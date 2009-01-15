@@ -41,6 +41,19 @@ enum _state {
 	ST_ENTRY_HCLIST,
 	ST_GAME_QUIT
 };
+enum _keynum_{		//キーコンフィグ用
+	KEY_NONE,
+	KEY_SHOT,
+	KEY_BOMB,
+	KEY_SLOW,
+	KEY_UP,
+	KEY_DOWN,
+	KEY_LEFT,
+	KEY_RIGHT,
+	KEY_PAUSE,
+	KEY_CANCEL,
+	KEY_SC_SHOT
+};
 
 enum _diff { DIFF_EASY=0, DIFF_MEDIUM=1, DIFF_HARD=2 };
 
@@ -63,14 +76,16 @@ typedef struct {
 	int d;	//下
 	int l;	//左
 	int r;	//右
-	int f;	//決定
-	int e;	//終わり
-	int c;	//キャンセル
-	int b;	//ボム
+	int ba;	//×
+	int ma;	//○
+	int sa;	//△
+	int si;	//□
 	int rt;	//R
 	int lt;	//L
-	int screenS;
+	int sl;	//SELECT
+	int st;	//START
 } KEYCONFIG;
+
 
 #include "font.h"
 #include "menu.h"
@@ -103,5 +118,7 @@ void *mmalloc(size_t size);
 void preload_gfx();
 void load_ing();
 void display_vidinfo();
+int ini_load();		//***090110
+void ini_save();	//***090115
 
 #endif

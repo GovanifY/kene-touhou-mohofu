@@ -4,6 +4,7 @@ SPRITE *sb03[6];
 extern SPRITE *player;
 extern double fps_factor;
 extern SDL_Surface *screen;
+extern int difficulty;
 
 typedef struct _boss03_data {
 	ENEMY_BASE b;
@@ -31,15 +32,30 @@ void enemy_boss03_add(int lv)
 		sb03[i]->type=SP_EN_BOSS03;
 		b=mmalloc(sizeof(BOSS03_DATA));
 		sb03[i]->data=b;
-		b->b.health=40;  //denis was 40
-		b->b.score=500*(lv+1);
+		if(lv==0)		//***090114		追加
+		{
+			if(i==1)
+			{
+				b->b.health=500;
+				b->b.score=1500*(difficulty+1);
+			}
+			else
+			{
+				b->b.health=80;
+				b->b.score=600*(difficulty+1);
+			}
+		}
+		else
+		{
+			b->b.health=40;  //denis was 40
+			b->b.score=500*(difficulty+1);
+		}
 		b->health_flag=0;
 		b->level=lv;
 		if(i==1) {
 			b->state=0;
 			sb03[i]->mover=enemy_boss03_move;
 		}
-
 	}
 
 	((PLAYER_DATA *)player->data)->bossmode=1;
@@ -137,6 +153,9 @@ void enemy_boss03_hitbyweapon(SPRITE *c, SPRITE *s, int angle)
 }
 
 
+//***090114		いろいろと追加します。
+//3面と4面の差別化。
+//4面には新しく追加した弾軌道を組み込む。
 void enemy_boss03_move(SPRITE *c)
 {
 	BOSS03_DATA *b=(BOSS03_DATA *)c->data;
@@ -144,6 +163,9 @@ void enemy_boss03_move(SPRITE *c)
 	static double w;
 	static double firewait1;
 	static int firewait2;
+	static int firewait3;
+	static int bomb_n;
+	int i;
 
 	switch(b->state) {
 		case 0:
@@ -153,11 +175,13 @@ void enemy_boss03_move(SPRITE *c)
 			b->state=1;
 			firewait1=45;
 			firewait2=4;
+			firewait3=0;
+			bomb_n=0;
 			break;
 		case 1:
 			y+=fps_factor*(b->level+1);
 			enemy_boss03_setpos(x,y);
-			if(y>=30) {
+			if(y>=0) {
 				b->state=2;
 				w=0;
 			}
@@ -171,7 +195,7 @@ void enemy_boss03_move(SPRITE *c)
 		case 3:
 			y+=fps_factor*(b->level+1);
 			enemy_boss03_setpos(x,y);
-			if(y>=80) {
+			if(y>=30) {
 				b->state=4;
 				w=0;
 			}
@@ -226,6 +250,27 @@ void enemy_boss03_move(SPRITE *c)
 		} else {
 			enemy_boss03_fire(0);
 			enemy_boss03_fire(1);
+		}
+	}
+	if(b->level==0)
+	{
+		if(b->b.health<=200)
+		{
+			if(firewait3 < 0)
+			{
+				if(bomb_n<13)
+					bomb_n++;
+				for(i=0;i<bomb_n;i++)
+				{
+					enemy_pong_bullet_create(c, 5.0, 2*M_PI/bomb_n*i, 0.1, 2);
+				}
+				if(b->b.health>50)
+					firewait3=b->b.health;
+				else
+					firewait3=50;
+			}
+			else
+				firewait3--;
 		}
 	}
 }

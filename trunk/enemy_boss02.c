@@ -3,11 +3,14 @@
 /*
 	自分で思ったよりも第2形態の攻撃パターンがカオスになってしまった。
 	もっと丁寧に作り直した方がいいかも。
+	090114
+		天狗の速度を難易度ごとに変えてみた。
 */
 
 extern SPRITE *player;
 extern double fps_factor;
 extern SDL_Surface *screen;
+extern int difficulty;		//***090114		追加
 
 typedef struct _boss02_data {
 	ENEMY_BASE b;
@@ -285,7 +288,7 @@ void enemy_boss02_move(SPRITE *s)
 			
 		case 3: 	//左移動中->6へ
 			if(s->x>=0) {
-				s->x-=6*fps_factor;
+				s->x-=(4+difficulty)*fps_factor;
 				if(s->aktframe>0) {
 					b->wait2+=fps_factor;
 					if(b->wait2>=3) {
@@ -294,6 +297,7 @@ void enemy_boss02_move(SPRITE *s)
 					}
 				}
 			} else {
+				s->x++;			//***090114		追加
 				b->wait1=10;
 				b->state1=6;
 			}
@@ -301,7 +305,7 @@ void enemy_boss02_move(SPRITE *s)
 			
 		case 4:		//右移動中->8へ
 			if(s->x<(WIDTH2-s->w)) {
-				s->x+=6*fps_factor;
+				s->x+=(4+difficulty)*fps_factor;
 				if(s->aktframe<8) {
 					b->wait2+=fps_factor;
 					if(b->wait2>=3) {
@@ -310,6 +314,7 @@ void enemy_boss02_move(SPRITE *s)
 					}
 				}
 			} else {
+				s->x--;			//***090114		追加
 				b->wait1=10;
 				b->state1=8;
 			}
@@ -322,8 +327,8 @@ void enemy_boss02_move(SPRITE *s)
 			}
 			else
 			{
-				s->x+=cos(ang_b2)*6*fps_factor;
-				s->y+=sin(ang_b2)*6*fps_factor;
+				s->x+=cos(ang_b2)*(4+difficulty)*fps_factor;
+				s->y+=sin(ang_b2)*(4+difficulty)*fps_factor;
 			}
 			break;
 			
@@ -359,7 +364,7 @@ void enemy_boss02_move(SPRITE *s)
 			if(s->y>HEIGHT/3)
 				b->state1=12;
 			else
-				s->y+=6*fps_factor;
+				s->y+=(4+difficulty)*fps_factor;
 			break;
 
 		case 12:

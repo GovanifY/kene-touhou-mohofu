@@ -17,12 +17,14 @@
 		enemy_gr_bullet_create
 		下方向に加速していく中弾。
 		フレーム毎で計算しているのでかなり加速度を小さくしないと大変なことに。
+	090114
+		大玉の動きを変えてみた
 */
 
 extern SDL_Surface *screen;
 extern SPRITE *player;
 extern double fps_factor;
-
+extern int difficulty;		//***090114		追加
 
 void enemy_bullet_create(SPRITE *s, double speed)
 {
@@ -211,6 +213,7 @@ void enemy_bigbullet_create(SPRITE *s, double ex, double ey, double speed, doubl
 		data->angle=angle;
 	data->speed=speed;
 	data->ransu=ransu;
+	data->wait_bg=10;
 	
 	src_d->sw=h->w;
 	src_d->sh=h->h;
@@ -231,9 +234,15 @@ void enemy_bigbullet_move(SPRITE *s)
 		bonus_info_text(s->x,s->y,buffer,FONT07);		//表示されてない？
 	}
 	BIGBULLET_DATA *d=(BIGBULLET_DATA *)s->data;
-	
-	s->x+=cos(d->angle+((rand()%d->ransu-d->ransu/2)/10))*d->speed*fps_factor;
-	s->y+=sin(d->angle+((rand()%d->ransu-d->ransu/2)/10))*d->speed*fps_factor;
+	if(d->wait_bg>0)		//***090114		追加場所。今までフレーム毎に計算していた所を10フレーム毎に変更
+		d->wait_bg--;
+	else
+	{
+		d->wait_bg=10;
+		d->angle+=((rand()%d->ransu)-d->ransu/2)/10;
+	}
+	s->x+=cos(d->angle)*d->speed*fps_factor;
+	s->y+=sin(d->angle)*d->speed*fps_factor;
 	if((s->x<0)||(s->x>WIDTH2)||(s->y<0)||(s->y>HEIGHT)) {
 		s->type=-1;
 	}
@@ -300,6 +309,70 @@ void enemy_g_bullet_move(SPRITE *s)
 	}
 }
 
+//090114	追加
+void enemy_pong_bullet_create(SPRITE *s, double speed, double angle, double gra, int bou)
+{
+	/*
+		angle	-2でプレイヤー
+				基本はラジアン
+		gra		フレーム毎に下方向にどれだけ加速するか
+	*/
+	SPRITE *h;
+	PO_BULLET_DATA *data;
+
+	h=sprite_add_file("bshoot2.png",1,PR_ENEMY);	
+	h->type=SP_EN_LASER;
+	h->flags|=(SP_FLAG_VISIBLE|SP_FLAG_COLCHECK);
+	h->mover=enemy_pong_bullet_move;
+	h->aktframe=0;
+	h->x=s->x+(s->w/2-h->w/2);
+	h->y=s->y+(s->h/2-h->h/2);
+
+	data=mmalloc(sizeof(PO_BULLET_DATA));
+	h->data=data;
+
+	data->id=rand()%1000;
+	if(angle==-2)
+		data->angle=atan2(player->y-s->y,player->x-s->x);
+	else
+		data->angle=angle;
+	data->speed=speed;
+	data->gra=gra;
+	data->sum=0;
+	data->bounds=bou;
+}
+
+void enemy_pong_bullet_move(SPRITE *s)
+{
+	PLAYER_DATA *pd=(PLAYER_DATA *)player->data;
+	if(pd->bossmode==2)
+	{
+		s->type=-1;
+		char buffer[3];
+		pd->score+=50;
+		sprintf(buffer,"50");
+		bonus_info_text(s->x,s->y,buffer,FONT07);
+	}
+	PO_BULLET_DATA *d=(PO_BULLET_DATA *)s->data;
+	if(d->sum<15)
+		d->sum+=d->gra;
+	s->x+=cos(d->angle)*d->speed*fps_factor;
+	s->y+=sin(d->angle)*d->speed*fps_factor+d->sum;
+	if((s->x<0)||(s->x>WIDTH2)) {
+		d->angle=atan2(sin(d->angle),-cos(d->angle));
+	}
+	else if(s->y>HEIGHT)
+	{
+		if(d->bounds)
+		{
+			d->speed=-d->speed;
+			d->sum=-d->sum;
+			d->bounds--;
+		}
+		else
+			s->type=-1;
+	}
+}
 
 void enemy_gr_bullet_create(SPRITE *s, double speed, double angle, double gra)
 {

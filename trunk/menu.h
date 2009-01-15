@@ -11,10 +11,10 @@
 #include "fps.h"
 
 /* Menues */
-enum _menu_states { MEN_START, MEN_PAUSE, MEN_OPTION, MEN_VOLUME, MEN_DIFF, MEN_PLAYERS };
+enum _menu_states { MEN_START, MEN_PAUSE, MEN_OPTION, MEN_VOLUME, MEN_DIFF, K_CONFIG, MEN_PLAYERS };
 
 typedef struct {
-	SPRITE *opts[20][5];
+	SPRITE *opts[20][5];	//項目、アニメーション(残像)レイヤー
 	SDL_Surface *opts_surface[20];
 	SDL_Surface *bg;
 	int active_item;
@@ -27,10 +27,10 @@ typedef struct {
 } MENU;
 
 typedef struct {
-	int i0;
-	int i1;
-	int i2;
-	int i3;
+	int i0;		//x
+	int i1;		//y
+	int i2;		//スプライト用
+	int i3;		//スプライト用
 } MENU_DATA;
 
 void menusystem_init();
@@ -46,8 +46,11 @@ void volumemenu_init();
 void volumemenu_work();
 void difficultymenu_init();
 void difficultymenu_work();
-void player_sl_init();
-void player_sl_work();
+void key_config_init();
+void key_config_work();
+void kp_search(int btn, int num);
+void player_opt_init();
+void player_opt_work();
 void genericmenu_init(char *options[], MENU *m, int fadeout, int timeout);
 void genericmenu_work(MENU *m);
 #endif

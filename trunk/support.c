@@ -13,20 +13,37 @@ SDL_Surface *loadpic=NULL;		//load画面用
 SDL_Surface *loaddot[3];		//load画面用
 extern GAMESTATE state;
 extern GAMESTATE laststate;
+extern int difficulty;
 SceCtrlData pad;
-
+/*
+	enum _keynum_{		//キーコンフィグ用
+		KEY_NONE,
+		KEY_SHOT,
+		KEY_BOMB,
+		KEY_SLOW,
+		KEY_UP,
+		KEY_DOWN,
+		KEY_LEFT,
+		KEY_RIGHT,
+		KEY_PAUSE,
+		KEY_CANCEL,
+		KEY_SC_SHOT
+	};
+*/
 /*
 	typedef struct {
 		int u;	//上
 		int d;	//下
 		int l;	//左
 		int r;	//右
-		int f;	//決定
-		int e;	//終わり
-		int c;	//キャンセル
-		int b;	//ボム
+		int ba;	//×
+		int ma;	//○
+		int sa;	//△
+		int si;	//□
 		int rt;	//R
 		int lt;	//L
+		int sl;	//SELECT
+		int st;	//START
 	} KEYCONFIG;
 */
 /*
@@ -38,6 +55,7 @@ SceCtrlData pad;
 		ImgList* Next;
 	};
 */
+
 
 void game_init(int argc, char *argv[])
 {
@@ -130,20 +148,6 @@ void game_init(int argc, char *argv[])
 		}
 	}
 	*/
-		
-	/* 取り合えず番号振っといた */
-	keyconfig.b= 1;
-	keyconfig.c= 2;
-	keyconfig.f= 3;
-	keyconfig.screenS=4;
-	keyconfig.u= 5;
-	keyconfig.d= 6;
-	keyconfig.l= 7;
-	keyconfig.r= 8;
-	keyconfig.rt=9;
-	keyconfig.lt=10;
-	keyconfig.e= 12;
-
 	/*
 	error(ERR_DEBUG,"Key-configuration:");
 	error(ERR_DEBUG,"up-key    : %s",SDL_GetKeyName(keyconfig.u));
@@ -633,83 +637,91 @@ void keyboard_clear()
 
 void keyboard_poll()	//231氏と本家さんの協力によりSDLのキー取得を使わない方法を取った。
 {
+	//最大8191
 	sceCtrlReadBufferPositive(&pad, 1);			//この位置で合ってるかどうかはよくわからない。
 	if (pad.Buttons & PSP_CTRL_SQUARE){
-		keyboard[keyconfig.b]=1;
+		keyboard[keyconfig.si]|=0x001;
 	}
 	else
 	{
-		keyboard[keyconfig.b]=0;
+		keyboard[keyconfig.si]&=0xFFE;
 	}
 	if (pad.Buttons & PSP_CTRL_CIRCLE){
-		keyboard[keyconfig.c]=1;
+		keyboard[keyconfig.ma]=0x002;
 	}
 	else
 	{
-		keyboard[keyconfig.c]=0;
+		keyboard[keyconfig.ma]&=0xFFD;
 	}
 	if (pad.Buttons & PSP_CTRL_CROSS){
-		keyboard[keyconfig.f]=1;
+		keyboard[keyconfig.ba]=0x004;
 	}
 	else
 	{
-		keyboard[keyconfig.f]=0;
+		keyboard[keyconfig.ba]&=0xFFB;
 	}
 	if (pad.Buttons & PSP_CTRL_LTRIGGER){
-		keyboard[keyconfig.lt]=1;
+		keyboard[keyconfig.lt]=0x008;
 	}
 	else
 	{
-		keyboard[keyconfig.lt]=0;
+		keyboard[keyconfig.lt]&=0xFF7;
 	}
 	if (pad.Buttons & PSP_CTRL_RTRIGGER){
-		keyboard[keyconfig.rt]=1;
+		keyboard[keyconfig.rt]=0x010;
 	}
 	else
 	{
-		keyboard[keyconfig.rt]=0;
+		keyboard[keyconfig.rt]&=0xFEF;
+	}
+	if (pad.Buttons & PSP_CTRL_SELECT){
+		keyboard[keyconfig.sl]=0x020;
+	}
+	else
+	{
+		keyboard[keyconfig.sl]&=0xFCF;
 	}
 	if (pad.Buttons & PSP_CTRL_START){
-		keyboard[keyconfig.e]=1;
+		keyboard[keyconfig.st]=0x040;
 	}
 	else
 	{
-		keyboard[keyconfig.e]=0;
+		keyboard[keyconfig.st]&=0xFBF;
 	}
 	if ((pad.Buttons & PSP_CTRL_UP)||(pad.Ly<90)){
-		keyboard[keyconfig.u]=1;
+		keyboard[keyconfig.u]=0x080;
 	}
 	else
 	{
-		keyboard[keyconfig.u]=0;
+		keyboard[keyconfig.u]&=0xF7F;
 	}
 	if ((pad.Buttons & PSP_CTRL_DOWN)||(pad.Ly>170)){
-		keyboard[keyconfig.d]=1;
+		keyboard[keyconfig.d]=0x100;
 	}
 	else
 	{
-		keyboard[keyconfig.d]=0;
+		keyboard[keyconfig.d]&=0xEFF;
 	}
 	if ((pad.Buttons & PSP_CTRL_LEFT)||(pad.Lx<90)){
-		keyboard[keyconfig.l]=1;
+		keyboard[keyconfig.l]=0x200;
 	}
 	else
 	{
-		keyboard[keyconfig.l]=0;
+		keyboard[keyconfig.l]&=0xDFF;
 	}
 	if ((pad.Buttons & PSP_CTRL_RIGHT)||(pad.Lx>170)){
-		keyboard[keyconfig.r]=1;
+		keyboard[keyconfig.r]=0x400;
 	}
 	else
 	{
-		keyboard[keyconfig.r]=0;
+		keyboard[keyconfig.r]&=0xBFF;
 	}
 	if (pad.Buttons & PSP_CTRL_TRIANGLE){
-		keyboard[keyconfig.screenS]=1;
+		keyboard[keyconfig.sa]=0x800;
 	}
 	else
 	{
-		keyboard[keyconfig.screenS]=0;
+		keyboard[keyconfig.sa]&=0x7FF;
 	}
 }
 
@@ -782,6 +794,7 @@ void preload_gfx()
 	tmp=loadbmp("boss03-ro.png"); unloadbmp_by_surface(tmp);
 	tmp=loadbmp("boss03-ru.png"); unloadbmp_by_surface(tmp);
 	tmp=loadbmp("bshoot.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("bshoot2.png"); unloadbmp_by_surface(tmp);
 	tmp=loadbmp("coin.png"); unloadbmp_by_surface(tmp);
 	tmp=loadbmp("crusher.png"); unloadbmp_by_surface(tmp);
 	tmp=loadbmp("cshoot.png"); unloadbmp_by_surface(tmp);
@@ -841,6 +854,7 @@ void preload_gfx()
 	tmp=loadbmp("wolke03_4.png"); unloadbmp_by_surface(tmp);
 	load_ing();
 	tmp=loadbmp2("weapon_p.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("key_bg.png"); unloadbmp_by_surface(tmp);
 	tmp=loadbmp("bg2.png"); unloadbmp_by_surface(tmp);
 	tmp=loadbmp("back1.jpg"); unloadbmp_by_surface(tmp);
 	tmp=loadbmp("back2.jpg"); unloadbmp_by_surface(tmp);
@@ -852,6 +866,9 @@ void preload_gfx()
 	tmp=loadbmp("core.png"); unloadbmp_by_surface(tmp);
 	tmp=loadbmp2("bigkugel1.png"); unloadbmp_by_surface(tmp);
 	tmp=loadbmp("bigkugel2.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("key_icon.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("keylist.png"); unloadbmp_by_surface(tmp);
+	
 	/* alle benoetigten Bilder in den Cache laden */
 }
 
@@ -928,3 +945,57 @@ void display_vidinfo()
 	error(ERR_DEBUG,"=======================================");
 }
 
+int ini_load()
+{
+	FILE *fp;
+	char fn[50];
+	strcpy(fn,"./setting.ini");
+
+	if ( NULL == (fp = fopen(fn,"r")))
+    	return -1;
+
+	fscanf(fp,"%s",moddir);
+	fscanf(fp,"%d",&difficulty);
+	fscanf(fp,"%d",&keyconfig.u);
+	fscanf(fp,"%d",&keyconfig.d);
+	fscanf(fp,"%d",&keyconfig.l);
+	fscanf(fp,"%d",&keyconfig.r);
+	fscanf(fp,"%d",&keyconfig.ba);
+	fscanf(fp,"%d",&keyconfig.ma);
+	fscanf(fp,"%d",&keyconfig.sa);
+	fscanf(fp,"%d",&keyconfig.si);
+	fscanf(fp,"%d",&keyconfig.rt);
+	fscanf(fp,"%d",&keyconfig.lt);
+	fscanf(fp,"%d",&keyconfig.sl);
+	fscanf(fp,"%d",&keyconfig.st);
+	fclose(fp);
+	if(difficulty>3)
+		difficulty=2;
+	return 1;
+}
+
+void ini_save()
+{
+	char k=13;
+	FILE *fp;
+	char fn[50];
+	strcpy(fn,"./setting.ini");
+	if ( NULL == (fp = fopen(fn,"w")))
+		return;
+
+	fprintf(fp,"%s%c\n",moddir,k);
+	fprintf(fp,"%d%c\n",difficulty,k);
+	fprintf(fp,"%d%c\n",keyconfig.u,k);
+	fprintf(fp,"%d%c\n",keyconfig.d,k);
+	fprintf(fp,"%d%c\n",keyconfig.l,k);
+	fprintf(fp,"%d%c\n",keyconfig.r,k);
+	fprintf(fp,"%d%c\n",keyconfig.ba,k);
+	fprintf(fp,"%d%c\n",keyconfig.ma,k);
+	fprintf(fp,"%d%c\n",keyconfig.sa,k);
+	fprintf(fp,"%d%c\n",keyconfig.si,k);
+	fprintf(fp,"%d%c\n",keyconfig.rt,k);
+	fprintf(fp,"%d%c\n",keyconfig.lt,k);
+	fprintf(fp,"%d%c\n",keyconfig.sl,k);
+	fprintf(fp,"%d",keyconfig.st);
+	fclose(fp);
+}

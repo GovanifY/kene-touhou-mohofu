@@ -191,27 +191,39 @@ void player_keycontrol(SPRITE *s)
 	if((!(s->flags&SP_FLAG_VISIBLE))||(d->state==PL_RESET))
 		return;
 	
-	if(keyboard[keyconfig.l]) {
+	if(keyboard[KEY_LEFT]) {
 		direction=-1;
 		if(s->x>0) {
-			s->x-=(d->player_speed/(keyboard[keyconfig.rt]+1))*fps_factor;
+			if(keyboard[KEY_SLOW])
+				s->x-=(d->player_speed/2)*fps_factor;
+			else
+				s->x-=d->player_speed*fps_factor;
 		}
 	}
 
-	if(keyboard[keyconfig.r]) {
+	if(keyboard[KEY_RIGHT]) {
 		direction=1;
 		if(s->x<WIDTH2-s->w) {		//プレイヤーのx座標 < スクリーンの横幅-プレイヤーの横幅
-			s->x+=(d->player_speed/(keyboard[keyconfig.rt]+1))*fps_factor;
+			if(keyboard[KEY_SLOW])
+				s->x+=(d->player_speed/2)*fps_factor;
+			else
+				s->x+=d->player_speed*fps_factor;
 		}
 	}
 
-	if((keyboard[keyconfig.u]) && (s->y>0)) {
-		s->y-=(d->player_speed/(keyboard[keyconfig.rt]+1))*fps_factor;
+	if((keyboard[KEY_UP]) && (s->y>0)) {
+		if(keyboard[KEY_SLOW])
+			s->y-=(d->player_speed/2)*fps_factor;
+		else
+			s->y-=d->player_speed*fps_factor;
 		//parsys_add(NULL,50,0,s->x+s->w/2,s->y+s->h,10,90,10,100,PIXELATE,NULL);
 	}
 
-	if((keyboard[keyconfig.d]) && (s->y<screen->h-s->h)) {
-		s->y+=(d->player_speed/(keyboard[keyconfig.rt]+1))*fps_factor;
+	if((keyboard[KEY_DOWN]) && (s->y<screen->h-s->h)) {
+		if(keyboard[KEY_SLOW])
+			s->y+=(d->player_speed/2)*fps_factor;
+		else
+			s->y+=d->player_speed*fps_factor;
 	}
 
 		
@@ -228,7 +240,7 @@ void player_keycontrol(SPRITE *s)
 	if(bomb_wait>0)					//ボムウェイト処理
 		bomb_wait-=fps_factor;
 
-	if(((keyboard[keyconfig.lt])||(keyboard[keyconfig.b]))&&(d->bombs>0))
+	if((keyboard[KEY_BOMB])&&(d->bombs>0))
 	{
 		if(bomb_wait==0)
 		{
@@ -243,7 +255,7 @@ void player_keycontrol(SPRITE *s)
 		}
 	}
 
-	if(keyboard[keyconfig.f]) {
+	if(keyboard[KEY_SHOT]) {
 		if(d->weapon_wait<=0) {
 			playChunk(0);
 			switch(weapon_List) {
@@ -479,7 +491,7 @@ void player_colcheck(SPRITE *s, int mask)
 				if(i==5)	//同じIDの弾が無かった時
 				{
 					d->graze++;
-					d->score+=500;
+					d->score+=100+(difficulty*200);
 					graze_check[(d->graze)%5]=((BULLET_DATA *)c->data)->id;
 					playChunk(9);
 				}
@@ -496,7 +508,7 @@ void player_colcheck(SPRITE *s, int mask)
 				if(j==5)
 				{
 					d->graze++;
-					d->score+=500;
+					d->score+=100+(difficulty*200);
 					graze_check[(d->graze)%5]=((LASER_DATA *)c->data)->id;
 					playChunk(9);
 				}
@@ -513,7 +525,7 @@ void player_colcheck(SPRITE *s, int mask)
 				if(l==5)
 				{
 					d->graze++;
-					d->score+=500;
+					d->score+=100+(difficulty*200);
 					graze_check[(d->graze)%5]=((BIGBULLET_DATA *)c->data)->id;
 					playChunk(9);
 				}

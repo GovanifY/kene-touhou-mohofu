@@ -335,25 +335,25 @@ void hsc_entry_work()
 			// 	wstat=0;
 			if(--wstat==0) {
 				wstat=8;
-				if(keyboard[keyconfig.l]) {
+				if(keyboard[KEY_LEFT]) {
 					wstat=20;
 					sel--;
 					if(sel<0)
 						sel=39;
 				}
-				if(keyboard[keyconfig.r]) {
+				if(keyboard[KEY_RIGHT]) {
 					wstat=20;
 					sel++;
 					if(sel==40)
 						sel=0;
 				}
-				if(keyboard[keyconfig.u]) {
+				if(keyboard[KEY_UP]) {
 					wstat=20;
 					sel-=10;
 					if(sel<0)
 						sel+=40;
 				}
-				if(keyboard[keyconfig.d]) {
+				if(keyboard[KEY_DOWN]) {
 					wstat=20;
 					sel+=10;
 					if(sel>39)
@@ -361,7 +361,7 @@ void hsc_entry_work()
 				}
 				
 				
-				if(keyboard[keyconfig.c]) {		//キャンセルボタンの追加
+				if(keyboard[KEY_CANCEL]) {		//キャンセルボタンの追加
 					wstat=20;
 					if(entidx>0) {		//何も入力されていないときは実行しない
 						entidx--;
@@ -370,7 +370,7 @@ void hsc_entry_work()
 				}
 				
 				
-				if(keyboard[keyconfig.f]) {
+				if(keyboard[KEY_SHOT]) {
 					wstat=20;
 					switch(letter[sel].ascii) {
 						case -1: /* Delete last character */
@@ -402,7 +402,7 @@ void hsc_entry_work()
 				}
 				
 				
-				if(keyboard[keyconfig.e]) {		//終了ボタンの追加
+				if(keyboard[KEY_PAUSE]) {		//終了ボタンの追加
 					if(strcmp(entry,"   "))		//何か入力されているとき(strcmpは=だと0を返す)
 					{
 						wstat=20;

@@ -56,13 +56,13 @@ void thegame_work()
 	/* gt=Zeit seit Spielbeginn in 1/10 sec. */
 	gt=(SDL_GetTicks()-level_start_time)/100;
 
-	if(keyboard[keyconfig.screenS]==1){		//スクリーンショット機能。keypollに入れると何故かうまくいかなかったのでこっちに場所を変更。
+	if(keyboard[KEY_SC_SHOT]==1){		//スクリーンショット機能。keypollに入れると何故かうまくいかなかったのでこっちに場所を変更。
 		wait_sc=100;
 		sprintf(screenbuf,"ms0:/PICTURE/Toho_Moho%d.bmp",screennum++);		//保存場所の変更。
 		SDL_SaveBMP(screen,screenbuf);
 	}
 	if(d->lives>0) {
-		if(keyboard[keyconfig.e]) {
+		if(keyboard[KEY_PAUSE]) {
 			newstate(ST_MENU,MEN_PAUSE,1);
 		}
 

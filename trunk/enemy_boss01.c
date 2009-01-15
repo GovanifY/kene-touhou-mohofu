@@ -4,6 +4,7 @@ SPRITE *sb01[6];
 extern SPRITE *player;
 extern double fps_factor;
 extern SDL_Surface *screen;
+extern int difficulty;		//***090114		追加
 
 typedef struct _boss01_data {
 	ENEMY_BASE b;
@@ -45,19 +46,19 @@ void enemy_boss01_add(int lv)
 		b=mmalloc(sizeof(BOSS01_DATA));
 		sb01[i]->data=b;
 		if(i==0)
-			b->b.health=150;
+			b->b.health=200;		//***090114		変更(+50)
 		else if(i==1)
-			b->b.health=250;		//アリス本体のHP。もう少し高くてもいいかも。
+			b->b.health=350;		//アリス本体のHP。もう少し高くてもいいかも。***090114	変更(+100)
 		else if(i==2)
-			b->b.health=150;
+			b->b.health=200;		//***090114		変更(+50)
 		else if(i==4)
 			b->b.health=5;		//真ん中の子
 		else
-			b->b.health=40;  //denis was 40
+			b->b.health=60;  //denis was 40		***090114	変更(+20)
 		if(i==1)
-			b->b.score=1000*(lv+1);
+			b->b.score=1000*(difficulty+1);
 		else
-			b->b.score=500*(lv+1);
+			b->b.score=500*(difficulty+1);
 		b->health_flag=0;
 		b->level=lv;
 		if(i==1) {

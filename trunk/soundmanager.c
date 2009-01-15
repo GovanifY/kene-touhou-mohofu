@@ -140,7 +140,7 @@ void initSound() {
 // Play/Stop the music/chunk.
 
 void playMusic(char *file) {
-	//Mix_FreeMusic(music);		//これを入れないと途中で音楽が鳴らなくなるっぽい->仕様ではなかった？
+	Mix_FreeMusic(music);		//これを入れないと途中で音楽が鳴らなくなるっぽい->仕様ではなかった？
   char name[72];
  /*   if ( music!=NULL ) {
   	if ( Mix_PlayingMusic() )

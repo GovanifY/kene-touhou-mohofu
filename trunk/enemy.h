@@ -37,6 +37,14 @@ typedef struct {
 	double sum;
 }GR_BULLET_DATA;
 
+typedef struct {
+	double angle;
+	double speed;
+	int id;
+	double gra;
+	double sum;
+	int bounds;
+}PO_BULLET_DATA;
 
 typedef struct {
 	double angle;
@@ -57,6 +65,7 @@ typedef struct {
 	double speed;
 	int ransu;
 	int id;
+	int wait_bg;
 } BIGBULLET_DATA;
 
 typedef struct {
@@ -89,6 +98,8 @@ void enemy_bigbullet_move(SPRITE *s);
 void enemy_bigbullet_move2(SPRITE *s);
 void enemy_g_bullet_create(SPRITE *s, double speed, int state, double angle);
 void enemy_g_bullet_move(SPRITE *s);
+void enemy_pong_bullet_create(SPRITE *s, double speed, double angle, double gra, int bou);
+void enemy_pong_bullet_move(SPRITE *s);
 void explosion_add(int x, int y, double wait, int type);
 void explosion_move(SPRITE *c);
 

@@ -18,6 +18,38 @@ MENU volumemenu;
 MENU difficultymenu;
 MENU player_sl;
 
+//*****************************
+//keyconfig用	***20080110-0115
+int key_pos[12];		//数字=ボタン変数 並びは"key_bg.png"
+int keys2[11]={KEY_NONE,KEY_SHOT,KEY_BOMB,KEY_SLOW,KEY_UP,KEY_DOWN,KEY_LEFT,KEY_RIGHT,KEY_PAUSE,KEY_CANCEL,KEY_SC_SHOT};		//数字=機能定数 並びは"keylist.png"
+SDL_Surface *key_sf[11];		//機能リストの画像"keylist.png"
+SDL_Surface *key_bg;
+SDL_Surface *key_set;
+SPRITE *keyicon;
+SPRITE *keyicon2;
+SDL_Rect rect_k;
+int select_key;
+int select_key2;
+int select_key_dir;		//menu画面内の状態
+int bg_alpha;
+int bg_level;			//menu画面の状態
+//******************************
+/*
+	typedef struct {
+		int u;	//上
+		int d;	//下
+		int l;	//左
+		int r;	//右
+		int ba;	//×
+		int ma;	//○
+		int sa;	//△
+		int si;	//□
+		int rt;	//R
+		int lt;	//L
+		int sl;	//SELECT
+		int st;	//START
+	} KEYCONFIG;
+*/
 /*
 typedef struct {
 	SPRITE *opts[20][5];
@@ -90,8 +122,11 @@ void menu_init()
 		case MEN_DIFF:
 			difficultymenu_init();
 			break;
+		case K_CONFIG:
+			key_config_init();
+			break;
 		case MEN_PLAYERS:
-			player_sl_init();
+			player_opt_init();
 			break;
 	}
 }
@@ -115,8 +150,11 @@ void menu_work()
 		case MEN_DIFF:
 			difficultymenu_work();
 			break;
+		case K_CONFIG:
+			key_config_work();
+			break;
 		case MEN_PLAYERS:
-			player_sl_work();
+			player_opt_work();
 			break;
 	}
 }
@@ -197,7 +235,8 @@ void optionmenu_init()
 	char *m00="FX VOLUME";
 	char *m01="DIFFICULTY";
 	char *m02="HIGH SCORE";		//変更
-	char *m03="BACK TO MAIN MENU";
+	char *m03="KEY CONFIG";
+	char *m04="BACK TO MAIN MENU";
 
 	char *o[8];
 
@@ -205,7 +244,8 @@ void optionmenu_init()
 	o[1]=m01;
 	o[2]=m02;
 	o[3]=m03;
-	o[4]=NULL;
+	o[4]=m04;
+	o[5]=NULL;
 	
 	genericmenu_init(o,&optionmenu,0,-1);
 }
@@ -227,7 +267,10 @@ void optionmenu_work()
 			case 2:	/* Hiscore */
 				newstate(ST_SHOW_HCLIST,0,1);
 				break;
-			case 3:	/* Back to Game */
+			case 3:	/* Key Config */
+				newstate(ST_MENU,K_CONFIG,1);
+				break;
+			case 4:	/* Back to Game */
 				newstate(ST_MENU,MEN_START,1);
 				break;
 		}
@@ -268,18 +311,336 @@ void difficultymenu_work()
 		difficultymenu.select_finish=0;
 		difficulty=difficultymenu.active_item;
 		newstate(ST_MENU,MEN_OPTION,1);
+		ini_save();
 	}
 }
 
 
-
-void player_sl_init()
+//***090110
+//キーコンフィグ追加。
+//これを追加するためにplayer.cやsupport.cのkeyconfig配列の指定方法も変更した。
+//基本は絶対値指定(機能固定値)でsupport.cのkeypollの中のkeyconfigだけ配列指定番号に変数（keyconfig.xxx）を取る
+//またkeypollに入る値は、0と1だけのままだとボタン設定上問題が出るのでビットで管理するようにした
+void key_config_init()
 {
+	char *options_key[]={"NONE", "SHOT", "BOMB", "SLOW", "UP", "DOWN", "LEFT", "RIGHT", "PAUSE", "CANCEL", "SC SHOT",NULL};
+	key_pos[0]=keyconfig.ma;
+	key_pos[1]=keyconfig.ba;
+	key_pos[2]=keyconfig.si;
+	key_pos[3]=keyconfig.sa;
+	key_pos[4]=keyconfig.u;
+	key_pos[5]=keyconfig.d;
+	key_pos[6]=keyconfig.l;
+	key_pos[7]=keyconfig.r;
+	key_pos[8]=keyconfig.rt;
+	key_pos[9]=keyconfig.lt;
+	key_pos[10]=keyconfig.sl;
+	key_pos[11]=keyconfig.st;
+	playMusic("stage5");
+	int i=0;
+	select_key=0;
+	select_key_dir=0;
+	bg_level=0;
 	
+	bg_alpha=0;
+	keyicon=sprite_add_file("key_icon.png" , 12, PR_FRONT0);
+	key_bg=loadbmp("key_bg.png");
+	key_set=loadbmp("keylist.png");
+	SDL_SetColorKey(key_set,SDL_SRCCOLORKEY,0x00000000);
+	
+	keyicon->type=SP_MENUTEXT;
+	keyicon->flags|=(SP_FLAG_VISIBLE|SP_FLAG_COLCHECK);
+	keyicon->x=68;
+	keyicon->y=49;
+	keyicon->aktframe=0;
+	keyicon->anim_speed=2;
+	
+	while(options_key[i]!=NULL) {
+		key_sf[i]=font_render(options_key[i],FONT03);
+		i++;
+	}
+	//SDL_SetAlpha(key_bg, SDL_SRCALPHA, 0);
+	
+	keyboard_clear();
+}
+
+void key_config_work()
+{
+	static int key_shot;		//存在確認用。1で存在。0で存在しない。存在しないとメニューを抜けれない。
+	static int key_down;
+	static int key_up;
+	static int bg_wait;
+	int i;
+	
+	SDL_BlitSurface(key_bg,NULL,screen,NULL);
+	switch(bg_level)
+	{
+		case 0:
+			if(bg_alpha<255)
+				bg_alpha+=6*fps_factor;
+			else
+			{
+				bg_alpha=255;
+				bg_level=1;
+				bg_wait=0;
+			}
+			SDL_SetAlpha(key_bg, SDL_SRCALPHA, bg_alpha);
+			break;
+		case 1:
+			switch(select_key_dir)
+			{
+				case 0:		//第一層
+					if(bg_wait==0)
+					{
+						if(keyboard[KEY_UP])		//上ボタン
+						{
+							if(select_key==0)
+								select_key=13;
+							else
+								select_key--;
+							bg_wait=10;
+						}
+						if(keyboard[KEY_DOWN])		//下ボタン
+						{
+							if(select_key==13)
+								select_key=0;
+							else
+								select_key++;
+							bg_wait=10;
+						}
+						if(keyboard[KEY_LEFT])		//左
+						{
+							select_key=0;
+						}
+						if(keyboard[KEY_RIGHT])		//右
+						{
+							select_key=13;
+						}
+						
+						if(keyboard[KEY_CANCEL])		//キャンセルボタン
+						{
+							playChunk(4);
+							keyicon->type=-1;
+							bg_level=2;
+							//key_bg=loadbmp("moon.jpg");
+							bg_alpha=255;
+							playMusic("intro");
+						}
+						
+						if(keyboard[KEY_SHOT])		//ショットボタン
+						{
+							playChunk(2);
+							if(select_key==13)		//OKを選んだ場合
+							{
+								key_shot=0;
+								key_down=0;
+								key_up=0;
+								for(i=0;i<12;i++)	//ショットボタン&↑&↓があるか確認
+								{
+									if(key_pos[i]==KEY_SHOT)
+										key_shot++;
+									if(key_pos[i]==KEY_UP)
+										key_up++;
+									if(key_pos[i]==KEY_DOWN)
+										key_down++;
+								}
+								if((key_shot!=0)&&((key_up!=0)&&(key_down!=0)))
+								{
+									keyicon->type=-1;
+									bg_level=2;
+									//key_bg=loadbmp("moon.jpg");
+									bg_alpha=255;
+									playMusic("intro");
+									
+									//最終的に代入される物
+									keyconfig.ma=key_pos[0];
+									keyconfig.ba=key_pos[1];
+									keyconfig.si=key_pos[2];
+									keyconfig.sa=key_pos[3];
+									keyconfig.u= key_pos[4];
+									keyconfig.d= key_pos[5];
+									keyconfig.l= key_pos[6];
+									keyconfig.r= key_pos[7];
+									keyconfig.rt=key_pos[8];
+									keyconfig.lt=key_pos[9];
+									keyconfig.sl=key_pos[10];
+									keyconfig.st=key_pos[11];
+									ini_save();
+								}
+								else
+									pspDebugScreenPrintf("damedayo\n");
+							}
+							else if(select_key==12)		//resetを選んだ場合
+							{
+								playChunk(7);
+								bg_wait=10;
+								key_pos[0]= KEY_CANCEL;
+								key_pos[1]= KEY_SHOT;
+								key_pos[2]= KEY_BOMB;
+								key_pos[3]= KEY_SC_SHOT;
+								key_pos[4]= KEY_UP;
+								key_pos[5]= KEY_DOWN;
+								key_pos[6]= KEY_LEFT;
+								key_pos[7]= KEY_RIGHT;
+								key_pos[8]= KEY_SLOW;
+								key_pos[9]= KEY_NONE;
+								key_pos[10]=KEY_NONE;
+								key_pos[11]=KEY_PAUSE;
+								select_key=13;
+							}
+							else		//キーの選択
+							{
+								select_key_dir=1;
+							}
+						}
+					}
+					else
+						bg_wait--;
+					
+					keyicon->y=49+(select_key*15);
+					
+					break;
+					
+				case 1:		//第二層準備
+					for(i=0;i<11;i++)
+					{
+						if(keys2[i]==key_pos[select_key])		//選択した所に何が入っているのか調べる
+						{
+							break;
+						}
+					}
+					keyicon2=sprite_add_file("key_icon.png" , 12, PR_FRONT0);
+					bg_alpha=0;
+					keyicon2->type=SP_MENUTEXT;
+					keyicon2->flags|=(SP_FLAG_VISIBLE|SP_FLAG_COLCHECK);
+					keyicon2->x=295;
+					keyicon2->y=40+(i*19);
+					keyicon2->aktframe=0;
+					keyicon2->anim_speed=1;
+					select_key2=i;
+					select_key_dir=2;
+					break;
+					
+				case 2:
+					if(bg_alpha<255)
+						bg_alpha+=12*fps_factor;
+					else
+					{
+						bg_alpha=255;
+						select_key_dir=3;
+					}
+					
+					rect_k.x=310;
+					rect_k.y=36;
+					SDL_SetAlpha(key_set, SDL_SRCALPHA, bg_alpha);
+					SDL_BlitSurface(key_set,NULL,screen,&rect_k);
+					break;
+					
+				case 3:		//第二層
+					if(bg_wait==0)
+					{
+						if(keyboard[KEY_UP])
+						{
+							if(select_key2==0)
+								select_key2=10;
+							else
+								select_key2--;
+							bg_wait=10;
+						}
+						if(keyboard[KEY_DOWN])
+						{
+							if(select_key2==10)
+								select_key2=0;
+							else
+								select_key2++;
+							bg_wait=10;
+						}
+						if(keyboard[KEY_LEFT])
+						{
+							select_key2=0;
+						}
+						if(keyboard[KEY_RIGHT])
+						{
+							select_key2=10;
+						}
+						if(keyboard[KEY_CANCEL])
+						{
+							bg_wait=20;
+							select_key_dir=0;
+							keyicon2->type=-1;
+						}
+						if(keyboard[KEY_SHOT])
+						{
+							playChunk(2);
+							bg_wait=20;
+							for(i=0;i<12;i++)
+							{
+								if(key_pos[i]==keys2[select_key2])
+									break;
+							}
+							key_pos[select_key]=keys2[select_key2];
+							
+							select_key_dir=0;
+							keyicon2->type=-1;
+						}
+					}
+					else
+						bg_wait--;
+					
+					rect_k.x=310;
+					rect_k.y=36;
+					SDL_BlitSurface(key_set,NULL,screen,&rect_k);
+
+					keyicon2->y=40+(select_key2*19);
+					break;
+			}
+			for(i=0;i<12;i++)
+			{
+				kp_search(key_pos[i], i);
+			}
+			
+			break;
+		case 2:
+			if(bg_alpha<255)
+				bg_alpha+=8*fps_factor;
+			else
+			{
+				//unloadbmp_by_surface(key_bg);
+				bg_alpha=255;
+				newstate(ST_INTRO,1,1);
+				for(i=0;i<12;i++)
+					SDL_FreeSurface(key_sf[i]);
+			}
+			//SDL_SetAlpha(key_bg, SDL_SRCALPHA, bg_alpha);
+			break;
+	}
+	
+	if(bg_level!=2)
+	{
+		sprite_work(SP_SHOW_MENUTEXT);
+		sprite_display(SP_SHOW_MENUTEXT);
+	}
+}
+
+void kp_search(int btn, int num)
+{
+	int i;
+	for(i=0;i<11;i++)
+		if(keys2[i]==btn)
+			break;
+	if(i==11)
+		i=0;
+	rect_k.x=150;
+	rect_k.y=49+(num*15);
+	SDL_BlitSurface(key_sf[i],NULL,screen,&rect_k);
+}
+
+void player_opt_init()
+{
 	
 }
 
-void player_sl_work()
+void player_opt_work()
 {
 	
 }
@@ -359,7 +720,7 @@ void genericmenu_work(MENU *m)
 		SDL_BlitSurface(m->bg,NULL,screen,NULL);
 
 		if((w<=0) && (m->alphadir<2)) {
-			if(keyboard[keyconfig.d]) {
+			if(keyboard[KEY_DOWN]) {
 				playChunk(2);
 				if(m->active_item==m->nopt-1)
 					m->active_item=0;
@@ -368,7 +729,7 @@ void genericmenu_work(MENU *m)
 				w=10/fps_factor;
 				m->timeout=-1;
 			}
-			if(keyboard[keyconfig.u]) {
+			if(keyboard[KEY_UP]) {
 				playChunk(2);
 				if(!m->active_item)
 					m->active_item=m->nopt-1;
@@ -377,7 +738,7 @@ void genericmenu_work(MENU *m)
 				w=10/fps_factor;;
 				m->timeout=-1;
 			}
-			if((state.substate==MEN_PAUSE)&&(keyboard[keyconfig.e])) {
+			if((state.substate==MEN_PAUSE)&&(keyboard[KEY_PAUSE])) {		//ポーズメニューの場合はstartボタンでポーズ解除
 				playChunk(2);
 				pausemenu.active_item=0;
 				m->alphadir=2;
@@ -454,7 +815,7 @@ void genericmenu_work(MENU *m)
 		sprite_work(SP_SHOW_MENUTEXT);
 		sprite_display(SP_SHOW_MENUTEXT);
 
-		if(keyboard[keyconfig.f]) {
+		if(keyboard[KEY_SHOT]) {
 			playChunk(2);
 			m->alphadir=2;
 			m->timeout=-1;

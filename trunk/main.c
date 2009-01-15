@@ -17,7 +17,7 @@ typedef struct SDL_Surface {
 } SDL_Surface;
 */
 extern int keyboard[];
-
+extern KEYCONFIG keyconfig;
 GAMESTATE state;
 GAMESTATE laststate;
 PSP_HEAP_SIZE_MAX();
@@ -28,6 +28,7 @@ int difficulty=DIFF_MEDIUM;
 
 char mods[20][20];
 int modcount=0;
+
 
 void wait(){
         int i,j;
@@ -146,7 +147,23 @@ int main(int argc, char *argv[])
 	scePowerSetClockFrequency(333,333,166);
 	pspDebugScreenInit();
 	printF("Starting K.E.T.M.\n");
-	chooseModDir(); 
+	
+	if(ini_load()==-1)	//090110
+	{
+		chooseModDir();
+		keyconfig.si= KEY_BOMB;		//Å†
+		keyconfig.ma= KEY_CANCEL;	//Åõ
+		keyconfig.ba= KEY_SHOT;		//Å~
+		keyconfig.sa= KEY_SC_SHOT;	//Å¢
+		keyconfig.u = KEY_UP;		//Å™
+		keyconfig.d = KEY_DOWN;		//Å´
+		keyconfig.l = KEY_LEFT;		//Å©
+		keyconfig.r = KEY_RIGHT;	//Å®
+		keyconfig.rt= KEY_SLOW;		//R
+		keyconfig.lt= KEY_BOMB;		//L
+		keyconfig.sl= KEY_NONE;		//SELECT
+		keyconfig.st= KEY_PAUSE;	//START
+	}
 
 	game_init(argc, argv);
 	playMusic("intro");

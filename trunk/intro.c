@@ -42,7 +42,7 @@ void intro_work()
 			newstate(ST_INTRO,INTRO_QUIT,0);
 		}
 
-		if(keyboard[keyconfig.e]) newstate(ST_GAME_QUIT,0,1);
+		if(keyboard[KEY_PAUSE]) newstate(ST_GAME_QUIT,0,1);
 	}
 
 	switch(state.substate) {

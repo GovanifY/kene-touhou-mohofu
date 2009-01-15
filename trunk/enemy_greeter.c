@@ -103,8 +103,10 @@ void enemy_greeter_move(SPRITE *s)
 		}
 		if(d->level)
 			if(rand()%(100-d->level*10)==0)
+			{
 				enemy_bullet_create(s,3+d->level);
-				
+				enemy_pong_bullet_create(s, 3, -2, 0.1,1);			//***090114		’Ç‰Á
+			}
 		break;
 	case 1:
 		if(s->y<-s->h) {
