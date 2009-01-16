@@ -1,6 +1,7 @@
 #include "enemy.h"
 
 extern double fps_factor;
+extern int difficulty;		//***090116		’Ç‰Á
 
 typedef struct {
 	ENEMY_BASE b;
@@ -102,7 +103,7 @@ void enemy_greeter_move(SPRITE *s)
 			d->speed=7;
 		}
 		if(d->level)
-			if(rand()%(100-d->level*10)==0)
+			if(rand()%(100-(d->level-2+difficulty)*10)==0)		//***090116		ŽáŠ±•ÏX
 			{
 				enemy_bullet_create(s,3+d->level);
 				enemy_pong_bullet_create(s, 3, -2, 0.1,1);			//***090114		’Ç‰Á

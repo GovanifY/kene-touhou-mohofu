@@ -24,6 +24,7 @@ typedef struct {
 	int weapon;
 	int player_speed;
 	int extra;
+	int bonus;		//***090116		’Ç‰Á
 	double extra_wait;
 	double extra_time;
 	double weapon_wait;

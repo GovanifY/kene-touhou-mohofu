@@ -7,9 +7,12 @@
 
 #include "sprite.h"
 #include "support.h"
+#include "player.h"		//***090116		’Ç‰Á
 
-typedef struct {
-	double speed;
+typedef struct {		//***090116		•ÏX
+	double sum;
+	double gra;
+	int pl_up;
 } BONUS_DATA;
 
 typedef struct {

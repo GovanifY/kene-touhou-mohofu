@@ -2,6 +2,7 @@
 
 extern double fps_factor;
 extern SDL_Surface *screen;
+extern SPRITE *player;		//***090116		’Ç‰Á
 
 void bonus_add(int x, int y, int type)
 {
@@ -48,15 +49,34 @@ void bonus_add(int x, int y, int type)
 	s->mover=bonus_move;
 	data=mmalloc(sizeof(BONUS_DATA));
 	s->data=data;
-	data->speed=rand()%400/100+1;
+	data->sum=-2;
+	data->gra=0.08;
+	data->pl_up=0;
 }
 
 void bonus_move(SPRITE *s)
 {
 	BONUS_DATA *d=(BONUS_DATA *)s->data;
-
-	s->y+=d->speed*fps_factor;
-	if(s->y>272) s->type=-1; //denis 480
+	if(((PLAYER_DATA *)player->data)->bonus)
+		d->pl_up=1;
+	if(!d->pl_up)
+	{
+		if(d->sum<5)
+			d->sum+=d->gra;
+		s->y+=d->sum*fps_factor;
+		if(s->y>272) s->type=-1; //denis 480
+	}
+	else
+	{
+		d->sum-=5;
+		if(d->sum<0)
+		{	
+			d->gra=atan2(player->y-s->y,player->x-s->x);
+			d->sum=20;
+		}
+		s->x+=cos(d->gra)*15*fps_factor;
+		s->y+=sin(d->gra)*15*fps_factor;
+	}
 }
 
 void bonus_info_add(int x, int y, char *filename)

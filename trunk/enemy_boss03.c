@@ -36,7 +36,7 @@ void enemy_boss03_add(int lv)
 		{
 			if(i==1)
 			{
-				b->b.health=500;
+				b->b.health=800;
 				b->b.score=1500*(difficulty+1);
 			}
 			else
@@ -254,20 +254,20 @@ void enemy_boss03_move(SPRITE *c)
 	}
 	if(b->level==0)
 	{
-		if(b->b.health<=200)
+		if(b->b.health<=600)
 		{
 			if(firewait3 < 0)
 			{
-				if(bomb_n<13)
+				if(bomb_n<32)
 					bomb_n++;
-				for(i=0;i<bomb_n;i++)
+				for(i=0;i<=(int)((double)bomb_n/3.0);i++)
 				{
-					enemy_pong_bullet_create(c, 5.0, 2*M_PI/bomb_n*i, 0.1, 2);
+					enemy_pong_bullet_create(c, 5.0, 2*M_PI/(int)((double)bomb_n/3.0)*i+M_PI/2, 0.07, 2);		//***090116		”÷’²®
 				}
 				if(b->b.health>50)
 					firewait3=b->b.health;
 				else
-					firewait3=50;
+					firewait3=100;
 			}
 			else
 				firewait3--;

@@ -17,7 +17,7 @@
 		enemy_gr_bullet_create
 		下方向に加速していく中弾。
 		フレーム毎で計算しているのでかなり加速度を小さくしないと大変なことに。
-	090114
+	//***090114
 		大玉の動きを変えてみた
 */
 
@@ -309,7 +309,7 @@ void enemy_g_bullet_move(SPRITE *s)
 	}
 }
 
-//090114	追加
+//***090114	追加
 void enemy_pong_bullet_create(SPRITE *s, double speed, double angle, double gra, int bou)
 {
 	/*
@@ -320,11 +320,11 @@ void enemy_pong_bullet_create(SPRITE *s, double speed, double angle, double gra,
 	SPRITE *h;
 	PO_BULLET_DATA *data;
 
-	h=sprite_add_file("bshoot2.png",1,PR_ENEMY);	
+	h=sprite_add_file("bshoot2.png",3,PR_ENEMY);	
 	h->type=SP_EN_LASER;
 	h->flags|=(SP_FLAG_VISIBLE|SP_FLAG_COLCHECK);
 	h->mover=enemy_pong_bullet_move;
-	h->aktframe=0;
+	h->aktframe=bou;
 	h->x=s->x+(s->w/2-h->w/2);
 	h->y=s->y+(s->h/2-h->h/2);
 
@@ -368,6 +368,8 @@ void enemy_pong_bullet_move(SPRITE *s)
 			d->speed=-d->speed;
 			d->sum=-d->sum;
 			d->bounds--;
+			s->aktframe=d->bounds;		//***090116		若干変更
+			d->angle=atan2(sin(d->angle),-cos(d->angle));		//***090116		追加
 		}
 		else
 			s->type=-1;

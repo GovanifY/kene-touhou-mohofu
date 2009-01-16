@@ -30,10 +30,11 @@ typedef struct {
 	int weapon;
 	int player_speed;
 	int extra;
+	int bonus;		//***090116		追加
 	double extra_wait;
 	double extra_time;
 	double weapon_wait;
-	*SPRITE core;		//player2(core)
+	SPRITE *core;
 } PLAYER_DATA;
 
 enum _priority {
@@ -86,11 +87,12 @@ void player_init()
 	data->lives=3;
 	data->bombs=3;
 	data->score=0;
+	data->bonus=0;
 
 	bomb_wait = 0;
 	weapon_List=0;
 	weapon_chain=0;
-	weapon_p=loadbmp2("weapon_p.png");		//loadbmpで読み込むと俺の環境だと表示されなくなる。
+	weapon_p=loadbmp2("weapon_p.png");		//俺の環境だとloadbmpで読み込むと表示されなくなる。
 	data->core=player_add_core(player);		//○の追加
 }
 
@@ -216,6 +218,9 @@ void player_keycontrol(SPRITE *s)
 			s->y-=(d->player_speed/2)*fps_factor;
 		else
 			s->y-=d->player_speed*fps_factor;
+		if(d->weapon==32)
+			if(s->y<9)
+				d->bonus=1;
 		//parsys_add(NULL,50,0,s->x+s->w/2,s->y+s->h,10,90,10,100,PIXELATE,NULL);
 	}
 
@@ -224,6 +229,8 @@ void player_keycontrol(SPRITE *s)
 			s->y+=(d->player_speed/2)*fps_factor;
 		else
 			s->y+=d->player_speed*fps_factor;
+		if(d->bonus)
+			d->bonus=0;
 	}
 
 		
@@ -551,6 +558,7 @@ void player_colcheck(SPRITE *s, int mask)
 				s->flags&=~SP_FLAG_VISIBLE;
 				d->core->flags&=~SP_FLAG_VISIBLE;		//○も消す
 				d->lives--;
+				d->bonus=0;
 		}
 	}
 }
