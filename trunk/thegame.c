@@ -112,7 +112,8 @@ void thegame_work()
 	} else {
 		player->flags&=~SP_FLAG_VISIBLE;
 		PLAYER_DATA *d=(PLAYER_DATA *)player->data;
-		d->core->alpha=0;			//›‚ğÁ‚·‚½‚ß‚É“ü‚ê‚½‚¯‚ÇˆÓ–¡–³‚©‚Á‚½‚©‚à‚µ‚ê‚È‚¢B
+		//d->core->alpha=0;			//›‚ğÁ‚·‚½‚ß‚É“ü‚ê‚½‚¯‚ÇˆÓ–¡–³‚©‚Á‚½‚©‚à‚µ‚ê‚È‚¢B
+		//‚±‚±‚ªƒ_ƒ‚Á‚Û‚¢
 		if(gameover_delay) {
 			gameover_delay--;
 			bg_work();

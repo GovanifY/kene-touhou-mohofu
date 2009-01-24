@@ -104,7 +104,7 @@ void enemy_boss02_hitbyweapon(SPRITE *c, SPRITE *s, int angle)
 		d->x=c->x;
 		d->y=c->y;
 		b2->state2=1;
-		if((b2->state1==2)||(b2->state1=6))
+		if((b2->state1==2)||(b2->state1==6))
 		{
 			b2->state1=2;
 			b2->wait1=30;
