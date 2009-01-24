@@ -77,12 +77,12 @@ void enemy_boss03_setpos(int x, int y)
 	sb03[5]->y=sb03[2]->h+y;
 }
 
-/* boss wurde von player berührt */
+/* boss wurde von player berErt */
 void enemy_boss03_hitbyplayer(SPRITE *c)
 {
 }
 
-/* boss wurde von player-weapon berührt */
+/* boss wurde von player-weapon berErt */
 void enemy_boss03_hitbyweapon(SPRITE *c, SPRITE *s, int angle)
 {
 	int i,j;
@@ -133,6 +133,7 @@ void enemy_boss03_hitbyweapon(SPRITE *c, SPRITE *s, int angle)
 		explosion_add(sb03[i]->x+sb03[i]->w/2,sb03[i]->y+sb03[i]->h/2,0,0);
 		sb03[i]->flags&=~SP_FLAG_VISIBLE;
 		((PLAYER_DATA *)player->data)->score+=b->b.score;
+		bonus_multi_add(sb03[i]->x, sb03[i]->y,SP_BONUS_COIN,7);
 	}
 
 	j=0;

@@ -4,6 +4,64 @@ extern double fps_factor;
 extern SDL_Surface *screen;
 extern SPRITE *player;		//***090116		’Ç‰Á
 
+void bonus_multi_add(int x, int y,int type, int num){
+
+int i;
+
+for(i=0;i<num;i++){
+		SPRITE *s;
+	BONUS_DATA *data;
+switch(type) {
+	case SP_BONUS_FIREPOWER:
+		s=sprite_add_file("bonus_p.png",16,PR_BONUS);
+		s->anim_speed=3;
+		break;
+	case SP_BONUS_ADDSPEED:
+		s=sprite_add_file("bonus_s.png",16,PR_BONUS);
+		s->anim_speed=2;
+		break;
+	case SP_BONUS_BOMB:
+		s=sprite_add_file("bonus_f.png",16,PR_BONUS);
+		s->anim_speed=3;
+		break;
+	case SP_BONUS_COIN:
+		s=sprite_add_file("coin.png",20,PR_BONUS);
+		s->anim_speed=3;
+		break;
+	case SP_BONUS_EXTRA:
+		s=sprite_add_file("bonus_x.png",16,PR_BONUS);
+		s->anim_speed=3;
+		break;
+	case SP_BONUS_HEALTH:
+		s=sprite_add_file("bonus_h.png",9,PR_BONUS);
+		s->anim_speed=2;
+		break;
+	default:
+		CHECKPOINT;
+		error(ERR_WARN,"cant add unknown bonus! debug me! please! now!");
+		return;
+	}
+
+	s->flags|=(SP_FLAG_VISIBLE|SP_FLAG_COLCHECK);
+	
+	s->x = x + (rand()%100-50);
+	s->y = y + (rand()%60-30);
+	
+	if(x<480)
+		s->x=s->x+20;
+	else
+		s->x=s->x-10;
+	//s->y=y;
+	s->type=type;
+	s->mover=bonus_move;
+	data=mmalloc(sizeof(BONUS_DATA));
+	s->data=data;
+	data->sum=-5;
+	data->gra=0.08;
+	data->pl_up=0;
+}
+}
+
 void bonus_add(int x, int y, int type)
 {
 	SPRITE *s;
@@ -61,14 +119,14 @@ void bonus_move(SPRITE *s)
 		d->pl_up=1;
 	if(!d->pl_up)
 	{
-		if(d->sum<5)
+		if(d->sum<4)
 			d->sum+=d->gra;
 		s->y+=d->sum*fps_factor;
 		if(s->y>272) s->type=-1; //denis 480
 	}
 	else
 	{
-		d->sum-=5;
+		d->sum-=4;
 		if(d->sum<0)
 		{	
 			d->gra=atan2(player->y-s->y,player->x-s->x);

@@ -139,12 +139,12 @@ void enemy_boss01_setpos(int x, int y)
 	}
 }
 
-/* boss wurde von player ber�hrt */
+/* boss wurde von player ber・rt */
 void enemy_boss01_hitbyplayer(SPRITE *c)
 {
 }
 
-/* boss wurde von player-weapon ber�hrt */
+/* boss wurde von player-weapon ber・rt */
 void enemy_boss01_hitbyweapon(SPRITE *c, SPRITE *s, int angle)
 {
 	/*
@@ -209,6 +209,7 @@ void enemy_boss01_hitbyweapon(SPRITE *c, SPRITE *s, int angle)
 	if(b->b.health<=0) {
 		explosion_add(sb01[i]->x+sb01[i]->w/2,sb01[i]->y+sb01[i]->h/2,0,0);
 		sb01[i]->flags&=~SP_FLAG_VISIBLE;
+		bonus_multi_add(sb01[i]->x, sb01[i]->y,SP_BONUS_COIN,7);
 		((PLAYER_DATA *)player->data)->score+=b->b.score;
 		if(i==1)		//アリスを倒すと皆破壊される。
 		{

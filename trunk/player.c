@@ -114,7 +114,7 @@ void player_move(SPRITE *s1)
 
 		case PL_EXPLODE:
 			//ここでアイテムを吐き出すようにすればそれっぽくなるかも
-			
+			bonus_multi_add(s1->x, s1->y,SP_BONUS_FIREPOWER,5);//というわけで実装
 			if(!d->explode) {
 				playChunk(4);
 				explosion_add(s1->x+5,s1->y+5,0,rand()%3+1);	

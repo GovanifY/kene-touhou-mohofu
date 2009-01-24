@@ -124,6 +124,7 @@ void enemy_boss02_hitbyweapon(SPRITE *c, SPRITE *s, int angle)
 			}
 		}
 		*/
+		bonus_multi_add(s->x, s->y,SP_BONUS_COIN,7);
 		d->type=-1;
 		((PLAYER_DATA *)player->data)->score+=b->b.score;
 		((PLAYER_DATA *)player->data)->bossmode=2;

@@ -688,28 +688,28 @@ void keyboard_poll()	//231‚Æ–{‰Æ‚³‚ñ‚Ì‹¦—Í‚É‚æ‚èSDL‚ÌƒL[æ“¾‚ğg‚í‚È‚¢•û–@‚ğ
 	{
 		keyboard[keyconfig.st]&=0xFBF;
 	}
-	if ((pad.Buttons & PSP_CTRL_UP)||(pad.Ly<90)){
+	if ((pad.Buttons & PSP_CTRL_UP)||(pad.Ly<70)){
 		keyboard[keyconfig.u]=0x080;
 	}
 	else
 	{
 		keyboard[keyconfig.u]&=0xF7F;
 	}
-	if ((pad.Buttons & PSP_CTRL_DOWN)||(pad.Ly>170)){
+	if ((pad.Buttons & PSP_CTRL_DOWN)||(pad.Ly>185)){
 		keyboard[keyconfig.d]=0x100;
 	}
 	else
 	{
 		keyboard[keyconfig.d]&=0xEFF;
 	}
-	if ((pad.Buttons & PSP_CTRL_LEFT)||(pad.Lx<90)){
+	if ((pad.Buttons & PSP_CTRL_LEFT)||(pad.Lx<70)){
 		keyboard[keyconfig.l]=0x200;
 	}
 	else
 	{
 		keyboard[keyconfig.l]&=0xDFF;
 	}
-	if ((pad.Buttons & PSP_CTRL_RIGHT)||(pad.Lx>170)){
+	if ((pad.Buttons & PSP_CTRL_RIGHT)||(pad.Lx>185)){
 		keyboard[keyconfig.r]=0x400;
 	}
 	else

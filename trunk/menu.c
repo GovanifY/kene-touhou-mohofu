@@ -222,9 +222,9 @@ void pausemenu_work()
 			case 1:	/* Quit Game */
 				 stopMusic();
 				sprite_remove_all(SP_SHOW_ALL);
-				parsys_remove_all();
+				//parsys_remove_all();
 				controller_remove_all();
-			score_cleanup();
+				//score_cleanup();
 				newstate(ST_INTRO,0,1);
 				playMusic("intro");
 				break;
