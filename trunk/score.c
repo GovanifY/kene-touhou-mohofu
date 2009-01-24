@@ -56,7 +56,7 @@ void Power_Statas(int weapon, int dx, int dy)		//ƒEƒFƒ|ƒ“ƒQ[ƒW‚Ì•\¦Bketm‚É·•
 	srec.x=0;
 	srec.y=0;
 	srec.h=13;
-	srec.w=(int)((double)weapon / 32 * (double)weapon_p->w);
+	srec.w=(int)((double)weapon / 128 * (double)weapon_p->w);		//***090123		•ÏX
 	drec.w=weapon_p->w;
 	drec.h=weapon_p->h;
 	drec.x=dx;
@@ -103,14 +103,14 @@ void score_display()		//‚±‚±‚Ìà–¾‚ÍÈ—ª
 			//sprintf(buffer,"POWER  :");
 			//font_print(buffer,FONT07,387,110);
 			Power_Statas(p->weapon ,387,124);
-			if(p->weapon == 32)
+			if(p->weapon == 128)
 			{
 				sprintf(buffer,"MAX");
 				font_print(buffer,FONT07,388,125);
 			}
 			else
 			{
-				sprintf(buffer,"%d",(int)((double)p->weapon / 32 * 100));
+				sprintf(buffer,"%d",(int)((double)p->weapon / 128 * 100));		//***090123		•ÏX
 				font_print(buffer,FONT07,388,125);
 			}
 			

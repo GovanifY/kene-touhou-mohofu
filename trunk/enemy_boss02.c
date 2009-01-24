@@ -3,7 +3,7 @@
 /*
 	自分で思ったよりも第2形態の攻撃パターンがカオスになってしまった。
 	もっと丁寧に作り直した方がいいかも。
-	090114
+	***090114
 		天狗の速度を難易度ごとに変えてみた。
 */
 
@@ -264,6 +264,7 @@ void enemy_boss02_move(SPRITE *s)
 			{
 				s->x+=cos(ang_b2)*6*fps_factor;
 				s->y+=sin(ang_b2)*6*fps_factor;
+				b->state1=0;
 			}
 			break;
 			

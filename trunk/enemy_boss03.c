@@ -263,12 +263,12 @@ void enemy_boss03_move(SPRITE *c)
 					bomb_n++;
 				for(i=0;i<=(int)((double)bomb_n/3.0);i++)
 				{
-					enemy_pong_bullet_create(c, 5.0, 2*M_PI/(int)((double)bomb_n/3.0)*i+M_PI/2, 0.07, 2);		//***090116		”÷’²®
+					enemy_pong_bullet_create(c, 5.0, 6*M_PI*i/(double)bomb_n+1, 0.07, 2);		//***090116		”÷’²®
 				}
-				if(b->b.health>50)
-					firewait3=b->b.health;
+				if(b->b.health>100)
+					firewait3=b->b.health/2;
 				else
-					firewait3=100;
+					firewait3=50;
 			}
 			else
 				firewait3--;

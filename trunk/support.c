@@ -774,6 +774,7 @@ void preload_gfx()
 	tmp=loadbmp("bgpanel2.png"); unloadbmp_by_surface(tmp);
 	tmp=loadbmp("bonus_f.png"); unloadbmp_by_surface(tmp);
 	tmp=loadbmp("bonus_p.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("bonus_p_.png"); unloadbmp_by_surface(tmp);
 	tmp=loadbmp("bonus_s.png"); unloadbmp_by_surface(tmp);
 	tmp=loadbmp("bonus_h.png"); unloadbmp_by_surface(tmp);
 	tmp=loadbmp("bonus_x.png"); unloadbmp_by_surface(tmp);
@@ -832,6 +833,7 @@ void preload_gfx()
 	load_ing();
 	tmp=loadbmp("rotating_rocket.png"); unloadbmp_by_surface(tmp);
 	tmp=loadbmp("rwingx.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("splash.png"); unloadbmp_by_surface(tmp);		//***090124		’Ç‰Á
 	tmp=loadbmp("ship-med.png"); unloadbmp_by_surface(tmp);
 	tmp=loadbmp("speed.png"); unloadbmp_by_surface(tmp);
 	tmp=loadbmp("tr_blue.png"); unloadbmp_by_surface(tmp);

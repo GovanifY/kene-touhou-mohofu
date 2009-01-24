@@ -114,7 +114,11 @@ void player_move(SPRITE *s1)
 
 		case PL_EXPLODE:
 			//ここでアイテムを吐き出すようにすればそれっぽくなるかも
-			bonus_multi_add(s1->x, s1->y,SP_BONUS_FIREPOWER,5);//というわけで実装
+			if(d->lives){
+				bonus_multi_add(s1->x, s1->y,SP_BONUS_FIREPOWER,5);//というわけで実装
+				if(d->weapon>30)		//***090124ちょっと追加
+					bonus_multi_add(s1->x, s1->y,SP_BONUS_FIREPOWER_G,1);
+			}
 			if(!d->explode) {
 				playChunk(4);
 				explosion_add(s1->x+5,s1->y+5,0,rand()%3+1);	
@@ -125,7 +129,7 @@ void player_move(SPRITE *s1)
 				d->state=PL_RESET;					//無敵状態？
 				s1->flags|=SP_FLAG_VISIBLE;			//可視フラグのOFF(不可視)
 				d->core->flags|=SP_FLAG_VISIBLE;	//○消し
-				d->weapon-=difficulty+4;			//武器レベルの低下
+				d->weapon-=(difficulty*4)+12;			//武器レベルの低下
 				d->bombs = 3;						//ボム所持数の初期化
 				if ( d->weapon<0)
 					d->weapon=0; //denis - reset weapons
@@ -218,7 +222,7 @@ void player_keycontrol(SPRITE *s)
 			s->y-=(d->player_speed/2)*fps_factor;
 		else
 			s->y-=d->player_speed*fps_factor;
-		if(d->weapon==32)
+		if(d->weapon==128)		//***090123		変更
 			if(s->y<9)
 				d->bonus=1;
 		//parsys_add(NULL,50,0,s->x+s->w/2,s->y+s->h,10,90,10,100,PIXELATE,NULL);
@@ -352,13 +356,13 @@ void player_colcheck(SPRITE *s, int mask)
 			case SP_BONUS_FIREPOWER:
 				playChunk(5);
 				
-				if(d->weapon<32) {		//maxでないとき
+				if(d->weapon<128) {		//maxでないとき
 					d->weapon++;
 					bonus_info_add(c->x,c->y,"weapon.png");
 					weapon_check(d->weapon);
 				}
 				else {					//maxの時
-					char buffer[50];
+					char buffer[8];
 					weapon_chain++;
 					d->score+=10*weapon_chain;
 					sprintf(buffer,"%d",10*weapon_chain);		//ウェポンボーナス得点の表示
@@ -367,6 +371,26 @@ void player_colcheck(SPRITE *s, int mask)
 				//spimg=sprite_getcurrimg(c);
 				//parsys_add(spimg, c->w,1, c->x,c->y, 5, 0, 0, 80, LINESPLIT, NULL);
 				//SDL_FreeSurface(spimg);
+				c->type=-1;
+				break;
+
+			case SP_BONUS_FIREPOWER_G:		//***090123		追加
+				playChunk(5);
+				if(d->weapon<120) {
+					d->weapon+=8;
+					bonus_info_add(c->x,c->y,"weapon.png");
+					weapon_check(d->weapon);
+				}
+				else if(d->weapon==128){
+					char buffer[8];
+					weapon_chain+=8;
+					sprintf(buffer,"%d",10*weapon_chain);		//ウェポンボーナス得点の表示
+					bonus_info_text(c->x,c->y,buffer,FONT07);
+				}
+				else{
+					d->weapon=128;
+					weapon_check(d->weapon);
+				}
 				c->type=-1;
 				break;
 
@@ -389,11 +413,11 @@ void player_colcheck(SPRITE *s, int mask)
 
 			case SP_BONUS_COIN:
 				playChunk(5);
-				d->score+=1000;
+				d->score+=100;		//***090123		変更
 				//spimg=sprite_getcurrimg(c);
 				//parsys_add(spimg, c->w,1, c->x,c->y, 5, 0, 0, 80, LINESPLIT, NULL);
 				//SDL_FreeSurface(spimg);
-				bonus_info_add(c->x,c->y,"plus1000.png");
+				bonus_info_add(c->x,c->y,"plus100.png");		//***090123		変更
 				c->type=-1;
 				break;
 
@@ -402,7 +426,7 @@ void player_colcheck(SPRITE *s, int mask)
 				//spimg=sprite_getcurrimg(c);
 				//parsys_add(spimg, c->w,1, c->x,c->y, 5, 0, 0, 80, LINESPLIT, NULL);
 				//SDL_FreeSurface(spimg);
-				if(d->player_speed<9) {
+				if(d->player_speed<8) {
 					d->player_speed++;
 					bonus_info_add(c->x,c->y,"speed.png");
 				} else {
@@ -425,19 +449,19 @@ void player_colcheck(SPRITE *s, int mask)
 							bonus_info_add(c->x,c->y,"extra.png");
 							break;
 						case PLX_SHIELD:		//ウェポンアイテム(強)
-							d->extra_time=50;
-							if(d->weapon<25) {
+							d->extra_time=30;
+							if(d->weapon<120) {		//***090123		変更
 								d->weapon+=8;
 								bonus_info_add(c->x,c->y,"weapon.png");
 								weapon_check(d->weapon);
 							}
-							else if(d->weapon==32){
+							else if(d->weapon==128){		//***090123		変更
 								d->score+=1000;
-								weapon_chain+=5;
+								weapon_chain+=8;
 								bonus_info_add(c->x,c->y,"plus1000.png");
 							}
 							else{
-								d->weapon=32;
+								d->weapon=128;		//***090123		変更
 								weapon_check(d->weapon);
 							}
 							break;
@@ -564,20 +588,20 @@ void player_colcheck(SPRITE *s, int mask)
 }
 
 void weapon_check(int w)		//weaponの段階から今の装備を決める
-{
-	if(w==0)
+{								//***090123		大幅な変更。最大128へ。
+	if(w<=5)
 		weapon_List=WP_PLASMA;
-	else if(w==1)
-		weapon_List=WP_DOUBLEPLASMA;
-	else if(w<=6)
-		weapon_List=WP_QUADPLASMA;
 	else if(w<=10)
+		weapon_List=WP_DOUBLEPLASMA;
+	else if(w<=35)
+		weapon_List=WP_QUADPLASMA;
+	else if(w<=50)
 		weapon_List=WP_FIREBALL;
-	else if(w<=15)
+	else if(w<=70)
 		weapon_List=WP_DOUBLEFIREBALL;
-	else if(w<=22)
+	else if(w<=100)
 		weapon_List=WP_QUADFIREBALL;
-	else if(w<=32)
+	else if(w<=128)
 		weapon_List=WP_FIFTHFIREBALL;
 	else
 		weapon_List=WP_KILLRAY;
@@ -1513,6 +1537,32 @@ void weapon_colcheck(SPRITE *s, int angle, int destroy, int check_bullets)
 					playChunk(8);
 				    	explosion_add(c->x,c->y+5,0,rand()%3+1);	
 					//parsys_add(spimg, 2,2, c->x,c->y, 10, angle, 10, 50, EXPLODE|DIFFSIZE, NULL);
+					switch(c->type){		//***090123		追加
+						case SP_EN_GREETER:
+							if(rand()%100>70){
+								if(rand()%100>50)
+									bonus_add(c->x, c->y, SP_BONUS_FIREPOWER);
+								else
+									bonus_add(c->x, c->y, SP_BONUS_COIN);
+							}
+							break;
+						case SP_EN_MING:
+							if(rand()%100>70){
+								if(rand()%100>50)
+									bonus_add(c->x, c->y, SP_BONUS_FIREPOWER);
+								else
+									bonus_add(c->x, c->y, SP_BONUS_COIN);
+							}
+							break;
+						case SP_EN_GROUNDER:
+							if(rand()%100>70)
+									bonus_add(c->x, c->y, SP_BONUS_FIREPOWER);
+							if(rand()%100>70)
+									bonus_add(c->x+5, c->y+5, SP_BONUS_COIN);
+							if(rand()%100>70)
+									bonus_add(c->x+10, c->y-5, SP_BONUS_FIREPOWER);
+							break;
+					}
 					pd->score+=d->score;
 					sprintf(buffer,"%d",d->score);
 					bonus_info_text(c->x,c->y,buffer,FONT07);

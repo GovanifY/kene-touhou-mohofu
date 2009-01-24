@@ -81,7 +81,7 @@ void enemy_curver_controller(CONTROLLER *c)
 			return;
 		}
 	}
-	bonus_add(id_array[c->max],id_array[c->max+1],SP_BONUS_FIREPOWER);
+	bonus_add(id_array[c->max],id_array[c->max+1],SP_BONUS_FIREPOWER_G);
 	controller_remove(c);
 }
 

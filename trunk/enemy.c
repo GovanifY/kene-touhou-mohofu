@@ -234,11 +234,11 @@ void enemy_bigbullet_move(SPRITE *s)
 		bonus_info_text(s->x,s->y,buffer,FONT07);		//表示されてない？
 	}
 	BIGBULLET_DATA *d=(BIGBULLET_DATA *)s->data;
-	if(d->wait_bg>0)		//***090114		追加場所。今までフレーム毎に計算していた所を10フレーム毎に変更
+	if(d->wait_bg>0)		//***090124		追加場所。今までフレーム毎に計算していた所を5フレーム毎に変更
 		d->wait_bg--;
 	else
 	{
-		d->wait_bg=10;
+		d->wait_bg=5;
 		d->angle+=((rand()%d->ransu)-d->ransu/2)/10;
 	}
 	s->x+=cos(d->angle)*d->speed*fps_factor;
@@ -387,7 +387,7 @@ void enemy_gr_bullet_create(SPRITE *s, double speed, double angle, double gra)
 	GR_BULLET_DATA *data;
 
 	h=sprite_add_file("bshoot.png",1,PR_ENEMY);	
-	h->type=SP_EN_BULLET;
+	h->type=SP_EN_LASER;
 	h->flags|=(SP_FLAG_VISIBLE|SP_FLAG_COLCHECK);
 	h->mover=enemy_gr_bullet_move;
 	h->aktframe=0;
@@ -423,6 +423,59 @@ void enemy_gr_bullet_move(SPRITE *s)
 	s->x+=cos(d->angle)*d->speed*fps_factor;
 	s->y+=sin(d->angle)*d->speed*fps_factor+d->sum;
 	if((s->x<0)||(s->x>WIDTH2)||(s->y<-50)||(s->y>HEIGHT+50)) {
+		s->type=-1;
+	}
+}
+
+void enemy_stop_bullet_create(SPRITE *s, double speed, double angle, double a)
+{
+	/*
+		angle	-2でプレイヤー
+				基本はラジアン
+		a		フレーム毎にspeedをにどれだけ減速するか
+	*/
+	SPRITE *h;
+	ST_BULLET_DATA *data;
+
+	h=sprite_add_file("kugel.png",1,PR_ENEMY);	
+	h->type=SP_EN_BULLET;
+	h->flags|=(SP_FLAG_VISIBLE|SP_FLAG_COLCHECK);
+	h->mover=enemy_stop_bullet_move;
+	h->aktframe=0;
+	h->x=s->x+(s->w/2-h->w/2);
+	h->y=s->y+(s->h/2-h->h/2);
+
+	data=mmalloc(sizeof(GR_BULLET_DATA));
+	h->data=data;
+
+	data->id=rand()%1000;
+	if(angle==-2)
+		data->angle=atan2(player->y-s->y,player->x-s->x);
+	else
+		data->angle=angle;
+	data->speed=speed;
+	data->a=a;
+}
+
+void enemy_stop_bullet_move(SPRITE *s)
+{
+	PLAYER_DATA *pd=(PLAYER_DATA *)player->data;
+	if(pd->bossmode==2)
+	{
+		s->type=-1;
+		char buffer[3];
+		pd->score+=30;
+		sprintf(buffer,"30");
+		bonus_info_text(s->x,s->y,buffer,FONT07);
+	}
+	ST_BULLET_DATA *d=(ST_BULLET_DATA *)s->data;
+	if(d->speed>0)
+		d->speed-=d->a;
+	else if(d->speed)
+		d->speed=0;
+	s->x+=cos(d->angle)*d->speed*fps_factor;
+	s->y+=sin(d->angle)*d->speed*fps_factor+1;
+	if((s->x<0)||(s->x>WIDTH2)||(s->y<0)||(s->y>HEIGHT)) {
 		s->type=-1;
 	}
 }

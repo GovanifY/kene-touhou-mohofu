@@ -220,7 +220,7 @@ void pausemenu_work()
 				adjust_start_time(pause_start_time);
 				break;
 			case 1:	/* Quit Game */
-				 stopMusic();
+				//stopMusic();		//***090123		コメントアウト
 				sprite_remove_all(SP_SHOW_ALL);
 				//parsys_remove_all();
 				controller_remove_all();

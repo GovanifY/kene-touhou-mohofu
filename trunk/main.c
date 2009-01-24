@@ -196,7 +196,7 @@ int main(int argc, char *argv[])
 				break;
 			case ST_GAME_OVER:
 				if(state.newstate) {
-					playChunk(4);
+					//playChunk(4);		//***090123		コメントアウト
 					stopMusic();
 					gameover_init();
 					playMusic("intro");

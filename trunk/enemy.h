@@ -76,6 +76,12 @@ typedef struct {
 	int sh;
 } BIGBULLET_S_DATA;
 
+typedef struct {
+	double angle;
+	double speed;
+	int id;
+	double a;
+} ST_BULLET_DATA;
 
 typedef struct {
 	double wait;
@@ -100,6 +106,9 @@ void enemy_g_bullet_create(SPRITE *s, double speed, int state, double angle);
 void enemy_g_bullet_move(SPRITE *s);
 void enemy_pong_bullet_create(SPRITE *s, double speed, double angle, double gra, int bou);
 void enemy_pong_bullet_move(SPRITE *s);
+void enemy_stop_bullet_create(SPRITE *s, double speed, double angle, double gra);
+void enemy_stop_bullet_move(SPRITE *s);
+
 void explosion_add(int x, int y, double wait, int type);
 void explosion_move(SPRITE *c);
 
@@ -164,6 +173,9 @@ void enemy_greeter_move(SPRITE *s);
 void enemy_curver_add(int lv);
 void enemy_curver_controller(CONTROLLER *c);
 void enemy_curver_move(SPRITE *s);
+
+void enemy_splash_add(int lv);
+void enemy_splash_move(SPRITE *s);
 
 void enemy_boss01_add(int lv);
 void enemy_boss01_setpos(int x, int y);

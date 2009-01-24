@@ -2,6 +2,7 @@
 
 extern SPRITE *player;
 extern double fps_factor;
+extern int difficulty;		//***090124		’Ç‰Á
 
 typedef struct {
 	ENEMY_BASE b;
@@ -10,6 +11,8 @@ typedef struct {
 	int ty;
 	double speed;
 	int level;
+	int wait;		//***090124		’Ç‰Á
+	int n;
 } GROUNDER_DATA;
 
 void enemy_grounder_add(int lv, char spd) //actually lv is the x coord
@@ -27,11 +30,13 @@ void enemy_grounder_add(int lv, char spd) //actually lv is the x coord
 	s->y=-s->h-lv%1000;
 	data=mmalloc(sizeof(GROUNDER_DATA));
 	s->data=data;
-	data->b.score=10;
-	data->b.health=2;
+	data->b.score=200;
+	data->b.health=10+(difficulty*5);
 	data->state=0;
 	data->tx=player->x;
 	data->ty=player->y;
+	data->wait=100;		//***090124		’Ç‰Á
+	data->n=0;
 	switch(spd) {
                 case '1':  data->speed=0.2; break;
                 case '2':  data->speed=0.4; break;
@@ -50,10 +55,11 @@ void enemy_grounder_add(int lv, char spd) //actually lv is the x coord
 
 }
 
-void enemy_grounder_move(SPRITE *s)
+void enemy_grounder_move(SPRITE *s)		//***090124		UŒ‚ƒpƒ^[ƒ“‚ð•Ï‚¦‚é
 {
 	//double angle;
 	GROUNDER_DATA *d=(GROUNDER_DATA *)s->data;
+	int al,sp;
 	
 	switch(d->state) {
 		case 0:
@@ -66,6 +72,24 @@ void enemy_grounder_move(SPRITE *s)
 			if(s->y > 290) {
 				s->type=-1;
 			}
+	}
+	
+	if(d->n<(difficulty*10)+20){		//***090124		’Ç‰Á
+		if(d->wait<0)
+		{
+			al=rand()%360;
+			sp=rand()%5+1;
+			if(sp<4){
+				sp=rand()%5+1;
+				if(sp<4){
+					sp=rand()%5+1;
+				}
+			}
+			enemy_stop_bullet_create(s, sp, degtorad(al), 0.04);
+			d->wait=20-(difficulty*5);
+		}
+		else
+			d->wait--;
 	}
 
 	//angle=atan2(d->ty-s->y,d->tx-s->x);

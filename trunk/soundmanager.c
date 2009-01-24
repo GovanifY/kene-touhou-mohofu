@@ -141,14 +141,14 @@ void initSound() {
 
 void playMusic(char *file) {
 	//Mix_FreeMusic(music);		//これを入れないと途中で音楽が鳴らなくなるっぽい->仕様ではなかった？
-  char name[72];
- /*   if ( music!=NULL ) {
-  	if ( Mix_PlayingMusic() )
-    		Mix_HaltMusic();
-      	Mix_FreeMusic(music);
-	music=NULL;
-    } */
-  if ( !useAudio ) return;
+	if ( !useAudio ) return;
+	char name[72];
+	if ( music!=NULL ) {
+		//if ( Mix_PlayingMusic() )
+		Mix_HaltMusic();
+		Mix_FreeMusic(music);
+		music=NULL;
+	}
   
 	strcpy(name, moddir);
 	strcat(name, "/sounds/");
@@ -158,7 +158,7 @@ void playMusic(char *file) {
 		pspDebugScreenPrintf("Couldn't load: %s\n", name);
 		sceKernelDelayThread(5000000);	//確認用待ち時間
 		//useAudio = 0;
-		//return;
+		return;
 	}
   Mix_PlayMusic(music,-1);
 }
@@ -181,11 +181,11 @@ void fadeMusic() {
 void stopMusic() {
   if ( !useAudio ) return;
     if ( music!=NULL ) {
-  	if ( Mix_PlayingMusic() ){
+	  	if ( Mix_PlayingMusic() ){
     		Mix_HaltMusic();
-      	Mix_FreeMusic(music);
-	music=NULL;
-	}
+      		Mix_FreeMusic(music);
+			music=NULL;
+		}
     }
 }
 

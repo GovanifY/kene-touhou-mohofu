@@ -56,7 +56,7 @@ void thegame_work()
 	/* gt=Zeit seit Spielbeginn in 1/10 sec. */
 	gt=(SDL_GetTicks()-level_start_time)/100;
 
-	if(keyboard[KEY_SC_SHOT]==1){		//スクリーンショット機能。keypollに入れると何故かうまくいかなかったのでこっちに場所を変更。
+	if(keyboard[KEY_SC_SHOT]){		//スクリーンショット機能。keypollに入れると何故かうまくいかなかったのでこっちに場所を変更。
 		wait_sc=100;
 		sprintf(screenbuf,"ms0:/PICTURE/Toho_Moho%d.bmp",screennum++);		//保存場所の変更。
 		SDL_SaveBMP(screen,screenbuf);
@@ -170,6 +170,8 @@ void thegame_level(LEVELENTRY *l, int lev)
 			enemy_greeter_add(l->para2);
 		} else if(!strcmp(l->para1,"CURVER")) {
 			enemy_curver_add(l->para2);
+		} else if(!strcmp(l->para1,"SPLASH")) {		//***090124		追加
+			enemy_splash_add(l->para2);
 		} else if(!strcmp(l->para1,"BOSS01")) {
 			enemy_boss01_add(l->para2);
 		} else if(!strcmp(l->para1,"BOSS02")) {

@@ -37,6 +37,7 @@ OBJS =	main.o \
 	enemy_boss02.o \
 	enemy_boss03.o \
 	enemy_gametext.o \
+	enemy_splash.o \
 	support.o \
 	intro.o \
 	thegame.o \
