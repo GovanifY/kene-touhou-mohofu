@@ -77,6 +77,7 @@ void enemy_grounder_move(SPRITE *s)		//***090124		UŒ‚ƒpƒ^[ƒ“‚ð•Ï‚¦‚é
 	if(d->n<(difficulty*10)+20){		//***090124		’Ç‰Á
 		if(d->wait<0)
 		{
+			playChunk(10);
 			al=rand()%360;
 			sp=rand()%5+1;
 			if(sp<4){

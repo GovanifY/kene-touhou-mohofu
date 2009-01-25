@@ -127,7 +127,7 @@ void thegame_work()
 			lastscore=((PLAYER_DATA *)player->data)->score;
 			controller_remove_all();
 			sprite_remove_all(SP_SHOW_ALL);
-			parsys_remove_all();
+//			parsys_remove_all();
 			score_cleanup();
 			newstate(ST_GAME_OVER,0,1);
 		}

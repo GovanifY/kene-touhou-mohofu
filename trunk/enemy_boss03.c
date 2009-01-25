@@ -133,7 +133,7 @@ void enemy_boss03_hitbyweapon(SPRITE *c, SPRITE *s, int angle)
 		explosion_add(sb03[i]->x+sb03[i]->w/2,sb03[i]->y+sb03[i]->h/2,0,0);
 		sb03[i]->flags&=~SP_FLAG_VISIBLE;
 		((PLAYER_DATA *)player->data)->score+=b->b.score;
-		bonus_multi_add(sb03[i]->x, sb03[i]->y,SP_BONUS_COIN,7);
+		bonus_multi_add(sb03[i]->x, sb03[i]->y,SP_BONUS_COIN,7,1);
 	}
 
 	j=0;

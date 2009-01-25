@@ -80,7 +80,7 @@ void enemy_boss02_hitbyweapon(SPRITE *c, SPRITE *s, int angle)
 	WEAPON_BASE *w=(WEAPON_BASE *)s->data;
 
 	explosion_add(s->x,s->y,0,rand()%3+1);
-	parsys_add(NULL,100,0,s->x,s->y,30,0,0,50,PIXELATE,NULL);
+//	parsys_add(NULL,100,0,s->x,s->y,30,0,0,50,PIXELATE,NULL);
 	b->b.health-=w->strength;
 
 	if((b->b.health<=300)&&(b->type==0)) {	//HPが残り300になった時。グラフィックの差し替え。攻撃パターン変更
@@ -124,7 +124,7 @@ void enemy_boss02_hitbyweapon(SPRITE *c, SPRITE *s, int angle)
 			}
 		}
 		*/
-		bonus_multi_add(s->x, s->y,SP_BONUS_COIN,7);
+		bonus_multi_add(s->x, s->y,SP_BONUS_COIN,7,1);
 		d->type=-1;
 		((PLAYER_DATA *)player->data)->score+=b->b.score;
 		((PLAYER_DATA *)player->data)->bossmode=2;

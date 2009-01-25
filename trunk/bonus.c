@@ -4,7 +4,7 @@ extern double fps_factor;
 extern SDL_Surface *screen;
 extern SPRITE *player;		//***090116		追加
 
-void bonus_multi_add(int x, int y,int type, int num){
+void bonus_multi_add(int x, int y,int type, int num, int up){		//***090125		追加:up	1でプレイヤーに集まります。0で普通の状態。
 	int i;
 	for(i=0;i<num;i++){
 		SPRITE *s;
@@ -60,7 +60,7 @@ void bonus_multi_add(int x, int y,int type, int num){
 		s->data=data;
 		data->sum=-5;
 		data->gra=0.08;
-		data->pl_up=0;
+		data->pl_up=up;		//ちょっと変更
 	}
 }
 
@@ -185,14 +185,14 @@ void bonus_info_text(int x, int y, char *text, int font)
 void bonus_infotext_move(SPRITE *c)
 {
 	BIT_DATA *b=(BIT_DATA *)c->data;
-	 SDL_Surface *s;
+//	 SDL_Surface *s;
 
 	c->y+=fps_factor*2;
 	b->distance-=fps_factor*3;
 	c->alpha=b->distance;
 	if(b->distance<=0) {
 		 //s=sprite_getcurrimg(c);
-		 parsys_add(s,1,1,c->x,c->y,30,0,0,100,PIXELIZE,NULL);
+		 //parsys_add(s,1,1,c->x,c->y,30,0,0,100,PIXELIZE,NULL);
 		c->type=-1;
 	}
 		

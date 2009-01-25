@@ -10,14 +10,14 @@ extern int lastscore;
 SDL_Surface *bg=NULL;
 
 SDL_Surface *go_surface1, *go_surface2;
-int go_ex1,go_ex2;
+//int go_ex1,go_ex2;
 
 void gameover_init()
 {
 	char scoretext[50];
 
 	sprite_remove_all(SP_SHOW_ALL);
-	parsys_remove_all();
+//	parsys_remove_all();
 
 	go_surface1=font_render("GAME OVER",FONT05);
 	sprintf(scoretext,"SCORE: %d",lastscore);
@@ -42,8 +42,8 @@ void gameover_init()
 
 void gameover_work()
 {	
-	SDL_Surface *tmpsurface;
-	SDL_Rect s,d;
+//	SDL_Surface *tmpsurface;
+//	SDL_Rect s,d;
 	static int wait=0;
 	static double go_size1, go_size2;
 
@@ -79,10 +79,10 @@ void gameover_work()
 			gameover_display(go_size1,go_size2);
 			wait-=fps_factor;
 			if(wait<=0) {
-				newstate(ST_GAME_OVER,GO_START_EXPLODE,0);
+				newstate(ST_GAME_OVER,GO_QUIT,0);
 			}
 			break;
-
+/*
 		case GO_START_EXPLODE:
 			go_ex1=0;
 			go_ex2=0;
@@ -105,7 +105,7 @@ void gameover_work()
 				error(ERR_FATAL,"cant create SDL_Surface: %s",SDL_GetError());
 			}
 			blit_scaled(go_surface1,&s,tmpsurface,&d);
-			parsys_add(tmpsurface,d.w,1,screen->w/2-d.w/2,screen->h/2-d.h/2-30,10,0,0,100,LINESPLIT,&go_ex1);
+//			parsys_add(tmpsurface,d.w,1,screen->w/2-d.w/2,screen->h/2-d.h/2-30,10,0,0,100,LINESPLIT,&go_ex1);
 			//SDL_FreeSurface(tmpsurface);
 
 			s.w=go_surface2->w;
@@ -123,19 +123,19 @@ void gameover_work()
 				error(ERR_FATAL,"cant create SDL_Surface: %s",SDL_GetError());
 			}
 			blit_scaled(go_surface2,&s,tmpsurface,&d);
-			parsys_add(tmpsurface,d.w,1,screen->w/2-d.w/2,screen->h/2-d.h/2-30,10,0,0,100,LINESPLIT,&go_ex2);
+//			parsys_add(tmpsurface,d.w,1,screen->w/2-d.w/2,screen->h/2-d.h/2-30,10,0,0,100,LINESPLIT,&go_ex2);
 			//SDL_FreeSurface(tmpsurface);
 
 			newstate(ST_GAME_OVER,GO_WAIT_EXPLODE,0);
 			break;
 
 		case GO_WAIT_EXPLODE:
-			parsys_display();
+//			parsys_display();
 			if((go_ex1==0)&&(go_ex2==0)) {
 				newstate(ST_GAME_OVER,GO_QUIT,0);
 			}
 			break;
-
+*/
 		case GO_QUIT:
 			//SDL_FreeSurface(go_surface1);
 			//SDL_FreeSurface(go_surface2);

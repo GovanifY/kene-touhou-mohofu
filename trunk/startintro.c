@@ -82,7 +82,7 @@ void startintro_work()
 			newstate(ST_INTRO,0,1);
 	}
 
-	parsys_display();
+//	parsys_display();
 
 }
 

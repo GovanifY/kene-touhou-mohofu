@@ -43,7 +43,7 @@ void enemy_bullet_create(SPRITE *s, double speed)
 	h->data=data;
 
 	data->id=rand()%1000;
-	data->angle=atan2(player->y-s->y,player->x-s->x);
+	data->angle=atan2(player->y+player->h/2-s->y,player->x-player->w/2-s->x);
 	data->speed=speed;
 
 }
@@ -85,7 +85,7 @@ void enemy_laser_create(SPRITE *s, double speed)
 	h->data=data;
 
 	data->id=rand()%1000;
-	data->angle=atan2(player->y-s->y,player->x-s->x);
+	data->angle=atan2(player->y+player->h/2-s->y,player->x-player->w/2-s->x);
 	data->speed=speed;
 
 }
@@ -208,7 +208,7 @@ void enemy_bigbullet_create(SPRITE *s, double ex, double ey, double speed, doubl
 
 	data->id=rand()%1000;
 	if(angle==-2)
-		data->angle=atan2(player->y-s->y,player->x-s->x);
+		data->angle=atan2(player->y-player->h/2-s->y,player->x-player->w/2-s->x);
 	else
 		data->angle=angle;
 	data->speed=speed;
@@ -450,7 +450,7 @@ void enemy_stop_bullet_create(SPRITE *s, double speed, double angle, double a)
 
 	data->id=rand()%1000;
 	if(angle==-2)
-		data->angle=atan2(player->y-s->y,player->x-s->x);
+		data->angle=atan2(player->y+player->h/2-s->y,player->x-player->w/2-s->x);
 	else
 		data->angle=angle;
 	data->speed=speed;
@@ -474,8 +474,8 @@ void enemy_stop_bullet_move(SPRITE *s)
 	else if(d->speed)
 		d->speed=0;
 	s->x+=cos(d->angle)*d->speed*fps_factor;
-	s->y+=sin(d->angle)*d->speed*fps_factor+1;
-	if((s->x<0)||(s->x>WIDTH2)||(s->y<0)||(s->y>HEIGHT)) {
+	s->y+=sin(d->angle)*d->speed*fps_factor+fps_factor;
+	if((s->x<0)||(s->x>WIDTH2)||(s->y>HEIGHT)||(s->y<-100)) {
 		s->type=-1;
 	}
 }

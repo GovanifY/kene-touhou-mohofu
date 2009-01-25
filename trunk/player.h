@@ -8,7 +8,7 @@
 #include "particle.h"
 #include "enemy.h"
 
-enum _player_state { PL_NORMAL, PL_EXPLODE, PL_RESET, PL_SAVE };
+enum _player_state { PL_NORMAL, PL_HIT_BOMB, PL_EXPLODE, PL_RESET, PL_SAVE };		//***090125		’Ç‰Á:PL_HIT_BOMB
 
 typedef struct {
 	int lives;
@@ -25,10 +25,12 @@ typedef struct {
 	int player_speed;
 	int extra;
 	int bonus;		//***090116		’Ç‰Á
+	int hit_bomb_wait;		//***090125		’Ç‰Á
 	double extra_wait;
 	double extra_time;
 	double weapon_wait;
 	SPRITE *core;
+	SPRITE *enemy;		//***090125		’Ç‰Á:player‚É“–‚½‚Á‚½•¨
 } PLAYER_DATA;
 
 enum _weapon_type {

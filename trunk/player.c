@@ -31,10 +31,12 @@ typedef struct {
 	int player_speed;
 	int extra;
 	int bonus;		//***090116		追加
+	int hit_bomb_wait;		//***090125		追加
 	double extra_wait;
 	double extra_time;
 	double weapon_wait;
 	SPRITE *core;
+	SPRITE *enemy;		//***090125		追加:playerに当たった物
 } PLAYER_DATA;
 
 enum _priority {
@@ -88,6 +90,7 @@ void player_init()
 	data->bombs=3;
 	data->score=0;
 	data->bonus=0;
+	data->hit_bomb_wait=0;		//***090125		追加
 
 	bomb_wait = 0;
 	weapon_List=0;
@@ -110,14 +113,46 @@ void player_move(SPRITE *s1)
 
 			break;
 
-		//ここに何か追加すれば食らいボムが実装できそう
+		//***090125		追加
+		case PL_HIT_BOMB:
+			if(d->hit_bomb_wait<8){
+				if((keyboard[KEY_BOMB])&&(d->bombs>0)){
+					if(bomb_wait==0)
+					{
+						playChunk(7);
+						d->save_delay=200;					//無敵時間。たまにシールドをすり抜ける者が現れるので
+						d->state=PL_SAVE;
+						d->bombs--;
+						d->extra=PLX_BOMB;
+						d->extra_time=200;
+						d->hit_bomb_wait=0;
+						player_add_shield(player);		//シールドの追加
+						bomb_wait = 200;
+					}
+				}
+				else
+					d->hit_bomb_wait++;
+			}
+			else
+			{
+				explosion_add(d->enemy->x+5,d->enemy->y+5,0,rand()%3+1);
+				d->explode=0;
+				d->enemy->type=-1;
+				s1->flags&=~SP_FLAG_VISIBLE;
+				d->core->flags&=~SP_FLAG_VISIBLE;
+				d->lives--;
+				d->bonus=0;
+				d->hit_bomb_wait=0;
+				d->state=PL_EXPLODE;
+			}
+			break;
 
 		case PL_EXPLODE:
 			//ここでアイテムを吐き出すようにすればそれっぽくなるかも
 			if(d->lives){
-				bonus_multi_add(s1->x, s1->y,SP_BONUS_FIREPOWER,5);//というわけで実装
+				bonus_multi_add(s1->x, s1->y,SP_BONUS_FIREPOWER,5,0);//というわけで実装
 				if(d->weapon>30)		//***090124ちょっと追加
-					bonus_multi_add(s1->x, s1->y,SP_BONUS_FIREPOWER_G,1);
+					bonus_multi_add(s1->x, s1->y,SP_BONUS_FIREPOWER_G,1,0);
 			}
 			if(!d->explode) {
 				playChunk(4);
@@ -570,19 +605,20 @@ void player_colcheck(SPRITE *s, int mask)
 			//	parsys_add(spimg, 2,2, c->x,c->y, 10, 270, 10, 30, EXPLODE|DIFFSIZE, NULL);
 				//SDL_FreeSurface(spimg);
 			//	spimg=NULL;
-				d->state=PL_EXPLODE;
-				explosion_add(c->x+5,c->y+5,0,rand()%3+1);//denis	
-				d->explode=0;
+				d->state=PL_HIT_BOMB;		//***090125		追加
+				d->enemy=c;
+				//explosion_add(c->x+5,c->y+5,0,rand()%3+1);		//***090125		以下コメントアウト
+				//d->explode=0;
 
 				//spimg=sprite_getcurrimg(s);
 				//parsys_add(spimg, 2,2, c->x,c->y, 10, 90, 10, 30, EXPLODE|DIFFSIZE, &d->explode);
 				//SDL_FreeSurface(spimg);
 				//spimg=NULL;
-				c->type=-1;
-				s->flags&=~SP_FLAG_VISIBLE;
-				d->core->flags&=~SP_FLAG_VISIBLE;		//○も消す
-				d->lives--;
-				d->bonus=0;
+				//c->type=-1;
+				//s->flags&=~SP_FLAG_VISIBLE;
+				//d->core->flags&=~SP_FLAG_VISIBLE;		//○も消す
+				//d->lives--;
+				//d->bonus=0;
 		}
 	}
 }
@@ -626,34 +662,23 @@ void player_move_core(SPRITE *s2)
 	s2->y=player->y-s2->h+20;
 	if(is_graze)	//プレイヤースプライトが弾に触れているか
 	{
-		SPRITE *c;
-		if((c=sprite_colcheck(s2,SP_SHOW_ENEMY_WEAPONS))!=NULL) {
-			switch(c->type) {			//各弾の処理。弾の種類を追加した場合。ここにも追加する必要あり。
-				case SP_EN_BULLET:
-					((PLAYER_DATA *)player->data)->state=PL_EXPLODE;
-					explosion_add(c->x+5,c->y+5,0,rand()%3+1);
-					((PLAYER_DATA *)player->data)->explode=0;
-					c->type=-1;
-					player->flags&=~SP_FLAG_VISIBLE;
-					((PLAYER_DATA *)player->data)->lives--;
-					break;
-					
-				case SP_EN_LASER:
-					((PLAYER_DATA *)player->data)->state=PL_EXPLODE;
-					explosion_add(c->x+5,c->y+5,0,rand()%3+1);
-					((PLAYER_DATA *)player->data)->explode=0;
-					c->type=-1;
-					player->flags&=~SP_FLAG_VISIBLE;
-					((PLAYER_DATA *)player->data)->lives--;
-					break;
-				case SP_EN_BIGBULLET:
-					((PLAYER_DATA *)player->data)->state=PL_EXPLODE;
-					explosion_add(c->x+5,c->y+5,0,rand()%3+1);
-					((PLAYER_DATA *)player->data)->explode=0;
-					c->type=-1;
-					player->flags&=~SP_FLAG_VISIBLE;
-					((PLAYER_DATA *)player->data)->lives--;
-					break;
+		if(((PLAYER_DATA *)player->data)->state==PL_NORMAL){
+			SPRITE *c;
+			if((c=sprite_colcheck(s2,SP_SHOW_ENEMY_WEAPONS))!=NULL) {
+				switch(c->type) {			//各弾の処理。弾の種類を追加した場合。ここにも追加する必要あり。
+					case SP_EN_BULLET:
+						((PLAYER_DATA *)player->data)->state=PL_HIT_BOMB;
+						((PLAYER_DATA *)player->data)->enemy=c;
+						break;
+					case SP_EN_LASER:
+						((PLAYER_DATA *)player->data)->state=PL_HIT_BOMB;
+						((PLAYER_DATA *)player->data)->enemy=c;
+						break;
+					case SP_EN_BIGBULLET:
+						((PLAYER_DATA *)player->data)->state=PL_HIT_BOMB;
+						((PLAYER_DATA *)player->data)->enemy=c;
+						break;
+				}
 			}
 		}
 	}

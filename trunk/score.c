@@ -37,6 +37,8 @@ void Player_Disp(char *img_name, int num, int x_suf, int y_suf)		//êØÇÃï\é¶
 	SDL_Rect recAll,rec;
 	star = loadbmp(img_name);
 	SDL_SetColorKey(star,SDL_SRCCOLORKEY|SDL_RLEACCEL,0x00000000);
+	if(num<=0)
+		num=1;
 	recAll.x = x_suf;
 	recAll.y = y_suf;
 	recAll.w = 100;
@@ -44,7 +46,7 @@ void Player_Disp(char *img_name, int num, int x_suf, int y_suf)		//êØÇÃï\é¶
 	
 	rec.x = 0;
 	rec.y = 0;
-	rec.w = 10*num;
+	rec.w = 10*(num-1);
 	rec.h = 10;
 	
 	SDL_BlitSurface(star, &rec, screen, &recAll);
@@ -137,11 +139,11 @@ void score_display()		//Ç±Ç±ÇÃê‡ñæÇÕè»ó™
 			
 				font_print(buffer,FONT07,387,170);
 	
-				sprintf(buffer,"  TIME : %d",(int)p->extra_time/10);
+				sprintf(buffer,"  TIME : %02d",(int)((double)p->extra_time/10));
 				font_print(buffer,FONT07,387,180);
 			}
-			
 			//sprintf(buffer,"GRAZE  :");
+			
 			//font_print(buffer,FONT07,387,140);
 			
 			sprintf(buffer," %d", p->graze);

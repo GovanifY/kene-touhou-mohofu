@@ -5,6 +5,7 @@ CONTROLLER *cont=NULL;
 COLMAP_CACHE *colmap_cache=NULL;
 extern SDL_Surface *screen;
 extern double fps_factor;
+extern GAMESTATE state;		//***090125		追加
 SDL_Rect rc;
 
 COLMAP_CACHE *sprite_add_colmap(SDL_Surface *img, int frames)
@@ -258,7 +259,7 @@ void sprite_work(int type)
 	while(s!=NULL) {
 		n=s->next;
 		/* animate */
-		s->ticks++;
+		//s->ticks++;
 		if(s->type&type) {
 			if(s->anim_speed!=0) {
 				// s->anim_count++;
@@ -283,18 +284,21 @@ void sprite_work(int type)
 		}
 		s=n;
 	}
-	s=sprite;
-	while(s!=NULL) {
-		n=s->next;
-		if (s->ticks>1000) {
-			s->ticks=0;
-		 if ((s->priority==PR_ENEMY || s->priority== PR_ENEMY_WEAPON) && s->type!=SP_EN_BOSS01 && s->type!=SP_EN_BOSS02 && s->type!=SP_EN_BOSS03 && s->type!=SP_MENUTEXT) 
-			s->type=-1;
+	if(ST_MENU != state.mainstate) { /* メニュー以外の場合、自動的に消える機能 */
+		s=sprite;
+		while(s!=NULL) {
+			n=s->next;
+			s->ticks++;
+			if (s->ticks>1000) {
+				s->ticks=0;
+				if ((s->priority==PR_ENEMY || s->priority== PR_ENEMY_WEAPON) && s->type!=SP_EN_BOSS01 && s->type!=SP_EN_BOSS02 && s->type!=SP_EN_BOSS03 && s->type!=SP_MENUTEXT) 
+					s->type=-1;
+			}
+			if(s->type==-1) {
+				sprite_remove(s);
+			}
+			s=n;
 		}
-		if(s->type==-1) {
-			sprite_remove(s);
-		}
-		s=n;
 	}
 }
 

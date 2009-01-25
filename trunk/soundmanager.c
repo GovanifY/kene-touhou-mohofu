@@ -32,10 +32,10 @@ static Mix_Music *music[MUSIC_NUM];
 
 static Mix_Music *music;
 
-#define CHUNK_NUM 10	//‚¢‚­‚Â‚©’Ç‰Á
+#define CHUNK_NUM 11	//‚¢‚­‚Â‚©’Ç‰Á
 
 static char *chunkFileName[CHUNK_NUM] = {
-  "shot.wav", "hit.wav", "foedst.wav", "bossdst.wav", "shipdst.wav", "bonus.wav", "extend.wav", "bomb.wav", "death.wav", "graze.wav"
+  "shot.wav", "hit.wav", "foedst.wav", "bossdst.wav", "shipdst.wav", "bonus.wav", "extend.wav", "bomb.wav", "death.wav", "graze.wav", "e_shot.wav"
 };		//‚¢‚ë‚¢‚ë’Ç‰Á
 static Mix_Chunk *chunk[CHUNK_NUM];
 static int chunkFlag[CHUNK_NUM];

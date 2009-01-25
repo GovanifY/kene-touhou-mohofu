@@ -34,17 +34,17 @@ void enemy_splash_add(int lv)
 	data->n=0;
 	switch(lv){
 		case 0:		//‰E‰º
-			s->x=WIDTH2+s->w+20;
+			s->x=WIDTH2-s->w+20;
 			s->y=100;
 			s->aktframe=0;
 			break;
 		case 1:		//‰E’†
-			s->x=WIDTH2+s->w+40;
+			s->x=WIDTH2-s->w+40;
 			s->y=70;
 			s->aktframe=0;
 			break;
 		case 2:		//‰Eã
-			s->x=WIDTH2+s->w+60;
+			s->x=WIDTH2-s->w+60;
 			s->y=40;
 			s->aktframe=0;
 			break;
@@ -89,7 +89,7 @@ void enemy_splash_add(int lv)
 void enemy_splash_move(SPRITE *s)
 {
 	SPLASH_DATA *d=(SPLASH_DATA *)s->data;
-	double p=atan2(player->y-s->y,player->x-s->x);
+	double p;
 	int i2;
 	
 	switch(d->state) {
@@ -116,7 +116,8 @@ void enemy_splash_move(SPRITE *s)
 			d->state=2;
 		else
 		{
-			if(((p>=M_PI/8)&&(p<7*M_PI/8))||((p>=-5*M_PI/8)&&(p>-3*M_PI/8)))
+			p=atan2(player->y-s->y,player->x-s->x);
+			if(((p>=M_PI/8)&&(p<7*M_PI/8))||((p>=-5*M_PI/8)&&(p<-3*M_PI/8)))
 				s->aktframe=s->aktframe%4+8;
 			else if((p>=-M_PI/8)&&(p<M_PI/8))
 				s->aktframe=s->aktframe%4+16;
@@ -136,6 +137,7 @@ void enemy_splash_move(SPRITE *s)
 		enemy_laser_create(s, 3);
 		enemy_laser_create(s, 4);
 		
+		p=atan2(player->y-s->y,player->x-s->x);
 		SPRITE *h;
 		BULLET_DATA *data;
 		if(difficulty>0){
@@ -176,8 +178,8 @@ void enemy_splash_move(SPRITE *s)
 					h->data=data;
 			
 					data->id=rand()%1000;
-					data->angle=p+(1-i2%2*2)*M_PI/3;
-					data->speed=3+i2/2;
+					data->angle=p+(1-i2%2*2)*M_PI/12;
+					data->speed=2+i2/2;
 				}
 			}
 		}

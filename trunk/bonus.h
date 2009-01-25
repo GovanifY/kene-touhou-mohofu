@@ -19,7 +19,7 @@ typedef struct {
 	double distance;
 } BIT_DATA;
 
-void bonus_multi_add(int x, int y,int type, int num);
+void bonus_multi_add(int x, int y,int type, int num, int up);
 void bonus_add(int x, int y, int type);
 void bonus_move(SPRITE *s);
 

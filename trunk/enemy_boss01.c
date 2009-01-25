@@ -209,7 +209,7 @@ void enemy_boss01_hitbyweapon(SPRITE *c, SPRITE *s, int angle)
 	if(b->b.health<=0) {
 		explosion_add(sb01[i]->x+sb01[i]->w/2,sb01[i]->y+sb01[i]->h/2,0,0);
 		sb01[i]->flags&=~SP_FLAG_VISIBLE;
-		bonus_multi_add(sb01[i]->x, sb01[i]->y,SP_BONUS_COIN,7);
+		bonus_multi_add(sb01[i]->x, sb01[i]->y,SP_BONUS_COIN,7,1);
 		((PLAYER_DATA *)player->data)->score+=b->b.score;
 		if(i==1)		//ƒAƒŠƒX‚ğ“|‚·‚ÆŠF”j‰ó‚³‚ê‚éB
 		{
