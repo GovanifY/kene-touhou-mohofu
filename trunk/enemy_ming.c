@@ -2,6 +2,7 @@
 
 extern double fps_factor;
 extern SPRITE *player;
+extern int difficulty;
 
 typedef struct {
 	ENEMY_BASE b;
@@ -40,7 +41,7 @@ void enemy_ming_add(int lv)
 		data->b.score=25;
 		data->b.health=1;
 		data->angle=90;
-		data->speed=4+lv;
+		data->speed=2+difficulty+lv/2;
 		data->state=0;
 		data->level=lv;
 		switch(i) {
@@ -128,7 +129,7 @@ void enemy_ming_controller(CONTROLLER *c)
 			return;
 		}
 	}
-	bonus_add(id_array[c->max],id_array[c->max+1],SP_BONUS_FIREPOWER);
+	bonus_add(id_array[c->max],id_array[c->max+1],SP_BONUS_FIREPOWER,0);
 	controller_remove(c);
 }
 	

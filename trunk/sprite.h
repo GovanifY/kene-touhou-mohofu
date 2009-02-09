@@ -57,9 +57,12 @@ enum SPRITE_TYPE {
 	SP_EN_GREETER,
 	SP_EN_CURVER,
 	SP_EN_SPLASH,
+	SP_EN_FAIRY,
+	SP_EN_GFAIRY,
 	SP_EN_BOSS01,
 	SP_EN_BOSS02,
 	SP_EN_BOSS03,
+	SP_EN_BOSS04,
 
 	SP_EN_BULLET=0x0800,		/* ... und ihre Waffen */
 	SP_EN_LASER,
@@ -122,7 +125,7 @@ typedef struct _sprite {
 #define SP_FLAG_VISIBLE		0x02	/* Sprite sichtbar */
 #define SP_FLAG_NOCACHE		0x04	/* Image nicht im Cache */
 #define SP_FLAG_FREESURFACE	0x08	/* Surface loeschen */
-#define SP_FLAG_CHEAPALPHA	0x10	/* "Cheapalpha", nur jedes 2te Pixel setzen */
+//#define SP_FLAG_CHEAPALPHA	0x10	/* "Cheapalpha", nur jedes 2te Pixel setzen */
 #define SP_FLAG_PARANOIA	0x20	/* SIE sind hinter mir her */
 
 typedef struct _cont {

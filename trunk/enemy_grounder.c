@@ -31,7 +31,7 @@ void enemy_grounder_add(int lv, char spd) //actually lv is the x coord
 	data=mmalloc(sizeof(GROUNDER_DATA));
 	s->data=data;
 	data->b.score=200;
-	data->b.health=10+(difficulty*5);
+	data->b.health=25+(difficulty*15);
 	data->state=0;
 	data->tx=player->x;
 	data->ty=player->y;
@@ -74,20 +74,20 @@ void enemy_grounder_move(SPRITE *s)		//***090124		攻撃パターンを変える
 			}
 	}
 	
-	if(d->n<(difficulty*10)+20){		//***090124		追加
+	if(d->n<(difficulty*7)+10){		//***090128		変更
 		if(d->wait<0)
 		{
 			playChunk(10);
 			al=rand()%360;
-			sp=rand()%5+1;
+			sp=rand()%4+1;
 			if(sp<4){
-				sp=rand()%5+1;
+				sp=rand()%4+1;
 				if(sp<4){
-					sp=rand()%5+1;
+					sp=rand()%4+1;
 				}
 			}
-			enemy_stop_bullet_create(s, sp, degtorad(al), 0.04);
-			d->wait=20-(difficulty*5);
+			enemy_stop_bullet_create(s, sp, degtorad(al), 0.03);
+			d->wait=25-(difficulty*5);
 		}
 		else
 			d->wait--;

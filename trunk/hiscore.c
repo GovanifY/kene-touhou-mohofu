@@ -60,7 +60,7 @@ void hsc_save(){
  int i;
         FILE *fp;
         char fn[50];
-        int tmpscore;
+//        int tmpscore;
         strcpy(fn,moddir);
         strcat(fn,"/");
         strcat(fn,"highscore.txt");
@@ -222,17 +222,18 @@ void hsc_show_move(SPRITE *s)
  * Hiscore Entry
  ******************************************************************************/
 
-LETTER letter[40];
-int sel;
-int wstat;
-SDL_Surface *headline;
-SDL_Surface *plate;
+static LETTER letter[40];
+static int sel;
+static int wstat;
+static SDL_Surface *headline;
+static SDL_Surface *plate;
 
-char *entry;
-int entidx;
+static char *entry;
+static int entidx;
 
 void hsc_entry_init()
 {
+	/*
 	int i=0,j;
 	unsigned char c='A';
 	char tmp_str[100];
@@ -242,25 +243,54 @@ void hsc_entry_init()
 		tmp_str[0]=c;
 		letter[i].ascii=c;
 		letter[i++].l=font_render(tmp_str,FONT02);
-	} /* 0-25 */
+	} // 0-25
 	for(c='0';c<='9';c++) {
 		tmp_str[0]=c;
 		letter[i].ascii=c;
 		letter[i++].l=font_render(tmp_str,FONT02);
-	} /* 26-36 */
+	} // 26-36
 	letter[i].ascii='.';
-	letter[i++].l=font_render(".",FONT02); /* 37 */
+	letter[i++].l=font_render(".",FONT02); //37
 	letter[i].ascii='-';
-	letter[i++].l=font_render("-",FONT02); /* 38 */
+	letter[i++].l=font_render("-",FONT02); //38
 	letter[i].ascii=-1;
-	letter[i++].l=font_render("DEL",FONT02); /* 39 */
+	letter[i++].l=font_render("DEL",FONT02); //39
 	letter[i].ascii=-2;
-	letter[i++].l=font_render("OK",FONT02); /* 40 */
+	letter[i++].l=font_render("OK",FONT02); //40
 
 	for(i=0;i<40;i++) {
 		SDL_SetColorKey(letter[i].l,SDL_SRCCOLORKEY,0x00000000);
 		letter[i].xpos=(i%10)*25+30;
 		letter[i].ypos=(i/10)*25+100;
+	}
+	*/
+	int i/*=0*/,j; 
+	char tmp_str[/*128*/32/*100*/]; 
+	tmp_str[1]=0; 
+	for (i=0; i<(40-2); ) { 
+		const char *str_aaa = /* 8*5==40==38(chars)+1(dummy)+1(0) */ 
+		{ "ABCDEFG123" "HIJKLMN456" "OPQRSTU789" "VWXYZ.-0" /*.align*/" " }; 
+		unsigned char c /*= 'A'*/; 
+		c = str_aaa[i]; 
+		tmp_str[0] = c; 
+		letter[i].ascii = c; letter[i].l = font_render(tmp_str, FONT02); /* */ 
+		i++; 
+	} 
+	letter[i].ascii=-1;
+	letter[i++].l=font_render("DEL",FONT02); /* 39 */ 
+	letter[i].ascii=-2;
+	letter[i++].l=font_render("OK", FONT02); /* 40 */ 
+	{
+		int k;
+		k = 0; 
+		for (j=0; j<4; j++) { 
+			for (i=0; i<10; i++) { 
+				SDL_SetColorKey(letter[k].l,SDL_SRCCOLORKEY,0x00000000); 
+				letter[k].xpos = (i)*30/*25*/ + 48/* 30*/; 
+				letter[k].ypos = (j)*36/*25*/ + 84/*100*/; 
+				k++; 
+			} 
+		} 
 	}
 
 	back=SDL_ConvertSurface(screen,screen->format,screen->flags);
@@ -387,7 +417,7 @@ void hsc_entry_work()
 								}
 								SDL_FreeSurface(back);
 								SDL_FreeSurface(headline);
-								unloadbmp_by_name("plate.png");
+								unloadbmp_by_surface(plate);/*unloadbmp_by_name("plate.png");*/
 								newstate(ST_INTRO,0,1);
 								return;
 							}
@@ -411,7 +441,7 @@ void hsc_entry_work()
 						}
 						SDL_FreeSurface(back);
 						SDL_FreeSurface(headline);
-						unloadbmp_by_name("plate.png");
+						unloadbmp_by_surface(plate);/*unloadbmp_by_name("plate.png");*/
 						newstate(ST_INTRO,0,1);
 						return;
 					}
@@ -433,7 +463,7 @@ void hsc_entry_show()
 
 	SDL_BlitSurface(back,NULL,screen,NULL);
 
-	r.x=screen->w/2-headline->w/2;
+	r.x=WIDTH2/2-headline->w/2;		//r.x=screen->w/2-headline->w/2;
 	r.y=40;
 	r.w=headline->w;
 	r.h=headline->h;
@@ -474,8 +504,8 @@ void hsc_entry_show()
 		blit_scaled(letter[sel].l,&s,screen,&r);
 	}
 
-	r.x=screen->w/2-plate->w/2;
-	r.y=260-plate->h;  //denis
+	r.x=WIDTH2/2-plate->w/2;		//r.x=screen->w/2-plate->w/2;
+	r.y=(HEIGHT-12)-plate->h;		//r.y=260-plate->h;  //denis
 	r.w=plate->w;
 	r.h=plate->h;
 	SDL_BlitSurface(plate,NULL,screen,&r);

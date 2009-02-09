@@ -2,9 +2,15 @@
 
 extern double fps_factor;
 extern SDL_Surface *screen;
+extern SPRITE *player;
 
 int akt_bgtype;
 double bg_alpha;
+
+int is_bg_add;		//***090201		追加:追加フラグ
+int is_bg_end;		//***090201		追加:前背景終了フラグ
+int is_bg_fin;		//***090202		追加:背景非ループフラグ
+int n_bg;		//***090209		追加:追加背景番号
 
 /* clouds */
 SPRITE *w1[5];
@@ -13,6 +19,7 @@ SPRITE *w3[20];
 
 /* tile */
 SDL_Surface *btile=NULL;
+SDL_Surface *btile2=NULL;		//***090201		追加
 double btile_y;
 
 void bg_init(int bg_type,int lev)
@@ -79,7 +86,6 @@ void bg_work()
 		tile_display();
 		break;
 	}
-	
 }
 
 void bg_destroy()
@@ -191,7 +197,6 @@ void clouds_mover(SPRITE *c)
 	}
 }
 
-
 void tile_init(int lev)
 {
 	char filename[20];
@@ -200,32 +205,106 @@ void tile_init(int lev)
 		btile=loadbmp(filename);
 	//}
 	btile_y=WIDTH2;
+	
+}
+
+void tile_add(int lev)		//***090201		追加
+{
+	char filename[20];
+	sprintf(filename,"back%d_a-%d.jpg",lev,n_bg);
+	btile2=loadbmp(filename);
+	is_bg_add=1;		//二枚目の背景追加フラグ
 }
 
 void tile_work()
 {
-	btile_y+=fps_factor;
-	if(btile_y>btile->h-1)
-		btile_y-=btile->h;
+	if(!is_bg_fin){		//非ループフラグが立ってないとき(通常ルート)
+		btile_y+=fps_factor;
+		if(is_bg_end){		//背景追加命令が出てから前背景が終端まで来たとき
+			if(btile_y>btile2->h-1){
+				btile_y-=btile2->h;
+			}
+			else if(btile_y>HEIGHT && btile!=NULL){	//下準備
+				unloadbmp_by_surface(btile);
+				btile=NULL;
+				unloadbmp_by_surface(btile2);
+				btile2=NULL;
+				char filename[20];
+				PLAYER_DATA *d=(PLAYER_DATA *)player->data;
+				
+				sprintf(filename,"back%d_a-%d.jpg",d->level,n_bg);
+				btile=loadbmp(filename);
+				is_bg_add=0;
+				is_bg_end=0;
+				n_bg++;
+			}
+		}
+		else{		//特殊な命令が出てないときor背景追加命令が出てから前背景が終端まで来てないとき
+			if(btile_y>btile->h-1){		//btile_yが前背景と同じ高さになったとき
+				if(is_bg_add){		//背景追加命令が出たとき
+					btile_y=0;
+					is_bg_end=1;		//前背景終了フラグ
+				}
+				else{		//通常処理
+					btile_y-=btile->h;
+				}
+			}
+		}
+	}
+	else{		//非ループの場合 ※今の所機能してないかもしれない
+		if(is_bg_end){
+			if(btile_y+fps_factor<=btile2->h-1){
+				btile_y+=fps_factor;
+			}
+		}
+		else{
+			if(btile_y+fps_factor<=btile->h-1){
+				btile_y+=fps_factor;
+			}
+		}
+	}
 }
 
 void tile_display()
 {
 	int i,j;
 	SDL_Rect r;
+	SDL_Rect r2;
 	if(bg_alpha<255) {
 	 	SDL_FillRect(screen,NULL,SDL_MapRGB(screen->format,0,0,0));
 		SDL_SetAlpha(btile,SDL_SRCALPHA,bg_alpha);
 	} else 
 		SDL_SetAlpha(btile,SDL_SRCALPHA,255);
+	if(is_bg_add || is_bg_end){
+		SDL_SetAlpha(btile2,SDL_SRCALPHA,bg_alpha);
+		r2.w=btile2->w;
+		r2.h=btile2->h;
+	}
 
 	r.w=btile->w;
 	r.h=btile->h;
-	for(i=0;i<WIDTH2;i+=btile->w) {
-		for(j=-btile->h;j<HEIGHT;j+=btile->h) {
-			r.x=i;
-			r.y=j+btile_y;
-			SDL_BlitSurface(btile,NULL,screen,&r);
+
+	if(is_bg_end){
+		for(i=0;i<WIDTH2;i+=btile2->w){
+			r2.x=i;
+			r2.y=-btile2->h+btile_y;
+			SDL_BlitSurface(btile2,NULL,screen,&r2);
+		}
+		for(i=0;i<WIDTH2;i+=btile->w) {
+			for(j=btile_y;j<HEIGHT;j+=btile->h) {
+				r.x=i;
+				r.y=j;
+				SDL_BlitSurface(btile,NULL,screen,&r);
+			}
+		}
+	}
+	else{
+		for(i=0;i<WIDTH2;i+=btile->w) {
+			for(j=-btile->h;j<HEIGHT;j+=btile->h) {
+				r.x=i;
+				r.y=j+btile_y;
+				SDL_BlitSurface(btile,NULL,screen,&r);
+			}
 		}
 	}
 }
@@ -235,4 +314,8 @@ void tile_remove()
 	if(btile!=NULL)
 		unloadbmp_by_surface(btile);
 	btile=NULL;
+
+	if(btile2!=NULL)
+		unloadbmp_by_surface(btile2);
+	btile2=NULL;
 }

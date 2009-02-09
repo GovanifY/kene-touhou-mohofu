@@ -10,6 +10,7 @@ enum _bg_type {
 	BG_CLOUDS,
 	BG_STARS,
 	BG_TILE,
+	BG_ADD,
 	BG_LAST
 };
 
@@ -26,6 +27,7 @@ void clouds_init(int lev);
 void clouds_remove();
 void clouds_mover(SPRITE *s);
 void tile_init(int lev);
+void tile_add(int lev);
 void tile_work();
 void tile_display();
 void tile_remove();

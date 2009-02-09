@@ -74,51 +74,51 @@ void score_display()		//Ç±Ç±ÇÃê‡ñæÇÕè»ó™
 		SDL_BlitSurface(bg2,NULL,screen,&bg2r);
 	
 		//sprintf(buffer,"SHIPS : %d",p->lives);
-		//font_print(buffer,FONT07,0,10);
+		//font_print_screen_xy(buffer,FONT07,0,10);
 
 		//sprintf(buffer,"SPEED : %d",p->player_speed);
-		//font_print(buffer,FONT07,0,20);
+		//font_print_screen_xy(buffer,FONT07,0,20);
 	
 		//sprintf(buffer,"STAGE : %d",p->level);
-		//font_print(buffer,FONT07,0,30);
+		//font_print_screen_xy(buffer,FONT07,0,30);
 	
 			if(high_score < p->score)
 				high_score = p->score;
 			//sprintf(buffer,"H_SCORE:");
-			//font_print(buffer,FONT07,387,5);
+			//font_print_screen_xy(buffer,FONT07,387,5);
 			sprintf(buffer," %08d", high_score);
-			font_print(buffer,FONT07,397,15);
+			font_print_screen_xy(buffer,FONT07,397,15);
 		
 			//sprintf(buffer,"SCORE  :");
-			//font_print(buffer,FONT07,387,30);
+			//font_print_screen_xy(buffer,FONT07,387,30);
 			sprintf(buffer," %08d", p->score);
-			font_print(buffer,FONT07,397,40);
+			font_print_screen_xy(buffer,FONT07,397,40);
 			
 			//sprintf(buffer,"PLAYER");
-			//font_print(buffer,FONT07,387,60);
+			//font_print_screen_xy(buffer,FONT07,387,60);
 			Player_Disp("Player_Star.png", p->lives,382,69);
 			
 			//sprintf(buffer,"BOMB");
-			//font_print(buffer,FONT07,387,85);
+			//font_print_screen_xy(buffer,FONT07,387,85);
 			Player_Disp("Bomb_Star.png", p->bombs,382,94);
 			
 			//sprintf(buffer,"POWER  :");
-			//font_print(buffer,FONT07,387,110);
+			//font_print_screen_xy(buffer,FONT07,387,110);
 			Power_Statas(p->weapon ,387,124);
 			if(p->weapon == 128)
 			{
 				sprintf(buffer,"MAX");
-				font_print(buffer,FONT07,388,125);
+				font_print_screen_xy(buffer,FONT07,388,125);
 			}
 			else
 			{
 				sprintf(buffer,"%d",(int)((double)p->weapon / 128 * 100));		//***090123		ïœçX
-				font_print(buffer,FONT07,388,125);
+				font_print_screen_xy(buffer,FONT07,388,125);
 			}
 			
 			if(p->extra!=PLX_NONE) {
 				sprintf(buffer,"EXTRA  :");
-				font_print(buffer,FONT07,387,160);
+				font_print_screen_xy(buffer,FONT07,387,160);
 				switch(p->extra) {
 				case PLX_HOMING:
 					sprintf(buffer," MISSILE");
@@ -137,17 +137,17 @@ void score_display()		//Ç±Ç±ÇÃê‡ñæÇÕè»ó™
 					break;
 				}
 			
-				font_print(buffer,FONT07,387,170);
+				font_print_screen_xy(buffer,FONT07,387,170);
 	
-				sprintf(buffer,"  TIME : %02d",(int)((double)p->extra_time/10));
-				font_print(buffer,FONT07,387,180);
+				sprintf(buffer,"  TIME :%3d",(int)((double)p->extra_time/10));
+				font_print_screen_xy(buffer,FONT07,387,180);
 			}
 			//sprintf(buffer,"GRAZE  :");
 			
-			//font_print(buffer,FONT07,387,140);
+			//font_print_screen_xy(buffer,FONT07,387,140);
 			
 			sprintf(buffer," %d", p->graze);
-			font_print(buffer,FONT07,440,140);
+			font_print_screen_xy(buffer,FONT07,440,140);
 			
 		/*
 		switch(weapon_List) {
@@ -179,7 +179,7 @@ void score_display()		//Ç±Ç±ÇÃê‡ñæÇÕè»ó™
 				strcat(buffer,"UNKNOWN ???");
 				break;
 		}
-		font_print(buffer,FONT07,397,120);
+		font_print_screen_xy(buffer,FONT07,397,120);
 		*/
 }
 

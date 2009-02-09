@@ -27,7 +27,7 @@ void enemy_cir_add(int lv)
 		data=mmalloc(sizeof(CIR_DATA));
 		s->data=data;
 		data->b.score=25;
-		data->b.health=1;
+		data->b.health=5;
 		data->angle=90;
 		data->speed=6;
 		data->state=0;

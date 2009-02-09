@@ -9,14 +9,14 @@
  *
  * @version $Revision: 1.4 $
  */
-#include "SDL.h"
+#include <SDL/SDL.h>/*#include "SDL.h"*/
 #include <stdlib.h>
 #include <stdio.h>
 #include <signal.h>
 #include <string.h>
 #include <pspdebug.h>
 
-#include "SDL_mixer.h"
+#include <SDL/SDL_mixer.h>/*#include "SDL_mixer.h"*/
 #include "soundmanager.h"
 #include "support.h"
 static int useAudio = 0;
@@ -32,10 +32,10 @@ static Mix_Music *music[MUSIC_NUM];
 
 static Mix_Music *music;
 
-#define CHUNK_NUM 11	//‚¢‚­‚Â‚©’Ç‰Á
+#define CHUNK_NUM 15	//‚¢‚­‚Â‚©’Ç‰Á
 
 static char *chunkFileName[CHUNK_NUM] = {
-  "shot.wav", "hit.wav", "foedst.wav", "bossdst.wav", "shipdst.wav", "bonus.wav", "extend.wav", "bomb.wav", "death.wav", "graze.wav", "e_shot.wav"
+  "shot.wav", "hit.wav", "foedst.wav", "bossdst.wav", "shipdst.wav", "bonus.wav", "extend.wav", "bomb.wav", "death.wav", "graze.wav", "e_shot.wav", "e_shot00.wav", "b2_shot.wav", "_shot.wav", "e_shot01.wav"
 };		//‚¢‚ë‚¢‚ë’Ç‰Á
 static Mix_Chunk *chunk[CHUNK_NUM];
 static int chunkFlag[CHUNK_NUM];

@@ -2,6 +2,7 @@
 
 extern double fps_factor;
 extern int difficulty;		//***090116		追加
+extern SPRITE *player;		//***090126		追加
 
 typedef struct {
 	ENEMY_BASE b;
@@ -43,7 +44,7 @@ void enemy_greeter_add(int lv)
 		s->y=-i*s->h;
 		data->angle=atan2((HEIGHT-s->h-60)-s->y,WIDTH2/2-s->x);		//ウィンドウ幅の変更
 		data->max_y=(HEIGHT-s->h-60);
-		data->speed=5;
+		data->speed=4;
 		data->state=0;
 		data->b.score=5;
 		data->b.health=1;
@@ -84,7 +85,7 @@ void enemy_greeter_controller(CONTROLLER *c)
 			return;
 		}
 	}
-	bonus_add(id_array[c->max],id_array[c->max+1],bonus);
+	bonus_add(id_array[c->max],id_array[c->max+1],bonus,0);
 	bonus++;
 	if(bonus==SP_BONUS_HEALTH)
 		bonus=SP_BONUS_FIREPOWER;
@@ -100,14 +101,15 @@ void enemy_greeter_move(SPRITE *s)
 		if(s->y>=d->max_y) {
 			d->angle=atan2(0-s->y,WIDTH2/2-s->x);		//ウィンドウ幅の変更
 			d->state=1;
-			d->speed=7;
+			d->speed=3+difficulty;		//***090201		変更
 		}
 		if(d->level)
-			if(rand()%(100-(d->level-2+difficulty)*10)==0)		//***090116		若干変更
+		{
+			if(rand()%(105-(d->level-2+difficulty)*10)==0)		//***090126		若干変更
 			{
-				enemy_bullet_create(s,3+d->level);
-				//enemy_pong_bullet_create(s, 3, -2, 0.1,1);			//***090114		追加	***090123	やっぱ取り消し
+				enemy_bullet_create(s,difficulty+d->level/3);
 			}
+		}
 		break;
 	case 1:
 		if(s->y<-s->h) {

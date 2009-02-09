@@ -20,19 +20,33 @@ MENU player_sl;
 
 //*****************************
 //keyconfig用	***20080110-0115
-int key_pos[12];		//数字=ボタン変数 並びは"key_bg.png"
-int keys2[11]={KEY_NONE,KEY_SHOT,KEY_BOMB,KEY_SLOW,KEY_UP,KEY_DOWN,KEY_LEFT,KEY_RIGHT,KEY_PAUSE,KEY_CANCEL,KEY_SC_SHOT};		//数字=機能定数 並びは"keylist.png"
-SDL_Surface *key_sf[11];		//機能リストの画像"keylist.png"
-SDL_Surface *key_bg;
-SDL_Surface *key_set;
-SPRITE *keyicon;
-SPRITE *keyicon2;
-SDL_Rect rect_k;
-int select_key;
-int select_key2;
-int select_key_dir;		//menu画面内の状態
-int bg_alpha;
-int bg_level;			//menu画面の状態
+static int key_pos[12];		//数字=ボタン変数 並びは"key_bg.png"
+static int keys2[11]={KEY_NONE,KEY_SHOT,KEY_BOMB,KEY_SLOW,KEY_UP,KEY_DOWN,KEY_LEFT,KEY_RIGHT,KEY_PAUSE,KEY_CANCEL,KEY_SC_SHOT};		//数字=機能定数 並びは"keylist.png"
+static SDL_Surface *key_sf[11];		//機能リストの画像"keylist.png"
+static SDL_Surface *key_bg;
+static SDL_Surface *key_set;
+static SPRITE *keyicon;
+static SPRITE *keyicon2;
+static SDL_Rect rect_k;
+static int select_key;
+static int select_key2;
+static int select_key_dir;		//menu画面内の状態
+static int bg_level;			//menu画面の状態
+//******************************
+static int bg_alpha;		//共用
+//******************************
+//player select用
+#define MAX_PLAYER 2
+int select_player;
+static int sp_level;
+static int sp_wait;
+static char *sp_bg_list[]={"sp_reimu_bg.jpg","sp_marisa_bg.jpg", NULL};
+static char *sp_st_list[]={"sp_reimu_st.png","sp_marisa_st.png", NULL};
+static double sp_scale;
+static SDL_Surface *sp_bg;
+static SDL_Surface *tmp_sp_bg;
+static SDL_Surface *sp_st;
+static SDL_Surface *tmp_sp_st;
 //******************************
 /*
 	typedef struct {
@@ -49,8 +63,7 @@ int bg_level;			//menu画面の状態
 		int sl;	//SELECT
 		int st;	//START
 	} KEYCONFIG;
-*/
-/*
+
 typedef struct {
 	SPRITE *opts[20][5];
 	SDL_Surface *opts_surface[20];		//画像化した各項目のアドレス
@@ -122,12 +135,6 @@ void menu_init()
 		case MEN_DIFF:
 			difficultymenu_init();
 			break;
-		case K_CONFIG:
-			key_config_init();
-			break;
-		case MEN_PLAYERS:
-			player_opt_init();
-			break;
 	}
 }
 
@@ -149,12 +156,6 @@ void menu_work()
 			break;
 		case MEN_DIFF:
 			difficultymenu_work();
-			break;
-		case K_CONFIG:
-			key_config_work();
-			break;
-		case MEN_PLAYERS:
-			player_opt_work();
 			break;
 	}
 }
@@ -181,7 +182,7 @@ void startmenu_work()
 			switch(startmenu.active_item) {
 
 				case 0: /* New Game */
-					newstate(ST_GAME_PLAY,0,1);
+					newstate(ST_PLAYER_SELECT,0,1);//newstate(ST_GAME_PLAY,0,1);
 					break;
 
 				case 1:	/* Options */
@@ -205,7 +206,7 @@ void pausemenu_init()
 {
 	char *options[]={"CONTINUE GAME", "QUIT GAME", NULL};
 	genericmenu_init(options,&pausemenu,1,-1);
-	pause_start_time=SDL_GetTicks();
+	pause_start_time=PSP_GetTicks();
 }
 
 void pausemenu_work()
@@ -221,6 +222,7 @@ void pausemenu_work()
 				break;
 			case 1:	/* Quit Game */
 				//stopMusic();		//***090123		コメントアウト
+				bg_destroy();		//***090126		追加
 				sprite_remove_all(SP_SHOW_ALL);
 				//parsys_remove_all();
 				controller_remove_all();
@@ -270,7 +272,7 @@ void optionmenu_work()
 				newstate(ST_SHOW_HCLIST,0,1);
 				break;
 			case 3:	/* Key Config */
-				newstate(ST_MENU,K_CONFIG,1);
+				newstate(ST_KEY_CONFIG,0,1);
 				break;
 			case 4:	/* Back to Game */
 				newstate(ST_MENU,MEN_START,1);
@@ -320,7 +322,6 @@ void difficultymenu_work()
 
 //***090110
 //キーコンフィグ追加。
-//これを追加するためにplayer.cやsupport.cのkeyconfig配列の指定方法も変更した。
 //基本は絶対値指定(機能固定値)でsupport.cのkeypollの中のkeyconfigだけ配列指定番号に変数（keyconfig.xxx）を取る
 //またkeypollに入る値は、0と1だけのままだとボタン設定上問題が出るのでビットで管理するようにした
 void key_config_init()
@@ -368,7 +369,7 @@ void key_config_init()
 
 void key_config_work()
 {
-	static int key_shot;		//存在確認用。1で存在。0で存在しない。存在しないとメニューを抜けれない。
+	static int key_shot;		//存在確認用。0で存在しない。存在しないとメニューを抜けれない。
 	static int key_down;
 	static int key_up;
 	static int bg_wait;
@@ -422,11 +423,11 @@ void key_config_work()
 						if(keyboard[KEY_CANCEL])		//キャンセルボタン
 						{
 							playChunk(4);
-							keyicon->type=-1;
+//							keyicon->type=-1;
 							bg_level=2;
 							//key_bg=loadbmp("moon.jpg");
-							bg_alpha=255;
-							playMusic("intro");
+//							bg_alpha=255;
+//							playMusic("intro");
 						}
 						
 						if(keyboard[KEY_SHOT])		//ショットボタン
@@ -446,13 +447,13 @@ void key_config_work()
 									if(key_pos[i]==KEY_DOWN)
 										key_down++;
 								}
-								if((key_shot!=0)&&((key_up!=0)&&(key_down!=0)))
+								if(key_shot && key_up && key_down)
 								{
-									keyicon->type=-1;
+//									keyicon->type=-1;
 									bg_level=2;
 									//key_bg=loadbmp("moon.jpg");
-									bg_alpha=255;
-									playMusic("intro");
+//									bg_alpha=255;
+//									playMusic("intro");
 									
 									//最終的に代入される物
 									keyconfig.ma=key_pos[0];
@@ -622,6 +623,13 @@ void key_config_work()
 		sprite_work(SP_SHOW_MENUTEXT);
 		sprite_display(SP_SHOW_MENUTEXT);
 	}
+	else{
+		keyicon->y=272+1;
+		keyicon->type=-1;
+		bg_alpha=255;
+		playMusic("intro");
+		newstate(ST_INTRO,0,1);
+	} 
 }
 
 void kp_search(int btn, int num)
@@ -636,15 +644,174 @@ void kp_search(int btn, int num)
 	rect_k.y=49+(num*15);
 	SDL_BlitSurface(key_sf[i],NULL,screen,&rect_k);
 }
+#define SP_X 250
 
 void player_opt_init()
 {
+	SDL_Rect sr;
+	sr.x=SP_X;
+	sr.y=50;
+	select_player=0;
+	sp_level=4;
+	sp_bg=loadbmp(sp_bg_list[select_player]);
+	sp_st=loadbmp(sp_st_list[select_player]);
+	SDL_SetColorKey(sp_st, SDL_SRCCOLORKEY, 0x00000000);
+	sp_wait=0;
+	SDL_BlitSurface(sp_bg,NULL,screen,NULL);
+	SDL_BlitSurface(sp_st,NULL,screen,&sr);
 	
+	sp_scale=1;
 }
-
 void player_opt_work()
 {
+	SDL_Rect sr;
+	sr.x=SP_X;
+	sr.y=50;
+	SDL_FillRect(screen,NULL,SDL_MapRGB(screen->format,0,0,0));
+	switch(sp_level){
+		case 4://選択
+			SDL_BlitSurface(sp_bg,NULL,screen,NULL);
+			SDL_BlitSurface(sp_st,NULL,screen,&sr);
+			if(sp_wait<0){
+				if(keyboard[KEY_LEFT]){		//左
+					playChunk(2);
+					unloadbmp_by_surface(sp_bg);
+					sp_bg=NULL;
+					unloadbmp_by_surface(sp_st);
+					sp_st=NULL;
+					tmp_sp_bg=loadbmp(sp_bg_list[select_player]);
+					tmp_sp_st=loadbmp(sp_st_list[select_player]);
+					SDL_SetColorKey(tmp_sp_st, SDL_SRCCOLORKEY, 0x00000000);
+					
+					if(select_player==0)
+						select_player=MAX_PLAYER-1;
+					else
+						select_player--;
+					sp_bg=loadbmp(sp_bg_list[select_player]);
+					sp_st=loadbmp(sp_st_list[select_player]);
+					SDL_SetColorKey(sp_st, SDL_SRCCOLORKEY, 0x00000000);
+					sp_level=6;
+					sp_wait=30;
+					sp_scale=1;
+					bg_alpha=0;
+				}
+				if(keyboard[KEY_RIGHT]){		//右
+					playChunk(2);
+					unloadbmp_by_surface(sp_bg);
+					sp_bg=NULL;
+					unloadbmp_by_surface(sp_st);
+					sp_st=NULL;
+					tmp_sp_bg=loadbmp(sp_bg_list[select_player]);
+					tmp_sp_st=loadbmp(sp_st_list[select_player]);
+					SDL_SetColorKey(tmp_sp_st, SDL_SRCCOLORKEY, 0x00000000);
+					
+					if(select_player==MAX_PLAYER-1)
+						select_player=0;
+					else
+						select_player++;
+					sp_bg=loadbmp(sp_bg_list[select_player]);
+					sp_st=loadbmp(sp_st_list[select_player]);
+					SDL_SetColorKey(sp_st, SDL_SRCCOLORKEY, 0x00000000);
+					sp_level=5;
+					sp_wait=30;
+					sp_scale=1;
+					bg_alpha=0;
+				}
+				if(keyboard[KEY_SHOT]){
+					playChunk(1);
+					unloadbmp_by_surface(sp_bg);
+					sp_bg=NULL;
+					unloadbmp_by_surface(sp_st);
+					sp_st=NULL;
+					newstate(ST_GAME_PLAY,0,1);
+				}
+				if(keyboard[KEY_CANCEL]){
+					playChunk(4);
+					unloadbmp_by_surface(sp_bg);
+					sp_bg=NULL;
+					unloadbmp_by_surface(sp_st);
+					sp_st=NULL;
+					newstate(ST_INTRO,1,1);
+				}
+			}
+			else{
+				sp_wait-=3*fps_factor;
+			}
+			break;
+		case 5:
+			sp_scale-=0.07;
+			bg_alpha+=15;
+			if(bg_alpha<255){
+				SDL_SetAlpha(sp_bg, SDL_SRCALPHA, bg_alpha);
+			}
+			else if(bg_alpha==255){
+			}
+			else{
+				bg_alpha=255;
+				SDL_SetAlpha(sp_bg, SDL_SRCALPHA, bg_alpha);
+			}
+			SDL_BlitSurface(tmp_sp_bg,NULL,screen,NULL);
+			SDL_BlitSurface(sp_bg,NULL,screen,NULL);
+			
+			if(sp_scale<0){
+				sp_level=4;
+				unloadbmp_by_surface(tmp_sp_bg);
+				unloadbmp_by_surface(tmp_sp_st);
+				tmp_sp_bg=NULL;
+				tmp_sp_st=NULL;
+				SDL_SetAlpha(sp_bg, SDL_SRCALPHA, 255);
+			}
+			else{
+				player_opt_img(sp_st, 1-sp_scale, 0);
+				player_opt_img(tmp_sp_st, sp_scale, 1);
+			}
+			break;
+		case 6:
+			sp_scale-=0.07;
+			bg_alpha+=15;
+			if(bg_alpha<255){
+				SDL_SetAlpha(sp_bg, SDL_SRCALPHA, bg_alpha);
+			}
+			else if(bg_alpha==255){
+			}
+			else{
+				bg_alpha=255;
+				SDL_SetAlpha(sp_bg, SDL_SRCALPHA, bg_alpha);
+			}
+			SDL_BlitSurface(tmp_sp_bg,NULL,screen,NULL);
+			SDL_BlitSurface(sp_bg,NULL,screen,NULL);
+			
+			if(sp_scale<0){
+				sp_level=4;
+				unloadbmp_by_surface(tmp_sp_bg);
+				unloadbmp_by_surface(tmp_sp_st);
+				tmp_sp_bg=NULL;
+				tmp_sp_st=NULL;
+				SDL_SetAlpha(sp_bg, SDL_SRCALPHA, 255);
+			}
+			else{
+				player_opt_img(sp_st, 1-sp_scale, 1);
+				player_opt_img(tmp_sp_st, sp_scale, 0);
+			}
+			break;
+	}
+}
+
+void player_opt_img(SDL_Surface *src, double scale, int l_or_r){		//r=0, l=1
+	SDL_Rect sr,dr;
 	
+	sr.w=src->w;
+	sr.h=src->h;
+	sr.x=0;
+	sr.y=0;
+	dr.w=src->w*scale;
+	dr.h=src->h;
+	if(l_or_r)
+		dr.x=SP_X;
+	else
+		dr.x=200+SP_X-dr.w;
+	dr.y=50;
+	blit_scaled(src, &sr, screen, &dr);
 }
 
 void genericmenu_init(char *options[], MENU *m, int fadeout, int timeout)

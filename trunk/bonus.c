@@ -64,7 +64,7 @@ void bonus_multi_add(int x, int y,int type, int num, int up){		//***090125		’Ç‰Á
 	}
 }
 
-void bonus_add(int x, int y, int type)
+void bonus_add(int x, int y, int type, int up)
 {
 	SPRITE *s;
 	BONUS_DATA *data;
@@ -115,7 +115,7 @@ void bonus_add(int x, int y, int type)
 	s->data=data;
 	data->sum=-2;
 	data->gra=0.08;
-	data->pl_up=0;
+	data->pl_up=up;
 }
 
 void bonus_move(SPRITE *s)
@@ -136,10 +136,10 @@ void bonus_move(SPRITE *s)
 		if(d->sum<0)
 		{	
 			d->gra=atan2(player->y-s->y,player->x-s->x);
-			d->sum=20;
+			d->sum=14;
 		}
-		s->x+=cos(d->gra)*15*fps_factor;
-		s->y+=sin(d->gra)*15*fps_factor;
+		s->x+=cos(d->gra)*12*fps_factor;
+		s->y+=sin(d->gra)*12*fps_factor;
 	}
 }
 

@@ -25,8 +25,8 @@
 #define M_PI		3.14159265358979323846
 #endif
 
-#define degtorad(x) ((M_PI/180.0)*(x))
-#define radtodeg(x) ( (int)((x)/(M_PI/180.0)+360)%360 )
+#define degtorad(x) ((M_PI/180.0)*(x))		//2π ÷ 360 * X
+#define radtodeg(x) ( (int)((x)*((360.0)/(M_PI*2))+360)%360 ) 
 
 enum _errlevel { ERR_DEBUG, ERR_INFO, ERR_WARN, ERR_FATAL };
 
@@ -39,6 +39,8 @@ enum _state {
 	ST_GAME_OVER,
 	ST_SHOW_HCLIST,
 	ST_ENTRY_HCLIST,
+	ST_KEY_CONFIG,
+	ST_PLAYER_SELECT,
 	ST_GAME_QUIT
 };
 enum _keynum_{		//キーコンフィグ用
@@ -95,7 +97,7 @@ typedef struct {
 char moddir[20];
 
 void game_init(int argc, char *argv[]);
-void toggle_fullscreen();
+//void toggle_fullscreen();
 void error(int errorlevel, char *msg, ...);
 SDL_Surface *loadbmp(char *filename);
 SDL_Surface *loadbmp2(char *filename);

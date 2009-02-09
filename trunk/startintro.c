@@ -73,11 +73,11 @@ void startintro_work()
 			break;
 		case STIN_QUIT:
 			//parsys_remove_all();
-			unloadbmp_by_name("badblocks.png");
+			unloadbmp_by_surface(badblocks);/*unloadbmp_by_name("badblocks.png");*/
 			badblocks=NULL;
 			//SDL_FreeSurface(presents);
 			presents=NULL;
-			unloadbmp_by_name("ketm.png");
+			unloadbmp_by_surface(ketm);/*unloadbmp_by_name("ketm.png");*/
 			ketm=NULL;
 			newstate(ST_INTRO,0,1);
 	}

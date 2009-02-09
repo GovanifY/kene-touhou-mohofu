@@ -20,6 +20,7 @@ typedef struct _boss02_data {
 	double wait1;		//移動待ち
 	double wait2;		//モーション変更用
 	int xp;
+	int n_wayt;
 	int level;
 } BOSS02_DATA;
 
@@ -51,14 +52,15 @@ void enemy_boss02_add(int lv)
 	s->type=SP_EN_BOSS02;
 	b=mmalloc(sizeof(BOSS02_DATA));
 	s->data=b;
-	b->b.health=1200;
-	b->b.score=2000;
+	b->b.health=2500;
+	b->b.score=2000+difficulty*1500;
 	b->state1=0;
 	b->state2=0;
 	b->wait1=50;
 	b->wait2=0;
 	b->type=0;
 	b->level=lv;
+	b->n_wayt=1;
 	s->mover=enemy_boss02_move;
 	s->x=(WIDTH2/2)-(s->w/2);
 	b->xp=s->x;
@@ -83,13 +85,15 @@ void enemy_boss02_hitbyweapon(SPRITE *c, SPRITE *s, int angle)
 //	parsys_add(NULL,100,0,s->x,s->y,30,0,0,50,PIXELATE,NULL);
 	b->b.health-=w->strength;
 
-	if((b->b.health<=300)&&(b->type==0)) {	//HPが残り300になった時。グラフィックの差し替え。攻撃パターン変更
+	if((b->b.health<=1000)&&(b->type==0)) {	//HPが残り1000になった時。グラフィックの差し替え。攻撃パターン変更
+		bonus_multi_add(c->x, c->y,SP_BONUS_FIREPOWER,3,0);
+		bonus_multi_add(c->x, c->y,SP_BONUS_FIREPOWER_G,1,0);
 		for(i=0;i<192;i+=40) {
 			for(j=0;j<192;j+=40) {
 				explosion_add(d->x+i,d->y+j,rand()%40,0);
 			}
 		}
-		
+		((PLAYER_DATA *)player->data)->bossmode=4;
 		d=sprite_add_file("boss02_v2x.png",9,PR_ENEMY);
 		d->flags=c->flags;
 		d->anim_speed=c->anim_speed;
@@ -104,13 +108,8 @@ void enemy_boss02_hitbyweapon(SPRITE *c, SPRITE *s, int angle)
 		d->x=c->x;
 		d->y=c->y;
 		b2->state2=1;
-		if((b2->state1==2)||(b2->state1==6))
-		{
-			b2->state1=2;
-			b2->wait1=30;
-		}
-		else
-			b2->state1=0;
+		b2->state1=13;
+		b2->wait1=100;
 
 		c->type=-1;
 		((PLAYER_DATA *)player->data)->score+=b->b.score;
@@ -151,7 +150,7 @@ void enemy_boss02_move(SPRITE *s)
 			enemy_boss02_sr_add(s);
 			if(b->type==1)
 				enemy_boss02_ice_add(s);
-			b->wait1=100;
+			b->wait1=20;
 			b->state1=2;
 			break;
 	
@@ -250,7 +249,7 @@ void enemy_boss02_move(SPRITE *s)
 		switch(b->state1) {
 			
 		case 0:		//不定:初期位置情報の取得->1へ
-			ang_b2=atan2(-s->y+30,-s->x+(WIDTH2/2)-(s->w/2));
+			ang_b2=atan2(-s->y+20,-s->x+WIDTH2/2-s->w);
 			b->state1=1;
 			break;
 			
@@ -258,7 +257,14 @@ void enemy_boss02_move(SPRITE *s)
 			if(s->y<30)
 			{
 				b->state1=2;
-				b->wait1=30;
+				b->wait1+=30+difficulty*10;
+				if(b->n_wayt%3==0){
+					enemy_n_way_bullet(s, "kugel.png", 0, 8, 5, atan2(player->y-s->y,player->x-s->x));
+				}
+				if(b->n_wayt%4==0 && b->n_wayt%12!=0){
+					enemy_n_way_bullet(s, "kugel.png", 0, 11, 4, atan2(player->y-s->y,player->x-s->x));
+					enemy_n_way_bullet(s, "kugel.png", 0, 11, 3, atan2(player->y-s->y,player->x-s->x));
+				}
 			}
 			else
 			{
@@ -269,22 +275,22 @@ void enemy_boss02_move(SPRITE *s)
 			break;
 			
 		case 2:		//初期位置:大玉3つ->3,4,5
-			if(b->wait1==0)
+			if(b->wait1<0)
 			{
-				enemy_bigbullet_create(s, s->x+s->w/3, s->y+s->h/2, 5, -M_PI/6+atan2(player->y-s->y,player->x-s->x), 20);	//大弾の追加
-				enemy_bigbullet_create(s, s->x+s->w/3, s->y+s->h/2, 5, atan2(player->y-s->y,player->x-s->x), 20);
-				enemy_bigbullet_create(s, s->x+s->w/3, s->y+s->h/2, 5, +M_PI/6+atan2(player->y-s->y,player->x-s->x), 20);
+				enemy_bigbullet_create(s, s->x+s->w/3, s->y+s->h/2, 5, -M_PI/6+atan2(player->y-s->y,player->x-s->x), 1);	//大弾の追加
+				enemy_bigbullet_create(s, s->x+s->w/3, s->y+s->h/2, 5, atan2(player->y-s->y,player->x-s->x), 1);
+				enemy_bigbullet_create(s, s->x+s->w/3, s->y+s->h/2, 5, +M_PI/6+atan2(player->y-s->y,player->x-s->x), 1);
 				b->state1=rand()%3+3;
 				if(b->state1==5)
 					ang_b2=atan2(-s->y+player->y,-s->x+player->x);
 				else
 				{
-					s->x+=6*fps_factor;
+					s->y+=6*fps_factor;
 				}
 			}
 			else
 			{
-				b->wait1--;
+				b->wait1-=fps_factor;
 			}
 			break;
 			
@@ -340,8 +346,10 @@ void enemy_boss02_move(SPRITE *s)
 			
 		case 7:		//左:右回転攻撃->0,11
 			enemy_boss02_sr_add(s);
-			if(rand()%2==0)
+			if(rand()%2==0){
 				b->state1=0;
+				b->n_wayt++;
+			}
 			else
 				b->state1=11;
 			break;
@@ -353,20 +361,22 @@ void enemy_boss02_move(SPRITE *s)
 		case 9:		//右:左回転攻撃->ひとまず0へ
 			enemy_boss02_sr_add2(s);
 			b->state1=0;
+			b->n_wayt++;
 			break;
 			
 		case 10:	//プレイヤー位置付近:大玉3つ->ひとまず0へ
-			enemy_bigbullet_create(s, s->x+s->w/3, s->y+s->h/2, 5, -M_PI/6+atan2(player->y-s->y,player->x-s->x), 20);
-			enemy_bigbullet_create(s, s->x+s->w/3, s->y+s->h/2, 5, atan2(player->y-s->y,player->x-s->x), 20);
-			enemy_bigbullet_create(s, s->x+s->w/3, s->y+s->h/2, 5, +M_PI/6+atan2(player->y-s->y,player->x-s->x), 20);
+			enemy_bigbullet_create(s, s->x+s->w/3, s->y+s->h/2, 3, -M_PI/6+atan2(player->y-s->y,player->x-s->x), 20);
+			enemy_bigbullet_create(s, s->x+s->w/3, s->y+s->h/2, 3, atan2(player->y-s->y,player->x-s->x), 20);
+			enemy_bigbullet_create(s, s->x+s->w/3, s->y+s->h/2, 3, +M_PI/6+atan2(player->y-s->y,player->x-s->x), 20);
 			b->state1=0;
+			b->n_wayt++;
 			break;
 			
 		case 11:	//左:前へ->12
 			if(s->y>HEIGHT/3)
 				b->state1=12;
 			else
-				s->y+=(4+difficulty)*fps_factor;
+				s->y+=(5+difficulty)*fps_factor;
 			break;
 
 		case 12:
@@ -375,6 +385,12 @@ void enemy_boss02_move(SPRITE *s)
 			enemy_bullet_create(s, 5);
 			enemy_g_bullet_create(s, 5, -10, atan2(player->y-s->y,player->x-s->x)-M_PI/6);
 			enemy_g_bullet_create(s, 5, -20, atan2(player->y-s->y,player->x-s->x)-M_PI/3);
+			b->state1=0;
+			b->n_wayt++;
+			break;
+		
+		case 13:
+			((PLAYER_DATA *)player->data)->bossmode=1;
 			b->state1=0;
 			break;
 		}
@@ -404,7 +420,7 @@ void enemy_boss02_waitstate(SPRITE *s, int nextstate)
 	else 
 	{
 		b->state1=nextstate;
-		enemy_bigbullet_create(s, s->x+s->w/2, s->y+s->h/2, 8, -2, 10);
+		enemy_bigbullet_create(s, s->x+s->w/2, s->y+s->h/2, 4+difficulty/2, -2, 10);
 	}
 }
 

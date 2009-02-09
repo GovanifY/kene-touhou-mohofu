@@ -57,7 +57,7 @@ void enemy_xev_move(SPRITE *s)
 				d->ty=player->y;
 				if(d->level)
 					enemy_bullet_create(s,1+d->level);
-				bonus_add(s->x,s->y,rand()%(SP_BONUS_LAST-SP_BONUS_FIREPOWER)+SP_BONUS_FIREPOWER);
+				bonus_add(s->x,s->y,rand()%(SP_BONUS_LAST-SP_BONUS_FIREPOWER)+SP_BONUS_FIREPOWER,0);
 			}
 			
 		case 1:

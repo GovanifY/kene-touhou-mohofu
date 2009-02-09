@@ -1,104 +1,57 @@
 #include "fps.h"
+double fps_factor; /* FPS 調整値 */
+extern int difficulty;
 
-Uint32 fps_gamestart;
-Uint32 fps_lasttime;
-Uint32 fps_frames;
-double fps_factor;
-int fps;
-int fps_method;
-int fps_display;
+#include <psptypes.h>
+#include <psprtc.h>
 
-#define AVG_FRAMES 5 
-double fps_factor_avg[AVG_FRAMES];
-int fps_factor_avg_idx;
-
-extern GAMESTATE state;
-extern SDL_Surface *screen;
-extern difficulty;
-void fps_init()
+/*static*/ unsigned int PSP_GetTicks(void)
 {
-	int i;
+	u64 current_ticks;/* 1[nsec] == 1/(1000*1000)[sec] */
+	sceRtcGetCurrentTick(&current_ticks);
+	return (current_ticks/*>>8*/);
+}
 
-	fps_gamestart=SDL_GetTicks();
-	fps_lasttime=fps_gamestart;
-	fps_frames=0;
-	fps_factor=1;
-	fps_method=MAXFPS;
-	fps_display=0;
-	for(i=0;i<AVG_FRAMES;i++)
-		fps_factor_avg[i]=1;
-	fps_factor_avg_idx=0;
+#define FPS_MAX_HISTORY 8/*5*/ /* 測定履歴数 */
+static double fps_history_value[FPS_MAX_HISTORY]; /* FPS 履歴値 */
+static Uint32 fps_old_time; /* 前回測定した時の時間 */
+
+void fps_init(void)
+{
+	fps_old_time/*=fps_gamestart; fps_gamestart*/= PSP_GetTicks();
+	fps_factor=(double)(1);/* ==1 当り障りは無いが、いい加減な値 */
+	int i;
+	for(i=0; i<FPS_MAX_HISTORY; i++)
+		{ fps_history_value[i]=(double)((double)(1)/(double)(FPS_MAX_HISTORY));}
+	/* ==1.0/FPS_MAX_HISTORY 当り障りは無いが、いい加減な値 */
+}
+
+void fps_newframe(void)
+{
+	static Uint32 fps_now_time;
+	static Uint32 fps_history_index=0; /* 履歴インデックス */
+	static int difficulty_old=99;/* ==99 この値は開始時に必ず再計算させる都合上、ありえない設定値とする。 */
+	int i;
+	static double tick_addj;
+	/* 難易度が変更された場合 */
+	if (difficulty_old != difficulty)
+	{
+		difficulty_old = difficulty;
+		/* ↓東方を目指してるのなら、難易度でゲーム全体の速度を変えない方が良いと思いますが、 */
+		/* 現在旧版と互換の為、下記の様にしてあります。 */
+		/* ゲーム全体のゲーム速度 調整値の計算 */
+		#define ADJUST_INTERVAL_VALUE (22)		//(28-difficulty*3)=>difficulty=2
+		tick_addj = (double)(1.0/((double)(ADJUST_INTERVAL_VALUE)*(double)(FPS_MAX_HISTORY*1000) ));
+	}
+	/* FPS 履歴値の計算(現在、過去時間から、履歴を計算し蓄える) */
+	fps_old_time = fps_now_time; /* 前回の時間 */
+	fps_now_time = PSP_GetTicks(); /* 今回の時間 */
 	
-}
-
-void fps_show()
-{
-/*
-	char fpstxt[9];
-	SDL_Surface *t;
-	SDL_Rect r;
-	static int fps_index=0;
-	static int fps_array[50];
-	int fps_avg;
-	static int fps_avg_old=0;
-	int i;
-
-	if((fps_display) && (state.mainstate==ST_GAME_PLAY)) {
-		if(fps_method==MAXFPS) {
-			fps_array[fps_index]=fps;
-			fps_avg=0;
-			for(i=0;i<50;i++) {
-				fps_avg+=fps_array[i];
-			}
-			fps_avg/=50;
-			if(++fps_index>49) {
-				fps_index=0;
-				fps_avg_old=fps_avg;
-			}
-			sprintf(fpstxt,"%03d FPS",fps_avg_old);
-		} else {
-			sprintf(fpstxt,"- FIX -");
-		}
-
-		t=font_render(fpstxt,FONT07);
-		r.x=screen->w-t->w;
-		r.y=screen->h-t->h;
-		r.w=t->w;
-		r.h=t->h;
-		SDL_BlitSurface(t,NULL,screen,&r);
-		SDL_FreeSurface(t);
-	}
-*/
-}
-
-void toggle_fps()
-{
-	if(fps_method==MAXFPS) {
-		fps_method=WAITFORFRAME;
-		fps_factor=1;
-	} else {
-		fps_method=MAXFPS;
-		fps_factor=1;
-	}
-}
-
-void fps_newframe()
-{
-	static Uint32 nexttime=0;
-	static Uint32 now;
-	int i;
-
-	fps_frames++;
-	fps_lasttime=now;
-	now=SDL_GetTicks();
-
-		fps_factor_avg[fps_factor_avg_idx++]=(double)(now-fps_lasttime)/(TICK_INTERVAL-difficulty*3);
-		if(fps_factor_avg_idx==AVG_FRAMES)
-			fps_factor_avg_idx=0;
-		fps_factor=0;
-		for(i=0;i<AVG_FRAMES;i++)
-			fps_factor+=fps_factor_avg[i];
-		fps_factor/=AVG_FRAMES;
-		fps=1/((double)(now-fps_lasttime)/1000);
-			
-}
+	fps_history_index++;
+	if (fps_history_index>=FPS_MAX_HISTORY) { fps_history_index=0;}
+	
+	fps_history_value[fps_history_index] = (double)(fps_now_time-fps_old_time)*tick_addj;
+	/* FPS 調整値の計算(予め加重で割ってあるので足すだけ) */
+	fps_factor=0;
+	for (i=0; i<FPS_MAX_HISTORY; i++) { fps_factor += fps_history_value[i];}
+} 

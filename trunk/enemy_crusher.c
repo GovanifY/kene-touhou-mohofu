@@ -78,7 +78,7 @@ void enemy_crusher_controller(CONTROLLER *c)
 			return;
 		}
 	}
-	bonus_add(id_array[c->max],id_array[c->max+1],SP_BONUS_COIN);
+	bonus_add(id_array[c->max],id_array[c->max+1],SP_BONUS_COIN,0);
 	controller_remove(c);
 }
 
@@ -94,13 +94,13 @@ void enemy_crusher_move(SPRITE *s)
 				d->c2+=1;
 			}
 		} else {
-			s->y-=(3+d->level)*fps_factor;
+			s->y-=(2+d->level/3)*fps_factor;
 			if(s->y<50)
 				d->c1=0;
 		}
 		if(d->level>0)
 			if(rand()%(100-d->level*10)==0)
-				enemy_bullet_create(s,3+d->level);
+				enemy_bullet_create(s,3+d->level/2);
 	} else {
 		s->y-=4;
 		if(s->y<-(s->w))

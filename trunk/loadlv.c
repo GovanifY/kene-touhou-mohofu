@@ -13,8 +13,8 @@ int loadlv(int level)
 	int time;				//ÀsƒRƒ}ƒ“ƒh‚Ìo‚Ä‚­‚éƒ^ƒCƒ~ƒ“ƒO‚Ìæ“¾
 	char command;			//“G‚È‚Ì‚©ƒƒbƒZ[ƒW‚È‚Ì‚©
 	char para1[128];
-	int para2; 
 	char filename[128];
+	int para2; 
 	int entrys=0;
 
 	loadlv_freeentry();
@@ -124,7 +124,7 @@ void loadlv_addentry(Uint32 time, char command, char *para1, int para2)		//ƒIƒuƒ
 
 	new=mmalloc(sizeof(LEVELENTRY));
 
-	new->time=time;
+	new->time=(time*100*1000);/* “Ç‚İ‚İŒãAPSP‚É“s‡‚Ì—Ç‚¢’l‚É•ÏŠ·(1/10[sec]-> 1/1000000[sec]==1[nsec]==nano seconds ) */ 
 	new->command=command;
 	strncpy(new->para1,para1,63);
 	new->para2=para2;

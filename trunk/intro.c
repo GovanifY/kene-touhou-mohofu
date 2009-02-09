@@ -64,7 +64,7 @@ void intro_work()
 			r.w=ketm_logo->w;
 			r.h=ketm_logo->h;
 			SDL_BlitSurface(ketm_logo,NULL,screen,&r);
-			unloadbmp_by_name("moon.jpg");
+			unloadbmp_by_surface(intropic);/*unloadbmp_by_name("moon.jpg");*/
 			intropic=NULL;
 			newstate(ST_MENU,MEN_START,1);
 	}

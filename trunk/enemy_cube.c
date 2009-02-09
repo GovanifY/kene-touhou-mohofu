@@ -61,7 +61,7 @@ void enemy_cube_move(SPRITE *s)
 		}
 
 		if(!(rand()%600)) {
-			bonus_add(s->x,s->y,SP_BONUS_FIREPOWER);
+			bonus_add(s->x,s->y,SP_BONUS_FIREPOWER,0);
 		}
 	} else {
 		d->radius+=2*fps_factor;

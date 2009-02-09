@@ -1,11 +1,13 @@
 #include "player.h"
 
+#define rand_percent(aaa) ((unsigned char)(rand())<=(unsigned char)( (aaa*256)/100 ) ) /* aa%の確率で */
 extern SDL_Surface *screen;
 extern int keyboard[];
 extern KEYCONFIG keyconfig;
 extern double fps_factor;
 extern SPRITE *sprite;
 extern int difficulty;
+extern int select_player;
 int bomb_wait;			//次のボムを出せるまでの時間
 int weapon_List;		//どの武器を装備しているか
 int weapon_chain;		//どれだけ連続でwepon_upを取ったか
@@ -14,6 +16,8 @@ int graze_check[5]={-1,-1,-1,-1,-1};	//グレイズ用、弾id格納場所。
 										//1つにしなかったのは複数の弾を同時にグレイズしたときのため。
 int is_graze;	//player1が弾幕に触れたか？
 SDL_Surface *weapon_p;		//ウェポンゲージ
+
+SPRITE *c1, *c2;	//***090128	オプション用
 
 /*
 typedef struct {
@@ -29,9 +33,12 @@ typedef struct {
 	double anim_delay;
 	int weapon;
 	int player_speed;
+	int player_speed_mini;		//***090205		追加
+	int player_speed_max;		//***090205		追加	プレイヤー上限値
 	int extra;
 	int bonus;		//***090116		追加
 	int hit_bomb_wait;		//***090125		追加
+	int option;
 	double extra_wait;
 	double extra_time;
 	double weapon_wait;
@@ -58,12 +65,52 @@ enum _priority {
 */
 
 
+void option_check(PLAYER_DATA *d){
+	if(d->weapon>35){
+		if(d->option==0){
+			d->option=1;
+			switch(select_player){
+				case REIMU:
+					re_add_option(player);
+					break;
+				case MARISA:
+					ma_add_option(player);
+					break;
+			}
+		}
+	}
+	else
+		d->option=0;
+}
+
+void weapon_check(int w)		//weaponの段階から今の装備を決める
+{								//***090123		大幅な変更。最大128へ。
+	if(w<=5)
+		weapon_List=WP_SINGLE;
+	else if(w<=10)
+		weapon_List=WP_DOUBLE;
+	else if(w<=60)
+		weapon_List=WP_TRIPLE;
+	else if(w<=85)
+		weapon_List=WP_QUAD;
+	else if(w<=128)
+		weapon_List=WP_FIFTH;
+	else
+		weapon_List=WP_LAST;
+}
+
 void player_init()
 {
 
 	PLAYER_DATA *data;
-
-	player=sprite_add_file("ship-med.png",11,PR_PLAYER);
+	switch(select_player){
+		case REIMU:
+			player=sprite_add_file("ship-med.png",11,PR_PLAYER);
+			break;
+		case MARISA:
+			player=sprite_add_file("ship-med-ma.png",11,PR_PLAYER);
+			break;
+	}
 	player->type=SP_PLAYER;
 	player->flags|=(SP_FLAG_VISIBLE|SP_FLAG_COLCHECK);
 	player->mover=player_move;
@@ -72,6 +119,18 @@ void player_init()
 	player->aktframe=5;
 	data=mmalloc(sizeof(PLAYER_DATA));
 	player->data=data;
+	switch(select_player){
+		case REIMU:
+			data->player_speed_mini=3;
+			data->player_speed=3;
+			data->player_speed_max=6;
+			break;
+		case MARISA:
+			data->player_speed_mini=4;
+			data->player_speed=4;
+			data->player_speed_max=8;
+			break;
+	}
 	data->level=1;
 	data->bossmode=0;
 	data->state=PL_SAVE;
@@ -83,7 +142,6 @@ void player_init()
 	data->extra=PLX_NONE;
 	data->extra_wait=0;
 	data->extra_time=0;
-	data->player_speed=5;
 
 	data->graze=0;
 	data->lives=3;
@@ -91,6 +149,7 @@ void player_init()
 	data->score=0;
 	data->bonus=0;
 	data->hit_bomb_wait=0;		//***090125		追加
+	data->option=0;
 
 	bomb_wait = 0;
 	weapon_List=0;
@@ -115,19 +174,31 @@ void player_move(SPRITE *s1)
 
 		//***090125		追加
 		case PL_HIT_BOMB:
-			if(d->hit_bomb_wait<8){
+			if(d->hit_bomb_wait<6){
 				if((keyboard[KEY_BOMB])&&(d->bombs>0)){
 					if(bomb_wait==0)
 					{
-						playChunk(7);
-						d->save_delay=200;					//無敵時間。たまにシールドをすり抜ける者が現れるので
-						d->state=PL_SAVE;
+						switch(select_player){
+							case REIMU:
+								playChunk(7);
+								d->save_delay=200;					//無敵時間。たまにシールドをすり抜ける者が現れるので
+								d->state=PL_SAVE;
+								d->extra=PLX_BOMB;
+								d->extra_time=200;
+								d->hit_bomb_wait=0;
+								player_add_shield(player);		//シールドの追加
+								bomb_wait = 200;
+								break;
+							case MARISA:
+								playChunk(7);
+								d->hit_bomb_wait=0;
+								player_add_levarie(player);
+								bomb_wait = 100;
+								d->save_delay=5;
+								d->state=PL_SAVE;
+								break;
+						}
 						d->bombs--;
-						d->extra=PLX_BOMB;
-						d->extra_time=200;
-						d->hit_bomb_wait=0;
-						player_add_shield(player);		//シールドの追加
-						bomb_wait = 200;
 					}
 				}
 				else
@@ -155,7 +226,7 @@ void player_move(SPRITE *s1)
 					bonus_multi_add(s1->x, s1->y,SP_BONUS_FIREPOWER_G,1,0);
 			}
 			if(!d->explode) {
-				playChunk(4);
+				//playChunk(4);		//***090127	場所を移動する。
 				explosion_add(s1->x+5,s1->y+5,0,rand()%3+1);	
 				explosion_add(s1->x+5,s1->y+20,0,rand()%3+1);	
 				explosion_add(s1->x+20,s1->y+5,0,rand()%3+1);	
@@ -169,10 +240,11 @@ void player_move(SPRITE *s1)
 				if ( d->weapon<0)
 					d->weapon=0; //denis - reset weapons
 					
-				if(d->player_speed>5) 				//4以下にならないように
+				if(d->player_speed>d->player_speed_mini) 				//player_speed_mini以下にならないように
 					d->player_speed--;
 				weapon_check(d->weapon);			//リストを見て装備の変更
 				weapon_chain=0;						//weapon_chainの初期化
+				option_check(d);
 				s1->x=WIDTH2/2-s1->w/2;				//プレイヤー位置の初期化
 				s1->y=272;
 			}
@@ -228,10 +300,10 @@ void player_keycontrol(SPRITE *s)
 	int direction=0;
 	PLAYER_DATA *d=(PLAYER_DATA *)s->data;
 
-	/* if player is invisible (state gameover) allow no keycontrol */
+	//if player is invisible (state gameover) allow no keycontrol
 	if((!(s->flags&SP_FLAG_VISIBLE))||(d->state==PL_RESET))
 		return;
-	
+	/*
 	if(keyboard[KEY_LEFT]) {
 		direction=-1;
 		if(s->x>0) {
@@ -257,9 +329,9 @@ void player_keycontrol(SPRITE *s)
 			s->y-=(d->player_speed/2)*fps_factor;
 		else
 			s->y-=d->player_speed*fps_factor;
-		if(d->weapon==128)		//***090123		変更
-			if(s->y<9)
-				d->bonus=1;
+		if(d->weapon==128)		//***090126		変更
+			if(s->y<50)
+				d->bonus=0x01;
 		//parsys_add(NULL,50,0,s->x+s->w/2,s->y+s->h,10,90,10,100,PIXELATE,NULL);
 	}
 
@@ -268,10 +340,79 @@ void player_keycontrol(SPRITE *s)
 			s->y+=(d->player_speed/2)*fps_factor;
 		else
 			s->y+=d->player_speed*fps_factor;
-		if(d->bonus)
-			d->bonus=0;
+		if(s->y>50)
+			d->bonus&=~0x01;
 	}
+	*/
+		int my_pad;
+		my_pad = 0;
+		if(keyboard[KEY_LEFT]){
+			my_pad |= PSP_CTRL_LEFT;
+			direction=-1; 
+		}
+		else if(keyboard[KEY_RIGHT]){
+			my_pad |= PSP_CTRL_RIGHT;
+			direction=1;
+		}
+		if(keyboard[KEY_UP]){
+			my_pad |= PSP_CTRL_UP;
+		}
+		else if(keyboard[KEY_DOWN]) {
+			my_pad |= PSP_CTRL_DOWN;
+		}
 
+		static const signed /*int*/short shipMv[16][2] =
+		{
+		/*LDRU*/ /* y x */
+		// 斜め移動が速過ぎるのを修正。
+		/*0000*/ {0,0},
+		/*0001*/ { 0, -256},/*0 U*/
+		/*0010*/ { 256, 0},/*2 R*/
+		/*0011*/ { 181, -181},/*1 UR*/
+		/*0100*/ { 0, 256},/*4 D*/
+		/*0101*/ {0,0},
+		/*0110*/ { 181, 181},/*3 DR*/
+		/*0111*/ {0,0},
+		/*1000*/ {-256, 0},/*6 L*/
+		/*1001*/ {-181, -181},/*7 UL*/
+		/*1010*/ {0,0},
+		/*1011*/ {0,0},
+		/*1100*/ {-181, 181},/*5 DL*/
+		/*1101*/ {0,0},
+		/*1110*/ {0,0},
+		/*1111*/ {0,0},
+		};
+		
+		const unsigned int my_slow =(keyboard[KEY_SLOW])?(1):(0);		//値をシフトして半分にする？
+		s->x += ((d->player_speed*(shipMv[((my_pad&0xf0)>>4)][0] >>my_slow))>>8) *fps_factor;
+		s->y += ((d->player_speed*(shipMv[((my_pad&0xf0)>>4)][1] >>my_slow))>>8) *fps_factor;
+		// はみだしたら修正。 
+		if(s->x < 0){
+			s->x = 0;
+		} 
+		if(s->x > WIDTH2-s->w){
+			s->x = WIDTH2-s->w;
+		} 
+		if(s->y < 0){
+			s->y = 0;
+		} 
+		if(s->y > HEIGHT-s->h){
+			s->y = HEIGHT-s->h;
+		} 
+		// ??? (下記は、よくわかんないけど、だいたい互換のはず？) 
+		if(my_pad & PSP_CTRL_UP){ /*&& (s->y>0)*/
+			if(d->weapon==128){ //***090123 変更 
+				if(s->y<50){
+					d->bonus=0x01;
+				}
+			} 
+		//parsys_add(NULL,50,0,s->x+s->w/2,s->y+s->h,10,90,10,100,PIXELATE,NULL); 
+		}
+		else if(my_pad & PSP_CTRL_DOWN) /*&& (s->y<screen->h*-s->h)*/{ 
+			if(d->bonus){
+				d->bonus&=~0x01;
+			} 
+		}
 		
 	if(d->weapon_wait>0)
 		d->weapon_wait-=fps_factor;
@@ -283,59 +424,96 @@ void player_keycontrol(SPRITE *s)
 		d->extra_time-=fps_factor;
 	else
 		d->extra=PLX_NONE;
-	if(bomb_wait>0)					//ボムウェイト処理
+	if(bomb_wait>0){					//ボムウェイト処理
 		bomb_wait-=fps_factor;
-
+		if(bomb_wait<190)
+			d->bonus&=~0x02;
+	}
+	
 	if((keyboard[KEY_BOMB])&&(d->bombs>0))
 	{
 		if(bomb_wait==0)
 		{
-			playChunk(7);
-			d->save_delay=200;					//無敵時間。たまにシールドをすり抜ける者が現れるので
-			d->state=PL_SAVE;
+			switch(select_player){
+				case REIMU:
+					playChunk(7);
+					d->save_delay=200;					//無敵時間。たまにシールドをすり抜ける者が現れるので
+					d->state=PL_SAVE;
+					d->extra=PLX_BOMB;
+					d->extra_time=200;
+					player_add_shield(player);		//シールドの追加
+					bomb_wait = 200;
+					break;
+				case MARISA:
+					playChunk(7);
+					player_add_levarie(player);
+					bomb_wait = 100;
+					break;
+			}
 			d->bombs--;
-			d->extra=PLX_BOMB;
-			d->extra_time=200;
-			player_add_shield(player);		//シールドの追加
-			bomb_wait = 200;
 		}
 	}
 
 	if(keyboard[KEY_SHOT]) {
 		if(d->weapon_wait<=0) {
 			playChunk(0);
-			switch(weapon_List) {
-				case WP_PLASMA:
-					player_add_plasma(s);
-					d->weapon_wait=5;
+			switch(select_player){
+				case REIMU:
+					switch(weapon_List) {
+						case WP_SINGLE:
+							player_add_fuda(s);
+							d->weapon_wait=5;
+							break;
+						case WP_DOUBLE:
+							player_add_doublefuda(s);
+							d->weapon_wait=5;
+							break;
+						case WP_TRIPLE:
+							player_add_triplefuda(s);
+							d->weapon_wait=5;
+							break;
+						case WP_QUAD:
+							player_add_quadfuda(s);
+							d->weapon_wait=5;
+							break;
+						case WP_FIFTH:
+							player_add_fifthfuda(s);
+							d->weapon_wait=5;
+							break;
+						case WP_LAST:
+							player_add_killray(s);
+							d->weapon_wait=5;
+							break;
+					}
 					break;
-				case WP_DOUBLEPLASMA:
-					player_add_doubleplasma(s);
-					d->weapon_wait=5;
-					break;
-				case WP_QUADPLASMA:
-					player_add_quadplasma(s);
-					d->weapon_wait=5;
-					break;
-				case WP_FIREBALL:
-					player_add_fireball(s);
-					d->weapon_wait=4;
-					break;
-				case WP_DOUBLEFIREBALL:
-					player_add_doublefireball(s);
-					d->weapon_wait=4;
-					break;
-				case WP_QUADFIREBALL:
-					player_add_quadfireball(s);
-					d->weapon_wait=4;
-					break;
-				case WP_FIFTHFIREBALL:
-					player_add_fifthfireball(s);
-					d->weapon_wait=4;
-					break;
-				case WP_KILLRAY:
-					player_add_killray(s);
-					d->weapon_wait=4;
+				
+				case MARISA:
+					switch(weapon_List) {
+						case WP_SINGLE:
+							player_add_star(s);
+							d->weapon_wait=6;
+							break;
+						case WP_DOUBLE:
+							player_add_doublestar(s);
+							d->weapon_wait=6;
+							break;
+						case WP_TRIPLE:
+							player_add_doublestar(s);
+							d->weapon_wait=5;
+							break;
+						case WP_QUAD:
+							player_add_triplestar(s);
+							d->weapon_wait=5;
+							break;
+						case WP_FIFTH:
+							player_add_quadstar(s);
+							d->weapon_wait=5;
+							break;
+						case WP_LAST:
+							player_add_killray(s);
+							d->weapon_wait=5;
+							break;
+					}
 					break;
 			}
 		}
@@ -407,6 +585,7 @@ void player_colcheck(SPRITE *s, int mask)
 				//parsys_add(spimg, c->w,1, c->x,c->y, 5, 0, 0, 80, LINESPLIT, NULL);
 				//SDL_FreeSurface(spimg);
 				c->type=-1;
+				option_check(d);
 				break;
 
 			case SP_BONUS_FIREPOWER_G:		//***090123		追加
@@ -427,6 +606,7 @@ void player_colcheck(SPRITE *s, int mask)
 					weapon_check(d->weapon);
 				}
 				c->type=-1;
+				option_check(d);
 				break;
 
 			case SP_BONUS_BOMB:
@@ -461,7 +641,7 @@ void player_colcheck(SPRITE *s, int mask)
 				//spimg=sprite_getcurrimg(c);
 				//parsys_add(spimg, c->w,1, c->x,c->y, 5, 0, 0, 80, LINESPLIT, NULL);
 				//SDL_FreeSurface(spimg);
-				if(d->player_speed<8) {
+				if(d->player_speed<d->player_speed_max) {
 					d->player_speed++;
 					bonus_info_add(c->x,c->y,"speed.png");
 				} else {
@@ -485,20 +665,22 @@ void player_colcheck(SPRITE *s, int mask)
 							break;
 						case PLX_SHIELD:		//ウェポンアイテム(強)
 							d->extra_time=30;
-							if(d->weapon<120) {		//***090123		変更
-								d->weapon+=8;
+							if(d->weapon<112) {		//***090123		変更
+								d->weapon+=16;
 								bonus_info_add(c->x,c->y,"weapon.png");
 								weapon_check(d->weapon);
 							}
 							else if(d->weapon==128){		//***090123		変更
 								d->score+=1000;
-								weapon_chain+=8;
+								weapon_chain+=16;
 								bonus_info_add(c->x,c->y,"plus1000.png");
+								weapon_check(d->weapon);
 							}
 							else{
 								d->weapon=128;		//***090123		変更
 								weapon_check(d->weapon);
 							}
+							option_check(d);
 							break;
 						case PLX_HLASER:
 							d->extra_time=1000;
@@ -544,6 +726,9 @@ void player_colcheck(SPRITE *s, int mask)
 				break;
 			case SP_EN_BOSS03:
 				enemy_boss03_hitbyplayer(c);
+				break;
+			case SP_EN_BOSS04:
+				enemy_boss04_hitbyplayer(c);
 				break;
 
 			case SP_EN_BULLET:
@@ -605,6 +790,7 @@ void player_colcheck(SPRITE *s, int mask)
 			//	parsys_add(spimg, 2,2, c->x,c->y, 10, 270, 10, 30, EXPLODE|DIFFSIZE, NULL);
 				//SDL_FreeSurface(spimg);
 			//	spimg=NULL;
+				playChunk(4);		//***090127	変更先
 				d->state=PL_HIT_BOMB;		//***090125		追加
 				d->enemy=c;
 				//explosion_add(c->x+5,c->y+5,0,rand()%3+1);		//***090125		以下コメントアウト
@@ -623,30 +809,17 @@ void player_colcheck(SPRITE *s, int mask)
 	}
 }
 
-void weapon_check(int w)		//weaponの段階から今の装備を決める
-{								//***090123		大幅な変更。最大128へ。
-	if(w<=5)
-		weapon_List=WP_PLASMA;
-	else if(w<=10)
-		weapon_List=WP_DOUBLEPLASMA;
-	else if(w<=35)
-		weapon_List=WP_QUADPLASMA;
-	else if(w<=50)
-		weapon_List=WP_FIREBALL;
-	else if(w<=70)
-		weapon_List=WP_DOUBLEFIREBALL;
-	else if(w<=100)
-		weapon_List=WP_QUADFIREBALL;
-	else if(w<=128)
-		weapon_List=WP_FIFTHFIREBALL;
-	else
-		weapon_List=WP_KILLRAY;
-}
-
 SPRITE *player_add_core(SPRITE *s1)		//○の追加
 {
 	SPRITE *s2;
-	s2=sprite_add_file("core.png",1,PR_PLAYER2);
+	switch(select_player){
+		case REIMU:
+			s2=sprite_add_file("core.png",1,PR_PLAYER2);
+			break;
+		case MARISA:
+			s2=sprite_add_file("core-ma.png",1,PR_PLAYER2);
+			break;
+	}
 	s2->anim_speed=0;
 	s2->type=SP_PLAYER2;
 	s2->x=s1->x+s1->w/2-s2->w/2;
@@ -667,14 +840,17 @@ void player_move_core(SPRITE *s2)
 			if((c=sprite_colcheck(s2,SP_SHOW_ENEMY_WEAPONS))!=NULL) {
 				switch(c->type) {			//各弾の処理。弾の種類を追加した場合。ここにも追加する必要あり。
 					case SP_EN_BULLET:
+						playChunk(4);		//***090127	変更先
 						((PLAYER_DATA *)player->data)->state=PL_HIT_BOMB;
 						((PLAYER_DATA *)player->data)->enemy=c;
 						break;
 					case SP_EN_LASER:
+						playChunk(4);		//***090127	変更先
 						((PLAYER_DATA *)player->data)->state=PL_HIT_BOMB;
 						((PLAYER_DATA *)player->data)->enemy=c;
 						break;
 					case SP_EN_BIGBULLET:
+						playChunk(4);		//***090127	変更先
 						((PLAYER_DATA *)player->data)->state=PL_HIT_BOMB;
 						((PLAYER_DATA *)player->data)->enemy=c;
 						break;
@@ -684,58 +860,219 @@ void player_move_core(SPRITE *s2)
 	}
 }
 
-void player_add_fireball(SPRITE *player)
+void re_add_option(SPRITE *s)	//霊夢
 {
-	SPRITE *shot;
-	PL_FIREBALL_DATA *data;
+	RE_OPTION_DATA *d1, *d2;
 
-	shot=sprite_add_file2("fireball1.png",2,PR_PLAYER);
-	shot->anim_speed=1;
-	shot->type=SP_PL_FIREBALL;
-	shot->x=player->x+player->w/2-shot->w/2;
-	shot->y=player->y-shot->h+20;
-	shot->mover=player_move_fireball;
-	shot->flags|=SP_FLAG_VISIBLE;
-	data=mmalloc(sizeof(PL_FIREBALL_DATA));
-	shot->data=data;
-	data->angle=270;
-	data->speed=18;
-	data->strength=2;
+	c1=sprite_add_file("option.png",8,PR_PLAYER);
+	c1->flags|=SP_FLAG_VISIBLE;
+	d1=mmalloc(sizeof(RE_OPTION_DATA));
+	c1->data=d1;
+	c1->mover=re_move_option;
+	d1->length=11;
+	d1->pos=-1;
+	d1->ani_speed=2;
+	d1->angle=-M_PI;
+	d1->state=0;
+	c1->aktframe=0;
+	c1->type=SP_PLAYER2;
+	c1->x=s->x+s->w/2-d1->length-c1->w/2;
+	c1->y=s->y+s->h/2-c1->h/2;
+	d1->w_wait=0;
+
+	c2=sprite_add_file("option.png",8,PR_PLAYER);
+	c2->flags|=SP_FLAG_VISIBLE;
+	d2=mmalloc(sizeof(RE_OPTION_DATA));
+	c2->data=d2;
+	c2->mover=re_move_option;
+	d2->length=11;
+	d2->pos=1;
+	d2->ani_speed=2;
+	d2->angle=0;
+	d2->state=0;
+	c2->aktframe=0;
+	c2->type=SP_PLAYER2;
+	c2->x=s->x+s->w/2-d2->length-c2->w/2;
+	c2->y=s->y+s->h/2-c2->h/2;
+	d2->w_wait=0;
 }
 
-void player_add_doublefireball(SPRITE *player)
+void re_move_option(SPRITE *s)	//霊夢
 {
-	SPRITE *shot;
-	PL_FIREBALL_DATA *data;
-
-	shot=sprite_add_file2("fireball1.png",2,PR_PLAYER);
-	shot->anim_speed=1;
-	shot->type=SP_PL_FIREBALL;
-	shot->x=player->x+player->w/2-shot->w/2-5;
-	shot->y=player->y-shot->h+20;
-	shot->mover=player_move_fireball;
-	shot->flags|=SP_FLAG_VISIBLE;
-	data=mmalloc(sizeof(PL_FIREBALL_DATA));
-	shot->data=data;
-	data->angle=270;
-	data->speed=18;
-	data->strength=2;
-
-	shot=sprite_add_file2("fireball1.png",2,PR_PLAYER);
-	shot->anim_speed=1;
-	shot->type=SP_PL_FIREBALL;
-	shot->x=player->x+player->w/2-shot->w/2+5;
-	shot->y=player->y-shot->h+20;
-	shot->mover=player_move_fireball;
-	shot->flags|=SP_FLAG_VISIBLE;
-	data=mmalloc(sizeof(PL_FIREBALL_DATA));
-	shot->data=data;
-	data->angle=270;
-	data->speed=18;
-	data->strength=2;
+	RE_OPTION_DATA *o=(RE_OPTION_DATA *)s->data;
+	
+	if(o->ani_speed==0){
+		s->aktframe=(s->aktframe+o->pos)%8;
+		if(s->aktframe<0)
+			s->aktframe=7;
+		o->ani_speed=2;
+	}
+	else
+		o->ani_speed--;
+	
+	if(((PLAYER_DATA *)player->data)->state==PL_SAVE||((PLAYER_DATA *)player->data)->state==PL_NORMAL)
+	{
+		if(o->w_wait<0){
+			if(keyboard[KEY_SHOT]){
+				if(((PLAYER_DATA *)player->data)->weapon<=90){
+					re_add_fireball(s, s->x, s->y-7);
+				}
+				else{
+					re_add_fireball(s, s->x-5, s->y-7);
+					re_add_fireball(s, s->x+5, s->y-7);
+				}	
+			}
+			o->w_wait=4;
+		}
+		else
+			o->w_wait--;
+	}
+	if(keyboard[KEY_SLOW]){
+		switch(o->state){
+			case 0:
+				o->state=1;
+				o->angle-=o->pos*0.1;
+				break;
+			case 1:
+				if((o->angle>-M_PI/2-0.05)&&(o->angle<-M_PI/2+0.05)){
+					o->state=2;
+					o->angle=-M_PI/2;
+				}
+				else
+					o->angle-=o->pos*0.1;
+				break;
+			case 2:
+				break;
+		}
+	}
+	else{
+		switch(o->state){
+			case 0:
+				break;
+			case 1:
+				if(o->angle<-M_PI || o->angle>0){
+					o->state=0;
+					o->angle=(o->pos+1)*M_PI/2-M_PI;
+				}
+				else
+					o->angle+=o->pos*0.1;
+				break;
+			case 2:
+				o->state=1;
+				o->angle+=o->pos*0.1;
+				break;
+		}
+	}
+	if(((PLAYER_DATA *)player->data)->option==0 || ((PLAYER_DATA *)player->data)->lives==0)
+		s->type=-1;
+	s->y=player->y+player->h/2+sin(o->angle)*o->length-s->h/2-5;
+	s->x=player->x+(o->pos+1)*player->w/2+cos(o->angle)*o->length-s->w/2-o->pos*6;
 }
 
-void player_add_quadfireball(SPRITE *player)		//三つにしました
+void ma_add_option(SPRITE *s)	//魔理沙
+{
+	RE_OPTION_DATA *d1, *d2;		//霊夢のを流用してます。
+
+	c1=sprite_add_file("core.png",1,PR_PLAYER);
+	c1->flags|=SP_FLAG_VISIBLE;
+	d1=mmalloc(sizeof(RE_OPTION_DATA));
+	c1->data=d1;
+	c1->mover=ma_move_option;
+	d1->length=11;
+	d1->pos=-1;
+	d1->angle=-M_PI;
+	d1->state=0;
+	c1->aktframe=0;
+	c1->type=SP_PLAYER2;
+	c1->x=s->x+s->w/2-d1->length-c1->w/2;
+	c1->y=s->y+s->h/2-c1->h/2;
+	d1->w_wait=0;
+
+	c2=sprite_add_file("core.png",1,PR_PLAYER);
+	c2->flags|=SP_FLAG_VISIBLE;
+	d2=mmalloc(sizeof(RE_OPTION_DATA));
+	c2->data=d2;
+	c2->mover=ma_move_option;
+	d2->length=11;
+	d2->pos=1;
+	d2->angle=0;
+	d2->state=0;
+	c2->aktframe=0;
+	c2->type=SP_PLAYER2;
+	c2->x=s->x+s->w/2-d2->length-c2->w/2;
+	c2->y=s->y+s->h/2-c2->h/2;
+	d2->w_wait=0;
+}
+
+void ma_move_option(SPRITE *s)	//魔理沙
+{
+	RE_OPTION_DATA *o=(RE_OPTION_DATA *)s->data;
+	
+	if(((PLAYER_DATA *)player->data)->state==PL_SAVE||((PLAYER_DATA *)player->data)->state==PL_NORMAL)
+	{
+		if(o->w_wait<0){
+			if(keyboard[KEY_SHOT]){
+				if(((PLAYER_DATA *)player->data)->weapon<=70){
+					ma_add_fireball(s, s->x-5, s->y-7);
+				}
+				else if(((PLAYER_DATA *)player->data)->weapon<=100){
+					ma_add_fireball(s, s->x-12, s->y-7);
+					ma_add_fireball(s, s->x+2, s->y-7);
+				}
+				else{
+					ma_add_fireball(s, s->x-12, s->y-7);
+					ma_add_fireball(s, s->x-5, s->y-45);
+					ma_add_fireball(s, s->x+2, s->y-7);
+				}	
+			}
+			o->w_wait=8;
+		}
+		else
+			o->w_wait--;
+	}
+	if(keyboard[KEY_SLOW]){
+		switch(o->state){
+			case 0:
+				o->state=1;
+				o->angle-=o->pos*0.1;
+				break;
+			case 1:
+				if((o->angle>-M_PI/2-0.05)&&(o->angle<-M_PI/2+0.05)){
+					o->state=2;
+					o->angle=-M_PI/2;
+				}
+				else
+					o->angle-=o->pos*0.1;
+				break;
+			case 2:
+				break;
+		}
+	}
+	else{
+		switch(o->state){
+			case 0:
+				break;
+			case 1:
+				if(o->angle<-M_PI || o->angle>0){
+					o->state=0;
+					o->angle=(o->pos+1)*M_PI/2-M_PI;
+				}
+				else
+					o->angle+=o->pos*0.1;
+				break;
+			case 2:
+				o->state=1;
+				o->angle+=o->pos*0.1;
+				break;
+		}
+	}
+	if(((PLAYER_DATA *)player->data)->option==0 || ((PLAYER_DATA *)player->data)->lives==0)
+		s->type=-1;
+	s->y=player->y+player->h/2+sin(o->angle)*o->length-s->h/2-5;
+	s->x=player->x+(o->pos+1)*player->w/2+cos(o->angle)*o->length-s->w/2-o->pos*6;
+}
+
+void re_add_fireball(SPRITE *s, int x, int y)	//霊夢
 {
 	SPRITE *shot;
 	PL_FIREBALL_DATA *data;
@@ -743,21 +1080,8 @@ void player_add_quadfireball(SPRITE *player)		//三つにしました
 	shot=sprite_add_file2("fireball1.png",2,PR_PLAYER);
 	shot->anim_speed=1;
 	shot->type=SP_PL_FIREBALL;
-	shot->x=player->x+player->w/2-shot->w/2-5;
-	shot->y=player->y-shot->h+25;
-	shot->mover=player_move_fireball;
-	shot->flags|=SP_FLAG_VISIBLE;
-	data=mmalloc(sizeof(PL_FIREBALL_DATA));
-	shot->data=data;
-	data->angle=270-2;
-	data->speed=18;
-	data->strength=2;
-
-	shot=sprite_add_file2("fireball1.png",2,PR_PLAYER);
-	shot->anim_speed=1;
-	shot->type=SP_PL_FIREBALL;
-	shot->x=player->x+player->w/2-shot->w/2;
-	shot->y=player->y-shot->h+20;
+	shot->x=x;
+	shot->y=y;
 	shot->mover=player_move_fireball;
 	shot->flags|=SP_FLAG_VISIBLE;
 	data=mmalloc(sizeof(PL_FIREBALL_DATA));
@@ -765,91 +1089,29 @@ void player_add_quadfireball(SPRITE *player)		//三つにしました
 	data->angle=270;
 	data->speed=18;
 	data->strength=3;
-
-	shot=sprite_add_file2("fireball1.png",2,PR_PLAYER);
-	shot->anim_speed=1;
-	shot->type=SP_PL_FIREBALL;
-	shot->x=player->x+player->w/2-shot->w/2+5;
-	shot->y=player->y-shot->h+25;
-	shot->mover=player_move_fireball;
-	shot->flags|=SP_FLAG_VISIBLE;
-	data=mmalloc(sizeof(PL_FIREBALL_DATA));
-	shot->data=data;
-	data->angle=270+2;
-	data->speed=18;
-	data->strength=2;
 }
 
-void player_add_fifthfireball(SPRITE *player)		//五つにしました
+void ma_add_fireball(SPRITE *s, int x, int y)	//魔理沙
 {
 	SPRITE *shot;
 	PL_FIREBALL_DATA *data;
 
-	shot=sprite_add_file("plasma.png",1,PR_PLAYER);
-	shot->type=SP_PL_PLASMA;
-	shot->x=player->x+player->w/2-shot->w/2-15;
-	shot->y=player->y-shot->h+25;
-	shot->mover=player_move_plasma;
-	shot->flags|=SP_FLAG_VISIBLE;
-	data=mmalloc(sizeof(PL_PLASMA_DATA));
-	shot->data=data;
-	data->angle=270-5;
-	data->speed=15;
-	data->strength=1;
-
-	shot=sprite_add_file2("fireball1.png",2,PR_PLAYER);
-	shot->anim_speed=1;
+	shot=sprite_add_file("missile.png",1,PR_PLAYER);
+	shot->anim_speed=0;
 	shot->type=SP_PL_FIREBALL;
-	shot->x=player->x+player->w/2-shot->w/2-5;
-	shot->y=player->y-shot->h+20;
-	shot->mover=player_move_fireball;
-	shot->flags|=SP_FLAG_VISIBLE;
-	data=mmalloc(sizeof(PL_FIREBALL_DATA));
-	shot->data=data;
-	data->angle=270-2;
-	data->speed=18;
-	data->strength=2;
-
-	shot=sprite_add_file2("fireball1.png",2,PR_PLAYER);
-	shot->anim_speed=1;
-	shot->type=SP_PL_FIREBALL;
-	shot->x=player->x+player->w/2-shot->w/2;
-	shot->y=player->y-shot->h+20;
+	shot->x=x;
+	shot->y=y;
+	shot->alpha=150;
 	shot->mover=player_move_fireball;
 	shot->flags|=SP_FLAG_VISIBLE;
 	data=mmalloc(sizeof(PL_FIREBALL_DATA));
 	shot->data=data;
 	data->angle=270;
-	data->speed=18;
-	data->strength=3;
-
-	shot=sprite_add_file2("fireball1.png",2,PR_PLAYER);
-	shot->anim_speed=1;
-	shot->type=SP_PL_FIREBALL;
-	shot->x=player->x+player->w/2-shot->w/2+5;
-	shot->y=player->y-shot->h+20;
-	shot->mover=player_move_fireball;
-	shot->flags|=SP_FLAG_VISIBLE;
-	data=mmalloc(sizeof(PL_FIREBALL_DATA));
-	shot->data=data;
-	data->angle=270+2;
-	data->speed=18;
-	data->strength=2;
-
-	shot=sprite_add_file("plasma.png",1,PR_PLAYER);
-	shot->type=SP_PL_PLASMA;
-	shot->x=player->x+player->w/2-shot->w/2+15;
-	shot->y=player->y-shot->h+25;
-	shot->mover=player_move_plasma;
-	shot->flags|=SP_FLAG_VISIBLE;
-	data=mmalloc(sizeof(PL_PLASMA_DATA));
-	shot->data=data;
-	data->angle=270+5;
-	data->speed=15;
-	data->strength=1;
+	data->speed=10;
+	data->strength=4;
 }
 
-void player_move_fireball(SPRITE *s)
+void player_move_fireball(SPRITE *s)	//霊夢、魔理沙
 {
 	PL_FIREBALL_DATA *p=(PL_FIREBALL_DATA *)s->data;
 
@@ -864,25 +1126,26 @@ void player_move_fireball(SPRITE *s)
 	}
 }
 
-void player_add_plasma(SPRITE *player)
+void player_add_fuda(SPRITE *player)	//霊夢
 {
 	SPRITE *shot;
 	PL_PLASMA_DATA *data;
 
 	shot=sprite_add_file("plasma.png",1,PR_PLAYER);
-	shot->type=SP_PL_PLASMA;
+	shot->type=SP_PL_PLASMA;	
 	shot->x=player->x+player->w/2-shot->w/2;
 	shot->y=player->y-shot->h+20;
 	shot->mover=player_move_plasma;
 	shot->flags|=SP_FLAG_VISIBLE;
+	shot->alpha=150;
 	data=mmalloc(sizeof(PL_PLASMA_DATA));
 	shot->data=data;
 	data->angle=270;
 	data->speed=15;
-	data->strength=1;
+	data->strength=2;
 }
 
-void player_add_doubleplasma(SPRITE *player)
+void player_add_doublefuda(SPRITE *player)	//霊夢
 {
 	SPRITE *shot;
 	PL_PLASMA_DATA *data;
@@ -893,11 +1156,12 @@ void player_add_doubleplasma(SPRITE *player)
 	shot->y=player->y-shot->h+20;
 	shot->mover=player_move_plasma;
 	shot->flags|=SP_FLAG_VISIBLE;
+	shot->alpha=150;
 	data=mmalloc(sizeof(PL_PLASMA_DATA));
 	shot->data=data;
 	data->angle=270;
 	data->speed=15;
-	data->strength=1;
+	data->strength=2;
 
 	shot=sprite_add_file("plasma.png",1,PR_PLAYER);
 	shot->type=SP_PL_PLASMA;
@@ -905,14 +1169,15 @@ void player_add_doubleplasma(SPRITE *player)
 	shot->y=player->y-shot->h+20;
 	shot->mover=player_move_plasma;
 	shot->flags|=SP_FLAG_VISIBLE;
+	shot->alpha=150;
 	data=mmalloc(sizeof(PL_PLASMA_DATA));
 	shot->data=data;
 	data->angle=270;
 	data->speed=15;
-	data->strength=1;
+	data->strength=2;
 }
 
-void player_add_quadplasma(SPRITE *player)
+void player_add_triplefuda(SPRITE *player)	//霊夢
 {
 	SPRITE *shot;
 	PL_PLASMA_DATA *data;
@@ -923,13 +1188,193 @@ void player_add_quadplasma(SPRITE *player)
 	shot->y=player->y-shot->h+25;
 	shot->mover=player_move_plasma;
 	shot->flags|=SP_FLAG_VISIBLE;
+	shot->alpha=150;
 	data=mmalloc(sizeof(PL_PLASMA_DATA));
 	shot->data=data;
-	data->angle=270-5;
+	data->angle=270-6;
 	data->speed=15;
-	data->strength=1;
+	data->strength=2;
 
 	shot=sprite_add_file("plasma.png",1,PR_PLAYER);
+	shot->type=SP_PL_PLASMA;
+	shot->x=player->x+player->w/2-shot->w/2;
+	shot->y=player->y-shot->h+20;
+	shot->mover=player_move_plasma;
+	shot->flags|=SP_FLAG_VISIBLE;
+	shot->alpha=150;
+	data=mmalloc(sizeof(PL_PLASMA_DATA));
+	shot->data=data;
+	data->angle=270;
+	data->speed=15;
+	data->strength=2;
+
+	shot=sprite_add_file("plasma.png",1,PR_PLAYER);
+	shot->type=SP_PL_PLASMA;
+	shot->x=player->x+player->w/2-shot->w/2+15;
+	shot->y=player->y-shot->h+25;
+	shot->mover=player_move_plasma;
+	shot->flags|=SP_FLAG_VISIBLE;
+	shot->alpha=150;
+	data=mmalloc(sizeof(PL_PLASMA_DATA));
+	shot->data=data;
+	data->angle=270+6;
+	data->speed=15;
+	data->strength=2;
+}
+
+void player_add_quadfuda(SPRITE *player)	//霊夢
+{
+	SPRITE *shot;
+	PL_PLASMA_DATA *data;
+
+	shot=sprite_add_file("plasma.png",1,PR_PLAYER);
+	shot->type=SP_PL_PLASMA;
+	shot->x=player->x+player->w/2-shot->w/2-15;
+	shot->y=player->y-shot->h+25;
+	shot->mover=player_move_plasma;
+	shot->flags|=SP_FLAG_VISIBLE;
+	shot->alpha=150;
+	data=mmalloc(sizeof(PL_PLASMA_DATA));
+	shot->data=data;
+	data->angle=270-10;
+	data->speed=15;
+	data->strength=2;
+
+	shot=sprite_add_file("plasma.png",1,PR_PLAYER);
+	shot->type=SP_PL_PLASMA;
+	shot->x=player->x+player->w/2-shot->w/2-5;
+	shot->y=player->y-shot->h+20;
+	shot->mover=player_move_plasma;
+	shot->flags|=SP_FLAG_VISIBLE;
+	shot->alpha=150;
+	data=mmalloc(sizeof(PL_PLASMA_DATA));
+	shot->data=data;
+	data->angle=270;
+	data->speed=15;
+	data->strength=2;
+
+	shot=sprite_add_file("plasma.png",1,PR_PLAYER);
+	shot->type=SP_PL_PLASMA;
+	shot->x=player->x+player->w/2-shot->w/2+5;
+	shot->y=player->y-shot->h+20;
+	shot->mover=player_move_plasma;
+	shot->flags|=SP_FLAG_VISIBLE;
+	shot->alpha=150;
+	data=mmalloc(sizeof(PL_PLASMA_DATA));
+	shot->data=data;
+	data->angle=270;
+	data->speed=15;
+	data->strength=2;
+
+	shot=sprite_add_file("plasma.png",1,PR_PLAYER);
+	shot->type=SP_PL_PLASMA;
+	shot->x=player->x+player->w/2-shot->w/2+15;
+	shot->y=player->y-shot->h+25;
+	shot->mover=player_move_plasma;
+	shot->flags|=SP_FLAG_VISIBLE;
+	shot->alpha=150;
+	data=mmalloc(sizeof(PL_PLASMA_DATA));
+	shot->data=data;
+	data->angle=270+10;
+	data->speed=15;
+	data->strength=2;
+}
+
+void player_add_fifthfuda(SPRITE *player)	//霊夢
+{
+	SPRITE *shot;
+	PL_PLASMA_DATA *data;
+
+	shot=sprite_add_file("plasma.png",1,PR_PLAYER);
+	shot->type=SP_PL_PLASMA;
+	shot->x=player->x+player->w/2-shot->w/2-15;
+	shot->y=player->y-shot->h+25;
+	shot->mover=player_move_plasma;
+	shot->flags|=SP_FLAG_VISIBLE;
+	shot->alpha=150;
+	data=mmalloc(sizeof(PL_PLASMA_DATA));
+	shot->data=data;
+	data->angle=270-15;
+	data->speed=15;
+	data->strength=2;
+
+	shot=sprite_add_file("plasma.png",1,PR_PLAYER);
+	shot->type=SP_PL_PLASMA;
+	shot->x=player->x+player->w/2-shot->w/2-5;
+	shot->y=player->y-shot->h+20;
+	shot->mover=player_move_plasma;
+	shot->flags|=SP_FLAG_VISIBLE;
+	shot->alpha=150;
+	data=mmalloc(sizeof(PL_PLASMA_DATA));
+	shot->data=data;
+	data->angle=270-8;
+	data->speed=15;
+	data->strength=2;
+
+	shot=sprite_add_file("plasma.png",1,PR_PLAYER);
+	shot->type=SP_PL_PLASMA;
+	shot->x=player->x+player->w/2-shot->w/2;
+	shot->y=player->y-shot->h+20;
+	shot->mover=player_move_plasma;
+	shot->flags|=SP_FLAG_VISIBLE;
+	shot->alpha=150;
+	data=mmalloc(sizeof(PL_PLASMA_DATA));
+	shot->data=data;
+	data->angle=270;
+	data->speed=15;
+	data->strength=2;
+
+	shot=sprite_add_file("plasma.png",1,PR_PLAYER);
+	shot->type=SP_PL_PLASMA;
+	shot->x=player->x+player->w/2-shot->w/2+5;
+	shot->y=player->y-shot->h+20;
+	shot->mover=player_move_plasma;
+	shot->flags|=SP_FLAG_VISIBLE;
+	shot->alpha=150;
+	data=mmalloc(sizeof(PL_PLASMA_DATA));
+	shot->data=data;
+	data->angle=270+8;
+	data->speed=15;
+	data->strength=2;
+
+	shot=sprite_add_file("plasma.png",1,PR_PLAYER);
+	shot->type=SP_PL_PLASMA;
+	shot->x=player->x+player->w/2-shot->w/2+15;
+	shot->y=player->y-shot->h+25;
+	shot->mover=player_move_plasma;
+	shot->flags|=SP_FLAG_VISIBLE;
+	shot->alpha=150;
+	data=mmalloc(sizeof(PL_PLASMA_DATA));
+	shot->data=data;
+	data->angle=270+15;
+	data->speed=15;
+	data->strength=2;
+}
+
+void player_add_star(SPRITE *player)	//魔理沙
+{
+	SPRITE *shot;
+	PL_PLASMA_DATA *data;
+
+	shot=sprite_add_file("plasma_ma.png",1,PR_PLAYER);
+	shot->type=SP_PL_PLASMA;
+	shot->x=player->x+player->w/2-shot->w/2;
+	shot->y=player->y-shot->h+20;
+	shot->mover=player_move_plasma;
+	shot->flags|=SP_FLAG_VISIBLE;
+	data=mmalloc(sizeof(PL_PLASMA_DATA));
+	shot->data=data;
+	data->angle=270;
+	data->speed=12;
+	data->strength=3;
+}
+
+void player_add_doublestar(SPRITE *player)	//魔理沙
+{
+	SPRITE *shot;
+	PL_PLASMA_DATA *data;
+
+	shot=sprite_add_file("plasma_ma.png",1,PR_PLAYER);
 	shot->type=SP_PL_PLASMA;
 	shot->x=player->x+player->w/2-shot->w/2-5;
 	shot->y=player->y-shot->h+20;
@@ -938,10 +1383,10 @@ void player_add_quadplasma(SPRITE *player)
 	data=mmalloc(sizeof(PL_PLASMA_DATA));
 	shot->data=data;
 	data->angle=270;
-	data->speed=15;
-	data->strength=1;
+	data->speed=12;
+	data->strength=3;
 
-	shot=sprite_add_file("plasma.png",1,PR_PLAYER);
+	shot=sprite_add_file("plasma_ma.png",1,PR_PLAYER);
 	shot->type=SP_PL_PLASMA;
 	shot->x=player->x+player->w/2-shot->w/2+5;
 	shot->y=player->y-shot->h+20;
@@ -950,23 +1395,110 @@ void player_add_quadplasma(SPRITE *player)
 	data=mmalloc(sizeof(PL_PLASMA_DATA));
 	shot->data=data;
 	data->angle=270;
-	data->speed=15;
-	data->strength=1;
+	data->speed=12;
+	data->strength=3;
+}
 
-	shot=sprite_add_file("plasma.png",1,PR_PLAYER);
+void player_add_triplestar(SPRITE *player)		//魔理沙
+{
+	SPRITE *shot;
+	PL_PLASMA_DATA *data;
+
+	shot=sprite_add_file("plasma_ma.png",1,PR_PLAYER);
 	shot->type=SP_PL_PLASMA;
-	shot->x=player->x+player->w/2-shot->w/2+15;
+	shot->x=player->x+player->w/2-shot->w/2-5;
+	shot->y=player->y-shot->h+20;
+	shot->mover=player_move_plasma;
+	shot->flags|=SP_FLAG_VISIBLE;
+	shot->alpha=150;
+	data=mmalloc(sizeof(PL_PLASMA_DATA));
+	shot->data=data;
+	data->angle=270-4;
+	data->speed=12;
+	data->strength=2;
+
+	shot=sprite_add_file("plasma_ma.png",1,PR_PLAYER);
+	shot->type=SP_PL_PLASMA;
+	shot->x=player->x+player->w/2-shot->w/2;
+	shot->y=player->y-shot->h+20;
+	shot->mover=player_move_plasma;
+	shot->flags|=SP_FLAG_VISIBLE;
+	shot->alpha=150;
+	data=mmalloc(sizeof(PL_PLASMA_DATA));
+	shot->data=data;
+	data->angle=270;
+	data->speed=12;
+	data->strength=2;
+
+	shot=sprite_add_file("plasma_ma.png",1,PR_PLAYER);
+	shot->type=SP_PL_PLASMA;
+	shot->x=player->x+player->w/2-shot->w/2+5;
+	shot->y=player->y-shot->h+20;
+	shot->mover=player_move_plasma;
+	shot->flags|=SP_FLAG_VISIBLE;
+	shot->alpha=150;
+	data=mmalloc(sizeof(PL_PLASMA_DATA));
+	shot->data=data;
+	data->angle=270+4;
+	data->speed=12;
+	data->strength=2;
+}
+
+void player_add_quadstar(SPRITE *player)	//魔理沙
+{
+	SPRITE *shot;
+	PL_PLASMA_DATA *data;
+
+	shot=sprite_add_file("plasma_ma.png",1,PR_PLAYER);
+	shot->type=SP_PL_PLASMA;
+	shot->x=player->x+player->w/2-shot->w/2-10;
 	shot->y=player->y-shot->h+25;
 	shot->mover=player_move_plasma;
 	shot->flags|=SP_FLAG_VISIBLE;
 	data=mmalloc(sizeof(PL_PLASMA_DATA));
 	shot->data=data;
-	data->angle=270+5;
-	data->speed=15;
-	data->strength=1;
+	data->angle=270-7;
+	data->speed=12;
+	data->strength=3;
+
+	shot=sprite_add_file("plasma_ma.png",1,PR_PLAYER);
+	shot->type=SP_PL_PLASMA;
+	shot->x=player->x+player->w/2-shot->w/2-6;
+	shot->y=player->y-shot->h+20;
+	shot->mover=player_move_plasma;
+	shot->flags|=SP_FLAG_VISIBLE;
+	data=mmalloc(sizeof(PL_PLASMA_DATA));
+	shot->data=data;
+	data->angle=270-3;
+	data->speed=12;
+	data->strength=3;
+
+	shot=sprite_add_file("plasma_ma.png",1,PR_PLAYER);
+	shot->type=SP_PL_PLASMA;
+	shot->x=player->x+player->w/2-shot->w/2+6;
+	shot->y=player->y-shot->h+20;
+	shot->mover=player_move_plasma;
+	shot->flags|=SP_FLAG_VISIBLE;
+	data=mmalloc(sizeof(PL_PLASMA_DATA));
+	shot->data=data;
+	data->angle=270+3;
+	data->speed=12;
+	data->strength=3;
+
+	shot=sprite_add_file("plasma_ma.png",1,PR_PLAYER);
+	shot->type=SP_PL_PLASMA;
+	shot->x=player->x+player->w/2-shot->w/2+10;
+	shot->y=player->y-shot->h+25;
+	shot->mover=player_move_plasma;
+	shot->flags|=SP_FLAG_VISIBLE;
+	data=mmalloc(sizeof(PL_PLASMA_DATA));
+	shot->data=data;
+	data->angle=270+7;
+	data->speed=12;
+	data->strength=3;
 }
 
-void player_move_plasma(SPRITE *s)
+void player_move_plasma(SPRITE *s)	//霊夢
 {
 	PL_PLASMA_DATA *p=(PL_PLASMA_DATA *)s->data;
 
@@ -1010,7 +1542,6 @@ void player_add_killray(SPRITE *player)		//使わない
 void player_move_killray(SPRITE *s)
 {
 	PL_KILLRAY_DATA *p=(PL_KILLRAY_DATA *)s->data;
-
 
 	s->x+=cos(degtorad(p->angle))*p->speed*fps_factor;
 	s->y+=sin(degtorad(p->angle))*p->speed*fps_factor;
@@ -1240,17 +1771,17 @@ int search_enemy()
 		}
 		s=s->next;
 	}
-
 	return -1;
 }
 
 
-void player_add_shield(SPRITE *s)		//シールドの追加
+void player_add_shield(SPRITE *s)		//シールドの追加	//霊夢
 {
 	SPRITE *c;
 	PL_SHIELD_DATA *d;
+	PLAYER_DATA *sd=(PLAYER_DATA *)s->data;
 	int i;
-	
+	sd->bonus=0x02;
 	for(i=0;i<=359;i+=45) {
 		if(i%90 == 0)
 		{
@@ -1260,7 +1791,7 @@ void player_add_shield(SPRITE *s)		//シールドの追加
 			c->data=d;
 			c->mover=player_move_shield;
 			d->angle=i;
-			d->speed=25;
+			d->speed=23;
 			d->rad=38;
 			c->type=SP_PL_SHIELD;
 		}
@@ -1272,7 +1803,7 @@ void player_add_shield(SPRITE *s)		//シールドの追加
 			c->data=d;
 			c->mover=player_move_shield2;
 			d->angle=i;
-			d->speed=18;
+			d->speed=17;
 			d->rad=35;
 			c->type=SP_PL_SHIELD;
 		}
@@ -1280,7 +1811,7 @@ void player_add_shield(SPRITE *s)		//シールドの追加
 
 }
 
-void player_move_shield(SPRITE *s)
+void player_move_shield(SPRITE *s)	//霊夢
 {
 	PL_SHIELD_DATA *d=(PL_SHIELD_DATA *)s->data;
 	PLAYER_DATA *p=(PLAYER_DATA *)player->data;
@@ -1311,7 +1842,7 @@ void player_move_shield(SPRITE *s)
 		s->type=-1;
 }
 
-void player_move_shield2(SPRITE *s)
+void player_move_shield2(SPRITE *s)	//霊夢
 {
 	PL_SHIELD_DATA *d=(PL_SHIELD_DATA *)s->data;
 	PLAYER_DATA *p=(PLAYER_DATA *)player->data;
@@ -1330,6 +1861,70 @@ void player_move_shield2(SPRITE *s)
 		s->type=-1;
 }
 
+void player_add_levarie(SPRITE *s)	//魔理沙
+{
+	SPRITE *c;
+	PL_LEVARIE_DATA *d;
+	PLAYER_DATA *sd=(PLAYER_DATA *)s->data;
+	int i;
+	double ang=0;
+
+	sd->bonus=0x02;
+	for(i=0;i<16;i++){
+		switch(i%6){
+			case 0:
+				c=sprite_add_file("star_shield_blue.png",3,PR_PLAYER);
+				break;
+			case 1:
+				c=sprite_add_file("star_shields_red.png",3,PR_PLAYER);
+				break;
+			case 2:
+				c=sprite_add_file("star_shield_green.png",3,PR_PLAYER);
+				break;
+			case 3:
+				c=sprite_add_file("star_shields_blue.png",3,PR_PLAYER);
+				break;
+			case 4:
+				c=sprite_add_file("star_shield_red.png",3,PR_PLAYER);
+				break;
+			case 5:
+				c=sprite_add_file("star_shields_green.png",3,PR_PLAYER);
+				break;
+		}
+		c->anim_speed=5;
+		c->flags|=SP_FLAG_VISIBLE;
+		d=mmalloc(sizeof(PL_LEVARIE_DATA));
+		c->data=d;
+		c->mover=player_move_levarie;
+		d->angle=ang;
+		if(i%2==0){
+			d->speed=1;
+			c->alpha=150;
+		}
+		else{
+			d->speed=1.2;
+			c->alpha=180;
+		}
+		c->type=SP_PL_SHIELD;
+		c->x=s->x+s->w/2-c->w/2;
+		c->y=s->y+s->h/2-c->h/2;
+		ang+=0.39269908169872415481;
+	}
+}
+
+void player_move_levarie(SPRITE *s){
+	PL_LEVARIE_DATA *d=(PL_LEVARIE_DATA *)s->data;
+	
+	s->x+=cos(d->angle)*d->speed*fps_factor;
+	s->y+=sin(d->angle)*d->speed*fps_factor;
+
+	weapon_colcheck(s,d->angle,0,1);
+
+	if((s->x+s->w<0)||(s->x>WIDTH2)||(s->y+s->h<0)||(s->y>HEIGHT)) {
+		s->type=-1;
+	}
+}
+
 void player_add_hlaser(SPRITE *s)
 {
 	SPRITE *c;
@@ -1340,13 +1935,20 @@ void player_add_hlaser(SPRITE *s)
 
 	for(j=0;j<2;j++) {
 		e=controller_add();
-		e->max=24;
+		e->max=12;		//***090128		半分にしてみる
 		id_array=mmalloc(sizeof(int)*e->max);
 		e->e=id_array;
 		e->con=player_controller_hlaser;
 
 		for(i=0;i<e->max;i++) {
-			c=sprite_add_file("tshoot.png",6,PR_PLAYER);
+			switch(select_player){
+				case REIMU:
+					c=sprite_add_file("tshoot.png",6,PR_PLAYER);
+					break;
+				case MARISA:
+					c=sprite_add_file("tshoot-ma.png",6,PR_PLAYER);
+					break;
+			}
 			id_array[i]=c->id;
 			c->type=SP_PL_HLASER;
 			c->x=(s->x+s->w/2)-5;
@@ -1550,6 +2152,18 @@ void weapon_colcheck(SPRITE *s, int angle, int destroy, int check_bullets)
 					enemy_boss03_hitbyweapon(c,s,angle);
 				}
 				break;
+			case SP_EN_BOSS04:		//***090127		追加
+				if(s->type!=SP_PL_SHIELD)
+				{
+					enemy_boss04_hitbyweapon(c,s,angle);
+				}
+				break;
+			case SP_EN_GFAIRY:
+				if(s->type!=SP_PL_SHIELD)
+				{
+					enemy_nonshield_hitbyweapon(c,s,angle);
+				}
+				break;
 
 			default:
 				d=(ENEMY_BASE *)c->data;
@@ -1564,28 +2178,39 @@ void weapon_colcheck(SPRITE *s, int angle, int destroy, int check_bullets)
 					//parsys_add(spimg, 2,2, c->x,c->y, 10, angle, 10, 50, EXPLODE|DIFFSIZE, NULL);
 					switch(c->type){		//***090123		追加
 						case SP_EN_GREETER:
-							if(rand()%100>70){
-								if(rand()%100>50)
-									bonus_add(c->x, c->y, SP_BONUS_FIREPOWER);
+							if(rand_percent(30)){
+								if(rand_percent(50))
+									bonus_add(c->x, c->y, SP_BONUS_FIREPOWER, s->type==SP_PL_SHIELD);
 								else
-									bonus_add(c->x, c->y, SP_BONUS_COIN);
+									bonus_add(c->x, c->y, SP_BONUS_COIN, s->type==SP_PL_SHIELD);
 							}
 							break;
 						case SP_EN_MING:
-							if(rand()%100>70){
-								if(rand()%100>50)
-									bonus_add(c->x, c->y, SP_BONUS_FIREPOWER);
+							if(rand_percent(30)){
+								if(rand_percent(50))
+									bonus_add(c->x, c->y, SP_BONUS_FIREPOWER, s->type==SP_PL_SHIELD);
 								else
-									bonus_add(c->x, c->y, SP_BONUS_COIN);
+									bonus_add(c->x, c->y, SP_BONUS_COIN, s->type==SP_PL_SHIELD);
 							}
 							break;
 						case SP_EN_GROUNDER:
-							if(rand()%100>70)
-									bonus_add(c->x, c->y, SP_BONUS_FIREPOWER);
-							if(rand()%100>70)
-									bonus_add(c->x+5, c->y+5, SP_BONUS_COIN);
-							if(rand()%100>70)
-									bonus_add(c->x+10, c->y-5, SP_BONUS_FIREPOWER);
+							if(rand_percent(30))
+								bonus_add(c->x, c->y, SP_BONUS_FIREPOWER, s->type==SP_PL_SHIELD);
+							if(rand_percent(30))
+								bonus_add(c->x+5, c->y+5, SP_BONUS_COIN, s->type==SP_PL_SHIELD);
+							if(rand_percent(30))
+								bonus_add(c->x+10, c->y-5, SP_BONUS_FIREPOWER, s->type==SP_PL_SHIELD);
+							break;
+						case SP_EN_BADGUY:
+							if(rand_percent(10))
+								bonus_add(c->x, c->y, SP_BONUS_ADDSPEED, s->type==SP_PL_SHIELD);
+							break;
+						case SP_EN_SPLASH:
+							bonus_add(c->x, c->y, SP_BONUS_COIN, s->type==SP_PL_SHIELD);
+							break;
+						case SP_EN_FAIRY:
+							if(rand_percent(30))
+								bonus_add(c->x, c->y, SP_BONUS_FIREPOWER, s->type==SP_PL_SHIELD);
 							break;
 					}
 					pd->score+=d->score;

@@ -11,7 +11,7 @@
 #include "fps.h"
 
 /* Menues */
-enum _menu_states { MEN_START, MEN_PAUSE, MEN_OPTION, MEN_VOLUME, MEN_DIFF, K_CONFIG, MEN_PLAYERS };
+enum _menu_states { MEN_START, MEN_PAUSE, MEN_OPTION, MEN_VOLUME, MEN_DIFF };
 
 typedef struct {
 	SPRITE *opts[20][5];	//項目、アニメーション(残像)レイヤー
@@ -51,6 +51,7 @@ void key_config_work();
 void kp_search(int btn, int num);
 void player_opt_init();
 void player_opt_work();
+void player_opt_img(SDL_Surface *src, double scale, int l_or_r);
 void genericmenu_init(char *options[], MENU *m, int fadeout, int timeout);
 void genericmenu_work(MENU *m);
 #endif

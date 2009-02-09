@@ -46,15 +46,15 @@ void enemy_boss01_add(int lv)
 		b=mmalloc(sizeof(BOSS01_DATA));
 		sb01[i]->data=b;
 		if(i==0)
-			b->b.health=200;		//***090114		変更(+50)
+			b->b.health=400;		//***090114		変更(+50)
 		else if(i==1)
-			b->b.health=350;		//アリス本体のHP。もう少し高くてもいいかも。***090114	変更(+100)
+			b->b.health=700;		//アリス本体のHP。もう少し高くてもいいかも。***090114	変更(+100)
 		else if(i==2)
-			b->b.health=200;		//***090114		変更(+50)
+			b->b.health=400;		//***090114		変更(+50)
 		else if(i==4)
-			b->b.health=5;		//真ん中の子
+			b->b.health=20;		//真ん中の子
 		else
-			b->b.health=60;  //denis was 40		***090114	変更(+20)
+			b->b.health=200;  //denis was 40		***090114	変更(+20)
 		if(i==1)
 			b->b.score=1000*(difficulty+1);
 		else
@@ -362,7 +362,8 @@ void enemy_boss01_fire(int where) /* 0: left, 1: right, 2: bombenhagel */
 				ldata->angle=degtorad(angle);
 				ldata->speed=4;
 			}
-			
+			if(!(sb01[4]->flags&SP_FLAG_VISIBLE))
+				enemy_n_way_bullet(sb01[1], "kugel.png", 0, 12, 5, atan2(player->y+player->h/2-sb01[1]->h/2-sb01[1]->y,player->x-player->w/2-sb01[1]->x));
 			break;
 	}
 }

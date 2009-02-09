@@ -30,13 +30,13 @@ char mods[20][20];
 int modcount=0;
 
 
-void wait(){
-        int i,j;
-        for (i=0; i<10000; i++) {
-                for(j=0; j<2000; j++)
-			j++;
-	}
-}
+//void wait(){
+//        int i,j;
+//        for (i=0; i<10000; i++) {
+//                for(j=0; j<2000; j++)
+//			j++;
+//	}
+//}
 
 
 void readModDirs( ) {
@@ -102,13 +102,13 @@ printF("\n \
 			break;
 		}
 		}
-		wait();
+		for(i=0; i<8; i++){
+			sceDisplayWaitVblankStart();/*vsync*/
+		}//wait();
 	}
 	pspDebugScreenClear();
 }
 
-//*****下の三つの関数は幼稚園氏のサイトに書いてあった物のそのまんまコピペなのでやり方を間違えている可能性が高い*****
-//*****homeで終われない原因は俺の力不足及び知識不足
 
 /* Exit callback */
 static int exit_callback(int arg1, int arg2, void *common)
@@ -226,6 +226,19 @@ int main(int argc, char *argv[])
 				}
 				hsc_entry_work();
 				break;
+			case ST_KEY_CONFIG: 
+				if(state.newstate) { 
+					key_config_init(); 
+					state.newstate=0; 
+				} 
+				key_config_work(); 
+				break;
+			case ST_PLAYER_SELECT:
+				if(state.newstate) { 
+					player_opt_init(); 
+					state.newstate=0; 
+				}
+				player_opt_work();
 		}
 		
 		//fps_show();

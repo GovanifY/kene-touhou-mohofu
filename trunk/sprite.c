@@ -173,12 +173,12 @@ void sprite_display(int type)
 			t.h=s->h;
 			t.x=s->w*s->aktframe;
 			
-			if(s->flags&SP_FLAG_CHEAPALPHA) {
-				blit_calpha(s->img,&t,screen,&r);
-			} else {
+//			if(s->flags&SP_FLAG_CHEAPALPHA) {
+//				blit_calpha(s->img,&t,screen,&r);
+//			} else {
 				SDL_SetAlpha(s->img,SDL_SRCALPHA,s->alpha);
 				SDL_BlitSurface(s->img,&t,screen,&r);
-			}
+//			}
 		}
 		s=s->next;
 	}
@@ -291,7 +291,7 @@ void sprite_work(int type)
 			s->ticks++;
 			if (s->ticks>1000) {
 				s->ticks=0;
-				if ((s->priority==PR_ENEMY || s->priority== PR_ENEMY_WEAPON) && s->type!=SP_EN_BOSS01 && s->type!=SP_EN_BOSS02 && s->type!=SP_EN_BOSS03 && s->type!=SP_MENUTEXT) 
+				if ((s->priority==PR_ENEMY || s->priority== PR_ENEMY_WEAPON) && s->type!=SP_EN_BOSS01 && s->type!=SP_EN_BOSS02 && s->type!=SP_EN_BOSS03 && s->type!=SP_EN_BOSS04 && s->type!=SP_MENUTEXT)
 					s->type=-1;
 			}
 			if(s->type==-1) {

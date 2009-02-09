@@ -37,7 +37,7 @@ enum FONTS { FONT01, FONT02, FONT03, FONT04, FONT05, FONT06, FONT07, LAST_FONT }
 #define FONT06W 16
 #define FONT06H 16
 
-#define FONT07NAME "font07.bmp"
+#define FONT07NAME "font07.png"
 #define FONT07CHARS " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^"
 #define FONT07W 8
 #define FONT07H 8

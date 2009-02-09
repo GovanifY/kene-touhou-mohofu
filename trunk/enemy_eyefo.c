@@ -37,8 +37,8 @@ void enemy_eyefo_add(int lv)
 		s->aktframe=i%s->frames;
 		data=mmalloc(sizeof(EYEFO_DATA));
 		s->data=data;
-		data->b.score=10;
-		data->b.health=1;
+		data->b.score=30;
+		data->b.health=10;
 		data->radius=10;
 		data->flag1=0;
 		data->angle=360/16*i;
@@ -80,7 +80,7 @@ void enemy_eyefo_controller(CONTROLLER *c)
 			return;
 		}
 	}
-	bonus_add(id_array[c->max],id_array[c->max+1],SP_BONUS_EXTRA);
+	bonus_add(id_array[c->max],id_array[c->max+1],SP_BONUS_EXTRA,0);
 	controller_remove(c);
 }
 

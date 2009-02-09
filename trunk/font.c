@@ -48,6 +48,7 @@ void font_init()
 	}
 }
 
+/*
 SDL_Surface *font_render(char *text,int fontnr)
 {
 	SDL_Surface *txtimg;
@@ -81,7 +82,52 @@ SDL_Surface *font_render(char *text,int fontnr)
 	}
 	return(txtimg);
 }
-				
+*/
+
+/* 任意のサーフェイスに、文字列をレンダリング */
+static void font_render_surface_xy(SDL_Surface *txtimg, char *text, int fontnr, int x_offset, int y_offset)
+{
+	SDL_Rect s,d;
+	s.w=fonts[fontnr].w; d.w=(s.w)/*fonts[fontnr].w*/;
+	s.h=fonts[fontnr].h; d.h=(s.h)/*fonts[fontnr].h*/;
+	unsigned int i,j;
+	for(i=0;i<strlen(text);i++) {
+		for(j=0;j<strlen(fonts[fontnr].charorder);j++) {
+			if(text[i]==fonts[fontnr].charorder[j])
+			{
+				break;
+			}
+		}
+		s.x=j*(s.w)/*fonts[fontnr].w*/;
+		s.y=0;
+		d.x=x_offset+i*(s.w)/*fonts[fontnr].w*/;
+		d.y=y_offset/*0*/;
+		SDL_BlitSurface(fonts[fontnr].fontimg,&s,txtimg,&d);
+	}
+}
+
+/* サーフェイスを作らないで、直接画面に表示 */
+void font_print_screen_xy(char *text, int fontnr, int x, int y)
+{
+	SDL_SetColorKey(fonts[fontnr].fontimg/*screen*/,SDL_SRCCOLORKEY|SDL_RLEACCEL,0x00000000);
+	font_render_surface_xy( screen, text, fontnr, x, y);
+}
+
+/* 新規サーフェイスを作成し、文字列をレンダリング */
+SDL_Surface *font_render(char *text,int fontnr)
+{
+	SDL_Surface *txtimg;
+	txtimg=SDL_CreateRGBSurface(SDL_SRCCOLORKEY|SDL_HWSURFACE,strlen(text)*fonts[fontnr].w,fonts[fontnr].h,
+	screen->format->BitsPerPixel,
+	screen->format->Rmask,
+	screen->format->Gmask,
+	screen->format->Bmask,
+	screen->format->Amask);
+	SDL_SetColorKey(txtimg,SDL_SRCCOLORKEY|SDL_RLEACCEL,0x00000000);
+	font_render_surface_xy( txtimg, text, fontnr, 0, 0);
+	return(txtimg);
+}
+
 void font_print(char *text, int fontnr, int x, int y)
 {
 	SDL_Surface *textsurface;

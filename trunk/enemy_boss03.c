@@ -18,12 +18,22 @@ void enemy_boss03_add(int lv)
 	int i;
 	BOSS03_DATA *b;
 
-	sb03[0]=sprite_add_file("boss03-lo.png",2,PR_ENEMY);
-	sb03[1]=sprite_add_file("boss03-mo.png",2,PR_ENEMY);
-	sb03[2]=sprite_add_file("boss03-ro.png",2,PR_ENEMY);
-	sb03[3]=sprite_add_file("boss03-lu.png",2,PR_ENEMY);
-	sb03[4]=sprite_add_file("boss03-mu.png",2,PR_ENEMY);
-	sb03[5]=sprite_add_file("boss03-ru.png",2,PR_ENEMY);
+	if(lv==0){
+		sb03[0]=sprite_add_file("boss05-lo.png",2,PR_ENEMY);
+		sb03[1]=sprite_add_file("boss05-mo.png",2,PR_ENEMY);
+		sb03[2]=sprite_add_file("boss05-ro.png",2,PR_ENEMY);
+		sb03[3]=sprite_add_file("boss05-lu.png",2,PR_ENEMY);
+		sb03[4]=sprite_add_file("boss05-mu.png",2,PR_ENEMY);
+		sb03[5]=sprite_add_file("boss05-ru.png",2,PR_ENEMY);
+	}
+	else{
+		sb03[0]=sprite_add_file("boss03-lo.png",2,PR_ENEMY);
+		sb03[1]=sprite_add_file("boss03-mo.png",2,PR_ENEMY);
+		sb03[2]=sprite_add_file("boss03-ro.png",2,PR_ENEMY);
+		sb03[3]=sprite_add_file("boss03-lu.png",2,PR_ENEMY);
+		sb03[4]=sprite_add_file("boss03-mu.png",2,PR_ENEMY);
+		sb03[5]=sprite_add_file("boss03-ru.png",2,PR_ENEMY);
+	}
 
 	for(i=0;i<6;i++) {
 		sb03[i]->flags|=(SP_FLAG_VISIBLE|SP_FLAG_COLCHECK);
@@ -36,12 +46,12 @@ void enemy_boss03_add(int lv)
 		{
 			if(i==1)
 			{
-				b->b.health=800;
-				b->b.score=1500*(difficulty+1);
+				b->b.health=2000;
+				b->b.score=3000+2000*difficulty;
 			}
 			else
 			{
-				b->b.health=80;
+				b->b.health=200;
 				b->b.score=600*(difficulty+1);
 			}
 		}

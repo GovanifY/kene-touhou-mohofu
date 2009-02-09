@@ -2,6 +2,7 @@
 
 extern double fps_factor;
 extern SPRITE *player;
+extern int difficulty;		//***090209		追加
 
 typedef struct {
 	ENEMY_BASE b;
@@ -38,10 +39,10 @@ void enemy_curver_add(int lv)
 		data=mmalloc(sizeof(CURVER_DATA));
 		s->data=data;
 		data->b.score=25;
-		data->b.health=3;
+		data->b.health=5;
 		data->angle=0;
-		data->speed=7;
-		data->turnspeed=8;
+		data->speed=3+difficulty;
+		data->turnspeed=4+difficulty;
 		data->left=50;
 		data->right=WIDTH2-50-s->w;		//ウィンドウ幅の変更
 		data->state=0;
@@ -81,7 +82,7 @@ void enemy_curver_controller(CONTROLLER *c)
 			return;
 		}
 	}
-	bonus_add(id_array[c->max],id_array[c->max+1],SP_BONUS_FIREPOWER_G);
+	bonus_add(id_array[c->max],id_array[c->max+1],SP_BONUS_FIREPOWER_G,0);
 	controller_remove(c);
 }
 
@@ -100,7 +101,7 @@ void enemy_curver_move(SPRITE *s)
 				d->angle=180;
 				d->state=2;
 				if(d->level>0)
-					enemy_bullet_create(s,3+d->level);
+					enemy_bullet_create(s,2+d->level/3);
 					
 			}
 			break;
@@ -114,7 +115,7 @@ void enemy_curver_move(SPRITE *s)
 				d->angle=360;
 				d->state=4;
 				if(d->level>0)
-					enemy_bullet_create(s,3+d->level);
+					enemy_bullet_create(s,2+d->level/3);
 			}
 			break;
 		case 4:
@@ -127,7 +128,7 @@ void enemy_curver_move(SPRITE *s)
 				d->angle=180;
 				d->state=6;
 				if(d->level>0)
-					enemy_bullet_create(s,3+d->level);
+					enemy_bullet_create(s,2+d->level/3);
 			}
 			break;
 		case 6:
@@ -140,7 +141,7 @@ void enemy_curver_move(SPRITE *s)
 				d->angle=0;
 				d->state=8;
 				if(d->level>0)
-					enemy_bullet_create(s,3+d->level);
+					enemy_bullet_create(s,2+d->level/3);
 			}
 			break;
 		case 8:

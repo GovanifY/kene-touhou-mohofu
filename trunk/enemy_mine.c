@@ -27,7 +27,7 @@ void enemy_mine_add(int lv)
 	data=mmalloc(sizeof(MINE_DATA));
 	s->data=data;
 	data->b.score=30;
-	data->b.health=5;
+	data->b.health=12+lv*2;
 	data->tx=rand()%270+50;
 	data->ty=rand()%300+50;
 	data->state=0;

@@ -10,11 +10,12 @@ PSP_LARGE_MEMORY = 1
 
 
 OBJS =	main.o \
-	particle.o \
 	font.o \
 	sprite.o \
 	bonus.o \
 	enemy.o \
+	enemy_fairy.o \
+	enemy_greatfairy.o \
 	enemy_greeter.o \
 	enemy_curver.o \
 	enemy_crusher.o \
@@ -28,6 +29,7 @@ OBJS =	main.o \
 	enemy_zatak.o \
 	enemy_badguy.o \
 	enemy_grounder.o \
+	enemy_magicformatiion.o \
 	enemy_bgpanel.o \
 	enemy_bgpanel2.o \
 	enemy_proball.o \
@@ -36,6 +38,7 @@ OBJS =	main.o \
 	enemy_boss01.o \
 	enemy_boss02.o \
 	enemy_boss03.o \
+	enemy_boss04.o \
 	enemy_gametext.o \
 	enemy_splash.o \
 	support.o \

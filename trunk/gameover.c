@@ -16,6 +16,8 @@ void gameover_init()
 {
 	char scoretext[50];
 
+	bg_destroy(); 
+	controller_remove_all(); 
 	sprite_remove_all(SP_SHOW_ALL);
 //	parsys_remove_all();
 
@@ -162,15 +164,15 @@ void gameover_display(double s1, double s2)
 	s.h=go_surface1->h;
 	d.w=go_surface1->w*s1;
 	d.h=go_surface1->h*s1;
-	d.x=screen->w/2-d.w/2;
-	d.y=screen->h/2-d.h/2-30;
+	d.x=WIDTH2/2-d.w/2;		//***090203		d.x=screen->w/2-d.w/2;
+	d.y=HEIGHT/2-d.h/2-30;		//***090203		d.y=screen->h/2-d.h/2-30;
 	blit_scaled(go_surface1,&s,screen,&d);
 
 	s.w=go_surface2->w;
 	s.h=go_surface2->h;
 	d.w=go_surface2->w*s2;
 	d.h=go_surface2->h*s2;
-	d.x=screen->w/2-d.w/2;
-	d.y=screen->h/2-d.h/2+30;
+	d.x=WIDTH2/2-d.w/2;		//d.x=screen->w/2-d.w/2;
+	d.y=HEIGHT/2-d.h/2+30;		//d.y=screen->h/2-d.h/2+30;
 	blit_scaled(go_surface2,&s,screen,&d);
 }

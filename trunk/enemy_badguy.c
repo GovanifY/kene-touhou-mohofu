@@ -2,6 +2,7 @@
 
 extern SPRITE *player;
 extern double fps_factor;
+extern int difficulty;
 
 typedef struct {
 	ENEMY_BASE b;
@@ -35,12 +36,12 @@ void enemy_badguy_add(int lv)
 		s->y=rand()%40-90;
 		data=mmalloc(sizeof(BADGUY_DATA));
 		s->data=data;
-		data->b.score=5*(lv+1);
-		data->b.health=1;
+		data->b.score=50*(lv+1);
+		data->b.health=1+difficulty;
 		data->state=0;
 		data->tx=player->x;
 		data->ty=player->y;
-		data->speed=fps_factor*((double)(rand()%200)/100)*(3+lv);
+		data->speed=fps_factor*((double)(rand()%200)/100)*(1+difficulty+lv/3);
 		data->level=lv;
 
 	}
@@ -59,7 +60,7 @@ void enemy_badguy_move(SPRITE *s)
 				d->tx=-100;
 				d->ty=player->y;
 				if(d->level>0)
-					enemy_bullet_create(s,1+d->level);
+					enemy_bullet_create(s,1+d->level/2);
 				d->speed=6*fps_factor;
 			}
 			
@@ -69,7 +70,7 @@ void enemy_badguy_move(SPRITE *s)
 			}
 	}
 
-	angle=atan2(d->ty-s->y,d->tx-s->x);
+	angle=atan2(d->ty+20-s->y,d->tx-s->x);
 	s->x+=cos(angle)*d->speed;
 	s->y+=sin(angle)*d->speed;
 }

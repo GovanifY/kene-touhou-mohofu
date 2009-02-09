@@ -2,6 +2,7 @@
 
 extern SPRITE *player;
 extern double fps_factor;
+extern int difficulty;		//***0900209		’Ç‰Á
 
 typedef struct {
 	ENEMY_BASE b;
@@ -40,7 +41,7 @@ void enemy_proball_add(int lv)
 		data->b.score=10;
 		data->b.health=2;
 		data->state=0;
-		data->speed=5+lv;
+		data->speed=3+difficulty+lv/3;
 		data->dir=i%2==0?0:1;
 		data->level=lv;
 	}
@@ -76,7 +77,7 @@ void enemy_proball_controller(CONTROLLER *c)
 			return;
 		}
 	}
-	bonus_add(id_array[c->max],id_array[c->max+1],SP_BONUS_EXTRA);
+	bonus_add(id_array[c->max],id_array[c->max+1],SP_BONUS_EXTRA,0);
 	controller_remove(c);
 }
 

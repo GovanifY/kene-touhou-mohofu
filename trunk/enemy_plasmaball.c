@@ -73,7 +73,7 @@ void enemy_plasmaball_move(SPRITE *s)
 			if((d->ang>-0.7)&&(d->ang<0.4)&&(d->c==5)) {
 				d->state=2;
 				if(rand()%20==0)
-					bonus_add(s->x,s->y,SP_BONUS_EXTRA);
+					bonus_add(s->x,s->y,SP_BONUS_EXTRA,0);
 				if(rand()%20==0)
 					enemy_laser_create(s,5);
 			}

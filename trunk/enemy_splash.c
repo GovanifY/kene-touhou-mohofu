@@ -26,7 +26,7 @@ void enemy_splash_add(int lv)
 	data=mmalloc(sizeof(SPLASH_DATA));
 	s->data=data;
 	data->b.score=50;
-	data->b.health=5;
+	data->b.health=20;
 	data->state=0;
 	data->level=lv;
 	data->wait=0;
@@ -137,7 +137,7 @@ void enemy_splash_move(SPRITE *s)
 		enemy_laser_create(s, 3);
 		enemy_laser_create(s, 4);
 		
-		p=atan2(player->y-s->y,player->x-s->x);
+		p=atan2(player->y+player->h/2-s->y,player->x-player->w/2-s->x);
 		SPRITE *h;
 		BULLET_DATA *data;
 		if(difficulty>0){

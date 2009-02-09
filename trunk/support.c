@@ -14,6 +14,7 @@ SDL_Surface *loaddot[3];		//load画面用
 extern GAMESTATE state;
 extern GAMESTATE laststate;
 extern int difficulty;
+extern int b_id;
 SceCtrlData pad;
 /*
 	enum _keynum_{		//キーコンフィグ用
@@ -60,10 +61,12 @@ SceCtrlData pad;
 void game_init(int argc, char *argv[])
 {
 	Uint32 initflags=0;
-	int i;
+//	int i;
 	//SDL_Joystick *joy;
 	sceCtrlSetSamplingCycle(0);
 	sceCtrlSetSamplingMode(PSP_CTRL_MODE_ANALOG);
+	
+	b_id=0;		//***090129		変更
 /*
 	for(i=2;i<=argc;i++) {
 		if(!strncmp(argv[i-1],"-d",2)) {
@@ -187,6 +190,7 @@ void game_init(int argc, char *argv[])
 	unloadbmp_by_surface(loaddot[2]);
 }
 
+/*
 void toggle_fullscreen()
 {
 	SDL_Surface *tmp;
@@ -209,6 +213,7 @@ void toggle_fullscreen()
 	//SDL_FreeSurface(tmp);
 	// display_vidinfo();
 }
+*/
 
 void error(int errorlevel, char *msg, ...)
 {
@@ -309,6 +314,7 @@ void unloadbmp_by_surface(SDL_Surface *s)
 	error(ERR_WARN,"unloadbmp_by_surface: object not found");
 }
 
+/*
 void unloadbmp_by_name(char *name)
 {
 	char fn[50];
@@ -332,6 +338,7 @@ void unloadbmp_by_name(char *name)
 	CHECKPOINT;
 	error(ERR_WARN,"unloadbmp_by_name: object not found");
 }
+*/
 			
 void imglist_add(SDL_Surface *s, char *name)
 {
@@ -567,6 +574,7 @@ void blit_scaled(SDL_Surface *src, SDL_Rect *src_rct, SDL_Surface *dst, SDL_Rect
 /* just a quick hack - dont know if i will use it in the final game...
  * blits only every 2nd pixel, to archive a cheap 50%-alpha effect.
  */
+ /*
 void blit_calpha(SDL_Surface *src, SDL_Rect *src_rct, SDL_Surface *dst, SDL_Rect *dst_rct)
 {
 	Sint32 x, y;
@@ -625,6 +633,7 @@ void blit_calpha(SDL_Surface *src, SDL_Rect *src_rct, SDL_Surface *dst, SDL_Rect
 	if(SDL_MUSTLOCK(dst))
 		SDL_UnlockSurface(dst);
 }
+*/
 
 void keyboard_clear()
 {
@@ -635,96 +644,61 @@ void keyboard_clear()
 	}
 }
 
-void keyboard_poll()	//231氏と本家さんの協力によりSDLのキー取得を使わない方法を取った。
-{
-	//最大8191
-	sceCtrlReadBufferPositive(&pad, 1);			//この位置で合ってるかどうかはよくわからない。
-	if (pad.Buttons & PSP_CTRL_SQUARE){
-		keyboard[keyconfig.si]|=0x001;
+void keyboard_poll(void) 
+{ 
+	sceCtrlReadBufferPositive(&pad, 1); 
+	int pad_data = pad.Buttons; 
+	if (pad.Lx < 70){
+		pad_data |= PSP_CTRL_LEFT;
 	}
-	else
-	{
-		keyboard[keyconfig.si]&=0xFFE;
+	else if (pad.Lx > 185){
+		pad_data |= PSP_CTRL_RIGHT;
 	}
-	if (pad.Buttons & PSP_CTRL_CIRCLE){
-		keyboard[keyconfig.ma]=0x002;
-	}
-	else
-	{
-		keyboard[keyconfig.ma]&=0xFFD;
-	}
-	if (pad.Buttons & PSP_CTRL_CROSS){
-		keyboard[keyconfig.ba]=0x004;
-	}
-	else
-	{
-		keyboard[keyconfig.ba]&=0xFFB;
-	}
-	if (pad.Buttons & PSP_CTRL_LTRIGGER){
-		keyboard[keyconfig.lt]=0x008;
-	}
-	else
-	{
-		keyboard[keyconfig.lt]&=0xFF7;
-	}
-	if (pad.Buttons & PSP_CTRL_RTRIGGER){
-		keyboard[keyconfig.rt]=0x010;
-	}
-	else
-	{
-		keyboard[keyconfig.rt]&=0xFEF;
-	}
-	if (pad.Buttons & PSP_CTRL_SELECT){
-		keyboard[keyconfig.sl]=0x020;
-	}
-	else
-	{
-		keyboard[keyconfig.sl]&=0xFCF;
-	}
-	if (pad.Buttons & PSP_CTRL_START){
-		keyboard[keyconfig.st]=0x040;
-	}
-	else
-	{
-		keyboard[keyconfig.st]&=0xFBF;
-	}
-	if ((pad.Buttons & PSP_CTRL_UP)||(pad.Ly<70)){
-		keyboard[keyconfig.u]=0x080;
-	}
-	else
-	{
-		keyboard[keyconfig.u]&=0xF7F;
-	}
-	if ((pad.Buttons & PSP_CTRL_DOWN)||(pad.Ly>185)){
-		keyboard[keyconfig.d]=0x100;
-	}
-	else
-	{
-		keyboard[keyconfig.d]&=0xEFF;
-	}
-	if ((pad.Buttons & PSP_CTRL_LEFT)||(pad.Lx<70)){
-		keyboard[keyconfig.l]=0x200;
-	}
-	else
-	{
-		keyboard[keyconfig.l]&=0xDFF;
-	}
-	if ((pad.Buttons & PSP_CTRL_RIGHT)||(pad.Lx>185)){
-		keyboard[keyconfig.r]=0x400;
-	}
-	else
-	{
-		keyboard[keyconfig.r]&=0xBFF;
-	}
-	if (pad.Buttons & PSP_CTRL_TRIANGLE){
-		keyboard[keyconfig.sa]=0x800;
-	}
-	else
-	{
-		keyboard[keyconfig.sa]&=0x7FF;
-	}
-}
 
+	if (pad.Ly < 70){
+		pad_data |= PSP_CTRL_UP;
+	}
+	else if (pad.Ly > 185){
+		pad_data |= PSP_CTRL_DOWN;
+	}
+
+	if(pad_data & PSP_CTRL_SQUARE){keyboard[keyconfig.si] |= (pad_data & PSP_CTRL_SQUARE);}
+	else{keyboard[keyconfig.si] &= (~PSP_CTRL_SQUARE);}
+	
+	if(pad_data & PSP_CTRL_CIRCLE){keyboard[keyconfig.ma] |= (pad_data & PSP_CTRL_CIRCLE);}
+	else{keyboard[keyconfig.u] &= (~PSP_CTRL_CIRCLE);}
+
+	if(pad_data & PSP_CTRL_CROSS){keyboard[keyconfig.ba] |= (pad_data & PSP_CTRL_CROSS);}
+	else{keyboard[keyconfig.ba] &= (~PSP_CTRL_CROSS);}
+
+	if(pad_data & PSP_CTRL_LTRIGGER){keyboard[keyconfig.lt] |= (pad_data & PSP_CTRL_LTRIGGER);}
+	else{keyboard[keyconfig.lt] &= (~PSP_CTRL_LTRIGGER);}
+
+	if(pad_data & PSP_CTRL_RTRIGGER){keyboard[keyconfig.rt] |= (pad_data & PSP_CTRL_RTRIGGER);}
+	else{keyboard[keyconfig.rt] &= (~PSP_CTRL_RTRIGGER);}
+
+	if(pad_data & PSP_CTRL_SELECT){keyboard[keyconfig.sl] |= (pad_data & PSP_CTRL_SELECT);}
+	else{keyboard[keyconfig.sl] &= (~PSP_CTRL_SELECT);}
+
+	if(pad_data & PSP_CTRL_START){keyboard[keyconfig.st] |= (pad_data & PSP_CTRL_START);}
+	else{keyboard[keyconfig.st] &= (~PSP_CTRL_START);}
+
+	if(pad_data & PSP_CTRL_UP){keyboard[keyconfig.u] |= (pad_data & PSP_CTRL_UP);}
+	else{keyboard[keyconfig.u] &= (~PSP_CTRL_UP);}
+
+	if(pad_data & PSP_CTRL_DOWN){keyboard[keyconfig.d] |= (pad_data & PSP_CTRL_DOWN);}
+	else{keyboard[keyconfig.d] &= (~PSP_CTRL_DOWN);}
+
+	if(pad_data & PSP_CTRL_LEFT){keyboard[keyconfig.l] |= (pad_data & PSP_CTRL_LEFT);}
+	else{keyboard[keyconfig.l] &= (~PSP_CTRL_LEFT);}
+
+	if(pad_data & PSP_CTRL_RIGHT){keyboard[keyconfig.r] |= (pad_data & PSP_CTRL_RIGHT);}
+	else{keyboard[keyconfig.r] &= (~PSP_CTRL_RIGHT);}
+
+	if(pad_data & PSP_CTRL_TRIANGLE){keyboard[keyconfig.sa] |= (pad_data & PSP_CTRL_TRIANGLE);}
+	else{keyboard[keyconfig.sa] &= (~PSP_CTRL_TRIANGLE);}
+}
+	
 int keyboard_keypressed()
 {
 	int i;
@@ -759,123 +733,6 @@ void *mmalloc(size_t size)
 	return ptr;
 }
 
-void preload_gfx()
-{
-	/*
-		ファイルの確認だと思う。
-	*/
-	SDL_Surface *tmp;
-
-	load_ing();
-	tmp=loadbmp("12side.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("badblocks.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("badguy.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("bgpanel.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("bgpanel2.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("bonus_f.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("bonus_p.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("bonus_p_.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("bonus_s.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("bonus_h.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("bonus_x.png"); unloadbmp_by_surface(tmp);
-	load_ing();
-	tmp=loadbmp("boss01-lo.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("boss01-lu.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("boss01-mo.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("boss01-mu.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("boss01-ro.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("boss01-ru.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("boss02_v2.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("boss02_v2x.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("boss03-lo.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("boss03-lu.png"); unloadbmp_by_surface(tmp);
-	load_ing();
-	tmp=loadbmp("boss03-mo.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("boss03-mu.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("boss03-ro.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("boss03-ru.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("bshoot.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("bshoot2.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("coin.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("crusher.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("cshoot.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp2("cshoot1.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp2("cshoot2.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("cube.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("ex.png"); unloadbmp_by_surface(tmp);
-	load_ing();
-	tmp=loadbmp("eyefo.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("fireball.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp2("fireball1.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("firebomb.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("font01.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("font02.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("font03.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("font04.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("font05.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("font07.bmp"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("grounder.png"); unloadbmp_by_surface(tmp);
-	load_ing();
-	tmp=loadbmp("iris.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("homing.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("ketm.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("killray-b.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("killray-r.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("kugel.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("moon.jpg"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("plasma.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("plasmaball.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("Player_Star.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("Bomb_Star.png"); unloadbmp_by_surface(tmp);
-	//tmp=loadbmp("plate.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("plus1000.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("plus100.png"); unloadbmp_by_surface(tmp);
-	load_ing();
-	tmp=loadbmp("rotating_rocket.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("rwingx.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("splash.png"); unloadbmp_by_surface(tmp);		//***090124		追加
-	tmp=loadbmp("ship-med.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("speed.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("tr_blue.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("tr_red.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("tr_green.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("target.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("weapon.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("wolke01_1.png"); unloadbmp_by_surface(tmp);
-	load_ing();
-	tmp=loadbmp("wolke02_1.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("wolke03_1.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("wolke01_2.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("wolke02_2.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("wolke03_2.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("wolke01_3.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("wolke02_3.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("wolke03_3.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("wolke01_4.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("wolke02_4.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("wolke03_4.png"); unloadbmp_by_surface(tmp);
-	load_ing();
-	tmp=loadbmp2("weapon_p.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("key_bg.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("bg2.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("back1.jpg"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("back2.jpg"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("back3.jpg"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("back4.jpg"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("ming.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("tshoot.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("protectball.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("core.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp2("bigkugel1.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("bigkugel2.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("key_icon.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("keylist.png"); unloadbmp_by_surface(tmp);
-	
-	/* alle benoetigten Bilder in den Cache laden */
-}
-
-
-
 void load_ing()		//load画面用
 {
 	kazu ++;
@@ -896,11 +753,7 @@ void load_ing()		//load画面用
 	SDL_Flip(screen);
 }
 
-
-
-
-
-
+/*
 void display_vidinfo()
 {
 	const SDL_VideoInfo *s;
@@ -946,6 +799,181 @@ void display_vidinfo()
 	}
 	error(ERR_DEBUG,"=======================================");
 }
+*/
+
+void preload_gfx()
+{
+	/*
+		ファイルの確認だと思う。
+	*/
+	SDL_Surface *tmp;
+
+	load_ing();
+	tmp=loadbmp("12side.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("badblocks.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("badguy.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("bgpanel.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("bgpanel2.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("bonus_f.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("bonus_p.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("bonus_p_.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("bonus_s.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("bonus_h.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("bonus_x.png"); unloadbmp_by_surface(tmp);
+	load_ing();
+	tmp=loadbmp("boss01-lo.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("boss01-lu.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("boss01-mo.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("boss01-mu.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("boss01-ro.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("boss01-ru.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("boss02_v2.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("boss02_v2x.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("boss03-lo.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("boss03-lu.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("boss03-mo.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("boss03-mu.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("boss03-ro.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("boss03-ru.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("boss04.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp2("boss04-lo.png"); unloadbmp_by_surface(tmp);
+    tmp=loadbmp("boss05-lo.png"); unloadbmp_by_surface(tmp);
+    tmp=loadbmp("boss05-mo.png"); unloadbmp_by_surface(tmp);
+    tmp=loadbmp("boss05-ro.png"); unloadbmp_by_surface(tmp);
+    tmp=loadbmp("boss05-lu.png"); unloadbmp_by_surface(tmp);
+    tmp=loadbmp("boss05-mu.png"); unloadbmp_by_surface(tmp);
+    tmp=loadbmp("boss05-ru.png"); unloadbmp_by_surface(tmp);
+	load_ing();
+	tmp=loadbmp("bshoot.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("bshoot2.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("coin.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("crusher.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("cshoot.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp2("cshoot1.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp2("cshoot2.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("cube.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("ex.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp2("knife.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp2("knife_core.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp2("knife0.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp2("knife1.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp2("knife2.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp2("knife3.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp2("knife4.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp2("knife5.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp2("knife6.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp2("knife7.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp2("knife8.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp2("knife9.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp2("knife10.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp2("knife11.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp2("knife12.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp2("knife13.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp2("knife14.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp2("knife15.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp2("knife16.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp2("knife17.png"); unloadbmp_by_surface(tmp);
+	load_ing();
+	tmp=loadbmp("fairy.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("great_fairy.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("eyefo.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("fireball.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp2("fireball1.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("firebomb.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("font01.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("font02.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("font03.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("font04.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("font05.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("font07.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("grounder.png"); unloadbmp_by_surface(tmp);
+	load_ing();
+	tmp=loadbmp("iris.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("homing.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("ketm.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("killray-b.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("killray-r.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("kugel.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("moon.jpg"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("plasma.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("plasma_ma.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("plasmaball.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("missile.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("Player_Star.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("Bomb_Star.png"); unloadbmp_by_surface(tmp);
+	//tmp=loadbmp("plate.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("plus1000.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("plus100.png"); unloadbmp_by_surface(tmp);
+	load_ing();
+	tmp=loadbmp("rotating_rocket.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("rwingx.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("splash.png"); unloadbmp_by_surface(tmp);		//***090124		追加
+	tmp=loadbmp("ship-med.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("ship-med-ma.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("speed.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("tr_blue.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("tr_red.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("tr_green.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("star_shields_blue.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("star_shields_red.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("star_shields_green.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("star_shield_blue.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("star_shield_red.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("star_shield_green.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("target.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("weapon.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("wolke01_1.png"); unloadbmp_by_surface(tmp);
+	load_ing();
+	tmp=loadbmp("wolke02_1.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("wolke03_1.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("wolke01_2.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("wolke02_2.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("wolke03_2.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("wolke01_3.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("wolke02_3.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("wolke03_3.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("wolke01_4.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("wolke02_4.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("wolke03_4.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("sp_reimu_bg.jpg"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("sp_marisa_bg.jpg"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("sp_reimu_st.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("sp_marisa_st.png"); unloadbmp_by_surface(tmp);
+	load_ing();
+	tmp=loadbmp2("weapon_p.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("key_bg.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("bg2.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("back1.jpg"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("back1_a-0.jpg"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("back1_a-1.jpg"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("back2.jpg"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("back2_a-0.jpg"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("back2_a-1.jpg"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("back3.jpg"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("back3_a-0.jpg"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("back3_a-1.jpg"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("back4.jpg"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("back4_a-0.jpg"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("back4_a-1.jpg"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("back5.jpg"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("back5_a-0.jpg"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("back5_a-1.jpg"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("back6.jpg"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("ming.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("tshoot.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("tshoot-ma.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("protectball.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("core.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("core-ma.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp2("bigkugel1.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("bigkugel2.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("key_icon.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("keylist.png"); unloadbmp_by_surface(tmp);
+	
+	/* alle benoetigten Bilder in den Cache laden */
+}
+
+
 
 int ini_load()
 {
