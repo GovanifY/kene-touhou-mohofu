@@ -54,6 +54,7 @@ OBJS =	main.o \
 	fps.o \
 	soundmanager.o \
 	bg.o
+	
 
 INCDIR = 
 CFLAGS = -O2  -G0 -Wall -g $(shell $(SDL_CONFIG) --cflags) 
@@ -68,7 +69,6 @@ LIBDIR =
 LDFLAGS =
 LIBS = -lstdc++  -lSDL_mixer  -lvorbisidec -lSDL_image -lpng -lz -ljpeg \
         -lSDL_gfx -lm $(shell $(SDL_CONFIG) --libs)  -lpsppower
-
 EXTRA_TARGETS = EBOOT.PBP
 PSP_EBOOT_TITLE = kene
 

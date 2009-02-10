@@ -648,17 +648,17 @@ void keyboard_poll(void)
 { 
 	sceCtrlReadBufferPositive(&pad, 1); 
 	int pad_data = pad.Buttons; 
-	if (pad.Lx < 70){
+	if (pad.Lx < 64){
 		pad_data |= PSP_CTRL_LEFT;
 	}
-	else if (pad.Lx > 185){
+	else if (pad.Lx > 192){
 		pad_data |= PSP_CTRL_RIGHT;
 	}
 
-	if (pad.Ly < 70){
+	if (pad.Ly < 64){
 		pad_data |= PSP_CTRL_UP;
 	}
-	else if (pad.Ly > 185){
+	else if (pad.Ly > 192){
 		pad_data |= PSP_CTRL_DOWN;
 	}
 

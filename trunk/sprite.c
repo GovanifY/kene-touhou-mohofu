@@ -322,6 +322,25 @@ SPRITE *sprite_colcheck(SPRITE *tocheck, int type)
 	return NULL;
 }
 
+SPRITE *sprite_colcheck2(SPRITE *tocheck, int type)
+{
+	SPRITE *s=sprite;
+
+	while(s!=NULL) {
+		if( (s!=tocheck) &&	/* zu testendes Sprite ueberspringen */
+		    ((s->flags&(SP_FLAG_COLCHECK|SP_FLAG_VISIBLE))==(SP_FLAG_COLCHECK|SP_FLAG_VISIBLE)) &&
+		    (s->type!=-1) &&
+		    (s->type&type)) {	/* Passender Sprite-Type? */
+			if(sprite_col_bounding2(s,tocheck)) { /* Bounding Box Collosion? */
+				//if(sprite_col_pixel(s,tocheck)) { /* Pixel-Level Collison */ ‚¢‚ç‚È‚¢
+					return s;
+				//} 
+			}
+		}
+		s=s->next;
+	}
+	return NULL;
+}
 
 int sprite_col_bounding(SPRITE *a, SPRITE *b)
 {
@@ -358,6 +377,50 @@ int sprite_col_bounding(SPRITE *a, SPRITE *b)
 			}
 		}
 	}
+	
+	
+
+return 0;
+}
+
+int sprite_col_bounding2(SPRITE *a, SPRITE *b)
+{/*
+	if(a->x < b->x) {
+		if(a->x+a->w > b->x) {
+			if(a->y < b->y) {
+				if(a->y+a->h > b->y) {
+					rc.x=b->x;
+					rc.y=b->y;
+					return 1;
+				}
+			} else {
+				if(b->y+b->h > a->y) {
+					rc.x=b->x;
+					rc.y=a->y;
+					return 1;
+				}
+			}
+		}
+	} else {
+		if(b->x+b->w > a->x) {
+			if(b->y < a->y) {
+				if(b->y+b->h > a->y) {
+					rc.x=a->x;
+					rc.y=a->y;
+					return 1;
+				}
+			} else {
+				if(a->y+a->h > b->y) {
+					rc.x=a->x;
+					rc.y=b->y;
+					return 1;
+				}
+			}
+		}
+	}*/
+		 if ((b->x-10<=a->x+a->w)&&(b->y-10<=a->y+a->h)&&(b->x+b->w+10>=a->x)&&(b->y+b->h+10>=a->y)){
+	 	 return 1;
+	 }
 	return 0;
 }
 

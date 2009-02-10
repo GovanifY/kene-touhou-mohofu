@@ -131,7 +131,7 @@ void player_init();
 void player_move(SPRITE *s);
 void player_keycontrol(SPRITE *s);
 void player_colcheck(SPRITE *s, int mask);
-
+void player_colcheck2(SPRITE *s, int mask);
 void weapon_check(int w);
 
 SPRITE *player_add_core(SPRITE *s1);

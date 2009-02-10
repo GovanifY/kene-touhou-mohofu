@@ -3,7 +3,6 @@
 #include <SDL/SDL.h>
 #include <stdlib.h>
 #include <math.h>
-
 #include "sprite.h"
 #include "particle.h"
 #include "support.h"
@@ -146,7 +145,7 @@ typedef struct {
 	double framestat;
 } EXPLOSION_DATA;
 
-
+//void bullet_way(SPRITE *s, int way, double angle, double angle2, double spd);
 void enemy_bullet_create(SPRITE *s, double speed);
 void enemy_bullet_move(SPRITE *s);
 void enemy_gr_bullet_create(SPRITE *s, double speed, double angle, double gra);

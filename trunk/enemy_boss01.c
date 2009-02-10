@@ -213,6 +213,7 @@ void enemy_boss01_hitbyweapon(SPRITE *c, SPRITE *s, int angle)
 		((PLAYER_DATA *)player->data)->score+=b->b.score;
 		if(i==1)		//ƒAƒŠƒX‚ð“|‚·‚ÆŠF”j‰ó‚³‚ê‚éB
 		{
+			//bonus_multi_add(sb01[i]->x, sb01[i]->y,SP_BONUS_COIN,7);
 			explosion_add(sb01[0]->x+sb01[0]->w/2,sb01[0]->y+sb01[0]->h/2,0,0);
 			sb01[0]->flags&=~SP_FLAG_VISIBLE;
 			explosion_add(sb01[2]->x+sb01[2]->w/2,sb01[2]->y+sb01[2]->h/2,0,0);
@@ -245,7 +246,6 @@ void enemy_boss01_move(SPRITE *c)
 	static double w;
 	static double firewait1;
 	static int firewait2;
-
 	switch(b->state) {
 		case 0:
 			x=WIDTH2/2-(sb01[0]->w+sb01[1]->w+sb01[2]->w)/2;
@@ -336,6 +336,8 @@ void enemy_boss01_fire(int where) /* 0: left, 1: right, 2: bombenhagel */
 	SPRITE *b;
 	LASER_DATA *ldata;
 	int angle;
+	//bullet_way(sb01[4],100, 0, M_PI*2/100,2);
+	
 
 	switch(where) {
 		case 0:
@@ -367,3 +369,4 @@ void enemy_boss01_fire(int where) /* 0: left, 1: right, 2: bombenhagel */
 			break;
 	}
 }
+

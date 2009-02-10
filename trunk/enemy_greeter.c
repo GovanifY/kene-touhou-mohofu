@@ -107,7 +107,7 @@ void enemy_greeter_move(SPRITE *s)
 		{
 			if(rand()%(105-(d->level-2+difficulty)*10)==0)		//***090126		ŽáŠ±•ÏX
 			{
-				enemy_bullet_create(s,difficulty+d->level/3);
+				enemy_bullet_create(s,1+difficulty+d->level/3);
 			}
 		}
 		break;

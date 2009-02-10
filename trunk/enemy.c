@@ -1,4 +1,5 @@
 #include "enemy.h"
+
 /*
 	グレイズ関係の追加で大幅に変更されている。
 	弾のデータにidを追加。idは1つの弾でグレイズを何回もしないようにするため。0-999までのランダムの値をとる。
@@ -26,6 +27,39 @@ extern SPRITE *player;
 extern double fps_factor;
 extern int difficulty;		//***090114		追加
 int b_id;
+
+/*いろいろと検証用なのでコメントアウト
+void bullet_way(SPRITE *s ,int way, double angle, double angle2, double spd){
+	//スプライト情報, n way, 角度ベース, 分割角度幅, 速度
+	int i;
+
+
+	for(i=0;i<way;i++){
+			
+	SPRITE *h;
+	BULLET_DATA *data;
+
+	h=sprite_add_file("kugel.png",1,PR_ENEMY);	
+	h->type=SP_EN_BULLET;
+	h->flags|=(SP_FLAG_VISIBLE|SP_FLAG_COLCHECK);
+	h->mover=enemy_bullet_move;
+	h->aktframe=0;
+	h->x=s->x+(s->w/2-h->w/2);
+	h->y=s->y+(s->h/2-h->h/2);
+
+	data=mmalloc(sizeof(BULLET_DATA));
+	h->data=data;
+
+	data->id=rand()%1000;
+	data->angle=angle-angle2*(way/2)+angle2*i;
+	data->speed=spd;
+			
+		
+	}
+
+
+}
+*/
 
 void enemy_bullet_create(SPRITE *s, double speed)
 {
@@ -61,8 +95,8 @@ void enemy_bullet_move(SPRITE *s)
 	}
 	BULLET_DATA *d=(BULLET_DATA *)s->data;
 
-	s->x+=cos(d->angle)*d->speed*fps_factor;
-	s->y+=sin(d->angle)*d->speed*fps_factor;
+	s->x+=cosf(d->angle)*d->speed*fps_factor;
+	s->y+=sinf(d->angle)*d->speed*fps_factor;
 	if((s->x<0)||(s->x>WIDTH2)||(s->y<0)||(s->y>HEIGHT)) {
 		s->type=-1;
 	}

@@ -169,7 +169,7 @@ void player_move(SPRITE *s1)
 
 			player_keycontrol(s1);
 			player_colcheck(s1,SP_SHOW_ENEMYS|SP_SHOW_ENEMY_WEAPONS|SP_SHOW_BONUS);
-
+			player_colcheck2(s1,SP_SHOW_ENEMYS|SP_SHOW_ENEMY_WEAPONS|SP_SHOW_BONUS);
 			break;
 
 		//***090125		追加
@@ -191,10 +191,12 @@ void player_move(SPRITE *s1)
 								break;
 							case MARISA:
 								playChunk(7);
+								d->save_delay=200;					//無敵時間。つーかさすがにボム時間中無敵じゃないのはきつい
+								d->state=PL_SAVE;
 								d->hit_bomb_wait=0;
 								player_add_levarie(player);
 								bomb_wait = 100;
-								d->save_delay=5;
+								//d->save_delay=5;
 								d->state=PL_SAVE;
 								break;
 						}
@@ -445,6 +447,8 @@ void player_keycontrol(SPRITE *s)
 					bomb_wait = 200;
 					break;
 				case MARISA:
+					d->save_delay=200;					//無敵時間。たまにシールドをすり抜ける者が現れるので
+					d->state=PL_SAVE;
 					playChunk(7);
 					player_add_levarie(player);
 					bomb_wait = 100;
@@ -805,6 +809,81 @@ void player_colcheck(SPRITE *s, int mask)
 				//d->core->flags&=~SP_FLAG_VISIBLE;		//○も消す
 				//d->lives--;
 				//d->bonus=0;
+		}
+	}
+}
+
+void player_colcheck2(SPRITE *s, int mask)
+{
+	is_graze=0;
+	/*
+		s		プレイヤー
+		mask	調べる対象？
+				敵か敵の弾かアイテムか
+	*/
+	SPRITE *c;	//対象
+	//SDL_Surface *spimg;
+	PLAYER_DATA *d=(PLAYER_DATA *)s->data;
+
+	/* Kollision Player <> Feind, Feindwaffe oder Bonusitem */
+	if((c=sprite_colcheck2(s,mask))!=NULL) {
+		
+		switch(c->type) {
+			case SP_EN_BULLET:
+				is_graze=1;
+				int i;
+				for(i=0;i<5;i++)
+				{
+					if(graze_check[i]==((BULLET_DATA *)c->data)->id)	//同じ場合
+						break;											//forを抜ける
+				}
+				if(i==5)	//同じIDの弾が無かった時
+				{
+					d->graze++;
+					d->score+=100+(difficulty*200);
+					graze_check[(d->graze)%5]=((BULLET_DATA *)c->data)->id;
+					playChunk(9);
+				}
+				break;
+				
+			case SP_EN_LASER:
+				is_graze=1;
+				int j;
+				for(j=0;j<5;j++)
+				{
+					if(graze_check[j]==((LASER_DATA *)c->data)->id)	//同じ場合
+						break;											//forを抜ける
+				}
+				if(j==5)
+				{
+					d->graze++;
+					d->score+=100+(difficulty*200);
+					graze_check[(d->graze)%5]=((LASER_DATA *)c->data)->id;
+					playChunk(9);
+				}
+				break;
+			
+			case SP_EN_BIGBULLET:
+				is_graze=1;
+				int l;
+				for(l=0;l<5;l++)
+				{
+					if(graze_check[l]==((BIGBULLET_DATA *)c->data)->id)	//同じ場合
+						break;											//forを抜ける
+				}
+				if(l==5)
+				{
+					d->graze++;
+					d->score+=100+(difficulty*200);
+					graze_check[(d->graze)%5]=((BIGBULLET_DATA *)c->data)->id;
+					playChunk(9);
+				}
+				break;
+				
+			case SP_EN_BIGBULLET_DUMMY:		//2つ目のスプライトは当たり判定が無い
+				break;
+
+			
 		}
 	}
 }

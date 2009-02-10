@@ -107,7 +107,7 @@ typedef struct _sprite {
 	int type;			/* Sprite-Typ, (siehe enum SPRITE_TYPE), -1=remove */
 	Uint8 priority;			/* Prioritaet (0: unten, 9 oben) */
 	Uint8 frames;			/* Anzahl Frames */
-	Sint8 anim_speed;		/* Geschw. der Animation (negative Werte: Anim l‰uft r¸ckw‰rts */
+	Sint8 anim_speed;		/* Geschw. der Animation (negative Werte: Anim l‰uft rÅEkw‰rts */
 	// Sint8 anim_count;		/* intern: Zaehler f. anim_speed */
 	Uint8 alpha;			/* 255: opak, -  0: durchsichtig */
 	Uint8 flags;			/* siehe unten (SP_FLAG...) */
@@ -153,7 +153,9 @@ void sprite_move(int type);
 void sprite_work(int type);
 int sprite_count(int type);
 SPRITE *sprite_colcheck(SPRITE *tocheck, int type);
+SPRITE *sprite_colcheck2(SPRITE *tocheck, int type);
 int sprite_col_bounding(SPRITE *a, SPRITE *b);
+int sprite_col_bounding2(SPRITE *a, SPRITE *b);
 int sprite_col_pixel(SPRITE *a, SPRITE *b);
 Uint32 sprite_getpixel(SDL_Surface *surface, Sint16 x, Sint16 y);
 int sprite_memand(Uint8 *s1, Uint8 *s2, int shift1, int shift2, int n);
