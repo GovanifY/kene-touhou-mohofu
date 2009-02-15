@@ -6,18 +6,20 @@ extern GAMESTATE state;
 extern KEYCONFIG keyconfig;
 extern double fps_factor;
 
-SDL_Surface *intropic=NULL;
-SDL_Surface *ketm_logo=NULL;
-int alpha;
-double delay;
-int keydelay;
+static SDL_Surface *intropic=NULL;
+static SDL_Surface *ketm_logo=NULL;
+static int alpha;
+static double delay;
+static int keydelay;
 
-void intro_init()
+void intro_init(void)
 {
-	if(intropic==NULL) {
+	if (intropic==NULL)
+	{
 		intropic=loadbmp("moon.jpg");
 	}
-	if(ketm_logo==NULL) {
+	if (ketm_logo==NULL)
+	{
 		ketm_logo=loadbmp("ketm.png");
 		SDL_SetColorKey(ketm_logo,SDL_SRCCOLORKEY,0x00000000);
 	}
@@ -28,53 +30,14 @@ void intro_init()
 	keyboard_clear();
 	keydelay=20;
 }
-void intro_work()
-{
-	SDL_Rect r;
 
-	if(state.mainstate!=ST_INTRO || state.newstate==1) return;
 
-	if(keydelay) {
-		keydelay--;
-	} else {
-
-		if(keyboard_keypressed()) {
-			newstate(ST_INTRO,INTRO_QUIT,0);
-		}
-
-		if(keyboard[KEY_PAUSE]) newstate(ST_GAME_QUIT,0,1);
-	}
-
-	switch(state.substate) {
-		case INTRO_FADEIN_MOON:
-			intro_fadein_moon();
-			break;
-		case INTRO_FADEIN_KETM:
-			intro_fadein_ketm();
-			break;
-		case INTRO_SLEEP:
-			intro_sleep();
-			break;
-		case INTRO_QUIT:
-			SDL_SetAlpha(intropic, SDL_SRCALPHA, 255);
-			SDL_BlitSurface(intropic,NULL,screen,NULL);
-			SDL_SetAlpha(ketm_logo, SDL_SRCALPHA, 255);
-			r.x=(WIDTH/2)-(ketm_logo->w/2);
-			r.y=30;
-			r.w=ketm_logo->w;
-			r.h=ketm_logo->h;
-			SDL_BlitSurface(ketm_logo,NULL,screen,&r);
-			unloadbmp_by_surface(intropic);/*unloadbmp_by_name("moon.jpg");*/
-			intropic=NULL;
-			newstate(ST_MENU,MEN_START,1);
-	}
-}
-
-void intro_fadein_moon()
+static void intro_fadein_moon(void)
 {
 	// alpha+=2*fps_factor;
 	alpha+=10;
-	if(alpha>=255) {
+	if (alpha>=255)
+	{
 		alpha=255;
 		delay=100;
 		newstate(ST_INTRO,INTRO_FADEIN_KETM,0);
@@ -84,15 +47,15 @@ void intro_fadein_moon()
 	SDL_BlitSurface(intropic, NULL, screen, NULL);
 }
 
-void intro_fadein_ketm()
+static void intro_fadein_ketm(void)
 {
 	SDL_Rect r;
-
 	SDL_SetAlpha(intropic,SDL_SRCALPHA,255);
 	SDL_BlitSurface(intropic, NULL, screen, NULL);
 	// alpha-=2*fps_factor;
 	alpha-=10;
-	if(alpha<=0) {
+	if (alpha<=0)
+	{
 		alpha=0;
 		delay=100;
 		newstate(ST_INTRO,INTRO_SLEEP,0);
@@ -106,11 +69,49 @@ void intro_fadein_ketm()
 	SDL_BlitSurface(ketm_logo,NULL,screen,&r);
 }
 
-void intro_sleep()
+static void intro_sleep(void)
 {
 	delay-=fps_factor;
 	// delay--;
-	if(delay>=0) {
+	if (delay>=0)
+	{
 		newstate(ST_INTRO,INTRO_QUIT,0);
+	}
+}
+
+void intro_work(void)
+{
+	SDL_Rect r;
+	if (state.mainstate!=ST_INTRO || state.newstate==1) return;
+	if (keydelay)
+	{
+		keydelay--;
+	}
+	else
+	{
+		if (keyboard_keypressed())
+		{
+			newstate(ST_INTRO,INTRO_QUIT,0);
+		}
+		if (keyboard[KEY_PAUSE]) newstate(ST_GAME_QUIT,0,1);
+	}
+
+	switch (state.substate)
+	{
+	case INTRO_FADEIN_MOON: 	intro_fadein_moon();		break;
+	case INTRO_FADEIN_KETM: 	intro_fadein_ketm();		break;
+	case INTRO_SLEEP:			intro_sleep();				break;
+	case INTRO_QUIT:
+		SDL_SetAlpha(intropic, SDL_SRCALPHA, 255);
+		SDL_BlitSurface(intropic,NULL,screen,NULL);
+		SDL_SetAlpha(ketm_logo, SDL_SRCALPHA, 255);
+		r.x=(WIDTH/2)-(ketm_logo->w/2);
+		r.y=30;
+		r.w=ketm_logo->w;
+		r.h=ketm_logo->h;
+		SDL_BlitSurface(ketm_logo,NULL,screen,&r);
+		unloadbmp_by_surface(intropic);/*unloadbmp_by_name("moon.jpg");*/
+		intropic=NULL;
+		newstate(ST_MENU,MENU_START/*0*/,1);
 	}
 }

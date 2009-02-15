@@ -21,7 +21,7 @@ void fps_init(void)
 	fps_old_time/*=fps_gamestart; fps_gamestart*/= PSP_GetTicks();
 	fps_factor=(double)(1);/* ==1 当り障りは無いが、いい加減な値 */
 	int i;
-	for(i=0; i<FPS_MAX_HISTORY; i++)
+	for (i=0; i<FPS_MAX_HISTORY; i++)
 		{ fps_history_value[i]=(double)((double)(1)/(double)(FPS_MAX_HISTORY));}
 	/* ==1.0/FPS_MAX_HISTORY 当り障りは無いが、いい加減な値 */
 }
@@ -41,17 +41,18 @@ void fps_newframe(void)
 		/* 現在旧版と互換の為、下記の様にしてあります。 */
 		/* ゲーム全体のゲーム速度 調整値の計算 */
 		#define ADJUST_INTERVAL_VALUE (22)		//(28-difficulty*3)=>difficulty=2
+	//	#define ADJUST_INTERVAL_VALUE (40)		//(28-difficulty*3)=>difficulty=2
 		tick_addj = (double)(1.0/((double)(ADJUST_INTERVAL_VALUE)*(double)(FPS_MAX_HISTORY*1000) ));
 	}
 	/* FPS 履歴値の計算(現在、過去時間から、履歴を計算し蓄える) */
 	fps_old_time = fps_now_time; /* 前回の時間 */
 	fps_now_time = PSP_GetTicks(); /* 今回の時間 */
-	
+
 	fps_history_index++;
 	if (fps_history_index>=FPS_MAX_HISTORY) { fps_history_index=0;}
-	
+
 	fps_history_value[fps_history_index] = (double)(fps_now_time-fps_old_time)*tick_addj;
 	/* FPS 調整値の計算(予め加重で割ってあるので足すだけ) */
 	fps_factor=0;
 	for (i=0; i<FPS_MAX_HISTORY; i++) { fps_factor += fps_history_value[i];}
-} 
+}

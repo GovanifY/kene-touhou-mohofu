@@ -7,16 +7,27 @@
 #include "support.h"
 #include "font.h"
 #include "sprite.h"
-#include "particle.h"
+//#include "particle.h"
 #include "fps.h"
 
 /* Menues */
-enum _menu_states { MEN_START, MEN_PAUSE, MEN_OPTION, MEN_VOLUME, MEN_DIFF };
+enum _menu_states
+{
+	MENU_START=0,	/*intro.c*/
+	MENU_PAUSE, 	/*thegame.c*/
+	MENU_OPTION,
+	#if (1==DEBUG_MODE)
+	MENU_STAGE_SELECT,
+	#endif
+	MENU_VOLUME,
+	MENU_DIFF
+};
 
-typedef struct {
+typedef struct
+{
 	SPRITE *opts[20][5];	//項目、アニメーション(残像)レイヤー
 	SDL_Surface *opts_surface[20];
-	SDL_Surface *bg;
+//	SDL_Surface *bg;
 	int active_item;
 	int select_finish;
 	int nopt;
@@ -26,33 +37,30 @@ typedef struct {
 	int timeout;
 } MENU;
 
-typedef struct {
-	int i0;		//x
-	int i1;		//y
-	int i2;		//スプライト用
-	int i3;		//スプライト用
-} MENU_DATA;
+//static void genericmenu_work(MENU *m);
+//static void genericmenu_init(char *options[], MENU *m, int fadeout, int timeout);
 
-void menusystem_init();
-void menu_init();
-void menu_work();
-void startmenu_init();
-void startmenu_work();
-void pausemenu_init();
-void pausemenu_work();
-void optionmenu_init();
-void optionmenu_work();
-void volumemenu_init();
-void volumemenu_work();
-void difficultymenu_init();
-void difficultymenu_work();
-void key_config_init();
-void key_config_work();
-void kp_search(int btn, int num);
-void player_opt_init();
-void player_opt_work();
-void player_opt_img(SDL_Surface *src, double scale, int l_or_r);
-void genericmenu_init(char *options[], MENU *m, int fadeout, int timeout);
-void genericmenu_work(MENU *m);
+//static void startmenu_init(void);
+//static void startmenu_work(void);
+//static void pausemenu_init(void);
+//static void pausemenu_work(void);
+//static void optionmenu_init(void);
+//static void optionmenu_work(void);
+//static void volumemenu_init(void);
+//static void volumemenu_work(void);
+//static void difficultymenu_init(void);
+//static void difficultymenu_work(void);
+extern void key_config_init(void);
+//static void kp_search(int btn, int num);
+extern void key_config_work(void);
+
+extern void player_opt_init(void);
+//static void player_opt_img(SDL_Surface *src, double scale, int l_or_r);
+extern void player_opt_work(void);
+
+extern void menu_init(void);
+extern void menu_work(void);
+
+extern void menusystem_init(void);
 #endif
 

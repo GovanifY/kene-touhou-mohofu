@@ -4,12 +4,12 @@ extern HSC_LIST hsc_table[];
 extern SDL_Surface *screen;
 extern SPRITE *player;
 extern int high_score;
-SDL_Surface *star;
-extern weapon_List;
+
+extern int weapon_List; /*player.c*/
 SDL_Surface *bg2;
-SDL_Rect bg2r={WIDTH2, 0, 0, 0};	//ÉfÅ[É^ÉEÉBÉìÉhÉEóprect->w,h,x,y
-extern int is_graze;	//player1Ç™íeñãÇ…êGÇÍÇΩÇ©ÅH
-extern SDL_Surface *weapon_p;	//ÉEÉFÉ|ÉìÉQÅ[ÉWÅBâ¥ÇÃä¬ã´ÇæÇ∆loadbmp2Ç≈çÏÇÈÇ∆ïÅí Ç…ï\é¶Ç≥ÇÍÇÈÇÊÇ§Ç…Ç»Ç¡ÇΩÅB
+
+extern int is_graze;				// player1Ç™íeñãÇ…êGÇÍÇΩÇ©ÅH
+extern SDL_Surface *weapon_p;		// ÉEÉFÉ|ÉìÉQÅ[ÉWÅBâ¥ÇÃä¬ã´ÇæÇ∆loadbmp2Ç≈çÏÇÈÇ∆ïÅí Ç…ï\é¶Ç≥ÇÍÇÈÇÊÇ§Ç…Ç»Ç¡ÇΩÅB
 
 /*
 typedef struct {
@@ -31,34 +31,45 @@ typedef struct {
 	double weapon_wait;
 } PLAYER_DATA;
 */
-
-void Player_Disp(char *img_name, int num, int x_suf, int y_suf)		//êØÇÃï\é¶
+enum
 {
+	R_00_Player_Star_png = 0,
+	R_01_Bomb_Star_png,
+};
+static void player_display( int g_num, int num, int y_suf)		//êØÇÃï\é¶
+{
+	SDL_Surface *star;
+	/*const*/ char *img_name[]=
+	{
+		"Player_Star.png",
+		"Bomb_Star.png",
+	};
 	SDL_Rect recAll,rec;
-	star = loadbmp(img_name);
+	star = loadbmp((char *)img_name[g_num]);
 	SDL_SetColorKey(star,SDL_SRCCOLORKEY|SDL_RLEACCEL,0x00000000);
-	if(num<=0)
-		num=1;
-	recAll.x = x_suf;
+	if (num<1)	{	num=0;}
+
+	rec.x = 0;
+	rec.y = 0;
+	rec.w = (10*num);
+	rec.h = 10;
+
+	recAll.x = WIDTH-7-(10*num);
 	recAll.y = y_suf;
 	recAll.w = 100;
 	recAll.h = 11;
-	
-	rec.x = 0;
-	rec.y = 0;
-	rec.w = 10*(num-1);
-	rec.h = 10;
-	
 	SDL_BlitSurface(star, &rec, screen, &recAll);
 }
+/* pannel x offset */
+#define PPP 380
 
-void Power_Statas(int weapon, int dx, int dy)		//ÉEÉFÉ|ÉìÉQÅ[ÉWÇÃï\é¶ÅBketmÇ…ç∑ï™Çè„èëÇ´Ç∑ÇÈÇ∆âΩåÃÇ©ïÅí Ç…ï\é¶Ç≥ÇÍÇÈÅB
+static void power_status(int weapon, int dx, int dy)		//ÉEÉFÉ|ÉìÉQÅ[ÉWÇÃï\é¶ÅBketmÇ…ç∑ï™Çè„èëÇ´Ç∑ÇÈÇ∆âΩåÃÇ©ïÅí Ç…ï\é¶Ç≥ÇÍÇÈÅB
 {
 	SDL_Rect srec, drec;
 	srec.x=0;
 	srec.y=0;
 	srec.h=13;
-	srec.w=(int)((double)weapon / 128 * (double)weapon_p->w);		//***090123		ïœçX
+	srec.w=(int)((double)weapon / 128 * (double)weapon_p->w);		//[***090123		ïœçX
 	drec.w=weapon_p->w;
 	drec.h=weapon_p->h;
 	drec.x=dx;
@@ -66,123 +77,83 @@ void Power_Statas(int weapon, int dx, int dy)		//ÉEÉFÉ|ÉìÉQÅ[ÉWÇÃï\é¶ÅBketmÇ…ç∑ï
 	SDL_BlitSurface(weapon_p, &srec, screen, &drec);
 }
 
-void score_display()		//Ç±Ç±ÇÃê‡ñæÇÕè»ó™
+void score_display(void)
 {
-		PLAYER_DATA *p=(PLAYER_DATA *)player->data;
-		char buffer[100];
-	
-		SDL_BlitSurface(bg2,NULL,screen,&bg2r);
-	
-		//sprintf(buffer,"SHIPS : %d",p->lives);
-		//font_print_screen_xy(buffer,FONT07,0,10);
+	SDL_Rect bg2r={WIDTH2, 0, 0, 0};	// ÉfÅ[É^ÉEÉBÉìÉhÉEóprect->w,h,x,y
+	PLAYER_DATA *p=(PLAYER_DATA *)player->data;
+	char buffer[64/*100*/];
+	SDL_BlitSurface(bg2,NULL,screen,&bg2r);
 
-		//sprintf(buffer,"SPEED : %d",p->player_speed);
-		//font_print_screen_xy(buffer,FONT07,0,20);
-	
-		//sprintf(buffer,"STAGE : %d",p->level);
-		//font_print_screen_xy(buffer,FONT07,0,30);
-	
-			if(high_score < p->score)
-				high_score = p->score;
-			//sprintf(buffer,"H_SCORE:");
-			//font_print_screen_xy(buffer,FONT07,387,5);
-			sprintf(buffer," %08d", high_score);
-			font_print_screen_xy(buffer,FONT07,397,15);
-		
-			//sprintf(buffer,"SCORE  :");
-			//font_print_screen_xy(buffer,FONT07,387,30);
-			sprintf(buffer," %08d", p->score);
-			font_print_screen_xy(buffer,FONT07,397,40);
-			
-			//sprintf(buffer,"PLAYER");
-			//font_print_screen_xy(buffer,FONT07,387,60);
-			Player_Disp("Player_Star.png", p->lives,382,69);
-			
-			//sprintf(buffer,"BOMB");
-			//font_print_screen_xy(buffer,FONT07,387,85);
-			Player_Disp("Bomb_Star.png", p->bombs,382,94);
-			
-			//sprintf(buffer,"POWER  :");
-			//font_print_screen_xy(buffer,FONT07,387,110);
-			Power_Statas(p->weapon ,387,124);
-			if(p->weapon == 128)
-			{
-				sprintf(buffer,"MAX");
-				font_print_screen_xy(buffer,FONT07,388,125);
-			}
-			else
-			{
-				sprintf(buffer,"%d",(int)((double)p->weapon / 128 * 100));		//***090123		ïœçX
-				font_print_screen_xy(buffer,FONT07,388,125);
-			}
-			
-			if(p->extra!=PLX_NONE) {
-				sprintf(buffer,"EXTRA  :");
-				font_print_screen_xy(buffer,FONT07,387,160);
-				switch(p->extra) {
-				case PLX_HOMING:
-					sprintf(buffer," MISSILE");
-					break;
-				case PLX_SHIELD:
-					sprintf(buffer," WEAPON_UP");
-					break;
-				case PLX_HLASER:
-					sprintf(buffer," LASER");
-					break;
-				case PLX_BOMB:
-					sprintf(buffer," BOMB");
-					break;
-				default:
-					sprintf(buffer," UNKNOWN ???");
-					break;
-				}
-			
-				font_print_screen_xy(buffer,FONT07,387,170);
-	
-				sprintf(buffer,"  TIME :%3d",(int)((double)p->extra_time/10));
-				font_print_screen_xy(buffer,FONT07,387,180);
-			}
-			//sprintf(buffer,"GRAZE  :");
-			
-			//font_print_screen_xy(buffer,FONT07,387,140);
-			
-			sprintf(buffer," %d", p->graze);
-			font_print_screen_xy(buffer,FONT07,440,140);
-			
-		/*
-		switch(weapon_List) {
-			case WP_PLASMA:
-				strcat(buffer,"REIFU-1");
-				break;
-			case WP_DOUBLEPLASMA:
-				strcat(buffer,"REIFU-2");
-				break;
-			case WP_QUADPLASMA:
-				strcat(buffer,"REIFU-4");
-				break;
-			case WP_FIREBALL:
-				strcat(buffer,"YUMEFU-1");
-				break;
-			case WP_DOUBLEFIREBALL:
-				strcat(buffer,"YUMEFU-2");
-				break;
-			case WP_QUADFIREBALL:
-				strcat(buffer,"YUMEFU-4");
-				break;
-			case WP_FIFTHFIREBALL:
-				strcat(buffer,"YUMEFU-5");
-				break;
-			case WP_KILLRAY:
-				strcat(buffer,"OFUDA");
-				break;
-			default:
-				strcat(buffer,"UNKNOWN ???");
-				break;
-		}
-		font_print_screen_xy(buffer,FONT07,397,120);
-		*/
+	//sprintf(buffer,"SHIPS : %d",p->lives);		//	font_print_screen_xy(buffer,FONT07,0,10);
+	//sprintf(buffer,"SPEED : %d",p->player_speed); //	font_print_screen_xy(buffer,FONT07,0,20);
+	//sprintf(buffer,"STAGE : %d",p->level);		//	font_print_screen_xy(buffer,FONT07,0,30);
+
+	if (high_score < p->score)
+	{	high_score = p->score;}
+	//sprintf(buffer,"H_SCORE:");					//	font_print_screen_xy(buffer,FONT07,PPP+1*8,5);
+	sprintf(buffer,"%09d0", high_score);				font_print_screen_xy(buffer,FONT07,PPP+1*8+3,15);
+
+	//sprintf(buffer,"SCORE  :");					//	font_print_screen_xy(buffer,FONT07,PPP+1*8,30);
+	sprintf(buffer,"%09d0", p->score);					font_print_screen_xy(buffer,FONT07,PPP+1*8+3,40);
+
+	//sprintf(buffer,"PLAYER"); 					//	font_print_screen_xy(buffer,FONT07,PPP+1*8,60);
+	player_display( R_00_Player_Star_png, (p->lives), 69);
+
+	//sprintf(buffer,"BOMB");						//	font_print_screen_xy(buffer,FONT07,PPP+1*8,85);
+	player_display( R_01_Bomb_Star_png, (p->bombs), 94);
+
+	//sprintf(buffer,"POWER  :");					//	font_print_screen_xy(buffer,FONT07,PPP+1*8,110);
+	power_status(p->weapon ,PPP+7,124);
+	if (p->weapon > (127-1) /*== 128*/)
+	{
+		sprintf(buffer,"MAX");							font_print_screen_xy(buffer,FONT07,PPP+7*8+3,125);
+	}
+	else
+	{
+		#if 0
+	//	sprintf(buffer,"%d",(int)((double)p->weapon / 128 * 100 )); 	//[***090123		ïœçX
+		#else
+		sprintf(buffer,"%d", (((int)(p->weapon) * 200) >>8) );		//[***090214		ïœçX
+		#endif
+		font_print_screen_xy(buffer,FONT07,PPP+8*8+3,125);
+	}
+
+	if (p->extra!=PLX_NONE)
+	{
+		sprintf(buffer,"EXTRA  :"); 					font_print_screen_xy(buffer,FONT07,PPP+1*8-2,160);
+		/*const*/ char *extra_name[4]=
+		{
+		// 0==PLX_NONE		"NONE",
+		/* 1==PLX_HOMING:*/ "MISSILE",
+		/* 2==PLX_SHIELD:*/ "WEAPON_UP",
+		/* PLX_HLASER:*/	"LASER",
+		/* PLX_BOMB:*/		"BOMB",
+		//	/*default:*/	"UNKNOWN ???",
+		};
+		font_print_screen_xy( (char *)extra_name[(p->extra-1)&(4-1)], FONT07,PPP+2*8-4,170);
+		sprintf(buffer,"TIME :%3d",(int)(((int)p->extra_time)/10));
+		font_print_screen_xy(buffer,FONT07,PPP+3*8-6,180);
+	}
+	//sprintf(buffer,"GRAZE  :");					//	font_print_screen_xy(buffer,FONT07,PPP+1*8,140);
+
+	sprintf(buffer," %d", p->graze);					font_print_screen_xy(buffer,FONT07,PPP+7*8+3,140);
+
+	/*
+	switch (weapon_List) {
+	case WP_PLASMA: 			strcat(buffer,"REIFU-1");		break;
+	case WP_DOUBLEPLASMA:		strcat(buffer,"REIFU-2");		break;
+	case WP_QUADPLASMA: 		strcat(buffer,"REIFU-4");		break;
+	case WP_FIREBALL:			strcat(buffer,"YUMEFU-1");		break;
+	case WP_DOUBLEFIREBALL: 	strcat(buffer,"YUMEFU-2");		break;
+	case WP_QUADFIREBALL:		strcat(buffer,"YUMEFU-4");		break;
+	case WP_FIFTHFIREBALL:		strcat(buffer,"YUMEFU-5");		break;
+	case WP_KILLRAY:			strcat(buffer,"OFUDA"); 		break;
+	default:					strcat(buffer,"UNKNOWN ???");	break;
+	}
+	font_print_screen_xy(buffer,FONT07,PPP+3*8,120);
+	*/
 }
 
-void score_cleanup()
-{
-}
+//void score_cleanup()
+//{
+//}

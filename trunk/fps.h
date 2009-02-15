@@ -6,17 +6,19 @@
 #include "support.h"
 #include "font.h"
 
-#define TICK_INTERVAL 28
-// #define PIXEL_SPEED 50
-// #define PIXEL_SPEED 50
+//#define TICK_INTERVAL 28
+//#define PIXEL_SPEED 50
+//enum _fps_methods { WAITFORFRAME, MAXFPS };
 
-enum _fps_methods { WAITFORFRAME, MAXFPS };
 
-void fps_init();
-void toggle_fps();
-void fps_show();
-void fps_newframe();
-Uint32 TimeLeft();
-void waitfornextframe();
+extern unsigned int PSP_GetTicks(void);
+extern void fps_init(void);
+extern void fps_newframe(void);
+
+
+//extern void toggle_fps(void);
+//extern void fps_show(void);
+//extern Uint32 TimeLeft(void);
+//extern void waitfornextframe(void);
 
 #endif

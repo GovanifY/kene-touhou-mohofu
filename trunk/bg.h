@@ -5,7 +5,8 @@
 #include "support.h"
 #include "sprite.h"
 
-enum _bg_type {
+enum _bg_type
+{
 	BG_BLACK=0,
 	BG_CLOUDS,
 	BG_STARS,
@@ -14,22 +15,17 @@ enum _bg_type {
 	BG_LAST
 };
 
-typedef struct {
-	double speed_base;
-	double speed_rand;
-} CLOUDS_DATA;
+extern void tile_add(void/*int lev*/);
 
+extern void bg_init(int bg_type/*,int lev*/);
+extern void bg_work(void);
+extern void bg_destroy(void);
 
-void bg_init(int bg_type,int lev);
-void bg_work();
-void bg_destroy();
-void clouds_init(int lev);
-void clouds_remove();
-void clouds_mover(SPRITE *s);
-void tile_init(int lev);
-void tile_add(int lev);
-void tile_work();
-void tile_display();
-void tile_remove();
-
+//static void tile_work(void);
+//static void tile_display(void);
+//static void clouds_remove(void);
+//static void tile_remove(void);
+//static void clouds_mover(SPRITE *s);
+//static void clouds_init(void/*int lev*/);
+//static void tile_init(void/*int lev*/);
 #endif

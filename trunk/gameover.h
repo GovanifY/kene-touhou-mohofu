@@ -5,10 +5,11 @@
 
 #include "support.h"
 #include "sprite.h"
-#include "particle.h"
+//#include "particle.h"
 #include "player.h"
 
-enum _gameover_states {
+enum _gameover_states
+{
 	GO_INIT,
 	GO_FADEINIT,
 	GO_FADEIN1,
@@ -19,8 +20,8 @@ enum _gameover_states {
 	GO_QUIT
 };
 
-void gameover_init();
-void gameover_work();
-void gameover_display(double s1, double s2);
+extern void gameover_init(void);
+extern void gameover_work(void);
+extern void gameover_display(double s1, double s2);
 
 #endif

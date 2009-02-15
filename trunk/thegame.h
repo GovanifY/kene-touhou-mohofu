@@ -7,7 +7,7 @@
 #include <unistd.h>
 
 #include "sprite.h"
-#include "particle.h"
+//#include "particle.h"
 #include "player.h"
 #include "enemy.h"
 #include "menu.h"
@@ -15,7 +15,7 @@
 #include "bg.h"
 #include "loadlv.h"
 
-void thegame_init();
-void thegame_work();
-void thegame_level();
+extern void thegame_init(void);
+extern void thegame_work(void);
+//static void thegame_level(void);
 #endif

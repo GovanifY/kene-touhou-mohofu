@@ -1,16 +1,26 @@
 #include "support.h"
 
+#ifdef ENABLE_PSP
+	//# /* カスタムライブラリを使う */
+	#include "SDL_image.h"
+#else
+	//# /* 標準ライブラリを使う */
+	#include <SDL/SDL_image.h>
+#endif
+
 SDL_Surface *screen;
+SDL_Surface *back_screen/*=NULL*/;
+
 int keyboard[15];
 int debug=0;
 int use_joystick=1;
 IMGLIST *img_list=NULL;
 KEYCONFIG keyconfig;
-Uint32 videoflags=SDL_FULLSCREEN | SDL_DOUBLEBUF |SDL_HWSURFACE | SDL_HWPALETTE| SDL_HWACCEL;
-int depth=16;
-int kazu=0;
-SDL_Surface *loadpic=NULL;		//load画面用
-SDL_Surface *loaddot[3];		//load画面用
+static Uint32 videoflags = SDL_FULLSCREEN | SDL_DOUBLEBUF | SDL_HWSURFACE | SDL_HWPALETTE| SDL_HWACCEL;
+static int depth=16;
+static int kazu=0;
+static SDL_Surface *loadpic=NULL;		//load画面用
+static SDL_Surface *loaddot[3];		//load画面用
 extern GAMESTATE state;
 extern GAMESTATE laststate;
 extern int difficulty;
@@ -37,14 +47,14 @@ SceCtrlData pad;
 		int d;	//下
 		int l;	//左
 		int r;	//右
-		int ba;	//×
-		int ma;	//○
-		int sa;	//△
-		int si;	//□
-		int rt;	//R
-		int lt;	//L
-		int sl;	//SELECT
-		int st;	//START
+		int ba; //×
+		int ma; //○
+		int sa; //△
+		int si; //□
+		int rt; //R
+		int lt; //L
+		int sl; //SELECT
+		int st; //START
 	} KEYCONFIG;
 */
 /*
@@ -57,6 +67,14 @@ SceCtrlData pad;
 	};
 */
 
+void psp_push_screen(void)
+{
+	SDL_BlitSurface(screen,NULL,back_screen,NULL);
+}
+void psp_pop_screen(void)
+{
+	SDL_BlitSurface(back_screen,NULL,screen,NULL);
+}
 
 void game_init(int argc, char *argv[])
 {
@@ -65,24 +83,24 @@ void game_init(int argc, char *argv[])
 	//SDL_Joystick *joy;
 	sceCtrlSetSamplingCycle(0);
 	sceCtrlSetSamplingMode(PSP_CTRL_MODE_ANALOG);
-	
-	b_id=0;		//***090129		変更
+
+	b_id=0; 	//[***090129		変更
 /*
-	for(i=2;i<=argc;i++) {
-		if(!strncmp(argv[i-1],"-d",2)) {
+	for (i=2;i<=argc;i++) {
+		if (!strncmp(argv[i-1],"-d",2)) {
 			debug=1;
 			error(ERR_DEBUG,"debug-mode enabled");
-		} else if(!strncmp(argv[i-1],"-f",2)) {
+		} else if (!strncmp(argv[i-1],"-f",2)) {
 			videoflags=SDL_FULLSCREEN;
-		} else if(!strncmp(argv[i-1],"-j",2)) {
+		} else if (!strncmp(argv[i-1],"-j",2)) {
 			use_joystick=1;
-		} else if(!strncmp(argv[i-1],"-16",3)) {
+		} else if (!strncmp(argv[i-1],"-16",3)) {
 			depth=16;
-		} else if(!strncmp(argv[i-1],"-24",3)) {
+		} else if (!strncmp(argv[i-1],"-24",3)) {
 			depth=24;
-		} else if(!strncmp(argv[i-1],"-32",3)) {
+		} else if (!strncmp(argv[i-1],"-32",3)) {
 			depth=32;
-		} else if(!strncmp(argv[i-1],"-h",2)) {
+		} else if (!strncmp(argv[i-1],"-h",2)) {
 			error(ERR_INFO,"%s:  a shoot-em-all game",argv[0]);
 			error(ERR_INFO,"-h:  get this help");
 			error(ERR_INFO,"-f:  fullscreen mode");
@@ -101,27 +119,45 @@ void game_init(int argc, char *argv[])
 */
 	initflags=SDL_INIT_VIDEO;
 /*
-	if(use_joystick)
+	if (use_joystick)
 		initflags|=SDL_INIT_JOYSTICK;
 */
-
-	if(SDL_Init(initflags)<0) {
+	if (SDL_Init(initflags)<0)
+	{
 		CHECKPOINT;
 		error(ERR_FATAL,"cant init SDL: %s",SDL_GetError());
 	}
-
-	if(atexit(SDL_Quit)) {
+	if (atexit(SDL_Quit))
+	{
 		CHECKPOINT;
 		error(ERR_WARN,"atexit dont returns zero");
 	}
-
-	if((screen=SDL_SetVideoMode(WIDTH,HEIGHT,depth,videoflags))==NULL) {
+	screen = SDL_SetVideoMode(WIDTH,HEIGHT,depth,videoflags);
+	if (NULL == screen)
+	{
 		CHECKPOINT;
 		error(ERR_FATAL,"cant open screen: %s",SDL_GetError());
 	}
+//	back_screen = NULL;
+	back_screen = SDL_CreateRGBSurface(
+		SDL_SWSURFACE/*SDL_HWSURFACE*/,/*メインメモリへ*/
+		WIDTH/*screen->w*/,
+		HEIGHT/*screen->h*/,
+		screen->format->BitsPerPixel,
+		screen->format->Rmask,
+		screen->format->Gmask,
+		screen->format->Bmask,
+		screen->format->Amask);
+	if (NULL == back_screen)
+	{
+		CHECKPOINT;
+		error(ERR_FATAL,"cant create SDL_Surface: %s",SDL_GetError());
+	}
+
+
 	//display_vidinfo(screen);
 	/*
-	if(depth==0) {
+	if (depth==0) {
 		error(ERR_DEBUG,"we want the current screen bit-depth...");
 	} else {
 		error(ERR_DEBUG,"we want a %d bpp screen...",depth);
@@ -130,16 +166,16 @@ void game_init(int argc, char *argv[])
 	*/
 
 	/*
-	if(use_joystick) {
-		if(debug) {
+	if (use_joystick) {
+		if (debug) {
 			error(ERR_DEBUG,"%i joysticks found",SDL_NumJoysticks());
-			for(i=0;i<SDL_NumJoysticks();i++) {
+			for (i=0;i<SDL_NumJoysticks();i++) {
 				error(ERR_DEBUG,"stick %d: %s",i,SDL_JoystickName(i));
 			}
 		}
-		if(SDL_NumJoysticks()>0) {
+		if (SDL_NumJoysticks()>0) {
 			joy=SDL_JoystickOpen(0);
-			if(joy) {
+			if (joy) {
 				error(ERR_DEBUG,"Joystick 0:");
 				error(ERR_DEBUG,"Name: %s",SDL_JoystickName(0));
 				error(ERR_DEBUG,"Axes: %d",SDL_JoystickNumAxes(joy));
@@ -164,11 +200,11 @@ void game_init(int argc, char *argv[])
 	//SDL_ShowCursor(1);
 	//SDL_WM_SetCaption("killeverythingthatmoves","ketm");
 
-	loadpic=loadbmp("loadpng.png");		//ロード用画像
+	loadpic=loadbmp("loadpng.png"); 	//ロード用画像
 	loaddot[0]=loadbmp("maru1.png");		//ロード用画像
 	loaddot[1]=loadbmp("maru1.png");		//ロード用画像
 	loaddot[2]=loadbmp("maru1.png");		//ロード用画像1つで十分だよね
-	
+
 	SDL_SetColorKey(loaddot[0], SDL_SRCCOLORKEY, 0x00000000);
 	SDL_SetColorKey(loaddot[1], SDL_SRCCOLORKEY, 0x00000000);
 	SDL_SetColorKey(loaddot[2], SDL_SRCCOLORKEY, 0x00000000);
@@ -195,17 +231,17 @@ void toggle_fullscreen()
 {
 	SDL_Surface *tmp;
 
-	if(videoflags==SDL_DOUBLEBUF)
+	if (videoflags==SDL_DOUBLEBUF)
 		videoflags=SDL_FULLSCREEN;
 	else
 		videoflags=SDL_DOUBLEBUF;
 
 	tmp=SDL_ConvertSurface(screen,screen->format,screen->flags);
-	if(tmp==NULL) {
+	if (tmp==NULL) {
 		CHECKPOINT;
 		error(ERR_FATAL,"cant copy screen");
 	}
-	if((screen=SDL_SetVideoMode(WIDTH,HEIGHT,depth,videoflags))==NULL) {
+	if ((screen=SDL_SetVideoMode(WIDTH,HEIGHT,depth,videoflags))==NULL) {
 		CHECKPOINT;
 		error(ERR_FATAL,"cant open change fullscreen/window: %s",SDL_GetError());
 	}
@@ -219,76 +255,75 @@ void error(int errorlevel, char *msg, ...)
 {
 	char msgbuf[128];
 	va_list argptr;
-	
+
 	va_start(argptr, msg);
 	vsprintf(msgbuf, msg, argptr);
 	va_end(argptr);
 
-	switch(errorlevel) {
-		case ERR_DEBUG: if(debug) { fprintf(stdout,"DEBUG: %s\n",msgbuf); } break;
+	switch (errorlevel)
+	{
+		case ERR_DEBUG: if (debug) { fprintf(stdout,"DEBUG: %s\n",msgbuf); } break;
 		case ERR_INFO: fprintf(stdout,"INFO: %s\n",msgbuf); break;
 		//case ERR_WARN: fprintf(stdout,"WARNING: %s\n",msgbuf); break;
 		case ERR_FATAL: fprintf(stdout,"FATAL: %s\n",msgbuf); break;
 	}
 
-	if(errorlevel==ERR_FATAL) exit(1);
+	if (errorlevel==ERR_FATAL) exit(1);
 }
 
-	
-SDL_Surface *loadbmp(char *filename)
+
+
+
+
+
+
+SDL_Surface *loadbmp0(char *filename, int use_alpha)
 {
-	char fn[50];
+	char fn[64/*50*/];
 	strcpy(fn,moddir);
 	strcat(fn,"/");
 	strcat(fn,filename);
-
-	SDL_Surface *s1,*s2;
-
-	if((s1=imglist_search(fn))!=NULL) {
+//
+	SDL_Surface *s1;
+	SDL_Surface *s2;
+//
+	s1 = imglist_search(fn);
+	if ( NULL != s1 )
+	{
 		return s1;
 	}
-
-	//if((s1=SDL_LoadBMP(fn))==NULL) {
-	if((s1=IMG_Load(fn))==NULL) {
+	//if ((s1=SDL_LoadBMP(fn))==NULL)
+	s1 = IMG_Load(fn);
+	if ( NULL == s1 )
+	{
 		CHECKPOINT;
 		error(ERR_FATAL,"cant load image %s: %s",fn,SDL_GetError());
 	}
-	if((s2=SDL_DisplayFormat(s1))==NULL) {
+	if (use_alpha)
+	{
+		s2 = SDL_DisplayFormatAlpha(s1);	//α値を持ったsurface
+	}
+	else
+	{
+		s2 = SDL_DisplayFormat(s1);
+	}
+	if ( NULL == s2 )
+	{
 		CHECKPOINT;
 		error(ERR_FATAL,"cant convert image %s to display format: %s",fn,SDL_GetError());
 	}
 	SDL_FreeSurface(s1);
-	s1=NULL;
+	s1 = NULL;
 	imglist_add(s2,fn);
 	return(s2);
 }
-
-SDL_Surface *loadbmp2(char *filename)	//α値を持ったsurface
+SDL_Surface *loadbmp(char *filename/*, int use_alpha*/)
 {
-	char fn[50];
-	strcpy(fn,moddir);
-	strcat(fn,"/");
-	strcat(fn,filename);
-
-	SDL_Surface *s1,*s2;
-
-	if((s1=imglist_search(fn))!=NULL) {
-		return s1;
-	}
-
-	//if((s1=SDL_LoadBMP(fn))==NULL) {
-	if((s1=IMG_Load(fn))==NULL) {
-		CHECKPOINT;
-		error(ERR_FATAL,"cant load image %s: %s",fn,SDL_GetError());
-	}
-	if((s2=SDL_DisplayFormatAlpha(s1))==NULL) {
-		CHECKPOINT;
-		error(ERR_FATAL,"cant convert image %s to display format: %s",fn,SDL_GetError());
-	}
-	SDL_FreeSurface(s1);
-	s1=NULL;
-	imglist_add(s2,fn);
-	return(s2);
+	return	loadbmp0(filename, 0);
+}
+SDL_Surface *loadbmp2(char *filename/*, int use_alpha*/)
+{
+	return	loadbmp0(filename, 1);
 }
 
 void unloadbmp_by_surface(SDL_Surface *s)
@@ -298,9 +333,9 @@ void unloadbmp_by_surface(SDL_Surface *s)
 	*/
 	IMGLIST *i=img_list;
 
-	while(i!=NULL) {
-		if(s==i->img) {
-			if(!i->refcount) {
+	while (i!=NULL) {
+		if (s==i->img) {
+			if (!i->refcount) {
 				CHECKPOINT;
 				error(ERR_WARN,"unloadbmp_by_surface: refcount for object %s is already zero",i->name);
 			} else {
@@ -323,9 +358,9 @@ void unloadbmp_by_name(char *name)
 	strcat(fn,name);
 	IMGLIST *i=img_list;
 
-	while(i!=NULL) {
-		if(!strcmp(i->name,fn)) {
-			if(!i->refcount) {
+	while (i!=NULL) {
+		if (!strcmp(i->name,fn)) {
+			if (!i->refcount) {
 				CHECKPOINT;
 				error(ERR_WARN,"unloadbmp_by_name: refcount for object %s is already zero",i->name);
 			} else {
@@ -339,7 +374,7 @@ void unloadbmp_by_name(char *name)
 	error(ERR_WARN,"unloadbmp_by_name: object not found");
 }
 */
-			
+
 void imglist_add(SDL_Surface *s, char *name)
 {
 	IMGLIST *new;
@@ -349,7 +384,7 @@ void imglist_add(SDL_Surface *s, char *name)
 	new->refcount=1;
 	new->img=s;
 
-	if(img_list==NULL) {
+	if (img_list==NULL) {
 		img_list=new;
 		new->next=NULL;
 	} else {
@@ -362,8 +397,8 @@ SDL_Surface *imglist_search(char *name)
 {
 	IMGLIST *i=img_list;
 
-	while(i!=NULL) {
-		if(!strcmp(name,i->name)) {
+	while (i!=NULL) {
+		if (!strcmp(name,i->name)) {
 			i->refcount++;
 			return (i->img);
 		}
@@ -376,11 +411,11 @@ void imglist_garbagecollect()
 {
 	IMGLIST *s=img_list,*p=NULL,*n=NULL;
 
-	while(s!=NULL) {
+	while (s!=NULL)
+	{
 		n=s->next;
-
-		if(s->refcount==0) {
-			if(p==NULL) {
+		if (s->refcount==0) {
+			if (p==NULL) {
 				img_list=n;
 			} else {
 				p->next=n;
@@ -400,21 +435,23 @@ Uint32 getpixel(SDL_Surface *surface, int x, int y)
 	int bpp=surface->format->BytesPerPixel;
 	Uint8 *p=(Uint8 *)surface->pixels+y*surface->pitch+x*bpp;
 
-	if(x>=clip_xmin(surface) && x<=clip_xmax(surface) && y>=clip_ymin(surface) && y<=clip_ymax(surface)){
-		switch(bpp) {
-			case 1:
-				return *p;
-			case 2:
-				return *(Uint16 *)p;
-			case 3:
-				if(SDL_BYTEORDER==SDL_BIG_ENDIAN)
-					return p[0]<<16|p[1]<<8|p[2];
-				else
-					return p[0]|p[1]<<8|p[2]<<16;
-			case 4:
-				return *(Uint32 *)p;
-			default:
-				return 0;
+	if (x>=clip_xmin(surface) && x<=clip_xmax(surface) && y>=clip_ymin(surface) && y<=clip_ymax(surface))
+	{
+		switch (bpp)
+		{
+		case 1:
+			return *p;
+		case 2:
+			return *(Uint16 *)p;
+		case 3:
+			if (SDL_BYTEORDER==SDL_BIG_ENDIAN)
+				return p[0]<<16|p[1]<<8|p[2];
+			else
+				return p[0]|p[1]<<8|p[2]<<16;
+		case 4:
+			return *(Uint32 *)p;
+		default:
+			return 0;
 		}
 	} else return 0;
 }
@@ -423,27 +460,29 @@ void putpixel(SDL_Surface *surface, int x, int y, Uint32 pixel)
 {
 	int bpp=surface->format->BytesPerPixel;
 	Uint8 *p=(Uint8 *)surface->pixels+y*surface->pitch+x*bpp;
-	if(x>=clip_xmin(surface) && x<=clip_xmax(surface) && y>=clip_ymin(surface) && y<=clip_ymax(surface)){
-		switch(bpp) {
-			case 1:
-				*p=pixel;
-				break;
-			case 2:
-				*(Uint16 *)p=pixel;
-				break;
-			case 3:
-				if(SDL_BYTEORDER==SDL_BIG_ENDIAN) {
-					p[0]=(pixel>>16)&0xff;
-					p[1]=(pixel>>8)&0xff;
-					p[2]=pixel&0xff;
-				} else {
-					p[2]=(pixel>>16)&0xff;
-					p[1]=(pixel>>8)&0xff;
-					p[0]=pixel&0xff;
-				}
-				break;
-			case 4:
-				*(Uint32 *)p=pixel;
+	if (x>=clip_xmin(surface) && x<=clip_xmax(surface) && y>=clip_ymin(surface) && y<=clip_ymax(surface))
+	{
+		switch (bpp)
+		{
+		case 1:
+			*p=pixel;
+			break;
+		case 2:
+			*(Uint16 *)p=pixel;
+			break;
+		case 3:
+			if (SDL_BYTEORDER==SDL_BIG_ENDIAN) {
+				p[0]=(pixel>>16)&0xff;
+				p[1]=(pixel>>8)&0xff;
+				p[2]=pixel&0xff;
+			} else {
+				p[2]=(pixel>>16)&0xff;
+				p[1]=(pixel>>8)&0xff;
+				p[0]=pixel&0xff;
+			}
+			break;
+		case 4:
+			*(Uint32 *)p=pixel;
 		}
 	}
 }
@@ -463,13 +502,13 @@ void draw_line(SDL_Surface *s, int x1, int y1, int x2, int y2, Uint32 farbe1, Ui
 	px=x1;
 	py=y1;
 
-	if(SDL_MUSTLOCK(s))
+	if (SDL_MUSTLOCK(s))
 		SDL_LockSurface(s);
 
-	if(dxabs>=dyabs) {
-		for(i=0;i<dxabs;i++) {
+	if (dxabs>=dyabs) {
+		for (i=0;i<dxabs;i++) {
 			y+=dyabs;
-			if(y>=dxabs) {
+			if (y>=dxabs) {
 				y-=dxabs;
 				py+=sdy;
 			}
@@ -479,9 +518,9 @@ void draw_line(SDL_Surface *s, int x1, int y1, int x2, int y2, Uint32 farbe1, Ui
 			px+=sdx;
 		}
 	} else {
-		for(i=0;i<dyabs;i++) {
+		for (i=0;i<dyabs;i++) {
 			x+=dxabs;
-			if(x>=dyabs) {
+			if (x>=dyabs) {
 				x-=dyabs;
 				px+=sdx;
 			}
@@ -491,7 +530,7 @@ void draw_line(SDL_Surface *s, int x1, int y1, int x2, int y2, Uint32 farbe1, Ui
 			py+=sdy;
 		}
 	}
-	if(SDL_MUSTLOCK(s))
+	if (SDL_MUSTLOCK(s))
 		SDL_UnlockSurface(s);
 }
 
@@ -510,13 +549,13 @@ void draw_line_simple(SDL_Surface *s, int x1, int y1, int x2, int y2, Uint32 far
 	px=x1;
 	py=y1;
 
-	if(SDL_MUSTLOCK(s))
+	if (SDL_MUSTLOCK(s))
 		SDL_LockSurface(s);
 
-	if(dxabs>=dyabs) {
-		for(i=0;i<dxabs;i++) {
+	if (dxabs>=dyabs) {
+		for (i=0;i<dxabs;i++) {
 			y+=dyabs;
-			if(y>=dxabs) {
+			if (y>=dxabs) {
 				y-=dxabs;
 				py+=sdy;
 			}
@@ -524,9 +563,9 @@ void draw_line_simple(SDL_Surface *s, int x1, int y1, int x2, int y2, Uint32 far
 			px+=sdx;
 		}
 	} else {
-		for(i=0;i<dyabs;i++) {
+		for (i=0;i<dyabs;i++) {
 			x+=dxabs;
-			if(x>=dyabs) {
+			if (x>=dyabs) {
 				x-=dyabs;
 				px+=sdx;
 			}
@@ -534,7 +573,7 @@ void draw_line_simple(SDL_Surface *s, int x1, int y1, int x2, int y2, Uint32 far
 			py+=sdy;
 		}
 	}
-	if(SDL_MUSTLOCK(s))
+	if (SDL_MUSTLOCK(s))
 		SDL_UnlockSurface(s);
 }
 */
@@ -550,24 +589,24 @@ void blit_scaled(SDL_Surface *src, SDL_Rect *src_rct, SDL_Surface *dst, SDL_Rect
 
 	key=src->format->colorkey;
 
-	if(SDL_MUSTLOCK(src))
+	if (SDL_MUSTLOCK(src))
 		SDL_LockSurface(src);
-	if(SDL_MUSTLOCK(dst))
+	if (SDL_MUSTLOCK(dst))
 		SDL_LockSurface(dst);
 
-	for(y = 0; y<dst_rct->h; y++) {
-		for(x = 0; x<dst_rct->w; x++) {
+	for (y = 0; y<dst_rct->h; y++) {
+		for (x = 0; x<dst_rct->w; x++) {
 			u = src_rct->w * x / dst_rct->w;
 			v = src_rct->h * y / dst_rct->h;
 			col=getpixel(src, u + src_rct->x, v + src_rct->y);
-			if(col!=key)
+			if (col!=key)
 				putpixel(dst, x + dst_rct->x, y + dst_rct->y, col);
 		}
 	}
 
-	if(SDL_MUSTLOCK(src))
+	if (SDL_MUSTLOCK(src))
 		SDL_UnlockSurface(src);
-	if(SDL_MUSTLOCK(dst))
+	if (SDL_MUSTLOCK(dst))
 		SDL_UnlockSurface(dst);
 }
 
@@ -583,42 +622,42 @@ void blit_calpha(SDL_Surface *src, SDL_Rect *src_rct, SDL_Surface *dst, SDL_Rect
 	Uint16 *ps,*pd;
 	Uint16 *sps,*spd;
 
-	if(src->format->BitsPerPixel!=dst->format->BitsPerPixel) {
+	if (src->format->BitsPerPixel!=dst->format->BitsPerPixel) {
 		CHECKPOINT;
 		error(ERR_FATAL,"cant handle different pixelformats (yet?)");
 	}
-	if(src->format->BitsPerPixel!=16) {
+	if (src->format->BitsPerPixel!=16) {
 		CHECKPOINT;
 		error(ERR_FATAL,"can only handle 16bit-pixelformat");
 	}
 	key=src->format->colorkey;
 
-	if(SDL_MUSTLOCK(src))
+	if (SDL_MUSTLOCK(src))
 		SDL_LockSurface(src);
-	if(SDL_MUSTLOCK(dst))
+	if (SDL_MUSTLOCK(dst))
 		SDL_LockSurface(dst);
 
 	ps=(Uint16 *)src->pixels+src_rct->y*src->pitch/2+src_rct->x;
 	pd=(Uint16 *)dst->pixels+dst_rct->y*dst->pitch/2+dst_rct->x;
 
-	for(y=0;y<src_rct->h;y++) {
+	for (y=0;y<src_rct->h;y++) {
 		sps=ps;
 		spd=pd;
 
-		if(y%2) {
+		if (y%2) {
 			ps++;
 			pd++;
 		}
 
-		for(x=0;x<src_rct->w;x+=2) {
+		for (x=0;x<src_rct->w;x+=2) {
 
-			if((x+dst_rct->x>=0) &&
+			if ((x+dst_rct->x>=0) &&
 			   (x+dst_rct->x<dst->w) &&
 			   (y+dst_rct->y>=0) &&
 			   (y+dst_rct->y<dst->h)) {
 
 				col=*(ps);
-				if(col!=key)
+				if (col!=key)
 					*(pd)=col;
 			}
 			pd+=2;
@@ -627,10 +666,10 @@ void blit_calpha(SDL_Surface *src, SDL_Rect *src_rct, SDL_Surface *dst, SDL_Rect
 		ps=sps+src->pitch/2;
 		pd=spd+dst->pitch/2;
 	}
-		
-	if(SDL_MUSTLOCK(src))
+
+	if (SDL_MUSTLOCK(src))
 		SDL_UnlockSurface(src);
-	if(SDL_MUSTLOCK(dst))
+	if (SDL_MUSTLOCK(dst))
 		SDL_UnlockSurface(dst);
 }
 */
@@ -638,72 +677,42 @@ void blit_calpha(SDL_Surface *src, SDL_Rect *src_rct, SDL_Surface *dst, SDL_Rect
 void keyboard_clear()
 {
 	int i;
-
-	for(i=0;i<15;i++) {
+	for (i=0;i<15;i++)
+	{
 		keyboard[i]=0;
 	}
 }
 
-void keyboard_poll(void) 
-{ 
-	sceCtrlReadBufferPositive(&pad, 1); 
-	int pad_data = pad.Buttons; 
-	if (pad.Lx < 64){
-		pad_data |= PSP_CTRL_LEFT;
-	}
-	else if (pad.Lx > 192){
-		pad_data |= PSP_CTRL_RIGHT;
-	}
+void keyboard_poll(void)
+{
+	sceCtrlReadBufferPositive(&pad, 1);
+	int pad_data = pad.Buttons;
+	if (pad.Lx < 64/*70*/)			{		pad_data |= PSP_CTRL_LEFT;	}
+	else if (pad.Lx > 192/*185*/)	{		pad_data |= PSP_CTRL_RIGHT; }
 
-	if (pad.Ly < 64){
-		pad_data |= PSP_CTRL_UP;
-	}
-	else if (pad.Ly > 192){
-		pad_data |= PSP_CTRL_DOWN;
-	}
-
-	if(pad_data & PSP_CTRL_SQUARE){keyboard[keyconfig.si] |= (pad_data & PSP_CTRL_SQUARE);}
-	else{keyboard[keyconfig.si] &= (~PSP_CTRL_SQUARE);}
-	
-	if(pad_data & PSP_CTRL_CIRCLE){keyboard[keyconfig.ma] |= (pad_data & PSP_CTRL_CIRCLE);}
-	else{keyboard[keyconfig.u] &= (~PSP_CTRL_CIRCLE);}
-
-	if(pad_data & PSP_CTRL_CROSS){keyboard[keyconfig.ba] |= (pad_data & PSP_CTRL_CROSS);}
-	else{keyboard[keyconfig.ba] &= (~PSP_CTRL_CROSS);}
-
-	if(pad_data & PSP_CTRL_LTRIGGER){keyboard[keyconfig.lt] |= (pad_data & PSP_CTRL_LTRIGGER);}
-	else{keyboard[keyconfig.lt] &= (~PSP_CTRL_LTRIGGER);}
-
-	if(pad_data & PSP_CTRL_RTRIGGER){keyboard[keyconfig.rt] |= (pad_data & PSP_CTRL_RTRIGGER);}
-	else{keyboard[keyconfig.rt] &= (~PSP_CTRL_RTRIGGER);}
-
-	if(pad_data & PSP_CTRL_SELECT){keyboard[keyconfig.sl] |= (pad_data & PSP_CTRL_SELECT);}
-	else{keyboard[keyconfig.sl] &= (~PSP_CTRL_SELECT);}
-
-	if(pad_data & PSP_CTRL_START){keyboard[keyconfig.st] |= (pad_data & PSP_CTRL_START);}
-	else{keyboard[keyconfig.st] &= (~PSP_CTRL_START);}
-
-	if(pad_data & PSP_CTRL_UP){keyboard[keyconfig.u] |= (pad_data & PSP_CTRL_UP);}
-	else{keyboard[keyconfig.u] &= (~PSP_CTRL_UP);}
-
-	if(pad_data & PSP_CTRL_DOWN){keyboard[keyconfig.d] |= (pad_data & PSP_CTRL_DOWN);}
-	else{keyboard[keyconfig.d] &= (~PSP_CTRL_DOWN);}
-
-	if(pad_data & PSP_CTRL_LEFT){keyboard[keyconfig.l] |= (pad_data & PSP_CTRL_LEFT);}
-	else{keyboard[keyconfig.l] &= (~PSP_CTRL_LEFT);}
-
-	if(pad_data & PSP_CTRL_RIGHT){keyboard[keyconfig.r] |= (pad_data & PSP_CTRL_RIGHT);}
-	else{keyboard[keyconfig.r] &= (~PSP_CTRL_RIGHT);}
-
-	if(pad_data & PSP_CTRL_TRIANGLE){keyboard[keyconfig.sa] |= (pad_data & PSP_CTRL_TRIANGLE);}
-	else{keyboard[keyconfig.sa] &= (~PSP_CTRL_TRIANGLE);}
+	if (pad.Ly < 64/*70*/)			{		pad_data |= PSP_CTRL_UP;	}
+	else if (pad.Ly > 192/*185*/)	{		pad_data |= PSP_CTRL_DOWN;	}
+//
+	if (pad_data & PSP_CTRL_SELECT) 	{keyboard[keyconfig.sl] |= (pad_data & PSP_CTRL_SELECT);}	else{keyboard[keyconfig.sl] &= (~PSP_CTRL_SELECT);}
+	if (pad_data & PSP_CTRL_START)		{keyboard[keyconfig.st] |= (pad_data & PSP_CTRL_START);}	else{keyboard[keyconfig.st] &= (~PSP_CTRL_START);}
+	if (pad_data & PSP_CTRL_UP) 		{keyboard[keyconfig.u]	|= (pad_data & PSP_CTRL_UP);}		else{keyboard[keyconfig.u]	&= (~PSP_CTRL_UP);}
+	if (pad_data & PSP_CTRL_RIGHT)		{keyboard[keyconfig.r]	|= (pad_data & PSP_CTRL_RIGHT);}	else{keyboard[keyconfig.r]	&= (~PSP_CTRL_RIGHT);}
+	if (pad_data & PSP_CTRL_DOWN)		{keyboard[keyconfig.d]	|= (pad_data & PSP_CTRL_DOWN);} 	else{keyboard[keyconfig.d]	&= (~PSP_CTRL_DOWN);}
+	if (pad_data & PSP_CTRL_LEFT)		{keyboard[keyconfig.l]	|= (pad_data & PSP_CTRL_LEFT);} 	else{keyboard[keyconfig.l]	&= (~PSP_CTRL_LEFT);}
+	if (pad_data & PSP_CTRL_LTRIGGER)	{keyboard[keyconfig.lt] |= (pad_data & PSP_CTRL_LTRIGGER);} else{keyboard[keyconfig.lt] &= (~PSP_CTRL_LTRIGGER);}
+	if (pad_data & PSP_CTRL_RTRIGGER)	{keyboard[keyconfig.rt] |= (pad_data & PSP_CTRL_RTRIGGER);} else{keyboard[keyconfig.rt] &= (~PSP_CTRL_RTRIGGER);}
+	if (pad_data & PSP_CTRL_TRIANGLE)	{keyboard[keyconfig.sa] |= (pad_data & PSP_CTRL_TRIANGLE);} else{keyboard[keyconfig.sa] &= (~PSP_CTRL_TRIANGLE);}
+	if (pad_data & PSP_CTRL_CIRCLE) 	{keyboard[keyconfig.ma] |= (pad_data & PSP_CTRL_CIRCLE);}	else{keyboard[keyconfig.ma] &= (~PSP_CTRL_CIRCLE);}
+	if (pad_data & PSP_CTRL_CROSS)		{keyboard[keyconfig.ba] |= (pad_data & PSP_CTRL_CROSS);}	else{keyboard[keyconfig.ba] &= (~PSP_CTRL_CROSS);}
+	if (pad_data & PSP_CTRL_SQUARE) 	{keyboard[keyconfig.si] |= (pad_data & PSP_CTRL_SQUARE);}	else{keyboard[keyconfig.si] &= (~PSP_CTRL_SQUARE);}
 }
-	
+
 int keyboard_keypressed()
 {
 	int i;
-	for(i=0;i<15;i++) {
-		if(keyboard[i]) return 1;
+	for (i=0;i<15;i++)
+	{
+		if (keyboard[i]) return 1;
 	}
 	return 0;
 }
@@ -711,9 +720,9 @@ int keyboard_keypressed()
 void newstate(int m, int s, int n)
 {
 	laststate=state;
-	if(m>=0) state.mainstate=m;
-	if(s>=0) state.substate=s;
-	if(n>=0) state.newstate=n;
+	if (m>=0) state.mainstate=m;
+	if (s>=0) state.substate=s;
+	if (n>=0) state.newstate=n;
 }
 
 void *mmalloc(size_t size)
@@ -721,11 +730,11 @@ void *mmalloc(size_t size)
 	void *ptr;
 
 	ptr=malloc(size);
-	if(ptr==NULL) {
+	if (ptr==NULL) {
 		error(ERR_WARN,"can't alloc %d bytes, trying garbage collection",size);
 		imglist_garbagecollect();
 		ptr=malloc(size);
-		if(ptr==NULL) {
+		if (ptr==NULL) {
 			error(ERR_FATAL,"I'm sorry, but you're out of memory!");
 		}
 	}
@@ -733,7 +742,7 @@ void *mmalloc(size_t size)
 	return ptr;
 }
 
-void load_ing()		//load画面用
+void load_ing() 	//load画面用
 {
 	kazu ++;
 	int i;
@@ -743,8 +752,8 @@ void load_ing()		//load画面用
 	dott.y=248;
 	SDL_FillRect(screen,NULL,SDL_MapRGB(screen->format,0,0,0));
 	SDL_BlitSurface(loadpic, NULL, screen, NULL);
-	for(i=0;i<(kazu % 4);i++){
-		if(i!=3)
+	for (i=0;i<(kazu % 4);i++){
+		if (i!=3)
 		{
 			dott.x=425+19*i;
 			SDL_BlitSurface(loaddot[i], NULL, screen, &dott);
@@ -765,13 +774,13 @@ void display_vidinfo()
 
 	s=SDL_GetVideoInfo();
 
-	if(SDL_VideoDriverName(driver,256)==NULL)
+	if (SDL_VideoDriverName(driver,256)==NULL)
 		error(ERR_WARN,"couldn't get video driver name");
 	else
 		error(ERR_DEBUG,"Video Driver: %s",driver);
 
 	error(ERR_DEBUG,"BitsPerPixel: %d",s->vfmt->BitsPerPixel);
-	if(s->vfmt->palette==NULL) {
+	if (s->vfmt->palette==NULL) {
 		error(ERR_DEBUG,"R Mask      : 0x%.8x",s->vfmt->Rmask);
 		error(ERR_DEBUG,"G Mask      : 0x%.8x",s->vfmt->Gmask);
 		error(ERR_DEBUG,"B Mask      : 0x%.8x",s->vfmt->Bmask);
@@ -789,12 +798,12 @@ void display_vidinfo()
 
 	error(ERR_DEBUG,"Available Fullscreen modes:");
 	modes=SDL_ListModes(NULL,SDL_FULLSCREEN);
-	for(i=0;modes[i];i++) {
+	for (i=0;modes[i];i++) {
 		error(ERR_DEBUG,"%d: %dx%d",i+1,modes[i]->w,modes[i]->h);
 	}
 	error(ERR_DEBUG,"Available HW-surfaces modes:");
 	modes=SDL_ListModes(NULL,SDL_FULLSCREEN|SDL_HWSURFACE);
-	for(i=0;modes[i];i++) {
+	for (i=0;modes[i];i++) {
 		error(ERR_DEBUG,"%d: %dx%d",i+1,modes[i]->w,modes[i]->h);
 	}
 	error(ERR_DEBUG,"=======================================");
@@ -837,12 +846,12 @@ void preload_gfx()
 	tmp=loadbmp("boss03-ru.png"); unloadbmp_by_surface(tmp);
 	tmp=loadbmp("boss04.png"); unloadbmp_by_surface(tmp);
 	tmp=loadbmp2("boss04-lo.png"); unloadbmp_by_surface(tmp);
-    tmp=loadbmp("boss05-lo.png"); unloadbmp_by_surface(tmp);
-    tmp=loadbmp("boss05-mo.png"); unloadbmp_by_surface(tmp);
-    tmp=loadbmp("boss05-ro.png"); unloadbmp_by_surface(tmp);
-    tmp=loadbmp("boss05-lu.png"); unloadbmp_by_surface(tmp);
-    tmp=loadbmp("boss05-mu.png"); unloadbmp_by_surface(tmp);
-    tmp=loadbmp("boss05-ru.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("boss05-lo.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("boss05-mo.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("boss05-ro.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("boss05-lu.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("boss05-mu.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("boss05-ru.png"); unloadbmp_by_surface(tmp);
 	load_ing();
 	tmp=loadbmp("bshoot.png"); unloadbmp_by_surface(tmp);
 	tmp=loadbmp("bshoot2.png"); unloadbmp_by_surface(tmp);
@@ -907,7 +916,7 @@ void preload_gfx()
 	load_ing();
 	tmp=loadbmp("rotating_rocket.png"); unloadbmp_by_surface(tmp);
 	tmp=loadbmp("rwingx.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("splash.png"); unloadbmp_by_surface(tmp);		//***090124		追加
+	tmp=loadbmp("splash.png"); unloadbmp_by_surface(tmp);		//[***090124		追加
 	tmp=loadbmp("ship-med.png"); unloadbmp_by_surface(tmp);
 	tmp=loadbmp("ship-med-ma.png"); unloadbmp_by_surface(tmp);
 	tmp=loadbmp("speed.png"); unloadbmp_by_surface(tmp);
@@ -969,7 +978,7 @@ void preload_gfx()
 	tmp=loadbmp("bigkugel2.png"); unloadbmp_by_surface(tmp);
 	tmp=loadbmp("key_icon.png"); unloadbmp_by_surface(tmp);
 	tmp=loadbmp("keylist.png"); unloadbmp_by_surface(tmp);
-	
+
 	/* alle benoetigten Bilder in den Cache laden */
 }
 
@@ -982,7 +991,7 @@ int ini_load()
 	strcpy(fn,"./setting.ini");
 
 	if ( NULL == (fp = fopen(fn,"r")))
-    	return -1;
+		return -1;
 
 	fscanf(fp,"%s",moddir);
 	fscanf(fp,"%d",&difficulty);
@@ -999,8 +1008,8 @@ int ini_load()
 	fscanf(fp,"%d",&keyconfig.sl);
 	fscanf(fp,"%d",&keyconfig.st);
 	fclose(fp);
-	if(difficulty>3)
-		difficulty=2;
+	if (difficulty>3)
+	{	difficulty=2;}
 	return 1;
 }
 

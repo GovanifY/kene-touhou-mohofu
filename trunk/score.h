@@ -8,8 +8,9 @@
 #include "player.h"
 #include "support.h"
 
-void Player_Disp(char *img_name, int num, int x_suf, int y_suf);
-void Power_Statas(int weapon, int dx, int dy);
-void score_display();
-void score_cleanup();
+extern void score_display(void);
+
+//static void player_disp(char *img_name, int num, int x_suf, int y_suf);
+//static void power_status(int weapon, int dx, int dy);
+//extern void score_cleanup(void);
 #endif

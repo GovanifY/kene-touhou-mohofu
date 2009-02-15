@@ -5,7 +5,8 @@
 #include "sprite.h"
 #include "menu.h"
 
-enum _intro_states {
+enum _intro_states
+{
 	INTRO_INIT,
 	INTRO_FADEIN_MOON,
 	INTRO_FADEIN_KETM,
@@ -14,9 +15,9 @@ enum _intro_states {
 	INTRO_QUIT
 };
 
-void intro_init();
-void intro_work();
-void intro_fadein_moon();
-void intro_fadein_ketm();
-void intro_sleep();
+extern void intro_init(void);
+extern void intro_work(void);
+//static void intro_fadein_moon(void);
+//static void intro_fadein_ketm(void);
+//static void intro_sleep(void);
 #endif

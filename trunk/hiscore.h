@@ -8,50 +8,28 @@
 #include "sprite.h"
 #include "player.h"
 
-enum _hclist_show_states {
-	HCLISTS_INIT,
-	HCLISTS_FADEIN,
-	HCLISTS_WAIT,
-	HCLISTS_FADEOUT,
-	HCLISTS_QUIT
-};
-
-enum _hclist_edit_states {
+enum _hclist_edit_states
+{
 	HCLISTE_INIT,
 	HCLISTE_ENTRY,
 	HCLISTE_QUIT
 };
 
-typedef struct {
+typedef struct
+{
 	char name[4];
 	int score;
 } HSC_LIST;
 
-typedef struct {
-	double xg;
-	double yg;
-	int dir;
-	double ph;
-	double phspeed;
-	double amp;
-	double ampspeed;
-	int arrived;
-} HSC_DATA;
+extern void hsc_init(void);
+extern void hsc_show_init(void);
+extern void hsc_show_work(void);
+//static void hsc_show_move(void);
 
-typedef struct {
-	SDL_Surface *l;
-	double s;
-	char ascii;
-	int xpos,ypos;
-} LETTER;
+extern void hsc_entry_init(void);
+extern void hsc_entry_work(void);
+//static void hsc_entry_show(void);
 
-void hsc_init();
-void hsc_show_init();
-void hsc_show_work();
-void hsc_show_move();
-
-void hsc_entry_init();
-void hsc_entry_work();
-void hsc_entry_show();
-
+extern void hsc_save(void);
+extern void hsc_load(void);
 #endif
