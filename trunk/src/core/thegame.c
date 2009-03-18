@@ -15,6 +15,7 @@ extern int is_bg_end;	//[***090202		追加
 extern int is_bg_fin;	//[***090202		追加
 extern int n_bg;		//[***090209		追加
 extern int difficulty;
+extern int select_player;
 
 
 /* ザコで宣言が必要なもの(グローバル) */
@@ -78,7 +79,7 @@ static void thegame_level(LEVELENTRY *l/*, int lev*/)
 		else if (!strcmp(l->para1,"CURVER"))	{	enemy_curver_add(l->para2); 		}
 		else if (!strcmp(l->para1,"BADGUY"))	{	enemy_badguy_add(l->para2); 		}
 		else if (!strcmp(l->para1,"PROBALL"))	{	enemy_proball_add(l->para2);		}
-		else if (!strcmp(l->para1,"PLASMABALL")) {	enemy_plasmaball_add(l->para2); 	}
+		else if (!strcmp(l->para1,"PLASMABALL")){	enemy_plasmaball_add(l->para2); 	}
 		else if (!strcmp(l->para1,"MING"))		{	enemy_ming_add(l->para2);			}
 		else if (!strcmp(l->para1,"GREETER"))	{	enemy_greeter_add(l->para2);		}
 		else if (!strcmp(l->para1,"SPLASH"))	{	enemy_splash_add(l->para2); 		}		//[***090124		追加
@@ -90,7 +91,7 @@ static void thegame_level(LEVELENTRY *l/*, int lev*/)
 		else if (!strcmp(l->para1,"BOSS04"))	{	enemy_boss04_add(l->para2); 		}
 		else {			error(ERR_WARN,"unknown enemy '%s'",l->para1);		}
 		#else
-	{void (*aaa[])(int) =
+	{void (*aaa[])(int) =		/* enemyの生成を番号で管理(loadlv.cのctype_name[]に対応している) */
 		{
 		enemy_error,
 		enemy_xev_add,
@@ -151,6 +152,9 @@ static void thegame_level(LEVELENTRY *l/*, int lev*/)
 			break;
 		}
 		break;
+	case 'P':		/* [***090313	追加	 Picture */
+		enemy_gameimg_add(l->para1,l->para0,l->para2);
+		break;
 	// add background tiles....
 	case BTYPE_01_BGPANEL1: 		enemy_bgpanel_type_add_xy(	l->para0, l->para2, l->para3, /*type*/1-1);	break;
 	case BTYPE_02_BGPANEL2: 		enemy_bgpanel_type_add_xy(	l->para0, l->para2, l->para3, /*type*/2-1);	break;
@@ -191,9 +195,20 @@ void thegame_init(void)
 
 void thegame_work(void)
 {
+/*
+	bossmodeについて
+	0:特になし。
+	1:ボスとの戦闘中。
+	2:ボス撃破。終了イベントファイル読み込み。
+	3:ボス開始イベント。
+	4:ボス形態変更。強敵撃破。
+	5:開始イベントファイル読み込み。
+	6:ボス終了イベント。
+*/
 	PLAYER_DATA *d=(PLAYER_DATA *)player->data;
 	Uint32 gt;
 	LEVELENTRY *l;
+	static int button_d;
 //	int *level=&d->level;
 
 	if (state.mainstate!=ST_GAME_PLAY || state.newstate==1) return;
@@ -231,8 +246,16 @@ void thegame_work(void)
 		/* 生きてる */
 		if (keyboard[KEY_PAUSE])
 		{
-			newstate(ST_MENU,MENU_PAUSE,1);
+			if(d->bossmode!=3 && d->bossmode!=6 && button_d<0)
+			{
+				newstate(ST_MENU,MENU_PAUSE,1);
+			}
+			else
+			{
+				button_d=20;
+			}
 		}
+		else{	button_d--;	}
 
 		l=leveltab;
 		while (l!=NULL)
@@ -245,22 +268,25 @@ void thegame_work(void)
 			l=l->next;
 		}
 
-		if (((PLAYER_DATA *)player->data)->bossmode==2) //ボスを倒したときの処理
+		if (d->bossmode==2) //ボスを倒したときの処理
 		{
-			if (dbwait==0)
+			claer_music();
+			if (dbwait==0)		//[***090313		変更
 			{ //TIME_20_DBWAITフレーム待ってから実行。ボスを倒した時に画面に表示されている弾を全て消す処理のために必要。
-				dbwait=TIME_20_DBWAIT;
-				((PLAYER_DATA *)player->data)->bossmode=0;
-				playChunk(3);
-				//
-				level_start_time=PSP_GetTicks();
-				gt=(PSP_GetTicks()-level_start_time); //denis
-				/* Load next level */
-				loadlv();//if (loadlv(/**level*/)==0)	{	error(ERR_WARN,"no entrys for level %d",*level);}
-				is_bg_add=0;
-				is_bg_end=0;
-				is_bg_fin=0;
-				n_bg=0;
+				char buffer[10];
+				sprintf(buffer,"stage%d-%d_end",player_now_stage,select_player);
+				if(!script_init(buffer, NULL,380)){		//ファイルがない場合はイベントを飛ばす
+					dbwait=TIME_20_DBWAIT;
+					d->bossmode=0;
+					level_start_time=PSP_GetTicks();
+					gt=(PSP_GetTicks()-level_start_time);
+					loadlv();
+					is_bg_add=0;
+					is_bg_end=0;
+					is_bg_fin=0;
+					n_bg=0;
+				}
+				else{	d->bossmode=6;	}
 			}
 			dbwait--;
 		}
@@ -271,6 +297,16 @@ void thegame_work(void)
 			//	error(ERR_DEBUG,"sorry, no more levels in this alpha-version");
 			d->score+=d->lives*(2000+(difficulty*4000));
 			d->lives=0-1;/* 死に中 */
+			if(difficulty>0)
+			{
+				/******自分でコンパイルする人へ******
+				このままだと配布バイナリと違うので
+				thegame.c	:	と
+				menu.c		:	の
+				文字列"無駄"を適当に変えといて下さい。
+				************************************/
+				strcpy(password,"RUMIAISMYBRIDE");
+			}
 			return;
 			}
 		}
@@ -280,6 +316,37 @@ void thegame_work(void)
 	controller_work();
 	sprite_work(SP_SHOW_ALL);
 	sprite_display(SP_SHOW_ALL);
+	if(d->bossmode==5)		//[***090313		追加
+	{
+		char buffer[10];
+		sprintf(buffer,"stage%d-%d",player_now_stage,select_player);
+		setMusicVolume(80);
+		if(!script_init(buffer, NULL,380)){	d->bossmode=1;	}
+		else{	d->bossmode=3;	}
+	}
+	else if(d->bossmode==3)		//[***090313		追加
+	{
+		if(thescript()==1){
+			d->bossmode=1;
+			play_music( player_now_stage+8 );
+			setMusicVolume(128);
+		}
+	}
+	else if(d->bossmode==6)		//[***090313		追加	ここに移動。
+	{
+		if(thescript()==1){
+			dbwait=TIME_20_DBWAIT;
+			d->bossmode=0;
+			level_start_time=PSP_GetTicks();
+			gt=(PSP_GetTicks()-level_start_time); //denis
+			/* Load next level */
+			loadlv();//if (loadlv(/**level*/)==0)	{	error(ERR_WARN,"no entrys for level %d",*level);}
+			is_bg_add=0;
+			is_bg_end=0;
+			is_bg_fin=0;
+			n_bg=0;
+		}
+	}
 	//parsys_display();
 	score_display();
 //	gframe++;

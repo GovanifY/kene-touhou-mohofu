@@ -60,6 +60,7 @@
 	#define M_PI		3.14159265358979323846
 #endif
 
+#define M_PI_H		0.52359877559829887307		/* ÉŒ ÅÄ 6 */
 #define degtorad(x) (((M_PI*2)/360.0)*(x))		/* 2ÉŒ ÅÄ 360 * X */
 #define radtodeg(x) ( (int)((x)*((360.0)/(M_PI*2))+360)%360 )
 
@@ -97,6 +98,7 @@ enum _state
 	ST_GAME_DEMO,
 	ST_GAME_PLAY,
 	ST_GAME_OVER,
+	ST_STORY,		/* [***20090223	í«â¡  */
 	ST_SHOW_HCLIST,
 	ST_ENTRY_HCLIST,
 	ST_KEY_CONFIG,
@@ -163,6 +165,7 @@ typedef struct
 //#include "_resource.h"
 
 char moddir[20];
+char password[20];		/* [***090222 */
 
 extern void game_init(int argc, char *argv[]);
 //void toggle_fullscreen(void);
@@ -199,6 +202,6 @@ extern void ini_save(void);	//[***090115
 extern void psp_push_screen(void);
 extern void psp_pop_screen(void);
 
-#define DEBUG_MODE (1)
+#define DEBUG_MODE (0)
 
 #endif

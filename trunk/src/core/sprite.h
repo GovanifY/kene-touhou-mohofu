@@ -14,11 +14,11 @@ enum _priority
 	PR_GROUNDER,
 	PR_BACK1,
 	PR_BACK2,
+	PR_PLAYER,
 	PR_ENEMY,
 	PR_ENEMY_WEAPON,
 	PR_TARGET,
 	PR_BONUS,
-	PR_PLAYER,
 	PR_PLAYER2,
 	PR_TMP,
 	PR_TEXT,
@@ -129,6 +129,7 @@ typedef struct _sprite
 #define SP_FLAG_VISIBLE 	0x02	/* Sprite sichtbar */
 #define SP_FLAG_NOCACHE 	0x04	/* Image nicht im Cache */
 #define SP_FLAG_FREESURFACE 0x08	/* Surface loeschen */
+#define SP_FLAG_GRAZE 		0x10	/* グレイズ済みかとうかのフラグ SP_FLAG_CHEAPALPHA */
 //#define SP_FLAG_CHEAPALPHA	0x10	/* "Cheapalpha", nur jedes 2te Pixel setzen */
 #define SP_FLAG_PARANOIA	0x20	/* SIE sind hinter mir her */
 

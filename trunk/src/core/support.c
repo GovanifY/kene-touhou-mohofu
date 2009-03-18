@@ -19,13 +19,13 @@ KEYCONFIG keyconfig;
 static Uint32 videoflags = SDL_FULLSCREEN | SDL_DOUBLEBUF | SDL_HWSURFACE | SDL_HWPALETTE| SDL_HWACCEL;
 static int depth=16;
 static int kazu=0;
-static SDL_Surface *loadpic=NULL;		//load画面用
+//static SDL_Surface *loadpic=NULL;		//load画面用
 static SDL_Surface *loaddot[3];		//load画面用
 extern GAMESTATE state;
 extern GAMESTATE laststate;
 extern int difficulty;
 extern int b_id;
-SceCtrlData pad;
+//SceCtrlData pad;
 /*
 	enum _keynum_{		//キーコンフィグ用
 		KEY_NONE,
@@ -200,7 +200,9 @@ void game_init(int argc, char *argv[])
 	//SDL_ShowCursor(1);
 	//SDL_WM_SetCaption("killeverythingthatmoves","ketm");
 
-	loadpic=loadbmp("loadpng.png"); 	//ロード用画像
+	SDL_Surface *loadpic=loadbmp("loadpng.png");
+	SDL_BlitSurface(loadpic, NULL, back_screen, NULL);
+	unloadbmp_by_surface(loadpic);
 	loaddot[0]=loadbmp("maru1.png");		//ロード用画像
 	loaddot[1]=loadbmp("maru1.png");		//ロード用画像
 	loaddot[2]=loadbmp("maru1.png");		//ロード用画像1つで十分だよね
@@ -220,7 +222,7 @@ void game_init(int argc, char *argv[])
 	load_ing();
 	newstate(ST_START_INTRO,0,1);
 	initSound();
-	unloadbmp_by_surface(loadpic);
+//	unloadbmp_by_surface(loadpic);
 	unloadbmp_by_surface(loaddot[0]);
 	unloadbmp_by_surface(loaddot[1]);
 	unloadbmp_by_surface(loaddot[2]);
@@ -685,6 +687,7 @@ void keyboard_clear()
 
 void keyboard_poll(void)
 {
+	SceCtrlData pad;
 	sceCtrlReadBufferPositive(&pad, 1);
 	int pad_data = pad.Buttons;
 	if (pad.Lx < 64/*70*/)			{		pad_data |= PSP_CTRL_LEFT;	}
@@ -750,8 +753,8 @@ void load_ing() 	//load画面用
 	dott.h=0;
 	dott.w=0;
 	dott.y=248;
-	SDL_FillRect(screen,NULL,SDL_MapRGB(screen->format,0,0,0));
-	SDL_BlitSurface(loadpic, NULL, screen, NULL);
+//	SDL_FillRect(screen,NULL,SDL_MapRGB(screen->format,0,0,0));		//画面に大幅な変更がないときはする必要なし？
+	psp_pop_screen();		//SDL_BlitSurface(loadpic, NULL, screen, NULL);
 	for (i=0;i<(kazu % 4);i++){
 		if (i!=3)
 		{
@@ -829,6 +832,26 @@ void preload_gfx()
 	tmp=loadbmp("bonus_s.png"); unloadbmp_by_surface(tmp);
 	tmp=loadbmp("bonus_h.png"); unloadbmp_by_surface(tmp);
 	tmp=loadbmp("bonus_x.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp2("knife.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp2("knife_core.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp2("knife0.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp2("knife1.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp2("knife2.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp2("knife3.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp2("knife4.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp2("knife5.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp2("knife6.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp2("knife7.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp2("knife8.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp2("knife9.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp2("knife10.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp2("knife11.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp2("knife12.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp2("knife13.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp2("knife14.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp2("knife15.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp2("knife16.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp2("knife17.png"); unloadbmp_by_surface(tmp);
 	load_ing();
 	tmp=loadbmp("boss01-lo.png"); unloadbmp_by_surface(tmp);
 	tmp=loadbmp("boss01-lu.png"); unloadbmp_by_surface(tmp);
@@ -862,41 +885,26 @@ void preload_gfx()
 	tmp=loadbmp2("cshoot2.png"); unloadbmp_by_surface(tmp);
 	tmp=loadbmp("cube.png"); unloadbmp_by_surface(tmp);
 	tmp=loadbmp("ex.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp2("knife.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp2("knife_core.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp2("knife0.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp2("knife1.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp2("knife2.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp2("knife3.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp2("knife4.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp2("knife5.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp2("knife6.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp2("knife7.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp2("knife8.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp2("knife9.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp2("knife10.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp2("knife11.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp2("knife12.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp2("knife13.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp2("knife14.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp2("knife15.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp2("knife16.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp2("knife17.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("spell_bullet_r.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("spell_bullet_g.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("spell_bullet_b.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("kugel2.png"); unloadbmp_by_surface(tmp);
 	load_ing();
 	tmp=loadbmp("fairy.png"); unloadbmp_by_surface(tmp);
 	tmp=loadbmp("great_fairy.png"); unloadbmp_by_surface(tmp);
 	tmp=loadbmp("eyefo.png"); unloadbmp_by_surface(tmp);
 	tmp=loadbmp("fireball.png"); unloadbmp_by_surface(tmp);
 	tmp=loadbmp2("fireball1.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp2("bat.png"); unloadbmp_by_surface(tmp);
 	tmp=loadbmp("firebomb.png"); unloadbmp_by_surface(tmp);
 	tmp=loadbmp("font01.png"); unloadbmp_by_surface(tmp);
 	tmp=loadbmp("font02.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("font03.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp2("font03.png"); unloadbmp_by_surface(tmp);
 	tmp=loadbmp("font04.png"); unloadbmp_by_surface(tmp);
 	tmp=loadbmp("font05.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("font07.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("grounder.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp2("font07.png"); unloadbmp_by_surface(tmp);
 	load_ing();
+	tmp=loadbmp("grounder.png"); unloadbmp_by_surface(tmp);
 	tmp=loadbmp("iris.png"); unloadbmp_by_surface(tmp);
 	tmp=loadbmp("homing.png"); unloadbmp_by_surface(tmp);
 	tmp=loadbmp("ketm.png"); unloadbmp_by_surface(tmp);
@@ -906,6 +914,7 @@ void preload_gfx()
 	tmp=loadbmp("moon.jpg"); unloadbmp_by_surface(tmp);
 	tmp=loadbmp("plasma.png"); unloadbmp_by_surface(tmp);
 	tmp=loadbmp("plasma_ma.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("plasma_oz.png"); unloadbmp_by_surface(tmp);
 	tmp=loadbmp("plasmaball.png"); unloadbmp_by_surface(tmp);
 	tmp=loadbmp("missile.png"); unloadbmp_by_surface(tmp);
 	tmp=loadbmp("Player_Star.png"); unloadbmp_by_surface(tmp);
@@ -929,9 +938,15 @@ void preload_gfx()
 	tmp=loadbmp("star_shield_blue.png"); unloadbmp_by_surface(tmp);
 	tmp=loadbmp("star_shield_red.png"); unloadbmp_by_surface(tmp);
 	tmp=loadbmp("star_shield_green.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("cross_red.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp2("fire_wind_r.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp2("fire_wind_l.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp2("fire_wind_u.png"); unloadbmp_by_surface(tmp);
 	tmp=loadbmp("target.png"); unloadbmp_by_surface(tmp);
 	tmp=loadbmp("weapon.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp2("health.png"); unloadbmp_by_surface(tmp);
 	tmp=loadbmp("wolke01_1.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp2("window.png"); unloadbmp_by_surface(tmp);
 	load_ing();
 	tmp=loadbmp("wolke02_1.png"); unloadbmp_by_surface(tmp);
 	tmp=loadbmp("wolke03_1.png"); unloadbmp_by_surface(tmp);
@@ -946,8 +961,19 @@ void preload_gfx()
 	tmp=loadbmp("wolke03_4.png"); unloadbmp_by_surface(tmp);
 	tmp=loadbmp("sp_reimu_bg.jpg"); unloadbmp_by_surface(tmp);
 	tmp=loadbmp("sp_marisa_bg.jpg"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("sp_remiria_bg.jpg"); unloadbmp_by_surface(tmp);
 	tmp=loadbmp("sp_reimu_st.png"); unloadbmp_by_surface(tmp);
 	tmp=loadbmp("sp_marisa_st.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("sp_remiria_st.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("oze_op1.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("oze_op2.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("oze_op3.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("oze_op4.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("mari_op.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("option.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("core.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("core-ma.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("core-oz.png"); unloadbmp_by_surface(tmp);
 	load_ing();
 	tmp=loadbmp2("weapon_p.png"); unloadbmp_by_surface(tmp);
 	tmp=loadbmp("key_bg.png"); unloadbmp_by_surface(tmp);
@@ -971,9 +997,8 @@ void preload_gfx()
 	tmp=loadbmp("ming.png"); unloadbmp_by_surface(tmp);
 	tmp=loadbmp("tshoot.png"); unloadbmp_by_surface(tmp);
 	tmp=loadbmp("tshoot-ma.png"); unloadbmp_by_surface(tmp);
+	tmp=loadbmp("tshoot-oz.png"); unloadbmp_by_surface(tmp);
 	tmp=loadbmp("protectball.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("core.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("core-ma.png"); unloadbmp_by_surface(tmp);
 	tmp=loadbmp2("bigkugel1.png"); unloadbmp_by_surface(tmp);
 	tmp=loadbmp("bigkugel2.png"); unloadbmp_by_surface(tmp);
 	tmp=loadbmp("key_icon.png"); unloadbmp_by_surface(tmp);
@@ -982,6 +1007,90 @@ void preload_gfx()
 	/* alle benoetigten Bilder in den Cache laden */
 }
 
+static int ini_load_int(FILE *fp, char *search)
+{
+	/* 走査するよ */
+	fseek(fp, 0L, SEEK_SET);
+	int result=-1;
+	char buffer[128];		//行取得用
+	char target[30];		//何についての情報なのか
+	while (fgets(buffer,128,fp) != NULL)
+	{
+		char *c;		//行解析用
+		c = buffer;
+
+		/* skiped lines. */
+		if (*c=='\n')		{	continue;	}
+		while (isspace(*c)) {	c++;		}
+		if (*c=='#')		{	continue;	}
+
+		char *sc=target;
+		int i=0;
+		while (*c != '=')
+		{
+			i++;
+			if (i >= 30)		{	return -1;	}
+			*sc++ = *c++;
+		}
+		c++;		/* =を無視 */
+		*sc = 0;	//NULL
+
+		if (!strcmp(target,search))
+		{
+			char re_s[30];
+			char *re_e=re_s;
+			while (*c != '\n')
+			{
+				*re_e++=*c++;
+			}
+			re_e=0;
+			result=atoi(re_s);
+			break;
+		}
+	}
+	return result;
+}
+
+static int ini_load_char(FILE *fp, char *search, char *result)
+{
+	fseek(fp, 0L, SEEK_SET);
+	int int_result=-1;
+	char buffer[128];		//行取得用
+	char target[30];		//何についての情報なのか
+	while (fgets(buffer,128,fp) != NULL)
+	{
+		char *c;		//行解析用
+		c = buffer;
+
+		if (*c=='\n')		{	continue;	}
+		while (isspace(*c)) {	c++;		}
+		if (*c=='#')		{	continue;	}
+
+		char *sc=target;
+		int i=0;
+		while (*c != '=')
+		{
+			i++;
+			if (i >= 30)		{	return -1;	}
+			*sc++ = *c++;
+		}
+		c++;
+		*sc = 0;	//NULL
+
+		if (!strcmp(target,search))
+		{
+			char *re_e=result;
+			while (*c != 13)		/* \nじゃなくて13にしないとちゃんと取ってくれないよ。intの方は数字じゃない物は排除してくれるみたいだから問題なし */
+			{
+				*re_e++=*c++;
+			}
+			re_e=0;
+			int_result=1;
+			break;
+		}
+	}
+	return int_result;
+}
 
 
 int ini_load()
@@ -989,26 +1098,54 @@ int ini_load()
 	FILE *fp;
 	char fn[50];
 	strcpy(fn,"./setting.ini");
+	int tmp;
 
-	if ( NULL == (fp = fopen(fn,"r")))
-		return -1;
+	if ( NULL == (fp = fopen(fn,"r"))){	return -1;	}
 
-	fscanf(fp,"%s",moddir);
-	fscanf(fp,"%d",&difficulty);
-	fscanf(fp,"%d",&keyconfig.u);
-	fscanf(fp,"%d",&keyconfig.d);
-	fscanf(fp,"%d",&keyconfig.l);
-	fscanf(fp,"%d",&keyconfig.r);
-	fscanf(fp,"%d",&keyconfig.ba);
-	fscanf(fp,"%d",&keyconfig.ma);
-	fscanf(fp,"%d",&keyconfig.sa);
-	fscanf(fp,"%d",&keyconfig.si);
-	fscanf(fp,"%d",&keyconfig.rt);
-	fscanf(fp,"%d",&keyconfig.lt);
-	fscanf(fp,"%d",&keyconfig.sl);
-	fscanf(fp,"%d",&keyconfig.st);
+	if(ini_load_char(fp, "moddir", moddir)==-1){	return -1;	}
+//	fscanf(fp,"moddir=%s",moddir);
+	tmp=ini_load_int(fp,"difficulty");
+	if(tmp!=-1){	difficulty=tmp;	}
+	else	{	return -1;	}
+	tmp=ini_load_int(fp,"UP");
+	if(tmp!=-1){	keyconfig.u=tmp;	}
+	else	{	return -1;	}
+	tmp=ini_load_int(fp,"DOWN");
+	if(tmp!=-1){	keyconfig.d=tmp;	}
+	else	{	return -1;	}
+	tmp=ini_load_int(fp,"LEFT");
+	if(tmp!=-1){	keyconfig.l=tmp;	}
+	else	{	return -1;	}
+	tmp=ini_load_int(fp,"RIGHT");
+	if(tmp!=-1){	keyconfig.r=tmp;	}
+	else	{	return -1;	}
+	tmp=ini_load_int(fp,"CROSS");
+	if(tmp!=-1){	keyconfig.ba=tmp;	}
+	else	{	return -1;	}
+	tmp=ini_load_int(fp,"CIRCLE");
+	if(tmp!=-1){	keyconfig.ma=tmp;	}
+	else	{	return -1;	}
+	tmp=ini_load_int(fp,"TRIANGLE");
+	if(tmp!=-1){	keyconfig.sa=tmp;	}
+	else	{	return -1;	}
+	tmp=ini_load_int(fp,"SQUARE");
+	if(tmp!=-1){	keyconfig.si=tmp;	}
+	else	{	return -1;	}
+	tmp=ini_load_int(fp,"R_T");
+	if(tmp!=-1){	keyconfig.rt=tmp;	}
+	else	{	return -1;	}
+	tmp=ini_load_int(fp,"L_T");
+	if(tmp!=-1){	keyconfig.lt=tmp;	}
+	else	{	return -1;	}
+	tmp=ini_load_int(fp,"SELECT");
+	if(tmp!=-1){	keyconfig.sl=tmp;	}
+	else	{	return -1;	}
+	tmp=ini_load_int(fp,"START");
+	if(tmp!=-1){	keyconfig.st=tmp;	}
+	else	{	return -1;	}
+	if(ini_load_char(fp,"password", password)==-1){	return -1;	}
 	fclose(fp);
-	if (difficulty>3)
+	if (difficulty>3 || 0>difficulty)
 	{	difficulty=2;}
 	return 1;
 }
@@ -1022,19 +1159,20 @@ void ini_save()
 	if ( NULL == (fp = fopen(fn,"w")))
 		return;
 
-	fprintf(fp,"%s%c\n",moddir,k);
-	fprintf(fp,"%d%c\n",difficulty,k);
-	fprintf(fp,"%d%c\n",keyconfig.u,k);
-	fprintf(fp,"%d%c\n",keyconfig.d,k);
-	fprintf(fp,"%d%c\n",keyconfig.l,k);
-	fprintf(fp,"%d%c\n",keyconfig.r,k);
-	fprintf(fp,"%d%c\n",keyconfig.ba,k);
-	fprintf(fp,"%d%c\n",keyconfig.ma,k);
-	fprintf(fp,"%d%c\n",keyconfig.sa,k);
-	fprintf(fp,"%d%c\n",keyconfig.si,k);
-	fprintf(fp,"%d%c\n",keyconfig.rt,k);
-	fprintf(fp,"%d%c\n",keyconfig.lt,k);
-	fprintf(fp,"%d%c\n",keyconfig.sl,k);
-	fprintf(fp,"%d",keyconfig.st);
+	fprintf(fp,"moddir=%s%c\n",moddir,k);
+	fprintf(fp,"difficulty=%d%c\n",difficulty,k);
+	fprintf(fp,"UP=%d%c\n",keyconfig.u,k);
+	fprintf(fp,"DOWN=%d%c\n",keyconfig.d,k);
+	fprintf(fp,"LEFT=%d%c\n",keyconfig.l,k);
+	fprintf(fp,"RIGHT=%d%c\n",keyconfig.r,k);
+	fprintf(fp,"CROSS=%d%c\n",keyconfig.ba,k);
+	fprintf(fp,"CIRCLE=%d%c\n",keyconfig.ma,k);
+	fprintf(fp,"TRIANGLE=%d%c\n",keyconfig.sa,k);
+	fprintf(fp,"SQUARE=%d%c\n",keyconfig.si,k);
+	fprintf(fp,"R_T=%d%c\n",keyconfig.rt,k);
+	fprintf(fp,"L_T=%d%c\n",keyconfig.lt,k);
+	fprintf(fp,"SELECT=%d%c\n",keyconfig.sl,k);
+	fprintf(fp,"START=%d%c\n",keyconfig.st,k);
+	fprintf(fp,"password=%s%c\n",password,k);
 	fclose(fp);
 }

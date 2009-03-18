@@ -87,7 +87,7 @@ static void enemy_splash_move(SPRITE *s)
 				data=mmalloc(sizeof(BULLET_DATA));
 				h->data=data;
 
-				data->id=rand()%1000;
+//				data->id=rand()%1000;
 				data->angle=p+(1-i2%2*2)*M_PI/6;
 				data->speed=3+i2/2;
 			}
@@ -108,7 +108,7 @@ static void enemy_splash_move(SPRITE *s)
 					data=mmalloc(sizeof(BULLET_DATA));
 					h->data=data;
 
-					data->id=rand()%1000;
+//					data->id=rand()%1000;
 					data->angle=p+(1-i2%2*2)*M_PI/12;
 					data->speed=2+i2/2;
 				}

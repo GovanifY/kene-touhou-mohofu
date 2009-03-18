@@ -41,7 +41,7 @@ static Mix_Music *BGM_track;
 
 
 /* ----- BGM の数(読み込みファイル数) */
-#define USE_BGM_FILES 7 /**/
+#define USE_BGM_FILES 14 /**/
 
 /* ----- SE の数(読み込みファイル数) */
 #define USE_SE_FILES 15 /*いくつか追加*/
@@ -116,13 +116,13 @@ static const char *music_file_name[USE_BGM_FILES] =
 	"stage4",	/*	4 */
 	"stage5",	/*	5 */
 	"stage6",	/*	6 */
-//	"stage7",	/*	7 */
-//	"menu2",	/*	8 */
-//	"boss1",	/*	9 */
-//	"boss2",	/* 10 */
-//	"boss3",	/* 11 */
-//	"boss4",	/* 12 */
-//	"boss5",	/* 13 */
+	"stage7",	/*	7 */
+	"menu2",	/*	8 */
+	"boss1",	/*	9 */
+	"boss2",	/* 10 */
+	"boss3",	/* 11 */
+	"boss4",	/* 12 */
+	"boss5",	/* 13 */
 //	"boss6",	/* 14 */
 //	"boss7", 	/* 15 */
 };		//いろいろ追加
@@ -195,6 +195,16 @@ void closeSound(void)
 		}
 	}
 	Mix_CloseAudio();
+}
+
+void claer_music(void)
+{
+	if ( BGM_track != NULL )
+	{
+		Mix_HaltMusic();
+		Mix_FreeMusic(BGM_track);
+		BGM_track = NULL;
+	}
 }
 
 /* ---------------------------------------- */
@@ -289,7 +299,10 @@ void setChunkVolume(int volume)
 }
 
 
-
+void setMusicVolume(int volume)
+{
+	Mix_VolumeMusic( volume);
+}
 
 
 // Initialize the sound.

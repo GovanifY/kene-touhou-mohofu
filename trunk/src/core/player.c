@@ -25,12 +25,13 @@ enum _player_state
 	PL_SAVE
 };
 
-int graze_check[5]={-1,-1,-1,-1,-1};	//グレイズ用、弾id格納場所。
+//int graze_check[5]={-1,-1,-1,-1,-1};	//グレイズ用、弾id格納場所。
 										//1つにしなかったのは複数の弾を同時にグレイズしたときのため。
-int is_graze;	//player1が弾幕に触れたか？
+static int is_graze;	//player1が弾幕に触れたか？
 SDL_Surface *weapon_p;		//ウェポンゲージ
+SDL_Surface *boss_hp;		//[***090305		追加:ボスHPゲージ
 
-static SPRITE *c1, *c2; //[***090128	オプション用
+static SPRITE *c1, *c2, *c3, *c4; //[***090128.090220	追加:オプション用.c3,c4
 
 typedef struct
 {
@@ -91,6 +92,20 @@ typedef struct
 typedef struct
 {
 	int strength;/*union WEAPON_BASE*/
+	double angle;
+	double speed;
+} PL_CROSS_RED_DATA;
+
+typedef struct
+{
+	int strength;/*union WEAPON_BASE*/
+	double angle;
+	double speed;
+} OZ_MISSILE_DATA;
+
+typedef struct
+{
+	int strength;/*union WEAPON_BASE*/
 	int nr;
 	int state;
 	double angle;
@@ -109,6 +124,23 @@ typedef struct
 	int w_wait;
 	double angle;
 } RE_OPTION_DATA;
+
+typedef struct
+{
+	int strength;/*union WEAPON_BASE*/	/* [***090214 追加 */
+	int ani_speed;
+	int state1;
+	int state2;
+	int w_wait;
+	int offset_x;		/* 円の半径と兼用 */
+	int offset_y;
+	int id;
+	int slow_count;
+	double angle;
+	double m_angle;
+	struct _sprite *next;
+} OZ_OPTION_DATA;
+
 
 
 /*
@@ -181,6 +213,7 @@ static void player_move_core(SPRITE *s2)
 			}
 		}
 	}
+	is_graze=0;
 }
 
 
@@ -535,6 +568,97 @@ static void player_move_levarie(SPRITE *s)
 		s->type=-1;
 	}
 }
+
+static void oz_move_missile(SPRITE *s)
+{
+	OZ_MISSILE_DATA *p=(OZ_MISSILE_DATA *)s->data;
+
+	s->x+=cos(p->angle)*p->speed*fps_factor;
+	s->y+=sin(p->angle)*p->speed*fps_factor;
+
+	if (s->x<-s->w || WIDTH2<s->x || -s->h>s->y) {
+		s->type=-1;
+	} else {
+		weapon_colcheck(s,0,1);
+	}
+}
+
+static void oz_add_missile(SPRITE *s, int r_or_l)	/* [***090221 追加 */
+{
+	/*
+		r_or_l	r=2, l=0 ,u=3 ,d=1
+	*/
+	SPRITE *c;
+	OZ_MISSILE_DATA *d;
+	if(!r_or_l)	{	c=sprite_add_file("fire_wind_r.png",4,PR_PLAYER);}
+	else if(r_or_l==2)		{	c=sprite_add_file("fire_wind_l.png",4,PR_PLAYER);}
+	else 	{	c=sprite_add_file("fire_wind_u.png",4,PR_PLAYER);}
+	c->flags|=SP_FLAG_VISIBLE;
+	d=mmalloc(sizeof(OZ_MISSILE_DATA));
+	c->data=d;
+	c->type=SP_PL_SHIELD;
+	c->anim_speed=3;
+	c->aktframe=0;
+	c->mover=oz_move_missile;
+	c->alpha=100;
+	c->x=s->x+(s->w-c->w)/2;
+	if(r_or_l<3)
+		c->y=s->y+15;
+	else
+		c->y=s->y-s->h+15;
+	d->strength=10;
+	d->angle=((double)r_or_l/2)*M_PI;
+	d->speed=12;
+}
+
+static void player_move_cross_red(SPRITE *s)	/* [***090220 追加 */
+{
+	PL_CROSS_RED_DATA *d=(PL_CROSS_RED_DATA *)s->data;
+	PLAYER_DATA *p=(PLAYER_DATA *)player->data;
+	unsigned int check=0x1F;
+	check&=(int)p->extra_time;
+	s->x=player->x+(player->w-s->w)/2;
+	s->y=player->y+(player->h-s->h)/2;
+	d->angle+=fps_factor;
+	if(d->angle>M_PI){
+		d->angle-=2*M_PI;
+	}
+	if(p->extra_time>20){
+		if(check==0){
+			oz_add_missile(s, 2);
+			oz_add_missile(s, 0);
+			oz_add_missile(s, 3);
+		}
+		else if((int)p->extra_time%4==0){
+			s->aktframe++;
+			if(s->aktframe==4){
+				s->aktframe=0;
+			}
+		}
+	}
+	else{
+		if((int)p->extra_time%4==0){
+			if(s->aktframe<4)
+				s->aktframe=4;
+			else if(s->aktframe==4)
+				s->aktframe=5;
+			else if(s->aktframe==5)
+				s->aktframe=6;
+			else if(s->aktframe==6)
+				s->aktframe=7;
+			else if(s->aktframe==7)
+				s->aktframe=8;
+			else
+				s->aktframe=9;
+		}
+	}
+
+	weapon_colcheck(s,/*d->angle,*/0,1);
+
+	if (p->extra_time<=0)
+		s->type=-1;
+}
+
 static void player_move_hlaser(SPRITE *s)
 {
 	PL_HLASER_DATA *b=(PL_HLASER_DATA *)s->data;
@@ -660,7 +784,7 @@ static void re_add_fireball(SPRITE *s, int x, int y)	//霊夢
 
 	shot=sprite_add_file2("fireball1.png",2,PR_PLAYER);	shot->anim_speed=1;
 	shot->type=SP_PL_FIREBALL;
-	shot->x=x;
+	shot->x=x-shot->w/2;
 	shot->y=y;
 	shot->mover=player_move_fireball;
 	shot->flags|=SP_FLAG_VISIBLE;
@@ -678,7 +802,7 @@ static void ma_add_fireball(SPRITE *s, int x, int y)	//魔理沙
 
 	shot=sprite_add_file("missile.png",1,PR_PLAYER);	shot->anim_speed=0;
 	shot->type=SP_PL_FIREBALL;
-	shot->x=x;
+	shot->x=x-shot->w/2;
 	shot->y=y;
 	shot->alpha=150;
 	shot->mover=player_move_fireball;
@@ -690,10 +814,48 @@ static void ma_add_fireball(SPRITE *s, int x, int y)	//魔理沙
 	data->strength=4;
 }
 
+static void oz_add_fireball(SPRITE *s, int x, int y)	//おぜう	/* [***090220 追加 */
+{
+	SPRITE *shot;
+	PL_FIREBALL_DATA *data;
+
+	shot=sprite_add_file("bat.png",5,PR_PLAYER);	shot->anim_speed=3;
+	shot->type=SP_PL_FIREBALL;
+	shot->x=x-shot->w/2;
+	shot->y=y;
+	shot->mover=player_move_fireball;
+	shot->flags|=SP_FLAG_VISIBLE;
+	
+	data=mmalloc(sizeof(PL_FIREBALL_DATA));
+	shot->data=data;
+	data->angle=270;
+	data->speed=8;
+	data->strength=5;
+}
+
+static void oz_add_fireball2(SPRITE *s, int x, int y, int angle)	//おぜう	/* [***090221 追加 */
+{
+	SPRITE *shot;
+	PL_FIREBALL_DATA *data;
+
+	shot=sprite_add_file("bat.png",5,PR_PLAYER);	shot->anim_speed=3;
+	shot->type=SP_PL_FIREBALL;
+	shot->x=x-shot->w/2;
+	shot->y=y;
+	shot->mover=player_move_fireball;
+	shot->flags|=SP_FLAG_VISIBLE;
+	
+	data=mmalloc(sizeof(PL_FIREBALL_DATA));
+	shot->data=data;
+	data->angle=angle;
+	data->speed=8;
+	data->strength=5;
+}
 
 static void re_move_option(SPRITE *s)	//霊夢
 {
 	RE_OPTION_DATA *o=(RE_OPTION_DATA *)s->data;
+	PLAYER_DATA *d=(PLAYER_DATA *)player->data;
 	if (o->ani_speed==0)
 	{
 		o->ani_speed=2;
@@ -704,16 +866,16 @@ static void re_move_option(SPRITE *s)	//霊夢
 	else
 	{	o->ani_speed--;}
 
-	if (((PLAYER_DATA *)player->data)->state==PL_SAVE||((PLAYER_DATA *)player->data)->state==PL_NORMAL)
+	if (d->state==PL_SAVE||d->state==PL_NORMAL)
 	{
 		if (o->w_wait<0){
-			if (keyboard[KEY_SHOT]){
+			if (keyboard[KEY_SHOT] && d->bossmode!=3 && d->bossmode!=6){
 				if (((PLAYER_DATA *)player->data)->weapon<=90){
-					re_add_fireball(s, s->x, s->y-7);
+					re_add_fireball(s, s->x+s->w/2, s->y-7);
 				}
 				else{
-					re_add_fireball(s, s->x-5, s->y-7);
-					re_add_fireball(s, s->x+5, s->y-7);
+					re_add_fireball(s, s->x+s->w/2-5, s->y-7);
+					re_add_fireball(s, s->x+s->w/2+5, s->y-7);
 				}
 			}
 			o->w_wait=4;
@@ -757,7 +919,7 @@ static void re_move_option(SPRITE *s)	//霊夢
 				break;
 		}
 	}
-	if (((PLAYER_DATA *)player->data)->option==0 || ((PLAYER_DATA *)player->data)->lives<0)
+	if (d->option==0 || d->lives<0)
 	{	s->type=-1;}
 	s->y=player->y+sin(o->angle)*o->length+((player->h-s->h)/2)-5;
 	s->x=player->x+cos(o->angle)*o->length+(((int)(o->pos+1)*player->w-s->w)/2)-o->pos*6;
@@ -765,26 +927,36 @@ static void re_move_option(SPRITE *s)	//霊夢
 static void ma_move_option(SPRITE *s)	//魔理沙
 {
 	RE_OPTION_DATA *o=(RE_OPTION_DATA *)s->data;
-	if (((PLAYER_DATA *)player->data)->state==PL_SAVE||((PLAYER_DATA *)player->data)->state==PL_NORMAL)
+	PLAYER_DATA *d=(PLAYER_DATA *)player->data;
+	if (o->ani_speed==0)
+	{
+		o->ani_speed=6;
+		s->aktframe=(s->aktframe+o->pos)%8;
+		if (s->aktframe<0)
+		{	s->aktframe=7;}
+	}
+	else
+	{	o->ani_speed--;}
+	if (d->state==PL_SAVE||d->state==PL_NORMAL)
 	{
 		if (o->w_wait<0)
 		{
-			if (keyboard[KEY_SHOT])
+			if (keyboard[KEY_SHOT] && d->bossmode!=3 && d->bossmode!=6)
 			{
 				if (((PLAYER_DATA *)player->data)->weapon<=70)
 				{
-					ma_add_fireball(s, s->x-5, s->y-7);
+					ma_add_fireball(s, s->x+s->w/2, s->y-7);
 				}
 				else if (((PLAYER_DATA *)player->data)->weapon<=100)
 				{
-					ma_add_fireball(s, s->x-12, s->y-7);
-					ma_add_fireball(s, s->x+2, s->y-7);
+					ma_add_fireball(s, s->x+s->w/2-7, s->y-7);
+					ma_add_fireball(s, s->x+s->w/2+7, s->y-7);
 				}
 				else
 				{
-					ma_add_fireball(s, s->x-12, s->y-7);
-					ma_add_fireball(s, s->x-5, s->y-45);
-					ma_add_fireball(s, s->x+2, s->y-7);
+					ma_add_fireball(s, s->x+s->w/2, s->y-7);
+					ma_add_fireball(s, s->x+s->w/2-7, s->y-45);
+					ma_add_fireball(s, s->x+s->w/2+7, s->y-7);
 				}
 			}
 			o->w_wait=8;
@@ -828,60 +1000,357 @@ static void ma_move_option(SPRITE *s)	//魔理沙
 				break;
 		}
 	}
-	if (((PLAYER_DATA *)player->data)->option==0 || ((PLAYER_DATA *)player->data)->lives<0)
+	if (d->option==0 || d->lives<0)
 	{	s->type=-1;}
 	s->y=player->y+sin(o->angle)*o->length+((player->h-s->h)/2)-5;
 	s->x=player->x+cos(o->angle)*o->length+(((int)(o->pos+1)*player->w-s->w)/2)-o->pos*6;
 }
+
+static void oz_move_option(SPRITE *s)	//おぜう	/* [***090220 追加 */
+{
+	static double l_angle;
+	static int cancel_flag;	//-		もしかしたらいらない子
+	static int change_d;	//-		この2つはid==1が管理する。
+	int tmp=0;
+	/*
+		目標:state1
+		0:	レミリアの後ろに4つ
+		1:	レミリアの周りを回るよ
+		2:	y=250の位置に散らばる
+		3:	レミリアに重なるように。slowを押すと段階的にoption停止
+	*/
+
+	OZ_OPTION_DATA *o=(OZ_OPTION_DATA *)s->data;
+	PLAYER_DATA *d=(PLAYER_DATA *)player->data;
+
+	if(s->flags&SP_FLAG_VISIBLE){		//表示されていれば上記の処理をするよ。
+		if (o->ani_speed==0)		//アニメーション
+		{
+			o->ani_speed=3;
+			s->aktframe++;
+			if(s->aktframe==8){s->aktframe=0;}
+		}
+		else
+		{	o->ani_speed--;}
+
+		if (d->state==PL_SAVE||d->state==PL_NORMAL)		//攻撃
+		{
+			if (o->w_wait<0)
+			{
+				if (keyboard[KEY_SHOT] && d->bossmode!=3 && d->bossmode!=6)
+				{
+					switch(o->id)
+					{
+					case 1:
+					case 2:
+						if(d->weapon>100){
+							oz_add_fireball2(s, s->x+s->w/2, s->y-7, 277);
+							oz_add_fireball2(s, s->x+s->w/2, s->y-7, 263);
+							o->w_wait=7;
+						}
+						else	{oz_add_fireball(s, s->x+s->w/2, s->y-7);	o->w_wait=5;}
+						break;
+					case 3:
+					case 4:
+						oz_add_fireball(s, s->x+s->w/2, s->y-7);
+						o->w_wait=5;
+						break;
+					}
+				}
+			}
+			else
+				o->w_wait--;
+		}
+
+		if(o->id==1)	//id==0によるflag管理
+		{
+			if(change_d==20)
+			{
+				cancel_flag=0;
+				change_d--;
+			}
+			else if(0<change_d && change_d<20)
+			{
+				change_d--;
+			}
+			else if(change_d<=0 && !cancel_flag)
+				cancel_flag=1;
+		}
+	
+		if (keyboard[KEY_SLOW]){
+			o->slow_count++;
+			if((o->state1==3) && (o->slow_count < o->id*30))
+			{
+				s->x = player->x+(player->w-s->w)/2;
+				s->y = player->y+(player->h-s->h)/2;
+		}
+			else if(o->state1==2)
+			{
+				switch(o->id)
+				{
+				case 1:	if(s->x<170-s->w)	{s->x+=fps_factor*2;}	break;
+				case 2:	if(s->x>210)		{s->x-=fps_factor*2;}	break;
+				case 3:	if(s->x<100-s->w)	{s->x+=fps_factor*4;}	break;
+				case 4:	if(s->x>280)		{s->x-=fps_factor*4;}	break;
+				}
+			}
+		}
+		else{
+			if(o->slow_count)
+		{
+				o->slow_count=0;
+				o->state2=0;
+			}
+			
+			if (keyboard[KEY_CANCEL] && cancel_flag){
+				if(o->id==1)	//id==1によるflag管理
+				{
+					if(change_d<=0)
+					{
+						change_d=20;
+						o->state1++;
+						o->state2=0;
+						if(o->state1==4)
+							o->state1=0;
+						if(c4->flags&SP_FLAG_VISIBLE){
+							((OZ_OPTION_DATA *)c4->data)->state1=o->state1;
+							((OZ_OPTION_DATA *)c4->data)->state2=0;
+						}
+						if(c3->flags&SP_FLAG_VISIBLE){
+							((OZ_OPTION_DATA *)c3->data)->state1=o->state1;
+							((OZ_OPTION_DATA *)c3->data)->state2=0;
+						}
+						if(c2->flags&SP_FLAG_VISIBLE){
+							((OZ_OPTION_DATA *)c2->data)->state1=o->state1;
+							((OZ_OPTION_DATA *)c2->data)->state2=0;
+						}
+					}
+				}
+			}
+			switch(o->state2)
+			{
+			case 0:		//初期化
+				switch(o->state1)
+				{
+				case 0:
+					switch(o->id)
+					{
+					case 1:	o->offset_x= 15;	o->offset_y=15;		break;
+					case 2:	o->offset_x=-15;	o->offset_y=15;		break;
+					case 3:	o->offset_x= 25;	o->offset_y=20;		break;
+					case 4:	o->offset_x=-25;	o->offset_y=20;		break;
+					}
+					break;
+				case 1:
+					o->offset_x=40;
+					o->offset_y=0;
+					break;
+				case 2:
+					switch(o->id)
+					{
+					case 1:	tmp=1;		break;
+					case 2:	tmp=2;		break;
+					case 3:	tmp=0;		break;
+					case 4:	tmp=3;		break;
+					}
+					o->offset_x=tmp*115+10;
+				o->offset_y=240;
+					o->m_angle=atan2(240-s->y-s->h/2, o->offset_x-s->x-s->w/2);
+					break;
+				case 3:
+					break;
+				}
+				o->state2=1;
+				break;
+			case 1:		//移動
+				switch(o->state1)
+				{
+				case 0:
+					tmp=player->y+player->h/2+o->offset_y - s->y-s->h/2;	/* tmp : y座標における目標地点と現在地の差 */
+					o->m_angle=atan2(tmp, player->x+player->w/2+o->offset_x - s->x-s->w/2);
+				if(-5 < tmp && tmp < 5 )
+					{
+						s->x=player->x+player->w/2+o->offset_x;
+						s->y=player->y+player->h/2+o->offset_y;
+						o->state2=2;
+					}
+					else
+					{
+						s->x+=cos(o->m_angle)*fps_factor*10;
+						s->y+=sin(o->m_angle)*fps_factor*10;
+					}
+					break;
+				case 1:
+					tmp=player->y+player->h/2+sin(o->angle+l_angle)*o->offset_x - s->y-s->h/2;	/* tmp : y座標における目標地点と現在地の差 */
+					o->m_angle=atan2(tmp, player->x+player->w/2+cos(o->angle+l_angle)*o->offset_x - s->x-s->w/2);
+					if(-5 < tmp && tmp < 5 )
+					{
+						s->x=player->x+player->w/2+sin(o->angle+l_angle)*o->offset_x;
+						s->y=player->y+player->h/2+cos(o->angle+l_angle)*o->offset_x;
+						o->state2=2;
+					}
+					else
+				{
+						s->x+=cos(o->m_angle)*fps_factor*10;
+						s->y+=sin(o->m_angle)*fps_factor*10;
+					}
+					break;
+				case 2:
+					if(-5 < 240 - s->y-s->h/2 && 240 - s->y-s->h/2 < 5 )
+					{
+						s->x=o->offset_x;
+						s->y=o->offset_y;
+						o->state2=2;
+					}
+					else
+					{
+					s->x+=cos(o->m_angle)*fps_factor*10;
+						s->y+=sin(o->m_angle)*fps_factor*10;
+					}
+					break;
+				case 3:
+					tmp=player->y+player->h/2 - s->y-s->h/2;
+					o->m_angle=atan2(tmp, player->x+player->w/2 - s->x-s->w/2);
+					if(-5 < tmp && tmp < 5 )
+					{
+						s->y=player->y+(player->h-s->h)/2;
+						s->x=player->x+(player->w-s->w)/2;
+						o->state2=2;
+					}
+					else
+					{
+						s->x+=cos(o->m_angle)*fps_factor*10;
+						s->y+=sin(o->m_angle)*fps_factor*10;
+					}
+					break;
+				}
+				break;
+			case 2:		//位置の維持 & 配置完了flag
+				switch(o->state1)
+				{
+				case 0:		/* レミリアの後方に四つ */
+					s->x = player->x+(player->w-s->w)/2+o->offset_x;
+					s->y = player->y+(player->h-s->h)/2+o->offset_y;
+					break;
+				case 1:		/* レミの周りを回るよ */
+					l_angle+=0.05*fps_factor;
+					if(l_angle>M_PI){
+						l_angle-=2*M_PI;
+					}
+					switch(o->id)
+					{
+					case 1:
+					case 2:
+						s->x = player->x+(player->w-s->w)/2+sin(o->angle+l_angle)*o->offset_x;
+						s->y = player->y+(player->h-s->h)/2+cos(o->angle+l_angle)*o->offset_x;
+						break;
+					case 3:
+					case 4:
+						s->x = player->x+(player->w-s->w)/2+sin(o->angle-l_angle)*o->offset_x;
+						s->y = player->y+(player->h-s->h)/2+cos(o->angle-l_angle)*o->offset_x;
+						break;
+					}
+					break;
+				case 2:		/* 後方支援 */
+					s->x = o->offset_x;
+					s->y = o->offset_y;
+					break;
+				case 3:		/* 減速時用 */
+					s->x = player->x+(player->w-s->w)/2;
+					s->y = player->y+(player->h-s->h)/2;
+					break;
+				break;
+				}
+			}
+		}
+	}
+
+	switch(o->id)
+	{
+	case 1:
+		break;
+	case 2:
+		if((s->flags&SP_FLAG_VISIBLE) && (d->weapon<=55))	{s->flags&=~SP_FLAG_VISIBLE;}
+		else if(!(s->flags&SP_FLAG_VISIBLE) && d->weapon>55)
+		{
+			s->flags|=SP_FLAG_VISIBLE;
+			o->state1=((OZ_OPTION_DATA *)c1->data)->state1;
+			o->state2=0;
+		}
+		break;
+	case 3:
+		if((s->flags&SP_FLAG_VISIBLE) && (d->weapon<=80))	{s->flags&=~SP_FLAG_VISIBLE;}
+		else if(!(s->flags&SP_FLAG_VISIBLE) && d->weapon>80)
+		{
+			s->flags|=SP_FLAG_VISIBLE;
+			o->state1=((OZ_OPTION_DATA *)c1->data)->state1;
+			o->state2=0;
+		}
+		break;
+	case 4:
+		if((s->flags&SP_FLAG_VISIBLE) && (d->weapon<=108))	{s->flags&=~SP_FLAG_VISIBLE;}
+		else if(!(s->flags&SP_FLAG_VISIBLE) && d->weapon>108)
+		{
+			s->flags|=SP_FLAG_VISIBLE;
+			o->state1=((OZ_OPTION_DATA *)c1->data)->state1;
+			o->state2=0;
+		}
+		break;
+	}
+	if(d->option==0 || d->lives<0)	{s->type=-1;}
+}
+
 static void re_add_option(SPRITE *s)	//霊夢
 {
 	RE_OPTION_DATA *d1, *d2;
-	c1=sprite_add_file("option.png",8,PR_PLAYER);
-	c1->flags|=SP_FLAG_VISIBLE;
-	c1->mover=re_move_option;
-	d1=mmalloc(sizeof(RE_OPTION_DATA));
-	c1->data=d1;
-	d1->strength=5;/* [***090214 追加 */
-	d1->length=11;
-	c1->x=s->x+s->w/2-d1->length-c1->w/2;
-	c1->y=s->y+s->h/2-c1->h/2;
-	d1->ani_speed=2;
-	d1->pos=-1;
-	d1->angle=-M_PI;
-	d1->state=0;
-	d1->w_wait=0;
-	c1->aktframe=0;
-	c1->type=SP_PLAYER2;
+	c1				=sprite_add_file("option.png",8,PR_PLAYER);
+	c1->flags		|=SP_FLAG_VISIBLE;
+	c1->mover		=re_move_option;
+	d1				=mmalloc(sizeof(RE_OPTION_DATA));
+	c1->data		=d1;
+	d1->strength	=5;/* [***090214 追加 */
+	d1->length		=11;
+	c1->x			=s->x-d1->length+(s->w-c1->w)/2;
+	c1->y			=s->y+(s->h-c1->h)/2;
+	d1->ani_speed	=2;
+	d1->pos			=-1;
+	d1->angle		=-M_PI;
+	d1->state		=0;
+	d1->w_wait		=0;
+	c1->aktframe	=0;
+	c1->type		=SP_PLAYER2;
 
-	c2=sprite_add_file("option.png",8,PR_PLAYER);
-	c2->flags|=SP_FLAG_VISIBLE;
-	c2->mover=re_move_option;
-	d2=mmalloc(sizeof(RE_OPTION_DATA));
-	c2->data=d2;
-	d2->strength=5;/* [***090214 追加 */
-	d2->length=11;
-	c2->x=s->x+s->w/2-d2->length-c2->w/2;
-	c2->y=s->y+s->h/2-c2->h/2;
-	d2->ani_speed=2;
-	d2->pos=1;
-	d2->angle=0;
-	d2->state=0;
-	d2->w_wait=0;
-	c2->aktframe=0;
-	c2->type=SP_PLAYER2;
+	c2				=sprite_add_file("option.png",8,PR_PLAYER);
+	c2->flags		|=SP_FLAG_VISIBLE;
+	c2->mover		=re_move_option;
+	d2				=mmalloc(sizeof(RE_OPTION_DATA));
+	c2->data		=d2;
+	d2->strength	=5;/* [***090214 追加 */
+	d2->length		=11;
+	c2->x			=s->x-d2->length+(s->w-c2->w)/2;
+	c2->y			=s->y+(s->h-c2->h)/2;
+	d2->ani_speed	=2;
+	d2->pos			=1;
+	d2->angle		=0;
+	d2->state		=0;
+	d2->w_wait		=0;
+	c2->aktframe	=0;
+	c2->type		=SP_PLAYER2;
 }
+
 static void ma_add_option(SPRITE *s)	//魔理沙
 {
 	RE_OPTION_DATA *d1, *d2;		//霊夢のを流用してます。
-	c1				=sprite_add_file("core.png",1,PR_PLAYER);	// 無理やり流用してます。
+	c1				=sprite_add_file("mari_op.png",8,PR_PLAYER);	// 無理やり流用してます。
 	c1->flags		|=SP_FLAG_VISIBLE;
 	c1->mover		=ma_move_option;
 	d1				=mmalloc(sizeof(RE_OPTION_DATA));
 	c1->data		=d1;
 	d1->strength	=5;/* [***090214 追加 */
 	d1->length		=11;
-	c1->x			=s->x+s->w/2-d1->length-c1->w/2;
-	c1->y			=s->y+s->h/2-c1->h/2;
+	c1->x			=s->x-d1->length+(s->w-c1->w)/2;
+	c1->y			=s->y+(s->h-c1->h)/2;
+	d1->ani_speed	=6;
 	d1->pos 		=-1;
 	d1->angle		=-M_PI;
 	d1->state		=0;
@@ -889,15 +1358,16 @@ static void ma_add_option(SPRITE *s)	//魔理沙
 	c1->aktframe	=0;
 	c1->type		=SP_PLAYER2;
 
-	c2				=sprite_add_file("core.png",1,PR_PLAYER);	// 無理やり流用してます。
+	c2				=sprite_add_file("mari_op.png",8,PR_PLAYER);	// 無理やり流用してます。
 	c2->flags		|=SP_FLAG_VISIBLE;
 	c2->mover		=ma_move_option;
 	d2				=mmalloc(sizeof(RE_OPTION_DATA));
 	c2->data		=d2;
 	d2->strength	=5;/* [***090214 追加 */
 	d2->length		=11;
-	c2->x			=s->x+s->w/2-d2->length-c2->w/2;
-	c2->y			=s->y+s->h/2-c2->h/2;
+	c2->x			=s->x-d2->length+(s->w-c2->w)/2;
+	c2->y			=s->y+(s->h-c2->h)/2;
+	d2->ani_speed	=6;
 	d2->pos 		=1;
 	d2->angle		=0;
 	d2->state		=0;
@@ -906,9 +1376,98 @@ static void ma_add_option(SPRITE *s)	//魔理沙
 	c2->type		=SP_PLAYER2;
 }
 
+static void oz_add_option(SPRITE *s)	//おぜう	/* [***090220 追加 */
+{
+	OZ_OPTION_DATA *d;
 
+	c1				=sprite_add_file("oze_op1.png",8,PR_PLAYER);
+	c1->flags		|=SP_FLAG_VISIBLE;
+	c1->type		=SP_PLAYER2;
+	c1->mover		=oz_move_option;
+	d				=mmalloc(sizeof(OZ_OPTION_DATA));
+	c1->data		=d;
+	c1->aktframe	=0;
+	d->angle		=M_PI/4;
+	d->next			=player;
+	d->state1		=0;
+	d->state2		=0;
+	d->offset_x		=0;
+	d->offset_y		=0;
+	d->strength		=5;
+	d->ani_speed	=3;
+	d->w_wait		=0;
+	d->id			=1;
+	d->m_angle		=0;
+	d->slow_count	=0;
+	c1->x = s->x+(s->w-c1->w)/2;
+	c1->y = s->y+(s->h-c1->h)/2+20;
 
+	c2				=sprite_add_file("oze_op2.png",8,PR_PLAYER);
+	c2->flags		&=~SP_FLAG_VISIBLE;
+	c2->type		=SP_PLAYER2;
+	c2->mover		=oz_move_option;
+	d				=mmalloc(sizeof(OZ_OPTION_DATA));
+	c2->data		=d;
+	c2->aktframe	=0;
+	d->angle		=5*M_PI/4;
+	d->next			=c1;
+	d->state1		=((OZ_OPTION_DATA *)c1->data)->state1;
+	d->state2		=0;
+	d->offset_x		=0;
+	d->offset_y		=0;
+	d->strength		=5;
+	d->ani_speed	=3;
+	d->w_wait		=0;
+	d->id			=2;
+	d->m_angle		=0;
+	d->slow_count	=0;
+	c2->x = s->x+(s->w-c2->w)/2;
+	c2->y = s->y+(s->h-c2->h)/2+20;
 
+	c3				=sprite_add_file("oze_op3.png",8,PR_PLAYER);
+	c3->flags		&=~SP_FLAG_VISIBLE;
+	c3->type		=SP_PLAYER2;
+	c3->mover		=oz_move_option;
+	d				=mmalloc(sizeof(OZ_OPTION_DATA));
+	c3->data		=d;
+	c3->aktframe	=0;
+	d->angle		=3*M_PI/4;
+	d->next			=c2;
+	d->state1		=((OZ_OPTION_DATA *)c1->data)->state1;
+	d->state2		=0;
+	d->offset_x		=0;
+	d->offset_y		=0;
+	d->strength		=5;
+	d->ani_speed	=3;
+	d->w_wait		=0;
+	d->id			=3;
+	d->m_angle		=0;
+	d->slow_count	=0;
+	c3->x = s->x+(s->w-c3->w)/2;
+	c3->y = s->y+(s->h-c3->h)/2+20;
+
+	c4				=sprite_add_file("oze_op4.png",8,PR_PLAYER);
+	c4->flags		&=~SP_FLAG_VISIBLE;
+	c4->type		=SP_PLAYER2;
+	c4->mover		=oz_move_option;
+	d				=mmalloc(sizeof(OZ_OPTION_DATA));
+	c4->data		=d;
+	c4->aktframe	=0;
+	d->angle		=7*M_PI/4;
+	d->next			=c3;
+	d->state1		=((OZ_OPTION_DATA *)c1->data)->state1;
+	d->state2		=0;
+	d->offset_x		=0;
+	d->offset_y		=0;
+	d->strength		=5;
+	d->ani_speed	=3;
+	d->w_wait		=0;
+	d->id			=4;
+	d->m_angle		=0;
+	d->slow_count	=0;
+	c4->x = s->x+(s->w-c4->w)/2;
+	c4->y = s->y+(s->h-c4->h)/2+20;
+}
 
 /*---new add-----*/
 
@@ -920,6 +1479,7 @@ static SPRITE *player_add_core(SPRITE *s1)		//○の追加
 	{
 	case REIMU: 	s2=sprite_add_file("core.png",1,PR_PLAYER2);		break;
 	case MARISA:	s2=sprite_add_file("core-ma.png",1,PR_PLAYER2); 	break;
+	case REMIRIA:	s2=sprite_add_file("core-oz.png",1,PR_PLAYER2); 	break;
 	}
 	s2->anim_speed=0;
 	s2->type=SP_PLAYER2;
@@ -1219,7 +1779,7 @@ static void player_add_triplestar(SPRITE *player)		//魔理沙
 	shot->data=data;
 	data->angle=270-4;
 	data->speed=12;
-	data->strength=2;
+	data->strength=3;
 
 	shot=sprite_add_file("plasma_ma.png",1,PR_PLAYER);
 	shot->type=SP_PL_PLASMA;
@@ -1232,7 +1792,7 @@ static void player_add_triplestar(SPRITE *player)		//魔理沙
 	shot->data=data;
 	data->angle=270;
 	data->speed=12;
-	data->strength=2;
+	data->strength=3;
 
 	shot=sprite_add_file("plasma_ma.png",1,PR_PLAYER);
 	shot->type=SP_PL_PLASMA;
@@ -1245,7 +1805,7 @@ static void player_add_triplestar(SPRITE *player)		//魔理沙
 	shot->data=data;
 	data->angle=270+4;
 	data->speed=12;
-	data->strength=2;
+	data->strength=3;
 }
 
 static void player_add_quadstar(SPRITE *player) //魔理沙
@@ -1302,6 +1862,53 @@ static void player_add_quadstar(SPRITE *player) //魔理沙
 	data->strength=3;
 }
 
+static void player_add_thing(SPRITE *player)	//おぜう	/* [***090220 追加 */
+{
+	SPRITE *shot;
+	PL_PLASMA_DATA *data;
+
+	shot=sprite_add_file("plasma_oz.png",1,PR_PLAYER);
+	shot->type=SP_PL_PLASMA;
+	shot->x=player->x+((player->w-shot->w)/2);
+	shot->y=player->y-shot->h+20;
+	shot->mover=player_move_plasma;
+	shot->flags|=SP_FLAG_VISIBLE;
+	data=mmalloc(sizeof(PL_PLASMA_DATA));
+	shot->data=data;
+	data->angle=270;
+	data->speed=18;
+	data->strength=4;
+}
+
+static void player_add_doublething(SPRITE *player)	//おぜう	/* [***090220 追加 */
+{
+	SPRITE *shot;
+	PL_PLASMA_DATA *data;
+
+	shot=sprite_add_file("plasma_oz.png",1,PR_PLAYER);
+	shot->type=SP_PL_PLASMA;
+	shot->x=player->x+((player->w-shot->w)/2)-5;
+	shot->y=player->y-shot->h+20;
+	shot->mover=player_move_plasma;
+	shot->flags|=SP_FLAG_VISIBLE;
+	data=mmalloc(sizeof(PL_PLASMA_DATA));
+	shot->data=data;
+	data->angle=270;
+	data->speed=18;
+	data->strength=4;
+
+	shot=sprite_add_file("plasma_oz.png",1,PR_PLAYER);
+	shot->type=SP_PL_PLASMA;
+	shot->x=player->x+((player->w-shot->w)/2)+5;
+	shot->y=player->y-shot->h+20;
+	shot->mover=player_move_plasma;
+	shot->flags|=SP_FLAG_VISIBLE;
+	data=mmalloc(sizeof(PL_PLASMA_DATA));
+	shot->data=data;
+	data->angle=270;
+	data->speed=18;
+	data->strength=4;
+}
 
 #if (1==USE_PLAYER_WAVE)
 static void player_add_killray(SPRITE *player)		//使わない
@@ -1373,8 +1980,10 @@ static void player_add_shield(SPRITE *s)		//シールドの追加	//霊夢
 			c->mover=player_move_shield;
 			d->angle=i;
 			d->speed=23;
-			d->rad=38;
+			d->rad=48;	//d->rad=38;
 			c->type=SP_PL_SHIELD;
+			c->x=player->x+cos(degtorad(i))*d->rad+((player->w-s->w)/2);
+			c->y=player->y-sin(degtorad(i))*d->rad+((player->h-s->h)/2);		//時計回り
 		}
 		else		//1つだと不安なので2つ作った。
 		{
@@ -1385,8 +1994,10 @@ static void player_add_shield(SPRITE *s)		//シールドの追加	//霊夢
 			c->mover=player_move_shield2;
 			d->angle=i;
 			d->speed=17;
-			d->rad=35;
+			d->rad=45;	//d->rad=35;
 			c->type=SP_PL_SHIELD;
+			c->x=player->x+cos(degtorad(i))*d->rad+((player->w-s->w)/2);
+			c->y=player->y-sin(degtorad(i))*d->rad+((player->h-s->h)/2);		//時計回り
 		}
 		d->strength=5;/* [***090214 追加 */
 	}
@@ -1435,6 +2046,27 @@ static void player_add_levarie(SPRITE *s)	//魔理沙
 		c->y=s->y+s->h/2-c->h/2;
 		ang += ((M_PI*2)/16) ;	// 22.5度/360, π/8 /*0.39269908169872415481*/
 	}
+}
+
+static void player_add_cross_red(SPRITE *s)	/* [***090220 追加 */
+{
+	SPRITE *c;
+	PL_CROSS_RED_DATA *d;
+	PLAYER_DATA *sd=(PLAYER_DATA *)s->data;
+	sd->bonus=0x02;
+	c=sprite_add_file("cross_red.png",10,PR_PLAYER);
+	c->flags|=SP_FLAG_VISIBLE;
+	d=mmalloc(sizeof(PL_CROSS_RED_DATA));
+	c->data=d;
+	c->anim_speed=0;
+	c->aktframe=0;
+	c->alpha=220;
+	c->mover=player_move_cross_red;
+	c->type=SP_PL_SHIELD;
+	c->x=s->x+(s->w-c->w)/2;
+	c->y=s->y+(s->h-c->h)/2;
+	d->strength=3;
+	d->angle=0;
 }
 
 static void player_add_homing(SPRITE *s)
@@ -1513,6 +2145,7 @@ static void player_add_hlaser(SPRITE *s)
 			{
 			case REIMU: 				c=sprite_add_file("tshoot.png",6,PR_PLAYER);					break;
 			case MARISA:				c=sprite_add_file("tshoot-ma.png",6,PR_PLAYER); 				break;
+			case REMIRIA:				c=sprite_add_file("tshoot-oz.png",6,PR_PLAYER); 				break;
 			}
 			id_array[i]=c->id;
 			c->type=SP_PL_HLASER;
@@ -1672,9 +2305,9 @@ static void player_keycontrol(SPRITE *s)
 			d->bonus &= ~0x02;
 	}
 
-	if ((keyboard[KEY_BOMB])&&(d->bombs>0))
+	if (keyboard[KEY_BOMB] && d->bombs>0 && d->bossmode!=3 && d->bossmode!=6)
 	{
-		if (bomb_wait==0)
+		if (bomb_wait<=0)
 		{
 			playChunk(7);
 			switch (select_player)
@@ -1693,12 +2326,20 @@ static void player_keycontrol(SPRITE *s)
 				player_add_levarie(player);
 				bomb_wait = 100;
 				break;
+			case REMIRIA:
+				d->save_delay=150;				//無敵時間。
+				d->state=PL_SAVE;
+				d->extra=PLX_BOMB;
+				d->extra_time=150;
+				player_add_cross_red(player);
+				bomb_wait = 300;
+				break;
 			}
 			d->bombs--;
 		}
 	}
 
-	if (keyboard[KEY_SHOT])
+	if (keyboard[KEY_SHOT] && d->bossmode!=3 && d->bossmode!=6)
 	{
 		if (d->weapon_wait>0)
 		{	d->weapon_wait-=fps_factor;}
@@ -1730,6 +2371,19 @@ static void player_keycontrol(SPRITE *s)
 				case WP_FIFTH:		player_add_quadstar(s); 		d->weapon_wait=5;		break;
 				#if (1==USE_PLAYER_WAVE)
 				case WP_LAST:		player_add_killray(s);			d->weapon_wait=5;		break;
+				#endif //(1==USE_PLAYER_WAVE)
+				}
+				break;
+			case REMIRIA:
+				switch (weapon_List)
+				{
+				case WP_SINGLE: 	player_add_thing(s); 			d->weapon_wait=7;		break;
+				case WP_DOUBLE: 	player_add_thing(s);			d->weapon_wait=6;		break;
+				case WP_TRIPLE: 	player_add_doublething(s);		d->weapon_wait=7;		break;
+				case WP_QUAD:		player_add_doublething(s);		d->weapon_wait=6;		break;
+				case WP_FIFTH:		player_add_doublething(s); 		d->weapon_wait=5;		break;
+				#if (1==USE_PLAYER_WAVE)
+				case WP_LAST:		player_add_killray(s);			d->weapon_wait=2;		break;
 				#endif //(1==USE_PLAYER_WAVE)
 				}
 				break;
@@ -1770,13 +2424,13 @@ static void option_check(PLAYER_DATA *d)
 {
 	if (d->weapon>35)
 	{
-		if (d->option==0)
+		if (!d->option)
 		{
-			d->option=1;
 			switch (select_player)
 			{
-			case REIMU: 			re_add_option(player);				break;
-			case MARISA:			ma_add_option(player);				break;
+			case REIMU: 		re_add_option(player);		d->option=1;		break;
+			case MARISA:		ma_add_option(player);		d->option=1;		break;
+			case REMIRIA:		oz_add_option(player);		d->option=1;		break;/* [***090220 追加 */
 			}
 		}
 	}
@@ -1796,7 +2450,7 @@ static void weapon_check(int w) 	//weaponの段階から今の装備を決める
 
 static void player_colcheck(SPRITE *s, int mask)
 {
-	is_graze=0;
+	//is_graze=0;
 	/*
 		s		プレイヤー
 		mask	調べる対象？
@@ -1823,7 +2477,7 @@ static void player_colcheck(SPRITE *s, int mask)
 			{
 				weapon_chain++;
 				//ウェポンボーナス得点の表示
-				bonus_info_any_score(c,(10*weapon_chain));
+				bonus_info_any_score(c,(weapon_chain));
 			}
 			//spimg=sprite_getcurrimg(c);
 			//parsys_add(spimg, c->w,1, c->x,c->y, 5, 0, 0, 80, LINESPLIT, NULL);
@@ -1844,7 +2498,7 @@ static void player_colcheck(SPRITE *s, int mask)
 			{
 				weapon_chain+=8;
 				//ウェポンボーナス得点の表示
-				bonus_info_any_score(c,(10*weapon_chain));
+				bonus_info_any_score(c,(weapon_chain));
 			}
 			else
 			{
@@ -1902,7 +2556,7 @@ static void player_colcheck(SPRITE *s, int mask)
 
 		case SP_BONUS_EXTRA:
 			playChunk(5);
-			if (bomb_wait == 0) //ボム中はこれを取っても1000ポイント入るだけだよ
+			if (bomb_wait <= 0) //ボム中はこれを取っても1000ポイント入るだけだよ
 			{
 				sprite_remove_all_type(SP_PL_SHIELD);
 				pd->extra=(rand()%(PLX_LAST-2))+1;
@@ -1974,51 +2628,54 @@ static void player_colcheck(SPRITE *s, int mask)
 
 		case SP_EN_BULLET:
 			is_graze=1;
-			int i;
-			for (i=0;i<5;i++)
+//			int i;
+//			for (i=0;i<5;i++)
+//			{
+//				if (graze_check[i]==((BULLET_DATA *)c->data)->id)	//同じ場合
+//					break;											//forを抜ける
+//			}
+			if (0==(c->flags & SP_FLAG_GRAZE)) /* グレイズ済? */ /* i==5 同じIDの弾が無かった時*/
 			{
-				if (graze_check[i]==((BULLET_DATA *)c->data)->id)	//同じ場合
-					break;											//forを抜ける
-			}
-			if (i==5)	//同じIDの弾が無かった時
-			{
-				pd->graze++;
+				c->flags |= SP_FLAG_GRAZE;/*グレイズ済*/
+				pd->graze++;/*グレイズ数*/
 				pd->score += (score(100)+score(200)*difficulty);
-				graze_check[(pd->graze)%5]=((BULLET_DATA *)c->data)->id;
+//				graze_check[(pd->graze)%5]=((BULLET_DATA *)c->data)->id;
 				playChunk(9);
 			}
 			break;
 
 		case SP_EN_LASER:
 			is_graze=1;
-			int j;
-			for (j=0;j<5;j++)
+//			int j;
+//			for (j=0;j<5;j++)
+//			{
+//				if (graze_check[j]==((LASER_DATA *)c->data)->id)	//同じ場合
+//					break;											//forを抜ける
+//			}
+			if (0==(c->flags & SP_FLAG_GRAZE)) /* グレイズ済? */ /* if (j==5) 同じIDの弾が無かった時*/
 			{
-				if (graze_check[j]==((LASER_DATA *)c->data)->id)	//同じ場合
-					break;											//forを抜ける
-			}
-			if (j==5)
-			{
-				pd->graze++;
+				c->flags |= SP_FLAG_GRAZE;/*グレイズ済*/
+				pd->graze++;/*グレイズ数*/
 				pd->score += (score(100)+score(200)*difficulty);
-				graze_check[(pd->graze)%5]=((LASER_DATA *)c->data)->id;
+//				graze_check[(pd->graze)%5]=((LASER_DATA *)c->data)->id;
 				playChunk(9);
 			}
 			break;
 
 		case SP_EN_BIGBULLET:
 			is_graze=1;
-			int l;
-			for (l=0;l<5;l++)
+//			int l;
+//			for (l=0;l<5;l++)
+//			{
+//				if (graze_check[l]==((BIGBULLET_DATA *)c->data)->id)	//同じ場合
+//					break;											//forを抜ける
+//			}
+			if (0==(c->flags & SP_FLAG_GRAZE)) /* グレイズ済? */ /* if (l==5) 同じIDの弾が無かった時*/
 			{
-				if (graze_check[l]==((BIGBULLET_DATA *)c->data)->id)	//同じ場合
-					break;											//forを抜ける
-			}
-			if (l==5)
-			{
-				pd->graze++;
+				c->flags |= SP_FLAG_GRAZE;/*グレイズ済*/
+				pd->graze++;/*グレイズ数*/
 				pd->score += (score(100)+score(200)*difficulty);
-				graze_check[(pd->graze)%5]=((BIGBULLET_DATA *)c->data)->id;
+//				graze_check[(pd->graze)%5]=((BIGBULLET_DATA *)c->data)->id;
 				playChunk(9);
 			}
 			break;
@@ -2064,7 +2721,7 @@ static void player_move(SPRITE *s1)
 		{
 			if ((keyboard[KEY_BOMB])&&(d->bombs>0))
 			{
-				if (bomb_wait==0)
+				if (bomb_wait<=0)
 				{
 					playChunk(7);
 					switch (select_player)
@@ -2079,13 +2736,22 @@ static void player_move(SPRITE *s1)
 						bomb_wait = 200;
 						break;
 					case MARISA:
-						d->save_delay=200;			//無敵時間。つーかさすがにボム時間中無敵じゃないのはきつい
+						d->save_delay=100;			//無敵時間。つーかさすがにボム時間中無敵じゃないのはきつい
 						d->state=PL_SAVE;
 						d->hit_bomb_wait=0;
 						player_add_levarie(player);
 						bomb_wait = 100;
 						//d->save_delay=5;
 						//d->state=PL_SAVE;
+						break;
+					case REMIRIA:	/* [***090220 追加 */
+						d->save_delay=150;			//無敵時間。
+						d->state=PL_SAVE;
+						d->extra=PLX_BOMB;
+						d->extra_time=150;
+						d->hit_bomb_wait=0;
+						player_add_cross_red(player);
+						bomb_wait = 400;
 						break;
 					}
 					d->bombs--;
@@ -2202,6 +2868,7 @@ void player_init(void)
 	{
 	case REIMU: 	player=sprite_add_file("ship-med.png",11,PR_PLAYER);		break;
 	case MARISA:	player=sprite_add_file("ship-med-ma.png",11,PR_PLAYER); 	break;
+	case REMIRIA:	player=sprite_add_file("ship-med-oz.png",11,PR_PLAYER); 	break;	/* [***090220 追加 */
 	}
 	player->type		= SP_PLAYER;
 	player->flags		|= (SP_FLAG_VISIBLE|SP_FLAG_COLCHECK);
@@ -2222,6 +2889,11 @@ void player_init(void)
 		data->player_speed_mini = 4;
 		data->player_speed		= 4;
 		data->player_speed_max	= 8;
+		break;
+	case REMIRIA:	/* [***090220 追加 */
+		data->player_speed_mini = 4;
+		data->player_speed		= 4;
+		data->player_speed_max	= 7;
 		break;
 	}
 	data->bossmode		= 0;
@@ -2246,6 +2918,9 @@ void player_init(void)
 	bomb_wait			= 0;
 	weapon_List 		= 0;
 	weapon_chain		= 0;
-	weapon_p			= loadbmp2("weapon_p.png"); 	//俺の環境だとloadbmpで読み込むと表示されなくなる。
+	weapon_p			= loadbmp("weapon_p.png");
+	SDL_SetColorKey(weapon_p,SDL_SRCCOLORKEY|SDL_RLEACCEL,0x00000000);
+	boss_hp				= loadbmp2("health.png");
 	data->core			= player_add_core(player);	//○の追加
+	data->boss			= NULL;
 }

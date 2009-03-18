@@ -61,8 +61,9 @@ static int bg_level;			//menu画面の状態
 static int bg_alpha;		//共用
 //[******************************
 //player select用
-#define MAX_PLAYER 2
+#define MAX_PLAYER 3
 int select_player;
+static int can_select_player;		/* [***090222	追加 */
 static int sp_level;
 static int sp_wait;
 static /*dou ble*/int sp_scale256;
@@ -363,7 +364,7 @@ static void startmenu_work()
 			switch (startmenu.active_item)
 			{
 			case 0: 	newstate(ST_PLAYER_SELECT,0,1); 	break; /* New Game */		//newstate(ST_GAME_PLAY,0,1);
-			case 1: 	newstate(ST_SHOW_HCLIST,0,1);		break; /* Options */
+			case 1: 	newstate(ST_STORY,0,1);		break; /* Options */
 			case 2: 	newstate(ST_MENU,MENU_OPTION,1);	break; /* Hiscore */
 			case 3: 	newstate(ST_GAME_QUIT,0,1); 		break; /* Quit */
 			}
@@ -895,8 +896,8 @@ static void kp_search(int btn, int num)
 
 #define SP_X 250
 
-static /*const*/ char *sp_bg_list[] = {"sp_reimu_bg.jpg","sp_marisa_bg.jpg", NULL};
-static /*const*/ char *sp_st_list[] = {"sp_reimu_st.png","sp_marisa_st.png", NULL};
+static /*const*/ char *sp_bg_list[] = {"sp_reimu_bg.jpg","sp_marisa_bg.jpg","sp_remiria_bg.jpg", NULL};
+static /*const*/ char *sp_st_list[] = {"sp_reimu_st.png","sp_marisa_st.png","sp_remiria_st.png", NULL};
 
 void player_opt_init()
 {
@@ -911,6 +912,23 @@ void player_opt_init()
 	sp_wait=0;
 	SDL_BlitSurface(sp_bg,NULL,screen,NULL);
 	SDL_BlitSurface(sp_st,NULL,screen,&sr);
+
+
+
+/******自分でコンパイルする人へ******
+このままだと配布バイナリと違うので
+thegame.c	:	と
+menu.c		:	の
+文字列"無駄"を適当に変えといて下さい。
+************************************/
+	if(!strcmp(password,"RUMIAISMYBRIDE"))		/* [***090222	追加 */
+	{
+		can_select_player=-1;
+	}
+	else
+	{
+		can_select_player=-2;
+	}
 
 	sp_scale256=1*256;
 }
@@ -956,7 +974,7 @@ void player_opt_work()
 					SDL_SetColorKey(tmp_sp_st, SDL_SRCCOLORKEY, 0x00000000);
 
 					if (select_player==0)
-						select_player=MAX_PLAYER-1;
+						select_player=MAX_PLAYER+can_select_player;		/* [***090222	追加 */
 					else
 						select_player--;
 					sp_bg=loadbmp(sp_bg_list[select_player]);
@@ -979,7 +997,7 @@ void player_opt_work()
 					tmp_sp_st=loadbmp(sp_st_list[select_player]);
 					SDL_SetColorKey(tmp_sp_st, SDL_SRCCOLORKEY, 0x00000000);
 
-					if (select_player==MAX_PLAYER-1)
+					if (select_player==MAX_PLAYER+can_select_player)		/* [***090222	追加 */
 						select_player=0;
 					else
 						select_player++;
@@ -1012,7 +1030,7 @@ void player_opt_work()
 				sp_wait-=3*fps_factor;
 			}
 			break;
-		case 5:
+		case 5:	//右
 			sp_scale256 -= (int)(0.07*256);
 			bg_alpha+=15;
 			if (bg_alpha<255)
@@ -1046,7 +1064,7 @@ void player_opt_work()
 				player_opt_img256(tmp_sp_st, sp_scale256, 1);
 			}
 			break;
-		case 6:
+		case 6:	//左
 			sp_scale256 -= (int)(0.07*256);
 			bg_alpha+=15;
 			if (bg_alpha<255)

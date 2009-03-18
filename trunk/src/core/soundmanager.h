@@ -13,6 +13,7 @@
 #define _BGM_VOICE_H_
 
 extern void closeSound(void);
+extern void claer_music(void);
 extern void initSound(void);
 //extern void playMusic(char *play_music_file_name);
 extern void fadeMusic(void);
@@ -21,6 +22,7 @@ extern void pauseMusic(void);
 extern void resumeMusic(void);
 extern void playChunk(int req_idx);
 extern void setChunkVolume(int volume);
+extern void setMusicVolume(int volume);
 //
 extern void voice_play_vbl(void);
 extern void play_music(int num);

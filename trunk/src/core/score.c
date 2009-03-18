@@ -8,29 +8,10 @@ extern int high_score;
 extern int weapon_List; /*player.c*/
 SDL_Surface *bg2;
 
-extern int is_graze;				// player1が弾幕に触れたか？
+//extern int is_graze;				// player1が弾幕に触れたか？
 extern SDL_Surface *weapon_p;		// ウェポンゲージ。俺の環境だとloadbmp2で作ると普通に表示されるようになった。
+extern SDL_Surface *boss_hp;
 
-/*
-typedef struct {
-	int lives;
-	int bombs;
-	int graze;
-	int score;
-	int level;
-	int bossmode;
-	int state;
-	int explode;
-	double save_delay;
-	double anim_delay;
-	int weapon;
-	int player_speed;
-	int extra;
-	double extra_wait;
-	double extra_time;
-	double weapon_wait;
-} PLAYER_DATA;
-*/
 enum
 {
 	R_00_Player_Star_png = 0,
@@ -75,6 +56,25 @@ static void power_status(int weapon, int dx, int dy)		//ウェポンゲージの表示。ke
 	drec.x=dx;
 	drec.y=dy;
 	SDL_BlitSurface(weapon_p, &srec, screen, &drec);
+}
+
+#define HPGAUGE 50
+static void health_status(int dx, int dy)		//[***090305		変更
+{
+	char buffer[3];
+	SPRITE *s=((PLAYER_DATA *)player->data)->boss;
+	sprintf(buffer,"%d", ((ENEMY_DATA *)s->data)->b.health>>10);
+	font_print_screen_xy(buffer,FONT03,47,0);
+	SDL_Rect srec, drec;
+	srec.x=0;
+	srec.y=0;
+	srec.h=10;
+	srec.w=HPGAUGE+((((ENEMY_DATA *)s->data)->b.health  & 0x03FF)>>2);
+	drec.w=boss_hp->w;
+	drec.h=boss_hp->h;
+	drec.x=dx;
+	drec.y=dy;
+	SDL_BlitSurface(boss_hp, &srec, screen, &drec);
 }
 
 void score_display(void)
@@ -138,6 +138,9 @@ void score_display(void)
 
 	sprintf(buffer," %d", p->graze);					font_print_screen_xy(buffer,FONT07,PPP+7*8+3,140);
 
+	if(((PLAYER_DATA *)player->data)->bossmode==1){
+		health_status(10, 6);
+	}
 	/*
 	switch (weapon_List) {
 	case WP_PLASMA: 			strcat(buffer,"REIFU-1");		break;

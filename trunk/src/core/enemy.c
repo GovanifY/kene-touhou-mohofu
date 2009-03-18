@@ -164,6 +164,65 @@ static void enemy_homing_move(SPRITE *s)
 	}
 }
 
+static void enemy_momiji_move(SPRITE *s)
+{
+	PLAYER_DATA *pd=(PLAYER_DATA *)player->data;
+	if (pd->bossmode==2||pd->bossmode==4)
+	{
+		s->type=-1;
+		bonus_info_score(s,SCORE_50);
+	}
+	MOMIJI_DATA *d=(MOMIJI_DATA *)s->data;
+	s->x+=cos(d->angle)*d->speed*fps_factor;
+	s->y+=sin(d->angle)*d->speed*fps_factor;
+	d->timer-=fps_factor;
+	if(d->timer<0)
+	{
+		enemy_smallbullet_re_create(s, 3, d->angle-M_PI_H*2, 0.04);
+		enemy_smallbullet_re_create(s, 3, d->angle-M_PI_H, 0.04);
+		enemy_smallbullet_re_create(s, 3, d->angle, 0.04);
+		enemy_smallbullet_re_create(s, 3, d->angle+M_PI_H, 0.04);
+		enemy_smallbullet_re_create(s, 3, d->angle+M_PI_H*2, 0.04);
+		s->type=-1;
+	}
+	if ((s->x<-s->w)||(s->x>WIDTH2)||(s->y<-s->h)||(s->y>HEIGHT)) {
+		s->type=-1;
+	}
+}
+
+
+static void enemy_smallbullet_re_move(SPRITE *s)
+{
+	PLAYER_DATA *pd=(PLAYER_DATA *)player->data;
+	if (pd->bossmode==2||pd->bossmode==4)
+	{
+		s->type=-1;
+		bonus_info_score(s,SCORE_50);
+	}
+	SMALL_RE_DATA *d=(SMALL_RE_DATA *)s->data;
+
+	switch(d->state)
+	{
+	case 0:
+		if(d->speed<0.5){
+			d->state=1;
+			d->angle+=M_PI;
+			d->angle2=d->angle;
+		}
+		else{	d->speed-=d->a;	}
+		break;
+	case 1:
+		d->speed+=d->a;
+		break;
+	}
+	if(d->angle2-d->angle<M_PI_H){	d->angle2+=0.01;	}
+	s->x+=cos(d->angle2)*d->speed*fps_factor;
+	s->y+=sin(d->angle2)*d->speed*fps_factor;
+	if (((s->x<-s->w)||(s->x>WIDTH2)||(s->y<-s->h)||(s->y>HEIGHT))&&s->ticks>200) {
+		s->type=-1;
+	}
+}
+
 
 static void enemy_new_bigbullet_move(SPRITE *s)
 {
@@ -587,7 +646,7 @@ void enemy_bullet_create(SPRITE *s, double speed)
 	data=mmalloc(sizeof(BULLET_DATA));
 	h->data=data;
 
-	data->id=rand()%1000;
+//	data->id=rand()%1000;
 	data->angle=atan2(player->y+player->h/2-s->y,player->x-player->w/2-s->x);
 	data->speed=speed;
 }
@@ -609,7 +668,7 @@ void enemy_laser_create(SPRITE *s, double speed)
 	data=mmalloc(sizeof(LASER_DATA));
 	h->data=data;
 
-	data->id=rand()%1000;
+//	data->id=rand()%1000;
 	data->angle=atan2(player->y+player->h/2-s->y,player->x-player->w/2-s->x);
 	data->speed=speed;
 
@@ -631,7 +690,7 @@ void enemy_laser_create2(SPRITE *s, double speed, double angle)
 	data=mmalloc(sizeof(LASER_DATA));
 	h->data=data;
 
-	data->id=rand()%1000;
+//	data->id=rand()%1000;
 	data->angle=angle;
 	data->speed=speed;
 
@@ -672,6 +731,43 @@ void enemy_homing_update(SPRITE *s)
 	s->aktframe%=20;
 }
 
+void enemy_momiji_create(SPRITE *s, double speed, double angle)
+{
+	SPRITE *h;
+	MOMIJI_DATA *data;
+
+	h=sprite_add_file("spell_bullet_r.png",1,PR_ENEMY);
+	h->flags|=(SP_FLAG_VISIBLE|SP_FLAG_COLCHECK);
+	h->type=SP_EN_LASER;
+	h->x=s->x+(s->w>>1);
+	h->y=s->y+(s->h>>1);
+	h->mover=enemy_momiji_move;
+	data=mmalloc(sizeof(MOMIJI_DATA));
+	h->data=data;
+	data->angle=angle;
+	data->speed=speed;
+	data->timer=30;
+}
+
+void enemy_smallbullet_re_create(SPRITE *s, double speed, double angle, double a)
+{
+	SPRITE *h;
+	SMALL_RE_DATA *data;
+
+	h=sprite_add_file("kugel2.png",1,PR_ENEMY);
+	h->flags|=(SP_FLAG_VISIBLE|SP_FLAG_COLCHECK);
+	h->type=SP_EN_BULLET;
+	h->x=s->x+(s->w>>1);
+	h->y=s->y+(s->h>>1);
+	h->mover=enemy_smallbullet_re_move;
+	data=mmalloc(sizeof(SMALL_RE_DATA));
+	h->data=data;
+	data->state=0;
+	data->angle=angle;
+	data->angle2=angle;
+	data->speed=speed;
+	data->a=a;
+}
 
 void enemy_bigbullet_create(SPRITE *s, double ex, double ey, double speed, double angle, int ransu)
 {
@@ -707,7 +803,7 @@ void enemy_bigbullet_create(SPRITE *s, double ex, double ey, double speed, doubl
 	src_d=mmalloc(sizeof(BIGBULLET_S_DATA));
 	hu->data=src_d;
 
-	data->id=rand()%1000;
+//	data->id=rand()%1000;
 	if (angle==-2)
 		data->angle=atan2(player->y-player->h/2-s->y,player->x-player->w/2-s->x);
 	else
@@ -752,7 +848,7 @@ void enemy_new_bigbullet_create(SPRITE *s, double speed, double angle, double a)
 	src_d=mmalloc(sizeof(BIGBULLET_S_DATA));
 	hu->data=src_d;
 
-	data->id=rand()%1000;
+//	data->id=rand()%1000;
 	if (angle==-2)
 	{	data->angle=atan2(player->y-player->h/2-s->y,player->x-player->w/2-s->x);}
 	else
@@ -800,7 +896,7 @@ void enemy_g_bullet_create(SPRITE *s, double speed, int state, double angle)
 	data=mmalloc(sizeof(G_BULLET_DATA));
 	h->data=data;
 
-	data->id=rand()%1000;
+//	data->id=rand()%1000;
 	if (angle==-2)
 	{	data->angle=atan2(player->y-s->y,player->x-s->x);}
 	else
@@ -832,7 +928,7 @@ void enemy_pong_bullet_create(SPRITE *s, double speed, double angle, double gra,
 	data=mmalloc(sizeof(PO_BULLET_DATA));
 	h->data=data;
 
-	data->id=rand()%1000;
+//	data->id=rand()%1000;
 	if (angle==-2)
 		data->angle=atan2(player->y-s->y,player->x-s->x);
 	else
@@ -865,7 +961,7 @@ void enemy_gr_bullet_create(SPRITE *s, double speed, double angle, double gra)
 	data=mmalloc(sizeof(GR_BULLET_DATA));
 	h->data=data;
 
-	data->id=rand()%1000;
+//	data->id=rand()%1000;
 	if (angle==-2)
 		data->angle=atan2(player->y-s->y,player->x-s->x);
 	else
@@ -897,7 +993,7 @@ void enemy_stop_bullet_create(SPRITE *s, double speed, double angle, double a)
 	data=mmalloc(sizeof(GR_BULLET_DATA));
 	h->data=data;
 
-	data->id=rand()%1000;
+//	data->id=rand()%1000;
 	if (angle==-2)
 		data->angle=atan2(player->y+player->h/2-s->y,player->x-player->w/2-s->x);
 	else
@@ -930,7 +1026,7 @@ void enemy_stop_bullet2_create(SPRITE *s, double speed, double angle, double a, 
 	data=mmalloc(sizeof(ST2_BULLET_DATA));
 	h->data=data;
 
-	data->id=rand()%1000;
+//	data->id=rand()%1000;
 	if (angle==-2)
 		data->angle=atan2(player->y+player->h/2-s->y,player->x-player->w/2-s->x);
 	else
@@ -967,7 +1063,7 @@ void enemy_angle_bullet_create(SPRITE *s, double speed, double angle, double a_a
 	data=mmalloc(sizeof(AN_BULLET_DATA));
 	h->data=data;
 	b_id++;
-	data->id=b_id%1000;
+//	data->id=b_id%1000;
 	data->angle=angle;
 	data->speed=speed;
 	data->a_angle=a_angle;
@@ -992,7 +1088,7 @@ void enemy_knife_create(SPRITE *s, double speed, double angle, int anim)
 	data=mmalloc(sizeof(BULLET_DATA));
 	h->data=data;
 
-	data->id=rand()%1000;
+//	data->id=rand()%1000;
 	data->angle=angle;
 	data->speed=speed;
 }
@@ -1013,7 +1109,7 @@ void enemy_fall_knife_create(SPRITE *s, double speed, double angle, double gra)
 	data=mmalloc(sizeof(FALL_KNIFE_DATA));
 	h->data=data;
 
-	data->id=rand()%1000;
+//	data->id=rand()%1000;
 	data->angle=angle;
 	data->speed=speed;
 	data->gra=gra;
@@ -1036,7 +1132,7 @@ void enemy_follow_knife_create(SPRITE *s, double speed, double angle, int height
 	data=mmalloc(sizeof(FOLLOW_KNIFE_DATA));
 	h->data=data;
 
-	data->id=rand()%1000;
+//	data->id=rand()%1000;
 	data->angle=angle;
 	data->speed=(double)speed;
 	data->speed2=speed;
@@ -1059,7 +1155,7 @@ void enemy_follow_knife_create2(double x, double y, double speed, double angle, 
 	data=mmalloc(sizeof(FOLLOW_KNIFE_DATA));
 	h->data=data;
 
-	data->id=rand()%1000;
+//	data->id=rand()%1000;
 	data->angle=angle;
 	data->speed=(double)speed;
 	data->speed2=speed;
@@ -1087,7 +1183,7 @@ void enemy_even_knife_create(SPRITE *s, double speed, double length, int r_or_l)
 	data=mmalloc(sizeof(EVEN_KNIFE_DATA));
 	h->data=data;
 
-	data->id=rand()%1000;
+//	data->id=rand()%1000;
 	tmp=atan2(player->y+player->h/2-s->y-s->h/2,player->x-player->w/2-s->x-s->w/2);
 	if (r_or_l)
 	{
@@ -1142,7 +1238,7 @@ void enemy_n_way_bullet(SPRITE *s, char *filename, int frame, int n, double spee
 		data=mmalloc(sizeof(BULLET_DATA));
 		h->data=data;
 
-		data->id=rand()%1000;
+//		data->id=rand()%1000;
 		i_angle+=((M_PI*2)/48)*2/*0.26179938779914943654*/;
 		if (i_angle>M_PI)			{	i_angle-=2*M_PI;}
 		else if (i_angle<-M_PI) 	{	i_angle+=2*M_PI;}

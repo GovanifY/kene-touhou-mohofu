@@ -189,6 +189,7 @@ int main(int argc, char *argv[])
 		case ST_ENTRY_HCLIST:	if (state.newstate) {	hsc_entry_init();		state.newstate=0;	}	hsc_entry_work();	break;
 		case ST_KEY_CONFIG: 	if (state.newstate) {	key_config_init();		state.newstate=0;	}	key_config_work();	break;
 		case ST_PLAYER_SELECT:	if (state.newstate) {	player_opt_init();		state.newstate=0;	}	player_opt_work();	break;
+		case ST_STORY:			if (state.newstate) {	story_init();			state.newstate=0;	}	story_work();		break;
 		}
 		//voice_play_vbl();
 		//fps_show();

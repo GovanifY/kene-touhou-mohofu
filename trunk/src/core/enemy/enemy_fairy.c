@@ -37,11 +37,11 @@ void enemy_fairy_add(int lv)
 {
 	SPRITE *s;
 	FAIRY_DATA *data;
-	s				= sprite_add_file("fairy.png",1,PR_ENEMY);
+	s				= sprite_add_file("fairy.png",7,PR_ENEMY);
 	s->type 		= SP_EN_FAIRY;
 	s->flags		|= (SP_FLAG_VISIBLE|SP_FLAG_COLCHECK);
 	s->mover		= enemy_fairy_move;
-	s->anim_speed	= 0;
+	s->anim_speed	= 4;
 	data			= mmalloc(sizeof(FAIRY_DATA));
 	s->data 		= data;
 	s->y			= -30;

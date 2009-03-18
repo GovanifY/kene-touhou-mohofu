@@ -14,6 +14,8 @@
 #include "score.h"
 #include "bg.h"
 #include "loadlv.h"
+#include "scenario.h"
+#include "soundmanager.h"
 
 extern void thegame_init(void);
 extern void thegame_work(void);

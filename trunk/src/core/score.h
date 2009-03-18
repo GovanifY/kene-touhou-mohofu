@@ -7,6 +7,7 @@
 #include "hiscore.h"
 #include "player.h"
 #include "support.h"
+#include "enemy.h"
 
 extern void score_display(void);
 

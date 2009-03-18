@@ -50,7 +50,7 @@ void enemy_boss03_hitbyweapon(SPRITE *c, SPRITE *s/*, int angle*/)
 		{	i=3;}
 		break;
 	case 1:
-		     if (sb03[4]->flags&SP_FLAG_VISIBLE)			{	i=4;}
+		     if (sb03[4]->flags&SP_FLAG_VISIBLE)		{		i=4;}
 		else if (sb03[3]->flags&SP_FLAG_VISIBLE)		{		i=3;}
 		else if (sb03[5]->flags&SP_FLAG_VISIBLE)		{		i=5;}
 		else if (sb03[0]->flags&SP_FLAG_VISIBLE)		{		i=0;}
@@ -94,6 +94,7 @@ void enemy_boss03_hitbyweapon(SPRITE *c, SPRITE *s/*, int angle*/)
 			explosion_add(sb03[i]->x+sb03[i]->w/2,sb03[i]->y+sb03[i]->h/2,rand()%20,EXPLOSION_TYPE00);
 		}
 		((PLAYER_DATA *)player->data)->bossmode=2;
+		playChunk(3);		//[***090313		追加	もっとスマートなやり方がありそうだけど思いつかなかった。
 	}
 }
 
@@ -107,26 +108,30 @@ static void enemy_boss03_fire(int where) /* 0: left, 1: right, 2: bombenhagel */
 	switch (where)
 	{
 	case 0:
-		if (sb03[3]->flags&SP_FLAG_VISIBLE)
+		if (sb03[3]->flags&SP_FLAG_VISIBLE && ((BOSS03_DATA *)sb03[1]->data)->state>2)
 			enemy_bullet_create(sb03[3],5);
 		break;
 	case 1:
-		if (sb03[5]->flags&SP_FLAG_VISIBLE)
+		if (sb03[5]->flags&SP_FLAG_VISIBLE && ((BOSS03_DATA *)sb03[1]->data)->state>2)
 			enemy_bullet_create(sb03[5],5);
 		break;
 	case 2:
-		for (angle=0;angle<=180;angle+=20) {
-			b=sprite_add_file("bshoot.png",1,PR_ENEMY);
-			b->type=SP_EN_LASER;
-			b->flags|=(SP_FLAG_VISIBLE|SP_FLAG_COLCHECK);
-			b->mover=enemy_laser_move;
-			//b->aktframe=0;
-			b->x=sb03[4]->x;
-			b->y=sb03[4]->y;
-			ldata=mmalloc(sizeof(LASER_DATA));
-			b->data=ldata;
-			ldata->angle=degtorad(angle);
-			ldata->speed=6;
+		if(((BOSS03_DATA *)sb03[1]->data)->state>2)
+		{
+			playChunk(14);
+			for (angle=0;angle<=180;angle+=20) {
+				b=sprite_add_file("bshoot.png",1,PR_ENEMY);
+				b->type=SP_EN_LASER;
+				b->flags|=(SP_FLAG_VISIBLE|SP_FLAG_COLCHECK);
+				b->mover=enemy_laser_move;
+				//b->aktframe=0;
+				b->x=sb03[4]->x;
+				b->y=sb03[4]->y;
+				ldata=mmalloc(sizeof(LASER_DATA));
+				b->data=ldata;
+				ldata->angle=degtorad(angle);
+				ldata->speed=6;
+			}
 		}
 		break;
 	}
@@ -162,12 +167,15 @@ static void enemy_boss03_move(SPRITE *c)
 		if (y>=0) {
 			b->state=2;
 			w=0;
+			((PLAYER_DATA *)player->data)->bossmode=5;
 		}
 		break;
 	case 2:
-		w+=fps_factor;
-		if (w>=40) {
-			b->state=3;
+		if(((PLAYER_DATA *)player->data)->bossmode==1){
+			w+=fps_factor;
+			if (w>=40) {
+				b->state=3;
+			}
 		}
 		break;
 	case 3:
@@ -232,7 +240,7 @@ static void enemy_boss03_move(SPRITE *c)
 	}
 	if (b->level==0)
 	{
-		if (b->b.health<=600)
+		if (b->b.health<=1000)
 		{
 			if (firewait3 < 0)
 			{
@@ -242,8 +250,8 @@ static void enemy_boss03_move(SPRITE *c)
 				{
 					enemy_pong_bullet_create(c, 5.0, 6*M_PI*i/(double)bomb_n+1, 0.07, 2);		//[***090116		微調整
 				}
-				if (b->b.health>100)
-					firewait3=b->b.health/2;
+				if (b->b.health>200)
+					firewait3=b->b.health/4;
 				else
 					firewait3=50;
 			}
@@ -287,7 +295,7 @@ void enemy_boss03_add(int lv)
 		{
 			if (i==1)
 			{
-				b->b.health=2000;
+				b->b.health=2047;
 				b->b.score=score(3000)+score(2000)*difficulty;
 			}
 			else
@@ -309,5 +317,7 @@ void enemy_boss03_add(int lv)
 		}
 	}
 
+	
+	((PLAYER_DATA *)player->data)->boss=sb03[1];
 	((PLAYER_DATA *)player->data)->bossmode=1;
 }

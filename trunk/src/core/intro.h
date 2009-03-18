@@ -4,6 +4,7 @@
 
 #include "sprite.h"
 #include "menu.h"
+#include "zenkaku.h"
 
 enum _intro_states
 {

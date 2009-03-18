@@ -65,7 +65,7 @@ static void enemy_curver_move(SPRITE *s)
 				d->angle=180;
 				d->state=2;
 				if (d->level>0)
-					enemy_bullet_create(s,2+d->level/3);
+					enemy_bullet_create(s,3+(d->level>>1));
 
 			}
 			break;
@@ -79,7 +79,7 @@ static void enemy_curver_move(SPRITE *s)
 				d->angle=360;
 				d->state=4;
 				if (d->level>0)
-					enemy_bullet_create(s,2+d->level/3);
+					enemy_bullet_create(s,3+(d->level>>1));
 			}
 			break;
 		case 4:
@@ -92,7 +92,7 @@ static void enemy_curver_move(SPRITE *s)
 				d->angle=180;
 				d->state=6;
 				if (d->level>0)
-					enemy_bullet_create(s,2+d->level/3);
+					enemy_bullet_create(s,3+(d->level>>1));
 			}
 			break;
 		case 6:
@@ -105,7 +105,7 @@ static void enemy_curver_move(SPRITE *s)
 				d->angle=0;
 				d->state=8;
 				if (d->level>0)
-					enemy_bullet_create(s,2+d->level/3);
+					enemy_bullet_create(s,3+(d->level>>1));
 			}
 			break;
 		case 8:

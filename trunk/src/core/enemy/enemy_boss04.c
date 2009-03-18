@@ -1,4 +1,5 @@
 #include "enemy.h"
+extern int select_player;
 
 typedef struct _boss04_data
 {
@@ -9,6 +10,7 @@ typedef struct _boss04_data
 	double sp_time;	//制限時間
 	double wait1;
 	double wait2;
+	double wait3;
 	int level;
 	double move_angle;
 	double angle;
@@ -67,18 +69,19 @@ void enemy_boss04_hitbyweapon(SPRITE *c, SPRITE *s/*, int angle*/)
 
 	explosion_add(s->x,s->y,0,EXPLOSION_TYPE04);
 	b->b.health-=w->strength;
-	if (b->b.health<(4-b->state1)*1000){
+	if (b->b.health<(4-b->state1)*1024){
 		playChunk(7);
 		((PLAYER_DATA *)player->data)->bossmode=4;
 		bonus_multi_add(c->x, c->y, SP_BONUS_COIN, 5, 1);
 		bonus_multi_add(c->x, c->y, SP_BONUS_FIREPOWER, 5, 0);
 		bonus_multi_add(c->x, c->y, SP_BONUS_FIREPOWER_G, 1, 0);
-		s->aktframe=1;
+		s->aktframe=4;
 		b->state1++;
 		b->state2=0;
 		b->wait1=80;
 		b->wait2=-100;
-		b->sp_time=3000;
+		b->wait3=0;
+		b->sp_time=2500;
 	}
 
 	if (b->b.health<=0) {
@@ -91,6 +94,7 @@ void enemy_boss04_hitbyweapon(SPRITE *c, SPRITE *s/*, int angle*/)
 		c->type=-1;
 		((PLAYER_DATA *)player->data)->score+=b->b.score;
 		((PLAYER_DATA *)player->data)->bossmode=2;
+		playChunk(3);		//[***090313		追加	もっとスマートなやり方がありそうだけど思いつかなかった。
 	}
 }
 
@@ -235,7 +239,7 @@ static void enemy_boss04_out(SPRITE *s)
 	if (s->x<50)				{	s->x=50;}
 	if (s->x>WIDTH2-s->w-50)	{	s->x=WIDTH2-s->w-50;}
 	if (s->y<10)				{	s->y=10;}
-	if (s->y>HEIGHT+s->h-80)	{	s->y=HEIGHT+s->h-80;}
+	if (s->y>HEIGHT+s->h-120)	{	s->y=HEIGHT+s->h-120;}
 }
 
 static void enemy_boss04_more_angle(SPRITE *s, double speed, double angle, double a)
@@ -314,6 +318,7 @@ static void enemy_boss04_knifes3(SPRITE *s, double speed, double length)
 			s->x=tmp1;
 			s->y=tmp2;
 			s->alpha=0;
+			s->aktframe=18;
 			b->state1=5;
 			b->wait2=speed;
 		}
@@ -593,7 +598,7 @@ static void enemy_boss04_move(SPRITE *s)
 	{
 		case 0:	//第一形態:旧アリスとほぼ同じ動き
 			switch (b->state2) {
-				case 0:
+				case 0:		/* 下がる */
 					if (s->y<20){
 						s->y+=fps_factor;
 					}
@@ -603,29 +608,46 @@ static void enemy_boss04_move(SPRITE *s)
 						enemy_bullet_create(s, 2);
 						enemy_bullet_create(s, 3.5);
 						s->aktframe=0;
+						pd->bossmode=5;
 					}
 					break;
-				case 1:
-					if (s->x>=50){
-						s->y+=fps_factor;
-						s->x-=fps_factor*3;
-					}
-					else{	//xが50以下になったら
-						b->state2=2;
-						b->wait1=50;
-						enemy_bullet_create(s, 2.5);
-						enemy_bullet_create(s, 2);
-						enemy_bullet_create(s, 3.5);
-						s->aktframe=1;
+				case 1:		/* 左 */
+					if(pd->bossmode==1){
+						if (s->x>=50){
+							s->y+=fps_factor;
+							s->x-=fps_factor*3;
+							if (s->aktframe>0) {
+								b->wait3+=fps_factor;
+								if (b->wait3>=5) {
+									s->aktframe--;
+									b->wait3=0;
+								}
+							}
+						}
+						else{	//xが50以下になったら
+							b->state2=2;
+							b->wait1=50;
+							enemy_bullet_create(s, 2.5);
+							enemy_bullet_create(s, 2);
+							enemy_bullet_create(s, 3.5);
+							s->aktframe=4;
+						}
 					}
 					break;
-				case 2:
-					enemy_boss04_waitstate(s, 3, 2);
+				case 2:		/* 待機 */
+					enemy_boss04_waitstate(s, 3, 4);
 					break;
-				case 3:
+				case 3:		/* 真ん中に戻る */
 					if (s->y>20){
 						s->y-=fps_factor;
 						s->x+=fps_factor*3;
+						if (s->aktframe<8) {
+							b->wait3+=fps_factor;
+							if (b->wait3>=5) {
+								s->aktframe++;
+								b->wait3=0;
+							}
+						}
 					}
 					else{	//真ん中まで来たら
 						b->state2=4;
@@ -634,7 +656,7 @@ static void enemy_boss04_move(SPRITE *s)
 						enemy_bullet_create(s, 3.5);
 					}
 					break;
-				case 4:
+				case 4:		/* 右 */
 					if (s->x+s->w<=WIDTH2-50){
 						s->y+=fps_factor;
 						s->x+=fps_factor*3;
@@ -645,18 +667,25 @@ static void enemy_boss04_move(SPRITE *s)
 						enemy_bullet_create(s, 2.5);
 						enemy_bullet_create(s, 2);
 						enemy_bullet_create(s, 3.5);
-						s->aktframe=1;
+						s->aktframe=4;
 					}
 					break;
-				case 5:
-					enemy_boss04_waitstate(s, 6, 0);
+				case 5:		/* 待機 */
+					enemy_boss04_waitstate(s, 6, 4);
 					break;
 				case 6:
 					if (s->y>20){
 						s->y-=fps_factor;
 						s->x-=fps_factor*3;
+						if (s->aktframe>0) {
+							b->wait3+=fps_factor;
+							if (b->wait3>=5) {
+								s->aktframe--;
+								b->wait3=0;
+							}
+						}
 					}
-					else{
+					else{	/* 真ん中に戻る */
 						b->state2=1;
 						enemy_bullet_create(s, 2.5);
 						enemy_bullet_create(s, 2);
@@ -684,17 +713,17 @@ static void enemy_boss04_move(SPRITE *s)
 						ang=rand()%180;
 						if (ang>90){
 							ang+=90;
-							s->aktframe=2;
+							s->aktframe=5;
 						}
 						else{
-							s->aktframe=0;
+							s->aktframe=3;
 						}
 						ang-=45;
 					}
 					else{
 						if (s->x>WIDTH2/2){
 							ang=180;
-							s->aktframe=0;
+							s->aktframe=6;
 						}
 						else{
 							ang=0;
@@ -710,7 +739,7 @@ static void enemy_boss04_move(SPRITE *s)
 					if (b->wait1<0){
 						b->wait1=35;
 						b->state2=3;
-						s->aktframe=1;
+						s->aktframe=4;
 					}else{
 						s->x+=cos(b->move_angle)*fps_factor;
 						s->y+=sin(b->move_angle)*fps_factor;
@@ -718,33 +747,46 @@ static void enemy_boss04_move(SPRITE *s)
 					}
 					break;
 				case 3:
-					enemy_boss04_waitstate(s, 4, 4);
+					enemy_boss04_waitstate(s, 4, 15);
+					b->wait3=0;
 					break;
 				case 4:
-					playChunk(11);
-					if ((int)b->wait2%2){
-						enemy_boss04_more_angle(s, 2.5+b->wait2/10-0.3,  M_PI/2, 0.013);
-						enemy_boss04_more_angle(s, 2.5+b->wait2/10-0.6,  M_PI/4, 0.011);
-						enemy_boss04_more_angle(s, 2.5+b->wait2/10-0.9,       0, 0.009);
-						enemy_boss04_more_angle(s, 2.5+b->wait2/10-1.2, -M_PI/4, 0.007);
-						enemy_boss04_more_angle(s, 2.5+b->wait2/10-1.5, -M_PI/2, 0.005);
-						if (difficulty>1){
-							enemy_boss04_more_angle(s, 2.5+b->wait2/10-1.8, -3*M_PI/4, 0.003);
-							enemy_boss04_more_angle(s, 2.5+b->wait2/10-2.1,    M_PI,   0.001);
+					if(s->aktframe==17){
+						playChunk(11);
+						if ((int)b->wait2%2){
+							enemy_boss04_more_angle(s, 2.5+b->wait2/10-0.3,  M_PI/2, 0.013);
+							enemy_boss04_more_angle(s, 2.5+b->wait2/10-0.6,  M_PI/4, 0.011);
+							enemy_boss04_more_angle(s, 2.5+b->wait2/10-0.9,       0, 0.009);
+							enemy_boss04_more_angle(s, 2.5+b->wait2/10-1.2, -M_PI/4, 0.007);
+							enemy_boss04_more_angle(s, 2.5+b->wait2/10-1.5, -M_PI/2, 0.005);
+							if (difficulty>1){
+								enemy_boss04_more_angle(s, 2.5+b->wait2/10-1.8, -3*M_PI/4, 0.003);
+								enemy_boss04_more_angle(s, 2.5+b->wait2/10-2.1,    M_PI,   0.001);
+							}
 						}
+						else{
+							enemy_boss04_more_angle(s, 2.5+b->wait2/10-0.3,  M_PI/2, -0.013);
+							enemy_boss04_more_angle(s, 2.5+b->wait2/10-0.6,  M_PI/4, -0.011);
+							enemy_boss04_more_angle(s, 2.5+b->wait2/10-0.9,       0, -0.009);
+							enemy_boss04_more_angle(s, 2.5+b->wait2/10-1.2, -M_PI/4, -0.007);
+							enemy_boss04_more_angle(s, 2.5+b->wait2/10-1.5, -M_PI/2, -0.005);
+							if (difficulty>1){
+								enemy_boss04_more_angle(s, 2.5+b->wait2/10-1.8, -3*M_PI/4, -0.003);
+								enemy_boss04_more_angle(s, 2.5+b->wait2/10-2.1,    M_PI,   -0.001);
+							}
+						}
+						s->aktframe=18;
+					}
+					else if(s->aktframe==18){
+						b->state2=5;
 					}
 					else{
-						enemy_boss04_more_angle(s, 2.5+b->wait2/10-0.3,  M_PI/2, -0.013);
-						enemy_boss04_more_angle(s, 2.5+b->wait2/10-0.6,  M_PI/4, -0.011);
-						enemy_boss04_more_angle(s, 2.5+b->wait2/10-0.9,       0, -0.009);
-						enemy_boss04_more_angle(s, 2.5+b->wait2/10-1.2, -M_PI/4, -0.007);
-						enemy_boss04_more_angle(s, 2.5+b->wait2/10-1.5, -M_PI/2, -0.005);
-						if (difficulty>1){
-							enemy_boss04_more_angle(s, 2.5+b->wait2/10-1.8, -3*M_PI/4, -0.003);
-							enemy_boss04_more_angle(s, 2.5+b->wait2/10-2.1,    M_PI,   -0.001);
+						b->wait3+=fps_factor;
+						if (b->wait3>=3) {
+							s->aktframe++;
+							b->wait3=0;
 						}
 					}
-					b->state2=5;
 					break;
 				case 5:
 					if (s->x>WIDTH2/2)
@@ -753,13 +795,11 @@ static void enemy_boss04_move(SPRITE *s)
 						b->move_angle=-M_PI/4;
 					b->state2=6;
 					b->wait1=5;
-					s->aktframe=5;
 					break;
 				case 6:
 					if (b->wait1<0){
 						b->wait1=10;
 						b->state2=7;
-						s->aktframe=6;
 					}
 					else
 					{
@@ -772,32 +812,50 @@ static void enemy_boss04_move(SPRITE *s)
 					}
 					break;
 				case 7:
-					enemy_boss04_waitstate(s, 8, 1);
+					if (s->aktframe>15) {
+						b->wait3+=fps_factor;
+						if (b->wait3>=3) {
+							s->aktframe--;
+							b->wait3=0;
+						}
+					}
+					enemy_boss04_waitstate(s, 8, 15);
 					break;
 				case 8:
 					if ((int)b->wait2%10==0){
-						s->aktframe=5;
-						playChunk(11);
-						enemy_boss04_more_angle(s, 2.5+b->wait2/10-0.3, M_PI/2, 0.013);
-						enemy_boss04_more_angle(s, 2.5+b->wait2/10-0.6, M_PI/4, 0.011);
-						enemy_boss04_more_angle(s, 2.5+b->wait2/10-0.9, 0, 0.009);
-						enemy_boss04_more_angle(s, 2.5+b->wait2/10-1.2, -M_PI/4, 0.007);
-						enemy_boss04_more_angle(s, 2.5+b->wait2/10-1.5, -M_PI/2, 0.005);
-						if (difficulty>1){
-							enemy_boss04_more_angle(s, 2.5+b->wait2/10-1.8, -3*M_PI/4, 0.003);
-							enemy_boss04_more_angle(s, 2.5+b->wait2/10-2.1, M_PI, 0.001);
+						if(s->aktframe==18){
+							s->aktframe=5;
+							playChunk(11);
+							enemy_boss04_more_angle(s, 2.5+b->wait2/10-0.3, M_PI/2, 0.013);
+							enemy_boss04_more_angle(s, 2.5+b->wait2/10-0.6, M_PI/4, 0.011);
+							enemy_boss04_more_angle(s, 2.5+b->wait2/10-0.9, 0, 0.009);
+							enemy_boss04_more_angle(s, 2.5+b->wait2/10-1.2, -M_PI/4, 0.007);
+							enemy_boss04_more_angle(s, 2.5+b->wait2/10-1.5, -M_PI/2, 0.005);
+							if (difficulty>1){
+								enemy_boss04_more_angle(s, 2.5+b->wait2/10-1.8, -3*M_PI/4, 0.003);
+								enemy_boss04_more_angle(s, 2.5+b->wait2/10-2.1, M_PI, 0.001);
+							}
+							enemy_boss04_more_angle(s, 2.5+b->wait2/10-0.3, M_PI/2, -0.013);
+							enemy_boss04_more_angle(s, 2.5+b->wait2/10-0.6, M_PI/4, -0.011);
+							enemy_boss04_more_angle(s, 2.5+b->wait2/10-0.9, 0, -0.009);
+							enemy_boss04_more_angle(s, 2.5+b->wait2/10-1.2, -M_PI/4, -0.007);
+							enemy_boss04_more_angle(s, 2.5+b->wait2/10-1.5, -M_PI/2, -0.005);
+							if (difficulty>1){
+								enemy_boss04_more_angle(s, 2.5+b->wait2/10-1.8, -3*M_PI/4, -0.003);
+								enemy_boss04_more_angle(s, 2.5+b->wait2/10-2.1, M_PI, -0.001);
+							}
+							b->state2=1;
+						}else{
+							b->wait3+=fps_factor;
+							if (b->wait3>=3) {
+								s->aktframe++;
+								b->wait3=0;
+							}
 						}
-						enemy_boss04_more_angle(s, 2.5+b->wait2/10-0.3, M_PI/2, -0.013);
-						enemy_boss04_more_angle(s, 2.5+b->wait2/10-0.6, M_PI/4, -0.011);
-						enemy_boss04_more_angle(s, 2.5+b->wait2/10-0.9, 0, -0.009);
-						enemy_boss04_more_angle(s, 2.5+b->wait2/10-1.2, -M_PI/4, -0.007);
-						enemy_boss04_more_angle(s, 2.5+b->wait2/10-1.5, -M_PI/2, -0.005);
-						if (difficulty>1){
-							enemy_boss04_more_angle(s, 2.5+b->wait2/10-1.8, -3*M_PI/4, -0.003);
-							enemy_boss04_more_angle(s, 2.5+b->wait2/10-2.1, M_PI, -0.001);
-						}
+					}else{
+						b->state2=1;
+						s->aktframe=16;
 					}
-					b->state2=1;
 					break;
 			}
 			enemy_boss04_out(s);
@@ -811,7 +869,7 @@ static void enemy_boss04_move(SPRITE *s)
 					b->state2=1;
 					pd->bossmode=1;
 					b->move_angle=atan2(-s->y,-s->x);
-					s->aktframe=0;
+					s->aktframe=4;
 				}else{
 					b->wait1-=fps_factor;
 				}
@@ -822,11 +880,18 @@ static void enemy_boss04_move(SPRITE *s)
 					b->wait1=10;
 					b->wait2=0;
 					b->move_angle=atan2(50-s->y,WIDTH2-s->w-s->x);
-					s->aktframe=1;
+					s->aktframe=0;
 				}
 				else{
 					s->x+=cos(b->move_angle)*3*fps_factor;
 					s->y+=sin(b->move_angle)*3*fps_factor;
+					if (s->aktframe>0) {
+						b->wait3+=fps_factor;
+						if (b->wait3>=3) {
+							s->aktframe--;
+							b->wait3=0;
+						}
+					}
 				}
 				break;
 			case 2:
@@ -837,7 +902,7 @@ static void enemy_boss04_move(SPRITE *s)
 					b->state2=4;
 					b->move_angle=atan2(50-s->y,WIDTH2/2-s->w/2-s->x);
 					b->wait2=0;
-					s->aktframe=0;
+					s->aktframe=8;
 				}
 				else{
 					b->wait2+=3;
@@ -852,17 +917,31 @@ static void enemy_boss04_move(SPRITE *s)
 					}
 					s->x+=cos(b->move_angle)*5*fps_factor;
 					s->y+=sin(b->move_angle)*5*fps_factor;
+					if (s->aktframe<8) {
+						b->wait3+=fps_factor;
+						if (b->wait3>=7) {
+							s->aktframe++;
+							b->wait3=0;
+						}
+					}
 				}
 				break;
 			case 4:
 				if (s->x<WIDTH2/2-s->w/2){		//真ん中に来たら
 					b->state2=5;
 					b->move_angle=atan2(-s->y,WIDTH2-s->w-s->x);
-					s->aktframe=2;
+					s->aktframe=4;
 				}
 				else{
 					s->x+=cos(b->move_angle)*3*fps_factor;
 					s->y+=sin(b->move_angle)*3*fps_factor;
+					if (s->aktframe>4) {
+						b->wait3+=fps_factor;
+						if (b->wait3>=3) {
+							s->aktframe--;
+							b->wait3=0;
+						}
+					}
 				}
 				break;
 			case 5:
@@ -871,11 +950,18 @@ static void enemy_boss04_move(SPRITE *s)
 					b->wait1=10;
 					b->wait2=0;
 					b->move_angle=atan2(50-s->y,-s->x);
-					s->aktframe=0;
+					s->aktframe=8;
 				}
 				else{
 					s->x+=cos(b->move_angle)*3*fps_factor;
 					s->y+=sin(b->move_angle)*3*fps_factor;
+					if (s->aktframe<8) {
+						b->wait3+=fps_factor;
+						if (b->wait3>=3) {
+							s->aktframe++;
+							b->wait3=0;
+						}
+					}
 				}
 				break;
 			case 6:
@@ -883,7 +969,7 @@ static void enemy_boss04_move(SPRITE *s)
 					b->state2=7;
 					b->move_angle=atan2(50-s->y,WIDTH2/2-s->w/2-s->x);
 					b->wait2=0;
-					s->aktframe=4;
+					s->aktframe=0;
 				}
 				else{
 					b->wait2+=3;
@@ -898,6 +984,13 @@ static void enemy_boss04_move(SPRITE *s)
 					}
 					s->x+=cos(b->move_angle)*5*fps_factor;
 					s->y+=sin(b->move_angle)*5*fps_factor;
+					if (s->aktframe>0) {
+						b->wait3+=fps_factor;
+						if (b->wait3>=7) {
+							s->aktframe--;
+							b->wait3=0;
+						}
+					}
 				}
 				break;
 			case 7:
@@ -910,13 +1003,20 @@ static void enemy_boss04_move(SPRITE *s)
 				else{
 					s->x+=cos(b->move_angle)*3*fps_factor;
 					s->y+=sin(b->move_angle)*3*fps_factor;
+					if (s->aktframe<4) {
+						b->wait3+=fps_factor;
+						if (b->wait3>=3) {
+							s->aktframe++;
+							b->wait3=0;
+						}
+					}
 				}
 				break;
 			case 8:
 				b->wait2--;
 				if (b->wait2<0){
 					b->state2=1;
-					s->aktframe=0;
+					s->aktframe=4;
 				}
 				else{
 					if ((int)b->wait2%20==0){
@@ -925,6 +1025,14 @@ static void enemy_boss04_move(SPRITE *s)
 						enemy_boss04_knifes1(s, (int)(b->wait2/20)+3, 30-(int)(b->wait2/20)*30, -60);
 						if (difficulty>1)
 							enemy_boss04_knifes1(s, (int)(b->wait2/20)+2, 30-(int)(b->wait2/20)*20, -40);
+						s->aktframe=18;
+					}
+				}
+				if (s->aktframe>15) {
+					b->wait3+=fps_factor;
+					if (b->wait3>=4) {
+						s->aktframe--;
+						b->wait3=0;
 					}
 				}
 			}
@@ -938,27 +1046,44 @@ static void enemy_boss04_move(SPRITE *s)
 						pd->bossmode=1;
 						b->move_angle=atan2(50-s->y,WIDTH2/2-s->w-s->x);
 						b->sp_time+=1000;
+						s->aktframe=15;
 					}else{
 						b->wait1-=fps_factor;
 					}
 					break;
 				case 1:
-					if (s->y>50){		//真ん中に来たら
+					if (s->y>50 && (s->x<WIDTH2/2+30 || s->x>WIDTH2/2-30)){		//真ん中に来たら
 						b->state2=2;
 						b->wait1=10;
 						b->wait2=0;
-						s->aktframe=6;
-					}
-					else{
+						s->aktframe=9;
+					}else{
 						s->x+=cos(b->move_angle)*3*fps_factor;
 						s->y+=sin(b->move_angle)*3*fps_factor;
+						if (s->aktframe<18) {
+							b->wait3+=fps_factor;
+							if (b->wait3>=3) {
+								s->aktframe++;
+								b->wait3=0;
+							}
+						}
 					}
 					break;
 				case 2:
-					enemy_boss04_maho_create(s);		//魔方陣生成
-					b->state2=3;
-					b->wait2=10;
-					b->wait1=5;
+					if(s->aktframe==14){
+						enemy_boss04_maho_create(s);		//魔方陣生成
+						b->state2=3;
+						b->wait2=10;
+						b->wait1=5;
+					}else{
+						if (s->aktframe<14) {
+							b->wait3+=fps_factor;
+							if (b->wait3>=3) {
+								s->aktframe++;
+								b->wait3=0;
+							}
+						}
+					}
 					break;
 				case 3:
 					b->angle=atan2(player->y+player->h/2-s->y,player->x-player->w/2-s->x);
@@ -983,12 +1108,19 @@ static void enemy_boss04_move(SPRITE *s)
 							b->wait1=20;
 							if (rand()%2==0){
 								b->state2=4;
-								s->aktframe=0;
+								s->aktframe=2;
 							}
 							else{
 								b->state2=5;
-								s->aktframe=2;
+								s->aktframe=6;
 							}
+						}
+					}
+					if (s->aktframe>9) {
+						b->wait3+=fps_factor;
+						if (b->wait3>=3) {
+							s->aktframe--;
+							b->wait3=0;
 						}
 					}
 					break;
@@ -997,12 +1129,12 @@ static void enemy_boss04_move(SPRITE *s)
 						b->state2=3;
 						b->wait2=30;
 						b->wait1=3;
-						s->aktframe=6;
+						s->aktframe=18;
 					}
 					else{
 						if (s->x<100){
 							b->state2=5;
-							s->aktframe=2;
+							s->aktframe=7;
 						}
 						else
 							s->x-=2*fps_factor;
@@ -1014,12 +1146,12 @@ static void enemy_boss04_move(SPRITE *s)
 						b->state2=3;
 						b->wait2=30;
 						b->wait1=3;
-						s->aktframe=6;
+						s->aktframe=18;
 					}
 					else{
 						if (s->x>WIDTH2-100-s->w){
 							b->state2=4;
-							s->aktframe=0;
+							s->aktframe=1;
 						}
 						else
 							s->x+=2*fps_factor;
@@ -1042,7 +1174,7 @@ static void enemy_boss04_move(SPRITE *s)
 					}
 					break;
 				case 1:
-					if ((s->x<WIDTH2/2+10 && s->x>WIDTH2/2-30)||s->y<50){		//真ん中に来たら
+					if ((s->x<WIDTH2/2+30 && s->x>WIDTH2/2-10)&&s->y<50){		//真ん中に来たら
 						b->state2=2;
 						b->wait1=20;
 						b->wait2=0;
@@ -1056,23 +1188,42 @@ static void enemy_boss04_move(SPRITE *s)
 				case 2:
 					if (b->wait1<0){		//待機時間が終わったら
 						b->state2=3;
-						s->aktframe=5;
+						s->aktframe=15;
+					}else if(b->wait1<6){
+						s->aktframe=14;
+					}else if(b->wait1<12){
+						s->aktframe=13;
+					}else if(b->wait1<18){
+						s->aktframe=12;
+					}else if(b->wait1<24){
+						s->aktframe=11;
+					}else if(b->wait1<30){
+						s->aktframe=10;
+					}else if(b->wait1<36){
+						s->aktframe=9;
 					}
-					else{
-						b->wait1-=fps_factor;
-					}
+					b->wait1-=fps_factor;
 					break;
 				case 3:
-					b->length_s_p=sqrt((player->x-s->x)*(player->x-s->x)+(player->y-s->y)*(player->y-s->y));
-					enemy_even_knife_create(s, 10, b->length_s_p, 0);
-					enemy_even_knife_create(s, 10, b->length_s_p, 1);
-					b->wait1=40;
-					if (s->y>150)
-						b->move_angle=degtorad(210+rand()%120);
-					else
-						b->move_angle=degtorad(rand()%360);
-					s->aktframe=6;
-					b->state2=4;
+					if(s->aktframe==18)
+					{
+						b->length_s_p=sqrt((player->x-s->x)*(player->x-s->x)+(player->y-s->y)*(player->y-s->y));
+						enemy_even_knife_create(s, 10, b->length_s_p, 0);
+						enemy_even_knife_create(s, 10, b->length_s_p, 1);
+						b->wait1=40;
+						if (s->y>150)
+							b->move_angle=degtorad(210+rand()%120);
+						else
+							b->move_angle=degtorad(rand()%360);
+						s->aktframe=16;
+						b->state2=4;
+					}else{
+						b->wait3+=fps_factor;
+						if (b->wait3>=3) {
+							s->aktframe++;
+							b->wait3=0;
+						}
+					}
 					break;
 				case 4:
 					if (b->wait1<0){
@@ -1088,8 +1239,8 @@ static void enemy_boss04_move(SPRITE *s)
 			}
 			if ((player->x+player->w/2<s->x+s->w/2+25)&&(player->x+player->w/2>s->x+s->w/2-25))
 				b->wait2+=fps_factor;
-			if (b->wait2>20+(3-difficulty)*40){
-				s->aktframe=5;
+			if (b->wait2>20+(3-difficulty)*30){
+				s->aktframe=16;
 				b->length_s_p=sqrt((player->x-s->x)*(player->x-s->x)+(player->y-s->y)*(player->y-s->y));
 				if (b->length_s_p>80)
 					b->length_s_p=80;
@@ -1105,11 +1256,11 @@ static void enemy_boss04_move(SPRITE *s)
 				b->wait1=120;
 				b->state1=4;
 				b->state2=2;
-				s->aktframe=1;
+				s->aktframe=4;
 			}
 			else
 			{
-				b->wait2-=0.02;
+				b->wait2-=0.03;
 				if (s->alpha>249)//if (s->alpha>255)
 				{
 					s->alpha=255;
@@ -1121,6 +1272,13 @@ static void enemy_boss04_move(SPRITE *s)
 				s->x+=cos(b->angle)*b->wait2*fps_factor;
 				s->y+=sin(b->angle)*b->wait2*fps_factor;
 			}
+			if (s->aktframe>15) {
+				b->wait3+=fps_factor;
+				if (b->wait3>=4) {
+					s->aktframe--;
+					b->wait3=0;
+				}
+			}
 			enemy_boss04_out(s);
 			break;
 
@@ -1128,13 +1286,16 @@ static void enemy_boss04_move(SPRITE *s)
 	if ((b->sp_time<0) && (b->state1<4))
 	{
 		playChunk(7);
+		bonus_multi_add(s->x, s->y, SP_BONUS_FIREPOWER, 5, 0);
+		bonus_multi_add(s->x, s->y, SP_BONUS_FIREPOWER_G, 1, 0);
 		pd->bossmode=4;
-		b->b.health=(4-b->state1)*1000-1;
+		b->b.health=(4-b->state1)*1024-1;
 		b->state1++;
 		b->state2=0;
-		b->wait1=120;
-		b->wait2=0;
-		b->sp_time=3500;
+		b->wait1=80;
+		b->wait2=-100;
+		b->sp_time=3000;
+		s->aktframe=4;
 	}
 }
 
@@ -1145,18 +1306,20 @@ void enemy_boss04_add(int lv)
 	BOSS04_DATA *b;
 	SPRITE *s;
 
-	s=sprite_add_file("boss04.png",7,PR_ENEMY);	s->anim_speed=0;
+	s=sprite_add_file("boss04.png",19,PR_ENEMY);	s->anim_speed=0;
 	s->flags|=SP_FLAG_VISIBLE|SP_FLAG_COLCHECK;
-	s->aktframe=1;
+	s->aktframe=4;
 	s->type=SP_EN_BOSS04;
 	b=mmalloc(sizeof(BOSS04_DATA));
 	s->data=b;
-	b->b.health=5000;
+	if(select_player!=2){b->b.health=5119;}
+	else				{b->b.health=1;}
 	b->b.score=score(5000)+score(4000)*difficulty;
 	b->state1=0;
 	b->state2=0;
 	b->wait1=0;
 	b->wait2=0;
+	b->wait3=0;
 	b->type=0;
 	b->level=lv;
 	b->move_angle=0;
@@ -1165,5 +1328,6 @@ void enemy_boss04_add(int lv)
 	s->x=WIDTH2/2-(s->w/2);
 	s->y=-(s->h);
 
+	((PLAYER_DATA *)player->data)->boss=s;
 	((PLAYER_DATA *)player->data)->bossmode=1;
 }

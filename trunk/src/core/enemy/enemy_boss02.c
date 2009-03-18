@@ -54,7 +54,12 @@ void enemy_boss02_hitbyweapon(SPRITE *c, SPRITE *s/*, int angle*/)
 //	parsys_add(NULL,100,0,s->x,s->y,30,0,0,50,PIXELATE,NULL);
 	b->b.health-=w->strength;
 
-	if ((b->b.health<=1000)&&(b->type==0)) {	//HPが残り1000になった時。グラフィックの差し替え。攻撃パターン変更
+	if(b->b.health<=2048 && b->state2==0) {
+		bonus_multi_add(c->x, c->y,SP_BONUS_FIREPOWER,3,0);
+		bonus_multi_add(c->x, c->y,SP_BONUS_FIREPOWER_G,1,0);
+		b->state2=1;
+	}
+	else if ((b->b.health<=1024)&&(b->type==0)) {	//HPが残り1024になった時。グラフィックの差し替え。攻撃パターン変更
 		bonus_multi_add(c->x, c->y,SP_BONUS_FIREPOWER,3,0);
 		bonus_multi_add(c->x, c->y,SP_BONUS_FIREPOWER_G,1,0);
 		for (i=0;i<192;i+=40) {
@@ -75,12 +80,13 @@ void enemy_boss02_hitbyweapon(SPRITE *c, SPRITE *s/*, int angle*/)
 		d->mover=c->mover;
 		d->x=c->x;
 		d->y=c->y;
-		b2->state2=1;
+		b2->state2=2;
 		b2->state1=13;
-		b2->wait1=100;
+		b2->wait1=40;
 
 		c->type=-1;
 		((PLAYER_DATA *)player->data)->score+=b->b.score;
+		((PLAYER_DATA *)player->data)->boss=d;
 	}
 
 	if (b->b.health<=0) {
@@ -95,6 +101,7 @@ void enemy_boss02_hitbyweapon(SPRITE *c, SPRITE *s/*, int angle*/)
 		d->type=-1;
 		((PLAYER_DATA *)player->data)->score+=b->b.score;
 		((PLAYER_DATA *)player->data)->bossmode=2;
+		playChunk(3);		//[***090313		追加	もっとスマートなやり方がありそうだけど思いつかなかった。
 	}
 }
 
@@ -346,22 +353,42 @@ static void enemy_boss02_move(SPRITE *s)
 
 	switch (b->state2) {
 	case 0: 		//攻撃パターン1
+	case 1:
 
 		switch (b->state1) {
 
 		case 0: /* nach unten */
 			if (s->y<30)
 				s->y+=2*fps_factor;
-			else
-				b->state1=1;
+			else{
+				b->state1=12;
+				((PLAYER_DATA *)player->data)->bossmode=5;
+				b->wait1=0;
+			}
+			break;
+
+		case 12:
+			if(((PLAYER_DATA *)player->data)->bossmode==1){
+				b->wait1+=fps_factor;
+				if (b->wait1>=40) {
+					b->state1=1;
+				}
+			}
 			break;
 
 		case 1: /* y-pos erreicht: rundumschuss */
-			enemy_boss02_sr_add1(s);
-			if (b->type==1)
-				enemy_boss02_ice_add(s);
-			b->wait1=20;
-			b->state1=2;
+			
+				enemy_boss02_sr_add1(s);
+				if (b->state2==0)
+					enemy_boss02_ice_add(s);
+				b->wait1=20;
+				b->state1=2;
+				if(b->state2==1)
+				{
+					enemy_momiji_create(s, 3.5, M_PI/2-M_PI_H*2);
+					enemy_momiji_create(s, 4, M_PI/2);
+					enemy_momiji_create(s, 3.5, M_PI/2+M_PI_H*2);
+				}
 			break;
 
 		case 2: /* warten */
@@ -381,6 +408,12 @@ static void enemy_boss02_move(SPRITE *s)
 			} else {
 				b->wait1=20;
 				b->state1=4;
+				if(b->state2==1)
+				{
+					enemy_momiji_create(s, 3.5, M_PI/2-M_PI_H*2);
+					enemy_momiji_create(s, 4, M_PI/2);
+					enemy_momiji_create(s, 3.5, M_PI/2+M_PI_H*2);
+				}
 			}
 			break;
 
@@ -402,6 +435,12 @@ static void enemy_boss02_move(SPRITE *s)
 				enemy_boss02_sr_add1(s);
 				b->wait1=100;
 				b->state1=6;
+				if(b->state2==1)
+				{
+					enemy_momiji_create(s, 3.5, M_PI/2-M_PI_H*2);
+					enemy_momiji_create(s, 4, M_PI/2);
+					enemy_momiji_create(s, 3.5, M_PI/2+M_PI_H*2);
+				}
 			}
 			break;
 
@@ -410,7 +449,8 @@ static void enemy_boss02_move(SPRITE *s)
 			break;
 
 		case 7:
-			enemy_boss02_ice_add(s);
+			if(b->state2==0)
+				enemy_boss02_ice_add(s);
 			b->wait1=100;
 			b->state1=8;
 			break;
@@ -432,6 +472,12 @@ static void enemy_boss02_move(SPRITE *s)
 			} else {
 				b->wait1=20;
 				b->state1=10;
+				if(b->state2==1)
+				{
+					enemy_momiji_create(s, 3.5, M_PI/2-M_PI_H*2);
+					enemy_momiji_create(s, 4, M_PI/2);
+					enemy_momiji_create(s, 3.5, M_PI/2+M_PI_H*2);
+				}
 			}
 			break;
 
@@ -455,7 +501,7 @@ static void enemy_boss02_move(SPRITE *s)
 		}
 	break;
 
-	case 1: 	//攻撃パターン2
+	case 2: 	//攻撃パターン2
 		switch (b->state1) {
 
 		case 0: 	//不定:初期位置情報の取得->1へ
@@ -467,7 +513,7 @@ static void enemy_boss02_move(SPRITE *s)
 			if (s->y<30)
 			{
 				b->state1=2;
-				b->wait1+=30+difficulty*10;
+				b->wait1+=10+(3-difficulty)*10;
 				if (b->n_wayt%3==0){
 					enemy_n_way_bullet(s, "kugel.png", 0, 8, 5, atan2(player->y-s->y,player->x-s->x));
 				}
@@ -618,7 +664,7 @@ void enemy_boss02_add(int lv)
 	s->type=SP_EN_BOSS02;
 	b=mmalloc(sizeof(BOSS02_DATA));
 	s->data=b;
-	b->b.health=2500;
+	b->b.health=3071;
 	b->b.score=score(2000)+score(1500)*difficulty;
 	b->state1=0;
 	b->state2=0;
@@ -633,4 +679,5 @@ void enemy_boss02_add(int lv)
 	s->y=-(s->h);
 
 	((PLAYER_DATA *)player->data)->bossmode=1;
+	((PLAYER_DATA *)player->data)->boss=s;
 }

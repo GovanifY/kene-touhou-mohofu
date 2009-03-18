@@ -39,18 +39,24 @@ typedef struct
 	int health;
 } ENEMY_BASE;
 
+typedef struct		/* enemy‚Ìˆê”ÊŒ` */
+{
+	ENEMY_BASE b;
+	int state;
+} ENEMY_DATA;
+
 typedef struct
 {
 	double angle;
 	double speed;
-	int id;
+//	int id;
 } BULLET_DATA;
 
 typedef struct
 {
 	double angle;
 	double speed;
-	int id;
+//	int id;
 	int state;
 } G_BULLET_DATA;
 
@@ -58,7 +64,7 @@ typedef struct
 {
 	double angle;
 	double speed;
-	int id;
+//	int id;
 	double gra;
 	double sum;
 }GR_BULLET_DATA;
@@ -67,7 +73,7 @@ typedef struct
 {
 	double angle;
 	double speed;
-	int id;
+//	int id;
 	double gra;
 	double sum;
 	int bounds;
@@ -77,7 +83,7 @@ typedef struct
 {
 	double angle;
 	double speed;
-	int id;
+//	int id;
 } LASER_DATA;
 
 typedef struct
@@ -93,7 +99,23 @@ typedef struct
 {
 	double angle;
 	double speed;
-	int id;
+	double timer;
+} MOMIJI_DATA;
+
+typedef struct
+{
+	double angle;
+	double angle2;
+	double speed;
+	double a;
+	int state;
+} SMALL_RE_DATA;
+
+typedef struct
+{
+	double angle;
+	double speed;
+//	int id;
 	int ransu;
 	int wait_bg;
 } BIGBULLET_DATA;
@@ -111,7 +133,7 @@ typedef struct
 {
 	double angle;
 	double speed;
-	int id;
+//	int id;
 	double a;
 } NEW_BIGBULLET_DATA;
 
@@ -119,7 +141,7 @@ typedef struct
 {
 	double angle;
 	double speed;
-	int id;
+//	int id;
 	int timer;
 	double a;
 } ST_BULLET_DATA;
@@ -128,7 +150,7 @@ typedef struct
 {
 	double angle;
 	double speed;
-	int id;
+//	int id;
 	double next_angle;
 	int timer;
 	int state;
@@ -139,7 +161,7 @@ typedef struct
 {
 	double angle;
 	double speed;
-	int id;
+//	int id;
 	double a_angle;
 	int timer;
 } AN_BULLET_DATA;
@@ -148,7 +170,7 @@ typedef struct
 {
 	double angle;
 	double speed;
-	int id;
+//	int id;
 	double sum;
 	double gra;
 } FALL_KNIFE_DATA;
@@ -157,7 +179,7 @@ typedef struct
 {
 	double angle;
 	double speed;
-	int id;
+//	int id;
 	int speed2;
 	int height;
 	int target;
@@ -168,7 +190,7 @@ typedef struct
 {
 	double angle;
 	double speed;
-	int id;
+//	int id;
 	double d_angle;
 	double length;
 	double x;
@@ -221,6 +243,8 @@ void enemy_laser_create(SPRITE *s, double speed);
 void enemy_laser_create2(SPRITE *s, double speed, double angle);
 void enemy_homing_create(SPRITE *s);
 void enemy_homing_update(SPRITE *s);
+void enemy_momiji_create(SPRITE *s, double speed, double angle);
+void enemy_smallbullet_re_create(SPRITE *s, double speed, double angle, double a);
 void enemy_bigbullet_create(SPRITE *s, double ex, double ey, double speed, double angle, int ransu);
 void enemy_new_bigbullet_create(SPRITE *s, double speed, double angle, double a);
 void enemy_g_bullet_create(SPRITE *s, double speed, int state, double angle);
@@ -272,6 +296,7 @@ extern void enemy_boss04_hitbyweapon(SPRITE *c, SPRITE *s/*, int angle*/);
 void enemy_n_way_bullet(SPRITE *s, char *filename, int frame, int n, double speed, double angle);
 
 void enemy_gametext_add(char *text, int y);
+void enemy_gameimg_add(char *filename,int xpos, int ypos);
 
 
 

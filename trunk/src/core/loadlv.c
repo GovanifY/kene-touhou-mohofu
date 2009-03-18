@@ -99,6 +99,10 @@ static void load_stage_add_entry(Uint32 time10, char command, char *para1, int p
 		break;
 	case 'B':		/* Background */
 		break;
+	case 'P':
+		new_entry->para0 = new_entry->para2/1000;
+		new_entry->para2 = new_entry->para2%1000;
+		break;
 	default:	// add background tiles....
 		{
 			/*const*/ short speed256 = 1.0*256;
@@ -140,10 +144,9 @@ static void load_stage_add_entry(Uint32 time10, char command, char *para1, int p
 		new_entry->next=leveltab;		//leveltabは前回のデータ
 
 	leveltab=new_entry; 	//leveltabに今生成したデータのアドレスを代入。
-	//nextにはdatファイル的には現在走査中のラインの上のラインが入っている。
 }
 
-/*int*/void loadlv(void/*int level*/)
+void loadlv(void/*int level*/)		/* 元々int */
 {
 				player_now_stage++;	/*(*level)++*/;
 	int level = player_now_stage;
@@ -159,7 +162,7 @@ static void load_stage_add_entry(Uint32 time10, char command, char *para1, int p
 	load_stage_free_entry();
 //
 	char filename[128];
-	sprintf(filename,"%s/level%02d.dat", moddir, level);
+	sprintf(filename,"%s/dat/level%02d.dat", moddir, level);
 	FILE *file;
 	if ((file=fopen(filename,"r"))==NULL)
 	{
@@ -168,7 +171,7 @@ static void load_stage_add_entry(Uint32 time10, char command, char *para1, int p
 //
 	int entrys		= 0;
 	int line_num	= 0;
-	char buffer_text_1_line[128];	/*parth text, 1 line buffer */		/* 走査する行の取得 */
+	char buffer_text_1_line[128];	/* parth text, 1 line buffer */		/* 走査する行の取得 */
 	while (fgets(buffer_text_1_line,128,file) != NULL)
 	{
 	int time10; 			/* 実行コマンドの出てくるタイミングの取得 */

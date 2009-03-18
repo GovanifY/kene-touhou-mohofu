@@ -71,7 +71,9 @@ void enemy_boss01_hitbyweapon(SPRITE *c, SPRITE *s/*, int angle*/)
 	WEAPON_BASE *w=(WEAPON_BASE *)s->data;
 
 	b=(BOSS01_DATA *)sb01[i]->data;
-	b->b.health-=w->strength;
+	if(((BOSS01_DATA *)sb01[1]->data)->state>1){
+		b->b.health-=w->strength;
+	}
 
 	explosion_add(s->x,s->y,0,EXPLOSION_TYPE04);
 	//parsys_add(NULL,100,0,s->x,s->y,30,0,0,50,PIXELATE,NULL);
@@ -113,6 +115,7 @@ void enemy_boss01_hitbyweapon(SPRITE *c, SPRITE *s/*, int angle*/)
 			explosion_add(sb01[i]->x+sb01[i]->w/2,sb01[i]->y+sb01[i]->h/2,rand()%20,EXPLOSION_TYPE00);
 		}
 		((PLAYER_DATA *)player->data)->bossmode=2;
+		playChunk(3);		//[***090313		追加	もっとスマートなやり方がありそうだけど思いつかなかった。
 	}
 }
 
@@ -165,7 +168,7 @@ static void enemy_boss01_setpos(int x, int y)
 	{
 		if (bwait1<=0)
 		{
-			bwait1=12-bdata->level;
+			bwait1=5+(3-difficulty)*5;
 			deg1+=10;
 			enemy_gr_bullet_create(sb01[0], 4+bdata->level, degtorad(-90+deg1%180), 0.04);
 		}
@@ -177,7 +180,7 @@ static void enemy_boss01_setpos(int x, int y)
 	{
 		if (bwait2<=0)
 		{
-			bwait2=12-bdata->level;
+			bwait2=5+(3-difficulty)*5;
 			deg2+=10;
 			enemy_gr_bullet_create(sb01[2], 4+bdata->level, degtorad(+90+deg2%180), 0.04);
 		}
@@ -196,31 +199,35 @@ static void enemy_boss01_fire(int where) /* 0: left, 1: right, 2: bombenhagel */
 	switch (where)
 	{
 	case 0:
-		if (sb01[3]->flags&SP_FLAG_VISIBLE)
+		if (sb01[3]->flags&SP_FLAG_VISIBLE && ((BOSS01_DATA *)sb01[1]->data)->state>2)
 			enemy_bullet_create(sb01[3],5);
 		break;
 	case 1:
-		if (sb01[5]->flags&SP_FLAG_VISIBLE)
+		if (sb01[5]->flags&SP_FLAG_VISIBLE && ((BOSS01_DATA *)sb01[1]->data)->state>2)
 			enemy_bullet_create(sb01[5],5);
 		break;
 	case 2:
-		for (angle=0;angle<=180;angle+=20)
+		if(((BOSS01_DATA *)sb01[1]->data)->state>2)
 		{
-			b=sprite_add_file("bshoot.png",1,PR_ENEMY);
-			b->type=SP_EN_LASER;
-			b->flags|=(SP_FLAG_VISIBLE|SP_FLAG_COLCHECK);
-			b->mover=enemy_laser_move;
-			//b->aktframe=0;
-			b->x=sb01[4]->x;
-			b->y=sb01[4]->y;
-			ldata=mmalloc(sizeof(LASER_DATA));
-			b->data=ldata;
-			ldata->id=rand()%1000;
-			ldata->angle=degtorad(angle);
-			ldata->speed=4;
+			playChunk(14);
+			for (angle=0;angle<=180;angle+=20)
+			{
+				b=sprite_add_file("bshoot.png",1,PR_ENEMY);
+				b->type=SP_EN_LASER;
+				b->flags|=(SP_FLAG_VISIBLE|SP_FLAG_COLCHECK);
+				b->mover=enemy_laser_move;
+				//b->aktframe=0;
+				b->x=sb01[4]->x;
+				b->y=sb01[4]->y;
+				ldata=mmalloc(sizeof(LASER_DATA));
+				b->data=ldata;
+//				ldata->id=rand()%1000;
+				ldata->angle=degtorad(angle);
+				ldata->speed=4;
+			}
 		}
 		if (!(sb01[4]->flags&SP_FLAG_VISIBLE))
-			enemy_n_way_bullet(sb01[1], "kugel.png", 0, 12, 5, atan2(player->y+player->h/2-sb01[1]->h/2-sb01[1]->y,player->x-player->w/2-sb01[1]->x));
+			enemy_n_way_bullet(sb01[1], "kugel.png", 0, 12, 3+difficulty, atan2(player->y+player->h/2-sb01[1]->h/2-sb01[1]->y,player->x-player->w/2-sb01[1]->x));
 		break;
 	}
 }
@@ -244,23 +251,26 @@ static void enemy_boss01_move(SPRITE *c)
 		firewait2=4;
 		break;
 	case 1:
-		y+=fps_factor*(b->level+1);
+		y+=fps_factor*2;
 		enemy_boss01_setpos(x,y);
-		if (y>=30) {
+		if (y>=20) {
 			b->state=2;
 			w=0;
+			((PLAYER_DATA *)player->data)->bossmode=5;
 		}
 		break;
 	case 2:
-		w+=fps_factor;
-		if (w>=40) {
-			b->state=3;
+		if(((PLAYER_DATA *)player->data)->bossmode==1){
+			w+=fps_factor;
+			if (w>=40) {
+				b->state=3;
+			}
 		}
 		break;
 	case 3:
-		y+=fps_factor*(b->level+1);
+		y+=fps_factor;
 		enemy_boss01_setpos(x,y);
-		if (y>=80) {
+		if (y>=50) {
 			b->state=4;
 			w=0;
 		}
@@ -277,8 +287,11 @@ static void enemy_boss01_move(SPRITE *c)
 		x-=2*fps_factor*(b->level+1);
 		w+=fps_factor;
 		enemy_boss01_setpos(x,y);
-		if (w>=60)
+		if (w>=60){
+			if(x>350)
+				x=350;
 			b->state=6;
+		}
 		break;
 	case 6:
 		y-=fps_factor*(b->level+1);
@@ -293,8 +306,11 @@ static void enemy_boss01_move(SPRITE *c)
 		x+=2*fps_factor*(b->level+1);
 		w+=fps_factor;
 		enemy_boss01_setpos(x,y);
-		if (w>=60)
+		if (w>=60){
+			if(x<10)
+				x=10;
 			b->state=8;
+		}
 		break;
 	case 8:
 		y-=fps_factor*(b->level+1);
@@ -343,9 +359,9 @@ void enemy_boss01_add(int lv)
 		b=mmalloc(sizeof(BOSS01_DATA));
 		sb01[i]->data=b;
 		if (i==0)		{	b->b.health=400;	}	//[***090114		変更(+50)
-		else if (i==1)	{	b->b.health=700;	}	//アリス本体のHP。もう少し高くてもいいかも。//[***090114	変更(+100)
+		else if (i==1)	{	b->b.health=1023;	}	//アリス本体のHP。もう少し高くてもいいかも。//[***090305	変更
 		else if (i==2)	{	b->b.health=400;	}	//[***090114		変更(+50)
-		else if (i==4)	{	b->b.health= 20;	}	//真ん中の子
+		else if (i==4)	{	b->b.health= 21+(2-difficulty)*20;	}	//真ん中の子
 		else			{	b->b.health=200;	}	//denis was 40		//[***090114	変更(+20)
 		//
 		if (i==1)		{	b->b.score=score(1000)*(difficulty+1);}
@@ -359,5 +375,6 @@ void enemy_boss01_add(int lv)
 			sb01[i]->mover=enemy_boss01_move;
 		}
 	}
-	((PLAYER_DATA *)player->data)->bossmode=1;
+	//((PLAYER_DATA *)player->data)->bossmode=1;
+	((PLAYER_DATA *)player->data)->boss=sb01[1];
 }

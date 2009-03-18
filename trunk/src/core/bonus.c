@@ -28,7 +28,7 @@ static SPRITE *bonus_sel(int x, int y, int type)
 	//x += 20;		/*重なると見にくいので横に20dotずらす*/
 	//if ( WIDTH2 < x ) {	x = ((WIDTH2 - x) & (512-1));	}	/* はみ出たら折り返す、ついでにマスク */
 	x += 16;		/*重なると見にくいので横に20dotずらす*/
-	if ( WIDTH2 < x ) { x = (WIDTH2-256)+((x) & (256-1));	}	/* はみ出たら、なんとなく右側の方にする */
+	if ( WIDTH2 < x ) { x = (WIDTH2-256-32)+((x) & (256-1));	}	/* はみ出たら、なんとなく右側の方にする */
 	#endif
 	//	#if 0
 	//	if (/*s->*/x < /*WIDTH2-20*/480/*480*/) x += 20;
@@ -87,7 +87,7 @@ void bonus_move(SPRITE *s)
 		d->pl_up=1;
 	if (!d->pl_up)
 	{
-		if (d->sum<4)		//[***090123		変更5=>4
+		if (d->sum<3)		//[***090123.0220		変更5=>4=>3
 			d->sum+=d->gra;
 		s->y+=d->sum*fps_factor;
 		if (s->y>HEIGHT) s->type=-1; // denis 480

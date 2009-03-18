@@ -12,7 +12,17 @@
 enum _select_pl 		//[***090203		’Ç‰Á
 {
 	REIMU=0,
-	MARISA
+	MARISA,
+	REMIRIA
+};
+
+enum _boss_mode 		//[***090223		’Ç‰Á
+{
+	B_NONE=0,
+	B_BATTLE,
+	B_DEATH,
+	B_EVENT,
+	B_CHANGE
 };
 
 typedef struct
@@ -40,6 +50,7 @@ typedef struct
 	double weapon_wait;
 	SPRITE *core;
 	SPRITE *enemy;			//[***090125		’Ç‰Á:player‚É“–‚½‚Á‚½•¨
+	SPRITE *boss;			//[***090305		’Ç‰Á
 } PLAYER_DATA;
 
 enum _weapon_type

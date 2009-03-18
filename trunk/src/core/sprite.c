@@ -399,7 +399,8 @@ void sprite_work(int type)
 					if (s->anim_speed>0)
 					{
 						s->aktframe++;
-						s->aktframe %= s->frames;
+						if(s->aktframe>=s->frames)
+							s->aktframe = 0;
 					}
 					else
 					{

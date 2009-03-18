@@ -17,6 +17,21 @@ static void enemy_xev_move(SPRITE *s)
 	double angle;
 	double speed=0;
 	XEV_DATA *d=(XEV_DATA *)s->data;
+	static const int item_table[10]={	/* [***20090223	’Ç‰Á ƒe[ƒuƒ‹‚É‚µ‚½‚æ */
+		0x1000,
+		0x1003,
+		0x1000,
+		0x1002,
+		0x1000,
+		0x1007,
+		0x1003,
+		0x1002,
+		0x1001,
+		0x1005
+	};
+	static unsigned int drop_item;
+	if(drop_item>9)
+		drop_item=0;
 
 	switch (d->state)
 	{
@@ -30,7 +45,7 @@ static void enemy_xev_move(SPRITE *s)
 			d->ty=player->y;
 			if (d->level)
 				enemy_bullet_create(s,1+d->level);
-			bonus_add(s->x,s->y,rand()%(SP_BONUS_LAST-SP_BONUS_FIREPOWER)+SP_BONUS_FIREPOWER,0);
+			bonus_add(s->x,s->y,item_table[drop_item++],0);
 		}
 		break;/* ??? [***20090210	’Ç‰Á  */
 	case 1:
