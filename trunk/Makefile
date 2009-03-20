@@ -3,6 +3,7 @@ TARGET = kene
 
 PSP_EBOOT_TITLE = kene_r12_test01
 PSP_EBOOT_ICON = ICON0.PNG
+PSP_EBOOT_ICON1= ICON0.PMF
 PSP_EBOOT_PIC1 = PIC1.PNG
 PSP_EBOOT_SND0 = SND0.AT3
 
@@ -59,6 +60,9 @@ OBJS += $(OBJ)/core/font.o
 OBJS += $(OBJ)/core/sprite.o
 OBJS += $(OBJ)/core/bonus.o
 
+OBJS += $(OBJ)/core/shinonomefont.o
+OBJS += $(OBJ)/core/zenkaku.o
+
 OBJS += $(OBJ)/core/enemy.o
 
 OBJS += $(OBJ)/core/enemy/enemy_fairy.o
@@ -96,6 +100,7 @@ OBJS += $(OBJ)/core/intro.o
 OBJS += $(OBJ)/core/thegame.o
 OBJS += $(OBJ)/core/loadlv.o
 OBJS += $(OBJ)/core/score.o
+OBJS += $(OBJ)/core/scenario.o
 OBJS += $(OBJ)/core/player.o
 OBJS += $(OBJ)/core/menu.o
 OBJS += $(OBJ)/core/startintro.o
