@@ -13,11 +13,11 @@
 #define _BGM_VOICE_H_
 
 extern void closeSound(void);
-extern void claer_music(void);
+extern void clear_music(void);//extern void stopMusic(void);
 extern void initSound(void);
 //extern void playMusic(char *play_music_file_name);
 extern void fadeMusic(void);
-//extern void stopMusic(void);
+
 extern void pauseMusic(void);
 extern void resumeMusic(void);
 extern void playChunk(int req_idx);

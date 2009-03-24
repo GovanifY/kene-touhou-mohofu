@@ -1,6 +1,9 @@
+/*
+‹P–é
+‚©‚®‚â
+*/
 #include "enemy.h"
 
-SPRITE *sb03[6];
 
 typedef struct _boss03_data
 {
@@ -10,22 +13,8 @@ typedef struct _boss03_data
 	int level;
 } BOSS03_DATA;
 
+static SPRITE *sb03[6];
 
-void enemy_boss03_setpos(int x, int y)
-{
-	sb03[0]->x=x;
-	sb03[0]->y=y;
-	sb03[1]->x=sb03[0]->w+sb03[0]->x;
-	sb03[1]->y=y;
-	sb03[2]->x=sb03[1]->w+sb03[1]->x;
-	sb03[2]->y=y;
-	sb03[3]->x=x;
-	sb03[3]->y=sb03[0]->h+y;
-	sb03[4]->x=sb03[3]->w+sb03[3]->x;
-	sb03[4]->y=sb03[1]->h+y;
-	sb03[5]->x=sb03[4]->w+sb03[4]->x;
-	sb03[5]->y=sb03[2]->h+y;
-}
 
 /* boss wurde von player ber??rt */
 void enemy_boss03_hitbyplayer(SPRITE *c)
@@ -98,6 +87,22 @@ void enemy_boss03_hitbyweapon(SPRITE *c, SPRITE *s/*, int angle*/)
 	}
 }
 
+
+static void enemy_boss03_setpos(int x, int y)
+{
+	sb03[0]->x=x;
+	sb03[0]->y=y;
+	sb03[1]->x=sb03[0]->w+sb03[0]->x;
+	sb03[1]->y=y;
+	sb03[2]->x=sb03[1]->w+sb03[1]->x;
+	sb03[2]->y=y;
+	sb03[3]->x=x;
+	sb03[3]->y=sb03[0]->h+y;
+	sb03[4]->x=sb03[3]->w+sb03[3]->x;
+	sb03[4]->y=sb03[1]->h+y;
+	sb03[5]->x=sb03[4]->w+sb03[4]->x;
+	sb03[5]->y=sb03[2]->h+y;
+}
 
 static void enemy_boss03_fire(int where) /* 0: left, 1: right, 2: bombenhagel */
 {
@@ -317,7 +322,7 @@ void enemy_boss03_add(int lv)
 		}
 	}
 
-	
+
 	((PLAYER_DATA *)player->data)->boss=sb03[1];
 	((PLAYER_DATA *)player->data)->bossmode=1;
 }

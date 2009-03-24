@@ -274,7 +274,7 @@ void bg_work()
 	}
 }
 
-static void clouds_remove()
+static void clouds_remove(void)
 {
 	int i;
 	for (i=0;i<5;i++)
@@ -284,7 +284,7 @@ static void clouds_remove()
 		w3[i]->type=-1;
 	}
 }
-static void tile_remove()
+static void tile_remove(void)
 {
 	if (btile1!=NULL)
 	{	unloadbmp_by_surface(btile1);}
@@ -295,7 +295,7 @@ static void tile_remove()
 	btile2=NULL;
 }
 
-void bg_destroy()
+void bg_destroy(void)
 {
 	if (akt_bgtype<0)
 	{
@@ -305,7 +305,7 @@ void bg_destroy()
 	switch (akt_bgtype)
 	{
 	case BG_BLACK:								break;
-	case BG_CLOUDS: 	clouds_remove();		break;
+	case BG_CLOUDS: 	tile_remove();clouds_remove();		break;
 	case BG_STARS:		/* stars_remove();*/	break;
 	case BG_TILE:		tile_remove();			break;
 	}

@@ -292,6 +292,8 @@ extern void enemy_boss03_hitbyplayer(SPRITE *c);
 extern void enemy_boss03_hitbyweapon(SPRITE *c, SPRITE *s/*, int angle*/);
 extern void enemy_boss04_hitbyplayer(SPRITE *c);
 extern void enemy_boss04_hitbyweapon(SPRITE *c, SPRITE *s/*, int angle*/);
+extern void enemy_boss05_hitbyplayer(SPRITE *c);
+extern void enemy_boss05_hitbyweapon(SPRITE *c, SPRITE *s/*, int angle*/);
 
 void enemy_n_way_bullet(SPRITE *s, char *filename, int frame, int n, double speed, double angle);
 

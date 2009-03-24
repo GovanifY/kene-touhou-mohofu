@@ -4,38 +4,47 @@ static FONT fonts[LAST_FONT];
 
 extern SDL_Surface *screen;
 
+/* ステータスパネル専用フォント */
 #define FONT01NAME "font01.png"
-#define FONT01CHARS "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890+-.:'\"x/=><*()!?@_ "
-#define FONT01W 17
-#define FONT01H 17
+#define FONT01CHARS " 0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklm"/*"ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890+-.:'\"x/=><*()!?@_ "*/
+#define FONT01W 8/*17*/
+#define FONT01H 10/*8 17*/
 
+/* 名前入力のキーボード、玉に字、フォント */
 #define FONT02NAME "font02.png"
 #define FONT02CHARS "ABCDEFGHIJKLMNOPQRSTUVWXYZ.,:!?[]/-1234567890"
 #define FONT02W 16
 #define FONT02H 16
 
+/* ボスメーター、キーコンフィグ、 フォント */
 #define FONT03NAME "font03.png"
 #define FONT03CHARS "ABCDEFGHIJKLMNOPQRSTUVWXYZ.,:!?[]/-1234567890"
 #define FONT03W 16
 #define FONT03H 16
 
+/* 点画っぽいフォント、大文字＝緑、小文字＝黄色、？記号＝黄色、asciiコード(0x20-0x7e)順に並べなおした */
 #define FONT04NAME "font04.png"
-#define FONT04CHARS "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@(){},.-;:_#*+?=!\"ｧ$%&/�ﾖﾄﾜｵ^ｰ'`ｴﾟ\\<>| "
+#define FONT04CHARS " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
+//efine FONT04CHARS "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@(){},.-;:_#*+?=!\"ｧ$%&/�ﾖﾄﾜｵ^ｰ'`ｴﾟ\\<>| "
 #define FONT04W 18
-#define FONT04H 37
+#define FONT04H 24/*37*/
 
+/* ゲームオーバー、ハイスコアタイトル、(緑青のグラデーション)フォント */
 #define FONT05NAME "font05.png"
-#define FONT05CHARS "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890+-.:'\"x/=><*()!?@_ "
-#define FONT05W 17
-#define FONT05H 17
+#define FONT05CHARS "ABCDEFGHIJKLMNOPQRSTUVWXYZ.,:!?[]/-1234567890"
+//efine FONT05CHARS "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890+-.:'\"x/=><*()!?@_ "
+#define FONT05W 16/*17*/
+#define FONT05H 16/*17*/
 
+/* メニュー画面の白いフォント */
 #define FONT06NAME "font06.png"
-#define FONT06CHARS "ABCDEFGHIJKLMNOPQRSTUVWXYZ,-./0123456789:<>?'()@!# "
+#define FONT06CHARS "ABCDEFGHIJKLMNOPQRSTUVWXYZ,-./0123456789:"/*"<>?'()@!# "*/
 #define FONT06W 16
-#define FONT06H 16
+#define FONT06H 20/*16*/
 
+/* 漢字得点専用フォント */
 #define FONT07NAME "font07.png"
-#define FONT07CHARS " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^"
+#define FONT07CHARS " 0123456789"/*" !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^"*/
 #define FONT07W 8
 #define FONT07H 8
 

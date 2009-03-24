@@ -1,3 +1,8 @@
+/*
+ŽË–½ŠÛ •¶
+“V‹ç
+*/
+
 #include "enemy.h"
 
 /*
@@ -377,7 +382,7 @@ static void enemy_boss02_move(SPRITE *s)
 			break;
 
 		case 1: /* y-pos erreicht: rundumschuss */
-			
+
 				enemy_boss02_sr_add1(s);
 				if (b->state2==0)
 					enemy_boss02_ice_add(s);

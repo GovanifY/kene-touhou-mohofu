@@ -1184,7 +1184,7 @@ void enemy_even_knife_create(SPRITE *s, double speed, double length, int r_or_l)
 	h->data=data;
 
 //	data->id=rand()%1000;
-	tmp=atan2(player->y+player->h/2-s->y-s->h/2,player->x-player->w/2-s->x-s->w/2);
+	tmp=atan2(player->y-s->y+((player->h-s->h)/2),player->x-s->x-player->w/2-s->w/2);
 	if (r_or_l)
 	{
 		if (tmp>3*M_PI/4)

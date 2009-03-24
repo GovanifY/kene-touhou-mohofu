@@ -1,3 +1,8 @@
+/*
+\˜Z–é ç–é
+PAD
+*/
+
 #include "enemy.h"
 extern int select_player;
 
@@ -302,8 +307,8 @@ static void enemy_boss04_knifes3(SPRITE *s, double speed, double length)
 		tmp=(rand()+(int)b->wait2)%8;
 		b->wait2+=1;
 		len+=0.1;
-		tmp1=player->x+player->w/2-s->w/2+cos(tmp*2*M_PI/8)*len;
-		tmp2=player->y+player->h/2-s->h/2+sin(tmp*2*M_PI/8)*len;
+		tmp1=player->x+((player->w-s->w)/2)+cos(tmp*2*M_PI/8)*len;
+		tmp2=player->y+((player->h-s->h)/2)+sin(tmp*2*M_PI/8)*len;
 		if ((30<tmp1 && tmp1<(WIDTH2-30))&&(30<tmp2 && tmp2<200))
 			break;
 	}
@@ -330,8 +335,8 @@ static void enemy_boss04_maho_move(SPRITE *s)
 {
 	BOSS04_MAHO_DATA *d=(BOSS04_MAHO_DATA *)s->data;
 	if (d->state1<5){
-		s->x=d->c->x+d->c->w/2-s->w/2;
-		s->y=d->c->y+d->c->h/2-s->h/2;
+		s->x=d->c->x+((d->c->w-s->w)/2);
+		s->y=d->c->y+((d->c->h-s->h)/2);
 		if (((BOSS04_DATA *)d->c->data)->state1==4)
 			d->state1=5;
 	}

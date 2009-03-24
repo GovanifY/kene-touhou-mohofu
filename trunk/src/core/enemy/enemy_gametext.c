@@ -67,13 +67,13 @@ static void enemy_gameimg_mover(SPRITE *s)
 	switch (g->state)
 	{
 	case 0:
-		s->alpha+=fps_factor*3;
-		if (s->alpha<=255)
+		{int aaa;aaa = s->alpha; aaa += fps_factor*3;
+		if (/*s->alpha*/aaa<=255)
 		{
 			s->alpha=255;
 			g->wait=100;
 			g->state=1;
-		}
+		}else{s->alpha=aaa;}}
 		break;
 	case 1:
 		g->wait-=fps_factor;
@@ -96,6 +96,7 @@ static void enemy_gameimg_mover(SPRITE *s)
 	}
 }
 
+/* ゲーム中イベントメッセージ(英語)表示 */
 void enemy_gametext_add(char *text, int ypos)
 {
 	SDL_Surface *sur;

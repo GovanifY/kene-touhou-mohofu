@@ -252,7 +252,35 @@ void toggle_fullscreen()
 	// display_vidinfo();
 }
 */
-
+void hit_any_key(void)
+{
+	SceCtrlData cpad;
+	/* —£‚³‚ê‚é‚Ü‚Å‘Ò‚Â */
+	while (1)
+	{
+		sceCtrlReadBufferPositive(&cpad, 1);
+		if (0==cpad.Buttons)
+		{
+			goto l_end1;
+		//	break;
+		}
+	}
+	l_end1:
+	;
+	/* ‰Ÿ‚³‚ê‚é‚Ü‚Å‘Ò‚Â */
+	while (1)
+	{
+		sceCtrlReadBufferPositive(&cpad, 1);
+		/*Any Key*/
+		if (cpad.Buttons & (PSP_CTRL_SQUARE|PSP_CTRL_CROSS|PSP_CTRL_CIRCLE|PSP_CTRL_TRIANGLE) )
+		{
+			goto l_end2;
+		//	break;
+		}
+	}
+	l_end2:
+	;
+}
 void error(int errorlevel, char *msg, ...)
 {
 	char msgbuf[128];
@@ -264,10 +292,20 @@ void error(int errorlevel, char *msg, ...)
 
 	switch (errorlevel)
 	{
-		case ERR_DEBUG: if (debug) { fprintf(stdout,"DEBUG: %s\n",msgbuf); } break;
-		case ERR_INFO: fprintf(stdout,"INFO: %s\n",msgbuf); break;
-		//case ERR_WARN: fprintf(stdout,"WARNING: %s\n",msgbuf); break;
-		case ERR_FATAL: fprintf(stdout,"FATAL: %s\n",msgbuf); break;
+	case ERR_DEBUG: 	if (debug) { fprintf(stdout,"DEBUG: %s\n",msgbuf); } break;
+	case ERR_INFO:		fprintf(stdout,"INFO: %s\n",msgbuf); break;
+	//case ERR_WARN:	fprintf(stdout,"WARNING: %s\n",msgbuf); break;
+	case ERR_FATAL: 	fprintf(stdout,"FATAL: %s\n",msgbuf);
+		pspDebugScreenSetXY(2,5);
+		pspDebugScreenPrintf("FATAL ERROR");
+		hit_any_key();
+		pspDebugScreenInit();/*—v‚é*/
+		pspDebugScreenClear();
+		pspDebugScreenSetXY(0,0);
+		pspDebugScreenPrintf("%s",	msgbuf	);
+		hit_any_key();
+		sceKernelExitGame();
+		break;
 	}
 
 	if (errorlevel==ERR_FATAL) exit(1);
@@ -299,7 +337,7 @@ SDL_Surface *loadbmp0(char *filename, int use_alpha)
 	if ( NULL == s1 )
 	{
 		CHECKPOINT;
-		error(ERR_FATAL,"cant load image %s: %s",fn,SDL_GetError());
+		error(ERR_FATAL,"cant load image %s:\n %s",fn,SDL_GetError());
 	}
 	if (use_alpha)
 	{

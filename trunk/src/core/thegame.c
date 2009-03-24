@@ -270,12 +270,12 @@ void thegame_work(void)
 
 		if (d->bossmode==2) //ボスを倒したときの処理
 		{
-			claer_music();
+			clear_music();
 			if (dbwait==0)		//[***090313		変更
 			{ //TIME_20_DBWAITフレーム待ってから実行。ボスを倒した時に画面に表示されている弾を全て消す処理のために必要。
-				char buffer[10];
-				sprintf(buffer,"stage%d-%d_end",player_now_stage,select_player);
-				if(!script_init(buffer, NULL,380)){		//ファイルがない場合はイベントを飛ばす
+				char buffer1[16/*10*/];
+				sprintf(buffer1,"stage%d-%d_end",player_now_stage,select_player);
+				if(!script_init(buffer1, NULL,380)){		//ファイルがない場合はイベントを飛ばす
 					dbwait=TIME_20_DBWAIT;
 					d->bossmode=0;
 					level_start_time=PSP_GetTicks();
@@ -318,10 +318,10 @@ void thegame_work(void)
 	sprite_display(SP_SHOW_ALL);
 	if(d->bossmode==5)		//[***090313		追加
 	{
-		char buffer[10];
-		sprintf(buffer,"stage%d-%d",player_now_stage,select_player);
+		char buffer2[16/*10*/];
+		sprintf(buffer2,"stage%d-%d",player_now_stage,select_player);
 		setMusicVolume(80);
-		if(!script_init(buffer, NULL,380)){	d->bossmode=1;	}
+		if(!script_init(buffer2, NULL,380)){	d->bossmode=1;	}
 		else{	d->bossmode=3;	}
 	}
 	else if(d->bossmode==3)		//[***090313		追加

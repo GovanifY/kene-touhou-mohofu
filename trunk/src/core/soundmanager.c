@@ -102,6 +102,18 @@ static int res_se[MAX_VOICE_TRACK];
 //	}
 //}
 
+/* ----- それまでの演奏停止 */
+void clear_music(void)
+{
+	if ( BGM_track != NULL )
+	{
+		Mix_HaltMusic();
+		Mix_FreeMusic(BGM_track);
+		BGM_track = NULL;
+	}
+}
+
+
 //void playMusic(char *play_music_file_name)
 void play_music(int num)
 {
@@ -197,15 +209,6 @@ void closeSound(void)
 	Mix_CloseAudio();
 }
 
-void claer_music(void)
-{
-	if ( BGM_track != NULL )
-	{
-		Mix_HaltMusic();
-		Mix_FreeMusic(BGM_track);
-		BGM_track = NULL;
-	}
-}
 
 /* ---------------------------------------- */
 /* --- SE のリクエスト						*/

@@ -17,7 +17,7 @@ void startintro_init(void)
 		SDL_SetColorKey(badblocks,SDL_SRCCOLORKEY,0x00000000);
 	}
 	if (presents==NULL) {
-		presents=font_render("PRESENT",FONT01);
+		presents=font_render("PRESENT",FONT05/*FONT01*/);
 	}
 	if (ketm==NULL) {
 		ketm=loadbmp("ketm.png");

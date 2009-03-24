@@ -1,5 +1,7 @@
+/*
+ƒAƒŠƒX
+*/
 #include "enemy.h"
-
 
 typedef struct _boss01_data
 {
@@ -227,7 +229,7 @@ static void enemy_boss01_fire(int where) /* 0: left, 1: right, 2: bombenhagel */
 			}
 		}
 		if (!(sb01[4]->flags&SP_FLAG_VISIBLE))
-			enemy_n_way_bullet(sb01[1], "kugel.png", 0, 12, 3+difficulty, atan2(player->y+player->h/2-sb01[1]->h/2-sb01[1]->y,player->x-player->w/2-sb01[1]->x));
+			enemy_n_way_bullet(sb01[1], "kugel.png", 0, 12, 3+difficulty, atan2(player->y+((player->h-sb01[1]->h)/2)-sb01[1]->y,player->x-player->w/2-sb01[1]->x));
 		break;
 	}
 }

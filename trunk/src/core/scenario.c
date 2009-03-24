@@ -53,7 +53,7 @@ static int cha_search(char *str)
 }
 
 static SDL_Surface *load_Surface(char *str,int alpha)
-{ 
+{
 	char fn[128];
 	strcpy(fn,moddir);
 	strcat(fn,"/scenario/");
@@ -769,7 +769,7 @@ typedef struct _scenario_script
 		char *c=NULL;					/* 走査中の行の分析用 */
 		int end_arg=0;				/* 引数の取得の中止 */
 		c = buffer_text_1_line;		/* 先頭アドレスを渡すよ */
-		
+
 
 		line_num++;
 
@@ -991,56 +991,56 @@ int thescript()
 					switch(ssc->para3)
 					{
 					case 0:		/* 何もせずに次の命令へ */
-						ssc->done=1;	
-						tmp_all[ssc->chain]=0;	
+						ssc->done=1;
+						tmp_all[ssc->chain]=0;
 						break;
 					case 1:		/* ボタンを押したら次の命令へ、カーソル継続 */
-						if(keyboard[KEY_SHOT] && button_d==0){	
-							ssc->done=1;	
-							tmp_all[ssc->chain]=0;	
-							button_d=10;	
-						}	
+						if(keyboard[KEY_SHOT] && button_d==0){
+							ssc->done=1;
+							tmp_all[ssc->chain]=0;
+							button_d=10;
+						}
 						break;
 					case 2:		/* カーソル初期化 */
-						ssc->done=1;	
-						tmp_all[ssc->chain]=0;	
-						count_char=0;	
+						ssc->done=1;
+						tmp_all[ssc->chain]=0;
+						count_char=0;
 						break;
 					case 3:		/* ボタンを押したら次の命令へ、カーソル初期化 */
-						if(keyboard[KEY_SHOT] && button_d==0){	
-							ssc->done=1;	
-							tmp_all[ssc->chain]=0;	
-							count_char=0;	
-							button_d=10;	
-						}	
+						if(keyboard[KEY_SHOT] && button_d==0){
+							ssc->done=1;
+							tmp_all[ssc->chain]=0;
+							count_char=0;
+							button_d=10;
+						}
 						break;
 					case 4:		/* 何もせずに次の命令へ、ウィンドウ初期化*/
-						ssc->done=1;	
-						tmp_all[ssc->chain]=0;	
-						msg_window_init();	
+						ssc->done=1;
+						tmp_all[ssc->chain]=0;
+						msg_window_init();
 						break;
 					case 5:		/* ボタンを押したら次の命令へ、カーソル継続、ウィンドウ初期化 */
-						if(keyboard[KEY_SHOT] && button_d==0){	
-							ssc->done=1;	
-							tmp_all[ssc->chain]=0;	
-							msg_window_init();	
-							button_d=10;	
-						}	
+						if(keyboard[KEY_SHOT] && button_d==0){
+							ssc->done=1;
+							tmp_all[ssc->chain]=0;
+							msg_window_init();
+							button_d=10;
+						}
 						break;
 					case 6:		/* カーソル初期化、ウィンドウ初期化 */
-						ssc->done=1;	
-						tmp_all[ssc->chain]=0;	
-						count_char=0;	
-						msg_window_init();	
+						ssc->done=1;
+						tmp_all[ssc->chain]=0;
+						count_char=0;
+						msg_window_init();
 						break;
 					case 7:		/* ボタンを押したら次の命令へ、カーソル初期化、ウィンドウ初期化 */
-						if(keyboard[KEY_SHOT] && button_d==0){	
-							ssc->done=1;	
-							tmp_all[ssc->chain]=0;	
-							count_char=0;	
-							msg_window_init();	
-							button_d=10;	
-						}	
+						if(keyboard[KEY_SHOT] && button_d==0){
+							ssc->done=1;
+							tmp_all[ssc->chain]=0;
+							count_char=0;
+							msg_window_init();
+							button_d=10;
+						}
 						break;
 					}
 				}
@@ -1250,7 +1250,7 @@ void story_work()
 		}
 		break;
 	case STORY_FADEOUT2:
-		
+
 		break;
 	case STORY_QUIT:
 		unloadbmp_by_surface(bg_story);

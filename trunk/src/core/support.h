@@ -202,6 +202,6 @@ extern void ini_save(void);	//[***090115
 extern void psp_push_screen(void);
 extern void psp_pop_screen(void);
 
-#define DEBUG_MODE (0)
+#define DEBUG_MODE (1)
 
 #endif

@@ -1,7 +1,7 @@
 
 TARGET = kene
 
-PSP_EBOOT_TITLE = kene_r12_test01
+PSP_EBOOT_TITLE = kene_r17_test01
 PSP_EBOOT_ICON = ICON0.PNG
 PSP_EBOOT_ICON1= ICON0.PMF
 PSP_EBOOT_PIC1 = PIC1.PNG
@@ -90,6 +90,7 @@ OBJS += $(OBJ)/core/enemy/enemy_boss01.o
 OBJS += $(OBJ)/core/enemy/enemy_boss02.o
 OBJS += $(OBJ)/core/enemy/enemy_boss03.o
 OBJS += $(OBJ)/core/enemy/enemy_boss04.o
+OBJS += $(OBJ)/core/enemy/enemy_boss05.o
 
 OBJS += $(OBJ)/core/enemy/enemy_bgpanel.o
 OBJS += $(OBJ)/core/enemy/enemy_bgpanel2.o

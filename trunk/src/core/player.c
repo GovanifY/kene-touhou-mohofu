@@ -529,7 +529,7 @@ static void player_move_shield(SPRITE *s)	//霊夢
 		シールドのx座標＝プレイヤーのx座標＋プレイヤーの横幅の半分＋cos(radian((４０°*x)＋speed*fps))×40－シールドの横幅の半分
 					   ＝プレイヤーの中心座標＋cos(radian((４０°*x)＋speed*fps))×40－シールドの横幅の半分
 	*/
-	s->y=player->y+player->h/2+sin(degtorad(d->angle))*d->rad-s->h/2;		//反時計回り
+	s->y=player->y+sin(degtorad(d->angle))*d->rad+((player->h-s->h)/2);		//反時計回り
 	s->aktframe = (((int)(d->angle))/10)%36;
 
 	weapon_colcheck(s,/*d->angle,*/0,1);
@@ -825,7 +825,7 @@ static void oz_add_fireball(SPRITE *s, int x, int y)	//おぜう	/* [***090220 追加
 	shot->y=y;
 	shot->mover=player_move_fireball;
 	shot->flags|=SP_FLAG_VISIBLE;
-	
+
 	data=mmalloc(sizeof(PL_FIREBALL_DATA));
 	shot->data=data;
 	data->angle=270;
@@ -844,7 +844,7 @@ static void oz_add_fireball2(SPRITE *s, int x, int y, int angle)	//おぜう	/* [**
 	shot->y=y;
 	shot->mover=player_move_fireball;
 	shot->flags|=SP_FLAG_VISIBLE;
-	
+
 	data=mmalloc(sizeof(PL_FIREBALL_DATA));
 	shot->data=data;
 	data->angle=angle;
@@ -1076,7 +1076,7 @@ static void oz_move_option(SPRITE *s)	//おぜう	/* [***090220 追加 */
 			else if(change_d<=0 && !cancel_flag)
 				cancel_flag=1;
 		}
-	
+
 		if (keyboard[KEY_SLOW]){
 			o->slow_count++;
 			if((o->state1==3) && (o->slow_count < o->id*30))
@@ -1101,7 +1101,7 @@ static void oz_move_option(SPRITE *s)	//おぜう	/* [***090220 追加 */
 				o->slow_count=0;
 				o->state2=0;
 			}
-			
+
 			if (keyboard[KEY_CANCEL] && cancel_flag){
 				if(o->id==1)	//id==1によるflag管理
 				{
@@ -1166,7 +1166,7 @@ static void oz_move_option(SPRITE *s)	//おぜう	/* [***090220 追加 */
 				switch(o->state1)
 				{
 				case 0:
-					tmp=player->y+player->h/2+o->offset_y - s->y-s->h/2;	/* tmp : y座標における目標地点と現在地の差 */
+					tmp=player->y+o->offset_y - s->y+((player->h-s->h)/2);	/* tmp : y座標における目標地点と現在地の差 */
 					o->m_angle=atan2(tmp, player->x+player->w/2+o->offset_x - s->x-s->w/2);
 				if(-5 < tmp && tmp < 5 )
 					{
@@ -1181,7 +1181,7 @@ static void oz_move_option(SPRITE *s)	//おぜう	/* [***090220 追加 */
 					}
 					break;
 				case 1:
-					tmp=player->y+player->h/2+sin(o->angle+l_angle)*o->offset_x - s->y-s->h/2;	/* tmp : y座標における目標地点と現在地の差 */
+					tmp=player->y+sin(o->angle+l_angle)*o->offset_x - s->y+((player->h-s->h)/2);	/* tmp : y座標における目標地点と現在地の差 */
 					o->m_angle=atan2(tmp, player->x+player->w/2+cos(o->angle+l_angle)*o->offset_x - s->x-s->w/2);
 					if(-5 < tmp && tmp < 5 )
 					{
@@ -1209,7 +1209,7 @@ static void oz_move_option(SPRITE *s)	//おぜう	/* [***090220 追加 */
 					}
 					break;
 				case 3:
-					tmp=player->y+player->h/2 - s->y-s->h/2;
+					tmp=player->y - s->y+((player->h-s->h)/2);
 					o->m_angle=atan2(tmp, player->x+player->w/2 - s->x-s->w/2);
 					if(-5 < tmp && tmp < 5 )
 					{
@@ -2042,8 +2042,8 @@ static void player_add_levarie(SPRITE *s)	//魔理沙
 			c->alpha=180;
 		}
 		c->type=SP_PL_SHIELD;
-		c->x=s->x+s->w/2-c->w/2;
-		c->y=s->y+s->h/2-c->h/2;
+		c->x=s->x+((s->w-c->w)/2);
+		c->y=s->y+((s->h-c->h)/2);
 		ang += ((M_PI*2)/16) ;	// 22.5度/360, π/8 /*0.39269908169872415481*/
 	}
 }
@@ -2078,7 +2078,7 @@ static void player_add_homing(SPRITE *s)
 	c=sprite_add_file("homing.png",20,PR_PLAYER);
 	c->type=SP_PL_HOMING;
 	c->x=(s->x+s->w/2)-40;
-	c->y=s->y+s->h/2;
+	c->y=(s->y+s->h/2);
 	c->mover=player_move_homing;
 	c->flags|=SP_FLAG_VISIBLE;
 	b=mmalloc(sizeof(PL_HOMING_DATA));
@@ -2101,7 +2101,7 @@ static void player_add_homing(SPRITE *s)
 	c=sprite_add_file("homing.png",20,PR_PLAYER);
 	c->type=SP_PL_HOMING;
 	c->x=(s->x+s->w/2)-10;
-	c->y=s->y+s->h/2;
+	c->y=(s->y+s->h/2);
 	c->mover=player_move_homing;
 	c->flags|=SP_FLAG_VISIBLE;
 	b=mmalloc(sizeof(PL_HOMING_DATA));
@@ -2150,7 +2150,7 @@ static void player_add_hlaser(SPRITE *s)
 			id_array[i]=c->id;
 			c->type=SP_PL_HLASER;
 			c->x=(s->x+s->w/2)-5;
-			c->y=s->y+s->h/2+15;
+			c->y=(s->y+s->h/2)+15;
 			c->flags|=SP_FLAG_VISIBLE;
 			c->aktframe=5-((double)6/hlaser_NUM_OF_ENEMIES)*i;
 			if (i==0) {

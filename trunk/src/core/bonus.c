@@ -28,7 +28,7 @@ static SPRITE *bonus_sel(int x, int y, int type)
 	//x += 20;		/*重なると見にくいので横に20dotずらす*/
 	//if ( WIDTH2 < x ) {	x = ((WIDTH2 - x) & (512-1));	}	/* はみ出たら折り返す、ついでにマスク */
 	x += 16;		/*重なると見にくいので横に20dotずらす*/
-	if ( WIDTH2 < x ) { x = (WIDTH2-256-32)+((x) & (256-1));	}	/* はみ出たら、なんとなく右側の方にする */
+	if ( (WIDTH2-16) < (unsigned int)(x) ) { x = (WIDTH2-256-32)+((x) & (256-1));	}	/* はみ出たら、なんとなく右側の方にする */
 	#endif
 	//	#if 0
 	//	if (/*s->*/x < /*WIDTH2-20*/480/*480*/) x += 20;
@@ -88,7 +88,7 @@ void bonus_move(SPRITE *s)
 	if (!d->pl_up)
 	{
 		if (d->sum<3)		//[***090123.0220		変更5=>4=>3
-			d->sum+=d->gra;
+		{	d->sum+=d->gra;}
 		s->y+=d->sum*fps_factor;
 		if (s->y>HEIGHT) s->type=-1; // denis 480
 	}
@@ -117,12 +117,13 @@ void bonus_info_add(int x, int y, char *filename)
 	c->mover	= bonus_info_move;
 }
 
+/* 取ったアイテムの種類を説明表示 */
 void bonus_info_move(SPRITE *c)
 {
 	if (c->alpha>=3*fps_factor)
 	{
 		c->alpha-=3*fps_factor;
-		c->y-=fps_factor;
+		c->y -= fps_factor; /* 上に移動(ketmと同じ) */
 	}
 	else
 	{
@@ -173,11 +174,13 @@ void bonus_info_any_score(SPRITE *src/*int x, int y*/, int score_num)
 	sprintf(buffer,"%d0", score_num );
 	bonus_info_s_text(src/*int x, int y*/, buffer, FONT07);
 }
+/* 取った得点を小さな漢字で説明表示 */
 void bonus_infotext_move(SPRITE *c)
 {
 	BIT_DATA *b=(BIT_DATA *)c->data;
 //	SDL_Surface *s;
-	c->y		+= fps_factor*2;
+	/* c->y		+= fps_factor*2;  下に移動(ketm)移動速度速すぎ */
+	c->y		-= fps_factor;    /* 上に移動 */
 	b->distance -= fps_factor*3;
 	c->alpha	= b->distance;
 	if (b->distance <= 0)

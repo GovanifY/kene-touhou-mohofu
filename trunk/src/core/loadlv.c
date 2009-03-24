@@ -57,7 +57,7 @@ static void load_stage_serror(char *load_filename, int error_line_number)
 }
 
 /* Do set the entry. */
-static void load_stage_add_entry(Uint32 time10, char command, char *para1, int para2)		//オブジェクトの生成
+static void load_stage_add_entry(Uint32 time10, char command, char *para1, int para0, int para2)		//オブジェクトの生成
 {
 	LEVELENTRY *new_entry;
 
@@ -66,6 +66,7 @@ static void load_stage_add_entry(Uint32 time10, char command, char *para1, int p
 	new_entry->time 	= (time10*100*1000);/* 読み込み後、PSPに都合の良い値に変換(1/10[sec]-> 1/1000000[sec]==1[nsec]==nano seconds ) */
 	new_entry->command	= command;
 	strncpy(new_entry->para1, para1, (MAX_PARA1_44-1)/*63*/);
+	new_entry->para0	= para0;
 	new_entry->para2	= para2;
 	new_entry->done 	= 0;
 //
@@ -100,8 +101,8 @@ static void load_stage_add_entry(Uint32 time10, char command, char *para1, int p
 	case 'B':		/* Background */
 		break;
 	case 'P':
-		new_entry->para0 = new_entry->para2/1000;
-		new_entry->para2 = new_entry->para2%1000;
+	//	new_entry->para0 = new_entry->para2/1000;
+	//	new_entry->para2 = new_entry->para2%1000;
 		break;
 	default:	// add background tiles....
 		{
@@ -125,10 +126,10 @@ static void load_stage_add_entry(Uint32 time10, char command, char *para1, int p
 			#endif
 			new_entry->para3 = speed256;
 		}
-		const short xxx = new_entry->para2/1000;
-		const short yyy = new_entry->para2%1000;
-		new_entry->para0 = xxx;
-		new_entry->para2 = yyy;
+	//	const short xxx = new_entry->para2/1000;
+	//	const short yyy = new_entry->para2%1000;
+	//	new_entry->para0 = xxx;
+	//	new_entry->para2 = yyy;
 			 if (!strcmp(new_entry->para1,"BGPANEL2"))	{	new_entry->command=BTYPE_02_BGPANEL2;	}
 		else if (!strcmp(new_entry->para1,"BGPANEL"))	{	new_entry->command=BTYPE_01_BGPANEL1;	}
 		else if (!strcmp(new_entry->para1,"GROUNDER"))	{	new_entry->command=BTYPE_03_GROUNDER;			}
@@ -162,7 +163,8 @@ void loadlv(void/*int level*/)		/* 元々int */
 	load_stage_free_entry();
 //
 	char filename[128];
-	sprintf(filename,"%s/dat/level%02d.dat", moddir, level);
+//	sprintf(filename,"%s/dat/level%02d.dat", moddir, level);
+	sprintf(filename,"%s/dat/stage%01d.txt", moddir, level);
 	FILE *file;
 	if ((file=fopen(filename,"r"))==NULL)
 	{
@@ -177,6 +179,7 @@ void loadlv(void/*int level*/)		/* 元々int */
 	int time10; 			/* 実行コマンドの出てくるタイミングの取得 */
 	char char_command;		/* 敵なのかメッセージなのか */
 	char para1[128];
+	int para0;
 	int para2;
 	char *c;				/* 走査中の行の分析用 */
 		line_num++;
@@ -194,9 +197,11 @@ void loadlv(void/*int level*/)		/* 元々int */
 		if (*c++ != '|')								{	load_stage_serror(filename, line_num);	continue;	}	/* load '|' */
 		if ((c = load_stage_get_str(c, para1))==NULL)	{	load_stage_serror(filename, line_num);	continue;	}	/* load str para1 */
 		if (*c++ != '|')								{	load_stage_serror(filename, line_num);	continue;	}	/* load '|' */
+		if ((c = load_stage_get_int(c, &para0))==NULL)	{	load_stage_serror(filename, line_num);	continue;	}	/* load int para0 */
+		if (*c++ != '|')								{	load_stage_serror(filename, line_num);	continue;	}	/* load '|' */
 		if ((c = load_stage_get_int(c, &para2))==NULL)	{	load_stage_serror(filename, line_num);	continue;	}	/* load int para2 */
 		/* do set register entry. */
-		load_stage_add_entry(time10, char_command, para1, para2);
+		load_stage_add_entry(time10, char_command, para1, para0, para2);
 		entrys++;
 	}
 	fclose(file);
