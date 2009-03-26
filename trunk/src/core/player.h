@@ -51,6 +51,8 @@ typedef struct
 	SPRITE *core;
 	SPRITE *enemy;			//[***090125		’Ç‰Á:player‚É“–‚½‚Á‚½•¨
 	SPRITE *boss;			//[***090305		’Ç‰Á
+	void (*callback_boss_hitbyweapon)(SPRITE *c, SPRITE *s);		//[***090325		’Ç‰Á
+	void (*callback_boss_hitbyplayer)(SPRITE *c);					//[***090325		’Ç‰Á
 } PLAYER_DATA;
 
 enum _weapon_type

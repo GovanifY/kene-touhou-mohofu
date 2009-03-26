@@ -52,7 +52,7 @@ typedef struct
 	int strength;/*union WEAPON_BASE*/
 	int angle;
 	double speed;
-	double dist;
+	double distance; 	/*距離(distance)*/
 } PL_KILLRAY_DATA;
 
 typedef struct
@@ -70,7 +70,7 @@ typedef struct
 	double angle;
 	double range;
 	double speed;
-	SPRITE *tgsprite;
+	SPRITE *tg_sprite;
 	int target_id;
 } PL_HOMING_DATA;
 
@@ -78,7 +78,7 @@ typedef struct
 {
 	int strength;/*union WEAPON_BASE*/	/* [***090214 追加 */
 	double angle;
-	int rad;
+	int radius; 	/*半径(radius)*/
 	double speed;
 } PL_SHIELD_DATA;
 
@@ -244,7 +244,7 @@ static void weapon_colcheck(SPRITE *s, /*int angle,*/ int destroy, int check_bul
 			/* Gegner von Homing-Missile getroffen? */
 			/* Paranoia-Flag und Target-Fadenkreuz entfernen */
 			h=(PL_HOMING_DATA *)s->data;
-			h->tgsprite->type=-1;
+			h->tg_sprite->type=-1;
 		}
 
 		/* wenn flag destroy gesetzt ist, wird der Schuss vernichtet */
@@ -257,15 +257,26 @@ static void weapon_colcheck(SPRITE *s, /*int angle,*/ int destroy, int check_bul
 
 		switch (c->type) {
 			//ボスに当たったのがシールドだった場合はダメージ処理を行わない
+			#if 0
 			case SP_EN_BOSS01:	if (s->type!=SP_PL_SHIELD)	{	enemy_boss01_hitbyweapon(c,s/*,angle*/);	}	break;
 			case SP_EN_BOSS02:	if (s->type!=SP_PL_SHIELD)	{	enemy_boss02_hitbyweapon(c,s/*,angle*/);	}	break;
 			case SP_EN_BOSS03:	if (s->type!=SP_PL_SHIELD)	{	enemy_boss03_hitbyweapon(c,s/*,angle*/);	}	break;
 			case SP_EN_BOSS04:	if (s->type!=SP_PL_SHIELD)	{	enemy_boss04_hitbyweapon(c,s/*,angle*/);	}	break;	//[***090127		追加
+			#else
+			case SP_EN_BOSS:	if (s->type!=SP_PL_SHIELD)	{	(((PLAYER_DATA *)player->data)->callback_boss_hitbyweapon)(c,s/*,angle*/);	}	break;
+			#endif
 			case SP_EN_GFAIRY:	if (s->type!=SP_PL_SHIELD)	{	enemy_nonshield_hitbyweapon(c,s/*,angle*/); 	}	break;
 
 			default:
 				d=(ENEMY_BASE *)c->data;
-				d->health-=b->strength;
+				/* にとりバグわからんので、なさそうな値の場合やらない */
+				if (0<b->strength)	/* 正値で */
+				{
+					if (20>b->strength)	/* ２０未満の場合 */
+					{
+						d->health -= b->strength;	/* 強さ分引く */
+					}
+				}
 				//spimg=sprite_getcurrimg(c);
 				if (d->health>0) {
 				//	playChunk(2);
@@ -324,7 +335,7 @@ static void weapon_colcheck(SPRITE *s, /*int angle,*/ int destroy, int check_bul
 
 
 
-static void player_move_fireball(SPRITE *s) //霊夢、魔理沙
+static void player_move_fireball(SPRITE *s) //霊夢、魔理沙、おぜう
 {
 	PL_FIREBALL_DATA *p=(PL_FIREBALL_DATA *)s->data;
 	s->x+=cos(degtorad(p->angle))*p->speed*fps_factor;
@@ -337,7 +348,7 @@ static void player_move_fireball(SPRITE *s) //霊夢、魔理沙
 	}
 }
 
-static void player_move_plasma(SPRITE *s)	//霊夢
+static void player_move_plasma(SPRITE *s)	//霊夢、魔理沙、おぜう
 {
 	PL_PLASMA_DATA *p=(PL_PLASMA_DATA *)s->data;
 	s->x+=cos(degtorad(p->angle))*p->speed*fps_factor;
@@ -352,16 +363,16 @@ static void player_move_plasma(SPRITE *s)	//霊夢
 
 
 #if (1==USE_PLAYER_WAVE)
-static void player_move_killray(SPRITE *s)
+static void player_move_killray(SPRITE *s)		//使わない
 {
 	PL_KILLRAY_DATA *p=(PL_KILLRAY_DATA *)s->data;
 
 	s->x+=cos(degtorad(p->angle))*p->speed*fps_factor;
 	s->y+=sin(degtorad(p->angle))*p->speed*fps_factor;
-	p->dist+=p->speed*fps_factor;
+	p->distance+=p->speed*fps_factor;
 
-	if ((p->dist>20)&&(s->aktframe<11)) {
-		p->dist=0;
+	if ((p->distance>20)&&(s->aktframe<11)) {
+		p->distance=0;
 		s->aktframe++;
 	}
 
@@ -374,6 +385,7 @@ static void player_move_killray(SPRITE *s)
 #endif //(1==USE_PLAYER_WAVE)
 
 #if (1==USE_PLAYER_BOMBER)
+/* ここは将来スペカになる予定 */
 static void player_move_bomb(SPRITE *s)
 {
 	static int k=5;
@@ -413,7 +425,7 @@ static void player_move_homing(SPRITE *s)
 {
 	PL_HOMING_DATA *b=(PL_HOMING_DATA *)s->data;
 	int ta;
-	SPRITE *tg=(SPRITE *)b->tgsprite; /* Target-Fadenkreuz */
+	SPRITE *tg=(SPRITE *)b->tg_sprite; /* Target-Fadenkreuz */
 	SPRITE *target=NULL;	/* Target */
 
 	switch (b->state)
@@ -516,20 +528,20 @@ static void player_move_shield(SPRITE *s)	//霊夢
 	d->angle+=(d->speed*fps_factor);
 	if (d->angle>360)
 	{	d->angle-=360;}
-	s->x=player->x+cos(degtorad(d->angle))*d->rad+((player->w-s->w)/2);
 	/*
 		s->x		シールドのx座標
 		player->x	プレイヤーのx座標
 		player->w/2 プレイヤーの横幅の半分
 		cos(degtorad(d->angle)) 	angleの角度をπに直したあとcos。この場合は40°の倍数＋１０*fpsのcos。
-		d->rad		40
+		d->radius	円の半径40
 		s->w/2		シールドの横幅の半分
 		プレイヤーのx座標＋プレイヤーの横幅の半分＝プレイヤーの中心座標
 		なので
 		シールドのx座標＝プレイヤーのx座標＋プレイヤーの横幅の半分＋cos(radian((４０°*x)＋speed*fps))×40－シールドの横幅の半分
 					   ＝プレイヤーの中心座標＋cos(radian((４０°*x)＋speed*fps))×40－シールドの横幅の半分
 	*/
-	s->y=player->y+sin(degtorad(d->angle))*d->rad+((player->h-s->h)/2);		//反時計回り
+	s->x=player->x+cos(degtorad(d->angle))*d->radius+((player->w-s->w)/2);
+	s->y=player->y+sin(degtorad(d->angle))*d->radius+((player->h-s->h)/2);		//反時計回り
 	s->aktframe = (((int)(d->angle))/10)%36;
 
 	weapon_colcheck(s,/*d->angle,*/0,1);
@@ -546,8 +558,8 @@ static void player_move_shield2(SPRITE *s)	//霊夢
 	d->angle+=(d->speed*fps_factor);
 	if (d->angle>360)
 	{	d->angle-=360;}
-	s->x=player->x+cos(degtorad(d->angle))*d->rad+((player->w-s->w)/2);
-	s->y=player->y-sin(degtorad(d->angle))*d->rad+((player->h-s->h)/2);		//時計回り
+	s->x=player->x+cos(degtorad(d->angle))*d->radius+((player->w-s->w)/2);
+	s->y=player->y-sin(degtorad(d->angle))*d->radius+((player->h-s->h)/2);		//時計回り
 	s->aktframe=(((int)(d->angle))/10)%36;
 
 	weapon_colcheck(s,/*d->angle,*/0,1);
@@ -742,7 +754,7 @@ static void player_move_hlaser(SPRITE *s)
 }
 
 //#define hlaser_NUM_OF_ENEMIES (24)
-#define hlaser_NUM_OF_ENEMIES (12)		//[***090128		半分にしてみる
+#define hlaser_NUM_OF_ENEMIES (12)		/* [***090128		半分にしてみる */
 static void player_controller_hlaser(CONTROLLER *c)
 {
 	int *id_array=c->e;
@@ -1933,7 +1945,7 @@ static void player_add_killray(SPRITE *player)		//使わない
 	shot->data=data;
 	data->angle=270;
 	data->speed=25;
-	data->dist=0;
+	data->distance=0;
 	data->strength=6;
 }
 #endif //(1==USE_PLAYER_WAVE)
@@ -1967,38 +1979,33 @@ static void player_add_shield(SPRITE *s)		//シールドの追加	//霊夢
 	SPRITE *c;
 	PL_SHIELD_DATA *d;
 	PLAYER_DATA *sd=(PLAYER_DATA *)s->data;
-	int i;
+	int ii;//	int i;	/* 半象限ずつ */
 	sd->bonus=0x02;
-	for (i=0;i<=359;i+=45)
+	for (ii=0;ii<(8);ii++)//	for (i=0;i<360/*i<=359*/;i+=45)
 	{
-		if (i%90 == 0)
+		if ( (ii&1) == 0)//	if (i%90 == 0)
 		{
 			c=sprite_add_file2("cshoot1.png",36,PR_PLAYER);
-			c->flags|=SP_FLAG_VISIBLE;
 			d=mmalloc(sizeof(PL_SHIELD_DATA));
 			c->data=d;
 			c->mover=player_move_shield;
-			d->angle=i;
 			d->speed=23;
-			d->rad=48;	//d->rad=38;
-			c->type=SP_PL_SHIELD;
-			c->x=player->x+cos(degtorad(i))*d->rad+((player->w-s->w)/2);
-			c->y=player->y-sin(degtorad(i))*d->rad+((player->h-s->h)/2);		//時計回り
+			d->radius=48;	//d->radius=38;
 		}
 		else		//1つだと不安なので2つ作った。
 		{
 			c=sprite_add_file2("cshoot2.png",36,PR_PLAYER);
-			c->flags|=SP_FLAG_VISIBLE;
 			d=mmalloc(sizeof(PL_SHIELD_DATA));
 			c->data=d;
 			c->mover=player_move_shield2;
-			d->angle=i;
 			d->speed=17;
-			d->rad=45;	//d->rad=35;
-			c->type=SP_PL_SHIELD;
-			c->x=player->x+cos(degtorad(i))*d->rad+((player->w-s->w)/2);
-			c->y=player->y-sin(degtorad(i))*d->rad+((player->h-s->h)/2);		//時計回り
+			d->radius=45;	//d->radius=35;
 		}
+		c->flags|=SP_FLAG_VISIBLE;
+		c->type=SP_PL_SHIELD;
+		d->angle=(ii*45)/*i*/;
+		c->x=player->x+cos(degtorad((ii*45)/*i*/))*d->radius+((player->w-s->w)/2);
+		c->y=player->y-sin(degtorad((ii*45)/*i*/))*d->radius+((player->h-s->h)/2);		//時計回り
 		d->strength=5;/* [***090214 追加 */
 	}
 }
@@ -2091,7 +2098,7 @@ static void player_add_homing(SPRITE *s)
 	b->state=0;
 	b->target_id=-1;
 	t=sprite_add_file("target.png",1,PR_TARGET);
-	b->tgsprite=t;
+	b->tg_sprite=t;
 	t->type=SP_ETC;
 	t->flags&=~(SP_FLAG_COLCHECK|SP_FLAG_VISIBLE);
 	t->mover=NULL;
@@ -2114,7 +2121,7 @@ static void player_add_homing(SPRITE *s)
 	b->state=0;
 	b->target_id=-1;
 	t=sprite_add_file("target.png",1,PR_TARGET);
-	b->tgsprite=t;
+	b->tg_sprite=t;
 	t->type=SP_ETC;
 	t->flags&=~(SP_FLAG_COLCHECK|SP_FLAG_VISIBLE);
 	t->mover=NULL;
@@ -2620,12 +2627,14 @@ static void player_colcheck(SPRITE *s, int mask)
 			}
 			c->type=-1;
 			break;
-
+		#if 0
 		case SP_EN_BOSS01:		enemy_boss01_hitbyplayer(c);	break;
 		case SP_EN_BOSS02:		enemy_boss02_hitbyplayer(c);	break;
 		case SP_EN_BOSS03:		enemy_boss03_hitbyplayer(c);	break;
 		case SP_EN_BOSS04:		enemy_boss04_hitbyplayer(c);	break;
-
+		#else
+		case SP_EN_BOSS:		(((PLAYER_DATA *)player->data)->callback_boss_hitbyplayer)(c);	break;
+		#endif
 		case SP_EN_BULLET:
 			is_graze=1;
 //			int i;

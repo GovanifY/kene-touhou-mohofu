@@ -416,18 +416,32 @@ void sprite_work(int type)
 		}
 		s=n;
 	}
-	if (ST_MENU != state.mainstate) { /* メニュー以外の場合、自動的に消える機能 */
+	/* メニュー以外の場合、自動的に消える機能 */
+	if (ST_MENU != state.mainstate)
+	{
 		s=sprite;
-		while (s!=NULL) {
+		while (s!=NULL)
+		{
 			n=s->next;
 			s->ticks++;
-			if (s->ticks>1000) {
+			if (s->ticks>1000)
+			{
 				s->ticks=0;
-				if ((s->priority==PR_ENEMY || s->priority== PR_ENEMY_WEAPON) && s->type!=SP_EN_BOSS01 && s->type!=SP_EN_BOSS02 && s->type!=SP_EN_BOSS03 && s->type!=SP_EN_BOSS04 && s->type!=SP_MENUTEXT)
-					s->type=-1;
+				if ((s->priority==PR_ENEMY || s->priority== PR_ENEMY_WEAPON) && /* 敵か敵の武器の場合で */
+					#if 0
+					s->type!=SP_EN_BOSS01 && 	/* 各ボス以外で */
+					s->type!=SP_EN_BOSS02 &&
+					s->type!=SP_EN_BOSS03 &&
+					s->type!=SP_EN_BOSS04 &&
+					#else
+					s->type!=SP_EN_BOSS &&		/* 各ボス以外で */
+					#endif
+					s->type!=SP_MENUTEXT)		/* メニュー以外の場合、 */
+				{	s->type=-1;	}	/* 自動消去にする。 */
 			}
-			if (s->type==-1) {
-				sprite_remove(s);
+			if (s->type==-1) 	/* 消去？ */
+			{
+				sprite_remove(s);	/* 消す */
 			}
 			s=n;
 		}

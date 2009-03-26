@@ -24,7 +24,7 @@ static SPRITE *sb01[6];
 	プレイヤーはプレイヤー側処理で死ぬとして、
 	その場合のボス側の特殊処理。
  boss wurde von player ber??rt */
-void enemy_boss01_hitbyplayer(SPRITE *c)
+static void callback_enemy_boss01_hitbyplayer(SPRITE *c)
 {
 }
 
@@ -33,7 +33,7 @@ void enemy_boss01_hitbyplayer(SPRITE *c)
 [3][4][5]
 */
 /* boss wurde von player-weapon ber??rt */
-void enemy_boss01_hitbyweapon(SPRITE *c, SPRITE *s/*, int angle*/)
+static void callback_enemy_boss01_hitbyweapon(SPRITE *c, SPRITE *s/*, int angle*/)
 {
 	/*
 		c = boss sprite
@@ -357,7 +357,7 @@ void enemy_boss01_add(int lv)
 		sb01[i]->flags|=(SP_FLAG_VISIBLE|SP_FLAG_COLCHECK);
 		sb01[i]->anim_speed=0;
 		sb01[i]->aktframe=0;
-		sb01[i]->type=SP_EN_BOSS01;
+		sb01[i]->type=SP_EN_BOSS/*SP_EN_BOSS01*/;
 		b=mmalloc(sizeof(BOSS01_DATA));
 		sb01[i]->data=b;
 		if (i==0)		{	b->b.health=400;	}	//[***090114		変更(+50)
@@ -379,4 +379,7 @@ void enemy_boss01_add(int lv)
 	}
 	//((PLAYER_DATA *)player->data)->bossmode=1;
 	((PLAYER_DATA *)player->data)->boss=sb01[1];
+	/* コールバック登録 */
+	((PLAYER_DATA *)player->data)->callback_boss_hitbyweapon=callback_enemy_boss01_hitbyweapon;
+	((PLAYER_DATA *)player->data)->callback_boss_hitbyplayer=callback_enemy_boss01_hitbyplayer;
 }

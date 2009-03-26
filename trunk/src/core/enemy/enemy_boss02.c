@@ -43,11 +43,11 @@ typedef struct
 } BOSS02_ICE_DATA;
 
 
-void enemy_boss02_hitbyplayer(SPRITE *c)
+static void callback_enemy_boss02_hitbyplayer(SPRITE *c)
 {
 }
 
-void enemy_boss02_hitbyweapon(SPRITE *c, SPRITE *s/*, int angle*/)
+static void callback_enemy_boss02_hitbyweapon(SPRITE *c, SPRITE *s/*, int angle*/)
 {
 	BOSS02_DATA *b=(BOSS02_DATA *)c->data;
 	SPRITE *d=c;
@@ -666,7 +666,7 @@ void enemy_boss02_add(int lv)
 	s=sprite_add_file("boss02_v2.png",9,PR_ENEMY);	s->anim_speed=0;
 	s->flags|=SP_FLAG_VISIBLE|SP_FLAG_COLCHECK;
 	s->aktframe=4;
-	s->type=SP_EN_BOSS02;
+	s->type=SP_EN_BOSS/*SP_EN_BOSS02*/;
 	b=mmalloc(sizeof(BOSS02_DATA));
 	s->data=b;
 	b->b.health=3071;
@@ -685,4 +685,7 @@ void enemy_boss02_add(int lv)
 
 	((PLAYER_DATA *)player->data)->bossmode=1;
 	((PLAYER_DATA *)player->data)->boss=s;
+	/* コールバック登録 */
+	((PLAYER_DATA *)player->data)->callback_boss_hitbyweapon=callback_enemy_boss02_hitbyweapon;
+	((PLAYER_DATA *)player->data)->callback_boss_hitbyplayer=callback_enemy_boss02_hitbyplayer;
 }

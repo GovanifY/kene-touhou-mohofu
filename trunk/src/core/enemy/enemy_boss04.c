@@ -38,7 +38,7 @@ typedef struct
 	double angle;
 	double angle2;
 	double speed;
-	int id;
+//	int id;
 	double gra;
 	double sum;
 	int timer;
@@ -48,7 +48,7 @@ typedef struct
 typedef struct
 {
 	BOSS04_MAHO_DATA *sd;
-	int id;
+//	int id;
 	int state;
 	double angle;
 	double gra;
@@ -58,11 +58,11 @@ typedef struct
 
 
 
-void enemy_boss04_hitbyplayer(SPRITE *c)
+static void callback_enemy_boss04_hitbyplayer(SPRITE *c)
 {
 }
 
-void enemy_boss04_hitbyweapon(SPRITE *c, SPRITE *s/*, int angle*/)
+static void callback_enemy_boss04_hitbyweapon(SPRITE *c, SPRITE *s/*, int angle*/)
 {
 	/*
 		c		ボス本体
@@ -164,7 +164,7 @@ static void enemy_sp1_bullet_create(SPRITE *s, double speed, double angle, doubl
 	data->angle2=0;
 	data->sd=(BOSS04_DATA *)s->data;
 	data->speed=speed;
-	data->id=rand()%1000;
+//	data->id=rand()%1000;
 	data->speed=speed;
 	data->gra=gra;
 	data->sum=0;
@@ -215,7 +215,7 @@ static void enemy_sp2_bullet_create(SPRITE *s, int angle, double gra)
 
 	data=mmalloc(sizeof(BULLET_SP2_DATA));
 	h->data=data;
-	data->id=rand()%1000;
+//	data->id=rand()%1000;
 	data->sd=(BOSS04_MAHO_DATA *)s->data;
 	data->state=0;
 	data->angle=degtorad(angle);
@@ -1314,7 +1314,7 @@ void enemy_boss04_add(int lv)
 	s=sprite_add_file("boss04.png",19,PR_ENEMY);	s->anim_speed=0;
 	s->flags|=SP_FLAG_VISIBLE|SP_FLAG_COLCHECK;
 	s->aktframe=4;
-	s->type=SP_EN_BOSS04;
+	s->type=SP_EN_BOSS/*SP_EN_BOSS04*/;
 	b=mmalloc(sizeof(BOSS04_DATA));
 	s->data=b;
 	if(select_player!=2){b->b.health=5119;}
@@ -1335,4 +1335,7 @@ void enemy_boss04_add(int lv)
 
 	((PLAYER_DATA *)player->data)->boss=s;
 	((PLAYER_DATA *)player->data)->bossmode=1;
+	/* コールバック登録 */
+	((PLAYER_DATA *)player->data)->callback_boss_hitbyweapon=callback_enemy_boss04_hitbyweapon;
+	((PLAYER_DATA *)player->data)->callback_boss_hitbyplayer=callback_enemy_boss04_hitbyplayer;
 }

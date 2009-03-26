@@ -6,8 +6,30 @@
 #include <math.h>
 
 /* Sprites */
-#define MAX_SPRITE 200
+//#define MAX_SPRITE 200
 
+#if 1
+/*Old r14*/
+enum _priority
+{
+	PR_BACK0 = 0,
+	PR_GROUNDER,
+	PR_BACK1,
+	PR_BACK2,
+	PR_ENEMY,
+	PR_ENEMY_WEAPON,
+	PR_TARGET,
+	PR_BONUS,
+	PR_PLAYER,
+	PR_PLAYER2,
+	PR_TMP,
+	PR_TEXT,
+	PR_FRONT0,
+	PR_FRONT1,
+	PR_FRONT2
+};
+#else
+/*New r17*/
 enum _priority
 {
 	PR_BACK0 = 0,
@@ -26,6 +48,7 @@ enum _priority
 	PR_FRONT1,
 	PR_FRONT2
 };
+#endif
 
 #define SP_SHOW_PLAYER			0x0100
 #define SP_SHOW_PLAYER_WEAPONS	0x0200
@@ -70,11 +93,14 @@ enum SPRITE_TYPE
 	SP_EN_SPLASH,
 	SP_EN_FAIRY,
 	SP_EN_GFAIRY,
+	#if 0
 	SP_EN_BOSS01,
 	SP_EN_BOSS02,
 	SP_EN_BOSS03,
 	SP_EN_BOSS04,
-
+	#else
+	SP_EN_BOSS,	//[***090325
+	#endif
 	SP_EN_BULLET		= /*0x0800*/SP_SHOW_ENEMY_WEAPONS,		/* ... und ihre Waffen */
 	SP_EN_LASER,
 	SP_EN_BIGBULLET,
@@ -129,7 +155,7 @@ typedef struct _sprite
 #define SP_FLAG_VISIBLE 	0x02	/* Sprite sichtbar */
 #define SP_FLAG_NOCACHE 	0x04	/* Image nicht im Cache */
 #define SP_FLAG_FREESURFACE 0x08	/* Surface loeschen */
-#define SP_FLAG_GRAZE 		0x10	/* グレイズ済みかとうかのフラグ SP_FLAG_CHEAPALPHA */
+#define SP_FLAG_GRAZE		0x10	/* グレイズ済みかとうかのフラグ */
 //#define SP_FLAG_CHEAPALPHA	0x10	/* "Cheapalpha", nur jedes 2te Pixel setzen */
 #define SP_FLAG_PARANOIA	0x20	/* SIE sind hinter mir her */
 

@@ -17,12 +17,12 @@ static SPRITE *sb03[6];
 
 
 /* boss wurde von player ber??rt */
-void enemy_boss03_hitbyplayer(SPRITE *c)
+static void callback_enemy_boss03_hitbyplayer(SPRITE *c)
 {
 }
 
 /* boss wurde von player-weapon ber??rt */
-void enemy_boss03_hitbyweapon(SPRITE *c, SPRITE *s/*, int angle*/)
+static void callback_enemy_boss03_hitbyweapon(SPRITE *c, SPRITE *s/*, int angle*/)
 {
 	int i,j;
 	BOSS03_DATA *b;
@@ -293,7 +293,7 @@ void enemy_boss03_add(int lv)
 		sb03[i]->flags|=(SP_FLAG_VISIBLE|SP_FLAG_COLCHECK);
 		sb03[i]->anim_speed=0;
 		sb03[i]->aktframe=0;
-		sb03[i]->type=SP_EN_BOSS03;
+		sb03[i]->type=SP_EN_BOSS/*SP_EN_BOSS03*/;
 		b=mmalloc(sizeof(BOSS03_DATA));
 		sb03[i]->data=b;
 		if (lv==0)		//[***090114		追加
@@ -321,8 +321,9 @@ void enemy_boss03_add(int lv)
 			sb03[i]->mover=enemy_boss03_move;
 		}
 	}
-
-
 	((PLAYER_DATA *)player->data)->boss=sb03[1];
 	((PLAYER_DATA *)player->data)->bossmode=1;
+	/* コールバック登録 */
+	((PLAYER_DATA *)player->data)->callback_boss_hitbyweapon=callback_enemy_boss03_hitbyweapon;
+	((PLAYER_DATA *)player->data)->callback_boss_hitbyplayer=callback_enemy_boss03_hitbyplayer;
 }

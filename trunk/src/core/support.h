@@ -84,6 +84,10 @@
 #define deg_360_to_512(x) ((int)((x)*(512.0/360.0)))
 #define deg_512_to_360(x) ((int)((x)*(360.0/512.0)))
 
+/* ‚Pü‚ª360“x‚Ì’PˆÊŒn(deg360)‚ğ‚Pü‚ª1024“x‚Ì’PˆÊŒn(deg1024)‚Ö•ÏŠ·B‹y‚Ñ‹t•ÏŠ·B */
+#define deg_360_to_1024(x) ((int)((x)*(1024.0/360.0)))
+#define deg_1024_to_360(x) ((int)((x)*(360.0/1024.0)))
+
 /* ”š‚ğƒXƒRƒA‚É•ÏŠ·B‹y‚Ñ‹t•ÏŠ·B */
 #define score(x)   ((int)(((int)x)/10))
 #define score_r(x) ((int)(((int)x)*10))

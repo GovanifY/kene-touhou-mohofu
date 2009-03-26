@@ -284,16 +284,16 @@ void enemy_nonshield_hitbyweapon(SPRITE *c, SPRITE *s/*, int angle*/);
 
 /* ボスで宣言が必要なもの(グローバル) */
 
-extern void enemy_boss01_hitbyplayer(SPRITE *c);
-extern void enemy_boss01_hitbyweapon(SPRITE *c, SPRITE *s/*, int angle*/);
-extern void enemy_boss02_hitbyplayer(SPRITE *c);
-extern void enemy_boss02_hitbyweapon(SPRITE *c, SPRITE *s/*, int angle*/);
-extern void enemy_boss03_hitbyplayer(SPRITE *c);
-extern void enemy_boss03_hitbyweapon(SPRITE *c, SPRITE *s/*, int angle*/);
-extern void enemy_boss04_hitbyplayer(SPRITE *c);
-extern void enemy_boss04_hitbyweapon(SPRITE *c, SPRITE *s/*, int angle*/);
-extern void enemy_boss05_hitbyplayer(SPRITE *c);
-extern void enemy_boss05_hitbyweapon(SPRITE *c, SPRITE *s/*, int angle*/);
+//static void callback_enemy_boss01_hitbyplayer(SPRITE *c);
+//static void callback_enemy_boss02_hitbyplayer(SPRITE *c);
+//static void callback_enemy_boss03_hitbyplayer(SPRITE *c);
+//static void callback_enemy_boss04_hitbyplayer(SPRITE *c);
+//static void callback_enemy_boss05_hitbyplayer(SPRITE *c);
+//static void callback_enemy_boss01_hitbyweapon(SPRITE *c, SPRITE *s/*, int angle*/);
+//static void callback_enemy_boss02_hitbyweapon(SPRITE *c, SPRITE *s/*, int angle*/);
+//static void callback_enemy_boss03_hitbyweapon(SPRITE *c, SPRITE *s/*, int angle*/);
+//static void callback_enemy_boss04_hitbyweapon(SPRITE *c, SPRITE *s/*, int angle*/);
+//static void callback_enemy_boss05_hitbyweapon(SPRITE *c, SPRITE *s/*, int angle*/);
 
 void enemy_n_way_bullet(SPRITE *s, char *filename, int frame, int n, double speed, double angle);
 
