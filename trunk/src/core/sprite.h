@@ -225,10 +225,10 @@ enum SPRITE_TYPE
 	SP_EN_BOSS, //[***090325
 	#endif
 	SP_EN_BULLET		= /*0x0800*/SP_SHOW_ENEMY_WEAPONS,		/* ... und ihre Waffen */
-	SP_EN_LASER,
-	SP_EN_BIGBULLET,
+//	SP_EN_LASER,
+//	SP_EN_BOSS02ICE,
+//	SP_EN_BIGBULLET,
 	SP_EN_BIGBULLET_DUMMY,
-	SP_EN_BOSS02ICE,
 //
 	SP_BONUS_00_FIREPOWER	= /*0x1000*/SP_SHOW_BONUS,	/* Bonusitems */
 	SP_BONUS_01_FIREPOWER_G,	//←ウェポンアイテム(中)	//ウェポンアイテム(強)→SP_BONUS_EXTRA_SHIELD,
@@ -242,6 +242,10 @@ enum SPRITE_TYPE
 	SP_MENUTEXT 		= /*0x2000*/SP_SHOW_MENUTEXT,
 	SP_ETC				= /*0x4000*/SP_SHOW_ETC,		/* diverses */
 };
+#define SP_EN_LASER     SP_EN_BULLET
+#define SP_EN_BOSS02ICE SP_EN_BULLET
+#define SP_EN_BIGBULLET SP_EN_BULLET
+
 
 typedef struct _colmap_cache
 {

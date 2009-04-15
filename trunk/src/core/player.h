@@ -13,7 +13,7 @@ enum _select_pl 		//[***090203		追加
 {
 	REIMU=0,
 	MARISA,
-	REMIRIA,
+	REMILIA,
 	CIRNO,
 	YUYUKO,
 };
@@ -65,33 +65,42 @@ enum _select_pl 		//[***090203		追加
 #endif
 
 /*なし*/
-#define BONUS_FLAG_00_NONE				0x00
-/*???*/
-#define BONUS_FLAG_01_aaaa				0x01
-/*自動アイテム収集*/
-#define BONUS_FLAG_02_AUTO_GET_ITEM 	0x02
+#define BONUS_FLAG_00_NONE							0x00
+/* [上部自動収集] MAX時にプレイヤー上部収集で自動アイテム収集 */
+#define BONUS_FLAG_01_PLAYER_UP_AUTO_GET_ITEM		0x01
+/* [ボムによる自動収集] ボム発動で自動アイテム収集 */
+#define BONUS_FLAG_02_BOMB_AUTO_GET_ITEM			0x02
+/* [スコア自動収集] ボス倒し後に自動点数収集(★アイテム用) */
+#define BONUS_FLAG_03_SCORE_AUTO_GET_ITEM			0x04
 
+
+
+#define BONUS_FLAG_07_IS_GRAZE						0x40
+#define BONUS_FLAG_08_OPTION_HIDE					0x80
+
+
+//#define BONUS_FLAG_0123_AUTO_GET_ITEM (BONUS_FLAG_01_PLAYER_UP_AUTO_GET_ITEM|BONUS_FLAG_02_BOMB_AUTO_GET_ITEM|BONUS_FLAG_03_SCORE_AUTO_GET_ITEM)
 
 typedef struct
 {
-	int lives;
-	int bombs;
-	int graze;
-	int score;
+	int lives;		/* 残りチャンス */
+	int bombs;		/* ボム数 */
+	int graze;		/* グレイズ得点 */
+	int score;		/* スコア得点 */
 //	int now_stage/*level*/;
 	int bossmode;
 	int state;
 //	int explode;// ←必ず0なので意味なかった。なんかの機能の残りだっけ？？？
-	double save_delay;
-	double anim_delay;
-	int weapon;					/*  0x00-0x7f  (0-127 の128段階==本家と同じ)   max==127==「128段階」*/
+	/*double*/int save_delay;
+//	/*double*/int an im_delay;	廃止
+	int weapon; 				/*	0x00-0x7f  (0-127 の128段階==本家と同じ)   max==127==「128段階」*/
 	int player_speed;
 //	int player_speed_minimum;	/*各プレイヤーごとの固定値なので削除*/
 //	int player_speed_maximum;	/*各プレイヤーごとの固定値なので削除*/
 	int extra_type;
-	int bonus_flag;				/* 1でボーナスアイテムが自分に集まる。0で厚真あらない(通常時) */	//[***090116		追加
+	int bonus_flag; 		/* ボーナスアイテムが自分に集まる状態の設定フラグ */	//[***090116		追加
 	int hit_bomb_wait;		//[***090125		追加
-	int option;
+//	int option_flag;		//	int bonus_flag;ボーナスフラグに吸収
 //	double extra_interval;/*武器使用間隔の共通時間は廃止(各武器で間隔は管理)*/
 	/*double*/int bomber_time;
 //	double weapon_interval;
@@ -102,16 +111,6 @@ typedef struct
 	void (*callback_boss_hitbyplayer)(SPRITE *c);					//[***090325		追加
 } PLAYER_DATA;
 
-enum _weapon_type
-{
-	WP_SINGLE=0,
-	WP_DOUBLE,
-	WP_TRIPLE,
-	WP_QUAD,
-	WP_FIFTH,
-//	WP_WAVE,
-	WP_MAX		/* 最大数 */
-};
 
 enum _player_extras
 {

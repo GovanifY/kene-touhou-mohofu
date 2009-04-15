@@ -82,8 +82,8 @@ static void callback_enemy_boss04_hitbyweapon(SPRITE *c, SPRITE *s/*, int angle*
 	{
 		playChunk(7);
 		((PLAYER_DATA *)player->data)->bossmode=B04_CHANGE;
-		bonus_multi_add(c, SP_BONUS_06_COIN,        5, BONUS_FLAG_COLLECT);
-		bonus_multi_add(c, SP_BONUS_00_FIREPOWER,   5, BONUS_FLAG_RAND_XY);
+		bonus_multi_add(c, SP_BONUS_06_COIN,		5, BONUS_FLAG_COLLECT);
+		bonus_multi_add(c, SP_BONUS_00_FIREPOWER,	5, BONUS_FLAG_RAND_XY);
 		bonus_multi_add(c, SP_BONUS_01_FIREPOWER_G, 1, BONUS_FLAG_RAND_XY);
 		s->aktframe 	=4;
 		b->state1++;
@@ -445,7 +445,7 @@ static void enemy_boss04_maho_move(SPRITE *s)
 			d->state01=7;
 			d->angle512=atan_512(217-s->y-s->h/2, 248-s->x-s->w/2);/*星型線2*/
 			d->wait=50;
-			d->nnn++;	if (d->nnn>(/*4-0*/3/*difficulty*/) ){d->nnn=1/*0*/;}
+			d->nnn++;	if (d->nnn>(/*4-0*/3/*difficulty*/) )	{d->nnn=1/*0*/;}
 			d->mmm++;	d->mmm &= 1;
 			d->state02=0x0;
 			if (2==d->nnn/*%(4-difficulty)*/)/* %2 == (5-3:Lunatic) */
@@ -604,7 +604,8 @@ static void enemy_boss04_maho_move(SPRITE *s)
 		d->state01=20;
 		break;
 	case 20:
-		if (d->wait<0){
+		if (d->wait<0)
+		{
 			d->state01=6;
 			d->state02=0x0;
 		}
@@ -615,7 +616,7 @@ static void enemy_boss04_maho_move(SPRITE *s)
 	}
 	if (d->c->type==-1)
 	{	s->type=SP_DELETE;}
-	#if 1/*魔方陣デバッグ用*/
+	#if 0/*魔方陣デバッグ用*/
 	/* パネルのスコア欄にstate01を、グレイズ欄にstate02を表示させる。っていうか書き換えちゃう。 */
 	((PLAYER_DATA *)player->data)->score=d->state01;
 	((PLAYER_DATA *)player->data)->graze=d->state02;
@@ -655,6 +656,58 @@ static void enemy_bullet_create_lines(SPRITE *s)
 	enemy_bullet_create(s, 2);
 	enemy_bullet_create(s, 3.5);
 }
+#define SAKUYA_LIMIT_MIN_Y (8)
+#define SAKUYA_LIMIT_MAX_Y (GAME_HEIGHT-32)
+
+/* 咲夜さんの誘導ポイント座標 */
+
+#define SAKUYA_POINT_X_LEFT 	(0						)
+#define SAKUYA_POINT_X_MID		(GAME_WIDTH/2/*-s->w/2*/)
+#define SAKUYA_POINT_X_RIGHT	(GAME_WIDTH  /*-s->w  */)
+#define SAKUYA_POINT_X_MARGIN	(16)
+
+#define SAKUYA_POINT_Y_LEFT 	(50)
+#define SAKUYA_POINT_Y_MID		(10)
+#define SAKUYA_POINT_Y_RIGHT	(50)
+#define SAKUYA_POINT_Y_CENTER	(50)
+#define SAKUYA_POINT_Y_MARGIN	(16)
+
+#define SAKUYA_LIMIT_X_LEFT 		(SAKUYA_POINT_X_LEFT +SAKUYA_POINT_X_MARGIN)
+#define SAKUYA_LIMIT_X_MID_LEFT 	(SAKUYA_POINT_X_MID  +SAKUYA_POINT_X_MARGIN)
+#define SAKUYA_LIMIT_X_MID_RIGHT	(SAKUYA_POINT_X_MID  -SAKUYA_POINT_X_MARGIN)
+#define SAKUYA_LIMIT_X_RIGHT		(SAKUYA_POINT_X_RIGHT-SAKUYA_POINT_X_MARGIN)
+
+#define atan_512_SAKUYA_LEFT	atan_512( (SAKUYA_POINT_Y_LEFT) 	-s->y, (SAKUYA_POINT_X_LEFT) -s->x)
+#define atan_512_SAKUYA_MID 	atan_512( (SAKUYA_POINT_Y_MID)		-s->y, (SAKUYA_POINT_X_MID)  -s->x)
+#define atan_512_SAKUYA_RIGHT	atan_512( (SAKUYA_POINT_Y_RIGHT)	-s->y, (SAKUYA_POINT_X_RIGHT)-s->x)
+#define atan_512_SAKUYA_CENTER	atan_512( (SAKUYA_POINT_Y_CENTER)	-s->y, (SAKUYA_POINT_X_MID)  -s->x)
+
+
+/* 咲夜さんの誘導ポイント名称 */
+enum
+{
+	SAKUYA_POINT_00_LEFT=0, 	/*左下*/
+	SAKUYA_POINT_01_MID_UP, 	/*中上*/
+//	SAKUYA_POINT_02_CENTER, 	/*画面中心*/
+	SAKUYA_POINT_03_RIGHT,		/*右下*/
+};
+
+
+static void move_sakuya(SPRITE *s, int speed, int target_point_name)
+{
+	int b_move_angle512;
+	switch (target_point_name)
+	{
+	case SAKUYA_POINT_00_LEFT:		b_move_angle512 =atan_512_SAKUYA_LEFT;/*50*/		break;
+	case SAKUYA_POINT_01_MID_UP:	b_move_angle512 =atan_512_SAKUYA_MID;				break;
+//	case SAKUYA_POINT_02_CENTER:	b_move_angle512 =atan_512_SAKUYA_CENTER;		break;
+	case SAKUYA_POINT_03_RIGHT: 	b_move_angle512 =atan_512_SAKUYA_RIGHT;/**/ 	break;
+	}
+	s->x+=co_s512((b_move_angle512))*((double)speed)*fps_factor;
+	s->y+=si_n512((b_move_angle512))*((double)speed)*fps_factor;
+		 if (s->y < (SAKUYA_LIMIT_MIN_Y) )	{	s->y++; 	}/* はみ出したら修正 */
+	else if (s->y > (SAKUYA_LIMIT_MAX_Y) )	{	s->y--; 	}/* はみ出したら修正 */
+}
 
 static void enemy_boss04_move(SPRITE *s)
 {
@@ -683,7 +736,7 @@ static void enemy_boss04_move(SPRITE *s)
 				/* プレイヤー弾受け付け、コールバックを登録 */
 				((PLAYER_DATA *)player->data)->callback_boss_hitbyweapon=callback_enemy_boss04_hitbyweapon;
 
-				/* vs REMIRIA */
+				/* vs REMILIA */
 				if (2==select_player)
 				{b->enemy_base.health=1;}
 
@@ -701,18 +754,22 @@ static void enemy_boss04_move(SPRITE *s)
 		case 1: 	/* 左 */
 			//if (pd->bossmode==B01_BATTLE)
 			{
-				if (s->x>=50){
+				if (s->x>=50)
+				{
 					s->y+=fps_factor;
 					s->x-=fps_factor*3;
-					if (s->aktframe>0) {
+					if (s->aktframe>0)
+					{
 						b->wait3+=fps_factor;
-						if (b->wait3>=5) {
+						if (b->wait3>=5)
+						{
 							s->aktframe--;
 							b->wait3=0;
 						}
 					}
 				}
-				else{	//xが50以下になったら
+				else	//xが50以下になったら
+				{
 					b->state2=2;
 					b->wait1=50;
 					enemy_bullet_create_lines(s);
@@ -728,15 +785,18 @@ static void enemy_boss04_move(SPRITE *s)
 			{
 				s->y-=fps_factor;
 				s->x+=fps_factor*3;
-				if (s->aktframe<8) {
+				if (s->aktframe<8)
+				{
 					b->wait3+=fps_factor;
-					if (b->wait3>=5) {
+					if (b->wait3>=5)
+					{
 						s->aktframe++;
 						b->wait3=0;
 					}
 				}
 			}
-			else{	//真ん中まで来たら
+			else	//真ん中まで来たら
+			{
 				b->state2=4;
 				enemy_bullet_create_lines(s);
 			}
@@ -747,7 +807,8 @@ static void enemy_boss04_move(SPRITE *s)
 				s->y+=fps_factor;
 				s->x+=fps_factor*3;
 			}
-			else{
+			else
+			{
 				b->state2=5;
 				b->wait1=50;
 				enemy_bullet_create_lines(s);
@@ -758,18 +819,22 @@ static void enemy_boss04_move(SPRITE *s)
 			enemy_boss04_waitstate(s, 6, 4);
 			break;
 		case 6:
-			if (s->y>20){
+			if (s->y>20)
+			{
 				s->y-=fps_factor;
 				s->x-=fps_factor*3;
-				if (s->aktframe>0) {
+				if (s->aktframe>0)
+				{
 					b->wait3+=fps_factor;
-					if (b->wait3>=5) {
+					if (b->wait3>=5)
+					{
 						s->aktframe--;
 						b->wait3=0;
 					}
 				}
 			}
-			else{	/* 真ん中に戻る */
+			else	/* 真ん中に戻る */
+			{
 				b->state2=1;
 				enemy_bullet_create_lines(s);
 			}
@@ -782,11 +847,14 @@ static void enemy_boss04_move(SPRITE *s)
 		switch (b->state2)
 		{
 		case 0:
-			if (b->wait1<0){
+			if (b->wait1<0)
+			{
 				b->state2=1;
 				pd->bossmode=B01_BATTLE;
 				b->wait2=0;
-			}else{
+			}
+			else
+			{
 				b->wait1-=fps_factor;
 			}
 			break;
@@ -812,11 +880,14 @@ static void enemy_boss04_move(SPRITE *s)
 			b->wait2++;
 			break;
 		case 2:
-			if (b->wait1<0){
+			if (b->wait1<0)
+			{
 				b->wait1=35;
 				b->state2=3;
 				s->aktframe=4;
-			}else{
+			}
+			else
+			{
 				s->x+=co_s512((b->move_angle512))*fps_factor;
 				s->y+=si_n512((b->move_angle512))*fps_factor;
 				b->wait1-=fps_factor;
@@ -873,7 +944,7 @@ static void enemy_boss04_move(SPRITE *s)
 			}
 			break;
 		case 5:
-			if (s->x>GAME_WIDTH/2)
+			if (s->x > GAME_WIDTH/2)
 			{	b->move_angle512=-rad2deg512(M_PI*3/4);}
 			else
 			{	b->move_angle512=-rad2deg512(M_PI/4);}
@@ -885,7 +956,8 @@ static void enemy_boss04_move(SPRITE *s)
 			b->wait1=5;
 			break;
 		case 6:
-			if (b->wait1<0){
+			if (b->wait1<0)
+			{
 				b->wait1=10;
 				b->state2=7;
 			}
@@ -900,9 +972,11 @@ static void enemy_boss04_move(SPRITE *s)
 			}
 			break;
 		case 7:
-			if (s->aktframe>15) {
+			if (s->aktframe>15)
+			{
 				b->wait3+=fps_factor;
-				if (b->wait3>=3) {
+				if (b->wait3>=3)
+				{
 					s->aktframe--;
 					b->wait3=0;
 				}
@@ -958,8 +1032,8 @@ static void enemy_boss04_move(SPRITE *s)
 		enemy_boss04_out(s);
 		break;
 	//
+
 	case 2: 	//第三形態:ナイフが落ちてくるよ
-		#define SAKUYA_LIMIT_Y (GAME_HEIGHT-32)
 		switch (b->state2)
 		{
 		case 0:
@@ -967,7 +1041,6 @@ static void enemy_boss04_move(SPRITE *s)
 			{
 				b->state2			=1;
 				pd->bossmode		=B01_BATTLE;
-				b->move_angle512	=atan_512(-s->y,-s->x);
 				s->aktframe 		=4;
 			}
 			else
@@ -976,20 +1049,16 @@ static void enemy_boss04_move(SPRITE *s)
 			}
 			break;
 		case 1:
-			if (s->x<5) 	//左隅に来たら		/* → || (s->y<5)があると無限ループになる*/
+			if (s->x < (SAKUYA_LIMIT_X_LEFT)/*5*/ ) 	//左隅に来たら		/* → || (s->y<5)があると無限ループになる*/
 			{
 				b->state2=2;
 				b->wait1=10;
 				b->wait2=0;
-				b->move_angle512=atan_512(50-s->y,GAME_WIDTH-s->w-s->x);
 				s->aktframe=0;
 			}
 			else
 			{
-				s->x+=co_s512((b->move_angle512))*3*fps_factor;
-				s->y+=si_n512((b->move_angle512))*3*fps_factor;
-					 if (s->y < 0)					{	s->y = 0;						}/* はみ出したら修正 */
-				else if (s->y > (SAKUYA_LIMIT_Y) )	{	s->y = (SAKUYA_LIMIT_Y);		}/* はみ出したら修正 */
+				move_sakuya(s, 3, SAKUYA_POINT_00_LEFT);
 				if (s->aktframe>0)
 				{
 					b->wait3+=fps_factor;
@@ -1005,10 +1074,9 @@ static void enemy_boss04_move(SPRITE *s)
 			enemy_boss04_waitstate(s, 3, 2);
 			break;
 		case 3:
-			if (s->x > GAME_WIDTH-s->w+3)	//右端に来たら
+			if (s->x > (SAKUYA_LIMIT_X_RIGHT)/*GAME_WIDTH-s->w+3*/ )	//右端に来たら
 			{
 				b->state2=4;
-				b->move_angle512=atan_512(50-s->y,GAME_WIDTH/2-s->w/2-s->x);
 				b->wait2=0;
 				s->aktframe=8;
 			}
@@ -1016,28 +1084,26 @@ static void enemy_boss04_move(SPRITE *s)
 			{
 				{	const short sss[4]=
 					{
-						t256(1.2),/*まばらなので簡単*/
-						t256(1.5),/*塊なので大きく避ければ簡単*/
-						t256(2.0),/*たまに難しい時がある*/
-						t256(6.5) /*うへぇこのスキマくぐるんですかぁ？*/
+						t256(1.2),/*easy:まばらなので簡単*/
+						t256(0.5/*1.0*/ /*1.5*/),/*normal:塊なので大きく避ければ簡単*/
+						t256(1.0/*2.0*/),/*hard:たまに難しい時がある*/
+						t256(18.5/*6.5*/ /*12.5*/ /*8.5*/) /*luna:うへぇこのスキマくぐるんですかぁ？*/
+						/*(luna:ボムらなくても気合避けでなんとかなる程度に難易度抑えたいのだがまだ高すぎるな)*/
 					};
 					b->wait2+=/*4*256*/sss[difficulty]/*(3*256*1.42)*/;
 				}
 				if (0==(((int)b->wait2)&(16-1)/*%21(15*256*1.42)*/))
 				{
-					enemy_fall_knife_create(s, 2, (deg_360_to_512(360)-((((int)(b->wait2))>>8)&(256-1)/*%(180*1.42)*/)), t256(0.03));
+					enemy_fall_knife_create(s, /*(0.7)*/(2)/*(2)*/, (deg_360_to_512(360)-((((int)(b->wait2))>>8)&(256-1)/*%(180*1.42)*/)), t256(0.03));
 					//if (difficulty)
 					{
-						enemy_fall_knife_create(s, 2, (deg_360_to_512(270)-((((int)(b->wait2))>>8)&(256-1)/*%(180*1.42)*/)), t256(0.04));
+						enemy_fall_knife_create(s, /*(0.7)*/(2)/*(2)*/, (deg_360_to_512(270)-((((int)(b->wait2))>>8)&(256-1)/*%(180*1.42)*/)), t256(0.04));
 					//	if (difficulty>1)
-						{	enemy_fall_knife_create(s, 2, (deg_360_to_512(180)-((((int)(b->wait2))>>8)&(256-1)/*%(180*1.42)*/)), t256(0.02));}
+						{	enemy_fall_knife_create(s, /*(0.7)*/(2)/*(2)*/, (deg_360_to_512(180)-((((int)(b->wait2))>>8)&(256-1)/*%(180*1.42)*/)), t256(0.02));}
 					}
 					playChunk(12);
 				}
-				s->x+=co_s512((b->move_angle512))*5*fps_factor;
-				s->y+=si_n512((b->move_angle512))*5*fps_factor;
-					 if (s->y < 0)					{	s->y = 0;						}/* はみ出したら修正 */
-				else if (s->y > (SAKUYA_LIMIT_Y) )	{	s->y = (SAKUYA_LIMIT_Y);		}/* はみ出したら修正 */
+				move_sakuya(s, 5, SAKUYA_POINT_03_RIGHT);
 				if (s->aktframe<8)
 				{
 					b->wait3+=fps_factor;
@@ -1050,18 +1116,16 @@ static void enemy_boss04_move(SPRITE *s)
 			}
 			break;
 		case 4:
-			if (s->x<GAME_WIDTH/2-s->w/2)		//真ん中に来たら
+		//	if (( s->x < (SAKUYA_LIMIT_X_MID)/*GAME_WIDTH/2-s->w/2*/ )) 	//真ん中に来たら
+			if (( s->x < (SAKUYA_LIMIT_X_MID_LEFT)) &&
+				( s->x > (SAKUYA_LIMIT_X_MID_RIGHT)))		//真ん中に来たら
 			{
 				b->state2=5;
-				b->move_angle512=atan_512(-s->y,GAME_WIDTH-s->w-s->x);
 				s->aktframe=4;
 			}
 			else
 			{
-				s->x+=co_s512((b->move_angle512))*3*fps_factor;
-				s->y+=si_n512((b->move_angle512))*3*fps_factor;
-					 if (s->y < 0)					{	s->y = 0;						}/* はみ出したら修正 */
-				else if (s->y > (SAKUYA_LIMIT_Y) )	{	s->y = (SAKUYA_LIMIT_Y);		}/* はみ出したら修正 */
+				move_sakuya(s, 3, SAKUYA_POINT_01_MID_UP);
 				if (s->aktframe>4)
 				{
 					b->wait3+=fps_factor;
@@ -1074,20 +1138,16 @@ static void enemy_boss04_move(SPRITE *s)
 			}
 			break;
 		case 5:
-			if (s->x>GAME_WIDTH-s->w-3) 	//右端に来たら	/* → || (s->y<5)があると無限ループになる */
+			if (s->x > (SAKUYA_LIMIT_X_RIGHT)/*GAME_WIDTH-s->w-3*/ )	//右端に来たら	/* → || (s->y<5)があると無限ループになる */
 			{
 				b->state2=6;
 				b->wait1=10;
 				b->wait2=0;
-				b->move_angle512=atan_512(50-s->y,-s->x);
 				s->aktframe=8;
 			}
 			else
 			{
-				s->x+=co_s512((b->move_angle512))*3*fps_factor;
-				s->y+=si_n512((b->move_angle512))*3*fps_factor;
-					 if (s->y < 0)					{	s->y = 0;						}/* はみ出したら修正 */
-				else if (s->y > (SAKUYA_LIMIT_Y) )	{	s->y = (SAKUYA_LIMIT_Y);		}/* はみ出したら修正 */
+				move_sakuya(s, 3, SAKUYA_POINT_03_RIGHT);
 				if (s->aktframe<8)
 				{
 					b->wait3+=fps_factor;
@@ -1100,10 +1160,9 @@ static void enemy_boss04_move(SPRITE *s)
 			}
 			break;
 		case 6:
-			if (s->x<5) 	//左端に来たら
+			if (s->x < (SAKUYA_LIMIT_X_LEFT)/*5*/)	//左端に来たら
 			{
 				b->state2=7;
-				b->move_angle512=atan_512(50-s->y,GAME_WIDTH/2-s->w/2-s->x);
 				b->wait2=0;
 				s->aktframe=0;
 			}
@@ -1112,19 +1171,16 @@ static void enemy_boss04_move(SPRITE *s)
 				b->wait2+=4/*(3*1.42)*/;
 				if (0==(((int)b->wait2)&(16-1))/*%(12*1.42)*/)
 				{
-					enemy_fall_knife_create(s, 3, ((((int)b->wait2)&(256-1)/*%(180*1.42)*/)+deg_360_to_512(180)), t256(0.03));
+					enemy_fall_knife_create(s, (3), ((((int)b->wait2)&(256-1)/*%(180*1.42)*/)+deg_360_to_512(180)), t256(0.03));
 					if (difficulty)
 					{
-						enemy_fall_knife_create(s, 3, ((((int)b->wait2)&(256-1)/*%(180*1.42)*/)+deg_360_to_512(90)), t256(0.04));
+						enemy_fall_knife_create(s, (3), ((((int)b->wait2)&(256-1)/*%(180*1.42)*/)+deg_360_to_512(90)), t256(0.04));
 						if (difficulty>1)
-						{	enemy_fall_knife_create(s, 3, ((((int)b->wait2)&(256-1)/*%(180*1.42)*/)), t256(0.02));}
+						{	enemy_fall_knife_create(s, (3), ((((int)b->wait2)&(256-1)/*%(180*1.42)*/)), t256(0.02));}
 					}
 					playChunk(12);
 				}
-				s->x+=co_s512((b->move_angle512))*5*fps_factor;
-				s->y+=si_n512((b->move_angle512))*5*fps_factor;
-					 if (s->y < 0)					{	s->y = 0;						}/* はみ出したら修正 */
-				else if (s->y > (SAKUYA_LIMIT_Y) )	{	s->y = (SAKUYA_LIMIT_Y);		}/* はみ出したら修正 */
+				move_sakuya(s, 5, SAKUYA_POINT_00_LEFT);
 				if (s->aktframe>0)
 				{
 					b->wait3+=fps_factor;
@@ -1137,19 +1193,17 @@ static void enemy_boss04_move(SPRITE *s)
 			}
 			break;
 		case 7:
-			if (s->x>GAME_WIDTH/2-s->w/2)		//真ん中に来たら
+		//	if (( s->x > (SAKUYA_LIMIT_X_MID)/*(GAME_WIDTH/2-s->w/2)*/ ))	//真ん中に来たら
+			if (( s->x < (SAKUYA_LIMIT_X_MID_LEFT)) &&
+				( s->x > (SAKUYA_LIMIT_X_MID_RIGHT)))		//真ん中に来たら
 			{
 				b->state2=8;
-				b->move_angle512=atan_512(50-s->y,GAME_WIDTH/2-s->w/2-s->x);
 				b->wait2=60;
 				s->aktframe=4;
 			}
 			else
 			{
-				s->x+=co_s512((b->move_angle512))*3*fps_factor;
-				s->y+=si_n512((b->move_angle512))*3*fps_factor;
-					 if (s->y < 0)					{	s->y = 0;						}/* はみ出したら修正 */
-				else if (s->y > (SAKUYA_LIMIT_Y) )	{	s->y = (SAKUYA_LIMIT_Y);		}/* はみ出したら修正 */
+				move_sakuya(s, 3, SAKUYA_POINT_01_MID_UP);
 				if (s->aktframe<4)
 				{
 					b->wait3+=fps_factor;
@@ -1170,6 +1224,7 @@ static void enemy_boss04_move(SPRITE *s)
 			}
 			else
 			{
+//				b->move_angle512=atan_512_SAKUYA_MID;
 				if ((int)b->wait2%20==0)
 				{
 					int b_wait2_high;
@@ -1204,7 +1259,6 @@ static void enemy_boss04_move(SPRITE *s)
 			{
 				b->state2=1;
 				pd->bossmode=B01_BATTLE;
-				b->move_angle512=atan_512(50-s->y,GAME_WIDTH/2-s->w-s->x);
 				b->sp_time+=1000;
 				s->aktframe=15;
 			}
@@ -1214,7 +1268,10 @@ static void enemy_boss04_move(SPRITE *s)
 			}
 			break;
 		case 1:
-			if (s->y>50 && (s->x<GAME_WIDTH/2+30 || s->x>GAME_WIDTH/2-30))		//真ん中に来たら
+		//	if ( ( s->y > 50) && (s->x<GAME_WIDTH/2+30 || s->x>GAME_WIDTH/2-30))		//真ん中に来たら
+			if (( s->y > (SAKUYA_POINT_Y_CENTER-SAKUYA_POINT_Y_MARGIN) ) &&
+				( s->x < (SAKUYA_LIMIT_X_MID_LEFT)) &&
+				( s->x > (SAKUYA_LIMIT_X_MID_RIGHT)))		//真ん中に来たら
 			{
 				b->state2=2;
 				b->wait1=10;
@@ -1223,6 +1280,7 @@ static void enemy_boss04_move(SPRITE *s)
 			}
 			else
 			{
+				b->move_angle512=atan_512_SAKUYA_CENTER/*atan_512(50-s->y,GAME_WIDTH/2-s->w-s->x)*/;
 				s->x+=co_s512((b->move_angle512))*3*fps_factor;
 				s->y+=si_n512((b->move_angle512))*3*fps_factor;
 				if (s->aktframe<18)
@@ -1512,13 +1570,13 @@ static void enemy_boss04_move(SPRITE *s)
 	if ((b->sp_time<0) && (b->state1<4))
 	{
 		playChunk(7);
-		bonus_multi_add(s, SP_BONUS_00_FIREPOWER,   5, BONUS_FLAG_RAND_XY);
+		bonus_multi_add(s, SP_BONUS_00_FIREPOWER,	5, BONUS_FLAG_RAND_XY);
 		bonus_multi_add(s, SP_BONUS_01_FIREPOWER_G, 1, BONUS_FLAG_RAND_XY);
 		pd->bossmode		= B04_CHANGE;
 		b->enemy_base.health		= (4-b->state1)*1024-1;
 
 //レミリア戦の開始イベントが見れなくなっちゃうのでここは無効
-//				/* vs REMIRIA */
+//				/* vs REMILIA */
 //				if (2==select_player)
 //				{b->enemy_base.health=1;}
 
@@ -1555,7 +1613,7 @@ void enemy_boss04_add(int lv)
 	b->enemy_base.health=((5*1024)-1);		/*5119==((5*1024)-1)*/
 
 //レミリア戦の開始イベントが見れなくなっちゃうのでここは無効
-//				/* vs REMIRIA */
+//				/* vs REMILIA */
 //				if (2==select_player){b->enemy_base.health=1;}
 
 	b->enemy_base.score 	= score(5000)+score(4000)*difficulty;

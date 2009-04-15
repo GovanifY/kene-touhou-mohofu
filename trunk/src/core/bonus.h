@@ -24,18 +24,19 @@ enum
 #define BONUS_FLAG_RAND_XY		(BONUS_FLAG_RAND_X|BONUS_FLAG_RAND_Y)
 
 
+//static void bonus_move(SPRITE *src);
+//static void bonus_info_move(SPRITE *src);
+//static void bonus_infotext_move(SPRITE *src);
+
 //void bonus_add(SPRITE *src/*int x, int y*/, int type, int num, int up_flags);/*îpé~*/
 void bonus_multi_add(SPRITE *src/*int x, int y*/, int type, int num, int up_flags);
-void bonus_move(SPRITE *s);
 
-void bonus_info_add(int x, int y, char *filename);
-void bonus_info_move(SPRITE *c);
+void bonus_info_add(SPRITE *src/*int x, int y*/, int info_type/*char *filename*/);
 
 //extern void bonus_info_text(int x, int y, char *text, int font);/*îpé~*/
 //static void bonus_info_s_text(SPRITE *src/*int x, int y*/, char *text, int font);
 extern void bonus_info_score(SPRITE *src/*int x, int y*/, int score_type);
 extern void bonus_info_any_score(SPRITE *src/*int x, int y*/, int score_num);
 
-void bonus_infotext_move(SPRITE *c);
 
 #endif
