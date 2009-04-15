@@ -16,9 +16,9 @@ enum _menu_states
 	MENU_START=0,	/*intro.c*/
 	MENU_PAUSE, 	/*thegame.c*/
 	MENU_OPTION,
-	#if (1==DEBUG_MODE)
+	//#if (1==DEBUG_MODE)
 	MENU_STAGE_SELECT,
-	#endif
+	//#endif
 	MENU_VOLUME,
 	MENU_DIFF
 };
@@ -26,13 +26,13 @@ enum _menu_states
 typedef struct
 {
 	SPRITE *opts[20][5];	//項目、アニメーション(残像)レイヤー
-	SDL_Surface *opts_surface[20];
+	SDL_Surface *opts_surface[20];		//画像化した各項目のアドレス???
 //	SDL_Surface *bg;
 	int active_item;
 	int select_finish;
-	int nopt;
+	int nopt;			//オプションの項目数を数えてる???
 	int alpha;
-	int alphadir;
+	int alphadir;		//各項目のα値の状態。フェードin or out or done???
 	int fadeout;
 	int timeout;
 } MENU;

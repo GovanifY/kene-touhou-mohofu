@@ -14,6 +14,9 @@ extern double fps_factor;
 
 typedef struct
 {
+#if 1
+	ENEMY_BASE b;		//[***090410		???追加???
+#endif
 	int state;
 	double speed;
 	double destx;
@@ -23,6 +26,9 @@ typedef struct
 
 typedef struct
 {
+#if 1
+	ENEMY_BASE b;		//[***090410		???追加???
+#endif
 	int state;
 	double wait;
 } GAMEIMG_DATA;
@@ -56,7 +62,7 @@ static void enemy_gametext_mover(SPRITE *s)
 		{	g->state=3;}
 		break;
 	case 3:
-		s->type=-1;
+		s->type=SP_DELETE;
 		break;
 	}
 }
@@ -91,7 +97,7 @@ static void enemy_gameimg_mover(SPRITE *s)
 		}
 		break;
 	case 3:
-		s->type=-1;
+		s->type=SP_DELETE;
 		break;
 	}
 }
@@ -100,31 +106,32 @@ static void enemy_gameimg_mover(SPRITE *s)
 void enemy_gametext_add(char *text, int ypos)
 {
 	SDL_Surface *sur;
+	sur 			= font_render(text,FONT04);
 	SPRITE *s;
-	GAMETEXT_DATA *g;
-
-	sur=font_render(text,FONT04);
-	s=sprite_add(sur,1,PR_BONUS,1);
-	s->flags|=SP_FLAG_FREESURFACE|SP_FLAG_VISIBLE;
-	s->type=SP_ETC;
-	s->x=WIDTH2;		//ウィンドウ幅の変更
-	s->y=ypos;
-	s->mover=enemy_gametext_mover;
-	g=mmalloc(sizeof(GAMETEXT_DATA));
-	s->data=g;
-	g->destx=(WIDTH2/2)-sur->w/2;		//ウィンドウ幅の変更
-	g->desty=ypos;
-	g->speed=5;
-	g->wait=0;
-	g->state=0;
+	s				= sprite_add(sur,1,PR_BONUS,1);
+	s->flags		|=SP_FLAG_FREESURFACE|SP_FLAG_VISIBLE;
+	s->type 		= SP_ETC;
+	s->x			= GAME_WIDTH;		//ウィンドウ幅の変更
+	s->y			= ypos;
+	s->mover		= enemy_gametext_mover;
+	GAMETEXT_DATA *data;
+	data			= mmalloc(sizeof(GAMETEXT_DATA));
+	s->data 		= data;
+#if 1
+	data->b.score	= score(200*2); 		//[***090410		???追加???
+	data->b.health	= 25+(difficulty<<2);	//[***090410		???追加???
+#endif
+	data->destx 	= (GAME_WIDTH/2)-sur->w/2;		//ウィンドウ幅の変更
+	data->desty 	= ypos;
+	data->speed 	= 5;
+	data->wait		= 0;
+	data->state 	= 0;
 }
 
 void enemy_gameimg_add(char *filename,int xpos, int ypos)
 {
-	SPRITE *s;
 	SDL_Surface *surface;
 	SDL_Surface *tmp;
-	GAMETEXT_DATA *g;
 	char fn[64/*50*/];
 	strcpy(fn,moddir);
 	strcat(fn,"/");
@@ -143,16 +150,22 @@ void enemy_gameimg_add(char *filename,int xpos, int ypos)
 	SDL_SetColorKey(tmp,SDL_SRCCOLORKEY|SDL_RLEACCEL,0x00000000);
 	SDL_BlitSurface(surface,NULL,tmp,NULL);
 	SDL_FreeSurface(surface);
-
-	s=sprite_add(tmp, 1, PR_BONUS, 1);
-	s->flags|=SP_FLAG_FREESURFACE|SP_FLAG_VISIBLE;
-	s->type=SP_ETC;
-	s->x=xpos;
-	s->y=ypos;
-	s->alpha=0;
-	s->mover=enemy_gameimg_mover;
-	g=mmalloc(sizeof(GAMEIMG_DATA));
-	s->data=g;
-	g->wait=0;
-	g->state=0;
+//
+	SPRITE *s;
+	s			= sprite_add(tmp, 1, PR_BONUS, 1);
+	s->flags	|=SP_FLAG_FREESURFACE|SP_FLAG_VISIBLE;
+	s->type 	= SP_ETC;
+	s->x		= xpos;
+	s->y		= ypos;
+	s->alpha	= 0;
+	s->mover	= enemy_gameimg_mover;
+	GAMEIMG_DATA/*GAMETEXT_DATA*/ *data;
+	data		= mmalloc(sizeof(GAMEIMG_DATA));
+	s->data 	= data;
+#if 1
+	data->b.score	= score(200*2); 		//[***090410		???追加???
+	data->b.health	= 25+(difficulty<<2);	//[***090410		???追加???
+#endif
+	data->wait		= 0;
+	data->state 	= 0;
 }

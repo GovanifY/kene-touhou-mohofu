@@ -185,7 +185,7 @@ SDL_Surface *font_render(char *text,int fontnr)
 	screen->format->Amask);
 	SDL_SetColorKey(txtimg,SDL_SRCCOLORKEY|SDL_RLEACCEL,0x00000000);
 	font_render_surface_xy( txtimg, text, fontnr, 0, 0);
-	return(txtimg);
+	return (txtimg);
 }
 
 void font_print(char *text, int fontnr, int x, int y)

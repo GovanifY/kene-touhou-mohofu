@@ -3,7 +3,7 @@
 SPRITE *sprite=NULL;		//スプライトのリスト構造
 
 extern SDL_Surface *screen;
-extern double fps_factor;
+//extern double fps_factor;
 extern GAMESTATE state; 	//[***090125		追加
 
 
@@ -12,6 +12,64 @@ static COLMAP_CACHE *colmap_cache	= NULL;
 
 /*------------------------------*/
 /*---- resource ----*/
+
+typedef struct
+{
+	const char *file_name;
+	Uint8 use_alpha;
+	Uint8 frames;
+	Uint8 priority;
+	Uint8 anime_speed;
+} IMAGE_RESOURCE;
+
+static IMAGE_RESOURCE my_resource[] =
+{	/*ショット*/
+	/*	0 REIMU */	{	"shot_re.png",			0,	 1, PR_PLAYER,	0	},	/*"plasma.png"*/
+	/*	1 MARISA */ {	"shot_ma.png",			0,	 1, PR_PLAYER,	0	},	/*"plasma_ma.png"*/
+	/*	2 REMIRIA */{	"shot_oz.png",			0,	 1, PR_PLAYER,	0	},	/*"plasma_oz.png"*/
+	/*	3 CIRNO */ {	"shot_ci.png",			0,	 1, PR_PLAYER,	0	},	/*"plasma_ci.png"*/
+//
+	/*	0 REIMU */	{	"needle_re.png",		1,	 2, PR_PLAYER,	1	},	//shot->anim_speed=1;
+	/*	1 MARISA */ {	"needle_ma.png",		0,	 1, PR_PLAYER,	0	},	//shot->anim_speed=0;
+	/*	2 REMIRIA */{	"needle_oz.png",		1,	 5, PR_PLAYER,	3	},	//shot->anim_speed=3;	/* alpha==1に修正。 alpha==0なのにalpha出てる？？？*/
+	/*	3 CIRNO */ {	"needle_ci.png",		0,	 1, PR_PLAYER,	0	},	//shot->anim_speed=0;
+//
+	/*	8 REIMU */	{	"homing_re.png",		0,	 6, PR_PLAYER,	0	},	/*"tshoot.png",*/
+	/*	9 MARISA */ {	"homing_ma.png",		0,	 6, PR_PLAYER,	0	},	/*"tshoot-ma.png"*/
+	/* 10 REMIRIA */{	"homing_oz.png",		0,	 6, PR_PLAYER,	0	},	/*"tshoot-oz.png"*/
+	/* 11 CIRNO */ {	"homing_ci.png",		0,	 6, PR_PLAYER,	0	},	/*"tshoot-ci.png"*/
+//	/*自分*/
+	/* 12 REIMU */	{	"jiki_re.png",			0,	 12, PR_PLAYER, 0	},	//"ship-med.png",		0,	 11,
+	/* 13 MARISA */ {	"jiki_ma.png",			0,	 12, PR_PLAYER, 0	},	//"ship-med-ma.png",	0,	 11,
+	/* 14 REMIRIA */{	"jiki_oz.png",			0,	 12, PR_PLAYER, 0	},	//"ship-med-oz.png",	0,	 11,
+	/* 15 CIRNO */ {	"jiki_ci.png",			0,	 12, PR_PLAYER, 0	},	//"ship-med-ci.png",	0,	 11,
+//	/*あたり判定*/
+	/*	4 REIMU */	{	"core_re.png",			0,	 1, PR_PLAYER2, 0	},	//"core.png",
+	/*	5 MARISA */ {	"core_ma.png",			0,	 1, PR_PLAYER2, 0	},	//"core-ma.png",
+	/*	6 REMIRIA */{	"core_oz.png",			0,	 1, PR_PLAYER2, 0	},	//"core-oz.png",
+	/*	7 CIRNO */ {	"core_ci.png",			0,	 1, PR_PLAYER2, 0	},	//"core-ci.png",
+//	/* オプション用素材 */
+	/* 16 REIMU */	{	"option1_re.png",		0,	  8, PR_PLAYER, 0	},/*"option.png"*/
+	/* 17 MARISA */ {	"option1_ma.png",		0,	  8, PR_PLAYER, 0	},/*"mari_op.png"*/
+	/* 18 REMIRIA */{	"option1_oz.png",		0,	  8, PR_PLAYER, 0	},/*"oze_op1.png"*/
+	/* 19 CIRNO */ {	"option1_ci.png",		0,	  8, PR_PLAYER, 0	},/*"ci_op1.png"*/
+//
+	/* 20 REIMU */	{	"option2_re.png",		0,	  8, PR_PLAYER, 0	},/*"option2.png"*/ 	/*起動チェックで使うかも知れないので有る名前で*/
+	/* 21 MARISA */ {	"option2_ma.png",		0,	  8, PR_PLAYER, 0	},/*"mari_op2.png"*/	/*起動チェックで使うかも知れないので有る名前で*/
+	/* 22 REMIRIA */{	"option2_oz.png",		0,	  8, PR_PLAYER, 0	},/*"oze_op2.png"*/
+	/* 23 CIRNO */ {	"option2_ci.png",		0,	  8, PR_PLAYER, 0	},/*"ci_op2.png"*/
+//
+	/* 24 REIMU */	{	"option3_re.png",		0,	  8, PR_PLAYER, 0	},/*"option3.png"*/ 	/*起動チェックで使うかも知れないので有る名前で*/
+	/* 25 MARISA */ {	"option3_ma.png",		0,	  8, PR_PLAYER, 0	},/*"mari_op3.png"*/	/*起動チェックで使うかも知れないので有る名前で*/
+	/* 26 REMIRIA */{	"option3_oz.png",		0,	  8, PR_PLAYER, 0	},/*"oze_op3.png"*/
+	/* 27 CIRNO */ {	"option3_ci.png",		0,	  8, PR_PLAYER, 0	},/*"ci_op3.png"*/
+//
+	/* 28 REIMU */	{	"option4_re.png",		0,	  8, PR_PLAYER, 0	},/*"option4.png"*/ 	/*起動チェックで使うかも知れないので有る名前で*/
+	/* 29 MARISA */ {	"option4_ma.png",		0,	  8, PR_PLAYER, 0	},/*"mari_op4.png"*/	/*起動チェックで使うかも知れないので有る名前で*/
+	/* 30 REMIRIA */{	"option4_oz.png",		0,	  8, PR_PLAYER, 0	},/*"oze_op4.png"*/
+	/* 31 CIRNO */ {	"option4_ci.png",		0,	  8, PR_PLAYER, 0	},/*"ci_op4.png"*/
+//
+};
 
 /*------------------------------*/
 /*---- collision ----*/
@@ -305,17 +363,17 @@ void sprite_remove_all(int type)
 	}
 }
 
-void sprite_remove_all_type(int type)
-{
-	SPRITE *s=sprite, *n=NULL;
-	while (s!=NULL)
-	{
-		n=s->next;
-		if (s->type==type)
-		{	sprite_remove(s);}
-		s=n;
-	}
-}
+//void sprite_remove_all_type(int type)
+//{
+//	SPRITE *s=sprite, *n=NULL;
+//	while (s!=NULL)
+//	{
+//		n=s->next;
+//		if (s->type==type)
+//		{	sprite_remove(s);}
+//		s=n;
+//	}
+//}
 
 
 /*---------------*/
@@ -333,10 +391,10 @@ void sprite_remove_colmap(COLMAP_CACHE *c)
 COLMAP_CACHE *sprite_get_colmap(SDL_Surface *img, int frames)
 {
 	COLMAP_CACHE *c=colmap_cache;
-
-	while (c!=NULL) {
+	while (c!=NULL)
+	{
 		if ((c->src==img)&&(c->frames==frames))
-			return(c);
+		{	return(c);}
 		c=c->next;
 	}
 	return(NULL);
@@ -347,27 +405,25 @@ COLMAP_CACHE *sprite_add_colmap(SDL_Surface *img, int frames)
 	COLMAP_CACHE *c;
 	int i;
 	int colbsize;
-
-	if ((c=sprite_get_colmap(img,frames))!=NULL) {
+	if ((c=sprite_get_colmap(img,frames))!=NULL)
+	{
 		c->refcount++;
 		return(c);
 	}
-
-	c=mmalloc(sizeof(COLMAP_CACHE));
-	c->src=img;
-	c->frames=frames;
-	c->refcount=1;
-	c->col=mmalloc(sizeof(Uint8 *)*frames);
-
-	colbsize=((img->w/frames)*(img->h+2))/8;
-
-	for (i=0;i<frames;i++) {
+	c				=mmalloc(sizeof(COLMAP_CACHE));
+	c->src			=img;
+	c->frames		=frames;
+	c->refcount		=1;
+	c->col			=mmalloc(sizeof(Uint8 *)*frames);
+	colbsize		=((img->w/frames)*(img->h+2))>>3/*/8*/;
+	for (i=0;i<frames;i++)
+	{
 		c->col[i]=mmalloc(colbsize);
 		memset(c->col[i],0x00,(colbsize));
-		sprite_create_colmap(img,c->col[i],img->w/frames,i);
+		sprite_create_colmap(img,c->col[i],(img->w/frames),i);
 	}
-
-	if (colmap_cache==NULL) {
+	if (colmap_cache==NULL)
+	{
 		c->next=NULL;
 	} else {
 		c->next=colmap_cache;
@@ -381,8 +437,8 @@ COLMAP_CACHE *sprite_add_colmap(SDL_Surface *img, int frames)
 void sprite_work(int type)
 {
 	SPRITE *s=sprite, *n;
-
-	while (s!=NULL) {
+	while (s!=NULL)
+	{
 		n=s->next;
 		/* animate */
 		//s->ticks++;
@@ -391,7 +447,7 @@ void sprite_work(int type)
 			if (s->anim_speed!=0)
 			{
 				// s->anim_count++;
-				s->anim_count+=fps_factor;
+				s->anim_count++/*=fps_factor*/;
 				// if (s->anim_count==abs(s->anim_speed))
 				if (s->anim_count>=abs(s->anim_speed))
 				{
@@ -399,18 +455,20 @@ void sprite_work(int type)
 					if (s->anim_speed>0)
 					{
 						s->aktframe++;
-						if(s->aktframe>=s->frames)
-							s->aktframe = 0;
+						if (s->aktframe >= s->frames)
+						{	s->aktframe = 0;}
 					}
-					else
-					{
-						s->aktframe--;
-						if (s->aktframe<0) s->aktframe=s->frames-1;
-					}
+				//	else		/*逆転アニメ禁止に変更*/
+				//	{
+				//		s->aktframe--;
+				//		if (s->aktframe < 0)
+				//		{	s->aktframe = s->frames-1;}
+				//	}
 				}
 			}
 			/* move */
-			if (s->mover!=NULL) {
+			if (s->mover!=NULL)
+			{
 				(s->mover)(s);
 			}
 		}
@@ -427,7 +485,7 @@ void sprite_work(int type)
 			if (s->ticks>1000)
 			{
 				s->ticks=0;
-				if ((s->priority==PR_ENEMY || s->priority== PR_ENEMY_WEAPON) && /* 敵か敵の武器の場合で */
+				if ((s->priority==PR_ENEMY || s->priority== PR_BULLETS) && /* 敵か敵の武器の場合で */
 					#if 0
 					s->type!=SP_EN_BOSS01 && 	/* 各ボス以外で */
 					s->type!=SP_EN_BOSS02 &&
@@ -437,9 +495,9 @@ void sprite_work(int type)
 					s->type!=SP_EN_BOSS &&		/* 各ボス以外で */
 					#endif
 					s->type!=SP_MENUTEXT)		/* メニュー以外の場合、 */
-				{	s->type=-1;	}	/* 自動消去にする。 */
+				{	s->type=SP_DELETE;	}	/* 自動消去にする。 */
 			}
-			if (s->type==-1) 	/* 消去？ */
+			if (s->type==SP_DELETE) 	/* 消去？ */
 			{
 				sprite_remove(s);	/* 消す */
 			}
@@ -549,26 +607,39 @@ SPRITE *sprite_add(SDL_Surface *surface, int frames, Uint8 priority, int nocache
 	return(s);
 }
 
+SPRITE *sprite_add_file0(char *filename, int frames, Uint8 priority, int use_alpha)
+{
+	SDL_Surface *s;
+	SPRITE *sp;
+	s=loadbmp0(filename, use_alpha);
+	if (0==use_alpha)
+	{
+		SDL_SetColorKey(s,SDL_SRCCOLORKEY|SDL_RLEACCEL,0x00000000);
+	}
+	sp=sprite_add(s,frames,priority,0);
+	return sp;
+}
 SPRITE *sprite_add_file(char *filename, int frames, Uint8 priority)
 {
-	SDL_Surface *s;
-	SPRITE *sp;
-	s=loadbmp(filename);
-	SDL_SetColorKey(s,SDL_SRCCOLORKEY|SDL_RLEACCEL,0x00000000);
-	sp=sprite_add(s,frames,priority,0);
-	return sp;
+	return sprite_add_file0( filename,  frames,  priority, 0);
 }
-
-
-SPRITE *sprite_add_file2(char *filename, int frames, Uint8 priority)
+//SPRITE *sprite_add_file2(char *filename, int frames, Uint8 priority)
+//{
+//	return sprite_add_file0( filename,  frames,  priority, 1);
+//}
+SPRITE *sprite_add_res(int image_resource_num)
 {
-	SDL_Surface *s;
-	SPRITE *sp;
-	s=loadbmp2(filename);
-	sp=sprite_add(s,frames,priority,0);
-	return sp;
-}
+	char *fff;
+	fff = (char *)my_resource[image_resource_num].file_name;
+	int aaa;
+	aaa = my_resource[image_resource_num].frames;
+	int bbb;
+	bbb = my_resource[image_resource_num].priority;
+	int ccc;
+	ccc = my_resource[image_resource_num].use_alpha;
 
+	return sprite_add_file0( fff, aaa, bbb, ccc);
+}
 /*------------------------------*/
 /*---- sprite controller ----*/
 

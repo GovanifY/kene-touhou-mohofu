@@ -26,12 +26,27 @@ extern int difficulty;
 		//[***090209		í«â¡
 enum
 {
-EXPLOSION_TYPE00=0,
-EXPLOSION_TYPE01,
-EXPLOSION_TYPE02,
-EXPLOSION_TYPE03,
-EXPLOSION_TYPE04
+	EXPLOSION_MINI00=0,/*è¨îöî≠*/
+	EXPLOSION_MINI01,
+	EXPLOSION_MINI02,
+	EXPLOSION_MINI03,
+//
+	EXPLOSION_ZAKO04,/*ÉUÉRè¡ñ≈îöî≠*/
+	EXPLOSION_ZAKO05,
+	EXPLOSION_ZAKO06,
+	EXPLOSION_ZAKO07,
+//
+	EXPLOSION_FIRE08,/*âŒâäîöî≠*/
+	EXPLOSION_FIRE09,
+	EXPLOSION_FIRE10,
+	EXPLOSION_FIRE11,
 };
+/* äÔêîíeÇÃèÍçáÇ…é©ã@ë_Ç¢ */
+#define ANGLE_JIKINERAI_KISUDAN 999
+
+#define ANGLE_JIKINERAI_DAN 999
+
+
 
 typedef struct
 {
@@ -45,170 +60,20 @@ typedef struct		/* enemyÇÃàÍî å` */
 	int state;
 } ENEMY_DATA;
 
+
+
+
+//2691186
 typedef struct
 {
-	double angle;
+	/*double*/int angle512;
 	double speed;
 //	int id;
 } BULLET_DATA;
 
-typedef struct
-{
-	double angle;
-	double speed;
-//	int id;
-	int state;
-} G_BULLET_DATA;
-
-typedef struct
-{
-	double angle;
-	double speed;
-//	int id;
-	double gra;
-	double sum;
-}GR_BULLET_DATA;
-
-typedef struct
-{
-	double angle;
-	double speed;
-//	int id;
-	double gra;
-	double sum;
-	int bounds;
-}PO_BULLET_DATA;
-
-typedef struct
-{
-	double angle;
-	double speed;
-//	int id;
-} LASER_DATA;
-
-typedef struct
-{
-	ENEMY_BASE b;
-	double angle;
-	double speed;
-	double range;
-	double delay;
-} HOMING_DATA;
-
-typedef struct
-{
-	double angle;
-	double speed;
-	double timer;
-} MOMIJI_DATA;
-
-typedef struct
-{
-	double angle;
-	double angle2;
-	double speed;
-	double a;
-	int state;
-} SMALL_RE_DATA;
-
-typedef struct
-{
-	double angle;
-	double speed;
-//	int id;
-	int ransu;
-	int wait_bg;
-} BIGBULLET_DATA;
-
-typedef struct
-{
-	double *sx;
-	double *sy;
-	int *type;
-	int sw;
-	int sh;
-} BIGBULLET_S_DATA;
-
-typedef struct
-{
-	double angle;
-	double speed;
-//	int id;
-	double a;
-} NEW_BIGBULLET_DATA;
-
-typedef struct
-{
-	double angle;
-	double speed;
-//	int id;
-	int timer;
-	double a;
-} ST_BULLET_DATA;
-
-typedef struct
-{
-	double angle;
-	double speed;
-//	int id;
-	double next_angle;
-	int timer;
-	int state;
-	double a;
-} ST2_BULLET_DATA;
-
-typedef struct
-{
-	double angle;
-	double speed;
-//	int id;
-	double a_angle;
-	int timer;
-} AN_BULLET_DATA;
-
-typedef struct
-{
-	double angle;
-	double speed;
-//	int id;
-	double sum;
-	double gra;
-} FALL_KNIFE_DATA;
-
-typedef struct
-{
-	double angle;
-	double speed;
-//	int id;
-	int speed2;
-	int height;
-	int target;
-	double timer;
-} FOLLOW_KNIFE_DATA;
-
-typedef struct
-{
-	double angle;
-	double speed;
-//	int id;
-	double d_angle;
-	double length;
-	double x;
-	double y;
-	int state;
-	int wait1;	//fire
-	int wait2;	//act
-} EVEN_KNIFE_DATA;
-
-typedef struct
-{
-	double wait;
-	double framewait;
-	double framestat;
-} EXPLOSION_DATA;
 
 //[r13]
-//void bullet_way(SPRITE *s, int way, double angle, double angle2, double spd);
+//void bullet_way(SPRITE *s, int way, dou ble angle, dou ble angle2, double spd);
 
 
 
@@ -237,36 +102,45 @@ extern void enemy_laser_move(SPRITE *s);
 //void enemy_evenr_knife_move(SPRITE *s);
 //static void explosion_move(SPRITE *c);
 
+/* íeÇÃê∂ê¨ */
+
 void enemy_bullet_create(SPRITE *s, double speed);
-void enemy_gr_bullet_create(SPRITE *s, double speed, double angle, double gra);
-void enemy_laser_create(SPRITE *s, double speed);
-void enemy_laser_create2(SPRITE *s, double speed, double angle);
+void enemy_gr_bullet_create(SPRITE *s, double speed, /*double*/int angle512, /*double*/int delta256);
+
+//extern void enemy_laser_create(SPRITE *s, double speed);/*îpé~(bullet_create_haridan180()Ç…version up)*/
+//extern void enemy_laser_create2(SPRITE *s, double speed, /*double*/int angle512);/*îpé~(bullet_create_haridan180()Ç…version up)*/
+extern void bullet_create_haridan180(SPRITE *src, int angle512, int speed256, int offsx, int offsy );
+
 void enemy_homing_create(SPRITE *s);
 void enemy_homing_update(SPRITE *s);
-void enemy_momiji_create(SPRITE *s, double speed, double angle);
-void enemy_smallbullet_re_create(SPRITE *s, double speed, double angle, double a);
-void enemy_bigbullet_create(SPRITE *s, double ex, double ey, double speed, double angle, int ransu);
-void enemy_new_bigbullet_create(SPRITE *s, double speed, double angle, double a);
-void enemy_g_bullet_create(SPRITE *s, double speed, int state, double angle);
-void enemy_pong_bullet_create(SPRITE *s, double speed, double angle, double gra, int bou);
-void enemy_stop_bullet_create(SPRITE *s, double speed, double angle, double gra);
-void enemy_stop_bullet2_create(SPRITE *s, double speed, double angle, double a, double next_angle);
-void enemy_angle_bullet_create(SPRITE *s, double speed, double angle, double a_angle);
-void enemy_knife_create(SPRITE *s, double speed, double angle, int anim);
-void enemy_fall_knife_create(SPRITE *s, double speed, double angle, double gra);
-void enemy_follow_knife_create(SPRITE *s, double speed, double angle, int height);
-void enemy_follow_knife_create2(double x, double y, double speed, double angle, int height);
-void enemy_even_knife_create(SPRITE *s, double speed, double length, int r_or_l);
+void enemy_momiji_create(SPRITE *s, double speed, /*double*/int angle512);
+//static void enemy_smallbullet_re_create(SPRITE *s, double speed, /*double*/int angle512, double a);
+void enemy_bigbullet_create(SPRITE *s, double ex, double ey, double speed, /*double*/int angle512, int ransu);
+void enemy_new_bigbullet_create(SPRITE *s, double speed, /*double*/int angle512, double a);
+void enemy_g_bullet_create(SPRITE *s, double speed, int state, /*double*/int angle512);
+void enemy_pong_bullet_create(SPRITE *s, double speed, /*double*/int angle512, /*double*/int delta256, int bou);
+void enemy_stop_bullet_create(SPRITE *s, double speed, /*double*/int angle512, /*double*/int delta256);
+//id enemy_stop_bullet2_create(SPRITE *s, double speed, /*double*/int angle512, double a, double next_angle);
+void enemy_stop_bullet3_create(SPRITE *s, /*double*/int speed256, /*double*/int angle512, double a, /*double*/int next_angle512);
+
+void enemy_angle_bullet_create(SPRITE *s, /*double*/int speed256, /*double*/int angle512, /*double*/int d_angle4096);
+void enemy_knife_create(SPRITE *s, /*double*/int speed256, /*double*/int angle512, int anim);
+void enemy_fall_knife_create(SPRITE *s, double speed, /*double*/int angle512, /*double*/int gra256);
+void enemy_follow_knife_create1(SPRITE *s,                          /*double*/int speed256, /*double*/int angle512, int height);
+//void enemy_follow_knife_create2(SPRITE *s,/*double x, double y,*/ /*double*/int speed256, /*double*/int angle512, int height);
+void enemy_even_knife_create(SPRITE *s, double speed, /*double*/int length, int r_or_l);
 
 
 
 
-//static void enemy_sp1_bullet_create(SPRITE *s, double speed, double angle, double gra, int r_or_l);
+//static void enemy_sp1_bullet_create(SPRITE *s, double speed, /*double*/int angle512, double gra, int r_or_l);
 //static void enemy_sp1_bullet_move(SPRITE *s);
 //static void enemy_sp2_bullet_create(SPRITE *s, int angle, double gra);
 //static void enemy_sp2_bullet_move(SPRITE *s);
 
-void explosion_add(int x, int y, double wait, int type);
+extern void explosion_add(int x, int y, /*double*/int wait, int type);
+extern void explosion_add_rect(SPRITE *src);
+extern void explosion_add_circle(SPRITE *src);
 
 //void enemy_magicformation_move(SPRITE *s);
 
@@ -295,7 +169,9 @@ void enemy_nonshield_hitbyweapon(SPRITE *c, SPRITE *s/*, int angle*/);
 //static void callback_enemy_boss04_hitbyweapon(SPRITE *c, SPRITE *s/*, int angle*/);
 //static void callback_enemy_boss05_hitbyweapon(SPRITE *c, SPRITE *s/*, int angle*/);
 
-void enemy_n_way_bullet(SPRITE *s, char *filename, int frame, int n, double speed, double angle);
+void enemy_n_way_bullet_type(SPRITE *s, int bu_type,/* char *filename, int frame,*/ int n, double speed, /*double*/int angle512);
+#define BU_TYPE01_KUGEL_PNG 0
+#define BU_TYPE01_KUNAI_PNG 0
 
 void enemy_gametext_add(char *text, int y);
 void enemy_gameimg_add(char *filename,int xpos, int ypos);
@@ -355,7 +231,7 @@ static Ç…ïœçXÇ∑ÇÈà◊ÅAÇ±Ç±Ç≈ÇÕêÈåæÇ≈Ç´Ç»Ç¢ */
 //static void enemy_boss04_move(SPRITE *s);
 //static void enemy_boss04_waitstate(SPRITE *s, int nextstate, int aktframe);
 //static void enemy_boss04_out(SPRITE *s);
-//static void enemy_boss04_more_angle(SPRITE *s, double speed, double angle, double a);
+//static void enemy_boss04_more_angle(SPRITE *s, double speed, /*double*/int angle512, double a);
 //static void enemy_boss04_maho_create(SPRITE *s);
 //static void enemy_boss04_maho_move(SPRITE *s);
 //static void enemy_boss04_knifes(SPRITE *s, double, int angle, int height);

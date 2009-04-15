@@ -1,3 +1,8 @@
+
+/*---------------------------------------------------------
+	ヘッダ
+---------------------------------------------------------*/
+
 #include "support.h"
 
 #ifdef ENABLE_PSP
@@ -8,250 +13,144 @@
 	#include <SDL/SDL_image.h>
 #endif
 
-SDL_Surface *screen;
-SDL_Surface *back_screen/*=NULL*/;
 
-int keyboard[15];
-int debug=0;
-int use_joystick=1;
-IMGLIST *img_list=NULL;
-KEYCONFIG keyconfig;
-static Uint32 videoflags = SDL_FULLSCREEN | SDL_DOUBLEBUF | SDL_HWSURFACE | SDL_HWPALETTE| SDL_HWACCEL;
-static int depth=16;
-static int kazu=0;
-//static SDL_Surface *loadpic=NULL;		//load画面用
-static SDL_Surface *loaddot[3];		//load画面用
+/*---------------------------------------------------------
+	定数
+---------------------------------------------------------*/
+
+
+/*---------------------------------------------------------
+	外部グローバル変数
+---------------------------------------------------------*/
 extern GAMESTATE state;
 extern GAMESTATE laststate;
 extern int difficulty;
-extern int b_id;
-//SceCtrlData pad;
+
+/*---------------------------------------------------------
+	グローバル変数
+---------------------------------------------------------*/
+/*extern*/SDL_Surface *screen;
+SDL_Surface *back_screen;
+
+//int debug=0;
+//int use_joystick=1;
+
+KEYCONFIG keyconfig;
+
+/*---------------------------------------------------------
+	math.h
+---------------------------------------------------------*/
+
+/* この配列もCPU内蔵の命令キャッシュに乗るよ */
+/*extern*/ double sin_tbl512[SINTABLE_SIZE];
+
+/* この関数はただの初期化。命令キャッシュに乗らないよ */
+void init_math(void)
+{
+	{
+		int i;
+		for(i=0; i<SINTABLE_SIZE; i++)
+		{
+			sin_tbl512[i]=(sin( (i*(M_PI*2) /SINTABLE_SIZE) )/**65536.0*/ );
+		}
+	}
+}
+/* この関数はCPU内蔵の命令キャッシュに乗るよ */
+int atan_512( int y, int x )
+{
+	return (rad2deg512(atan2(y,x)));
+}
 /*
-	enum _keynum_{		//キーコンフィグ用
-		KEY_NONE,
-		KEY_SHOT,
-		KEY_BOMB,
-		KEY_SLOW,
-		KEY_UP,
-		KEY_DOWN,
-		KEY_LEFT,
-		KEY_RIGHT,
-		KEY_PAUSE,
-		KEY_CANCEL,
-		KEY_SC_SHOT
-	};
-*/
-/*
-	typedef struct {
-		int u;	//上
-		int d;	//下
-		int l;	//左
-		int r;	//右
-		int ba; //×
-		int ma; //○
-		int sa; //△
-		int si; //□
-		int rt; //R
-		int lt; //L
-		int sl; //SELECT
-		int st; //START
-	} KEYCONFIG;
-*/
-/*
-	IMGLISTの構造
-	struct ImgList{
-		char name[64];
-		SDL_Surface* pSurface;
-		ImgList* Pre;
-		ImgList* Next;
-	};
+psp では、 atan2(), sin(), sqrt() 等の超越関数系命令は、
+psp の MIPS CPU 内 のコプロセッサが処理をする。
+コプロセッサ変換処理があちこちにあると、非常にパフォーマンスが悪いので、
+一ヶ所に纏めた方が実行速度は遥かに速い。
+(CPU内蔵の命令キャッシュに乗るために実行速度が速くなる)
 */
 
-void psp_push_screen(void)
+
+/*---------------------------------------------------------
+	キー入力関連の処理
+---------------------------------------------------------*/
+static int keyboard[16/*15*/];
+void keyboard_clear()
 {
-	SDL_BlitSurface(screen,NULL,back_screen,NULL);
-}
-void psp_pop_screen(void)
-{
-	SDL_BlitSurface(back_screen,NULL,screen,NULL);
+	int i;
+	for (i=0;i<15;i++)
+	{
+		keyboard[i]=0;
+	}
 }
 
-void game_init(int argc, char *argv[])
+/*global*/Uint32 my_pad;		/*今回入力*/
+/*global*/Uint32 my_pad_alter;	/*前回入力*/
+void keyboard_poll(void)
 {
-	Uint32 initflags=0;
+	SceCtrlData pad;
+	sceCtrlReadBufferPositive(&pad, 1);
+	int pad_data = pad.Buttons;
+	if (pad.Lx < 64/*70*/)			{		pad_data |= PSP_CTRL_LEFT;	}
+	else if (pad.Lx > 192/*185*/)	{		pad_data |= PSP_CTRL_RIGHT; }
+
+	if (pad.Ly < 64/*70*/)			{		pad_data |= PSP_CTRL_UP;	}
+	else if (pad.Ly > 192/*185*/)	{		pad_data |= PSP_CTRL_DOWN;	}
+//
+	if (pad_data & PSP_CTRL_SELECT) 	{keyboard[keyconfig.sl] |= (pad_data & PSP_CTRL_SELECT);}	else{keyboard[keyconfig.sl] &= (~PSP_CTRL_SELECT);}
+	if (pad_data & PSP_CTRL_START)		{keyboard[keyconfig.st] |= (pad_data & PSP_CTRL_START);}	else{keyboard[keyconfig.st] &= (~PSP_CTRL_START);}
+	if (pad_data & PSP_CTRL_UP) 		{keyboard[keyconfig.u]	|= (pad_data & PSP_CTRL_UP);}		else{keyboard[keyconfig.u]	&= (~PSP_CTRL_UP);}
+	if (pad_data & PSP_CTRL_RIGHT)		{keyboard[keyconfig.r]	|= (pad_data & PSP_CTRL_RIGHT);}	else{keyboard[keyconfig.r]	&= (~PSP_CTRL_RIGHT);}
+	if (pad_data & PSP_CTRL_DOWN)		{keyboard[keyconfig.d]	|= (pad_data & PSP_CTRL_DOWN);} 	else{keyboard[keyconfig.d]	&= (~PSP_CTRL_DOWN);}
+	if (pad_data & PSP_CTRL_LEFT)		{keyboard[keyconfig.l]	|= (pad_data & PSP_CTRL_LEFT);} 	else{keyboard[keyconfig.l]	&= (~PSP_CTRL_LEFT);}
+	if (pad_data & PSP_CTRL_LTRIGGER)	{keyboard[keyconfig.lt] |= (pad_data & PSP_CTRL_LTRIGGER);} else{keyboard[keyconfig.lt] &= (~PSP_CTRL_LTRIGGER);}
+	if (pad_data & PSP_CTRL_RTRIGGER)	{keyboard[keyconfig.rt] |= (pad_data & PSP_CTRL_RTRIGGER);} else{keyboard[keyconfig.rt] &= (~PSP_CTRL_RTRIGGER);}
+	if (pad_data & PSP_CTRL_TRIANGLE)	{keyboard[keyconfig.sa] |= (pad_data & PSP_CTRL_TRIANGLE);} else{keyboard[keyconfig.sa] &= (~PSP_CTRL_TRIANGLE);}
+	if (pad_data & PSP_CTRL_CIRCLE) 	{keyboard[keyconfig.ma] |= (pad_data & PSP_CTRL_CIRCLE);}	else{keyboard[keyconfig.ma] &= (~PSP_CTRL_CIRCLE);}
+	if (pad_data & PSP_CTRL_CROSS)		{keyboard[keyconfig.ba] |= (pad_data & PSP_CTRL_CROSS);}	else{keyboard[keyconfig.ba] &= (~PSP_CTRL_CROSS);}
+	if (pad_data & PSP_CTRL_SQUARE) 	{keyboard[keyconfig.si] |= (pad_data & PSP_CTRL_SQUARE);}	else{keyboard[keyconfig.si] &= (~PSP_CTRL_SQUARE);}
+//
+	my_pad_alter = my_pad;
+	my_pad = 0;
+//	if (keyboard[KEY_SELECT])		{my_pad |= (PSP_KEY_SELECT);}
+	if (keyboard[KEY_PAUSE])		{my_pad |= (PSP_KEY_PAUSE);}
+//
+		 if (keyboard[KEY_UP])		{my_pad |= (PSP_KEY_UP);}
+	else if (keyboard[KEY_DOWN])	{my_pad |= (PSP_KEY_DOWN);}
+		 if (keyboard[KEY_LEFT])	{my_pad |= (PSP_KEY_LEFT);}
+	else if (keyboard[KEY_RIGHT])	{my_pad |= (PSP_KEY_RIGHT);}
+//2716498 2716786 2716684
+//	if (keyboard[KEY_SYSTEM])		{my_pad |= (PSP_KEY_SYSTEM);}
+	if (keyboard[KEY_SLOW]) 		{my_pad |= (PSP_KEY_SLOW);}
+	if (keyboard[KEY_SC_SHOT])		{my_pad |= (PSP_KEY_SC_SHOT);}
+	if (keyboard[KEY_CANCEL])		{my_pad |= (PSP_KEY_CANCEL);}
+	if (keyboard[KEY_SHOT]) 		{my_pad |= (PSP_KEY_SHOT);}
+	if (keyboard[KEY_BOMB]) 		{my_pad |= (PSP_KEY_BOMB);}
+
+//
+	if (my_pad & PSP_KEY_SC_SHOT/*keybo ard[KEY_SC_SHOT]*/)		//スクリーンショット機能。keypollに入れると何故かうまくいかなかったのでこっちに場所を変更。
+	{
+		static int screennum=0;
+	/*static*/ char screenbuf[32/*20*/];
+		sprintf(screenbuf,"ms0:/PICTURE/Toho_Moho%d.bmp",screennum++);		//保存場所の変更。
+		SDL_SaveBMP(screen,screenbuf);
+	}
+}
+//		 if (keyboard[KEY_LEFT])	{		my_pad |= PSP_CTRL_LEFT;	/*direction=-1;*/		}
+//	else if (keyboard[KEY_RIGHT])	{		my_pad |= PSP_CTRL_RIGHT;	/*direction=1;*/		}
+//		 if (keyboard[KEY_UP])		{		my_pad |= PSP_CTRL_UP;		}
+//	else if (keyboard[KEY_DOWN])	{		my_pad |= PSP_CTRL_DOWN;	}
+
+//int keyboard_keypressed()
+//{
 //	int i;
-	//SDL_Joystick *joy;
-	sceCtrlSetSamplingCycle(0);
-	sceCtrlSetSamplingMode(PSP_CTRL_MODE_ANALOG);
-
-	b_id=0; 	//[***090129		変更
-/*
-	for (i=2;i<=argc;i++) {
-		if (!strncmp(argv[i-1],"-d",2)) {
-			debug=1;
-			error(ERR_DEBUG,"debug-mode enabled");
-		} else if (!strncmp(argv[i-1],"-f",2)) {
-			videoflags=SDL_FULLSCREEN;
-		} else if (!strncmp(argv[i-1],"-j",2)) {
-			use_joystick=1;
-		} else if (!strncmp(argv[i-1],"-16",3)) {
-			depth=16;
-		} else if (!strncmp(argv[i-1],"-24",3)) {
-			depth=24;
-		} else if (!strncmp(argv[i-1],"-32",3)) {
-			depth=32;
-		} else if (!strncmp(argv[i-1],"-h",2)) {
-			error(ERR_INFO,"%s:  a shoot-em-all game",argv[0]);
-			error(ERR_INFO,"-h:  get this help");
-			error(ERR_INFO,"-f:  fullscreen mode");
-			error(ERR_INFO,"-j:  enable joystick-support (preliminary)");
-			error(ERR_INFO,"-d:  enable debug messages");
-			error(ERR_INFO,"-16: force 16 bit screen (default)");
-			error(ERR_INFO,"-24: force 24 bit screen");
-			error(ERR_INFO,"-32: force 32 bit screen");
-			exit(0);
-		} else {
-			error(ERR_WARN,"unknown command line option: %s (try -h to get help)",argv[i-1]);
-		}
-	}
-
-	fprintf(stdout,"FYI: very early prepreprealpha, debug-mode forced\n"); debug=1;
-*/
-	initflags=SDL_INIT_VIDEO;
-/*
-	if (use_joystick)
-		initflags|=SDL_INIT_JOYSTICK;
-*/
-	if (SDL_Init(initflags)<0)
-	{
-		CHECKPOINT;
-		error(ERR_FATAL,"cant init SDL: %s",SDL_GetError());
-	}
-	if (atexit(SDL_Quit))
-	{
-		CHECKPOINT;
-		error(ERR_WARN,"atexit dont returns zero");
-	}
-	screen = SDL_SetVideoMode(WIDTH,HEIGHT,depth,videoflags);
-	if (NULL == screen)
-	{
-		CHECKPOINT;
-		error(ERR_FATAL,"cant open screen: %s",SDL_GetError());
-	}
-//	back_screen = NULL;
-	back_screen = SDL_CreateRGBSurface(
-		SDL_SWSURFACE/*SDL_HWSURFACE*/,/*メインメモリへ*/
-		WIDTH/*screen->w*/,
-		HEIGHT/*screen->h*/,
-		screen->format->BitsPerPixel,
-		screen->format->Rmask,
-		screen->format->Gmask,
-		screen->format->Bmask,
-		screen->format->Amask);
-	if (NULL == back_screen)
-	{
-		CHECKPOINT;
-		error(ERR_FATAL,"cant create SDL_Surface: %s",SDL_GetError());
-	}
+//	for (i=0;i<15;i++)
+//	{
+//		if (keyboard[i]) return 1;
+//	}
+//	return 0;
+//}
 
 
-	//display_vidinfo(screen);
-	/*
-	if (depth==0) {
-		error(ERR_DEBUG,"we want the current screen bit-depth...");
-	} else {
-		error(ERR_DEBUG,"we want a %d bpp screen...",depth);
-	}
-	error(ERR_DEBUG,"... and got a %d bpp surface",screen->format->BitsPerPixel);
-	*/
 
-	/*
-	if (use_joystick) {
-		if (debug) {
-			error(ERR_DEBUG,"%i joysticks found",SDL_NumJoysticks());
-			for (i=0;i<SDL_NumJoysticks();i++) {
-				error(ERR_DEBUG,"stick %d: %s",i,SDL_JoystickName(i));
-			}
-		}
-		if (SDL_NumJoysticks()>0) {
-			joy=SDL_JoystickOpen(0);
-			if (joy) {
-				error(ERR_DEBUG,"Joystick 0:");
-				error(ERR_DEBUG,"Name: %s",SDL_JoystickName(0));
-				error(ERR_DEBUG,"Axes: %d",SDL_JoystickNumAxes(joy));
-				error(ERR_DEBUG,"Buttons: %d",SDL_JoystickNumButtons(joy));
-				error(ERR_DEBUG,"Balls: %d",SDL_JoystickNumBalls(joy));
-			} else {
-				error(ERR_WARN,"could not open joystick #0");
-			}
-		}
-	}
-	*/
-	/*
-	error(ERR_DEBUG,"Key-configuration:");
-	error(ERR_DEBUG,"up-key    : %s",SDL_GetKeyName(keyconfig.u));
-	error(ERR_DEBUG,"down-key  : %s",SDL_GetKeyName(keyconfig.d));
-	error(ERR_DEBUG,"left-key  : %s",SDL_GetKeyName(keyconfig.l));
-	error(ERR_DEBUG,"right-key : %s",SDL_GetKeyName(keyconfig.r));
-	error(ERR_DEBUG,"fire-key  : %s",SDL_GetKeyName(keyconfig.f));
-	error(ERR_DEBUG,"escape-key: %s",SDL_GetKeyName(keyconfig.e));
-	*/
-
-	//SDL_ShowCursor(1);
-	//SDL_WM_SetCaption("killeverythingthatmoves","ketm");
-
-	SDL_Surface *loadpic=loadbmp("loadpng.png");
-	SDL_BlitSurface(loadpic, NULL, back_screen, NULL);
-	unloadbmp_by_surface(loadpic);
-	loaddot[0]=loadbmp("maru1.png");		//ロード用画像
-	loaddot[1]=loadbmp("maru1.png");		//ロード用画像
-	loaddot[2]=loadbmp("maru1.png");		//ロード用画像1つで十分だよね
-
-	SDL_SetColorKey(loaddot[0], SDL_SRCCOLORKEY, 0x00000000);
-	SDL_SetColorKey(loaddot[1], SDL_SRCCOLORKEY, 0x00000000);
-	SDL_SetColorKey(loaddot[2], SDL_SRCCOLORKEY, 0x00000000);
-	preload_gfx();
-	keyboard_clear();
-	load_ing();
-	font_init();
-	load_ing();
-	menusystem_init();
-	hsc_init();
-	hsc_load();
-	fps_init();
-	load_ing();
-	newstate(ST_START_INTRO,0,1);
-	initSound();
-//	unloadbmp_by_surface(loadpic);
-	unloadbmp_by_surface(loaddot[0]);
-	unloadbmp_by_surface(loaddot[1]);
-	unloadbmp_by_surface(loaddot[2]);
-}
-
-/*
-void toggle_fullscreen()
-{
-	SDL_Surface *tmp;
-
-	if (videoflags==SDL_DOUBLEBUF)
-		videoflags=SDL_FULLSCREEN;
-	else
-		videoflags=SDL_DOUBLEBUF;
-
-	tmp=SDL_ConvertSurface(screen,screen->format,screen->flags);
-	if (tmp==NULL) {
-		CHECKPOINT;
-		error(ERR_FATAL,"cant copy screen");
-	}
-	if ((screen=SDL_SetVideoMode(WIDTH,HEIGHT,depth,videoflags))==NULL) {
-		CHECKPOINT;
-		error(ERR_FATAL,"cant open change fullscreen/window: %s",SDL_GetError());
-	}
-	SDL_BlitSurface(tmp,NULL,screen,NULL);
-	//SDL_FreeSurface(tmp);
-	// display_vidinfo();
-}
-*/
 void hit_any_key(void)
 {
 	SceCtrlData cpad;
@@ -281,6 +180,10 @@ void hit_any_key(void)
 	l_end2:
 	;
 }
+
+/*---------------------------------------------------------
+	エラー処理
+---------------------------------------------------------*/
 void error(int errorlevel, char *msg, ...)
 {
 	char msgbuf[128];
@@ -292,11 +195,35 @@ void error(int errorlevel, char *msg, ...)
 
 	switch (errorlevel)
 	{
-	case ERR_DEBUG: 	if (debug) { fprintf(stdout,"DEBUG: %s\n",msgbuf); } break;
-	case ERR_INFO:		fprintf(stdout,"INFO: %s\n",msgbuf); break;
-	//case ERR_WARN:	fprintf(stdout,"WARNING: %s\n",msgbuf); break;
-	case ERR_FATAL: 	fprintf(stdout,"FATAL: %s\n",msgbuf);
-		pspDebugScreenSetXY(2,5);
+	//case ERR_DEBUG: 	if (debug) { fprintf(stdout,"DEBUG: %s\n",msgbuf); } break;
+	//case ERR_INFO:		fprintf(stdout,"INFO: %s\n",msgbuf); break;
+
+	#if 0
+	/*デバッグ用*/
+	case ERR_WARN:	//fprintf(stdout,"WARNING: %s\n",msgbuf);
+		pspDebugScreenSetXY(2,3);
+		pspDebugScreenPrintf("WARNING");
+		hit_any_key();
+		{
+		char msgbuf2[32/*128*/];
+			int j;
+			for (j=0;j<5;j++)
+			{
+				pspDebugScreenSetXY(2,5+j);
+				strncpy(msgbuf2, &msgbuf[j*24], 24);	/*24文字ずつ表示*/
+				/* [0] ... [23] で24文字 */
+				msgbuf2[24]=0;/* strncpyが '\0' 入れてくれないみたいなので、区切りを入れる */
+				msgbuf2[25]=0;/* strncpyが '\0' 入れてくれないみたいなので、区切りを入れる */
+				msgbuf2[26]=0;/* strncpyが '\0' 入れてくれないみたいなので、区切りを入れる */
+				msgbuf2[27]=0;/* strncpyが '\0' 入れてくれないみたいなので、区切りを入れる */
+				pspDebugScreenPrintf("%s",	msgbuf2	);
+			}
+			hit_any_key();
+		}
+		break;
+	#endif
+	case ERR_FATAL: //	fprintf(stdout,"FATAL: %s\n",msgbuf);
+		pspDebugScreenSetXY(2,3);
 		pspDebugScreenPrintf("FATAL ERROR");
 		hit_any_key();
 		pspDebugScreenInit();/*要る*/
@@ -304,18 +231,144 @@ void error(int errorlevel, char *msg, ...)
 		pspDebugScreenSetXY(0,0);
 		pspDebugScreenPrintf("%s",	msgbuf	);
 		hit_any_key();
-		sceKernelExitGame();
+		sceKernelExitGame();	//if (errorlevel==ERR_FATAL) exit(1);/*exit(1)はpspで使えないので注意*/
 		break;
 	}
-
-	if (errorlevel==ERR_FATAL) exit(1);
 }
 
 
+/*---------------------------------------------------------
+	システムの基礎部分
+---------------------------------------------------------*/
+void newstate(int m, int s, int n)
+{
+	laststate=state;
+	if (m>=0) state.mainstate=m;
+	if (s>=0) state.substate=s;
+	if (n>=0) state.newstate=n;
+}
+
+static void imglist_garbagecollect(void);
+void *mmalloc(size_t size)
+{
+	void *ptr;
+	ptr=malloc(size);
+	if (ptr==NULL)
+	{
+		error(ERR_WARN,"can't alloc %d bytes, trying garbage collection",size);
+		imglist_garbagecollect();
+		ptr=malloc(size);
+		if (ptr==NULL) {
+			error(ERR_FATAL,"I'm sorry, but you're out of memory!");
+		}
+	}
+	return ptr;
+}
+
+/*---------------------------------------------------------
+	画像関連
+---------------------------------------------------------*/
+
+void psp_clear_screen(void)
+{
+	/* 将来Guで描いた場合。ハードウェアー機能で、置き換えられるので今のうちにまとめとく */
+	SDL_FillRect(screen,NULL,SDL_MapRGB(screen->format,0,0,0));
+}
+void psp_push_screen(void)
+{
+	SDL_BlitSurface(screen,NULL,back_screen,NULL);
+}
+void psp_pop_screen(void)
+{
+	SDL_BlitSurface(back_screen,NULL,screen,NULL);
+}
 
 
+/*---------------------------------------------------------
+	画像キャッシュ関連
+---------------------------------------------------------*/
 
+/*
+	IMGLISTの構造
+	struct ImgList{
+		char name[64];
+		SDL_Surface* pSurface;
+		ImgList* Pre;
+		ImgList* Next;
+	};
+*/
+typedef struct _imglist
+{
+	char name[256];
+	int refcount;
+	SDL_Surface *img;
+	struct _imglist *next;
+} IMGLIST;
 
+/*画像キャッシュのリスト*/
+static IMGLIST *img_list/*=NULL*/;/*←この初期化処理はpspでは正常に動作しない*/
+
+/*extern*/ void init_imglist(void)
+{
+	img_list = NULL;
+}
+static void imglist_add(SDL_Surface *s, char *name)
+{
+	IMGLIST *new_list;
+	new_list			= mmalloc(sizeof(IMGLIST));
+	strcpy(new_list->name,name);
+	new_list->refcount	= 1;
+	new_list->img		= s;
+	if (img_list==NULL)
+	{
+		img_list		= new_list;
+		new_list->next	= NULL;
+	}
+	else
+	{
+		new_list->next	= img_list;
+		img_list		= new_list;
+	}
+}
+
+static SDL_Surface *imglist_search(char *name)
+{
+	IMGLIST *i=img_list;
+	while (i!=NULL)
+	{
+		if (!strcmp(name,i->name))
+		{
+			i->refcount++;
+			return (i->img);
+		}
+		i=i->next;
+	}
+	return(NULL);
+}
+
+static void imglist_garbagecollect(void)
+{
+	IMGLIST *s=img_list,*p=NULL,*n=NULL;
+	while (s!=NULL)
+	{
+		n=s->next;
+		if (s->refcount==0)
+		{
+			if (p==NULL)
+			{
+				img_list=n;
+			} else
+			{
+				p->next=n;
+			}
+			//SDL_FreeSurface(s->img);
+			free(s);
+		} else {
+			p=s;
+		}
+		s=n;
+	}
+}
 
 SDL_Surface *loadbmp0(char *filename, int use_alpha)
 {
@@ -372,13 +425,17 @@ void unloadbmp_by_surface(SDL_Surface *s)
 		*sがIMGLIST内にあるか確認をし、あった場合そのSurfaceのrefcountを0にする。
 	*/
 	IMGLIST *i=img_list;
-
-	while (i!=NULL) {
-		if (s==i->img) {
-			if (!i->refcount) {
+	while (i!=NULL)
+	{
+		if (s==i->img)
+		{
+			if (!i->refcount)
+			{
 				CHECKPOINT;
 				error(ERR_WARN,"unloadbmp_by_surface: refcount for object %s is already zero",i->name);
-			} else {
+			}
+			else
+			{
 				i->refcount--;
 			}
 			return;
@@ -415,107 +472,71 @@ void unloadbmp_by_name(char *name)
 }
 */
 
-void imglist_add(SDL_Surface *s, char *name)
-{
-	IMGLIST *new;
-
-	new=mmalloc(sizeof(IMGLIST));
-	strcpy(new->name,name);
-	new->refcount=1;
-	new->img=s;
-
-	if (img_list==NULL) {
-		img_list=new;
-		new->next=NULL;
-	} else {
-		new->next=img_list;
-		img_list=new;
-	}
-}
-
-SDL_Surface *imglist_search(char *name)
-{
-	IMGLIST *i=img_list;
-
-	while (i!=NULL) {
-		if (!strcmp(name,i->name)) {
-			i->refcount++;
-			return (i->img);
-		}
-		i=i->next;
-	}
-	return(NULL);
-}
-
-void imglist_garbagecollect()
-{
-	IMGLIST *s=img_list,*p=NULL,*n=NULL;
-
-	while (s!=NULL)
-	{
-		n=s->next;
-		if (s->refcount==0) {
-			if (p==NULL) {
-				img_list=n;
-			} else {
-				p->next=n;
-			}
-			//SDL_FreeSurface(s->img);
-			free(s);
-		} else {
-			p=s;
-		}
-		s=n;
-	}
-}
 
 /* dont forget to lock surface when using get/putpixel! */
 Uint32 getpixel(SDL_Surface *surface, int x, int y)
 {
+	#if (16!=depth)
 	int bpp=surface->format->BytesPerPixel;
 	Uint8 *p=(Uint8 *)surface->pixels+y*surface->pitch+x*bpp;
-
+	#else
+	Uint8 *p=(Uint8 *)surface->pixels+y*surface->pitch+x+x;
+	#endif
 	if (x>=clip_xmin(surface) && x<=clip_xmax(surface) && y>=clip_ymin(surface) && y<=clip_ymax(surface))
 	{
+		#if (16!=depth)
 		switch (bpp)
 		{
 		case 1:
 			return *p;
 		case 2:
+		#endif
 			return *(Uint16 *)p;
+		#if (16!=depth)
 		case 3:
 			if (SDL_BYTEORDER==SDL_BIG_ENDIAN)
-				return p[0]<<16|p[1]<<8|p[2];
+			{	return p[0]<<16|p[1]<<8|p[2];}
 			else
-				return p[0]|p[1]<<8|p[2]<<16;
+			{	return p[0]|p[1]<<8|p[2]<<16;}
 		case 4:
 			return *(Uint32 *)p;
 		default:
 			return 0;
 		}
+		#endif
 	} else return 0;
 }
 
 void putpixel(SDL_Surface *surface, int x, int y, Uint32 pixel)
 {
+	#if (16!=depth)
 	int bpp=surface->format->BytesPerPixel;
 	Uint8 *p=(Uint8 *)surface->pixels+y*surface->pitch+x*bpp;
+	#else
+	Uint8 *p=(Uint8 *)surface->pixels+y*surface->pitch+x+x;
+	#endif
 	if (x>=clip_xmin(surface) && x<=clip_xmax(surface) && y>=clip_ymin(surface) && y<=clip_ymax(surface))
 	{
+		#if (16!=depth)
 		switch (bpp)
 		{
 		case 1:
 			*p=pixel;
 			break;
 		case 2:
+		#endif
 			*(Uint16 *)p=pixel;
+		#if (16!=depth)
 			break;
 		case 3:
-			if (SDL_BYTEORDER==SDL_BIG_ENDIAN) {
+			if (SDL_BYTEORDER==SDL_BIG_ENDIAN)
+			{
 				p[0]=(pixel>>16)&0xff;
 				p[1]=(pixel>>8)&0xff;
 				p[2]=pixel&0xff;
-			} else {
+			}
+			else
+			{
 				p[2]=(pixel>>16)&0xff;
 				p[1]=(pixel>>8)&0xff;
 				p[0]=pixel&0xff;
@@ -524,6 +545,7 @@ void putpixel(SDL_Surface *surface, int x, int y, Uint32 pixel)
 		case 4:
 			*(Uint32 *)p=pixel;
 		}
+		#endif
 	}
 }
 /*
@@ -626,28 +648,22 @@ void blit_scaled(SDL_Surface *src, SDL_Rect *src_rct, SDL_Surface *dst, SDL_Rect
 	Sint32 x, y;
 	Sint32 u, v;
 	Uint32 col, key;
-
 	key=src->format->colorkey;
-
-	if (SDL_MUSTLOCK(src))
-		SDL_LockSurface(src);
-	if (SDL_MUSTLOCK(dst))
-		SDL_LockSurface(dst);
-
-	for (y = 0; y<dst_rct->h; y++) {
-		for (x = 0; x<dst_rct->w; x++) {
+	if (SDL_MUSTLOCK(src))	{	SDL_LockSurface(src);}
+	if (SDL_MUSTLOCK(dst))	{	SDL_LockSurface(dst);}
+	for (y = 0; y<dst_rct->h; y++)
+	{
+		for (x = 0; x<dst_rct->w; x++)
+		{
 			u = src_rct->w * x / dst_rct->w;
 			v = src_rct->h * y / dst_rct->h;
 			col=getpixel(src, u + src_rct->x, v + src_rct->y);
 			if (col!=key)
-				putpixel(dst, x + dst_rct->x, y + dst_rct->y, col);
+			{	putpixel(dst, x + dst_rct->x, y + dst_rct->y, col);}
 		}
 	}
-
-	if (SDL_MUSTLOCK(src))
-		SDL_UnlockSurface(src);
-	if (SDL_MUSTLOCK(dst))
-		SDL_UnlockSurface(dst);
+	if (SDL_MUSTLOCK(src))	{	SDL_UnlockSurface(src);}
+	if (SDL_MUSTLOCK(dst))	{	SDL_UnlockSurface(dst);}
 }
 
 /* just a quick hack - dont know if i will use it in the final game...
@@ -714,95 +730,30 @@ void blit_calpha(SDL_Surface *src, SDL_Rect *src_rct, SDL_Surface *dst, SDL_Rect
 }
 */
 
-void keyboard_clear()
+/*
+void toggle_fullscreen()
 {
-	int i;
-	for (i=0;i<15;i++)
-	{
-		keyboard[i]=0;
+	SDL_Surface *tmp;
+
+	if (videoflags==SDL_DOUBLEBUF)
+		videoflags=SDL_FULLSCREEN;
+	else
+		videoflags=SDL_DOUBLEBUF;
+
+	tmp=SDL_ConvertSurface(screen,screen->format,screen->flags);
+	if (tmp==NULL) {
+		CHECKPOINT;
+		error(ERR_FATAL,"cant copy screen");
 	}
-}
-
-void keyboard_poll(void)
-{
-	SceCtrlData pad;
-	sceCtrlReadBufferPositive(&pad, 1);
-	int pad_data = pad.Buttons;
-	if (pad.Lx < 64/*70*/)			{		pad_data |= PSP_CTRL_LEFT;	}
-	else if (pad.Lx > 192/*185*/)	{		pad_data |= PSP_CTRL_RIGHT; }
-
-	if (pad.Ly < 64/*70*/)			{		pad_data |= PSP_CTRL_UP;	}
-	else if (pad.Ly > 192/*185*/)	{		pad_data |= PSP_CTRL_DOWN;	}
-//
-	if (pad_data & PSP_CTRL_SELECT) 	{keyboard[keyconfig.sl] |= (pad_data & PSP_CTRL_SELECT);}	else{keyboard[keyconfig.sl] &= (~PSP_CTRL_SELECT);}
-	if (pad_data & PSP_CTRL_START)		{keyboard[keyconfig.st] |= (pad_data & PSP_CTRL_START);}	else{keyboard[keyconfig.st] &= (~PSP_CTRL_START);}
-	if (pad_data & PSP_CTRL_UP) 		{keyboard[keyconfig.u]	|= (pad_data & PSP_CTRL_UP);}		else{keyboard[keyconfig.u]	&= (~PSP_CTRL_UP);}
-	if (pad_data & PSP_CTRL_RIGHT)		{keyboard[keyconfig.r]	|= (pad_data & PSP_CTRL_RIGHT);}	else{keyboard[keyconfig.r]	&= (~PSP_CTRL_RIGHT);}
-	if (pad_data & PSP_CTRL_DOWN)		{keyboard[keyconfig.d]	|= (pad_data & PSP_CTRL_DOWN);} 	else{keyboard[keyconfig.d]	&= (~PSP_CTRL_DOWN);}
-	if (pad_data & PSP_CTRL_LEFT)		{keyboard[keyconfig.l]	|= (pad_data & PSP_CTRL_LEFT);} 	else{keyboard[keyconfig.l]	&= (~PSP_CTRL_LEFT);}
-	if (pad_data & PSP_CTRL_LTRIGGER)	{keyboard[keyconfig.lt] |= (pad_data & PSP_CTRL_LTRIGGER);} else{keyboard[keyconfig.lt] &= (~PSP_CTRL_LTRIGGER);}
-	if (pad_data & PSP_CTRL_RTRIGGER)	{keyboard[keyconfig.rt] |= (pad_data & PSP_CTRL_RTRIGGER);} else{keyboard[keyconfig.rt] &= (~PSP_CTRL_RTRIGGER);}
-	if (pad_data & PSP_CTRL_TRIANGLE)	{keyboard[keyconfig.sa] |= (pad_data & PSP_CTRL_TRIANGLE);} else{keyboard[keyconfig.sa] &= (~PSP_CTRL_TRIANGLE);}
-	if (pad_data & PSP_CTRL_CIRCLE) 	{keyboard[keyconfig.ma] |= (pad_data & PSP_CTRL_CIRCLE);}	else{keyboard[keyconfig.ma] &= (~PSP_CTRL_CIRCLE);}
-	if (pad_data & PSP_CTRL_CROSS)		{keyboard[keyconfig.ba] |= (pad_data & PSP_CTRL_CROSS);}	else{keyboard[keyconfig.ba] &= (~PSP_CTRL_CROSS);}
-	if (pad_data & PSP_CTRL_SQUARE) 	{keyboard[keyconfig.si] |= (pad_data & PSP_CTRL_SQUARE);}	else{keyboard[keyconfig.si] &= (~PSP_CTRL_SQUARE);}
-}
-
-int keyboard_keypressed()
-{
-	int i;
-	for (i=0;i<15;i++)
-	{
-		if (keyboard[i]) return 1;
+	if ((screen=SDL_SetVideoMode(WIDTH,HEIGHT,depth,videoflags))==NULL) {
+		CHECKPOINT;
+		error(ERR_FATAL,"cant open change fullscreen/window: %s",SDL_GetError());
 	}
-	return 0;
+	SDL_BlitSurface(tmp,NULL,screen,NULL);
+	//SDL_FreeSurface(tmp);
+	// display_vidinfo();
 }
-
-void newstate(int m, int s, int n)
-{
-	laststate=state;
-	if (m>=0) state.mainstate=m;
-	if (s>=0) state.substate=s;
-	if (n>=0) state.newstate=n;
-}
-
-void *mmalloc(size_t size)
-{
-	void *ptr;
-
-	ptr=malloc(size);
-	if (ptr==NULL) {
-		error(ERR_WARN,"can't alloc %d bytes, trying garbage collection",size);
-		imglist_garbagecollect();
-		ptr=malloc(size);
-		if (ptr==NULL) {
-			error(ERR_FATAL,"I'm sorry, but you're out of memory!");
-		}
-	}
-
-	return ptr;
-}
-
-void load_ing() 	//load画面用
-{
-	kazu ++;
-	int i;
-	SDL_Rect dott;
-	dott.h=0;
-	dott.w=0;
-	dott.y=248;
-//	SDL_FillRect(screen,NULL,SDL_MapRGB(screen->format,0,0,0));		//画面に大幅な変更がないときはする必要なし？
-	psp_pop_screen();		//SDL_BlitSurface(loadpic, NULL, screen, NULL);
-	for (i=0;i<(kazu % 4);i++){
-		if (i!=3)
-		{
-			dott.x=425+19*i;
-			SDL_BlitSurface(loaddot[i], NULL, screen, &dott);
-		}
-	}
-	SDL_Flip(screen);
-}
-
+*/
 /*
 void display_vidinfo()
 {
@@ -851,366 +802,4 @@ void display_vidinfo()
 }
 */
 
-void preload_gfx()
-{
-	/*
-		ファイルの確認だと思う。
-	*/
-	SDL_Surface *tmp;
 
-	load_ing();
-	tmp=loadbmp("12side.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("badblocks.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("badguy.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("bgpanel.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("bgpanel2.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("bonus_f.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("bonus_p.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("bonus_p_.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("bonus_s.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("bonus_h.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("bonus_x.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp2("knife.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp2("knife_core.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp2("knife0.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp2("knife1.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp2("knife2.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp2("knife3.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp2("knife4.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp2("knife5.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp2("knife6.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp2("knife7.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp2("knife8.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp2("knife9.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp2("knife10.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp2("knife11.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp2("knife12.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp2("knife13.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp2("knife14.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp2("knife15.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp2("knife16.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp2("knife17.png"); unloadbmp_by_surface(tmp);
-	load_ing();
-	tmp=loadbmp("boss01-lo.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("boss01-lu.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("boss01-mo.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("boss01-mu.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("boss01-ro.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("boss01-ru.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("boss02_v2.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("boss02_v2x.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("boss03-lo.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("boss03-lu.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("boss03-mo.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("boss03-mu.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("boss03-ro.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("boss03-ru.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("boss04.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp2("boss04-lo.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("boss05-lo.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("boss05-mo.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("boss05-ro.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("boss05-lu.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("boss05-mu.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("boss05-ru.png"); unloadbmp_by_surface(tmp);
-	load_ing();
-	tmp=loadbmp("bshoot.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("bshoot2.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("coin.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("crusher.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("cshoot.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp2("cshoot1.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp2("cshoot2.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("cube.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("ex.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("spell_bullet_r.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("spell_bullet_g.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("spell_bullet_b.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("kugel2.png"); unloadbmp_by_surface(tmp);
-	load_ing();
-	tmp=loadbmp("fairy.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("great_fairy.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("eyefo.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("fireball.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp2("fireball1.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp2("bat.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("firebomb.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("font01.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("font02.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp2("font03.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("font04.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("font05.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp2("font07.png"); unloadbmp_by_surface(tmp);
-	load_ing();
-	tmp=loadbmp("grounder.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("iris.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("homing.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("ketm.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("killray-b.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("killray-r.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("kugel.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("moon.jpg"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("plasma.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("plasma_ma.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("plasma_oz.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("plasmaball.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("missile.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("Player_Star.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("Bomb_Star.png"); unloadbmp_by_surface(tmp);
-	//tmp=loadbmp("plate.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("plus1000.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("plus100.png"); unloadbmp_by_surface(tmp);
-	load_ing();
-	tmp=loadbmp("rotating_rocket.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("rwingx.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("splash.png"); unloadbmp_by_surface(tmp);		//[***090124		追加
-	tmp=loadbmp("ship-med.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("ship-med-ma.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("speed.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("tr_blue.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("tr_red.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("tr_green.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("star_shields_blue.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("star_shields_red.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("star_shields_green.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("star_shield_blue.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("star_shield_red.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("star_shield_green.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("cross_red.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp2("fire_wind_r.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp2("fire_wind_l.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp2("fire_wind_u.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("target.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("weapon.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp2("health.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("wolke01_1.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp2("window.png"); unloadbmp_by_surface(tmp);
-	load_ing();
-	tmp=loadbmp("wolke02_1.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("wolke03_1.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("wolke01_2.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("wolke02_2.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("wolke03_2.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("wolke01_3.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("wolke02_3.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("wolke03_3.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("wolke01_4.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("wolke02_4.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("wolke03_4.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("sp_reimu_bg.jpg"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("sp_marisa_bg.jpg"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("sp_remiria_bg.jpg"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("sp_reimu_st.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("sp_marisa_st.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("sp_remiria_st.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("oze_op1.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("oze_op2.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("oze_op3.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("oze_op4.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("mari_op.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("option.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("core.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("core-ma.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("core-oz.png"); unloadbmp_by_surface(tmp);
-	load_ing();
-	tmp=loadbmp2("weapon_p.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("key_bg.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("bg2.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("back1.jpg"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("back1_a-0.jpg"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("back1_a-1.jpg"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("back2.jpg"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("back2_a-0.jpg"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("back2_a-1.jpg"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("back3.jpg"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("back3_a-0.jpg"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("back3_a-1.jpg"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("back4.jpg"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("back4_a-0.jpg"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("back4_a-1.jpg"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("back5.jpg"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("back5_a-0.jpg"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("back5_a-1.jpg"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("back6.jpg"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("ming.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("tshoot.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("tshoot-ma.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("tshoot-oz.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("protectball.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp2("bigkugel1.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("bigkugel2.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("key_icon.png"); unloadbmp_by_surface(tmp);
-	tmp=loadbmp("keylist.png"); unloadbmp_by_surface(tmp);
-
-	/* alle benoetigten Bilder in den Cache laden */
-}
-
-static int ini_load_int(FILE *fp, char *search)
-{
-	/* 走査するよ */
-	fseek(fp, 0L, SEEK_SET);
-	int result=-1;
-	char buffer[128];		//行取得用
-	char target[30];		//何についての情報なのか
-	while (fgets(buffer,128,fp) != NULL)
-	{
-		char *c;		//行解析用
-		c = buffer;
-
-		/* skiped lines. */
-		if (*c=='\n')		{	continue;	}
-		while (isspace(*c)) {	c++;		}
-		if (*c=='#')		{	continue;	}
-
-		char *sc=target;
-		int i=0;
-		while (*c != '=')
-		{
-			i++;
-			if (i >= 30)		{	return -1;	}
-			*sc++ = *c++;
-		}
-		c++;		/* =を無視 */
-		*sc = 0;	//NULL
-
-		if (!strcmp(target,search))
-		{
-			char re_s[30];
-			char *re_e=re_s;
-			while (*c != '\n')
-			{
-				*re_e++=*c++;
-			}
-			re_e=0;
-			result=atoi(re_s);
-			break;
-		}
-	}
-	return result;
-}
-
-static int ini_load_char(FILE *fp, char *search, char *result)
-{
-	fseek(fp, 0L, SEEK_SET);
-	int int_result=-1;
-	char buffer[128];		//行取得用
-	char target[30];		//何についての情報なのか
-	while (fgets(buffer,128,fp) != NULL)
-	{
-		char *c;		//行解析用
-		c = buffer;
-
-		if (*c=='\n')		{	continue;	}
-		while (isspace(*c)) {	c++;		}
-		if (*c=='#')		{	continue;	}
-
-		char *sc=target;
-		int i=0;
-		while (*c != '=')
-		{
-			i++;
-			if (i >= 30)		{	return -1;	}
-			*sc++ = *c++;
-		}
-		c++;
-		*sc = 0;	//NULL
-
-		if (!strcmp(target,search))
-		{
-			char *re_e=result;
-			while (*c != 13)		/* \nじゃなくて13にしないとちゃんと取ってくれないよ。intの方は数字じゃない物は排除してくれるみたいだから問題なし */
-			{
-				*re_e++=*c++;
-			}
-			re_e=0;
-			int_result=1;
-			break;
-		}
-	}
-	return int_result;
-}
-
-
-int ini_load()
-{
-	FILE *fp;
-	char fn[50];
-	strcpy(fn,"./setting.ini");
-	int tmp;
-
-	if ( NULL == (fp = fopen(fn,"r"))){	return -1;	}
-
-	if(ini_load_char(fp, "moddir", moddir)==-1){	return -1;	}
-//	fscanf(fp,"moddir=%s",moddir);
-	tmp=ini_load_int(fp,"difficulty");
-	if(tmp!=-1){	difficulty=tmp;	}
-	else	{	return -1;	}
-	tmp=ini_load_int(fp,"UP");
-	if(tmp!=-1){	keyconfig.u=tmp;	}
-	else	{	return -1;	}
-	tmp=ini_load_int(fp,"DOWN");
-	if(tmp!=-1){	keyconfig.d=tmp;	}
-	else	{	return -1;	}
-	tmp=ini_load_int(fp,"LEFT");
-	if(tmp!=-1){	keyconfig.l=tmp;	}
-	else	{	return -1;	}
-	tmp=ini_load_int(fp,"RIGHT");
-	if(tmp!=-1){	keyconfig.r=tmp;	}
-	else	{	return -1;	}
-	tmp=ini_load_int(fp,"CROSS");
-	if(tmp!=-1){	keyconfig.ba=tmp;	}
-	else	{	return -1;	}
-	tmp=ini_load_int(fp,"CIRCLE");
-	if(tmp!=-1){	keyconfig.ma=tmp;	}
-	else	{	return -1;	}
-	tmp=ini_load_int(fp,"TRIANGLE");
-	if(tmp!=-1){	keyconfig.sa=tmp;	}
-	else	{	return -1;	}
-	tmp=ini_load_int(fp,"SQUARE");
-	if(tmp!=-1){	keyconfig.si=tmp;	}
-	else	{	return -1;	}
-	tmp=ini_load_int(fp,"R_T");
-	if(tmp!=-1){	keyconfig.rt=tmp;	}
-	else	{	return -1;	}
-	tmp=ini_load_int(fp,"L_T");
-	if(tmp!=-1){	keyconfig.lt=tmp;	}
-	else	{	return -1;	}
-	tmp=ini_load_int(fp,"SELECT");
-	if(tmp!=-1){	keyconfig.sl=tmp;	}
-	else	{	return -1;	}
-	tmp=ini_load_int(fp,"START");
-	if(tmp!=-1){	keyconfig.st=tmp;	}
-	else	{	return -1;	}
-	if(ini_load_char(fp,"password", password)==-1){	return -1;	}
-	fclose(fp);
-	if (difficulty>3 || 0>difficulty)
-	{	difficulty=2;}
-	return 1;
-}
-
-void ini_save()
-{
-	char k=13;
-	FILE *fp;
-	char fn[50];
-	strcpy(fn,"./setting.ini");
-	if ( NULL == (fp = fopen(fn,"w")))
-		return;
-
-	fprintf(fp,"moddir=%s%c\n",moddir,k);
-	fprintf(fp,"difficulty=%d%c\n",difficulty,k);
-	fprintf(fp,"UP=%d%c\n",keyconfig.u,k);
-	fprintf(fp,"DOWN=%d%c\n",keyconfig.d,k);
-	fprintf(fp,"LEFT=%d%c\n",keyconfig.l,k);
-	fprintf(fp,"RIGHT=%d%c\n",keyconfig.r,k);
-	fprintf(fp,"CROSS=%d%c\n",keyconfig.ba,k);
-	fprintf(fp,"CIRCLE=%d%c\n",keyconfig.ma,k);
-	fprintf(fp,"TRIANGLE=%d%c\n",keyconfig.sa,k);
-	fprintf(fp,"SQUARE=%d%c\n",keyconfig.si,k);
-	fprintf(fp,"R_T=%d%c\n",keyconfig.rt,k);
-	fprintf(fp,"L_T=%d%c\n",keyconfig.lt,k);
-	fprintf(fp,"SELECT=%d%c\n",keyconfig.sl,k);
-	fprintf(fp,"START=%d%c\n",keyconfig.st,k);
-	fprintf(fp,"password=%s%c\n",password,k);
-	fclose(fp);
-}

@@ -1,100 +1,40 @@
 #include "hiscore.h"
 
-/*
-	typedef struct {
-		char name[4];
-		int score;
-	} HSC_LIST;
-*/
-
-HSC_LIST hsc_table[5];
-SPRITE *hscsprite[6];
-SDL_Surface *hscsurface[6];
-int all_inplace;
-int nr_of_sprites;
-//SDL_Surface *back;
-int lastscore;
-int high_score;
-
 extern GAMESTATE state;
 extern SDL_Surface *screen;
-extern int keyboard[];
-extern KEYCONFIG keyconfig;
 extern double fps_factor;
 
 
-void hsc_init(void)
-{
-	int i;
-	for (i=0; i<5; i++)
-	{
-		strcpy(hsc_table[i].name,"ZUN"/*"DEN"*/);
-		hsc_table[i].score=(5-i)*score(10000);
-	}
-}
+/*---------------------------------------------------------
+	ハイスコア表示デモ画面
+---------------------------------------------------------*/
 
-void hsc_load(void)
-{
-	int i;
-	FILE *fp;
-	char fn[64/*50*/];
-	int tmpscore;
-	strcpy(fn,moddir);
-	strcat(fn,"/");
-	strcat(fn,"highscore.txt");
+/*global*/
 
-	if ( NULL == (fp = fopen(fn,"r")) )
-	{
-		return;
-	}
-	for (i=0;i<5;i++)
-	{
-		if (fscanf(fp,"%3s %d\n",hsc_table[i].name,&tmpscore)==2)
-		{
-			hsc_table[i].score=tmpscore;
-			if (i == 0)
-			{
-				high_score = hsc_table[i].score;		//常に表示するハイコアの取得=>score.cで利用
-			}
-		}
-	}
-	fclose(fp);
-}
+ HSC_LIST hsc_table[5];
+ int lastscore;
+ int high_score;
 
-void hsc_save(void)
-{
-	int i;
-	FILE *fp;
-	char fn[64/*50*/];
-//	int tmpscore;
-	strcpy(fn,moddir);
-	strcat(fn,"/");
-	strcat(fn,"highscore.txt");
 
-	if ( NULL == (fp = fopen(fn,"w")) )
-	{
-		return;
-	}
-	for (i=0;i<5;i++)
-	{
-		fprintf(fp,"%3s %d\n",hsc_table[i].name,hsc_table[i].score);
-	}
-	fclose(fp);
-}
+/*local static*/
 
+static SPRITE *hscsprite[6];
+static SDL_Surface *hscsurface[6];
+static int all_inplace;
+//static int nr_of_sprites;
+//static SDL_Surface *back;
 
 typedef struct
 {
-	double xg;
-	double yg;
+	/*double*/int xg256;
+	/*double*/int yg256;
 	int dir;
-	double ph;
-	double phspeed;
-	double amp;
-	double ampspeed;
+	/*double*/int ph512;
+	/*double*/int phspeed;
+	/*double*/int amp256;
+	/*double*/int ampspeed256;
 	int arrived;
 } HSC_DATA;
-
 
 static void hsc_show_move(SPRITE *s)
 {
@@ -102,20 +42,20 @@ static void hsc_show_move(SPRITE *s)
 
 	if (d->arrived==0)
 	{
-		s->x=d->xg+(cos(degtorad(d->ph))*d->amp);
-		s->y=d->yg;
-		d->ph+=d->phspeed*fps_factor;
+		s->x = ((d->xg256+(int)(co_s512((d->ph512))*d->amp256))>>8);
+		s->y = ((d->yg256)>>8);
+		d->ph512 += d->phspeed/**fps_factor*/;
 		// d->ph+=d->phspeed;
 		// d->ph%=360;
-		if (d->ph>=360) {	d->ph-=360;}
+		mask512(d->ph512);//if (d->ph>=360) {	d->ph-=360;}
 		if (d->dir==0)
 		{
 			/* slide-in */
-			d->amp -= d->ampspeed;
-			if (d->amp<=0.3)
+			d->amp256 -= d->ampspeed256;
+			if (d->amp256 <= t256(0.3) )
 			{
-				s->x = d->xg;
-				s->y = d->yg;
+				s->x = ((d->xg256)>>8);
+				s->y = ((d->yg256)>>8);
 				d->arrived=1;
 				all_inplace++;
 			}
@@ -123,8 +63,9 @@ static void hsc_show_move(SPRITE *s)
 		else
 		{
 			/* slide-out */
-			d->amp+=d->ampspeed;
-			if ((d->amp>=400)&&((s->x<-s->w)||(s->x>WIDTH)))
+			d->amp256 += d->ampspeed256;
+			if ((d->amp256 >= t256(400) ) &&
+				((s->x<-s->w)||(s->x>PSP_WIDTH)))
 			{
 				d->arrived=1;
 				all_inplace++;
@@ -157,13 +98,13 @@ void hsc_show_init(void)
 		hscsprite[i]			= sprite_add(hscsurface[i],1,PR_TEXT,1);
 		hd						= mmalloc(sizeof(HSC_DATA));
 		hscsprite[i]->data		= hd;
-		hd->xg					= 20+(i*4);
-		hd->yg					= i*25+150;
+		hd->xg256				= (t256( 4)*i) + t256( 20);
+		hd->yg256				= (t256(25)*i) + t256(150);
 		hd->arrived 			= 0;
-		hd->ph					= ((i&(2-1))==0)?0:180;
+		hd->ph512				= ((i&(2-1))==0)?deg_360_to_512(0):deg_360_to_512(180);
 		hd->phspeed 			= 4;
-		hd->amp 				= 300;
-		hd->ampspeed			= 1;
+		hd->amp256				= t256(300);
+		hd->ampspeed256 		= t256(1);
 		hd->dir 				= 0;
 		hscsprite[i]->flags 	|= SP_FLAG_VISIBLE;
 		hscsprite[i]->type		= SP_ETC;
@@ -176,12 +117,12 @@ void hsc_show_init(void)
 	hscsprite[5]			= sprite_add(hscsurface[5],1,PR_TEXT,1);
 	hd						= mmalloc(sizeof(HSC_DATA));
 	hscsprite[5]->data		= hd;
-	hd->xg					= 30;
-	hd->yg					= 110;
-	hd->ph					= 0;
+	hd->xg256				= t256(30);
+	hd->yg256				= t256(110);
+	hd->ph512				= deg_360_to_512(0);
 	hd->phspeed 			= 5;
-	hd->amp 				= 300;
-	hd->ampspeed			= 1.0;
+	hd->amp256				= t256(300);
+	hd->ampspeed256 		= t256(1.0);
 	hd->arrived 			= 0;
 	hd->dir 				= 0;
 	hscsprite[5]->flags 	|= SP_FLAG_VISIBLE;
@@ -192,7 +133,7 @@ void hsc_show_init(void)
 
 	all_inplace=0;
 	psp_push_screen();	//back=SDL_ConvertSurface(screen,screen->format,screen->flags);
-	//if (back==NULL)
+	//if (NULL==back)
 	//{
 	//	CHECKPOINT;
 	//	error(ERR_FATAL,"cant create background surface");
@@ -203,15 +144,18 @@ void hsc_show_init(void)
 
 void hsc_show_work(void)
 {
+	if (state.mainstate!=ST_SHOW_HCLIST || state.newstate==1) return;
+
+	if (IS_KEYBOARD_PULLED/*keyboard_keypressed()*/)
+	{
+		newstate(ST_SHOW_HCLIST,HCLISTS_QUIT,0);
+	}
+//
+	psp_pop_screen();	//SDL_BlitSurface(back,NULL,screen,NULL);
+//
 	int i;
 	HSC_DATA *d;
 	static double w;
-
-	if (state.mainstate!=ST_SHOW_HCLIST || state.newstate==1) return;
-
-	psp_pop_screen();	//SDL_BlitSurface(back,NULL,screen,NULL);
-
-	if (keyboard_keypressed()) newstate(ST_SHOW_HCLIST,HCLISTS_QUIT,0);
 
 	switch (state.substate)
 	{
@@ -245,12 +189,12 @@ void hsc_show_work(void)
 	case HCLISTS_QUIT:
 		for (i=0;i<6;i++)
 		{
-			hscsprite[i]->type=-1;
+			hscsprite[i]->type=SP_DELETE;
 			SDL_FreeSurface(hscsurface[i]);
 		}
 	//	SDL_FreeSurface(back);
 	//	newstate(ST_MENU,0,1);
-		newstate(ST_INTRO,0,1);
+		newstate(ST_MENU/*ST_INTRO*/,0,1);
 		break;
 	}
 	sprite_work(SP_SHOW_ETC);
@@ -258,12 +202,10 @@ void hsc_show_work(void)
 }
 
 
-/*******************************************************************************
- * Hiscore Entry
- ******************************************************************************/
 
-static SDL_Surface *headline;
-static SDL_Surface *plate;
+/*---------------------------------------------------------
+	ハイスコア名前入力画面
+---------------------------------------------------------*/
 
 static char *entry;
 static int wstat;
@@ -280,6 +222,8 @@ typedef struct
 static LETTER letter[40];
 
 static int now_select_name_chr;
+static int plate_x;
+static int plate_y;
 
 void hsc_entry_init(void)
 {
@@ -327,15 +271,15 @@ void hsc_entry_init(void)
 		letter[i].ascii = c; letter[i].l = font_render(tmp_str, FONT02); /* */
 		i++;
 	}
-	letter[i].ascii=-1;
-	letter[i++].l=font_render("DEL",FONT02); /* 39 */
-	letter[i].ascii=-2;
-	letter[i++].l=font_render("OK", FONT02); /* 40 */
+	letter[i].ascii=-1; 	letter[i++].l=font_render("DEL",FONT02); /* 39 */
+	letter[i].ascii=-2; 	letter[i++].l=font_render("OK", FONT02); /* 40 */
 	{
 		int k;
 		k = 0;
-		for (j=0; j<4; j++) {
-			for (i=0; i<10; i++) {
+		for (j=0; j<4; j++)
+		{
+			for (i=0; i<10; i++)
+			{
 				SDL_SetColorKey(letter[k].l,SDL_SRCCOLORKEY,0x00000000);
 				letter[k].xpos = (i)*30/*25*/ + 48/* 30*/;
 				letter[k].ypos = (j)*36/*25*/ + 84/*100*/;
@@ -343,29 +287,21 @@ void hsc_entry_init(void)
 			}
 		}
 	}
-
-	psp_push_screen();	//back=SDL_ConvertSurface(screen,screen->format,screen->flags);
-	//if (back==NULL)
-	//{
-	//	CHECKPOINT;
-	//	error(ERR_FATAL,"cant create background surface");
-	//}
 	sel=-1;
 	wstat=-1;
-
-	for (i=0;i<40;i++) {
+	for (i=0;i<40;i++)
+	{
 		letter[i].s=0.0;
 	}
-
-	for (i=0;i<5;i++) {
+	for (i=0;i<5;i++)
+	{
 		if (lastscore>hsc_table[i].score)
-			break;
+		{	break;}
 	}
-
-	for (j=4;j>i;j--) {
+	for (j=4;j>i;j--)
+	{
 		hsc_table[j]=hsc_table[j-1];
 	}
-
 	hsc_table[i].score=lastscore;
 	entry=hsc_table[i].name;
 	entry[0]=' ';
@@ -373,16 +309,51 @@ void hsc_entry_init(void)
 	entry[2]=' ';
 	entry[3]=0;
 	now_select_name_chr=0;
-	switch (i) {
-		case 0:
-			sprintf(tmp_str,"NEW HISCORE");
-			break;
-		default:
-			sprintf(tmp_str,"PLACE %d IN THE LIST",i+1);
-			break;
+//	switch (i)
+//	{
+//	case 0: 	sprintf(tmp_str,"NEW HISCORE"); 				break;
+//	default:	sprintf(tmp_str,"PLACE %d IN THE LIST",i+1);	break;
+//	}
+	char *aaaa[5]=
+	{
+		"1ST"/*"NEW HISCORE"*/,
+		"2ND"/*"PLACE 2 IN THE LIST"*/,
+		"3RD"/*"PLACE 3 IN THE LIST"*/,
+		"4TH"/*"PLACE 4 IN THE LIST"*/,
+		"5TH"/*"PLACE 5 IN THE LIST"*/,
+	};
+	/* ｎ位タイトル描画 */
+	{	/*static*/ SDL_Surface *headline;
+		headline=font_render(/*tmp_str*/(&aaaa[i][0]),FONT06);
+		SDL_Rect r;
+		r.x=GAME_WIDTH/2-headline->w/2;
+		r.y=40;
+		r.w=headline->w;
+		r.h=headline->h;
+		SDL_BlitSurface(headline,NULL,screen,&r);
+		SDL_FreeSurface(headline);
 	}
-	headline=font_render(tmp_str,FONT06);
-	plate=loadbmp("plate.png");
+	/* プレート描画 */
+	{
+		/*static*/ SDL_Surface *plate;
+		plate=loadbmp("plate.png");
+		SDL_Rect r;
+		plate_x = r.x=GAME_WIDTH/2-plate->w/2;
+		plate_y = r.y=(GAME_HEIGHT-12)-plate->h;
+		r.w=plate->w;
+		r.h=plate->h;
+		SDL_BlitSurface(plate,NULL,screen,&r);
+		if (plate)
+		{
+			unloadbmp_by_surface(plate);/*unloadbmp_by_name("plate.png");*/
+		}
+	}
+	psp_push_screen();	//back=SDL_ConvertSurface(screen,screen->format,screen->flags);
+	//if (NULL==back)
+	//{
+	//	CHECKPOINT;
+	//	error(ERR_FATAL,"cant create background surface");
+	//}
 
 	newstate(ST_ENTRY_HCLIST,HCLISTE_ENTRY,0);
 }
@@ -390,21 +361,16 @@ void hsc_entry_init(void)
 static void hsc_entry_show(void)
 {
 	int i;
-	SDL_Rect r,s;
+	SDL_Rect s;
+	SDL_Rect r;
 	SDL_Surface *e;
-	static double angle=0;
+	static /*double*/int angle512=0;
 	int xa,ya;
 
 	psp_pop_screen();	//SDL_BlitSurface(back,NULL,screen,NULL);
 
-	r.x=WIDTH2/2-headline->w/2; 	//r.x=screen->w/2-headline->w/2;
-	r.y=40;
-	r.w=headline->w;
-	r.h=headline->h;
-	SDL_BlitSurface(headline,NULL,screen,&r);
-
-	angle+=15*fps_factor;
-	if (angle>360)	{	angle-=360;}
+	angle512 += deg_360_to_512(15)/**fps_factor*/;
+	mask512(angle512);//	if (angle>360)	{	angle-=360;}
 	s.x=0;
 	s.y=0;
 	for (i=0;i<40;i++)
@@ -421,15 +387,18 @@ static void hsc_entry_show(void)
 			if (sel>=0)
 			{	if (letter[i].s>1)
 				{	letter[i].s-=0.05;}}
-		} else {
+		}
+		else
+		{
 			if (sel>=0)
 			{	if (letter[i].s<=3)
 				{	letter[i].s+=0.2;}}
 		}
 	}
-	if (sel>=0) {
-		xa=cos(degtorad(angle))*10;
-		ya=sin(degtorad(angle))*10;
+	if (sel>=0)
+	{
+		xa=co_s512((angle512))*10;
+		ya=si_n512((angle512))*10;
 		s.w=letter[sel].l->w;
 		s.h=letter[sel].l->h;
 		r.x=letter[sel].xpos-(letter[sel].l->w*letter[sel].s/2)+xa;
@@ -439,20 +408,13 @@ static void hsc_entry_show(void)
 		blit_scaled(letter[sel].l,&s,screen,&r);
 	}
 
-	r.x=WIDTH2/2-plate->w/2;		//r.x=screen->w/2-plate->w/2;
-	r.y=(HEIGHT-12)-plate->h;		//r.y=260-plate->h;  //denis
-	r.w=plate->w;
-	r.h=plate->h;
-	SDL_BlitSurface(plate,NULL,screen,&r);
-
-
 	e=font_render(entry,FONT02);
 	s.x=0;
 	s.y=0;
 	s.w=e->w;
 	s.h=e->h;
-	r.x+=5;
-	r.y+=5;
+	r.x= plate_x + 5;
+	r.y= plate_y + 5;
 	r.w=e->w*2;
 	r.h=e->h*2;
 	blit_scaled(e,&s,screen,&r);
@@ -481,12 +443,12 @@ void hsc_entry_work(void)
 		if (wstat==0)
 		{
 			wstat=8;
-				 if (keyboard[KEY_LEFT])	{	wstat=20;		sel--;		if (sel<0)		sel=39; 			}
-			else if (keyboard[KEY_RIGHT])	{	wstat=20;		sel++;		if (sel==40)	sel=0;				}
-			else if (keyboard[KEY_UP])		{	wstat=20;		sel-=10;	if (sel<0)		sel+=40;			}
-			else if (keyboard[KEY_DOWN])	{	wstat=20;		sel+=10;	if (sel>39) 	sel-=40;			}
+				 if (my_pad & PSP_KEY_LEFT /*keybo ard[KEY_LEFT]*/) 	{	wstat=20;		sel--;		if (sel<0)		sel=39; 			}
+			else if (my_pad & PSP_KEY_RIGHT/*keybo ard[KEY_RIGHT]*/)	{	wstat=20;		sel++;		if (sel==40)	sel=0;				}
+			else if (my_pad & PSP_KEY_UP   /*keybo ard[KEY_UP]*/)		{	wstat=20;		sel-=10;	if (sel<0)		sel+=40;			}
+			else if (my_pad & PSP_KEY_DOWN /*keybo ard[KEY_DOWN]*/) 	{	wstat=20;		sel+=10;	if (sel>39) 	sel-=40;			}
 			//
-			if (keyboard[KEY_SHOT])
+			if (my_pad & PSP_KEY_SHOT/*keybo ard[KEY_SHOT]*/)
 			{
 				wstat=20;
 				switch (letter[sel].ascii)
@@ -510,7 +472,7 @@ void hsc_entry_work(void)
 					break;
 				}
 			}
-			else if (keyboard[KEY_CANCEL])		// キャンセルボタンの追加
+			else if (my_pad & PSP_KEY_CANCEL/*keybo ard[KEY_CANCEL]*/)		// キャンセルボタンの追加
 			{
 				wstat=20;
 			delete_last_character:
@@ -520,7 +482,7 @@ void hsc_entry_work(void)
 					entry[now_select_name_chr]=' ';
 				}
 			}
-			else if (keyboard[KEY_PAUSE])	// 終了ボタンの追加
+			else if (my_pad & PSP_KEY_PAUSE/*keybo ard[KEY_PAUSE]*/)	// 終了ボタンの追加
 			{
 				wstat=20;
 			agree_entry:
@@ -531,12 +493,7 @@ void hsc_entry_work(void)
 						SDL_FreeSurface(letter[i].l);
 					}
 				//	SDL_FreeSurface(back);
-					SDL_FreeSurface(headline);
-					if (plate)
-					{
-						unloadbmp_by_surface(plate);/*unloadbmp_by_name("plate.png");*/
-					}
-					newstate(ST_INTRO,0,1);
+					newstate(ST_MENU/*ST_INTRO*/,0,1);
 					return;
 				}
 			}
@@ -545,4 +502,3 @@ void hsc_entry_work(void)
 	}
 	hsc_entry_show();
 }
-

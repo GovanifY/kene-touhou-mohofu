@@ -56,14 +56,20 @@ static void load_stage_serror(char *load_filename, int error_line_number)
 	error(ERR_WARN,"syntax error in levelfile '%s', line no: %d", load_filename, error_line_number);
 }
 
+
 /* Do set the entry. */
 static void load_stage_add_entry(Uint32 time10, char command, char *para1, int para0, int para2)		//オブジェクトの生成
 {
 	LEVELENTRY *new_entry;
 
 	new_entry			= mmalloc(sizeof(LEVELENTRY));
-
+//	#if 1
 	new_entry->time 	= (time10*100*1000);/* 読み込み後、PSPに都合の良い値に変換(1/10[sec]-> 1/1000000[sec]==1[nsec]==nano seconds ) */
+//	#else
+//	/* 色々問題がある */
+//	//Uint32 cv_tbl[4]={100,90,80,70,};
+//	new_entry->time 	= (time10*(10-difficulty)*10/*100*/*1000);/* 読み込み後、PSPに都合の良い値に変換(1/10[sec]-> 1/1000000[sec]==1[nsec]==nano seconds ) */
+//	#endif
 	new_entry->command	= command;
 	strncpy(new_entry->para1, para1, (MAX_PARA1_44-1)/*63*/);
 	new_entry->para0	= para0;
@@ -106,20 +112,20 @@ static void load_stage_add_entry(Uint32 time10, char command, char *para1, int p
 		break;
 	default:	// add background tiles....
 		{
-			/*const*/ short speed256 = 1.0*256;
+			/*const*/ short speed256 = (short)(t256(1.0));
 			#if 1
 			switch (new_entry->command)
 			{
-			case '1':  speed256=(short)(0.2*256); break;
-			case '2':  speed256=(short)(0.4*256); break;
-			case '3':  speed256=(short)(0.6*256); break;
-			case '4':  speed256=(short)(0.8*256); break;
-			case '5':  speed256=(short)(1.0*256); break;
-			case '6':  speed256=(short)(1.2*256); break;
-			case '7':  speed256=(short)(1.4*256); break;
-			case '8':  speed256=(short)(1.6*256); break;
-			case '9':  speed256=(short)(1.8*256); break;
-			default:   speed256=(short)(1.0*256);
+			case '1':  speed256=(short)(t256(0.2)); break;
+			case '2':  speed256=(short)(t256(0.4)); break;
+			case '3':  speed256=(short)(t256(0.6)); break;
+			case '4':  speed256=(short)(t256(0.8)); break;
+			case '5':  speed256=(short)(t256(1.0)); break;
+			case '6':  speed256=(short)(t256(1.2)); break;
+			case '7':  speed256=(short)(t256(1.4)); break;
+			case '8':  speed256=(short)(t256(1.6)); break;
+			case '9':  speed256=(short)(t256(1.8)); break;
+			default:   speed256=(short)(t256(1.0));
 			}
 			#else
 			//	 = aaa[(new_entry->command & 0x0f)];
@@ -139,36 +145,60 @@ static void load_stage_add_entry(Uint32 time10, char command, char *para1, int p
 		break;
 	}
 //
-	if (leveltab==NULL) 	//最初のラインか？
-		new_entry->next=(LEVELENTRY *)NULL;
+	if (NULL==leveltab) 	//最初のラインか？
+	{	new_entry->next=(LEVELENTRY *)NULL;}
 	else
-		new_entry->next=leveltab;		//leveltabは前回のデータ
+	{	new_entry->next=leveltab;	}	//leveltabは前回のデータ
 
 	leveltab=new_entry; 	//leveltabに今生成したデータのアドレスを代入。
 }
 
+extern int is_bg_add;	//[***090202		追加
+extern int is_bg_end;	//[***090202		追加
+extern int is_bg_fin;	//[***090202		追加
+extern int n_bg;		//[***090209		追加
+
+extern int is_panel_window;
 void loadlv(void/*int level*/)		/* 元々int */
 {
-				player_now_stage++;	/*(*level)++*/;
-	int level = player_now_stage;
+	is_bg_add=0;
+	is_bg_end=0;
+	is_bg_fin=0;
+	n_bg=0;
 //
-				// change music soundtrack
-				{
-					//char filename[20];
-					//sprintf(filename,"stage%d",*level);
-					//playMusic(filename);
-					play_music( level/*(*level)*/ );
-				}
+	player_now_stage++;	/*(*level)++*/;
+//	int level = player_now_stage;
+//
+	is_panel_window =1;/*パネル表示*/
+	// change music soundtrack
+	{
+		//char filename[20];
+		//sprintf(filename,"stage%d",*level);
+		//playMusic(filename);
+		play_music( /*level*/player_now_stage/*(*level)*/ );
+	}
 //
 	load_stage_free_entry();
 //
 	char filename[128];
-//	sprintf(filename,"%s/dat/level%02d.dat", moddir, level);
-	sprintf(filename,"%s/dat/stage%01d.txt", moddir, level);
+//	sprintf(filename,"%s/dat/level%02d.dat", moddir, /*level*/player_now_stage);
+//	sprintf(filename,"%s/dat/stage%01d.txt", moddir, /*level*/player_now_stage);
+	int load_stage_number = player_now_stage;
+	#if (1==USE_ENDING_DEBUG)
+	if (5==player_now_stage/*continue_stage*/)
+	{	PLAYER_DATA *d=(PLAYER_DATA *)player->data;
+		if (B07_AFTER_LOAD==d->bossmode)
+		{
+			load_stage_number=9;/*エンディングデバッグ用*/
+		}
+	}
+	#endif //(1==USE_ENDING_DEBUG)
+	sprintf(filename,"%s/dat/stage%c.txt", moddir, ('0'+/*level*/load_stage_number/*player_now_stage*/) );
+
 	FILE *file;
-	if ((file=fopen(filename,"r"))==NULL)
+	if (NULL==(file=fopen(filename,"r")))
 	{
-		error(ERR_FATAL,"can't read levelfile %s\nerrno: %d (%s)",filename,errno,strerror(errno));
+		error(ERR_FATAL,"can't read stage data %s\nerrno: %d (%s)",filename,errno,strerror(errno));
 	}
 //
 	int entrys		= 0;
@@ -191,24 +221,27 @@ void loadlv(void/*int level*/)		/* 元々int */
 		if (*c=='#')		{	continue;	}	/* skiped comment line. */	/* Kommentarzeile ? */
 //
 		/* parth start */	/* Startzeitpunkt holen */
-		if ((c = load_stage_get_int(c, &time10))==NULL) {	load_stage_serror(filename, line_num);	continue;	}	/* load int time10 */	/* 時間の取得 */
+		if (NULL==(c = load_stage_get_int(c, &time10))) {	load_stage_serror(filename, line_num);	continue;	}	/* load int time10 */	/* 時間の取得 */
 		if (*c++ != '|')								{	load_stage_serror(filename, line_num);	continue;	}	/* load '|' */
 		char_command = *c++;		/* Befehl */																	/* load 1 char commnd */		/* char_commandメッセージか敵かの判定 */
 		if (*c++ != '|')								{	load_stage_serror(filename, line_num);	continue;	}	/* load '|' */
-		if ((c = load_stage_get_str(c, para1))==NULL)	{	load_stage_serror(filename, line_num);	continue;	}	/* load str para1 */
+		if (NULL==(c = load_stage_get_str(c, para1)))	{	load_stage_serror(filename, line_num);	continue;	}	/* load str para1 */
 		if (*c++ != '|')								{	load_stage_serror(filename, line_num);	continue;	}	/* load '|' */
-		if ((c = load_stage_get_int(c, &para0))==NULL)	{	load_stage_serror(filename, line_num);	continue;	}	/* load int para0 */
+		if (NULL==(c = load_stage_get_int(c, &para0)))	{	load_stage_serror(filename, line_num);	continue;	}	/* load int para0 */
 		if (*c++ != '|')								{	load_stage_serror(filename, line_num);	continue;	}	/* load '|' */
-		if ((c = load_stage_get_int(c, &para2))==NULL)	{	load_stage_serror(filename, line_num);	continue;	}	/* load int para2 */
+		if (NULL==(c = load_stage_get_int(c, &para2)))	{	load_stage_serror(filename, line_num);	continue;	}	/* load int para2 */
 		/* do set register entry. */
-		load_stage_add_entry(time10, char_command, para1, para0, para2);
+		#define MUSIC_CONVERT_TIME (10)
+		/* ??? */
+		load_stage_add_entry(MUSIC_CONVERT_TIME+time10, char_command, para1, para0, para2);
 		entrys++;
 	}
 	fclose(file);
 	//return(entrys);
 	if (0==entrys)
 	{
-		error(ERR_WARN,"no entrys for level %d",level);
+		error(ERR_WARN,"no entrys for STAGE%d.TXT",/*level*/player_now_stage);
 	}
+	fps_init();/* ??? auto fps初期化 */
 }
 

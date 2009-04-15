@@ -22,6 +22,9 @@ static void callback_enemy_boss03_hitbyplayer(SPRITE *c)
 }
 
 /* boss wurde von player-weapon ber??rt */
+static void callback_enemy_boss03_hitbyweapon_dummy(SPRITE *c, SPRITE *s/*, int angle*/)
+{	/* 完全に姿を現すまで攻撃は、すべて無効とする。 */
+}
 static void callback_enemy_boss03_hitbyweapon(SPRITE *c, SPRITE *s/*, int angle*/)
 {
 	int i,j;
@@ -39,7 +42,7 @@ static void callback_enemy_boss03_hitbyweapon(SPRITE *c, SPRITE *s/*, int angle*
 		{	i=3;}
 		break;
 	case 1:
-		     if (sb03[4]->flags&SP_FLAG_VISIBLE)		{		i=4;}
+			 if (sb03[4]->flags&SP_FLAG_VISIBLE)		{		i=4;}
 		else if (sb03[3]->flags&SP_FLAG_VISIBLE)		{		i=3;}
 		else if (sb03[5]->flags&SP_FLAG_VISIBLE)		{		i=5;}
 		else if (sb03[0]->flags&SP_FLAG_VISIBLE)		{		i=0;}
@@ -54,36 +57,41 @@ static void callback_enemy_boss03_hitbyweapon(SPRITE *c, SPRITE *s/*, int angle*
 	b=(BOSS03_DATA *)sb03[i]->data;
 	b->b.health-=w->strength;
 
-	explosion_add(s->x,s->y,0,EXPLOSION_TYPE04);
+	explosion_add(s->x,s->y,0,EXPLOSION_MINI00);
 	//parsys_add(NULL,100,0,s->x,s->y,30,0,0,50,PIXELATE,NULL);
 
 
-	if ((b->b.health<=15)&&(b->health_flag==0)) {
+	if ((b->b.health<=15)&&(b->health_flag==0))
+	{
 		b->health_flag=1;
-		explosion_add(sb03[i]->x+sb03[i]->w/2,sb03[i]->y+sb03[i]->h/2,0,EXPLOSION_TYPE00);
+		explosion_add(sb03[i]->x+sb03[i]->w/2,sb03[i]->y+sb03[i]->h/2,0,EXPLOSION_FIRE08);
 	}
-	if (b->b.health<=0) {
-		explosion_add(sb03[i]->x+sb03[i]->w/2,sb03[i]->y+sb03[i]->h/2,0,EXPLOSION_TYPE00);
-		sb03[i]->flags&=~SP_FLAG_VISIBLE;
+	if (b->b.health<=0)/*該当者の体力切れなら*/
+	{
+		explosion_add(sb03[i]->x+sb03[i]->w/2,sb03[i]->y+sb03[i]->h/2,0,EXPLOSION_ZAKO04/*EXPLOSION_FIRE08*/);
+		sb03[i]->flags		&= ~SP_FLAG_VISIBLE;
 		((PLAYER_DATA *)player->data)->score+=b->b.score;
-		bonus_multi_add(sb03[i]->x, sb03[i]->y,SP_BONUS_COIN,7,1);
+		bonus_multi_add(sb03[i], SP_BONUS_06_COIN, 7, BONUS_FLAG_COLLECT);
 	}
 
 	j=0;
-	for (i=0;i<6;i++) {
+	for (i=0;i<6;i++)
+	{
 		if (b->health_flag==1)
-			sb03[i]->aktframe=1;
+		{	sb03[i]->aktframe=1;}
 		if (sb03[i]->flags&SP_FLAG_VISIBLE)
-			j++;
+		{	j++;}
 	}
-	if (j==0) {
+	if (j==0)
+	{
 		/* boss komplett zerst??t */
-		for (i=0;i<6;i++) {
-			sb03[i]->type=-1;
-			explosion_add(sb03[i]->x+sb03[i]->w/2,sb03[i]->y+sb03[i]->h/2,rand()%20,EXPLOSION_TYPE00);
+		for (i=0;i<6;i++)
+		{
+			sb03[i]->type=SP_DELETE;
+		//	explosion_add(sb03[i]->x+sb03[i]->w/2,sb03[i]->y+sb03[i]->h/2,(rand()&(16-1)/*%20*/),EXPLOSION_FIRE08);
+			explosion_add_circle(sb03[i]);
 		}
-		((PLAYER_DATA *)player->data)->bossmode=2;
-		playChunk(3);		//[***090313		追加	もっとスマートなやり方がありそうだけど思いつかなかった。
+		((PLAYER_DATA *)player->data)->bossmode=B02_DEATH_WAIT;
 	}
 }
 
@@ -104,41 +112,41 @@ static void enemy_boss03_setpos(int x, int y)
 	sb03[5]->y=sb03[2]->h+y;
 }
 
-static void enemy_boss03_fire(int where) /* 0: left, 1: right, 2: bombenhagel */
-{
-	SPRITE *b;
-	LASER_DATA *ldata;
-	int angle;
 
-	switch (where)
+/*int where / 0: left, 1: right, 2: bombenhagel */
+static void enemy_boss01_nway_fire(void)
+{
+//	switch (where)
 	{
-	case 0:
-		if (sb03[3]->flags&SP_FLAG_VISIBLE && ((BOSS03_DATA *)sb03[1]->data)->state>2)
-			enemy_bullet_create(sb03[3],5);
-		break;
-	case 1:
-		if (sb03[5]->flags&SP_FLAG_VISIBLE && ((BOSS03_DATA *)sb03[1]->data)->state>2)
-			enemy_bullet_create(sb03[5],5);
-		break;
-	case 2:
-		if(((BOSS03_DATA *)sb03[1]->data)->state>2)
-		{
+//	case 2:
+		{static int hari=0;
+			hari--;
+			hari &= 32;
 			playChunk(14);
-			for (angle=0;angle<=180;angle+=20) {
-				b=sprite_add_file("bshoot.png",1,PR_ENEMY);
-				b->type=SP_EN_LASER;
-				b->flags|=(SP_FLAG_VISIBLE|SP_FLAG_COLCHECK);
-				b->mover=enemy_laser_move;
-				//b->aktframe=0;
-				b->x=sb03[4]->x;
-				b->y=sb03[4]->y;
-				ldata=mmalloc(sizeof(LASER_DATA));
-				b->data=ldata;
-				ldata->angle=degtorad(angle);
-				ldata->speed=6;
+			int angle512;
+			for (angle512=deg_360_to_512(0);angle512</*=*/deg_360_to_512(360/*180*/);
+			//	angle512+=/*22*/21+hari-difficulty/*deg_360_to_512(20)*/		/* 23本(360) ← 8本(180) */
+				angle512+=(/*22*/18+hari-difficulty-difficulty/*deg_360_to_512(20)*/)		/* 最低 == 10 == 48本(360)  */
+				)
+			{
+				bullet_create_haridan180(sb03[4], angle512, (int)(/*6*/ (0x100)+(rand()&0x2ff)/*t256(2.5)*/), /*offsx*/0/*(src->w/2)*/, /*offsy*/0/*(src->h/2)*/ );
 			}
 		}
-		break;
+//		break;
+	}
+}
+
+static void enemy_boss03_LR_dole_fire(void)
+{
+	{
+//	case 0:
+		if (sb03[3]->flags&SP_FLAG_VISIBLE)
+		{	enemy_bullet_create(sb03[3],5);}
+//		break;
+//	case 1:
+		if (sb03[5]->flags&SP_FLAG_VISIBLE)
+		{	enemy_bullet_create(sb03[5],5);}
+//		break;
 	}
 }
 //[***090114		いろいろと追加します。
@@ -147,121 +155,140 @@ static void enemy_boss03_fire(int where) /* 0: left, 1: right, 2: bombenhagel */
 static void enemy_boss03_move(SPRITE *c)
 {
 	BOSS03_DATA *b=(BOSS03_DATA *)c->data;
-	static double x,y;
-	static double w;
-	static double firewait1;
-	static int firewait2;
+	static /*double*/int xxx;
+	static /*double*/int yyy;
+	static /*double*/int www;
 	static int firewait3;
 	static int bomb_n;
 	int i;
 	switch (b->state)
 	{
 	case 0:
-		x=WIDTH2/2-(sb03[0]->w+sb03[1]->w+sb03[2]->w)/2;		//ウィンドウ幅の変更
-		y=-100;
-		enemy_boss03_setpos(x,y);
-		b->state=1;
-		firewait1=45;
-		firewait2=4;
-		firewait3=0;
-		bomb_n=0;
+		xxx		=GAME_WIDTH/2-(sb03[0]->w+sb03[1]->w+sb03[2]->w)/2; 	//ウィンドウ幅の変更
+		yyy		=-100;
+		enemy_boss03_setpos(xxx,yyy);
+		b->state	=1;
+	//	firewait1	=45;
+	//	firewait2	=4;
+		firewait3	=0;
+		bomb_n		=0;
 		break;
 	case 1:
-		y+=fps_factor*(b->level+1);
-		enemy_boss03_setpos(x,y);
-		if (y>=0) {
+		yyy+=1/*fps_factor*(b->level+1)*/;
+		enemy_boss03_setpos(xxx,yyy);
+		if (yyy>=0)
+		{
 			b->state=2;
-			w=0;
-			((PLAYER_DATA *)player->data)->bossmode=5;
+			www=0;
+			((PLAYER_DATA *)player->data)->bossmode=B05_BEFORE_LOAD;
 		}
 		break;
 	case 2:
-		if(((PLAYER_DATA *)player->data)->bossmode==1){
-			w+=fps_factor;
-			if (w>=40) {
+		if (((PLAYER_DATA *)player->data)->bossmode==B01_BATTLE)
+		{
+			www+=1/*fps_factor*/;
+			if (www>=40)
+			{
 				b->state=3;
 			}
 		}
 		break;
 	case 3:
-		y+=fps_factor*(b->level+1);
-		enemy_boss03_setpos(x,y);
-		if (y>=30) {
+		yyy+=1/*fps_factor*(b->level+1)*/;
+		enemy_boss03_setpos(xxx,yyy);
+		if (yyy>=30)
+		{
 			b->state=4;
-			w=0;
+			www=0;
+			/* プレイヤー弾受け付け、コールバックを登録 */
+			((PLAYER_DATA *)player->data)->callback_boss_hitbyweapon=callback_enemy_boss03_hitbyweapon;
 		}
 		break;
+/*完全に姿を現す*/
 	case 4:
-		w+=fps_factor;
-		if (w>=30) {
+		www+=1/*fps_factor*/;
+		if (www>=30)
+		{
 			b->state=5;
-			w=0;
+			www=0;
 		}
 		break;
 	case 5:
-		y+=fps_factor*(b->level+1);
-		x-=2*fps_factor*(b->level+1);
-		w+=fps_factor;
-		enemy_boss03_setpos(x,y);
-		if (w>=60)
-			b->state=6;
+		yyy+=1/*fps_factor*(b->level+1)*/;
+		xxx-=2*1/*fps_factor*(b->level+1)*/;
+		www+=1/*fps_factor*/;
+		enemy_boss03_setpos(xxx,yyy);
+		if (www>=60)
+		{	b->state=6;}
 		break;
 	case 6:
-		y-=fps_factor*(b->level+1);
-		x+=2*fps_factor*(b->level+1);
-		w-=fps_factor;
-		enemy_boss03_setpos(x,y);
-		if (w<=0)
-			b->state=7;
+		yyy-=1/*fps_factor*(b->level+1)*/;
+		xxx+=2*1/*fps_factor*(b->level+1)*/;
+		www-=1/*fps_factor*/;
+		enemy_boss03_setpos(xxx,yyy);
+		if (www<=0)
+		{	b->state=7;}
 		break;
 	case 7:
-		y+=fps_factor*(b->level+1);
-		x+=2*fps_factor*(b->level+1);
-		w+=fps_factor;
-		enemy_boss03_setpos(x,y);
-		if (w>=60)
-			b->state=8;
+		yyy+=1/*fps_factor*(b->level+1)*/;
+		xxx+=2*1/*fps_factor*(b->level+1)*/;
+		www+=1/*fps_factor*/;
+		enemy_boss03_setpos(xxx,yyy);
+		if (www>=60)
+		{	b->state=8;}
 		break;
 	case 8:
-		y-=fps_factor*(b->level+1);
-		x-=2*fps_factor*(b->level+1);
-		w-=fps_factor;
-		enemy_boss03_setpos(x,y);
-		if (w<=0)
-			b->state=4;
+		yyy-=1/*fps_factor*(b->level+1)*/;
+		xxx-=2*1/*fps_factor*(b->level+1)*/;
+		www-=1/*fps_factor*/;
+		enemy_boss03_setpos(xxx,yyy);
+		if (www<=0)
+		{	b->state=4;}
 		break;
 	}
-	firewait1-=fps_factor*(b->level+1);
-	if (firewait1<=0) {
-		firewait1=45;
-		firewait2--;
-		if (firewait2==0) {
-			enemy_boss03_fire(2);
-			firewait2=4;
-		} else {
-			enemy_boss03_fire(0);
-			enemy_boss03_fire(1);
+	if (/*((BOSS03_DATA *)sb03[1]->data)*/b->state > 2)
+	{
+	static /*double*/int firewait1=45;
+		firewait1-=1/*fps_factor*(b->level+1)*/;
+		if (firewait1<=0)
+		{
+			firewait1=45;
+			static unsigned int firewait2=0;
+			firewait2--;
+			firewait2 &= (4-1);
+			if (0==firewait2)
+			{
+				enemy_boss01_nway_fire();/*enemy_boss03_fire(2);*/
+			}
+			else
+			{
+				enemy_boss03_LR_dole_fire();/*enemy_boss03_fire(0);enemy_boss03_fire(1);*/
+			}
 		}
 	}
-	if (b->level==0)
+	/* 4面の場合跳ねる珠 */
+	if (0==b->level)
 	{
-		if (b->b.health<=1000)
+		if (b->b.health<=1000+1024)
 		{
 			if (firewait3 < 0)
 			{
 				if (bomb_n<32)
-					bomb_n++;
+				{	bomb_n++;}
 				for (i=0;i<=(int)((double)bomb_n/3.0);i++)
 				{
-					enemy_pong_bullet_create(c, 5.0, 6*M_PI*i/(double)bomb_n+1, 0.07, 2);		//[***090116		微調整
+					enemy_pong_bullet_create(c, 5.0,
+						(/*(M_PI*2)*/512*3*i/(double)(bomb_n+1))
+							/*+rad2deg512(1)*/, /*←多分括弧書かなかったミス*/
+						t256(0.07), 2);		//[***090116		微調整
 				}
-				if (b->b.health>200)
-					firewait3=b->b.health/4;
+				if (b->b.health>200+1024)
+				{	firewait3=b->b.health/4;}
 				else
-					firewait3=50;
+				{	firewait3=50;}
 			}
 			else
-				firewait3--;
+			{	firewait3--;}
 		}
 	}
 }
@@ -269,10 +296,8 @@ static void enemy_boss03_move(SPRITE *c)
 
 void enemy_boss03_add(int lv)
 {
-	int i;
-	BOSS03_DATA *b;
-
-	if (lv==0){
+	if (lv==0)
+	{
 		sb03[0]=sprite_add_file("boss05-lo.png",2,PR_ENEMY);
 		sb03[1]=sprite_add_file("boss05-mo.png",2,PR_ENEMY);
 		sb03[2]=sprite_add_file("boss05-ro.png",2,PR_ENEMY);
@@ -280,7 +305,8 @@ void enemy_boss03_add(int lv)
 		sb03[4]=sprite_add_file("boss05-mu.png",2,PR_ENEMY);
 		sb03[5]=sprite_add_file("boss05-ru.png",2,PR_ENEMY);
 	}
-	else{
+	else
+	{
 		sb03[0]=sprite_add_file("boss03-lo.png",2,PR_ENEMY);
 		sb03[1]=sprite_add_file("boss03-mo.png",2,PR_ENEMY);
 		sb03[2]=sprite_add_file("boss03-ro.png",2,PR_ENEMY);
@@ -289,7 +315,10 @@ void enemy_boss03_add(int lv)
 		sb03[5]=sprite_add_file("boss03-ru.png",2,PR_ENEMY);
 	}
 
-	for (i=0;i<6;i++) {
+	int i;
+	for (i=0;i<6;i++)
+	{
+		BOSS03_DATA *b;
 		sb03[i]->flags|=(SP_FLAG_VISIBLE|SP_FLAG_COLCHECK);
 		sb03[i]->anim_speed=0;
 		sb03[i]->aktframe=0;
@@ -298,32 +327,33 @@ void enemy_boss03_add(int lv)
 		sb03[i]->data=b;
 		if (lv==0)		//[***090114		追加
 		{
-			if (i==1)
+			if (i==1)/*輝夜本人*/
 			{
-				b->b.health=2047;
+				b->b.health= (difficulty<<10/*[x1024]*/)+2047+1024;
 				b->b.score=score(3000)+score(2000)*difficulty;
 			}
-			else
+			else/*小物*/
 			{
-				b->b.health=200;
+				b->b.health= (difficulty<<8/*[x256]*/)+ 200+1024;
 				b->b.score=score(600)*(difficulty+1);
 			}
 		}
-		else
+		else/*全部一緒*/
 		{
-			b->b.health=40;  //denis was 40
+			b->b.health = (difficulty<<6/*[x64]*/)+40+1024;  //denis was 40
 			b->b.score=score(500)*(difficulty+1);
 		}
 		b->health_flag=0;
 		b->level=lv;
-		if (i==1) {
+		if (i==1)
+		{
 			b->state=0;
 			sb03[i]->mover=enemy_boss03_move;
 		}
 	}
 	((PLAYER_DATA *)player->data)->boss=sb03[1];
-	((PLAYER_DATA *)player->data)->bossmode=1;
+	((PLAYER_DATA *)player->data)->bossmode=B01_BATTLE;
 	/* コールバック登録 */
-	((PLAYER_DATA *)player->data)->callback_boss_hitbyweapon=callback_enemy_boss03_hitbyweapon;
+	((PLAYER_DATA *)player->data)->callback_boss_hitbyweapon=callback_enemy_boss03_hitbyweapon_dummy;	/* ダミーコールバック登録 */
 	((PLAYER_DATA *)player->data)->callback_boss_hitbyplayer=callback_enemy_boss03_hitbyplayer;
 }

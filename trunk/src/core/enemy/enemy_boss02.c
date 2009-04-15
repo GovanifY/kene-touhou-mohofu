@@ -15,7 +15,7 @@
 typedef struct _boss02_data
 {
 	ENEMY_BASE b;
-	/*static*/ double ang_b2;
+	/*static*/ /*double*/int angle512/*angle_radian*/;/*radianで持つよりintで持って使う度に変換した方が速い*/
 	int type;	/* 0: normal, 1: destroyed */
 	int state1;
 	int state2; 		//攻撃パターン変更用
@@ -29,7 +29,7 @@ typedef struct _boss02_data
 typedef struct
 {
 	int boss_id;
-	double angle;
+	/*double*/int angle512;
 	double wait;
 } BOSS02_SR_DATA;
 
@@ -37,7 +37,7 @@ typedef struct
 {
 	int no;
 	int stat;
-	double angle;
+	/*double*/int angle512;
 	double time;
 	double speed;
 } BOSS02_ICE_DATA;
@@ -50,96 +50,79 @@ static void callback_enemy_boss02_hitbyplayer(SPRITE *c)
 static void callback_enemy_boss02_hitbyweapon(SPRITE *c, SPRITE *s/*, int angle*/)
 {
 	BOSS02_DATA *b=(BOSS02_DATA *)c->data;
-	SPRITE *d=c;
-	BOSS02_DATA *b2;
-	int i,j;
+//	SPRITE *d=c;
 	WEAPON_BASE *w=(WEAPON_BASE *)s->data;
 
-	explosion_add(s->x,s->y,0,EXPLOSION_TYPE04);
+	explosion_add(s->x,s->y,0,EXPLOSION_MINI00);
 //	parsys_add(NULL,100,0,s->x,s->y,30,0,0,50,PIXELATE,NULL);
 	b->b.health-=w->strength;
 
-	if(b->b.health<=2048 && b->state2==0) {
-		bonus_multi_add(c->x, c->y,SP_BONUS_FIREPOWER,3,0);
-		bonus_multi_add(c->x, c->y,SP_BONUS_FIREPOWER_G,1,0);
+	if (b->b.health<=(1024*3/*1024*2*/) && (b->state2==0) )
+	{
+		bonus_multi_add(c, SP_BONUS_00_FIREPOWER,   3, BONUS_FLAG_RAND_XY);
+		bonus_multi_add(c, SP_BONUS_01_FIREPOWER_G, 1, BONUS_FLAG_RAND_XY);
 		b->state2=1;
 	}
-	else if ((b->b.health<=1024)&&(b->type==0)) {	//HPが残り1024になった時。グラフィックの差し替え。攻撃パターン変更
-		bonus_multi_add(c->x, c->y,SP_BONUS_FIREPOWER,3,0);
-		bonus_multi_add(c->x, c->y,SP_BONUS_FIREPOWER_G,1,0);
-		for (i=0;i<192;i+=40) {
-			for (j=0;j<192;j+=40) {
-				explosion_add(d->x+i,d->y+j,rand()%40,EXPLOSION_TYPE00);
-			}
-		}
-		((PLAYER_DATA *)player->data)->bossmode=4;
-		d=sprite_add_file("boss02_v2x.png",9,PR_ENEMY);		d->anim_speed=0/*c->anim_speed*/;
-		d->flags=c->flags;
-		d->aktframe=c->aktframe;
-		d->type=c->type;
-		b2=mmalloc(sizeof(BOSS02_DATA));
-		memcpy(b2,b,sizeof(BOSS02_DATA));
-		b=b2;
+	else if ((b->b.health<=(1024*2/*1024*1*/)) && (b->type==0) )
+	{
+		//HPが残り1024になった時。グラフィックの差し替え。攻撃パターン変更
+		explosion_add_circle(/*d*/c);
+		bonus_multi_add(c, SP_BONUS_00_FIREPOWER,   3, BONUS_FLAG_RAND_XY);
+		bonus_multi_add(c, SP_BONUS_01_FIREPOWER_G, 1, BONUS_FLAG_RAND_XY);
+//グラフィックの差し替えは廃止。
+		((PLAYER_DATA *)player->data)->bossmode=B04_CHANGE;
+//		d=sprite_add_file("boss02_v2.png"/*"boss02_v2x.png"*/,9,PR_ENEMY);	d->anim_speed=0/*c->anim_speed*/;
+//		d->flags=c->flags;
+//		d->aktframe=c->aktframe;
+//		d->type=c->type;
+//		BOSS02_DATA *b2;
+//		b2=mmalloc(sizeof(BOSS02_DATA));
+//		memcpy(b2,b,sizeof(BOSS02_DATA));
+//		b=b2;
 		b->type=1;
-		d->data=b2;
-		d->mover=c->mover;
-		d->x=c->x;
-		d->y=c->y;
-		b2->state2=2;
-		b2->state1=13;
-		b2->wait1=40;
+//		d->data=b2;
+//		d->mover=c->mover;
+//		d->x=c->x;
+//		d->y=c->y;
+		/*b2*/b->state2=2;
+		/*b2*/b->state1=13;
+		/*b2*/b->wait1=40;
 
-		c->type=-1;
+//		c->type=SP_DELETE;
 		((PLAYER_DATA *)player->data)->score+=b->b.score;
-		((PLAYER_DATA *)player->data)->boss=d;
+//		((PLAYER_DATA *)player->data)->boss=d;
 	}
 
-	if (b->b.health<=0) {
-		/*
-		for (i=0;i<192;i+=40) {
-			for (j=0;j<192;j+=40) {
-				explosion_add(d->x+i,d->y+j,rand()%40,EXPLOSION_TYPE00);
-			}
-		}
-		*/
-		bonus_multi_add(s->x, s->y,SP_BONUS_COIN,7,1);
-		d->type=-1;
+	if (b->b.health<=0)
+	{
+		explosion_add_circle(/*d*/c);
+		bonus_multi_add(s, SP_BONUS_06_COIN, 7, BONUS_FLAG_COLLECT);
+		/*d*/c->type=SP_DELETE;
 		((PLAYER_DATA *)player->data)->score+=b->b.score;
-		((PLAYER_DATA *)player->data)->bossmode=2;
-		playChunk(3);		//[***090313		追加	もっとスマートなやり方がありそうだけど思いつかなかった。
+		((PLAYER_DATA *)player->data)->bossmode=B02_DEATH_WAIT;
 	}
 }
-
-
-
 
 static void enemy_boss02_sr_controller1(CONTROLLER *c)
 {
 	BOSS02_SR_DATA *e=(BOSS02_SR_DATA *)c->e;
-	SPRITE *l;
-	LASER_DATA *d;
-	SPRITE *boss;
-
-	if (e->wait>0) {
+	if (e->wait>0)
+	{
 		e->wait-=fps_factor;
-	} else {
-		boss=sprite_get_by_id(e->boss_id);	//なければNULL
-		e->wait=10;
-		e->angle+=15;
-		if ((e->angle>360-15)||(boss==NULL)) {
+	}
+	else
+	{
+		SPRITE *src;/* srcはbossオブジェ */
+		src 		= sprite_get_by_id(e->boss_id); //なければNULL
+		e->wait 	= 10;
+		e->angle512 += deg_360_to_512(15);
+		if ((e->angle512 > deg_360_to_512(360-15))||(src==NULL))
+		{
 			controller_remove(c);
-		} else {
-			l=sprite_add_file("bshoot.png",1,PR_ENEMY_WEAPON);
-			l->type=SP_EN_LASER;
-			l->flags|=(SP_FLAG_VISIBLE|SP_FLAG_COLCHECK);
-			l->mover=enemy_laser_move;
-			l->aktframe=0;
-			l->x=boss->x+(boss->w/2);
-			l->y=boss->y+(boss->h/2);
-			d=mmalloc(sizeof(LASER_DATA));
-			l->data=d;
-			d->angle=degtorad(e->angle);
-			d->speed=7;
+		}
+		else
+		{
+			bullet_create_haridan180(src, e->angle512, t256(7), /*offsx*/0-16/*(src->w/2)*/, /*offsy*/0/*(src->h/2)*/ );
 		}
 	}
 }
@@ -148,43 +131,35 @@ static void enemy_boss02_sr_add1(SPRITE *c)
 {
 	CONTROLLER *s;
 	BOSS02_SR_DATA *b;
-
 	s=controller_add();
 	b=mmalloc(sizeof(BOSS02_SR_DATA));
-	b->angle=0;
-	b->wait=10;
-	b->boss_id=c->id;
-	s->con=enemy_boss02_sr_controller1;
-	s->e=b;
+	b->angle512 	= deg_360_to_512(0);
+	b->wait 		= 10;
+	b->boss_id		= c->id;
+	s->con			= enemy_boss02_sr_controller1;
+	s->e			= b;
 }
 
 static void enemy_boss02_sr_controller2(CONTROLLER *c)
 {
 	BOSS02_SR_DATA *e=(BOSS02_SR_DATA *)c->e;
-	SPRITE *l;
-	LASER_DATA *d;
-	SPRITE *boss;
-
-	if (e->wait>0) {
+	if (e->wait>0)
+	{
 		e->wait-=fps_factor;
-	} else {
-		boss=sprite_get_by_id(e->boss_id);	//なければNULL
-		e->wait=10;
-		e->angle-=15;
-		if ((e->angle<=15)||(boss==NULL)) {
+	}
+	else
+	{
+		SPRITE *src;/* srcはbossオブジェ */
+		src 		= sprite_get_by_id(e->boss_id); //なければNULL
+		e->wait 	= 10;
+		e->angle512 -= deg_360_to_512(15);
+		if ((e->angle512 <= deg_360_to_512(15))||(src==NULL))
+		{
 			controller_remove(c);
-		} else {
-			l=sprite_add_file("bshoot.png",1,PR_ENEMY_WEAPON);
-			l->type=SP_EN_LASER;
-			l->flags|=(SP_FLAG_VISIBLE|SP_FLAG_COLCHECK);
-			l->mover=enemy_laser_move;
-			l->aktframe=0;
-			l->x=boss->x+(boss->w/2);
-			l->y=boss->y+(boss->h/2);
-			d=mmalloc(sizeof(LASER_DATA));
-			l->data=d;
-			d->angle=degtorad(e->angle);
-			d->speed=7;
+		}
+		else
+		{
+			bullet_create_haridan180(src, e->angle512, t256(7), /*offsx*/0-16/*(src->w/2)*/, /*offsy*/0/*(src->h/2)*/ );
 		}
 	}
 }
@@ -193,94 +168,102 @@ static void enemy_boss02_sr_add2(SPRITE *c)
 {
 	CONTROLLER *s;
 	BOSS02_SR_DATA *b;
-
-	s=controller_add();
-	b=mmalloc(sizeof(BOSS02_SR_DATA));
-	b->angle=360;
-	b->wait=8;
-	b->boss_id=c->id;
-	s->con=enemy_boss02_sr_controller2;
-	s->e=b;
+	s			= controller_add();
+	b			= mmalloc(sizeof(BOSS02_SR_DATA));
+	b->angle512 = deg_360_to_512(360)-1;/*追加 (-1)*/
+	b->wait 	= 8;
+	b->boss_id	= c->id;
+	s->con		= enemy_boss02_sr_controller2;
+	s->e		= b;
 }
 
 static void enemy_boss02_ice_move(SPRITE *s)
 {
-	BOSS02_ICE_DATA *l=(BOSS02_ICE_DATA *)s->data;
-
-	switch (l->stat) {
+	BOSS02_ICE_DATA *d=(BOSS02_ICE_DATA *)s->data;
+	switch (d->stat)
+	{
 	case 0:
-		l->angle=90;
-		l->time=100;
-		l->speed=4;
-		l->stat=1;
+		d->angle512 = deg_360_to_512(90);
+		d->time 	= 100;
+		d->speed	= 4;
+		d->stat 	= 1;
 		break;
 	case 1:
-		if (l->no==0)
-			l->angle+=5*fps_factor;
-		else
-			l->angle-=5*fps_factor;
-		l->time-=fps_factor;
-		if (l->time<=0)
-			l->stat=2;
+		if (d->no==0)	{	d->angle512 += deg_360_to_512(5)/**fps_factor*/;}
+		else			{	d->angle512 -= deg_360_to_512(5)/**fps_factor*/;}
+		d->time-=fps_factor;
+		if (d->time<=0)
+		{	d->stat=2;}
 		break;
 	case 2:
-		l->angle=rand()%90+45;
-		l->speed=12;
-		l->stat=3;
+		d->angle512 = (rand()&(128-1)/*%90*/)+deg_360_to_512(45);
+		d->speed=12;
+		d->stat=3;
 		break;
 	}
 
-	if (l->angle<0)
-		l->angle+=360;
-	if (l->angle>360)
-		l->angle-=360;
+//	if (d->angle512 < deg_360_to_512(0))	{	d->angle512 += deg_360_to_512(360);}
+//	if (d->angle512 > deg_360_to_512(360))	{	d->angle512 -= deg_360_to_512(360);}
+	mask512(d->angle512);
 
-	s->x+=cos(degtorad(l->angle))*l->speed*fps_factor;
-	s->y+=sin(degtorad(l->angle))*l->speed*fps_factor;
-	s->aktframe=(((int)l->angle+270)/10)%36;
-
-	if ( (s->x<-100)||(s->x>WIDTH2+100)||
-		(s->y<-100)||(s->y>/*screen->h*/WIDTH+100) )
-	{	s->type=-1;}
+	/*以下rwingx.cと同じ*/
+	s->x+=co_s512((d->angle512))*d->speed*fps_factor;
+	s->y+=si_n512((d->angle512))*d->speed*fps_factor;
+//	s->aktframe=(deg_512_to_360(d->angle512+deg_360_to_512(270))/10)%36;
+	s->aktframe = ((((d->angle512+deg_360_to_512(270))&(512-1))*(36/2))>>8);
+	/*(ここまで)[以下rwingx.cと同じ]*/
+//
+	if ((s->x<-100)||(s->x>100+GAME_WIDTH)||
+		(s->y<-100)||(s->y>100+GAME_HEIGHT) )
+	{	s->type=SP_DELETE;}
 }
 
 
 #define NUM_OF_ENEMIES (30)
-static void enemy_boss02_ice_controller(CONTROLLER *e)
+static void enemy_boss02_ice_controller(CONTROLLER *c)
 {
-	int *id_array=e->e;
-	SPRITE *s, *l, *master;
-	BOSS02_ICE_DATA *d;
+	int *id_array=c->e;
+
+	SPRITE *s;
 	int i;
 	int dead=0;
-
-	for (i=0;i<NUM_OF_ENEMIES;i++) {
+//	SPRITE *master;
+//	master=sprite_get_by_id(id_array[0]);
+//	BOSS02_ICE_DATA *data;
+//	data=(BOSS02_ICE_DATA *)master->data;
+	for (i=0; i<NUM_OF_ENEMIES; i++)
+	{
 		s=sprite_get_by_id(id_array[i]);
-		if (s==NULL) {
+		if (s==NULL)
+		{
 			dead=1;
 			break;
 		}
 	}
-	if (dead==1) {
-		for (i=0;i<NUM_OF_ENEMIES;i++) {
+	if (dead==1)
+	{
+		for (i=0; i<NUM_OF_ENEMIES; i++)
+		{
 			s=sprite_get_by_id(id_array[i]);
 			if (s!=NULL)
-				s->type=-1;
+			{	s->type=SP_DELETE;}
 		}
-		controller_remove(e);
-		return;
+		controller_remove(c);
+	//	return;
 	}
-
-	master=sprite_get_by_id(id_array[0]);
-
-	d=(BOSS02_ICE_DATA *)master->data;
-	for (i=NUM_OF_ENEMIES-1;i>=1;i--) {
-		s=sprite_get_by_id(id_array[i]);
-		l=sprite_get_by_id(id_array[i-1]);
-		if ((s!=NULL)&&(l!=NULL)) {
-			s->x=l->x;
-			s->y=l->y;
-			s->aktframe=l->aktframe;
+	else
+	{
+		for (i=NUM_OF_ENEMIES-1;i>=1;i--)
+		{
+			SPRITE *l;
+			s=sprite_get_by_id(id_array[i]);
+			l=sprite_get_by_id(id_array[i-1]);
+			if ((s!=NULL)&&(l!=NULL))
+			{
+				s->x=l->x;
+				s->y=l->y;
+				s->aktframe=l->aktframe;
+			}
 		}
 	}
 }
@@ -292,32 +275,39 @@ static void enemy_boss02_ice_add(SPRITE *c)
 	SPRITE * d;
 	int i,j;
 	BOSS02_ICE_DATA *l;
-
-	for (j=0;j<2;j++) {
+	for (j=0;j<2;j++)
+	{
 		e=controller_add();
 	//	NUM_OF_ENEMIES=30;
 		id_array=mmalloc(sizeof(int)*NUM_OF_ENEMIES);
 		e->e=id_array;
 		e->con=enemy_boss02_ice_controller;
-		for (i=0;i<NUM_OF_ENEMIES;i++) {
-			d=sprite_add_file("boss02_w.png",36,PR_ENEMY_WEAPON);
+		for (i=0; i<NUM_OF_ENEMIES; i++)
+		{
+			d=sprite_add_file("boss02_w.png",36,PR_BULLETS/*PR_ENEMY_WEAPON*/);
 			id_array[i]=d->id;
 			d->type=SP_EN_BOSS02ICE;
 			d->flags|=SP_FLAG_VISIBLE|SP_FLAG_COLCHECK;
-			if (i==0) {
+			if (i==0)
+			{
 				d->mover=enemy_boss02_ice_move;
 				l=mmalloc(sizeof(BOSS02_ICE_DATA));
 				d->data=l;
 				l->no=j;
 				l->stat=0;
-			} else {
+			}
+			else
+			{
 				d->mover=NULL;
 				d->data=NULL;
 			}
-			if (j==0) {
+			if (j==0)
+			{
 				d->x=c->x-19;
 				d->y=c->y+135;
-			} else {
+			}
+			else
+			{
 				d->x=c->x+81;
 				d->y=c->y+138;
 			}
@@ -330,17 +320,23 @@ static void enemy_boss02_waitstate(SPRITE *s, int nextstate)
 {
 	BOSS02_DATA *b=(BOSS02_DATA *)s->data;
 
-	if (b->wait1>0) {
+	if (b->wait1>0)
+	{
 		b->wait1-=fps_factor;
-		if (s->aktframe<4) {
+		if (s->aktframe<4)
+		{
 			b->wait2+=fps_factor;
-			if (b->wait2>=3) {
+			if (b->wait2>=3)
+			{
 				s->aktframe++;
 				b->wait2=0;
 			}
-		} else if (s->aktframe>4) {
+		}
+		else if (s->aktframe>4)
+		{
 			b->wait2+=fps_factor;
-			if (b->wait2>=3) {
+			if (b->wait2>=3)
+			{
 				s->aktframe--;
 				b->wait2=0;
 			}
@@ -349,51 +345,53 @@ static void enemy_boss02_waitstate(SPRITE *s, int nextstate)
 	else
 	{
 		b->state1=nextstate;
-		enemy_bigbullet_create(s, s->x+s->w/2, s->y+s->h/2, 4+difficulty/2, -2, 10);
+		enemy_bigbullet_create(s, s->x+s->w/2, s->y+s->h/2, 4+difficulty/2, 999/*-2*/, 10);
 	}
 }
 static void enemy_boss02_move(SPRITE *s)
 {
 	BOSS02_DATA *b=(BOSS02_DATA *)s->data;
 
-	switch (b->state2) {
+	switch (b->state2)
+	{
 	case 0: 		//攻撃パターン1
 	case 1:
-
-		switch (b->state1) {
-
+		switch (b->state1)
+		{
 		case 0: /* nach unten */
 			if (s->y<30)
-				s->y+=2*fps_factor;
-			else{
+			{	s->y+=2*fps_factor;}
+			else
+			{
 				b->state1=12;
-				((PLAYER_DATA *)player->data)->bossmode=5;
+				((PLAYER_DATA *)player->data)->bossmode=B05_BEFORE_LOAD;
 				b->wait1=0;
 			}
 			break;
 
 		case 12:
-			if(((PLAYER_DATA *)player->data)->bossmode==1){
+			if (((PLAYER_DATA *)player->data)->bossmode==B01_BATTLE)
+			{
 				b->wait1+=fps_factor;
-				if (b->wait1>=40) {
+				if (b->wait1>=40)
+				{
 					b->state1=1;
 				}
 			}
 			break;
 
 		case 1: /* y-pos erreicht: rundumschuss */
-
-				enemy_boss02_sr_add1(s);
-				if (b->state2==0)
-					enemy_boss02_ice_add(s);
-				b->wait1=20;
-				b->state1=2;
-				if(b->state2==1)
-				{
-					enemy_momiji_create(s, 3.5, M_PI/2-M_PI_H*2);
-					enemy_momiji_create(s, 4, M_PI/2);
-					enemy_momiji_create(s, 3.5, M_PI/2+M_PI_H*2);
-				}
+			enemy_boss02_sr_add1(s);
+			if (b->state2==0)
+			{	enemy_boss02_ice_add(s);}
+			b->wait1=20;
+			b->state1=2;
+			if (b->state2==1)
+			{
+				enemy_momiji_create(s, 3.5, deg_360_to_512(30*(3-2)) );
+				enemy_momiji_create(s, 4,	deg_360_to_512(30*(3  )) );
+				enemy_momiji_create(s, 3.5, deg_360_to_512(30*(3+2)) );
+			}
 			break;
 
 		case 2: /* warten */
@@ -401,23 +399,28 @@ static void enemy_boss02_move(SPRITE *s)
 			break;
 
 		case 3: /* nach links bis zum rand */
-			if (s->x>=0) {
+			if (s->x>=0)
+			{
 				s->x-=2*fps_factor;
-				if (s->aktframe>0) {
+				if (s->aktframe>0)
+				{
 					b->wait2+=fps_factor;
-					if (b->wait2>=3) {
+					if (b->wait2>=3)
+					{
 						s->aktframe--;
 						b->wait2=0;
 					}
 				}
-			} else {
+			}
+			else
+			{
 				b->wait1=20;
 				b->state1=4;
-				if(b->state2==1)
+				if (b->state2==1)
 				{
-					enemy_momiji_create(s, 3.5, M_PI/2-M_PI_H*2);
-					enemy_momiji_create(s, 4, M_PI/2);
-					enemy_momiji_create(s, 3.5, M_PI/2+M_PI_H*2);
+					enemy_momiji_create(s, 3.5, deg_360_to_512(30*(3-2)) );
+					enemy_momiji_create(s, 4,	deg_360_to_512(30*(3  )) );
+					enemy_momiji_create(s, 3.5, deg_360_to_512(30*(3+2)) );
 				}
 			}
 			break;
@@ -427,24 +430,29 @@ static void enemy_boss02_move(SPRITE *s)
 			break;
 
 		case 5: /* nach rechts bis zur mitte */
-			if (s->x<b->xp) {
+			if (s->x<b->xp)
+			{
 				s->x+=2*fps_factor;
-				if (s->aktframe<8) {
+				if (s->aktframe<8)
+				{
 					b->wait2+=fps_factor;
-					if (b->wait2>=3) {
+					if (b->wait2>=3)
+					{
 						s->aktframe++;
 						b->wait2=0;
 					}
 				}
-			} else {
+			}
+			else
+			{
 				enemy_boss02_sr_add1(s);
 				b->wait1=100;
 				b->state1=6;
-				if(b->state2==1)
+				if (b->state2==1)
 				{
-					enemy_momiji_create(s, 3.5, M_PI/2-M_PI_H*2);
-					enemy_momiji_create(s, 4, M_PI/2);
-					enemy_momiji_create(s, 3.5, M_PI/2+M_PI_H*2);
+					enemy_momiji_create(s, 3.5, deg_360_to_512(30*(3-2)) );
+					enemy_momiji_create(s, 4,	deg_360_to_512(30*(3  )) );
+					enemy_momiji_create(s, 3.5, deg_360_to_512(30*(3+2)) );
 				}
 			}
 			break;
@@ -454,8 +462,8 @@ static void enemy_boss02_move(SPRITE *s)
 			break;
 
 		case 7:
-			if(b->state2==0)
-				enemy_boss02_ice_add(s);
+			if (b->state2==0)
+			{	enemy_boss02_ice_add(s);}
 			b->wait1=100;
 			b->state1=8;
 			break;
@@ -465,23 +473,28 @@ static void enemy_boss02_move(SPRITE *s)
 			break;
 
 		case 9: /* nach rechts bis zum rand */
-			if (s->x<(WIDTH2-s->w)) {
+			if (s->x<(GAME_WIDTH-s->w))
+			{
 				s->x+=2*fps_factor;
-				if (s->aktframe<8) {
+				if (s->aktframe<8)
+				{
 					b->wait2+=fps_factor;
-					if (b->wait2>=3) {
+					if (b->wait2>=3)
+					{
 						s->aktframe++;
 						b->wait2=0;
 					}
 				}
-			} else {
+			}
+			else
+			{
 				b->wait1=20;
 				b->state1=10;
-				if(b->state2==1)
+				if (b->state2==1)
 				{
-					enemy_momiji_create(s, 3.5, M_PI/2-M_PI_H*2);
-					enemy_momiji_create(s, 4, M_PI/2);
-					enemy_momiji_create(s, 3.5, M_PI/2+M_PI_H*2);
+					enemy_momiji_create(s, 3.5, deg_360_to_512(30*(3-2)) );
+					enemy_momiji_create(s, 4,	deg_360_to_512(30*(3  )) );
+					enemy_momiji_create(s, 3.5, deg_360_to_512(30*(3+2)) );
 				}
 			}
 			break;
@@ -491,26 +504,30 @@ static void enemy_boss02_move(SPRITE *s)
 			break;
 
 		case 11: /* nach links bis zur mitte */
-			if (s->x>b->xp) {
+			if (s->x>b->xp)
+			{
 				s->x-=2*fps_factor;
-				if (s->aktframe>0) {
+				if (s->aktframe>0)
+				{
 					b->wait2+=fps_factor;
-					if (b->wait2>=3) {
+					if (b->wait2>=3)
+					{
 						s->aktframe--;
 						b->wait2=0;
 					}
 				}
-			} else
-				b->state1=1;
+			}
+			else
+			{	b->state1=1;	}
 			break;
 		}
-	break;
+		break;
 
 	case 2: 	//攻撃パターン2
-		switch (b->state1) {
-
+		switch (b->state1)
+		{
 		case 0: 	//不定:初期位置情報の取得->1へ
-			b->ang_b2=atan2(-s->y+20,-s->x+WIDTH2/2-s->w);
+			b->angle512/*_radian*/=atan_512(20-s->y,GAME_WIDTH/2-s->w-s->x);
 			b->state1=1;
 			break;
 
@@ -519,18 +536,20 @@ static void enemy_boss02_move(SPRITE *s)
 			{
 				b->state1=2;
 				b->wait1+=10+(3-difficulty)*10;
-				if (b->n_wayt%3==0){
-					enemy_n_way_bullet(s, "kugel.png", 0, 8, 5, atan2(player->y-s->y,player->x-s->x));
+				if ((b->n_wayt%3==0))
+				{
+					enemy_n_way_bullet_type(s, BU_TYPE01_KUGEL_PNG/*"kugel.png", 0*/, 8, 5, ANGLE_JIKINERAI_KISUDAN);	/*なるべく共通化*/	/*atan_512(player->y-s->y,player->x-s->x)*/
 				}
-				if (b->n_wayt%4==0 && b->n_wayt%12!=0){
-					enemy_n_way_bullet(s, "kugel.png", 0, 11, 4, atan2(player->y-s->y,player->x-s->x));
-					enemy_n_way_bullet(s, "kugel.png", 0, 11, 3, atan2(player->y-s->y,player->x-s->x));
+				if ( (b->n_wayt%4==0) && (b->n_wayt%12!=0) )
+				{
+					enemy_n_way_bullet_type(s, BU_TYPE01_KUGEL_PNG/*"kugel.png", 0*/, 11, 4, ANGLE_JIKINERAI_KISUDAN);	/*なるべく共通化*/	/*atan_512(player->y-s->y,player->x-s->x)*/
+					enemy_n_way_bullet_type(s, BU_TYPE01_KUGEL_PNG/*"kugel.png", 0*/, 11, 3, ANGLE_JIKINERAI_KISUDAN);	/*なるべく共通化*/	/*atan_512(player->y-s->y,player->x-s->x)*/
 				}
 			}
 			else
 			{
-				s->x+=cos(b->ang_b2)*6*fps_factor;
-				s->y+=sin(b->ang_b2)*6*fps_factor;
+				s->x+=co_s512((b->angle512/*_radian*/))*6*fps_factor;
+				s->y+=si_n512((b->angle512/*_radian*/))*6*fps_factor;
 				b->state1=0;
 			}
 			break;
@@ -538,12 +557,12 @@ static void enemy_boss02_move(SPRITE *s)
 		case 2: 	//初期位置:大玉3つ->3,4,5
 			if (b->wait1<0)
 			{
-				enemy_bigbullet_create(s, s->x+s->w/3, s->y+s->h/2, 5, -M_PI/6+atan2(player->y-s->y,player->x-s->x), 1);	//大弾の追加
-				enemy_bigbullet_create(s, s->x+s->w/3, s->y+s->h/2, 5, atan2(player->y-s->y,player->x-s->x), 1);
-				enemy_bigbullet_create(s, s->x+s->w/3, s->y+s->h/2, 5, +M_PI/6+atan2(player->y-s->y,player->x-s->x), 1);
+				enemy_bigbullet_create(s, s->x+s->w/3, s->y+s->h/2, 5, atan_512(player->y-s->y,player->x-s->x)-deg_360_to_512(30), 1); //大弾の追加
+				enemy_bigbullet_create(s, s->x+s->w/3, s->y+s->h/2, 5, atan_512(player->y-s->y,player->x-s->x) 				   	 , 1);
+				enemy_bigbullet_create(s, s->x+s->w/3, s->y+s->h/2, 5, atan_512(player->y-s->y,player->x-s->x)+deg_360_to_512(30), 1);
 				b->state1=rand()%3+3;
 				if (b->state1==5)
-					b->ang_b2=atan2(-s->y+player->y,-s->x+player->x);
+				{	b->angle512/*_radian*/=atan_512(player->y-s->y,player->x-s->x);}
 				else
 				{
 					s->y+=6*fps_factor;
@@ -556,16 +575,21 @@ static void enemy_boss02_move(SPRITE *s)
 			break;
 
 		case 3: 	//左移動中->6へ
-			if (s->x>=0) {
+			if (s->x>=0)
+			{
 				s->x-=(4+difficulty)*fps_factor;
-				if (s->aktframe>0) {
+				if (s->aktframe>0)
+				{
 					b->wait2+=fps_factor;
-					if (b->wait2>=3) {
+					if (b->wait2>=3)
+					{
 						s->aktframe--;
 						b->wait2=0;
 					}
 				}
-			} else {
+			}
+			else
+			{
 				s->x++; 		//[***090114		追加
 				b->wait1=10;
 				b->state1=6;
@@ -573,16 +597,21 @@ static void enemy_boss02_move(SPRITE *s)
 			break;
 
 		case 4: 	//右移動中->8へ
-			if (s->x<(WIDTH2-s->w)) {
+			if (s->x<(GAME_WIDTH-s->w))
+			{
 				s->x+=(4+difficulty)*fps_factor;
-				if (s->aktframe<8) {
+				if (s->aktframe<8)
+				{
 					b->wait2+=fps_factor;
-					if (b->wait2>=3) {
+					if (b->wait2>=3)
+					{
 						s->aktframe++;
 						b->wait2=0;
 					}
 				}
-			} else {
+			}
+			else
+			{
 				s->x--; 		//[***090114		追加
 				b->wait1=10;
 				b->state1=8;
@@ -590,14 +619,14 @@ static void enemy_boss02_move(SPRITE *s)
 			break;
 
 		case 5: 	//プレイヤー位置付近移動中->10へ
-			if (((s->x<0)||(s->y<0))||((s->x+s->w>WIDTH2)||(s->y+s->h>HEIGHT)))
+			if (((s->x<0)||(s->y<0))||((s->x+s->w>GAME_WIDTH)||(s->y+s->h>GAME_HEIGHT)))
 			{
 				b->state1=10;
 			}
 			else
 			{
-				s->x+=cos(b->ang_b2)*(4+difficulty)*fps_factor;
-				s->y+=sin(b->ang_b2)*(4+difficulty)*fps_factor;
+				s->x+=co_s512((b->angle512/*_radian*/))*(4+difficulty)*fps_factor;
+				s->y+=si_n512((b->angle512/*_radian*/))*(4+difficulty)*fps_factor;
 			}
 			break;
 
@@ -607,12 +636,13 @@ static void enemy_boss02_move(SPRITE *s)
 
 		case 7: 	//左:右回転攻撃->0,11
 			enemy_boss02_sr_add1(s);
-			if (rand()%2==0){
+			if (0==(rand()&(2-1)))
+			{
 				b->state1=0;
 				b->n_wayt++;
 			}
 			else
-				b->state1=11;
+			{	b->state1=11;}
 			break;
 
 		case 8: 	//右:待機->9へ
@@ -626,32 +656,32 @@ static void enemy_boss02_move(SPRITE *s)
 			break;
 
 		case 10:	//プレイヤー位置付近:大玉3つ->ひとまず0へ
-			enemy_bigbullet_create(s, s->x+s->w/3, s->y+s->h/2, 3, -M_PI/6+atan2(player->y-s->y,player->x-s->x), 20);
-			enemy_bigbullet_create(s, s->x+s->w/3, s->y+s->h/2, 3, atan2(player->y-s->y,player->x-s->x), 20);
-			enemy_bigbullet_create(s, s->x+s->w/3, s->y+s->h/2, 3, +M_PI/6+atan2(player->y-s->y,player->x-s->x), 20);
+			enemy_bigbullet_create(s, s->x+s->w/3, s->y+s->h/2, 3, atan_512(player->y-s->y,player->x-s->x)-deg_360_to_512(30), 20);
+			enemy_bigbullet_create(s, s->x+s->w/3, s->y+s->h/2, 3, atan_512(player->y-s->y,player->x-s->x) 		   			 , 20);
+			enemy_bigbullet_create(s, s->x+s->w/3, s->y+s->h/2, 3, atan_512(player->y-s->y,player->x-s->x)+deg_360_to_512(30), 20);
 			b->state1=0;
 			b->n_wayt++;
 			break;
 
 		case 11:	//左:前へ->12
-			if (s->y>HEIGHT/3)
-				b->state1=12;
+			if (s->y>GAME_HEIGHT/3)
+			{	b->state1=12;}
 			else
-				s->y+=(5+difficulty)*fps_factor;
+			{	s->y+=(5+difficulty)*fps_factor;}
 			break;
 
 		case 12:
-			enemy_g_bullet_create(s, 5, 20, atan2(player->y-s->y,player->x-s->x)+M_PI/3);		//いらない弾達。消した方がいいかも
-			enemy_g_bullet_create(s, 5, 10, atan2(player->y-s->y,player->x-s->x)+M_PI/6);
+			enemy_g_bullet_create(s, 5, 20, atan_512(player->y-s->y,player->x-s->x)+deg_360_to_512(60));		//いらない弾達。消した方がいいかも
+			enemy_g_bullet_create(s, 5, 10, atan_512(player->y-s->y,player->x-s->x)+deg_360_to_512(30));
 			enemy_bullet_create(s, 5);
-			enemy_g_bullet_create(s, 5, -10, atan2(player->y-s->y,player->x-s->x)-M_PI/6);
-			enemy_g_bullet_create(s, 5, -20, atan2(player->y-s->y,player->x-s->x)-M_PI/3);
+			enemy_g_bullet_create(s, 5, -10, atan_512(player->y-s->y,player->x-s->x)-deg_360_to_512(30));
+			enemy_g_bullet_create(s, 5, -20, atan_512(player->y-s->y,player->x-s->x)-deg_360_to_512(60));
 			b->state1=0;
 			b->n_wayt++;
 			break;
 
 		case 13:
-			((PLAYER_DATA *)player->data)->bossmode=1;
+			((PLAYER_DATA *)player->data)->bossmode=B01_BATTLE;
 			b->state1=0;
 			break;
 		}
@@ -662,28 +692,27 @@ void enemy_boss02_add(int lv)
 {
 	BOSS02_DATA *b;
 	SPRITE *s;
+	s				= sprite_add_file("boss02_v2.png",9,PR_ENEMY);	s->anim_speed=0;
+	s->flags		|=SP_FLAG_VISIBLE|SP_FLAG_COLCHECK;
+	s->aktframe 	= 4;
+	s->type 		= SP_EN_BOSS/*SP_EN_BOSS02*/;
+	b				= mmalloc(sizeof(BOSS02_DATA));
+	s->data 		= b;
+	b->b.health 	= (difficulty<<10/**1024*/)+3071+1024;
+	b->b.score		= score(2000)+score(1500)*difficulty;
+	b->state1		= 0;
+	b->state2		= 0;
+	b->wait1		= 50;
+	b->wait2		= 0;
+	b->type 		= 0;
+	b->level		= lv;
+	b->n_wayt		= 1;
+	s->mover		= enemy_boss02_move;
+	s->x			= (GAME_WIDTH/2)-(s->w/2);
+	b->xp			= s->x;
+	s->y			= -(s->h);
 
-	s=sprite_add_file("boss02_v2.png",9,PR_ENEMY);	s->anim_speed=0;
-	s->flags|=SP_FLAG_VISIBLE|SP_FLAG_COLCHECK;
-	s->aktframe=4;
-	s->type=SP_EN_BOSS/*SP_EN_BOSS02*/;
-	b=mmalloc(sizeof(BOSS02_DATA));
-	s->data=b;
-	b->b.health=3071;
-	b->b.score=score(2000)+score(1500)*difficulty;
-	b->state1=0;
-	b->state2=0;
-	b->wait1=50;
-	b->wait2=0;
-	b->type=0;
-	b->level=lv;
-	b->n_wayt=1;
-	s->mover=enemy_boss02_move;
-	s->x=(WIDTH2/2)-(s->w/2);
-	b->xp=s->x;
-	s->y=-(s->h);
-
-	((PLAYER_DATA *)player->data)->bossmode=1;
+	((PLAYER_DATA *)player->data)->bossmode=B01_BATTLE;
 	((PLAYER_DATA *)player->data)->boss=s;
 	/* コールバック登録 */
 	((PLAYER_DATA *)player->data)->callback_boss_hitbyweapon=callback_enemy_boss02_hitbyweapon;

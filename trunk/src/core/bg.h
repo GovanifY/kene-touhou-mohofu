@@ -7,11 +7,12 @@
 
 enum _bg_type
 {
-	BG_BLACK=0,
+	BG_THROW=0,		/*ìßñæ*/
+	BG_BLACK,		/*çï*/
 	BG_CLOUDS,
 	BG_STARS,
 	BG_TILE,
-	BG_ADD,
+//	B G_ADD,
 	BG_LAST
 };
 

@@ -13,17 +13,64 @@ enum _select_pl 		//[***090203		追加
 {
 	REIMU=0,
 	MARISA,
-	REMIRIA
+	REMIRIA,
+	CIRNO,
+	YUYUKO,
 };
 
-enum _boss_mode 		//[***090223		追加
-{
-	B_NONE=0,
-	B_BATTLE,
-	B_DEATH,
-	B_EVENT,
-	B_CHANGE
-};
+/*
+	bossmodeについて
+	0:特になし。							// [ゲーム中]
+	1:ボスとの戦闘中。						// [ゲーム中]
+	4:形態変更中。強敵撃破。弾回収待ち。	// [ゲーム中](enemy_greatfairy.cでも使う)
+	2:ボス撃破中。弾回収待ち。				// [ゲーム中]
+//
+	5:開始イベントファイル読み込み。		// [戦闘前]
+	7:終了イベントファイル読み込み。		// [撃破後]
+	3:ボス開始イベント(会話シーン)。		// [戦闘前]
+	6:ボス終了イベント(会話シーン)。		// [撃破後]
+	8:ボス曲を鳴らし、1ボスとの戦闘へ。 	// [戦闘前]
+	9:stage読み込み。						// [撃破後]
+*/
+#if 1
+	/* 旧仕様 */
+	enum _boss_mode 		//[***090223		追加
+	{
+		B00_NONE=0, 		// [ゲーム中]
+		B01_BATTLE, 		// [ゲーム中]
+		B02_DEATH_WAIT, 	// [ゲーム中]
+		B03_BEFORE_EVENT,	// [戦闘前]
+		B04_CHANGE, 		// [ゲーム中]
+		B05_BEFORE_LOAD,	// [戦闘前]
+		B06_AFTER_EVENT,	// [撃破後]
+		B07_AFTER_LOAD, 	// [撃破後]
+		B08_START,			// [戦闘前]
+		B09_STAGE_LOAD, 	// [撃破後]
+	};
+#else
+	enum _boss_mode 		//[***090223		追加
+	{
+		B00_NONE=0, 		// [ゲーム中]
+		B01_BATTLE, 		// [ゲーム中]
+		B04_CHANGE, 		// [ゲーム中]
+		B02_DEATH_WAIT, 	// [ゲーム中]
+	//
+		B05_BEFORE_LOAD,	// [戦闘前]
+		B07_AFTER_LOAD, 	// [撃破後]
+		B03_BEFORE_EVENT,	// [戦闘前]
+		B06_AFTER_EVENT,	// [撃破後]
+		B08_START,			// [戦闘前]
+		B09_STAGE_LOAD, 	// [撃破後]
+	};
+#endif
+
+/*なし*/
+#define BONUS_FLAG_00_NONE				0x00
+/*???*/
+#define BONUS_FLAG_01_aaaa				0x01
+/*自動アイテム収集*/
+#define BONUS_FLAG_02_AUTO_GET_ITEM 	0x02
+
 
 typedef struct
 {
@@ -34,20 +81,20 @@ typedef struct
 //	int now_stage/*level*/;
 	int bossmode;
 	int state;
-	int explode;
+//	int explode;// ←必ず0なので意味なかった。なんかの機能の残りだっけ？？？
 	double save_delay;
 	double anim_delay;
-	int weapon;
+	int weapon;					/*  0x00-0x7f  (0-127 の128段階==本家と同じ)   max==127==「128段階」*/
 	int player_speed;
-	int player_speed_mini;
-	int player_speed_max;
-	int extra;
-	int bonus;				//[***090116		追加
+//	int player_speed_minimum;	/*各プレイヤーごとの固定値なので削除*/
+//	int player_speed_maximum;	/*各プレイヤーごとの固定値なので削除*/
+	int extra_type;
+	int bonus_flag;				/* 1でボーナスアイテムが自分に集まる。0で厚真あらない(通常時) */	//[***090116		追加
 	int hit_bomb_wait;		//[***090125		追加
 	int option;
-	double extra_wait;
-	double extra_time;
-	double weapon_wait;
+//	double extra_interval;/*武器使用間隔の共通時間は廃止(各武器で間隔は管理)*/
+	/*double*/int bomber_time;
+//	double weapon_interval;
 	SPRITE *core;
 	SPRITE *enemy;			//[***090125		追加:playerに当たった物
 	SPRITE *boss;			//[***090305		追加
@@ -62,17 +109,18 @@ enum _weapon_type
 	WP_TRIPLE,
 	WP_QUAD,
 	WP_FIFTH,
-	WP_LAST
+//	WP_WAVE,
+	WP_MAX		/* 最大数 */
 };
 
 enum _player_extras
 {
 	PLX_NONE=0,
-	PLX_HOMING,
-	PLX_SHIELD,
-	PLX_HLASER,
+//	PLX_HOMING,
+//	PLX_HLASER,
+//	PLX_SHIELD,
 	PLX_BOMB,
-	PLX_LAST
+	PLX_LAST		/* 最大数 */
 };
 
 typedef struct

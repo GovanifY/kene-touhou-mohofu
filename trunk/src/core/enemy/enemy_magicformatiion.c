@@ -2,6 +2,9 @@
 
 typedef struct
 {
+#if 1
+	ENEMY_BASE b;		//[***090410		???追加???
+#endif
 	int state;
 	double speed;
 	double wait;
@@ -12,13 +15,13 @@ typedef struct
 
 static void enemy_magicformation_move(SPRITE *s)
 {
-	//double angle;
 	MAGICF_DATA *d=(MAGICF_DATA *)s->data;
-	int al,sp;
+	int sp;
 	switch (d->state)
 	{
 	case 0:
-		if (d->wait<0){
+		if (d->wait<0)
+		{
 			d->wait=5;
 			d->state=1;
 		}
@@ -28,17 +31,18 @@ static void enemy_magicformation_move(SPRITE *s)
 	case 1:
 		if (s->alpha<180)
 		{	s->alpha+=4*fps_factor;}
-		else{
+		else
+		{
 			d->state=2;
 			s->alpha=180;
 		}
 		break;
 	case 2:
-		if (d->n){		//[***090128		変更
+		if (d->n)		//[***090128		変更
+		{
 			if (d->wait<0)
 			{
 				playChunk(10);
-				al=rand()%360;
 				#if 0
 				/* sp は 殆ど2か3で、約1/80の確率で極稀に1を出す */
 				sp=rand()%3/*+1-1*/;	/* 0 1 2 */
@@ -62,7 +66,10 @@ static void enemy_magicformation_move(SPRITE *s)
 				}
 				#endif
 				sp++;	/* sp = 1 or 2 or 3 */
-				enemy_stop_bullet_create(s, sp, degtorad(al), 0.04);
+				{	int angle512;
+					angle512=(rand()&(512-1))/*%360*/;
+					enemy_stop_bullet_create(s, sp, /*degtorad*/(angle512), t256(0.04));
+				}
 				d->wait=5;
 				d->n--;
 			}
@@ -77,7 +84,7 @@ static void enemy_magicformation_move(SPRITE *s)
 		{	s->alpha-=fps_factor*2;}
 		else
 		{
-			s->type=-1;
+			s->type=SP_DELETE;
 			s->alpha=0;
 		}
 		break;
@@ -87,20 +94,24 @@ static void enemy_magicformation_move(SPRITE *s)
 void enemy_magicformation_add_xy(const short xxx, const short yyy, const short speed256)
 {
 	SPRITE *s;
+	s				= sprite_add_file("grounder.png",9,PR_GROUNDER);
+	s->anim_speed	= 2;
+	s->flags		|= (SP_FLAG_VISIBLE|SP_FLAG_COLCHECK);
+	s->mover		= enemy_magicformation_move;
+	s->aktframe 	= 0;
+	s->type 		= SP_PLAYER2;
+	s->x			= xxx;
+	s->y			= -s->h+yyy;
+	s->alpha		= 0;
 	MAGICF_DATA *data;
-	s=sprite_add_file("grounder.png",9,PR_GROUNDER);
-	s->anim_speed=2;
-	s->flags|=(SP_FLAG_VISIBLE|SP_FLAG_COLCHECK);
-	s->mover=enemy_magicformation_move;
-	s->aktframe=0;
-	s->type=SP_PLAYER2;
-	s->x=xxx;
-	s->y=-s->h+yyy;
-	s->alpha=0;
-	data=mmalloc(sizeof(MAGICF_DATA));
-	s->data=data;
-	data->state=0;
-	data->wait=10;
-	data->n=10+7*difficulty;
-	data->level=0;
+	data			= mmalloc(sizeof(MAGICF_DATA));
+	s->data 		= data;
+#if 1
+	data->b.score	= score(200*2);			//[***090410		???追加???
+	data->b.health	= 25+(difficulty<<2);	//[***090410		???追加???
+#endif
+	data->state 	= 0;
+	data->wait		= 10;
+	data->n 		= 10+7*difficulty;
+	data->level 	= 0;
 }
