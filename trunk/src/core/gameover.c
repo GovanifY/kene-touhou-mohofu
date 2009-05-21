@@ -1,143 +1,144 @@
-#include "gameover.h"
 
-extern SDL_Surface *screen;
-extern GAMESTATE state;
-extern HSC_LIST hsc_table[];
-extern double fps_factor;
-extern GAMESTATE state;
-extern int lastscore;
+/*---------------------------------------------------------
+	ゲームオーバーの表示
+---------------------------------------------------------*/
 
-
-static SDL_Surface *go_surface1;
-static SDL_Surface *go_surface2;
-
-//int go_ex1,go_ex2;
+#include "support.h"
 #include "player.h"
 
-enum _gameover_states
-{
-	GO_INIT=0,
-	GO_FADEINIT,
-	GO_FADEIN1,
-	GO_FADEIN2,
-	GO_WAIT,
-	GO_QUIT
-};
-
+/*---------------------------------------------------------
+	ゲームコア終了の後処理
+---------------------------------------------------------*/
+extern void bg2_destroy(void);
+extern int last_score;
 void gamecore_term(void)
 {
-	bg_destroy();
-	controller_remove_all();
-	sprite_remove_all(SP_SHOW_ALL);
+	last_score=((PLAYER_DATA *)player->data)->my_score;
+
+	bg2_destroy();		// [***090126		追加
+	//controller_remove_all();
+	sprite_remove_all000(SP_GROUP_ALL);
+//	sprite_remove_all222(SP_GROUP_ALL);/*弾幕用*/
 //	parsys_remove_all();
 //	score_cleanup();
-}
-void gameover_init(void)
-{
-	gamecore_term();
 //
-	//stopMusic();
+//	//play_voice_auto_track(VOICE04_SHIP_HAKAI);	// [***090123		コメントアウト
+	//stop_music(); 	// [***090123		コメントアウト
+	set_music_volume(128);
 	play_music(BGM_00_intro);
-//
-				//	//playChunk(4); 	//[***090123		コメントアウト
-				//	stopMusic();	コメントアウト
-				//	play_music(BGM_00_intro);	コメントアウト
-
-	go_surface1=font_render("GAME OVER",FONT05);
-	{	char scoretext[32/*50*/];
-		sprintf(scoretext,"SCORE: %d0",lastscore);
-		go_surface2=font_render(scoretext,FONT05);
-	}
-	#if 1
-	/* KETM互換なら ここで back buffer screen を clear screen すべき */
-	psp_push_screen();
-	#endif
-	SDL_SetAlpha(screen,SDL_SRCALPHA,128);
-	psp_push_screen();	//SDL_BlitSurface(screen,NULL,back_screen,NULL);
-	SDL_SetAlpha(screen,SDL_SRCALPHA,255);
-	newstate(ST_GAME_OVER,GO_FADEINIT,0);
 }
 
-static void gameover_display(double s1, double s2)
+/*---------------------------------------------------------
+	ゲームオーバー文字とスコア文字を拡大して表示する子関数
+---------------------------------------------------------*/
+
+static SDL_Surface *str_01_game_over_surface;
+static SDL_Surface *str_02_score_surface;
+
+static /*dou ble*/int go_size1_256;
+static /*dou ble*/int go_size2_256;
+
+//static void gameover_display(dou ble s1, dou ble s2);
+static void gameover_display(void/*dou ble s1, dou ble s2*/)
 {
 	SDL_Rect s,d;
-	s.x=0;
-	s.y=0;
-
-	s.w=go_surface1->w;
-	s.h=go_surface1->h;
-	d.w=go_surface1->w*s1;
-	d.h=go_surface1->h*s1;
-	d.x=GAME_WIDTH/2-d.w/2; 		//[***090203
-	d.y=GAME_HEIGHT/2-d.h/2-30;		//[***090203
-	blit_scaled(go_surface1,&s,screen,&d);
-
-	s.w=go_surface2->w;
-	s.h=go_surface2->h;
-	d.w=go_surface2->w*s2;
-	d.h=go_surface2->h*s2;
-	d.x=GAME_WIDTH/2-d.w/2; 		//[***090203
-	d.y=GAME_HEIGHT/2-d.h/2+30;		//[***090203
-	blit_scaled(go_surface2,&s,screen,&d);
+	s.x = 0;
+	s.y = 0;
+//
+	s.w = (str_01_game_over_surface->w);
+	s.h = (str_01_game_over_surface->h);
+	d.w = ((str_01_game_over_surface->w*go_size1_256)>>8);
+	d.h = ((str_01_game_over_surface->h*go_size1_256)>>8);
+	d.x = (GAME_WIDTH /2)	-((d.w)/2); 	// [***090203
+	d.y = 96;//98;//(GAME_HEIGHT/2)-30-((d.h)/2); 	// [***090203
+	blit_scaled(str_01_game_over_surface,&s,screen,&d);
+//
+	s.w = (str_02_score_surface->w);
+	s.h = (str_02_score_surface->h);
+	d.w = ((str_02_score_surface->w*go_size2_256)>>8);
+	d.h = ((str_02_score_surface->h*go_size2_256)>>8);
+	d.x = (GAME_WIDTH /2)	-((d.w)/2); 	// [***090203
+	d.y = 160;//158;//(GAME_HEIGHT/2)+30-((d.h)/2); 	// [***090203
+	blit_scaled(str_02_score_surface,&s,screen,&d);
 }
+
+/*---------------------------------------------------------
+
+---------------------------------------------------------*/
+
+enum /*_gameover_states_*/
+{
+	GAME_OVER_00_INIT = 0,
+	GAME_OVER_01_ZOOM_GAME_OVER,
+	GAME_OVER_02_ZOOM_SCORE,
+	GAME_OVER_03_WAIT_QUIT,
+};
+extern void check_high_score(void);
 void gameover_work(void)
 {
 //	SDL_Surface *tmpsurface;
 //	SDL_Rect s,d;
-	static int wait=0;
-	static double go_size1, go_size2;
-
-	if (state.mainstate!=ST_GAME_OVER || state.newstate==1) return;
-	psp_pop_screen();	//SDL_BlitSurface(back_screen,NULL,screen,NULL);
-
-	switch (state.substate)
+	static int game_over_time_out;/*wait*/
+//
+	if ( (ST_WORK_GAME_OVER|GAME_OVER_00_INIT) != (psp_loop) )
 	{
-	case GO_FADEINIT:
-		go_size1=0;
-		go_size2=0;
-		newstate(ST_GAME_OVER,GO_FADEIN1,0);
-		break;
-
-	case GO_FADEIN1:
-		gameover_display(go_size1,go_size2);
-		go_size1+=0.05*fps_factor;
-		if (go_size1>=1.5) {
-			newstate(ST_GAME_OVER,GO_FADEIN2,0);
-		}
-		break;
-
-	case GO_FADEIN2:
-		gameover_display(go_size1,go_size2);
-		go_size2+=0.05*fps_factor;
-		if (go_size2>=1.0) {
-			wait=200;
-			newstate(ST_GAME_OVER,GO_WAIT,0);
-		}
-		break;
-
-	case GO_WAIT:
-		gameover_display(go_size1,go_size2);
-		wait-=fps_factor;
-		if (wait<=0) {
-			newstate(ST_GAME_OVER,GO_QUIT,0);
-		}
-		break;
-
-	case GO_QUIT:
-		//SDL_FreeSurface(go_surface1);
-		//SDL_FreeSurface(go_surface2);
-		//SDL_FreeSurface(back_screen);
-		if (lastscore > hsc_table[4].score)
+		psp_pop_screen();	//SDL_BlitSurface(back_screen,NULL,screen,NULL);
+	}
+	switch ((Uint8)(psp_loop&0xff)/*state.substate*/)
+	{
+	case GAME_OVER_00_INIT:
+		//void gameover_init(void)
+		gamecore_term();
+	//
+		str_01_game_over_surface	= font_render("GAME OVER",FONT06/*FONT05*/);
 		{
-			/* you made it! enter your name in the hiscore-list */
-			newstate(ST_ENTRY_HCLIST,0,1);
+			char scoretext[32/*50*/];
+			sprintf(scoretext,"SCORE: %d0",last_score);
+			str_02_score_surface	= font_render(scoretext,FONT06/*FONT05*/);
 		}
-		else
+		#if 1
+		/* KETM互換なら ここで back buffer screen を clear screen すべき */
+		psp_push_screen();
+		#endif
+		SDL_SetAlpha(screen,SDL_SRCALPHA,128);
+		psp_push_screen();	//SDL_BlitSurface(screen,NULL,back_screen,NULL);
+		SDL_SetAlpha(screen,SDL_SRCALPHA,255);
+		go_size1_256		= 0;
+		go_size2_256		= 0;
+		game_over_time_out	= 0;/*wait*/
+		psp_loop++;//psp_loop=(ST_WORK_GAME_OVER|GAME_OVER_01_ZOOM_GAME_OVER);//newsta te(ST_GAME_OVER,GAME_OVER_01_ZOOM_GAME_OVER,0);
+		break;
+
+	case GAME_OVER_01_ZOOM_GAME_OVER:
+		gameover_display();
+		go_size1_256 += t256(0.05);
+		if (go_size1_256 >= t256(1.5))
 		{
-			/* you'd better play barbie */
-			newstate(ST_MENU/*ST_INTRO*/,0,1);
+			psp_loop++;//newsta te(ST_GAME_OVER,GAME_OVER_02_ZOOM_SCORE,0);
+		}
+		break;
+
+	case GAME_OVER_02_ZOOM_SCORE:
+		gameover_display();
+		go_size2_256 += t256(0.05);
+		if (go_size2_256 >= t256(1.0))
+		{
+			game_over_time_out = 200;
+			psp_loop++;//newsta te(ST_GAME_OVER,GAME_OVER_03_WAIT_QUIT,0);
+		}
+		break;
+
+	case GAME_OVER_03_WAIT_QUIT:
+		gameover_display();
+		game_over_time_out--;
+		if (1 > game_over_time_out)
+		{
+			//SDL_FreeSurface(str_01_game_over_surface);
+			//SDL_FreeSurface(str_02_score_surface);
+			//SDL_FreeSurface(back_screen);
+			check_high_score();/* ←内部で(psp_loopで)状態変更する */
+			//psp_loop++;//newsta te(ST_GAME_OVER,GAME_OVER_05_QUIT,0);
 		}
 		break;
 	}
 }
-

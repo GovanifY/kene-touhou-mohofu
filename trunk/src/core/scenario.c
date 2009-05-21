@@ -1,41 +1,478 @@
+
+/*---------------------------------------------------------
+	全角文字表示ライブラリ zenkaku.c / shinonomefont.c
+
+	PSPで平易に漢字を表示するために公開します。
+	フォントは東雲フォントを使用させて頂いています。
+
+＜要請＞
+	このライブラリはフリーウェアとし、特に金品は要求しませんが、
+	このライブラリを利用してソフトウェアを公開する方は、ドキュメント中に
+	以下の文言を挿入して頂けますよう、お願い致します。
+
+	「このソフトウェアはmediumgauge氏作成の全角文字表示ライブラリを使用しています。」
+
+＜仕様＞
+	ごく小さなプログラムですので、お読みいただければわかると思いますが、
+	zenkaku.h に定義されている mh_print() に座標、文字列、色を渡せば描画されます。
+---------------------------------------------------------*/
+
+#include "support.h"
 #include "scenario.h"
-#include <SDL/SDL_image.h>
 
-extern double fps_factor;
+#define USE_2ND_SCREEN		(0)
+
+
+#define FONT_WIDTH			(8)
+#define FONT_HEIGHT 		(16)
+
+/*---------------------------------------------------------
+	shift jisコード、全角1バイト目かどうか判定する子関数
+---------------------------------------------------------*/
+
+static int is_kanji(/*unsigned char*/int high_byte)
+{
+	high_byte &= 0xff;
+	return (
+		((high_byte >= 0x81) && (high_byte < 0xa0)) ||
+		((high_byte >= 0xe0) && (high_byte <= 0xfd))
+	);
+}
+
+/*
+現実の問題として、東雲フォント16には
+2バイト半角漢字はフォントデーターがない(作成されてない。作成すれば使える)
+そのため 2バイト半角漢字は表示されない。(データーが全て空白の為)
+//
+その上で、根源的な問題として、pspで2バイト半角漢字をサポートする意味がない気がする。
+*/
+
+
+/* USE_HARF_KANJI == (0): shift jisコード、$fdxx の2バイト半角漢字をサポートしない場合 */
+/* USE_HARF_KANJI == (1): shift jisコード、$fdxx の2バイト半角漢字をサポートする場合 */
+#define USE_HARF_KANJI		(0)
+#if (1==USE_HARF_KANJI)
+/*---------------------------------------------------------
+	文字種がshift jis漢字と判明している場合に、
+	(つまりis_kanji()判定後の場合専用)
+	2バイト半角かどうかを文字単位で返す子関数
+---------------------------------------------------------*/
+
+static int size_of_kanji(/*unsigned char*/int high_byte)
+{
+	high_byte &= 0xff;
+	if (0xfd == high_byte)	// 2バイト半角
+	{			return (1); }
+	else	{	return (2); }
+}
+#endif
+
+/*---------------------------------------------------------
+	東雲文字コード規格 の文字を描画する子関数
+---------------------------------------------------------*/
+
+static int font_color_number;
+
+extern const char shinonome_font16p[];
+/*
+	x				表示座標
+	y				表示座標
+	col_n			フォントの種類
+	code_offset 	文字
+//
+	dx		ドットx
+	dy		ドットy
+	bit 	調べるbyte情報
+	bitcnt	調べてるbyteが後何回調べられるか:最大8回(後述)
+			bitと&することで調べてるbyteのbit情報を得る。
+*/
+
+static Uint32 getpixel16(SDL_Surface *surface, int x, int y)
+{
+	Uint8 *p = (Uint8 *)surface->pixels+y*surface->pitch+x+x;
+	return (*(Uint16 *)p);
+}
+
+static void putpixel16(SDL_Surface *surface, int x, int y, Uint32 pixel)
+{
+	Uint8 *p = (Uint8 *)surface->pixels+y*surface->pitch+x+x;
+	*(Uint16 *)p=pixel;
+}
+static void draw_shinonome_moji(SDL_Surface *drawmap, SDL_Surface *backmap, int x, int y, int code_offset, int hidari_gawa)
+{
+	if (1==hidari_gawa)
+	{
+		x += FONT_WIDTH;
+	}
+	if (x > (drawmap->w-FONT_WIDTH) )	/* 範囲外なら */
+	{
+		return;/* 描画しない */
+	}
+	int haikei_offset;
+	if (1==hidari_gawa)
+	{
+		code_offset++;
+		haikei_offset=8;
+	}
+	else
+	{
+		haikei_offset=0;
+	}
+	haikei_offset += (font_color_number<<4);
+	code_offset<<=4;
+	int bit;
+	int bitcnt;
+	bitcnt = 0;
+	bit = 0;
+	int dy;
+	for (dy=0; dy<FONT_HEIGHT; dy++)
+	{
+		int dx;
+		for (dx=0; dx<FONT_WIDTH; dx++)
+		{
+			bitcnt >>= 1;
+			if (0==bitcnt)	// bitcnt==0の時
+			{
+				bit = shinonome_font16p[code_offset++];
+				bitcnt = 0x80;		// 1byteの情報量が8の為 80 40 20 10 8 4 2 1(0になったらすぐ80になるためカウントされない)
+			}
+			if (bit & bitcnt)
+			{
+				Uint32 dot;
+				dot=getpixel16(backmap, (dx+haikei_offset), dy);	/*font_color_bitmap*/
+				putpixel16(drawmap, dx+x, dy+y, dot);
+			}
+		}
+	}
+}
+
+/*---------------------------------------------------------
+http://openlab.ring.gr.jp/efont/shinonome/
+	shift jis文字コード規格 を 東雲文字コード規格 へ変換後、描画する
+---------------------------------------------------------*/
+
+static void draw_sjis_kanji(SDL_Surface *drawmap, SDL_Surface *backmap, int x, int y, int high_byte, int low_byte)
+{
+	if (0==high_byte)	/* 半角文字の場合(asciiコード) */
+	{
+		/* asciiコード → shinonomeコード 変換 */
+		static	const	Uint8/*int*/ sinonome_ascii_bank_offset[16] =
+		{// +0	  +1	+2	  +3	 +4    +5	 +6    +7	  +8	+9	  +a	+b	   +c	 +d    +e	 +f
+			0xff, 0xff, 0x00, 0x10,  0x20, 0x30, 0x40, 0x50,  0xff, 0xff, 0x60, 0x70,  0x80, 0x90, 0xff, 0xff
+		};
+	//		 if (low_byte < 0x20)	{	return; }				// ascii 0x00-0x1f
+	//	else if (low_byte < 0x80)	{	low_byte -= 0x20; } 	// ascii 0x20-0x7f
+	//	else if (low_byte < 0xa0)	{	return; }				// ascii 0x80-0x9f
+	//	else if (low_byte < 0xe0)	{	low_byte -= 0x40; } 	// ascii 0xa0-0xdf
+	//	else						{	return; }				// ascii 0xe0-0xff
+	//	code_offset <<= 4;	//code_offset *= 16;	/* 9 */ 	// ここでの9は多分1つの文字に使うバイト数。(1byte == 8bit)*9=72 == 6*12
+		Uint8 idx8;
+		idx8 = sinonome_ascii_bank_offset[((low_byte>>4) & 0x0f)];
+		/* 存在マップが 0xff の場合は、 東雲文字コード規格 にない文字なので表示できない */
+		if (0xff == idx8)
+		{
+			return;
+		}
+		idx8 = ((idx8)|((low_byte & 0x0f)));
+		draw_shinonome_moji(drawmap, backmap, x, y, (idx8), 0);/*low_byte<<4*/
+	}
+	else				/* 全角文字の場合(shift jisコード) */
+	{
+		#if 1
+		/*下位バイトのチェック*/
+		if (low_byte < 0x40)	// 0x40未満(0x00-0x3f)の場合は shift jis文字コード領域 ではない。
+		{
+			return;
+		}
+		#endif
+		low_byte -= 0x40;
+		/* 上位バイトから 東雲文字コード規格 のインデックスを得る */
+		int idx;
+		{
+			/* 東雲文字コード規格 の存在マップ */
+			//#define FDxx (47)/* 半角2バイト漢字文字 */
+			static	const	signed char/*int*/ sinonome_sjis_bank_offset[0x40] =
+			{// +0	+1	+2	+3	 +4  +5  +6  +7   +8  +9  +a  +b   +c  +d  +e  +f
+				-1,  0,  1,  2,   3, -1, -1,  4,   5,  6,  7,  8,	9, 10, 11, 12,		/* 0x80xx */
+				13, 14, 15, 16,  17, 18, 19, 20,  21, 22, 23, 24,  25, 26, 27, 28,		/* 0x90xx */
+				29, 30, 31, 32,  33, 34, 35, 36,  37, 38, 39, -1,  -1, -1, -1, -1,		/* 0xe0xx */
+				-1, -1, -1, -1,  -1, -1, -1, -1,  -1, -1, -1, -1,  -1, -1, -1, -1		/* 0xf0xx */
+			//	以下の領域は東雲フォント16にはフォントデーターがない(eaa4が最終データーだった)
+			//	29, 30, 31, 32,  33, 34, 35, 36,  37, 38, 39, -1,  -1, 40, 41, -1,		/* 0xe0xx */	東雲フォント16にはフォントデーターがない
+			//	-1, -1, -1, -1,  -1, -1, -1, -1,  42, 43, 44, 45,  46, 47, -1, -1		/* 0xf0xx */	東雲フォント16にはフォントデーターがない
+			};
+			idx = sinonome_sjis_bank_offset[high_byte & 0x3f];
+		}
+		/* 存在マップが -1 の場合は、 東雲文字コード規格 にない文字なので表示できない */
+		if (-1 == idx)
+		{
+			return;
+		}
+		//
+		idx = (16*10)/*半角文字をスキップ*/ + (idx*2*192)/*codetbl１個あたり192文字*/;
+		#if (1==USE_HARF_KANJI)
+		if (1 == size_of_kanji(high_byte))	// 2バイト半角
+		{
+			idx += (low_byte);
+		//	code_offset <<= 4;	//code_offset *= 16;	/* 9 */ 	// ここでの9は多分1つの文字に使うバイト数。(1byte == 8bit)*9=72 == 6*12
+			draw_shinonome_moji(drawmap, backmap, x, y, (idx) , 0);
+		}
+		else	/* if ( 2 == size_of_kanji(high_byte))*/	// 2バイト全角
+		#endif
+		{
+			idx += (low_byte+low_byte);/* x2 */
+			draw_shinonome_moji(drawmap, backmap, x, y, (idx) , 0); /* 右半分 */
+			draw_shinonome_moji(drawmap, backmap, x, y, (idx) , 1); /* 左半分 */
+		}
+	}
+}
+
+/*---------------------------------------------------------
+	文字列の描画
+---------------------------------------------------------*/
+
+//extern int count_char;/*scenario.c*/
+
+static /*extern*/ /*static*/ int cursor_x;
+static /*extern*/ /*static*/ int cursor_y;
+
+static int my_string_offset/*=0*/;
+static void clear_my_string_offset(void)
+{
+	my_string_offset=0;/* 初期化 */
+}
+
+/*---------------------------------------------------------
+
+---------------------------------------------------------*/
+
+		#if 0
+		/*???*/
+	//	if (NULL != font_color_bitmap)	{	SDL_FreeSurface(font_color_bitmap); 		font_color_bitmap	= NULL; }
+		if (NULL != font_color_bitmap)	{	unloadbmp_by_surface(font_color_bitmap);	font_color_bitmap	= NULL; }
+	//	font_color_bitmap=loadbmp(buffer);
+	//	esc_len=0;
+		{
+			char fn[64];
+			sp rintf(fn,"%s/" "fonts/font_bg%02d.png", data_dir, color_type);		/* 文字列処理(sp rintf)は非常に遅い */
+			font_color_bitmap = IMG_Load(fn);/*ここでロードすると確実に処置落ちするよ*/
+		}
+		font_color_bitmap = SDL_DisplayFormat(font_color_bitmap);
+		#endif
+			#if 0
+			unloadbmp_by_surface(font_color_bitmap);
+			font_color_bitmap=NULL;
+			#endif
+
+/*---------------------------------------------------------
+	shift jis文字 漢字かなまじり書体の文字列を描画する (wait指定で、frame毎に一文字描画。 wait0で、続きを全描画)
+---------------------------------------------------------*/
+/*
+	drawmap 			描き込み先(書き込み先ならsource(元)じゃなくてdestination(先))
+	rect				描き込み領域
+	str 				描き込む文字列
+	color_type			描き込む書体の色を指定する画像番号
+	wait				1字づつ描く場合に、1つの文字に掛ける時間
+						0==wait の場合は一回で全文字描画する
+						文字列を描いている途中から 0に変更することも可能
+//
+	my_string_offset	文字アドレスのオフセット / 0 の場合は 初期化フラグ
+	count_width 		横に並べられる文字の数
+	font_color_bitmap	書体の色を指定する画像
+*/
+
+//static extern SDL_Surface *font_color_bitmap; /* 字の色パターン画像 */
+//static SDL_Surface *font_color_bitmap/*=NULL*/;
+static SDL_Surface *font_bg_bitmap/*=NULL*/;
+
+
+//static /*extern*/ int cursor_continue;				/* カーソル継続 */
+
+/* 今の所必要ないけど、外部から描くなら。 */
+/*extern*/ static int print_kanji(SDL_Surface *drawmap, SDL_Rect *rect, const char *str, int color_type, int wait)
+{
+	font_color_number = (color_type & 0x0f);
+
+	static int count_width=1/* 0 (割り算なので0は危険) */;/*???*/
+//	static int esc_len;
+	if (0 == my_string_offset)	//初期化
+	{
+		count_width=(int)((rect->w)/FONT_WIDTH)+2;
+		//
+//		if (0==cursor_continue)
+//		{	/* カーソル継続しない */
+//			cursor_x=(0);
+//			cursor_y=(0);
+//		}
+	//	else	/* カーソル継続する */
+	//	{
+	//		cursor_continue=0;	/* 次回は、カーソル継続しない */
+	//	}
+	}
+	int terminate_this_frame;	terminate_this_frame=0;
+	int need_draw_this_flame;	need_draw_this_flame=0;
+//	if (0 == wait)	{		need_draw_this_flame=1; }	else
+	{	/* wait が 0 の場合は一回で全文字描画する */
+		static unsigned int count_wait_time;
+		count_wait_time++;
+		if (count_wait_time > wait)
+		{
+			count_wait_time = 0;
+			need_draw_this_flame = 1;
+		}
+	}
+	if (1==need_draw_this_flame)
+	{
+			#define IS_LOCK_LOCAL_SCREEN (1)
+			#if (1==IS_LOCK_LOCAL_SCREEN)
+			if (SDL_MUSTLOCK(drawmap))				{	SDL_LockSurface(drawmap);			}	/* ロック */
+		//	if (SDL_MUSTLOCK(font_color_bitmap))	{	SDL_LockSurface(font_color_bitmap); }	/* ロック */
+			if (SDL_MUSTLOCK(font_bg_bitmap))		{	SDL_LockSurface(font_bg_bitmap); 	}	/* ロック */
+			#endif
+		loop:
+		;
+		/*unsigned char*/int high_byte;
+		high_byte = (*(str+my_string_offset) & 0xff);
+		if (0x00 != high_byte )
+		{
+		//	cursor_x=((my_string_offset+count_char+esc_len)%count_width);	/* 除算(%)は非常に遅い */
+		//	cursor_y=((my_string_offset+count_char+esc_len)/count_width);	/* 除算(/)は非常に遅い */
+		//
+			int xx;
+			int yy;
+			xx = rect->x+(cursor_x)*(FONT_WIDTH);
+			yy = rect->y+(cursor_y)*(FONT_HEIGHT+2);
+		//	パフォーマンスが低下するのでなるべくロックしない。(ロックは最小限に)
+		/* 旧ロック */
+			if (is_kanji(high_byte)) /* shift jis 漢字 */
+			{
+			/*unsigned char*/int low_byte;	low_byte = (*(str+my_string_offset+1) & 0xff);
+			//	draw_sjis_kanji(drawmap, font_color_bitmap, xx, yy, high_byte, low_byte);
+				draw_sjis_kanji(drawmap, font_bg_bitmap, xx, yy, high_byte, low_byte);
+				#if (1==USE_HARF_KANJI)
+				my_string_offset  += size_of_kanji(high_byte);	/* 拡張半角文字領域 fdxx の場合は半角になる */
+				cursor_x		  += size_of_kanji(high_byte);	/* 拡張半角文字領域 fdxx の場合は半角になる */
+				#else
+				my_string_offset  += (2);
+				cursor_x		  += (2);
+				#endif
+			}
+			else				/* ascii文字 */
+			{
+				if ('\\' == high_byte)		/* エスケープシークエンス処理(escape sequence) */
+				{
+					/*unsigned char*/int escape_sequence = (*(str+my_string_offset+1) & 0xff);
+					if ('n' == escape_sequence) 	/* 改行コード */
+					{
+					//	esc_len += count_width-(cursor_x)-2;
+						my_string_offset += 2;
+						cursor_x = 999;/* 適当に大きな値を指定して改行させる */
+					//	cursor_x=0;
+					//	cursor_y++;
+					}
+				}
+				else					/* 半角文字 */
+				{
+				//	draw_sjis_kanji(drawmap, font_color_bitmap, xx, yy, 0, high_byte);
+					draw_sjis_kanji(drawmap, font_bg_bitmap, xx, yy, 0, high_byte);
+					my_string_offset++;
+					cursor_x++;
+				}
+			}/* 旧ロック解除 */
+			/* 改行処理 */
+			if ( (count_width-1) < cursor_x)
+			{
+				cursor_x=0;
+				cursor_y++;
+			}
+		//	terminate_this_frame=0; 	/* continue frame */
+			if (0 == wait)	/* wait が 0 の場合は一回で全文字描画する */
+			{
+				goto loop;	//loop処理
+			}
+		}/*while*/
+		else			//終了処理
+		{
+			terminate_this_frame=1; 	/* end frame */
+		}
+			#if (1==IS_LOCK_LOCAL_SCREEN)
+			if (SDL_MUSTLOCK(drawmap))				{	SDL_UnlockSurface(drawmap); 			}	/* ロック解除 */
+		//	if (SDL_MUSTLOCK(font_color_bitmap))	{	SDL_UnlockSurface(font_color_bitmap);	}	/* ロック解除 */
+			if (SDL_MUSTLOCK(font_bg_bitmap))		{	SDL_UnlockSurface(font_bg_bitmap);		}	/* ロック解除 */
+			#endif
+		if (1==terminate_this_frame)	//終了処理
+		{
+			{
+			//	count_width=1/* 0 (割り算なので0は危険) */;/*???*/
+			//	count_char += my_string_offset/*+esc_len*/;
+				my_string_offset = 0;	/* 次回は、初期化 */
+				//cursor_continue=0;	/* 次回は、カーソル継続しない */
+			}
+		}
+	}
+	return (terminate_this_frame);		/* 0:continue, 1:end */
+}
+
+/*---------------------------------------------------------
+
+---------------------------------------------------------*/
+
 extern int errno;
-extern GAMESTATE state;
-extern SDL_Surface *col_sdl;
-extern int count_i;
 
-extern int is_panel_window;
+// _script_command
+
+// [テキストのカーソル制御]
+//		CLCURSOR	/* カーソルの初期化 */
+//		LOADCUR 	/* 記憶したカーソル位置の呼び出し */
+//		SAVECUR 	/* カーソル位置の記憶 */
+// [テキスト表示/クリック待ち]
+//		CLICK		/* クリック待ち */
+//		BGTEXT		/* 背景にテキストを打ち込む */
+//		TEXT		/* メッセージウィンドウへの書き込み */
 
 
-enum _story_state
+//		FILTER
+//		JUMP		/* pauseボタンを押した時のjump先。 */
+//		LOADBG		/* 背景ファイルの変更 */
+//		LOADL		/* 立ち絵左 スプライトのロード */
+//		LOADR		/* 立ち絵右 スプライトのロード */
+//		LOADSP		/* 汎用スプライトのロード */
+//		MOVESP		/* スプライトの移動 */
+//		PARAMSP
+//		RELOADSP	/* スプライトの再読み込み */
+//		SUBG		/* 背景の表示/非表示 */
+//		SUFILTER	/* フィルター表示/非表示&透過度 */
+
+//		SUL 		/* 立ち絵左スプライトの表示/非表示 */
+//		SUR 		/* 立ち絵右スプライトの表示/非表示 */
+//		SUSPRITE	/* 汎用スプライトの表示*/
+
+//		SUTWINDOW	/* 強調立ち絵ウィンドウの表示/非表示 para2はスコアパネルのon/off */
+//		SUWINDOW	/* メッセージウィンドウの表示/非表示 para2はbpp速度。*/
+
+//		TWINDOW 	/* 立ち絵強調ウィンドウの初期化 */
+//		WAIT		/* wait */
+
+enum
 {
-	STORY_FADEOUT1,
-	STORY_LOAD,
-	STORY_FADEIN,
-	STORY_WORKS,
-	STORY_FADEOUT2,
-	STORY_QUIT
-};
-
-enum _script_command
-{
-	SCP_BGTEXT,
+// [テキストのカーソル制御]
+	SCP_LOADCUR,
+	SCP_SAVECUR,
 	SCP_CLCURSOR,
+// [テキスト表示/クリック待ち]
 	SCP_CLICK,
+	SCP_BGTEXT,
+	SCP_TEXT,
+//
+
 	SCP_FILTER,
 	SCP_JUMP,
 	SCP_LOADBG,
-	SCP_LOADCUR,
-	SCP_LOADL,
-	SCP_LOADR,
+	SCP_LOAD_LR,
 	SCP_LOADSP,
 	SCP_MOVESP,
 	SCP_PARAMSP,
 	SCP_RELOADSP,
-	SCP_SAVECUR,
 	SCP_SUBG,
 	SCP_SUFILTER,
 	SCP_SUL,
@@ -43,7 +480,6 @@ enum _script_command
 	SCP_SUSPRITE,
 	SCP_SUTWINDOW,
 	SCP_SUWINDOW,
-	SCP_TEXT,
 	SCP_TWINDOW,
 	SCP_WAIT
 };
@@ -51,19 +487,21 @@ enum _script_command
 typedef struct _scenario_script
 {
 	int command;
-	int done;		//終わったかどうか
-	int chain;		//同時実行かどうか
-					//0=違うよ	1=1つ目	2=2つ目
-	char para0[200];
+	int done;		// 終わったかどうか
+	int chain;		// 同時実行かどうか
+					// 0=違うよ 1=1つ目 2=2つ目
+	void *data;
+//
 	int para1;
 	int para2;
 	int para3;
-	void *data;
 	struct _scenario_script *next;
-} S_SCRIPT;
+//
+	char para0[(7*32)/*200*/];/* 32の倍数 */
+} S_SCRIPT;/* == 256bytes */
 
 
-typedef struct _sc_sprite
+typedef struct /*_sc_sprite*/
 {
 	SDL_Surface *img;				/* Images */
 	Uint8 frames;					/* アニメーションさせる予定 */
@@ -73,122 +511,166 @@ typedef struct _sc_sprite
 	Uint8 alpha;					/* alpha値 */
 	Uint8 flags;					/* ここでは表示させるかどうかだけだよ */
 	int aktframe;					/* 現在のフレーム */
-	double anim_count;				/* アニメーションのタイミング */
-	double x,y; 					/* x,y座標だよ */
-	int w,h; 						/**/
-	int cw,ch; 						/* 中心座標だよ */
+	/*dou ble*/int anim_count;		/* アニメーションのタイミング */
+	/*dou ble*/int/*int*/ x;		/* x座標だよ */
+	/*dou ble*/int/*int*/ y;		/* y座標だよ */
+	int w;							/* 幅 */			//	int cw; 	/* 中心座標(幅)だよ */
+	int h;							/* 高さ */			//	int ch; 	/* 中心座標(高さ)だよ */
 	int move_wait;					/* 動きがあったときの制御用 */
-	int move_x;						/* 目標座標 */
-	int move_y;
-	/*double*/int angle512;			/* 正確な方向 */		//	int r_course;	/* 大体の方向 */
+	int target_x;					/* 目標座標 */
+	int target_y;					/* 目標座標 */
+	int x256;						/* 精度確保用(256固定小数点形式) */
+	int y256;						/* 精度確保用(256固定小数点形式) */
+	/*dou ble*/int angle512;		/* 正確な方向 */	//	int r_course;	/* 大体の方向 */
 } SC_SPRITE;
 
 
+/*---------------------------------------------------------
+
+---------------------------------------------------------*/
 
 /*************グローバル変数**************/
-SDL_Surface *msg_window=NULL;		/* メッセージウィンドウ */
-SDL_Surface *window=NULL;			/* ウィンドウ */
-SDL_Rect msgw_rect; 				/* メッセージウィンドウ表示位置 */
-S_SCRIPT *sscript=NULL; 			/* 命令保持用 */
-int count_char=0;					/* カーソル位置 */
+/* zenkaku.c */
+// static extern int cursor_continue;			/* カーソル継続 */
+// /*static*/ int cursor_x; 					/* カーソル位置 */
+// /*static*/ int cursor_y; 					/* カーソル位置 */
+//int count_char/*=0*/; 						/* カーソル位置 */
+//static int cursor/*=0*/;						/* count_char保存用 */
+static int cursor_x_chached;					/* カーソル位置 保存用 */
+static int cursor_y_chached;					/* カーソル位置 保存用 */
 /*****************************************/
 
-static SDL_Surface *tachie_window=NULL; /* 優先立ち絵ウィンドウ */
-static SDL_Surface *bg_story;			/* スクリプトにおける背景 */
-static SDL_Surface *fade_out;			/* 演出用 */
-static SDL_Surface *filter; 			/* 演出用 */
+static SDL_Rect msgw_rect;				/* メッセージウィンドウ表示位置 */
+
+/*	pspでは ここで初期化しても正常動作しない場合がある。
+	起動時に初期化しないとダメ。(PCのソースをpspでコンパイルして動かない原因のひとつ) */
+static SDL_Surface *msg_window/*=NULL*/;		/* メッセージウィンドウ */
+static SDL_Surface *std_window/*=NULL*/;		/* ウィンドウ */
+#if (1==USE_2ND_SCREEN)
+static SDL_Surface *tachie_window/*=NULL*/; 	/* 優先立ち絵ウィンドウ */
+#endif /* (1==USE_2ND_SCREEN) */
+static SDL_Surface *bg_story_window;			/* スクリプトにおける背景 */
+
+static SDL_Surface *filter_window;				/* 演出用ウィンドウ */
+//static SDL_Surface *font_color_bitmap/*=NULL*/;
+static SDL_Surface *font_bg_bitmap/*=NULL*/;
+
 //
+#define SPRITE_tachie_l (29)/*-3*/
+#define SPRITE_tachie_r (30)/*-2*/
+#define SPRITE_tachie_m (31)/*-1*/
+#define SPRITE_MAX		(32)
+static SC_SPRITE *std_obj[SPRITE_MAX/*32*/ /*20*/]; 		/* 汎用スプライト */
+//static SC_SPRITE *tachie_r;
+//static SC_SPRITE *tachie_l;
+//
+static S_SCRIPT *sscript/*=NULL*/;				/* 命令保持用 */
+static S_SCRIPT *entry_script;					/* 命令収集用 */
+static S_SCRIPT *start_script/*=NULL*/; 		/* 命令実行用 */
+//
+static int bg_alpha;							/* 背景α値用 */
+static int inits;								/* 初期化判定 */
 
-static SC_SPRITE *sc_sp[32/*20*/];
-static SC_SPRITE *tachie_r;
-static SC_SPRITE *tachie_l;
-static S_SCRIPT *entry_script;		/* 命令収集用 */
-static S_SCRIPT *start_script=NULL; /* 命令実行用 */
-static int tick;					/* 時間測定用 */
-static int bg_alpha;				/* 背景α値用 */
-static int inits;					/* 初期化判定 */
-static int cursor=0;				/* count_char保存用 */
-static int is_window=0; 			/* ウィンドウ表示フラグ */
-static int is_tachie_window=0;		/* 立ち絵強調表示フラグ */
-static int is_bg=0; 				/* 背景表示フラグ */
-static int is_filter=0; 			/* フィルター表示フラグ */
-static int scenario_width;			/* 横幅 */
+static int is_window/*=0*/; 					/* ウィンドウ表示フラグ */
+#if (1==USE_2ND_SCREEN)
+static int is_tachie_window/*=0*/;				/* 立ち絵強調表示フラグ */
+#endif /* (1==USE_2ND_SCREEN) */
+static int is_bg/*=0*/; 						/* 背景表示フラグ */
+static int is_filter/*=0*/; 					/* フィルター表示フラグ */
+//static int 380/*scenario_width*/; 			/* 横幅 */
 
+/*---------------------------------------------------------
+	子関数
+---------------------------------------------------------*/
+extern int tiny_strcmp(char *aaa, const char *bbb);
 static int cha_search(char *str)
 {
 	int n;
-	if (!strcmp(str,"right"))		{	return -2;	}
-	else if (!strcmp(str,"left"))	{	return -3;	}
+	if (0==tiny_strcmp(str, "right"))		{	return (-2);	}
+	else if (0==tiny_strcmp(str, "left"))	{	return (-3);	}
 	else
 	{
 		char buffer[32/*20*/];
 		char *d = buffer;
 		while (isdigit(*str))		{	*d++ = *str++;	}
 		n=atoi(buffer);
-		if (0<=n && n<15)			{	return n;	}
+		if (0<=n && n<15)			{	return (n);	}
 	}
-	return -1;
+	return (-1);
 }
 
-static SDL_Surface *load_Surface(char *str,int alpha)
+/*---------------------------------------------------------
+
+---------------------------------------------------------*/
+
+static SDL_Surface *load_Surface(char *filename, int alpha)
 {
 	char fn[128];
-	strcpy(fn,moddir);
-	strcat(fn,"/scenario/");
-	strcat(fn,str);
-	SDL_Surface *tmp;
-	SDL_Surface *result;
-
-	tmp=IMG_Load(fn);
-	if ( NULL == tmp )
+//	strcpy(fn, data_dir);	strcat(fn, "/scenario/");
+	strcpy(fn, DIRECTRY_NAME_DATA "/"/*"scenario/"*/);
+	strcat(fn, filename);
+//
+	SDL_Surface *s1;/*temporaly*/
+	SDL_Surface *s2;/*result*/
+//
+	s1=IMG_Load(fn);/*ここでロードすると確実に処置落ちするよ*/
+	if ( NULL == s1 )
 	{
 		CHECKPOINT;
 		error(ERR_FATAL,"cant load image %s: %s",fn,SDL_GetError());
-		return NULL;
+		return (NULL);
 	}
-	if (alpha==-1 || alpha==0)	{
-		result = SDL_DisplayFormat(tmp);
-		SDL_SetColorKey(result,SDL_SRCCOLORKEY|SDL_RLEACCEL,0x00000000);
+	if (alpha==-1 || alpha==0)
+	{
+		s2 = SDL_DisplayFormat(s1);
+		SDL_SetColorKey(s2,SDL_SRCCOLORKEY|SDL_RLEACCEL,0x00000000);
 	}
-	else{
-		result = SDL_DisplayFormatAlpha(tmp);
+	else
+	{
+		s2 = SDL_DisplayFormatAlpha(s1);
 	}
-	if ( NULL == result )
+	if ( NULL == s2 )
 	{
 		CHECKPOINT;
 		error(ERR_FATAL,"cant convert image %s to display format: %s",fn,SDL_GetError());
-		return NULL;
+		return (NULL);
 	}
-	SDL_FreeSurface(tmp);
-	tmp = NULL;
-	return result;
+	SDL_FreeSurface(s1);
+	s1 = NULL;
+	return (s2);
 }
+
+/*---------------------------------------------------------
+
+---------------------------------------------------------*/
 
 static SDL_Surface *load_local(char *str,SDL_Surface *s,int alpha)
 {
 	char fn[128];
-	strcpy(fn,moddir);
-	strcat(fn,"/scenario/");
-	strcat(fn,str);
+//	strcpy(fn, data_dir);	strcat(fn, "/scenario/");
+	strcpy(fn, DIRECTRY_NAME_DATA "/"/*"scenario/"*/);
+	strcat(fn, str);
 	SDL_Surface *tmp=NULL;
 
-	if (s!=NULL)
+	if (NULL != s)
 	{
 		SDL_FreeSurface(s);
-		s=NULL;
+		s = NULL;
 	}
 
-	tmp=IMG_Load(fn);
+	tmp = IMG_Load(fn);/*ここでロードすると確実に処置落ちするよ*/
 	if ( NULL == tmp )
 	{
 		CHECKPOINT;
 		error(ERR_FATAL,"cant load image %s: %s",fn,SDL_GetError());
 	}
-	if (alpha==-1 || alpha==0)	{
+	if ((alpha==-1) || (alpha==0))
+	{
 		s = SDL_DisplayFormat(tmp);
 		SDL_SetColorKey(s,SDL_SRCCOLORKEY|SDL_RLEACCEL,0x00000000);
 	}
-	else{
+	else
+	{
 		s = SDL_DisplayFormatAlpha(tmp);
 	}
 	if ( NULL == s )
@@ -198,174 +680,190 @@ static SDL_Surface *load_local(char *str,SDL_Surface *s,int alpha)
 	}
 	SDL_FreeSurface(tmp);
 	tmp = NULL;
-	return s;
+	return (s);
 }
+
+/*---------------------------------------------------------
+
+---------------------------------------------------------*/
 
 static void remove_sc_sprite(SC_SPRITE *s)
 {
-	if (s!=NULL)	{
+	if (NULL != s)
+	{
 		SDL_FreeSurface(s->img);
-		free(s);
+		free (s);
 		s=NULL;
 	}
 }
 
-static void reload_sc_sprite(char *filename,int no,int frames,int alpha)
+/*---------------------------------------------------------
+
+---------------------------------------------------------*/
+
+static void reload_sc_sprite(char *filename, int no, int frames, int alpha)
 {
 	SC_SPRITE *sc;
-	if (no==-1) 	{	return; 		}
-	else if (no==-2)	{	sc=tachie_r;	}	/* right */
-	else if (no==-3)	{	sc=tachie_l;	}	/* left */
-	else			{	sc=sc_sp[no];	}	/* 汎用スプライト */
-	if (NULL==sc)	{	return; 		}
+	if (no==-1) 		{	return; 		}
+//	else if (no==-2)	{	sc=std_obj[SPRITE_tachie_r/*32-2*/];	}	/* right */
+//	else if (no==-3)	{	sc=std_obj[SPRITE_tachie_l/*32-3*/];	}	/* left */
+	else				{	sc=std_obj[(no)&(SPRITE_MAX-1)];	}	/* 汎用スプライト */
+	if (NULL==sc)		{	return; 		}
 
 	SDL_FreeSurface(sc->img);
 
-	SDL_Surface *tmp=NULL;
-	tmp=load_local(filename,tmp,alpha);
-	sc->img=tmp;
-	sc->frames=frames;
-	sc->w=tmp->w/frames;
-	sc->h=tmp->h;
-	sc->cw=tmp->w/frames/2;
-	sc->ch=tmp->h/2;
+	SDL_Surface *tmp = NULL;
+	tmp 		= load_local(filename,tmp,alpha);
+	sc->img 	= tmp;
+	sc->frames	= frames;
+	sc->w		= (tmp->w/frames);	//sc->cw		= ((sc->w)>>1);
+	sc->h		= (tmp->h); 		//sc->ch		= ((sc->h)>>1);
 }
 
-static SC_SPRITE *load_sc_sprite(char *filename,int sc_sp_num,int frames,int alpha,SDL_Rect *rect)
+/*---------------------------------------------------------
+
+---------------------------------------------------------*/
+
+static SC_SPRITE *load_sc_sprite(char *filename, int sc_sp_num, int frames, int alpha, SDL_Rect *rect)
 {
-	if (sc_sp[sc_sp_num]!=NULL)	{	remove_sc_sprite(sc_sp[sc_sp_num]); }
-
+	if (NULL != std_obj[sc_sp_num]) 	{	remove_sc_sprite(std_obj[sc_sp_num]); }
 	SC_SPRITE *tmp;
-	tmp=mmalloc(sizeof(SC_SPRITE));
-	SDL_Surface *suf=NULL;
-	suf=load_Surface(filename,alpha);
-	if (NULL==suf)	{ return NULL;	}
-	tmp->img=suf;
-	if (frames==-1)	{	tmp->frames=1;	}
-	else{	tmp->frames=frames; }
-	tmp->aktframe=0;
-	tmp->anim_speed=0;
-	tmp->anim_type=0;
-	tmp->anim_time=0;
-	tmp->anim_count=0;
-	tmp->alpha=255;
-	tmp->w=suf->w/frames;
-	tmp->h=suf->h;
-	tmp->cw=suf->w/frames/2;
-	tmp->ch=suf->h/2;
-	tmp->flags=0;
-	tmp->move_wait=0;
-	tmp->x=rect->x;
-	tmp->y=rect->y;
-	sc_sp[sc_sp_num]=tmp;
-	return tmp;
+	tmp 				= mmalloc(sizeof(SC_SPRITE));
+	SDL_Surface *suf	= NULL;
+	suf 				= load_Surface(filename,alpha);
+	if (NULL==suf)		{ return (NULL);			}
+	tmp->img			= suf;
+	if (frames==-1) 	{	tmp->frames = 1;		}
+	else				{	tmp->frames = frames; 	}
+	tmp->aktframe		= 0;
+	tmp->anim_speed 	= 0;
+	tmp->anim_type		= 0;
+	tmp->anim_time		= 0;
+	tmp->anim_count 	= 0;
+	tmp->alpha			= 255;
+	tmp->w				= (suf->w/frames);	//tmp->cw			= ((tmp->w)>>1);
+	tmp->h				= (suf->h); 		//tmp->ch			= ((tmp->h)>>1);
+	tmp->flags			= 0;
+	tmp->move_wait		= 0;
+	tmp->x				= rect->x;
+	tmp->y				= rect->y;
+	std_obj[sc_sp_num]	= tmp;
+	return (tmp);
 }
 
-static void load_r(char *filename,int frames,int alpha,SDL_Rect *rect)
+/*---------------------------------------------------------
+
+---------------------------------------------------------*/
+
+static void load_local_sprite(char *filename, int sc_sp_num, int frames, int alpha, SDL_Rect *rect)
 {
-	if (tachie_r!=NULL)	{	remove_sc_sprite(tachie_r); }
-
+	if (NULL != std_obj[sc_sp_num]) 	{	remove_sc_sprite(std_obj[sc_sp_num]); }
 	SC_SPRITE *tmp;
-	SDL_Surface *suf=NULL;
-	tmp=mmalloc(sizeof(SC_SPRITE));
-	suf=load_local(filename,suf,alpha);
-	if (NULL==suf)	{ return; }
-	tachie_r=tmp;
-	tmp->img=suf;
-	if (frames==-1)	{	tmp->frames=1;	}
-	else{	tmp->frames=frames; }
-	tmp->aktframe=0;
-	tmp->anim_speed=0;
-	tmp->anim_type=0;
-	tmp->anim_time=0;
-	tmp->anim_count=0;
-	tmp->alpha=255;
-	tmp->w=suf->w/frames;
-	tmp->h=suf->h;
-	tmp->cw=suf->w/frames/2;
-	tmp->ch=suf->h/2;
-	tmp->flags=0;
-	tmp->move_wait=0;
-	tmp->x=rect->x-(rect->w*tmp->w);
-	tmp->y=rect->y-tmp->h;
+	tmp 				= mmalloc(sizeof(SC_SPRITE));
+	SDL_Surface *suf	= NULL;
+	suf 				= load_local(filename,suf,alpha);
+	if (NULL==suf)		{	return; }
+	std_obj[sc_sp_num]	= tmp;
+	tmp->img			= suf;
+	if (frames==-1) 	{	tmp->frames=1;	}
+	else				{	tmp->frames=frames; }
+	tmp->aktframe		= 0;
+	tmp->anim_speed 	= 0;
+	tmp->anim_type		= 0;
+	tmp->anim_time		= 0;
+	tmp->anim_count 	= 0;
+	tmp->alpha			= 255;
+	tmp->w				= (suf->w/frames);	//tmp->cw			= ((tmp->w)>>1);
+	tmp->h				= (suf->h); 		//tmp->ch			= ((tmp->h)>>1);
+	tmp->flags			= 0;
+	tmp->move_wait		= 0;
+	tmp->x				= rect->x-(rect->w*tmp->w);
+	tmp->y				= rect->y-tmp->h;
 }
+//	tmp->cw 			= suf->w/frames/2;	//tachie_r
+//	tmp->cw 			= suf->w/frames;	//tachie_l
 
-static void load_l(char *filename,int frames,int alpha,SDL_Rect *rect)
-{\
-	if (tachie_l!=NULL)	{	remove_sc_sprite(tachie_l); }
 
-	SC_SPRITE *tmp;
-	SDL_Surface *suf=NULL;
-	tmp=mmalloc(sizeof(SC_SPRITE));
-	suf=load_local(filename,suf,alpha);
-	if (NULL==suf)	{ return; }
-	tachie_l=tmp;
-	tmp->img=suf;
-	if (frames==-1)	{	tmp->frames=1;	}
-	else{	tmp->frames=frames; }
-	tmp->aktframe=0;
-	tmp->anim_speed=0;
-	tmp->anim_type=0;
-	tmp->anim_time=0;
-	tmp->anim_count=0;
-	tmp->alpha=255;
-	tmp->w=suf->w/frames;
-	tmp->h=suf->h;
-	tmp->cw=suf->w/frames;
-	tmp->ch=suf->h/2;
-	tmp->flags=0;
-	tmp->move_wait=0;
-	tmp->x=rect->x-(rect->w*tmp->w);
-	tmp->y=rect->y-tmp->h;
-}
 
-static int move_sc_sprite(char *l_or_r,int x,int y,int speed)
+/*---------------------------------------------------------
+	SCP_MOVESP	スプライトの移動
+---------------------------------------------------------*/
+
+static int do_move_sc_sprite(char *l_or_r, int x, int y, int speed_aaa)
 {
 	SC_SPRITE *sc;
 	int n=cha_search(l_or_r);
-	if (n==-1)	{ return -1;	}
-	else if (n==-2)	{	sc=tachie_r;	}	/* right */
-	else if (n==-3)	{	sc=tachie_l;	}	/* left */
-	else{	sc=sc_sp[n];	}			/* 汎用スプライト */
-
-	if (inits)
+	if (n==-1)			{	return (-1);	}
+//	else if (n==-2) 	{	sc = tachie_r;	}	/* right */
+//	else if (n==-3) 	{	sc = tachie_l;	}	/* left */
+	else				{	sc = std_obj[((n)&(SPRITE_MAX-1))];	}	/* 汎用スプライト */
+//
+	if (inits)/* 初回のみ行う */
 	{
+		/* あらかじめ移動完了位置を算出しておく */
+		sc->target_x	= sc->x + x;		/* 移動完了座標 */
+		sc->target_y	= sc->y + y;		/* 移動完了座標 */
+		sc->x256		= ((sc->x)<<8); 	/* 精度確保用 */
+		sc->y256		= ((sc->y)<<8); 	/* 精度確保用 */
+		/* 移動方向を決める */
 		sc->angle512	= atan_512(y,x);
-		sc->move_x		= sc->x + x;		/* 目標座標 */
-		sc->move_y		= sc->y + y;
 	}
-	sc->x+=co_s512(sc->angle512)*speed/10;
-	sc->y+=si_n512(sc->angle512)*speed/10;
+//
+	/* 10で割るのは遅過ぎるので、3ビットシフトして(1/8)の値にする */
+	int speed256;
+	speed256 = (speed_aaa<<(8-3));		/* 精度確保用 */
+//	sc->x += ((cos512(sc->angle512)*speed)/10);
+//	sc->y += ((sin512(sc->angle512)*speed)/10);
+	sc->x256 += ((cos512(sc->angle512)*speed256)>>8);	/* 精度確保用 */
+	sc->y256 += ((sin512(sc->angle512)*speed256)>>8);	/* 精度確保用 */
+//
+	sc->x	= ((sc->x256)>>8);		/* 精度確保用 */
+	sc->y	= ((sc->y256)>>8);		/* 精度確保用 */
 	/* 大体の方向: なので ４５度回転してずらして、上位２ビットが大まかな方向 */
 	switch ((((sc->angle512+64/*deg_360_to_512(45)*/) & 0x180 )))/*sc->r_course*/
-	{
-	case (0<<7)/* 1:→(512_0) */: 	if (sc->x > sc->move_x)	{	sc->x=sc->move_x;	return 1;}	break;
-	case (1<<7)/* 2:↓(512_1) */: 	if (sc->y < sc->move_y)	{	sc->y=sc->move_y;	return 1;}	break;
-	case (2<<7)/* 3:←(512_2) */: 	if (sc->x < sc->move_x)	{	sc->x=sc->move_x;	return 1;}	break;
-	case (3<<7)/* 0:↑(512_3) */: 	if (sc->y > sc->move_y)	{	sc->y=sc->move_y;	return 1;}	break;
+	{	/* 移動完了座標に等しいかはみ出したら、完了とする。 */
+	case (0<<7)/* 1:→(512_0) */:	if (sc->x >= sc->target_x)	{	goto move_complete; 	}	break;
+	case (1<<7)/* 2:↓(512_1) */:	if (sc->y <= sc->target_y)	{	goto move_complete; 	}	break;
+	case (2<<7)/* 3:←(512_2) */:	if (sc->x <= sc->target_x)	{	goto move_complete; 	}	break;
+	case (3<<7)/* 0:↑(512_3) */:	if (sc->y >= sc->target_y)	{	goto move_complete; 	}	break;
 	}
-	return 0;
+	return (0);/*移動中*/
+move_complete:
+	/* 移動完了した場合は、正確な座標に修正する。 */
+	sc->x = sc->target_x;
+	sc->y = sc->target_y;
+	return (1);/*移動完了*/
 }
+
+/*---------------------------------------------------------
+
+---------------------------------------------------------*/
 
 static int script_wait(int n)
 {
-	static double w_tick;
+	static /*dou ble*/int w_tick;
 	if (inits)
 	{
 		w_tick=n;
 	}
-	w_tick-=fps_factor;
-	if (w_tick<0)
+	w_tick -= 1/*fps_fa ctor*/;
+	if (w_tick < 0/*1?*/)
 	{
 		w_tick=0;
-		return 1;
+		return (1);
 	}
-	return 0;
+	return (0);
 }
+
+/*---------------------------------------------------------
+
+---------------------------------------------------------*/
 
 static void msg_window_init(void)
 {
-	if (msg_window!=NULL)	{	SDL_FreeSurface(msg_window);	msg_window=NULL;	}
+	/* pspでは SDL_FreeSurface() が正常に動作しませんので、このままではメモリ不足？でハングアップします。 */
+	/*msg_window_init()*/
+	if (NULL != msg_window) 	{	SDL_FreeSurface(msg_window);	msg_window=NULL;	}
 	msg_window=SDL_CreateRGBSurface(SDL_SRCCOLORKEY|SDL_SWSURFACE,/* メインメモリへ確保する */
 			340,
 			100,
@@ -375,43 +873,46 @@ static void msg_window_init(void)
 			screen->format->Bmask,
 			screen->format->Amask);
 	SDL_SetColorKey(msg_window,SDL_SRCCOLORKEY|SDL_RLEACCEL,0x00000000);
+/* psp では 確保先が VRAM か メインメモリ かの2種類しかありません。
+そのうち VRAM 確保された場合、pspのSDL固有の機能であるSDLの画像キャッシュ機能が勝手に働くので、
+これが原因で変な事になります。(メインメモリ確保された場合、この問題は起きません)
+SDL_SWSURFACE が指定されていれば、必ずメインメモリへ確保される訳ではないようです。
+現状この部分は VRAM 確保されているみたいです。 VRAM 確保されないと Alpha が使えないのかも知れません？？？。
+ */
 }
 
+/*---------------------------------------------------------
+
+---------------------------------------------------------*/
+#if (1==USE_2ND_SCREEN)
 static void tachie_window_init(void)
 {
-	if (tachie_window!=NULL)	{	SDL_FreeSurface(tachie_window); tachie_window=NULL; }
-	tachie_window=SDL_CreateRGBSurface(SDL_SRCCOLORKEY|SDL_SWSURFACE,/* メインメモリへ確保する */
-			scenario_width,
-			272,
-			screen->format->BitsPerPixel,
-			screen->format->Rmask,
-			screen->format->Gmask,
-			screen->format->Bmask,
-			screen->format->Amask);
-	SDL_SetColorKey(tachie_window,SDL_SRCCOLORKEY|SDL_RLEACCEL,0x00000000);
 }
+#endif /* (1==USE_2ND_SCREEN) */
+/*---------------------------------------------------------
+
+---------------------------------------------------------*/
 
 static void filter_init(int r,int g,int b)
 {
-	if (filter!=NULL)	{	SDL_FreeSurface(filter);	filter=NULL;	}
-	filter=SDL_CreateRGBSurface(SDL_SRCCOLORKEY|SDL_SWSURFACE,/* メインメモリへ確保する */
-			scenario_width,
-			272,
-			screen->format->BitsPerPixel,
-			screen->format->Rmask,
-			screen->format->Gmask,
-			screen->format->Bmask,
-			screen->format->Amask);
-	SDL_SetColorKey(filter,SDL_RLEACCEL,0x00000000);
-	SDL_FillRect(filter,NULL,SDL_MapRGB(filter->format,r,g,b));
-	SDL_SetAlpha(filter,SDL_SRCALPHA,0);
+	/*filter_init()*/
+	SDL_FillRect(filter_window,NULL,SDL_MapRGB(filter_window->format,r,g,b));
+	SDL_SetAlpha(filter_window,SDL_SRCALPHA,0);
 }
+
+/*---------------------------------------------------------
+
+---------------------------------------------------------*/
 
 static void msgw_rect_init(int x,int y)
 {
 	msgw_rect.x=x;
 	msgw_rect.y=y;
 }
+
+/*---------------------------------------------------------
+
+---------------------------------------------------------*/
 
 static int window_effect(int w_is,int efe)
 {
@@ -420,7 +921,7 @@ static int window_effect(int w_is,int efe)
 	static int st_line;
 	Sint32 x, y;
 	Uint32 col;
-	if (efe==-1)	{	is_window=w_is; return 1;	}
+	if (efe==-1)	{	is_window=w_is; return (1); }
 	else
 	{
 		if (inits)
@@ -434,46 +935,46 @@ static int window_effect(int w_is,int efe)
 			{	st_line=efe;}
 		}
 		if (SDL_MUSTLOCK(msg_window))	{	SDL_LockSurface(msg_window);	}
-		if (SDL_MUSTLOCK(window))		{	SDL_LockSurface(window);		}
+		if (SDL_MUSTLOCK(std_window))	{	SDL_LockSurface(std_window);	}
 		if (w_is)
 		{
 			for (y = lines; y<lines+st_line; y++)
 			{
-				for (x = 0; x<window->w; x++)
+				for (x = 0; x<std_window->w; x++)
 				{
-					col=getpixel(window,x,y);
-					putpixel(msg_window,x,y, col);
+					col=getpixel16(std_window, x, y);
+					putpixel16(msg_window, x, y, col);
 				}
 			}
 		}
 		else
 		{
 			msg_window_init();
-			for (y = 0; y<window->h-(lines); y++)
+			for (y = 0; y<std_window->h-(lines); y++)
 			{
-				for (x = 0; x<window->w; x++)
+				for (x = 0; x<std_window->w; x++)
 				{
-					col=getpixel(window,x,y);
-					putpixel(msg_window,x,y, col);
+					col=getpixel16(std_window, x, y);
+					putpixel16(msg_window, x, y, col);
 				}
 			}
 		}
 		if (SDL_MUSTLOCK(msg_window))	{	SDL_UnlockSurface(msg_window);	}
-		if (SDL_MUSTLOCK(window))		{	SDL_UnlockSurface(window);		}
-		if (lines>window->h)			{	msg_window_init();	is_window=w_is; return 1;	}
+		if (SDL_MUSTLOCK(std_window))	{	SDL_UnlockSurface(std_window);		}
+		if (lines>std_window->h)		{	msg_window_init();	is_window=w_is; return (1); }
 		lines+=st_line;
 	}
-	return 0;
+	return (0);
 }
 
-/***************************************************************
-****		シ		ス		テ		ム		処		理		****
-***************************************************************/
+/*---------------------------------------------------------
+	システム処理(???)
+---------------------------------------------------------*/
 
 static SC_SPRITE *sc_sprite_work(SC_SPRITE *sp)
 {
-	if (NULL==sp)	{	return NULL;	}
-	if (sp->frames==1)	{ return sp;	}
+	if (NULL==sp)	{	return (NULL);	}
+	if (sp->frames==1)	{ return (sp);	}
 	/*
 	/// anim_typeについて ///
 	0:	左から右に。最後までいったら左へ戻る。
@@ -482,8 +983,8 @@ static SC_SPRITE *sc_sprite_work(SC_SPRITE *sp)
 	3:	右から左に。繰り返し無し。
 	4:	左から右に。最後までいったら右から左に。
 	*/
-	sp->anim_count+=fps_factor;
-	if (sp->anim_speed<sp->anim_count)
+	sp->anim_count += 1/*fps_fa ctor*/;
+	if (sp->anim_speed < sp->anim_count)
 	{
 		sp->anim_count=0;
 		switch (sp->anim_type)
@@ -497,126 +998,118 @@ static SC_SPRITE *sc_sprite_work(SC_SPRITE *sp)
 		case 6: 	break;
 		}
 	}
-	return sp;
+	return (sp);
 }
 
-static void disprite(int start,int end)
-{
-	int sp_i;
-	for (sp_i=start;sp_i<=end;sp_i++)
-	{
-		if (sc_sp[sp_i]!=NULL)
-		{
-			if (sc_sp[sp_i]->flags)
-			{
-				SDL_Rect src_r,dst_r;
-				src_r.x=sc_sp[sp_i]->w*sc_sp[sp_i]->aktframe;
-				src_r.y=0;
-				src_r.w=sc_sp[sp_i]->w;
-				src_r.h=sc_sp[sp_i]->h;
-				dst_r.x=sc_sp[sp_i]->x;
-				dst_r.y=sc_sp[sp_i]->y;
-				SDL_BlitSurface(sc_sp[sp_i]->img, &src_r, screen, &dst_r);
-			}
-			sc_sp[sp_i]=sc_sprite_work(sc_sp[sp_i]);
-		}
-	}
-}
+/*---------------------------------------------------------
+
+---------------------------------------------------------*/
 
 static void load_script_free(void)
 {
 	S_SCRIPT *l = sscript;
 	S_SCRIPT *n;
-	while (l!=NULL)
+	while (NULL != l)
 	{
 		n=l->next;
-		if (l->data!=NULL)	{ free(l->data);	l->data=NULL;	}
-		free(l);
+		if (NULL != l->data)	{ free (l->data);	l->data=NULL;	}
+		free (l);
 		l = n;
 	}
 	sscript = (S_SCRIPT *)NULL;
 	entry_script = (S_SCRIPT *)NULL;
 }
 
+/*---------------------------------------------------------
+
+---------------------------------------------------------*/
+
 static char *load_command(char *c, char *buffer, int *end)
 {
-	int i=0;
-	while (*c != ' ' && *c != 13)
+	int i = 0;
+	while ((*c != ' ') && (*c != 13))
 	{
 		i++;
 		if (i >= 10)
-		{	return (char *) NULL;}
+		{	return ((char *)NULL);}
 		*buffer++ = *c++;
 	}
 	if (*c == 13)	/* 改行コードは OD OA */
 	{
-		*end=1;
+		*end = 1;
 	}
 	*buffer = 0;		//NULL
-	return c;
+	return (c);
 }
+
+/*---------------------------------------------------------
+
+---------------------------------------------------------*/
 
 static char *load_str(char *c, char *buffer, int *end)
 {
-	int i=0;
-	int e=0;		/* エスケープ */
-	while (((*c == ',' && e==1)||*c != ',') && *c != 13)
+	int i = 0;
+	int e = 0;		/* エスケープ */
+	while ((((*c == ',') && (e==1))||(*c != ',')) && (*c != 13))
 	{
-		if (*c == '\\' && !e && *(c+1) == ',')	{	e=1;	c++;	}
+		if ((*c == '\\') && (!e) && (*(c+1) == ','))	{	e=1;	c++;	}
 		if (e)			{	e=0;	}
 		i++;
-		if (i >= 200)	{	return (char *)NULL;}
+		if (i >= 200)	{	return ((char *)NULL);}
 		*buffer++ = *c++;
 	}
 	if (*c == 13)
 	{
-		*end=1;
+		*end = 1;
 	}
 	*buffer = 0;		//NULL
-	return c;
+	return (c);
 }
+
+/*---------------------------------------------------------
+
+---------------------------------------------------------*/
 
 static char *load_int(char *c, int *nr, int *end)
 {
 	char buffer[32/*20*/];
 	char *d = buffer;
-	int i=0;
+	int i = 0;
 	while (isdigit(*c)||*c=='-') /* ',' または '\n' が来たら終了 */
 	{
 		i++;
 		if (i >= 20)
-		{	return (char *) NULL;}
+		{	return ((char *)NULL);}
 		*d++ = *c++;
 	}
 	if (*c == 13)	{	/* 改行コードは OD OA */
-		*end=1;
+		*end = 1;
 	}
 	*d = 0;
-	if ((*c==',' || *c==13) && *(c-1)==',')	{	*nr=-1; }
-	else{	*nr = atoi(buffer); }
-	return c;
+	if ((*c==',' || *c==13) && *(c-1)==',') {	*nr=-1; }
+	else									{	*nr = atoi(buffer); }
+	return (c);
 }
 
-static void regist_script(char *command,char *c_p0,int c_p1,int c_p2,int c_p3,int c_p4,int c_p5,int c_p6,int c_p7,int chain)
+/*---------------------------------------------------------
+
+---------------------------------------------------------*/
+
+static void regist_script(
+	char *command,
+	char *c_p0,
+	int c_p1,
+	int c_p2,
+	int c_p3,
+	int c_p4,
+	int c_p5,
+	int c_p6,
+	int c_p7,
+	int chain)
 {
 /*
-
 	基本形
 	command para0,para1,para2,para3
-
-typedef struct _scenario_script
-{
-	int command;
-/	int done;		//終わったかどうか
-/	int chain;		//同時実行かどうか
-					//0=違うよ	1=1つ目 2=2つ目
-/	char para0[200];
-/	int para1;
-/	int para2;
-	int para3;
-	void *data;
-/	struct _scenario_script *next;
-} S_SCRIPT;
 */
 	S_SCRIPT *new_script;
 
@@ -632,7 +1125,8 @@ typedef struct _scenario_script
 	switch (*command)
 	{
 	case 'B':
-		if (!strcmp(command, "BGTEXT"))	{		/* 背景にテキストを打ち込む */
+		if (0==tiny_strcmp(command, "BGTEXT"))	/* 背景にテキストを打ち込む */
+		{
 			SDL_Rect *new_rect0;
 			new_script->command=SCP_BGTEXT;
 			new_rect0 = mmalloc(sizeof(SDL_Rect));
@@ -645,59 +1139,68 @@ typedef struct _scenario_script
 		}
 		break;
 	case 'C':
-		if (!strcmp(command, "CLCURSOR"))	{	new_script->command=SCP_CLCURSOR;	}	/* カーソルの初期化 */
-		else if (!strcmp(command, "CLICK")) 	{	new_script->command=SCP_CLICK;	}		/* クリック待ち */
+		if (0==tiny_strcmp(command, "CLCURSOR"))		{	new_script->command=SCP_CLCURSOR;	}	/* カーソルの初期化 */
+		else if (0==tiny_strcmp(command, "CLICK"))		{	new_script->command=SCP_CLICK;		}	/* クリック待ち */
 		break;
 	case 'F':
-		if (!strcmp(command, "FILTER"))	{
+		if (0==tiny_strcmp(command, "FILTER"))
+		{
 			new_script->command=SCP_FILTER;
 			new_script->para2 = c_p2;
 			new_script->para3 = c_p3;
 		}
 		break;
 	case 'J':
-		if (!strcmp(command, "JUMP"))		{	new_script->command=SCP_JUMP;	}		/* pauseボタンを押した時のjump先。 */
+		if (0==tiny_strcmp(command, "JUMP"))			{	new_script->command=SCP_JUMP;		}	/* pauseボタンを押した時のjump先。 */
 	case 'L':
-		if (!strcmp(command, "LOADBG"))	{	new_script->command=SCP_LOADBG; }		/* 背景ファイルの変更 */
-		else if (!strcmp(command, "LOADCUR"))	{	new_script->command=SCP_LOADCUR;	}	/* 記憶したカーソル位置の呼び出し */
-		else if (!strcmp(command, "LOADL")) 	{
+		if (0==tiny_strcmp(command, "LOADBG"))			{	new_script->command=SCP_LOADBG; 	}	/* 背景ファイルの変更 */
+		else if (0==tiny_strcmp(command, "LOADCUR"))	{	new_script->command=SCP_LOADCUR;	}	/* 記憶したカーソル位置の呼び出し */
+		else if (0==tiny_strcmp(command, "LOADL"))	/*	立ち絵L スプライトのロード */
+		{
 			SDL_Rect *new_rect3;
-			new_script->command=SCP_LOADL;
+			new_script->command=SCP_LOAD_LR;
 			new_rect3 = mmalloc(sizeof(SDL_Rect));
-			if (c_p1==-1 && c_p2==-1)	{
-				new_rect3->x = 0;			/* x */
-				new_rect3->y = 272; 		/* y */
-				new_rect3->w = 1;			/* w */
+			if (c_p1==-1 && c_p2==-1)
+			{
+				new_rect3->x = 0;		/* x */
+				new_rect3->y = 272; 	/* y */
 			}
-			else{
-				new_rect3->x = c_p1;		/* x */
-				new_rect3->y = c_p2;		/* y */
-				new_rect3->w = 1;			/* w */
+			else
+			{
+				new_rect3->x = c_p1;	/* x */
+				new_rect3->y = c_p2;	/* y */
 			}
+			new_rect3->w = 1;			/* w */
 			new_rect3->h = 0;			/* h */
 			new_script->data=new_rect3;
-			new_script->para1=c_p3; 	/* flame */
-			new_script->para2=c_p4; 	/* alpha */
+			new_script->para1=SPRITE_tachie_l;	/* SPRITE_tachie_l */
+			new_script->para2=c_p3; 	/* flame */
+			new_script->para3=c_p4; 	/* alpha */
 		}
-		else if (!strcmp(command, "LOADR")) 	{
+		else if (0==tiny_strcmp(command, "LOADR"))	/*	立ち絵R スプライトのロード */
+		{
 			SDL_Rect *new_rect4;
-			new_script->command=SCP_LOADR;
+			new_script->command=SCP_LOAD_LR;
 			new_rect4 = mmalloc(sizeof(SDL_Rect));
-			if (c_p1==-1 && c_p2==-1)	{
-				new_rect4->x = scenario_width;	/* x */
-				new_rect4->y = 272; 			/* y */
+			if (c_p1==-1 && c_p2==-1)
+			{
+				new_rect4->x = 380; 	/* x */ 	/*380 scenario_width*/
+				new_rect4->y = 272; 	/* y */
 			}
-			else{
-				new_rect4->x = c_p1;			/* x */
-				new_rect4->y = c_p2;			/* y */
+			else
+			{
+				new_rect4->x = c_p1;	/* x */
+				new_rect4->y = c_p2;	/* y */
 			}
 			new_rect4->w = 0;			/* w */
 			new_rect4->h = 0;			/* h */
 			new_script->data=new_rect4;
-			new_script->para1=c_p3; 	/* flame */
-			new_script->para2=c_p4; 	/* alpha */
+			new_script->para1=SPRITE_tachie_r;	/* SPRITE_tachie_r */
+			new_script->para2=c_p3; 	/* flame */
+			new_script->para3=c_p4; 	/* alpha */
 		}
-		else if (!strcmp(command, "LOADSP"))	{											/* スプライトのロード */
+		else if (0==tiny_strcmp(command, "LOADSP")) /* 汎用スプライトのロード */
+			{
 			SDL_Rect *new_rect1;
 			new_script->command=SCP_LOADSP;
 			new_rect1 = mmalloc(sizeof(SDL_Rect));
@@ -711,7 +1214,8 @@ typedef struct _scenario_script
 		}
 		break;
 	case 'M':
-		if (!strcmp(command, "MOVESP"))	{											/* スプライトの移動 */
+		if (0==tiny_strcmp(command, "MOVESP"))		/* スプライトの移動 */
+		{
 			new_script->command=SCP_MOVESP; /* para1=x */
 			new_script->para2=c_p2; 		/* y */
 			if (c_p3<1) 						/* speed */
@@ -720,31 +1224,34 @@ typedef struct _scenario_script
 		}
 		break;
 	case 'P':
-		if (!strcmp(command, "PARAMSP"))	{
+		if (0==tiny_strcmp(command, "PARAMSP"))
+		{
 			new_script->command=SCP_PARAMSP;	/* para1=α値 */
 			new_script->para2=c_p2; 			/* anim_speed */
 			new_script->para3=c_p3; 			/* anim_type */
 		}
 		break;
 	case 'R':
-		if (!strcmp(command, "RELOADSP"))	{											/* スプライトの再読み込み */
+		if (0==tiny_strcmp(command, "RELOADSP"))		/* スプライトの再読み込み */
+		{
 			new_script->command=SCP_RELOADSP;	/* para1=no */
 			new_script->para2=c_p2; 			/* flames */
 			new_script->para3=c_p3; 			/* alpha */
 		}
 		break;
 	case 'S':
-		if (!strcmp(command, "SAVECUR"))	{	new_script->command=SCP_SAVECUR;	}	/* カーソル位置の記憶 */
-		else if (!strcmp(command, "SUBG"))		{	new_script->command=SCP_SUBG;		}	/* 背景の表示/非表示 */
-		else if (!strcmp(command, "SUFILTER"))	{	new_script->command=SCP_SUFILTER;	}	/* フィルター表示/非表示&透過度 */
-		else if (!strcmp(command, "SUL"))		{	new_script->command=SCP_SUL;		}	/* 立ち絵左の表示/非表示 */
-		else if (!strcmp(command, "SUR"))		{	new_script->command=SCP_SUR;		}	/* 立ち絵右の表示/非表示 */
-		else if (!strcmp(command, "SUSPRITE"))	{	new_script->command=SCP_SUSPRITE;	new_script->para2=c_p2; }/*スプライトの表示*/
-		else if (!strcmp(command, "SUTWINDOW")) {	new_script->command=SCP_SUTWINDOW;	new_script->para2=c_p2; }	/* 強調立ち絵ウィンドウの表示/非表示 para2はスコアパネルのon/off */
-		else if (!strcmp(command, "SUWINDOW"))	{	new_script->command=SCP_SUWINDOW;	new_script->para2=c_p2; }	/* メッセージウィンドウの表示/非表示 para2はbpp速度。*/
+			 if (0==tiny_strcmp(command, "SAVECUR"))	{	new_script->command=SCP_SAVECUR;	}	/* カーソル位置の記憶 */
+		else if (0==tiny_strcmp(command, "SUBG"))		{	new_script->command=SCP_SUBG;		}	/* 背景の表示/非表示 */
+		else if (0==tiny_strcmp(command, "SUFILTER"))	{	new_script->command=SCP_SUFILTER;	}	/* フィルター表示/非表示&透過度 */
+		else if (0==tiny_strcmp(command, "SUL"))		{	new_script->command=SCP_SUL;		}	/* 立ち絵左の表示/非表示 */
+		else if (0==tiny_strcmp(command, "SUR"))		{	new_script->command=SCP_SUR;		}	/* 立ち絵右の表示/非表示 */
+		else if (0==tiny_strcmp(command, "SUSPRITE"))	{	new_script->command=SCP_SUSPRITE;	new_script->para2=c_p2; }/*スプライトの表示*/
+		else if (0==tiny_strcmp(command, "SUTWINDOW"))	{	new_script->command=SCP_SUTWINDOW;	new_script->para2=c_p2; }	/* 強調立ち絵ウィンドウの表示/非表示 para2はスコアパネルのon/off */
+		else if (0==tiny_strcmp(command, "SUWINDOW"))	{	new_script->command=SCP_SUWINDOW;	new_script->para2=c_p2; }	/* メッセージウィンドウの表示/非表示 para2はbpp速度。*/
 		break;
 	case 'T':
-		if (!strcmp(command, "TEXT"))		{											/* メッセージウィンドウへの書き込み */
+		if (0==tiny_strcmp(command, "TEXT"))				/* メッセージウィンドウへの書き込み */
+		{
 			SDL_Rect *new_rect2;
 			new_script->command=SCP_TEXT;
 			new_rect2 = mmalloc(sizeof(SDL_Rect));
@@ -756,27 +1263,102 @@ typedef struct _scenario_script
 			new_script->para2 = c_p2;		/* 書き込み速度 */
 			new_script->para3 = c_p3;		/* 書き込み後のcount_charの処遇 */
 		}
-		else if (!strcmp(command, "TWINDOW"))	{	new_script->command=SCP_TWINDOW;		}/* 立ち絵強調ウィンドウの初期化 */
+		else if (0==tiny_strcmp(command, "TWINDOW"))	{	new_script->command=SCP_TWINDOW;		}/* 立ち絵強調ウィンドウの初期化 */
 		break;
 	case 'W':
-		if (!strcmp(command, "WAIT"))	{	new_script->command=SCP_WAIT;	}		/* wait */
+		if (0==tiny_strcmp(command, "WAIT"))	{	new_script->command=SCP_WAIT;	}		/* wait */
 		break;
 
 	default:
-		pspDebugScreenPrintf("unknown command :%s",command);
-		sceKernelDelayThread(3000000);
+		#if 0
+		//ps pDebugScreenPrintf("unknown command :%s",command);
+		//sc eKernelDelayThread(3000000);
+		#endif
 		break;
 	}
 
-	if (NULL==entry_script)	{	entry_script=new_script;		}
+	if (NULL==entry_script) {	entry_script=new_script;		}
 	else
 	{
 		entry_script->next=new_script;
 		entry_script=entry_script->next;
 	}
 
-	if (NULL==sscript)	{ sscript=entry_script;	}
+	if (NULL==sscript)	{ sscript=entry_script; }
 }
+
+/*---------------------------------------------------------
+	汎用性のまるでない読み込み関連。子関数
+	-------------------------------------------------------
+	標準入出力はpspでは遅すぎるのでsceの関数を使う。(ゲーム中の処理落ち軽減策)
+	エラーチェックとか全然無いので注意の事
+---------------------------------------------------------*/
+
+//atic char buffer_text_1_line[128];	/* parth text, 1 line buffer */ 	/* 走査する行の取得 */
+static char buffer_text_1_line[256];	/* parth text, 1 line buffer */ 	/* 走査する行の取得 */
+
+#if 1
+static unsigned long file_size;
+static unsigned long file_seek;
+static char *my_buf;
+static void *malloc_buf;
+
+static void *my_fopen(const char *file_name/*, const char *dummy*/)
+{
+	SceUID fd;
+	if (!(fd = sceIoOpen((char *)file_name, PSP_O_RDONLY, 0777)))
+	{
+		return (NULL);
+	}
+	file_size = sceIoLseek32(fd, 0, PSP_SEEK_END);
+	file_seek = 0;
+
+	malloc_buf = malloc(file_size);
+	if (NULL == malloc_buf)
+	{
+		sceIoClose(fd);
+		return (NULL);
+	}
+	sceIoLseek32(fd, 0, PSP_SEEK_SET);
+	sceIoRead( fd, malloc_buf, file_size);
+	sceIoClose(fd);
+	my_buf = malloc_buf;
+//
+	return (malloc_buf);
+}
+static int my_fgets(void/*char *buffer_name, int num, char *wfp*/)
+{
+	int ii;
+ii=0;
+	char aaa;
+//	char bbb;
+//bbb=0;
+	fgets_loop:;
+	aaa = /*buffer_name*/buffer_text_1_line[ii] = my_buf[file_seek]/*(*my_buf)*/;
+//	my_buf++;
+	ii++;
+	file_seek++;
+	if (0x0a==aaa)	return (1);
+	if (file_size < file_seek)	return (0)/*NULL*/;
+	goto fgets_loop;
+//	error(ERR_FATAL,"TEST %s\nno: %d (%s)",buffer_name,errno,strerror(errno));
+//	return (NULL);
+}
+static void my_fclose(void/*void *wfp*/)
+{
+	free(malloc_buf);
+}
+#else
+	#define my_fopen	fopen
+	#define my_fgets	fgets
+	#define my_fclose	fclose
+#endif
+/*---------------------------------------------------------
+	スクリプト読み込み
+	-------------------------------------------------------
+	この関数は、仕様上「とても処理落ちします」
+
+---------------------------------------------------------*/
 
 static int load_scenario(char *src_filename)
 {
@@ -784,51 +1366,39 @@ static int load_scenario(char *src_filename)
 /*
 	基本形
 	command para0,para1,para2,para3
-
-typedef struct _scenario_script
-{
-	int command;
-	int done;		//終わったかどうか
-	int chain;		//同時実行かどうか
-					//0=違うよ	1=1つ目 2=2つ目
-	char para0[200];
-	int para1;
-	int para2;
-	int para3;
-	void *data;
-	struct _scenario_script *next;
-} S_SCRIPT;
 */
 	char filename[128];
-	sprintf(filename,"%s/text/%s.txt", moddir, src_filename);
-	FILE *file;
-	if (NULL == (file = fopen(filename,"r")))		/* 開けなかったとき */
+//	sp rintf(filename, "%s/text/%s.txt", data_dir, src_filename);
+	strcpy(filename, DIRECTRY_NAME_DATA "/text/");
+	strcat(filename, src_filename);
+	strcat(filename, ".txt");
+
+//	FILE *fp;
+	if (NULL == (/*fp =*/my_fopen(filename/*,"r"*/)))		/* 開けなかったとき */
 	{
-		return 0;
+		return (0);
 	}
 
 	int entrys		= 0;		/* 命令がが書き込まれているかどうか。 */
 	int line_num	= 0;		/* 行番号 */
 	int chains		= 0;
-	char buffer_text_1_line[255];	/*parth text, 1 line buffer */		/* 走査する行の取得 */
-	while (fgets(buffer_text_1_line,255,file) != NULL)
+	while (/*NULL*/0 != my_fgets(/*buffer_text_1_line,255,fp*/))
 	{
 		/****************** script_data 用 ******************/
 		char char_command[16/*15*/];		/* 基本コマンド */
 		char c_p0[256/*200*/];
-		int c_p1=-1;
-		int c_p2=-1;
-		int c_p3=-1;
-		int c_p4=-1;
-		int c_p5=-1;
-		int c_p6=-1;
-		int c_p7=-1;
-
+		int c_pn[6];
+		{
+			int kk;
+			for (kk=0; kk<6; kk++)
+			{
+				c_pn[kk] = -1;
+			}
+		}
 		/****************** script_search 用 ****************/
 		char *c=NULL;					/* 走査中の行の分析用 */
 		int end_arg=0;				/* 引数の取得の中止 */
 		c = buffer_text_1_line; 	/* 先頭アドレスを渡すよ */
-
 
 		line_num++;
 
@@ -840,141 +1410,250 @@ typedef struct _scenario_script
 		else				{	chains=0;	}
 
 		if (NULL==(c = load_command(c, char_command, &end_arg)))	{	error(ERR_WARN,"syntax error in scriptfile '%s', line no: %d", filename, line_num); continue;	}
-		if (!end_arg)	{
+		if (!end_arg)
+		{
 			if (*c++ != ' ')									{	error(ERR_WARN,"syntax error in scriptfile '%s', line no: %d", filename, line_num); continue;	}
 			if (NULL==(c = load_str(c, c_p0, &end_arg)))		{	error(ERR_WARN,"syntax error in scriptfile '%s', line no: %d", filename, line_num); continue;	}
 		}
-		if (!end_arg)	{
-			if (*c++ != ',')									{	error(ERR_WARN,"syntax error in scriptfile '%s', line no: %d", filename, line_num); continue;	}
-			if (NULL==(c = load_int(c, &c_p1, &end_arg)))		{	error(ERR_WARN,"syntax error in scriptfile '%s', line no: %d", filename, line_num); continue;	}
+		{
+			int kk;
+			for (kk=0; kk<6; kk++)
+			{
+				if (!end_arg)
+				{
+					if (*c++ != ',')									{	error(ERR_WARN,"syntax error in scriptfile '%s', line no: %d", filename, line_num); continue;	}
+					if (NULL==(c = load_int(c, &c_pn[kk], &end_arg)))	{	error(ERR_WARN,"syntax error in scriptfile '%s', line no: %d", filename, line_num); continue;	}
+				}
+			}
 		}
-		if (!end_arg)	{
-			if (*c++ != ',')									{	error(ERR_WARN,"syntax error in scriptfile '%s', line no: %d", filename, line_num); continue;	}
-			if (NULL==(c = load_int(c, &c_p2, &end_arg)))		{	error(ERR_WARN,"syntax error in scriptfile '%s', line no: %d", filename, line_num); continue;	}
-		}
-		if (!end_arg)	{
-			if (*c++ != ',')									{	error(ERR_WARN,"syntax error in scriptfile '%s', line no: %d", filename, line_num); continue;	}
-			if (NULL==(c = load_int(c, &c_p3, &end_arg)))		{	error(ERR_WARN,"syntax error in scriptfile '%s', line no: %d", filename, line_num); continue;	}
-		}
-		if (!end_arg)	{
-			if (*c++ != ',')									{	error(ERR_WARN,"syntax error in scriptfile '%s', line no: %d", filename, line_num); continue;	}
-			if (NULL==(c = load_int(c, &c_p4, &end_arg)))		{	error(ERR_WARN,"syntax error in scriptfile '%s', line no: %d", filename, line_num); continue;	}
-		}
-		if (!end_arg)	{
-			if (*c++ != ',')									{	error(ERR_WARN,"syntax error in scriptfile '%s', line no: %d", filename, line_num); continue;	}
-			if (NULL==(c = load_int(c, &c_p5, &end_arg)))		{	error(ERR_WARN,"syntax error in scriptfile '%s', line no: %d", filename, line_num); continue;	}
-		}
-		if (!end_arg)	{
-			if (*c++ != ',')									{	error(ERR_WARN,"syntax error in scriptfile '%s', line no: %d", filename, line_num); continue;	}
-			if (NULL==(c = load_int(c, &c_p6, &end_arg)))		{	error(ERR_WARN,"syntax error in scriptfile '%s', line no: %d", filename, line_num); continue;	}
-		}
-		if (!end_arg)	{
-			if (*c++ != ',')									{	error(ERR_WARN,"syntax error in scriptfile '%s', line no: %d", filename, line_num); continue;	}
-			if (NULL==(c = load_int(c, &c_p7, &end_arg)))		{	error(ERR_WARN,"syntax error in scriptfile '%s', line no: %d", filename, line_num); continue;	}
-		}
-		regist_script(char_command,c_p0,c_p1,c_p2,c_p3,c_p4,c_p5,c_p6,c_p7,chains);
+		regist_script(char_command,c_p0,c_pn[0],c_pn[1],c_pn[2],c_pn[3],c_pn[4],c_pn[5],c_pn[6],chains);
 		entrys++;
 	}
-	fclose(file);
-	//return(entrys);
-	if (!entrys)
+	my_fclose (/*fp*/);
+	//return (entrys);
+	if (0 == entrys)
 	{
-		pspDebugScreenPrintf("can't entrys from this file %s",filename);
-		sceKernelDelayThread(3000000);
+		#if 0
+		//ps pDebugScreenPrintf("can't entrys from this file %s",filename);
+		//sc eKernelDelayThread(3000000);
+		#endif
 		error(ERR_WARN,"can't entrys from this file %s",filename);
-		return 0;
+		return (0);
 	}
-	return 1;
+	return (1);
 }
 
+/*---------------------------------------------------------
 
+---------------------------------------------------------*/
+
+//static extern int my_string_offset;
+//static extern void clear_my_string_offset(void);
 static void script_reset(void)
 {
 	int i;
-	for (i=0;i<20;i++)
+	for (i=0;i<SPRITE_MAX/*20*/;i++)
 	{
-		remove_sc_sprite(sc_sp[i]);
+		remove_sc_sprite(std_obj[i]);
 	}
-
-	remove_sc_sprite(tachie_r);
-	remove_sc_sprite(tachie_l);
-	if (bg_story!=NULL) 		{	SDL_FreeSurface(bg_story);		bg_story		= NULL; }
-	if (msg_window!=NULL)		{	SDL_FreeSurface(msg_window);	msg_window		= NULL; }
-	if (tachie_window!=NULL)	{	SDL_FreeSurface(tachie_window); tachie_window	= NULL; }
-	if (filter!=NULL)			{	SDL_FreeSurface(filter);		filter			= NULL; }
-	if (col_sdl!=NULL)			{	SDL_FreeSurface(col_sdl);		col_sdl 		= NULL; }
+//	remove_sc_sprite(std_obj[SPRITE_tachie_r]);
+//	remove_sc_sprite(std_obj[SPRITE_tachie_l]);
+	if (NULL != bg_story_window)	{	SDL_FreeSurface(bg_story_window);	bg_story_window 	= NULL; }
+	if (NULL != msg_window) 		{	SDL_FreeSurface(msg_window);		msg_window			= NULL; }
+#if (1==USE_2ND_SCREEN)
+//	if (NULL != tachie_window)		{	SDL_FreeSurface(tachie_window); 	tachie_window		= NULL; }
+#endif /* (1==USE_2ND_SCREEN) */
+//	if (NULL != filter_window)		{	SDL_FreeSurface(filter_window); 	filter_window		= NULL; }
+//	if (NULL != font_color_bitmap)	{	SDL_FreeSurface(font_color_bitmap); font_color_bitmap	= NULL; }
 	load_script_free();
 
-	cursor=0;
-	count_char=0;
-	count_i=0;
+//	count_char=0;			/* カーソル位置 */
+//	cursor=0;
+	cursor_x=0;
+	cursor_y=0;
+	cursor_x_chached=0; 	/* カーソル位置 保存用 */
+	cursor_y_chached=0; 	/* カーソル位置 保存用 */
+
+	clear_my_string_offset();	//	my_string_offset=0;
 }
 
+/*---------------------------------------------------------
 
-int thescript(void)
+---------------------------------------------------------*/
+
+static void disprite(int start, int end)
 {
-/*
-****やりたいこと****
+	int sp_i;
+	for (sp_i=start; sp_i<=end; sp_i++)
+	{
+		if (NULL != std_obj[sp_i])
+		{
+			if (std_obj[sp_i]->flags)
+			{
+				SDL_Rect src_r,dst_r;
+				src_r.x = std_obj[sp_i]->w*std_obj[sp_i]->aktframe;
+				src_r.y = 0;
+				src_r.w = std_obj[sp_i]->w;
+				src_r.h = std_obj[sp_i]->h;
+				dst_r.x = std_obj[sp_i]->x;
+				dst_r.y = std_obj[sp_i]->y;
+				SDL_BlitSurface(std_obj[sp_i]->img, &src_r, screen, &dst_r);
+			}
+			std_obj[sp_i] = sc_sprite_work(std_obj[sp_i]);
+		}
+	}
+}
+
+static void tachie_disprite(int nnn)
+{
+	if (NULL != std_obj[nnn])
+	{
+		if (std_obj[nnn]->flags)
+		{
+			SDL_Rect src_r,dst_r;
+			src_r.x = std_obj[nnn]->w*std_obj[nnn]->aktframe;
+			src_r.y = 0;
+			src_r.w = std_obj[nnn]->w;
+			src_r.h = std_obj[nnn]->h;
+			dst_r.x = std_obj[nnn]->x;
+			dst_r.y = std_obj[nnn]->y;
+			if (std_obj[nnn]->flags==1) 		{	SDL_BlitSurface(std_obj[nnn]->img, &src_r, screen, &dst_r); }
+			#if (1==USE_2ND_SCREEN)
+			else if (std_obj[nnn]->flags==2)	{	SDL_BlitSurface(std_obj[nnn]->img, &src_r, tachie_window, &dst_r);	}
+			#endif /* (1==USE_2ND_SCREEN) */
+		}
+		std_obj[nnn]=sc_sprite_work(std_obj[nnn]);
+	}
+}
+/*---------------------------------------------------------
+
+---- やりたいこと ----
 	1フレームでは終わらない処理があったときのためにこのコマンドからの命令には全て
 	終わったことを知らせる引数を付けておくこと。=>doneに代入で終了。
 	常にchainを確認し、0以外の値が入っていたら次の関数も実行する(nextを辿る)。
-*/
+---------------------------------------------------------*/
 
-	S_SCRIPT *ssc=start_script;
-	int n=0;					/* 次の命令に進めるかの判定 */
-	static int tmp_all[16/*15*/];		/* ご自由にお使いください。 */
-	SC_SPRITE *sc_tmp=NULL; 	/* 上に同じ */
-	//static double button_d; 	/* button wait */
+static int thescript(void)
+{
+	S_SCRIPT *ssc = start_script;
+	int n = 0;						/* 次の命令に進めるかの判定 */
+	static int tmp_all[16/*15*/];	/* ご自由にお使いください。 */
+	SC_SPRITE *sc_tmp = NULL; 		/* 上に同じ */
 
 	if (inits)
 	{
 		int i;
-		for (i=0;i<16/*15*/;i++)
+		for (i=0; i<16/*15*/; i++)
 		{
-			tmp_all[i]=0;
+			tmp_all[i] = 0;
 		}
 	}
-
-	//if (0>button_d || button_d>20)	{	button_d=0; }
-	//else if (0==my_pad/*button_d*/)			{	;	}
-	//else							{	button_d-=fps_factor;	}
-
-	if (0==my_pad/*button_d*/)
+//
+	int shot_ositenai;
+	shot_ositenai = 1;	/* ショット押してない */
+	if (0 == my_pad)/* 今は押してない */
 	{
-		if ((/*my_pad^*/my_pad_alter) & PSP_KEY_PAUSE/*keybo ard[KEY_PAUSE]*/)
+		if (my_pad_alter & PSP_KEY_BOMB_CANCEL) 	/* キャンセル入力 */
 		{
-			while (ssc->next!=NULL && ssc->command!=SCP_JUMP)
+			while ((NULL != ssc->next) && (SCP_JUMP != ssc->command))
 			{
 				ssc->done=1;
 				ssc=ssc->next;
 			}
-			if (NULL==ssc->next)	{	script_reset(); return 1;	}
-			//button_d=10;
+			if (NULL == ssc->next)	{	script_reset(); return (1); }
+		}
+		if (my_pad_alter & PSP_KEY_SHOT_OK) 		/* ＯＫ入力 */
+		{
+			shot_ositenai = 0;	/* ショット押したよ */
 		}
 	}
-
+//
 	while (1)
 	{
 		if (0==ssc->done)
 		{
 			switch (ssc->command)
 			{
-			case SCP_BGTEXT:
-				if (!ssc->para2 || (((/*my_pad^*/my_pad_alter) & PSP_KEY_SHOT/*keybo ard[KEY_SHOT]*/) && (0==my_pad/*button_d*/) ))
-				{
-					mh_print(bg_story,ssc->data,ssc->para1,ssc->para0);
-					ssc->done=1;
-					//button_d=10;
-				}
-				else
-				{	ssc->done=mh_print_fps(bg_story,ssc->para1,ssc->data,ssc->para0,ssc->para2);	}
+			// [テキストのカーソル制御]
+			case SCP_LOADCUR:		/* カーソル位置、復元 */
+			//	count_char=cursor;
+				cursor_x = cursor_x_chached;
+				cursor_y = cursor_y_chached;
+				ssc->done=1;
 				break;
+			case SCP_SAVECUR:		/* カーソル位置、記憶 */
+			//	cursor=count_char;
+				cursor_x_chached = cursor_x;
+				cursor_y_chached = cursor_y;
+				ssc->done=1;
+				break;
+			case SCP_CLCURSOR:		/* カーソルの初期化 */
+			//	count_char=0;
+				cursor_x=0;
+				cursor_y=0;
+				ssc->done=1;
+				break;
+			// [テキスト表示/クリック待ち]
 			case SCP_CLICK:
-				if (((/*my_pad^*/my_pad_alter) & PSP_KEY_SHOT/*keybo ard[KEY_SHOT]*/) && (0==my_pad/*button_d*/) )	{	ssc->done=1;	/*button_d=10;*/	}
+				if (0==shot_ositenai)
+				{	ssc->done=1;	}
 				break;
-			case SCP_CLCURSOR:
-				count_char=0;	ssc->done=1;
+			case SCP_BGTEXT:
+				if (0==shot_ositenai)	{	ssc->para2=0;	}	/* ショット押したら、残りは全部書く */
+				ssc->done = print_kanji(bg_story_window, ssc->data, ssc->para0, ssc->para1, ssc->para2);
 				break;
+			case SCP_TEXT:
+				if (0 == tmp_all[ssc->chain])
+				{
+					if (0==shot_ositenai)	{	ssc->para2=0;	}	/* ショット押したら、残りは全部書く */
+					tmp_all[ssc->chain] = print_kanji(msg_window, ssc->data, ssc->para0, ssc->para1, ssc->para2);
+				}
+				else	/*if (1==tmp_all[ssc->chain])*/
+				{
+					if (0==(ssc->para3 & 0xf8))
+					{
+						if ( 0x00 == ( (ssc->para3 & shot_ositenai) & 0x01) )
+						{
+							if (0x00==(ssc->para3 & 0x02))
+							{
+								;//cursor_continue=1;		/* カーソル継続 */
+							}
+							else
+							{
+						//	//	count_char=0;
+								cursor_x=0; 	/* カーソル初期化 */
+								cursor_y=0; 	/* カーソル初期化 */
+							}
+							if (0x04==(ssc->para3 & 0x04))
+							{
+								msg_window_init();		/* ウィンドウ初期化 */
+							}
+							ssc->done=1;
+							tmp_all[ssc->chain]=0;
+						}
+					}
+				}
+				break;
+#if 0
+/*
+	switch (ssc->para3)
+	w: 0:しない 	   1:ウィンドウ初期化
+	c: 0:カーソル継続  1:カーソル初期化
+	b: 0:実行。 	   1:ボタンを押したら実行。
+		   wcb
+	case 0:000:	何もせずに		 次の命令へ、カーソル継続
+	case 1:001:	ボタンを押したら 次の命令へ、カーソル継続
+	case 2:010:	何もせずに		 次の命令へ、カーソル初期化
+	case 3:011:	ボタンを押したら 次の命令へ、カーソル初期化
+	case 4:100:	何もせずに		 次の命令へ、カーソル継続	 ウィンドウ初期化
+	case 5:101:	ボタンを押したら 次の命令へ、カーソル継続、  ウィンドウ初期化
+	case 6:110:	何もせずに		 次の命令へ、カーソル初期化、ウィンドウ初期化
+	case 7:111:	ボタンを押したら 次の命令へ、カーソル初期化、ウィンドウ初期化
+*/
+#endif
+
+
+
 			case SCP_FILTER:
 				filter_init(ssc->para1,ssc->para2,ssc->para3);
 				ssc->done=1;
@@ -983,19 +1662,12 @@ int thescript(void)
 				ssc->done=1;
 				break;
 			case SCP_LOADBG:
-				bg_story=load_local(ssc->para0,bg_story,ssc->para1);
-				SDL_SetColorKey(bg_story,SDL_SRCCOLORKEY|SDL_RLEACCEL,0x00000000);
+				bg_story_window=load_local(ssc->para0,bg_story_window,ssc->para1);
+				SDL_SetColorKey(bg_story_window,SDL_SRCCOLORKEY|SDL_RLEACCEL,0x00000000);
 				ssc->done=1;
 				break;
-			case SCP_LOADCUR:
-				ssc->done=1;	count_char=cursor;
-				break;
-			case SCP_LOADL:
-				load_l(ssc->para0,ssc->para1,ssc->para2,ssc->data);
-				ssc->done=1;
-				break;
-			case SCP_LOADR:
-				load_r(ssc->para0,ssc->para1,ssc->para2,ssc->data);
+			case SCP_LOAD_LR:	/* 立ち絵L 立ち絵R */
+				load_local_sprite(ssc->para0,ssc->para1,ssc->para2,ssc->para3,ssc->data);
 				ssc->done=1;
 				break;
 			case SCP_LOADSP:
@@ -1003,21 +1675,24 @@ int thescript(void)
 				ssc->done=1;
 				break;
 			case SCP_MOVESP:
-				ssc->done=move_sc_sprite(ssc->para0,ssc->para1,ssc->para2,ssc->para3);
+				ssc->done=do_move_sc_sprite(ssc->para0,ssc->para1,ssc->para2,ssc->para3);
 				if (ssc->done==-1)
 				{
-					pspDebugScreenPrintf("no sprite in No.%s\n",ssc->para0);
-					sceKernelDelayThread(2000000);
-					return 1;
+					#if 0
+					//ps pDebugScreenPrintf("no sprite in No.%s\n",ssc->para0);
+					//sc eKernelDelayThread(2000000);
+					#endif
+					return (1);
 				}
 				break;
 			case SCP_PARAMSP:
-				tmp_all[ssc->chain]=cha_search(ssc->para0);
-				if (tmp_all[ssc->chain]==-1)	{	return -1;	}
-				else if (tmp_all[ssc->chain]==-2)	{	sc_tmp=tachie_r;	}
-				else if (tmp_all[ssc->chain]==-3)	{	sc_tmp=tachie_l;	}
-				else{				sc_tmp=sc_sp[tmp_all[ssc->chain]];	}
-				if (ssc->para1!=-1)	{
+				tmp_all[ssc->chain] = cha_search(ssc->para0);
+				if (tmp_all[ssc->chain] == -1)		{	return (-1);	}
+			//	else if (tmp_all[ssc->chain] == -2) {	sc_tmp=std_obj[SPRITE_tachie_r];	}
+			//	else if (tmp_all[ssc->chain] == -3) {	sc_tmp=std_obj[SPRITE_tachie_l];	}
+				else								{	sc_tmp=std_obj[((tmp_all[ssc->chain])&(SPRITE_MAX-1))]; }
+				if (ssc->para1!=-1)
+				{
 					sc_tmp->alpha=ssc->para1;
 					SDL_SetAlpha(sc_tmp->img, SDL_SRCALPHA, sc_tmp->alpha);
 				}
@@ -1034,180 +1709,89 @@ int thescript(void)
 				reload_sc_sprite(ssc->para0,ssc->para1,ssc->para2,ssc->para3);
 				ssc->done=1;
 				break;
-			case SCP_SAVECUR:
-				ssc->done=1;	cursor=count_char;
-				break;
 			case SCP_SUBG:
 				is_bg=ssc->para1;	ssc->done=1;
 				break;
 			case SCP_SUFILTER:
 				is_filter=ssc->para1;
-				SDL_SetAlpha(filter,SDL_SRCALPHA,ssc->para2);
+				SDL_SetAlpha(filter_window,SDL_SRCALPHA,ssc->para2);
 				ssc->done=1;
 				break;
 			case SCP_SUL:
-				tachie_l->flags=ssc->para1; ssc->done=1;
+				std_obj[SPRITE_tachie_l]->flags=ssc->para1; ssc->done=1;
 				break;
 			case SCP_SUR:
-				tachie_r->flags=ssc->para1; ssc->done=1;
+				std_obj[SPRITE_tachie_r]->flags=ssc->para1; ssc->done=1;
 				break;
 			case SCP_SUSPRITE:
-				if (ssc->para1==-2) 	{	tachie_r->flags=ssc->para2; }
-				else if (ssc->para1==-3)	{	tachie_l->flags=ssc->para2; }
-				else					{	sc_sp[ssc->para1]->flags=ssc->para2;	}
+			//		 if (ssc->para1==-2)	{	std_obj[SPRITE_tachie_r]->flags=ssc->para2; }
+			//	else if (ssc->para1==-3)	{	std_obj[SPRITE_tachie_l]->flags=ssc->para2; }
+			/*	else	*/					{	std_obj[((ssc->para1)&(SPRITE_MAX-1))]->flags=ssc->para2;	}
 				ssc->done=1;
 				break;
 			case SCP_SUTWINDOW:
-				is_tachie_window=ssc->para1;	is_panel_window=ssc->para2; 	ssc->done=1;	/*追加 is_panel_window 20090406 */
+				#if (1==USE_2ND_SCREEN)
+				is_tachie_window=ssc->para1;
+				#endif /* (1==USE_2ND_SCREEN) */
+			//	is_pa nel_window=ssc->para2;
+				{
+					PLAYER_DATA *pd=(PLAYER_DATA *)player->data;
+					pd->state_flag &= (~(STATE_FLAG_09_IS_PANEL_WINDOW));
+				//	pd->state_flag |= ((ssc->para2&1)<<STATE_FLAG_IS_PANEL_WINDOW_SHIFT);
+					if (1==ssc->para2)
+					{
+						pd->state_flag |= STATE_FLAG_09_IS_PANEL_WINDOW;
+					}
+				}
+				ssc->done=1;
+				/*追加 is_pa nel_window 20090406 */
 				break;
 			case SCP_SUWINDOW:		/* うまくいってない */
 				ssc->done=window_effect(ssc->para1,ssc->para2);
 				break;
-			case SCP_TEXT:
-				if (!tmp_all[ssc->chain])
-				{
-					if (0==ssc->para2 || (((/*my_pad^*/my_pad_alter) & PSP_KEY_SHOT/*keybo ard[KEY_SHOT]*/) && (0==my_pad/*button_d*/) ))
-					{
-						mh_print(msg_window,ssc->data,ssc->para1,ssc->para0);
-						tmp_all[ssc->chain]=1;
-						//button_d=10;
-					}
-					else
-					{	tmp_all[ssc->chain]=mh_print_fps(msg_window,ssc->para1,ssc->data,ssc->para0,ssc->para2);	}
-				}
-				else
-				{
-					switch (ssc->para3)
-					{
-					case 0: 	/* 何もせずに次の命令へ */
-						ssc->done=1;
-						tmp_all[ssc->chain]=0;
-						break;
-					case 1: 	/* ボタンを押したら次の命令へ、カーソル継続 */
-						if ((0==((/*my_pad^*/my_pad_alter) & PSP_KEY_SHOT/*keybo ard[KEY_SHOT]*/)) && (0==my_pad/*button_d*/) )
-						{
-							ssc->done=1;
-							tmp_all[ssc->chain]=0;
-							//button_d=10;
-						}
-						break;
-					case 2: 	/* カーソル初期化 */
-						ssc->done=1;
-						tmp_all[ssc->chain]=0;
-						count_char=0;
-						break;
-					case 3: 	/* ボタンを押したら次の命令へ、カーソル初期化 */
-						if (((/*my_pad^*/my_pad_alter) & PSP_KEY_SHOT/*keybo ard[KEY_SHOT]*/) && (0==my_pad/*button_d*/) )
-						{
-							ssc->done=1;
-							tmp_all[ssc->chain]=0;
-							count_char=0;
-							//button_d=10;
-						}
-						break;
-					case 4: 	/* 何もせずに次の命令へ、ウィンドウ初期化*/
-						ssc->done=1;
-						tmp_all[ssc->chain]=0;
-						msg_window_init();
-						break;
-					case 5: 	/* ボタンを押したら次の命令へ、カーソル継続、ウィンドウ初期化 */
-						if (((/*my_pad^*/my_pad_alter) & PSP_KEY_SHOT/*keybo ard[KEY_SHOT]*/) && (0==my_pad/*button_d*/) )
-						{
-							ssc->done=1;
-							tmp_all[ssc->chain]=0;
-							msg_window_init();
-							//button_d=10;
-						}
-						break;
-					case 6: 	/* カーソル初期化、ウィンドウ初期化 */
-						ssc->done=1;
-						tmp_all[ssc->chain]=0;
-						count_char=0;
-						msg_window_init();
-						break;
-					case 7: 	/* ボタンを押したら次の命令へ、カーソル初期化、ウィンドウ初期化 */
-						if (((/*my_pad^*/my_pad_alter) & PSP_KEY_SHOT/*keybo ard[KEY_SHOT]*/) && (0==my_pad/*button_d*/) )
-						{
-							ssc->done=1;
-							tmp_all[ssc->chain]=0;
-							count_char=0;
-							msg_window_init();
-							//button_d=10;
-						}
-						break;
-					}
-				}
-				break;
+
 			case SCP_TWINDOW:
-				tachie_window_init();	ssc->done=1;
+				#if (1==USE_2ND_SCREEN)
+				tachie_window_init();
+				#endif /* (1==USE_2ND_SCREEN) */
+				ssc->done=1;
 				break;
 			case SCP_WAIT:
 				ssc->done=script_wait(ssc->para1);
 				break;
 			}
 		}
-		if (0==ssc->done)	{	n++;	}		/* 継続フラグ */
+		if (0==ssc->done)		{	n++;	}		/* 継続フラグ */
 		if (NULL==ssc->next)	{	break;	}		/* nextがNULLの場合 */
-		if ((ssc->chain>=ssc->next->chain) || (0==ssc->chain))	{ break;	}	/* 現chainが次chainより大きい場合 */
+		if ((ssc->chain >= ssc->next->chain) || (0==ssc->chain))	{ break;	}	/* 現chainが次chainより大きい場合 */
 		ssc=ssc->next;
 	}
 	if (is_bg)
 	{
-		SDL_BlitSurface(bg_story, NULL, screen, NULL);
+		SDL_BlitSurface(bg_story_window, NULL, screen, NULL);
 	}
 
 	disprite(0,9);
-
-	if (tachie_l!=NULL)
-	{
-		if (tachie_l->flags)
-		{
-			SDL_Rect src_r,dst_r;
-			src_r.x=tachie_l->w*tachie_l->aktframe;
-			src_r.y=0;
-			src_r.w=tachie_l->w;
-			src_r.h=tachie_l->h;
-			dst_r.x=tachie_l->x;
-			dst_r.y=tachie_l->y;
-			if (tachie_l->flags==1) 		{	SDL_BlitSurface(tachie_l->img, &src_r, screen, &dst_r); }
-			else if (tachie_l->flags==2)	{	SDL_BlitSurface(tachie_l->img, &src_r, tachie_window, &dst_r);	}
-		}
-		tachie_l=sc_sprite_work(tachie_l);
-	}
-
+	tachie_disprite(SPRITE_tachie_l);
 	disprite(10,11);
-
-	if (tachie_r!=NULL)
-	{
-		if (tachie_r->flags)
-		{
-			SDL_Rect src_r,dst_r;
-			src_r.x=tachie_r->w*tachie_r->aktframe;
-			src_r.y=0;
-			src_r.w=tachie_r->w;
-			src_r.h=tachie_r->h;
-			dst_r.x=tachie_r->x;
-			dst_r.y=tachie_r->y;
-			if (tachie_r->flags==1) 		{	SDL_BlitSurface(tachie_r->img, &src_r, screen, &dst_r); }
-			else if (tachie_r->flags==2)	{	SDL_BlitSurface(tachie_r->img, &src_r, tachie_window, &dst_r);	}
-		}
-		tachie_r=sc_sprite_work(tachie_r);
-	}
-
+	tachie_disprite(SPRITE_tachie_r);
 	disprite(12,15);
+
 	if (is_filter)
 	{
-		SDL_BlitSurface(filter, NULL, screen, NULL);
+		SDL_BlitSurface(filter_window, NULL, screen, NULL);
 	}
 	disprite(16,16);
+	#if (1==USE_2ND_SCREEN)
 	if (is_tachie_window)
 	{
 		SDL_BlitSurface(tachie_window, NULL, screen, NULL);
 	}
+	#endif /* (1==USE_2ND_SCREEN) */
 	disprite(17,17);
 	if (is_window)
 	{
-		if (is_window!=2)	{	SDL_BlitSurface(window, NULL, screen, &msgw_rect);	}
+		if (is_window!=2)	{	SDL_BlitSurface(std_window, NULL, screen, &msgw_rect);	}
 		SDL_BlitSurface(msg_window, NULL, screen, &msgw_rect);
 	}
 	disprite(18,19);
@@ -1218,102 +1802,193 @@ int thescript(void)
 		inits=1;
 		while (start_script->done)		/* 次の命令へ */
 		{
-			if (NULL==start_script->next)	{	script_reset(); return 1;	}
+			if (NULL==start_script->next)	{	script_reset(); return (1); }
 			start_script=start_script->next;
 		}
 	}
-	return 0;
+	return (0);
 }
 
+
+/*---------------------------------------------------------
+
+---------------------------------------------------------*/
+void script_display(void)
+{
+	PLAYER_DATA *pd=(PLAYER_DATA *)player->data;
+	/*ボス戦闘後イベント*/
+#if 0
+	if (/*STATE_FLAG_05_IS_BOSS == */(pd->state_flag & STATE_FLAG_05_IS_BOSS))
+	//if (pd->bo ssmode==B06_AFTER_EVENT)
+	{
+		if (1==thescript())
+		{
+			pd->state_flag &= (~(STATE_FLAG_06_IS_SCRIPT));
+			pd->state_flag |= STATE_FLAG_12_END_SCRIPT; 	/*	pd->bo ssmode=B09_STAGE_LOAD;*/
+		}
+	}	// [***090313	追加	ここに移動。
+	/*ボス戦闘前イベント*/
+	else
+	//if (pd->bo ssmode==B03_BEFORE_EVENT)
+#endif
+	{
+		if (1==thescript())
+		{
+			pd->state_flag &= (~(STATE_FLAG_06_IS_SCRIPT));
+			pd->state_flag |= STATE_FLAG_12_END_SCRIPT; 	/*pd->bo ssmode=B08_START;*/
+		}
+	}	// [***090313	追加
+}
+
+/*---------------------------------------------------------
+
+---------------------------------------------------------*/
+
+extern int select_player;
+void script_load(void/*int mode*/)
+{
+	PLAYER_DATA *pd=(PLAYER_DATA *)player->data;
+	char buffer1[16/*10*/];
+	#if 0
+	/*ボス戦闘後イベント*/
+	if (/*STATE_FLAG_05_IS_BOSS == */(pd->state_flag & STATE_FLAG_05_IS_BOSS))
+	/*B07_AF TER_LOAD*/
+	{
+		sp rintf(buffer1,"stage%d-%d_end",player_now_stage,select_player);	/* sp rintf()は遅い */
+	}
+	/*ボス戦闘前イベント*/
+	else
+//	if (0==mode)/*B05_BE FORE_LOAD*/
+	{
+		set_music_volume(80);
+		sp rintf(buffer1,"stage%d-%d",player_now_stage,select_player);	/* sp rintf()は遅い */
+	}
+	#else
+	strcpy(buffer1,"stageZ-Z_end");
+	buffer1[5] =('0'+player_now_stage);
+	buffer1[7] =('0'+select_player);
+	if (/*STATE_FLAG_05_IS_BOSS == */(pd->state_flag & STATE_FLAG_05_IS_BOSS))
+	{;}
+	else
+	{	buffer1[8] = 0; 	set_music_volume(80);	}
+	#endif
+//
+	if (0 == script_init(buffer1, NULL, 380))		// ファイルがない場合はイベントを飛ばす
+			{	pd->state_flag |= STATE_FLAG_12_END_SCRIPT; 		/*pd->bo ssmode=B09_STAGE_LOAD;*/	}
+	else	{	pd->state_flag |= STATE_FLAG_06_IS_SCRIPT;			/*pd->bo ssmode=B00_NONE;*/ /*B06_AFTER_EVENT*/ 	}
+//
+//	if (0 == script_init(buffer1, NULL, 380))
+//			{	pd->state_flag |= STATE_FLAG_12_END_SCRIPT; 		/*pd->bo ssmode=B08_START;*/ }
+//	else	{	pd->state_flag |= STATE_FLAG_06_IS_SCRIPT;			/*pd->bo ssmode=B00_NONE;*/ /*B03_BEFORE_EVENT*/	}
+}
+/*---------------------------------------------------------
+
+---------------------------------------------------------*/
 
 int script_init(char *filename, char *bg_name, int width)		/* シナリオファイル名と背景ファイル名 */
 {
-	scenario_width=width;
-	if (bg_name!=NULL)
+//	380/*scenario_width*/=width;
+	if (NULL != bg_name)
 	{
-		bg_story=load_local(bg_name,bg_story,0);
-		SDL_SetColorKey(bg_story,SDL_SRCCOLORKEY|SDL_RLEACCEL,0x00000000);
+		bg_story_window=load_local(bg_name,bg_story_window,0);
+		SDL_SetColorKey(bg_story_window,SDL_SRCCOLORKEY|SDL_RLEACCEL,0x00000000);
 	}
-	if (!load_scenario(filename))
+	if (0 == load_scenario(filename))
 	{
-		return 0;
+		return (0);
 	}
-	window=loadbmp2("window.png");
+	std_window			= loadbmp0("fonts/window.png", 1, 1);/*2*/
 	msg_window_init();
 	msgw_rect_init(20,182);
+	#if (1==USE_2ND_SCREEN)
 	tachie_window_init();
-	tachie_r=NULL;
-	tachie_l=NULL;
-	inits=1;
-	is_bg=0;
-	is_window=0;
-	is_tachie_window=0;
-	is_filter=0;
-	count_char=0;
-	cursor=0;
+	#endif /* (1==USE_2ND_SCREEN) */
+	std_obj[SPRITE_tachie_r]			= NULL;
+	std_obj[SPRITE_tachie_l]			= NULL;
+	inits				= 1;
+	is_bg				= 0;
+	is_window			= 0;
+	#if (1==USE_2ND_SCREEN)
+	is_tachie_window	= 0;
+	#endif /* (1==USE_2ND_SCREEN) */
+	is_filter			= 0;
+//	count_char			= 0;
+//	cursor				= 0;
+	cursor_x=0; 			/* カーソル初期化 */
+	cursor_y=0; 			/* カーソル初期化 */
+	cursor_x_chached=0; 	/* カーソル初期化 */
+	cursor_y_chached=0; 	/* カーソル初期化 */
 	int i;
-	for (i=0;i<20;i++)
+	for (i=0;i<SPRITE_MAX/*20*/;i++)
 	{
-		sc_sp[i]=NULL;
+		std_obj[i]		= NULL;
 	}
-	start_script=sscript;
-	return 1;
+	start_script		= sscript;
+	return (1);
 }
 
-void story_init(void)
+/*---------------------------------------------------------
+
+---------------------------------------------------------*/
+
+enum /*_story_state_*/
 {
-	if (NULL==fade_out)
-	{
-		fade_out=loadbmp2("fade_black.png");
-	}
-	bg_alpha=0;
-	newstate(ST_STORY,STORY_FADEOUT1,0);
-	keyboard_clear();
-	tick=0;
-}
+	STORY_INIT=0,
+//	STORY_FADEOUT1,
+//	STORY_LOAD,
+	STORY_FADEIN,
+	STORY_WORKS,
+//	STORY_FADEOUT2,
+	STORY_QUIT
+};
+//	static SDL_Surface *fade_out_window;			/* 演出用 */
+//	static int tick;								/* 時間測定用 */
 
 void story_work(void)
 {
-/*
-	enum _story_state
+	switch ((Uint8)(psp_loop&0xff)/*state.substate*/)
 	{
-		STORY_FADEOUT1,
-		STORY_LOAD,
-		STORY_FADEIN,
-		STORY_WORKS,
-		STORY_FADEOUT2,
-		STORY_QUIT
-	};
-*/
-	switch (state.substate)
-	{
-	case STORY_FADEOUT1:
-		if (tick>30)
-		{
-			newstate(ST_STORY,STORY_LOAD,0);
-			#if 1
-			/*	何か良くわからないけど、ここはok???。	*/
-			if (NULL!=fade_out)
-			{
-				unloadbmp_by_surface(fade_out);
-			}
-			#endif
-		}
-		else
-		{
-			SDL_BlitSurface(fade_out, NULL, screen, NULL);
-			tick++;
-		}
-		break;
-	case STORY_LOAD:
-		script_init("story","story_bg.jpg",480);
+	case STORY_INIT:
+#if 0
+//		//void story_init(void)
+//		if (NULL==fade_out_window)
+//		{
+//			fade_out_window=loadbmp2("fonts/fade_black.png");
+//		}
+//		bg_alpha=0;
+//		//keyboa rd_clear();
+//		tick=0;
+//		psp_loop++;//newsta te(ST_STORY,STORY_FADEOUT1,0);
+//		break;
+//	case STORY_FADEOUT1:
+//		if (tick>30)
+//		{
+//			psp_loop++;//newsta te(ST_STORY,STORY_LOAD,0);
+//			#if 1
+//			/*	何か良くわからないけど、ここはok???。	*/
+//			if (NULL!=fade_out_window)
+//			{
+//				unloadbmp_by_surface(fade_out_window);
+//			}
+//			#endif
+//		}
+//		else
+//		{
+//			SDL_BlitSurface(fade_out_window, NULL, screen, NULL);
+//			tick++;
+//		}
+//		break;
+//	case STORY_LOAD:
+#endif
 		bg_alpha=0;
-		newstate(ST_STORY,STORY_FADEIN,0);
+		script_init("story", /*NULL*/"story/arasuzi.png"/*"story_bg.jpg"*/, 480);
+//		bg_alpha=0;
+		psp_loop++;//newsta te(ST_STORY,STORY_FADEIN,0);
 		break;
 	case STORY_FADEIN:
 		psp_clear_screen();
-		SDL_SetAlpha(bg_story, SDL_SRCALPHA, bg_alpha);
-		SDL_BlitSurface(bg_story, NULL, screen, NULL);
+		SDL_SetAlpha(bg_story_window, SDL_SRCALPHA, bg_alpha);
+		SDL_BlitSurface(bg_story_window, NULL, screen, NULL);
 		if (bg_alpha<255)
 		{
 			bg_alpha+=5;
@@ -1323,31 +1998,133 @@ void story_work(void)
 			bg_alpha=255;
 			#if 1
 			/*	何か良くわからないけど、ここはおかしい???。 */
-			if (NULL!=bg_story)
+			if (NULL!=bg_story_window)
 			{
-				unloadbmp_by_surface(bg_story);
+				unloadbmp_by_surface(bg_story_window);
 			}
 			#endif
-			newstate(ST_STORY,STORY_WORKS,0);
+			psp_loop++;//newsta te(ST_STORY,STORY_WORKS,0);
 		}
 		break;
 	case STORY_WORKS:
 		psp_clear_screen();
-		if (thescript())	{	newstate(ST_STORY,STORY_QUIT,0);	}
+		if (thescript())
+		{
+			psp_loop++;//newsta te(ST_STORY,STORY_QUIT,0);
+		}
 		break;
-	case STORY_FADEOUT2:
-		break;
+//	case STORY_FADEOUT2:
+//		break;
 	case STORY_QUIT:
 			#if 1
 			/*	何か良くわからないけど、ここはおかしい???。 */
-			if (NULL!=bg_story)
+			if (NULL!=bg_story_window)
 			{
-				unloadbmp_by_surface(bg_story);
+				unloadbmp_by_surface(bg_story_window);
 			}
 			#endif
 		bg_alpha=0;
 		inits=1;
-		newstate(ST_MENU/*ST_INTRO*/,0/*1*/,1);
+		/* メインメニューに戻る */
+		psp_loop=(ST_INIT_MENU|0/*ST_ME NU_SUB_MAIN_MENU*/);//newsta te(ST_MENU/*ST_INTRO*/,0/*1*/,1);
 		break;
 	}
+}
+
+
+/*---------------------------------------------------------
+	pspでは開放が正常動作出来ないので、起動時に確保して(終了時まで)開放しない
+---------------------------------------------------------*/
+
+void script_system_init(void)/* 組み込み */
+{
+	#if 1
+	msg_window=NULL;		/* メッセージウィンドウ */
+	std_window=NULL;		/* ウィンドウ */
+//
+	sscript=NULL;			/* 命令保持用 */
+	start_script=NULL;		/* 命令実行用 */
+//
+	is_window=0;			/* ウィンドウ表示フラグ */
+	#if (1==USE_2ND_SCREEN)
+	is_tachie_window=0; 	/* 立ち絵強調表示フラグ */
+	#endif /* (1==USE_2ND_SCREEN) */
+	is_bg=0;				/* 背景表示フラグ */
+	is_filter=0;			/* フィルター表示フラグ */
+//
+//	count_char=0;
+//	cursor=0;
+	cursor_x=0; 			/* カーソル位置 */
+	cursor_y=0; 			/* カーソル位置 */
+	cursor_x_chached=0; 	/* カーソル位置 保存用 */
+	cursor_y_chached=0; 	/* カーソル位置 保存用 */
+//
+	#endif
+
+	/* SDL_FreeSurface(); は pspでは多分ちゃんと動かないので その対策 */
+
+	#if (1==USE_2ND_SCREEN)
+	/* pspでは開放が正常動作出来ないので、起動時に確保して開放しない */
+	/*tachie_window_init()*/
+//	tachie_window=NULL; 	/* 優先立ち絵ウィンドウ */
+//	if (NULL != tachie_window)	{	SDL_FreeSurface(tachie_window); tachie_window=NULL; }
+	tachie_window=SDL_CreateRGBSurface(/*SDL_SRCCOLORKEY|*/SDL_SWSURFACE,/* メインメモリへ確保する */
+			380/*scenario_width*/,
+			272,
+			screen->format->BitsPerPixel,
+			screen->format->Rmask,
+			screen->format->Gmask,
+			screen->format->Bmask,
+			screen->format->Amask);
+	SDL_SetColorKey(tachie_window,SDL_SRCCOLORKEY/*|SDL_RLEACCEL*/,0x00000000);
+	#endif /* (1==USE_2ND_SCREEN) */
+//
+	/* pspでは開放が正常動作出来ないので、起動時に確保して開放しない */
+	/*filter_init()*/
+	#if 0
+	if (NULL != filter_window)	{	SDL_FreeSurface(filter_window); filter_window=NULL; }
+	#endif
+	filter_window=SDL_CreateRGBSurface(SDL_SRCCOLORKEY|SDL_SWSURFACE,/* メインメモリへ確保する */
+			380/*scenario_width*/,
+			272,
+			screen->format->BitsPerPixel,
+			screen->format->Rmask,
+			screen->format->Gmask,
+			screen->format->Bmask,
+			screen->format->Amask);
+	SDL_SetColorKey(filter_window,SDL_RLEACCEL,0x00000000);
+//
+		#if 1
+		/*???*/
+	//	font_color_bitmap=loadbmp(buffer);
+	//	esc_len=0;
+		{
+			char fn[128/*64*/];
+		//	strcpy(fn, data_dir);	strcat(fn, "/fonts/" "font_bg16.png" );
+			strcpy(fn, DIRECTRY_NAME_DATA "/fonts/" "font_bg16.png" );
+			font_bg_bitmap = IMG_Load(fn);/*ここでロードすると確実に処置落ちするよ*/
+		}
+		font_bg_bitmap = SDL_DisplayFormat(font_bg_bitmap);
+		#endif
+}
+
+/*---------------------------------------------------------
+	終了時に開放する部分...何だけど、
+	ハングアップしたりするので、取り敢えず無効になってる。
+	(開放しなくても終了すれば、OSがメモリ回収するので問題ないって言えば問題ない)
+---------------------------------------------------------*/
+
+void script_system_exit(void)/* 外す */
+{
+	/*msg_window_init()*/
+//	if (NULL != msg_window) 	{	SDL_FreeSurface(msg_window);	msg_window=NULL;	}
+	#if (1==USE_2ND_SCREEN)
+	/*tachie_window_init()*/
+//	if (NULL != tachie_window)	{	SDL_FreeSurface(tachie_window); tachie_window=NULL; }
+	#endif /* (1==USE_2ND_SCREEN) */
+	/*filter_init()*/
+//	if (NULL != filter_window)	{	SDL_FreeSurface(filter_window); filter_window=NULL; }
+
+	//	if (NULL != font_color_bitmap)	{	SDL_FreeSurface(font_color_bitmap); 		font_color_bitmap	= NULL; }
+//		if (NULL != font_color_bitmap)	{	unloadbmp_by_surface(font_color_bitmap);	font_color_bitmap	= NULL; }
 }

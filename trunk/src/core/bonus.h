@@ -1,42 +1,73 @@
 #ifndef _BONUS_H_
 #define _BONUS_H_
 
-#include <SDL/SDL.h>
-#include <stdlib.h>
-#include <math.h>
-
-#include "sprite.h"
 #include "support.h"
-#include "player.h" 	//[***090116		追加
 
 enum
 {
-	SCORE_30=0,
+	SCORE_10 = 0,	/* (MAX時以外の) [P]は10点 */
+	SCORE_20,
+	SCORE_30,
+	SCORE_40,
+//
 	SCORE_50,
+	SCORE_60,
+	SCORE_70,
+	SCORE_80,
+//
+	SCORE_90,
 	SCORE_100,
+	SCORE_200,
+	SCORE_300,
+//
+	SCORE_400,
+	SCORE_500,
+	SCORE_600,
+	SCORE_700,
+//
+	SCORE_800,
+	SCORE_900,
 	SCORE_1000,
+	SCORE_2000,
+//
+	SCORE_3000,
+	SCORE_4000,
+	SCORE_5000,
+	SCORE_6000,
+//
+	SCORE_7000,
+	SCORE_8000,
+	SCORE_9000,
+	SCORE_10000,
+//
+	SCORE_11000,
+	SCORE_12000,
+	SCORE_51200,
+	SCORE_76800,
 };
 
-#define BONUS_FLAG_NONE			0x00
-#define BONUS_FLAG_COLLECT		0x01
-#define BONUS_FLAG_RAND_X		0x02
-#define BONUS_FLAG_RAND_Y		0x04
-#define BONUS_FLAG_RAND_XY		(BONUS_FLAG_RAND_X|BONUS_FLAG_RAND_Y)
+#define ITEM_MOVE_FLAG_00_NONE  		0x00
+#define ITEM_MOVE_FLAG_01_COLLECT		0x01
+#define ITEM_MOVE_FLAG_02_RAND_X		0x02
+#define ITEM_MOVE_FLAG_04_RAND_Y		0x04
+#define ITEM_MOVE_FLAG_06_RAND_XY		(ITEM_MOVE_FLAG_02_RAND_X|ITEM_MOVE_FLAG_04_RAND_Y)
+
+#define ITEM_CREATE_MODE_01 	(12*0)
+#define ITEM_CREATE_MODE_02 	(12*1)
+
+extern void item_create(SPRITE *src/*int x, int y*/, int type, int num, int up_flags);
+extern void item_create_for_boss(SPRITE *src, int item_create_mode);
+
+extern void bonus_info_score_nodel(SPRITE *src/*int x, int y*/, int score_type);
+extern void bonus_info_any_score_nodel(SPRITE *src/*int x, int y*/, int score_num);
+extern void item_from_bullets(int put_item_num);
+
+/* エクステンドチェックがあるので、必ずここを使う */
+extern void player_add_score(int score_num);
 
 
-//static void bonus_move(SPRITE *src);
-//static void bonus_info_move(SPRITE *src);
-//static void bonus_infotext_move(SPRITE *src);
-
-//void bonus_add(SPRITE *src/*int x, int y*/, int type, int num, int up_flags);/*廃止*/
-void bonus_multi_add(SPRITE *src/*int x, int y*/, int type, int num, int up_flags);
-
-void bonus_info_add(SPRITE *src/*int x, int y*/, int info_type/*char *filename*/);
-
+//extern void bonus_add(SPRITE *src/*int x, int y*/, int type, int num, int up_flags);/*廃止*/
 //extern void bonus_info_text(int x, int y, char *text, int font);/*廃止*/
 //static void bonus_info_s_text(SPRITE *src/*int x, int y*/, char *text, int font);
-extern void bonus_info_score(SPRITE *src/*int x, int y*/, int score_type);
-extern void bonus_info_any_score(SPRITE *src/*int x, int y*/, int score_num);
 
-
-#endif
+#endif /* _BONUS_H_ */

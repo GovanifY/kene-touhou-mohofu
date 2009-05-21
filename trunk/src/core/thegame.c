@@ -1,379 +1,417 @@
-#include "thegame.h"
 
-extern SDL_Surface *screen;
+/*---------------------------------------------------------
 
-extern SPRITE *player;
-extern GAMESTATE state;
+---------------------------------------------------------*/
 
-extern HSC_LIST hsc_table[];
-extern int lastscore;
-extern LEVELENTRY *leveltab;
+#include "support.h"
 
-extern SDL_Surface *bg2;			//情報ウィンドウ
-extern SDL_Surface *weapon_p;		//ウェポンゲージ
-extern SDL_Surface *boss_hp;		//ボスHPゲージ
+#include "enemy.h"
+#include "loadlv.h"
+#include "scenario.h"
 
-extern int is_bg_add;	//[***090202		追加
-extern int is_bg_end;	//[***090202		追加
-extern int is_bg_fin;	//[***090202		追加
-extern int difficulty;
+extern STAGE_DATA *leveltab;
+
 extern int select_player;
 extern int practice_mode;
 
+/*---------------------------------------------------------
+
+---------------------------------------------------------*/
+
+extern void add_clouds( 				STAGE_DATA *l);
 
 /* ザコで宣言が必要なもの(グローバル) */
-extern void enemy_xev_add(int lv);
-extern void enemy_crusher_add(int lv);
-extern void enemy_eyefo_add(int lv);
-extern void enemy_cube_add(int lv);
-extern void enemy_drager_add(int lv);
-extern void enemy_mine_add(int lv);
-extern void enemy_rwingx_add(int lv);
-extern void enemy_cir_add(int lv);
-extern void enemy_zatak_add(int lv);
-extern void enemy_curver_add(int lv);
-extern void enemy_badguy_add(int lv);
-extern void enemy_proball_add(int lv);
-extern void enemy_plasmaball_add(int lv);
-extern void enemy_ming_add(int lv);
-extern void enemy_greeter_add(int lv);
-extern void enemy_splash_add(int lv);
-extern void enemy_fairy_add(int lv);
-extern void enemy_greatfairy_add(int lv);
-extern void enemy_boss01_add(int lv);
-extern void enemy_boss02_add(int lv);
-extern void enemy_boss03_add(int lv);
-extern void enemy_boss04_add(int lv);
+	//	その他
+extern void add_enemy_all_clear(		STAGE_DATA *l);
+	//	ボス
+extern void add_boss_alice( 			STAGE_DATA *l);/*int lv*/
+extern void add_boss_cirno( 			STAGE_DATA *l);/*int lv*/
+extern void add_boss_aya(				STAGE_DATA *l);/*int lv*/
+extern void add_boss_kaguya(			STAGE_DATA *l);/*int lv*/
+extern void add_boss_sakuya(			STAGE_DATA *l);/*int lv*/
+	//	[中型敵]妖怪
+extern void add_chuu_youkai1(			STAGE_DATA *l);/*int lv*/
+
+	//	その他ザコ
+extern void add_zako_obake( 			STAGE_DATA *l);/*int lv*/
+extern void add_zako_yukari1(			STAGE_DATA *l);/*int lv*/
+extern void add_zako_yukari2(			STAGE_DATA *l);/*int lv*/
+	//	毛玉
+extern void add_zako_aka_kedama1(		STAGE_DATA *l);/*int lv*/
+extern void add_zako_niji_kedama1(		STAGE_DATA *l);/*int lv*/
+extern void add_zako_midori_kedama1(	STAGE_DATA *l);/*int lv*/
+extern void add_zako_midori_kedama2(	STAGE_DATA *l);/*int lv*/
+extern void add_zako_kedama1(			STAGE_DATA *l);/*int lv*/
+	//	竜巻 陰陽玉
+extern void add_zako_inyou1(			STAGE_DATA *l);/*int lv*/
+extern void add_zako_tatsumaki1(		STAGE_DATA *l);/*int lv*/
+	//	妖怪
+extern void add_zako_kakomi1(			STAGE_DATA *l);/*int lv*/
+	//	中妖精
+extern void add_zako_meido1(			STAGE_DATA *l);/*int lv*/
+extern void add_zako_meido2(			STAGE_DATA *l);/*int lv*/
+extern void add_zako_meido3(			STAGE_DATA *l);/*int lv*/
+extern void add_zako_meido4(			STAGE_DATA *l);/*int lv*/
+	//	小妖精
+extern void add_zako_ao_yousei1(		STAGE_DATA *l);/*int lv*/
+extern void add_zako_ao_yousei2(		STAGE_DATA *l);/*int lv*/
+
+extern void add_enemy_panels(			STAGE_DATA *l);/* const short xxx, const short yyy, const short speed256, int type*/
+
+extern void bg2_control(				STAGE_DATA *l);
+
+extern void add_enemy_load_bg(			STAGE_DATA *l);// unsigned char bg_type/*l->user_y*/, int err_time/*l->time*/
+extern void add_enemy_eigo_string(		STAGE_DATA *l);// /*char *text, int y*/
+extern void add_enemy_load_picture( 	STAGE_DATA *l);// /*char *filename,int xpos, int ypos*/
 
 
+/*---------------------------------------------------------
 
-/*extern*/ int is_panel_window;
+---------------------------------------------------------*/
 
-//static int world_y;
-//static int world_dir=1;
-//static int gframe;
-static int gameover_delay;
-static Uint32 level_start_time;
-static Uint32 game_start_time;
+int difficulty=RANK_NORMAL;
 
+static Uint32 stage_start_time;
+//static Uint32 game_start_time;
 
+/*---------------------------------------------------------
 
+---------------------------------------------------------*/
 
-static void enemy_error(int lv)
+static void enemy_error(STAGE_DATA *l)/*int lv*/
 {
-	error(ERR_WARN,"unknown enemy ");
+//	error(ERR_WARN,"unknown enemy ");
 }
 
-static void thegame_level(LEVELENTRY *l/*, int lev*/)
+/*---------------------------------------------------------
+	シューティング ゲーム データーの解析
+	-------------------------------------------------------
+	ここに追記すればするほど、シューティングゲーム本体が
+	遅くなるので、注意して追記してくれ。
+	字句解析(parth)等はloadlv.cで予め済ませておこう。
+---------------------------------------------------------*/
+
+static void thegame_level(STAGE_DATA *l)/*, int lev*/
 {
-	switch (l->command)
+	/* 中間コード形式のコマンドから各関数に分岐する */
+	/* enemyの生成を番号で管理(loadlv.cのctype_name[]に対応している) */
+	void (*aaa[ETYPE_MAX])(STAGE_DATA *l) =/*int*/
 	{
-	case 'E':		/* add enemy */
-		#if 0
-			 if (!strcmp(l->para1,"XEV"))			{	enemy_xev_add(l->para2);			}
-		else if (!strcmp(l->para1,"CRUSHER"))		{	enemy_crusher_add(l->para2);		}
-		else if (!strcmp(l->para1,"EYEFO")) 		{	enemy_eyefo_add(l->para2);			}
-		else if (!strcmp(l->para1,"CUBE"))			{	enemy_cube_add(l->para2);			}
-		else if (!strcmp(l->para1,"DRAGER"))		{	enemy_drager_add(l->para2); 		}
-		else if (!strcmp(l->para1,"MINE"))			{	enemy_mine_add(l->para2);			}
-		else if (!strcmp(l->para1,"RWINGX"))		{	enemy_rwingx_add(l->para2); 		}
-		else if (!strcmp(l->para1,"CIR"))			{	enemy_cir_add(l->para2);			}
-		else if (!strcmp(l->para1,"ZATAK")) 		{	enemy_zatak_add(l->para2);			}
-		else if (!strcmp(l->para1,"CURVER"))		{	enemy_curver_add(l->para2); 		}
-		else if (!strcmp(l->para1,"BADGUY"))		{	enemy_badguy_add(l->para2); 		}
-		else if (!strcmp(l->para1,"PROBALL"))		{	enemy_proball_add(l->para2);		}
-		else if (!strcmp(l->para1,"PLASMABALL"))	{	enemy_plasmaball_add(l->para2); 	}
-		else if (!strcmp(l->para1,"MING"))			{	enemy_ming_add(l->para2);			}
-		else if (!strcmp(l->para1,"GREETER"))		{	enemy_greeter_add(l->para2);		}
-		else if (!strcmp(l->para1,"SPLASH"))		{	enemy_splash_add(l->para2); 		}		//[***090124		追加
-		else if (!strcmp(l->para1,"FAIRY")) 		{	enemy_fairy_add(l->para2);			}		//[***090207		追加
-		else if (!strcmp(l->para1,"GFAIRY"))		{	enemy_greatfairy_add(l->para2); 	}		//[***090207		追加
-		else if (!strcmp(l->para1,"BOSS01"))		{	enemy_boss01_add(l->para2); 		}
-		else if (!strcmp(l->para1,"BOSS02"))		{	enemy_boss02_add(l->para2); 		}
-		else if (!strcmp(l->para1,"BOSS03"))		{	enemy_boss03_add(l->para2); 		}
-		else if (!strcmp(l->para1,"BOSS04"))		{	enemy_boss04_add(l->para2); 		}
-		else {			error(ERR_WARN,"unknown enemy '%s'",l->para1);		}
-		#else
-	{void (*aaa[])(int) =		/* enemyの生成を番号で管理(loadlv.cのctype_name[]に対応している) */
-		{
-		enemy_error,
-		enemy_xev_add,
-		enemy_crusher_add,
-		enemy_eyefo_add,
-		enemy_cube_add,
-		enemy_drager_add,
-		enemy_mine_add,
-		enemy_rwingx_add,
-		enemy_cir_add,
-		enemy_zatak_add,
-		enemy_curver_add,
-		enemy_badguy_add,
-		enemy_proball_add,
-		enemy_plasmaball_add,
-		enemy_ming_add,
-		enemy_greeter_add,
-		enemy_splash_add,		//[***090124		追加
-		enemy_fairy_add,		//[***090207		追加
-		enemy_greatfairy_add,	//[***090207		追加
-		enemy_boss01_add,
-		enemy_boss02_add,
-		enemy_boss03_add,
-		enemy_boss04_add,	//[***090207		追加
-		};
-		(*aaa[ (int)(/*l->*/ /*mem_pool_stage[jj].*/l->para0/*ctype*/) ])(/*l->*/ /*mem_pool_stage[jj].*/l->para2);
-	}
-		#endif
-		break;
-	case 'T':		/* text */
-		enemy_gametext_add(l->para1,l->para2);
-		break;
-	case 'B':		/* Background */
-		if (l->para2!=3 && l->para2!=9)
-		{	bg_destroy();}
-		switch (l->para2)
-		{
-		case 0: 	bg_init(BG_CLOUDS/*,lev*/); 		break; /* Clouds */
-		case 1: 	bg_init(BG_STARS/*,lev*/);			break; /* Stars */
-		case 2: 	bg_init(BG_TILE/*,lev*/);			break; /* Tile */
-		case 3:
-			if (!is_bg_end && !is_bg_add)
-			{
-				tile_add(/*lev*/);		//二枚目の背景
-			}
-			else
-			{
-				pspDebugScreenPrintf("Too early\n please be later");
-				sceKernelDelayThread(1000000);
-			}
-			break;
-		case 9:
-			is_bg_fin=1;		//ループしない
-			break;
-		default:
-			error(ERR_WARN,"unknown background %d, using clouds",l->para2);
-			bg_init(BG_CLOUDS/*,lev*/);
-			break;
-		}
-		break;
-	case 'P':		/* [***090313	追加	 Picture */
-		enemy_gameimg_add(l->para1,l->para0,l->para2);
-		break;
-	// add background tiles....
-	case BTYPE_01_BGPANEL1: 		enemy_bgpanel_type_add_xy(	l->para0, l->para2, l->para3, /*type*/1-1);	break;
-	case BTYPE_02_BGPANEL2: 		enemy_bgpanel_type_add_xy(	l->para0, l->para2, l->para3, /*type*/2-1);	break;
-	case BTYPE_03_GROUNDER: 		enemy_grounder_add_xy(		l->para0, l->para2, l->para3);				break;
-	case BTYPE_04_MAGIC_FORMATION:	enemy_magicformation_add_xy(l->para0, l->para2, l->para3);				break;
-	}
+		add_clouds,/* [番兵区切り] */	/*NULL*/	/* add_clouds();内部で見つからない場合は、enemy_error(); */
+	//	その他
+		add_enemy_all_clear,		/* ゲーム 全ステージ クリアー */
+	//	ボス
+		add_boss_alice,
+		enemy_error/*add_boss_cirno*/,
+		add_boss_aya,
+		add_boss_kaguya,
+		add_boss_sakuya,		// [***090207		追加
+	//	特殊敵[中型敵]
+		add_chuu_youkai1,			/*	="妖怪1",	ok	*/		// [***090207	追加
+	//	その他ザコ
+		add_zako_obake, 			/*	-"おばけ1", ok. */
+		add_zako_yukari1,			/*	C"紫編隊1", ok? */		/*enemy_error*/
+		add_zako_yukari2,			/*	C"紫編隊2", ok? */		/*enemy_error*/
+	//	毛玉
+		add_zako_aka_kedama1,		/*	a"赤毛玉1", ok. */
+		add_zako_niji_kedama1,		/*	C"虹毛玉1", 	*/		/*enemy_error*/
+		add_zako_midori_kedama1,	/*	-"緑毛玉1", ok. */
+		add_zako_midori_kedama2,	/*	C"緑毛玉2", ok? */		/*enemy_error*/
+		add_zako_kedama1,			/*	-"毛玉1",	ok. */
+	//	竜巻 陰陽玉
+		add_zako_inyou1,			/*	-"陰陽玉1", ok. */
+		add_zako_tatsumaki1,		/*	C"竜巻1",	ok? */		/*enemy_error*/
+	//	妖怪
+		add_zako_kakomi1,			/*	-"囲妖怪1", ok. */
+	//	中妖精
+		add_zako_meido1,			/*	-"メイド1", ok. */
+		add_zako_meido2,			/*	-"メイド2", ok. */
+		add_zako_meido3,			/*	C"メイド3", ok--?	*/	/*enemy_error*/
+		add_zako_meido4,			/*	-"メイド4", ok. */
+	//	小妖精
+		add_zako_ao_yousei1,		/*	="青妖精1", ok	*/		// [***090207	追加
+		add_zako_ao_yousei2,		/*	="青妖精2", ok	*/		// [***090124	追加
+//
+		enemy_error,/* [番兵区切り] */	/*BTYPE_00_NONE*/
+		add_enemy_panels,/*BTYPE_01_BGPANEL1*/
+		add_enemy_panels,/*BTYPE_02_BGPANEL2*/
+		add_enemy_panels,/*BTYPE_03_GROUNDER*/
+		add_enemy_panels,/*BTYPE_04_MAGIC_FORMATION*/
+		bg2_control,/*BTYPE_05_BG_CONTROL*/
+//
+		add_enemy_eigo_string,/*ETYPE_01_ENGLISH_TEXT*/
+		add_enemy_load_bg,/*ETYPE_02_LOAD_BG*/
+		add_enemy_load_picture,/*ETYPE_03_PICTURE*/
+	};
+	(*aaa[ (int)(l->user_command) ])(l);	/* 中間コード形式のコマンドから各関数に分岐する */
 }
 
+/*---------------------------------------------------------
+
+---------------------------------------------------------*/
+void init_stage_start_time(void)
+{
+	stage_start_time=psp_get_uint32_ticks();
+}
+
+/*---------------------------------------------------------
+	シューティングゲーム本体の初期化
+---------------------------------------------------------*/
 extern int continue_stage;
 
 #define TIME_20_DBWAIT /*20*/20/*2*/
 static int dbwait/*=TIME_20_DBWAIT*/;		//ボスを倒したときに弾を消滅させるための時間確保
-void thegame_init(void)
+extern void set_rnd_seed(int set_seed);
+extern /*int*/void load_stage(void/*int level*/);
+extern void player_init(void);
+extern void score_panel_init(void);
+void common_load_init(void)
 {
-	playChunk(1);
+	set_rnd_seed(player_now_stage); 	/* 乱数系列の初期化 */
+//
+	/* Load next stage */
+	load_stage();//if (load_stage(/*level*/)==0)	{	error(ERR_WARN,"no entrys for level %d",level);}
+	// ロード中は処理落ちしているので、ロード後に時間を再作成する。
+	init_stage_start_time();/*stage_start_time=psp_get_uint32_ticks();*/
+//	game_start_time=psp_get_uint32_ticks();
 
+//	stage_start_time=psp_get_uint32_ticks();
+//	game_time=(psp_get_uint32_ticks()-stage_start_time);
+//	game_time=(psp_get_uint32_ticks()-stage_start_time);
+	//	play_music(BGM_01_stage1);	コメントアウト
+	psp_loop = (ST_WORK_GAME_PLAY|0);
+}
+//	int stage;	stage=((PLAYER_DATA *)player->data)->stage;
+
+void shooting_game_init(void)
+{
+	play_voice_auto_track(VOICE01_HIT);
+//
 	dbwait=TIME_20_DBWAIT;
-	bg2=loadbmp("bg2.png");
-//	gframe=0;
-	gameover_delay=100;
 //
-	weapon_p			= loadbmp("weapon_p.png");
-	SDL_SetColorKey(weapon_p,SDL_SRCCOLORKEY|SDL_RLEACCEL,0x00000000);
-	boss_hp 			= loadbmp2("health.png");
-//
-	controller_remove_all();
+	score_panel_init();
+	//controller_remove_all();
 	player_init();
-//
-
-
 //
 	#if (1==USE_ENDING_DEBUG)
 	/*player_init();より後の必要*/
 	if (5==continue_stage)
-	{	PLAYER_DATA *d=(PLAYER_DATA *)player->data;
-		d->bossmode		= B07_AFTER_LOAD;
+	{	PLAYER_DATA *pd=(PLAYER_DATA *)player->data;
+	//	pd->bo ssmode	= B07_AF TER_LOAD;
+		pd->state_flag	|= (STATE_FLAG_10_IS_LOAD_SCRIPT|STATE_FLAG_05_IS_BOSS|STATE_FLAG_11_IS_BOSS_DESTROY);
 		continue_stage--;
 		practice_mode=0;
 	}
 	#endif //(1==USE_ENDING_DEBUG)
 	player_now_stage/*data->now_stage*/ /*level*/	= continue_stage/*+1-1*/ /*1*/;
-
-
-	game_start_time=PSP_GetTicks();
-	level_start_time=PSP_GetTicks();
-//	int level;	level=((PLAYER_DATA *)player->data)->level;
-
-
-//	level_start_time=PSP_GetTicks();
-//	gt=(PSP_GetTicks()-level_start_time); //denis
-	loadlv();//if (loadlv(/*level*/)==0)	{	error(ERR_WARN,"no entrys for level %d",level);}
-	//	play_music(BGM_01_stage1);	コメントアウト
+//
+	common_load_init();
 }
 
-
-extern void game_clear_set_password(void);
-void thegame_work(void)
+extern void init_stage_start_time(void);
+extern void player_stage_clear(void);
+void stage_clear_work(void)
 {
-	PLAYER_DATA *d=(PLAYER_DATA *)player->data;
-	Uint32 gt;
+	//PLAYER_DATA *pd=(PLAYER_DATA *)player->data;
+	//
+	player_stage_clear();
+//
+	common_load_init();
+}
 
-
-//	int *level=&d->level;
-
-	if (state.mainstate!=ST_GAME_PLAY || state.newstate==1) return;
-
-	/* gt=Zeit seit Spielbeginn in 1/10 sec. */
-	gt=(PSP_GetTicks()-level_start_time);
-
-
-	if (d->lives<0)
+/*---------------------------------------------------------
+	ボス特殊処理
+---------------------------------------------------------*/
+static Uint32 game_time;
+//	if (B02_BOSS_DESTROY==pd->bo ssmode) //ボスを倒したときの処理
+//	if (/*STATE_FLAG_11_IS_BOSS_DESTROY==*/ (pd->state_flag & STATE_FLAG_11_IS_BOSS_DESTROY))
+//	{
+//	}
+//	else
+extern void player_loop_quit(void);
+void boss_destroy(void) 	//ボスを倒したときの処理
+{
+		item_from_bullets(SP_ITEM_05_HOSI);
+		//TIME_20_DBWAITフレーム待ってから実行。ボスを倒した時に画面に表示されている弾を全て消す処理のために必要。
+		stop_music();
+		play_voice_auto_track(VOICE03_BOSS_HAKAI);		// [***090313		追加	もっとスマートなやり方がありそうだけど思いつかなかった。
+		;
+//
 	{
-		/* GAMEOUT中 */
-		player->flags &= ~SP_FLAG_VISIBLE;
-		//PLAYER_DATA *d=(PLAYER_DATA *)player->data;
-		//d->core->alpha=0; 		//○を消すために入れたけど意味無かったかもしれない。
-		//ここがダメっぽい
-		if (gameover_delay)
+	PLAYER_DATA *pd=(PLAYER_DATA *)player->data;
+		pd->state_flag &= (~(STATE_FLAG_13_DRAW_BOSS_GAUGE));/*off*/
+//		pd->state_flag		&= (~(STATE_FLAG_03_SCORE_AUTO_GET_ITEM));		/* 終わり */
+		if (0==practice_mode)/*練習モードではボス後イベントは見れないよ。*/
 		{
-			gameover_delay--;
+		//	pd->bo ssmode=B07_AFTER_LOAD;
+			pd->state_flag |= STATE_FLAG_10_IS_LOAD_SCRIPT;
 		}
+		else/*練習モード*/
+		{
+			player_loop_quit();
+		}
+	}
+}
+void incliment_scene(void)
+{
+	PLAYER_DATA *pd=(PLAYER_DATA *)player->data;
+	{
+		/*ボス戦闘後イベント*/
+	//	if (B09_STAGE_LOAD==pd->bo ssmode) // 9:stage読み込み
+		if (/*STATE_FLAG_05_IS_BOSS == */(pd->state_flag & STATE_FLAG_05_IS_BOSS))
+		{
+			psp_loop = (ST_WORK_STAGE_CLEAR|0);
+		}
+		/*ボス戦闘前イベント*/
 		else
+	//	if (B08_START == pd->bo ssmode) // 8:ボス曲を鳴らし、1ボスとの戦闘へ。
 		{
-			bg_destroy();
-			lastscore=((PLAYER_DATA *)player->data)->score;
-//		//	controller_remove_all();
-//		//	sprite_remove_all(SP_SHOW_ALL);
-//			parsys_remove_all();
-//			score_cleanup();
-			newstate(ST_GAME_OVER,0,1);
+			set_music_volume(128);
+			play_music( player_now_stage+8 );
+			pd->state_flag |= (STATE_FLAG_05_IS_BOSS|STATE_FLAG_13_DRAW_BOSS_GAUGE);
 		}
+	}
+}
+//
+extern void script_load(void);
+void my_special(void)
+{
+	PLAYER_DATA *pd=(PLAYER_DATA *)player->data;
+//	if (pd->bo ssmode==B05_BEFORE_LOAD) 	// [***090313	追加
+//	if (pd->bo ssmode==B07_AFTER_LOAD)		// [***090313	追加
+	if (pd->state_flag & STATE_FLAG_10_IS_LOAD_SCRIPT)		// [***090313	追加
+	{
+		pd->state_flag &= (~(STATE_FLAG_10_IS_LOAD_SCRIPT));/*off*/
+		script_load(/*0 1*/);
+	}
+	if (pd->state_flag & (STATE_FLAG_11_IS_BOSS_DESTROY))
+	{
+	//	pd->state_flag |= STATE_FLAG_03_SCORE_AUTO_GET_ITEM;
+	//	if (TIME_20_DBWAIT==dbwait)
+	//	{
+	//	}
+	//	else
+		dbwait--;
+	//	if (0==dbwait)		// [***090313		変更
+		if (1>dbwait)		// [***090313		変更
+		{
+			dbwait=TIME_20_DBWAIT;
+		//
+			pd->state_flag &= (~(STATE_FLAG_11_IS_BOSS_DESTROY));/*off*/
+			boss_destroy();
+		//
+		}
+	}
+	/* スクリプトが終わった？ */
+	if (pd->state_flag & (STATE_FLAG_12_END_SCRIPT))
+	{
+		pd->state_flag &= (~(STATE_FLAG_12_END_SCRIPT));/*off*/ 	/*	pd->bo ssmode=B00_NONE;*/
+	//	pd->state_flag &= (~(STATE_FLAG_12_END_SCRIPT));/*off*/ 	/*	pd->bo ssmode=B00_NONE;*/	/*B01_BA TTLE*/
+		incliment_scene();
+	}
+}
+/*---------------------------------------------------------
+	シューティングゲーム本体のメインルーチン
+	-------------------------------------------------------
+	ここに追記すればするほど、シューティングゲーム本体が
+	遅くなるので、注意して追記してくれ。
+	めったに実行しない物は関数化して外に追い出そう。
+---------------------------------------------------------*/
+
+extern void script_display(void);
+extern void score_display(void);
+extern void bg_work_draw(void);
+extern void draw_score_chache(void);
+void shooting_game_work(void)
+{
+//	if (psp_loop != (ST_WORK_GAME_PLAY&0xff00) /*|| state.newsta te==1*/) return;
+	/* game_time=Zeit seit Spielbeginn in 1/10 sec. */
+	game_time=(psp_get_uint32_ticks()-stage_start_time);
+//
+	PLAYER_DATA *pd=(PLAYER_DATA *)player->data;
+	if (pd->state_flag & STATE_FLAG_14_GAME_LOOP_QUIT)
+	{
+		;	/* GAMEOUT中 */
 	}
 	else
 	{
 		/* 生きてる */
-		if ((d->bossmode!=B03_BEFORE_EVENT) && (d->bossmode!=B06_AFTER_EVENT))
+	//	if (0==my_pad)
+		if (0==(my_pad & PSP_KEY_PAUSE))
 		{
-			if (my_pad & PSP_KEY_PAUSE/*keybo ard[KEY_PAUSE]*/)
+			if (my_pad_alter & PSP_KEY_PAUSE)
 			{
-				newstate(ST_MENU,MENU_PAUSE,1);
+			//	if (0==(pd->state_flag & STATE_FLAG_06_IS_SCRIPT))/*たまにうまくいかない事がある*/
+				{
+					psp_loop=(ST_INIT_MENU|ST_MENU_SUB_PAUSE);//newsta te(ST_MENU,ST_MENU_SUB_PAUSE,1);
+				}
 			}
 		}
-			#if 1
-			{LEVELENTRY *l;
+		#if 1
+		{
+			STAGE_DATA *l;
 			/*
-				This routine, serch back to begin.
-				このルーチンは逆順に検索します。
+			This routine, serch back to begin.
+			このルーチンは逆順に検索します。
 			*/
-				l = leveltab;
-				while (l != NULL)/* [head ==NULL] then end. */
+			l = leveltab;
+			while (l != NULL)/* [head ==NULL] then end. */
+			{
+				if (l->done == 0)	/* enemy set done flag */
 				{
-					if (l->done == 0)	/* enemy set done flag */
+					#if 1
+					if (game_time >= l->time)
+					#else
+					if (v_time >= ((l->time) ) )
+					#endif
 					{
-						#if 1
-						if (gt >= l->time)
-						#else
-						if (v_time >= ((l->time) ) )
-						#endif
-						{
-							thegame_level(l/*, *level*/);
-							l->done=1;	/* enemy set done flag */
-						}
+						thegame_level(l);	/*, *level*/
+						l->done=1;	/* enemy set done flag */
 					}
-					l=l->next;/* choice alter. */
 				}
+				l=l->next;/* choice alter. */
 			}
-			#else
+		}
+		#else
 
-			#endif
+		#endif
 //
-		if (d->bossmode==B05_BEFORE_LOAD)		//[***090313		追加
+		/* 特殊処理 */
+	//	if (B00_NONE != pd->bo ssmode)
+		if (pd->state_flag & (STATE_FLAG_10_IS_LOAD_SCRIPT|STATE_FLAG_11_IS_BOSS_DESTROY|STATE_FLAG_12_END_SCRIPT))
 		{
-			char buffer2[16/*10*/];
-			sprintf(buffer2,"stage%d-%d",player_now_stage,select_player);
-			setMusicVolume(80);
-			if (!script_init(buffer2, NULL, 380))
-			{	d->bossmode=B08_START;		}
-			else{	d->bossmode=B03_BEFORE_EVENT;	}
-		}
-		else
-		if (d->bossmode==B07_AFTER_LOAD)		//[***0903		追加
-		{
-			char buffer1[16/*10*/];
-			sprintf(buffer1,"stage%d-%d_end",player_now_stage,select_player);
-			if (!script_init(buffer1, NULL, 380))		//ファイルがない場合はイベントを飛ばす
-			{	d->bossmode=B09_STAGE_LOAD;	}
-			else{	d->bossmode=B06_AFTER_EVENT;	}
-		}
-		if (d->bossmode==B02_DEATH_WAIT) //ボスを倒したときの処理
-		{
-		//	if (TIME_20_DBWAIT==dbwait)
-		//	{
-		//	}
-		//	else
-			if (0==dbwait)		//[***090313		変更
-			{
-				//TIME_20_DBWAITフレーム待ってから実行。ボスを倒した時に画面に表示されている弾を全て消す処理のために必要。
-				clear_music();
-				playChunk(3);		//[***090313		追加	もっとスマートなやり方がありそうだけど思いつかなかった。
-				;
-				if (0==practice_mode)/*練習モードではボス後イベントは見れないよ。*/
-				{
-					d->bossmode=B07_AFTER_LOAD;
-				}
-				else/*練習モード*/
-				{
-					d->lives=0-1;/* 死に中 */
-				}
-			}
-			dbwait--;
-		}
-		else
-		if (d->bossmode==B09_STAGE_LOAD) //	9:stage読み込み
-		{
-			//PLAYER_DATA *d=(PLAYER_DATA *)player->data;
-			d->bossmode=B00_NONE;
-			dbwait=TIME_20_DBWAIT;
-			level_start_time=PSP_GetTicks();
-			gt=(PSP_GetTicks()-level_start_time); //denis
-			/* Load next level */
-			loadlv();//if (loadlv(/**level*/)==0)	{	error(ERR_WARN,"no entrys for level %d",*level);}
-		}
-		else
-		if (d->bossmode==B08_START) //	8:ボス曲を鳴らし、1ボスとの戦闘へ。
-		{
-			setMusicVolume(128);
-			play_music( player_now_stage+8 );
-			d->bossmode=B01_BATTLE;
+			my_special();
 		}
 //
-		/* エンディング後の終了判定 */
-		if (/**level*/player_now_stage==6	)
-		{
-			if (gt>125000000/*60500000*/)/*125.0[sec]←60.5[sec]*/
-			{
-				//	error(ERR_DEBUG,"sorry, no more levels in this alpha-version");
-				d->score+=d->lives*(2000+(difficulty*4000));
-				d->lives=0-1;/* 死に中 */
-				game_clear_set_password();
-				//return;
-			}
-		}
 	}
-
-	bg_work();
-	controller_work();
-	sprite_work(SP_SHOW_ALL);
-	sprite_display(SP_SHOW_ALL);
-	if (d->bossmode==B03_BEFORE_EVENT)		{	if (thescript()==1)	{	d->bossmode=B08_START;		}	}	//[***090313	追加
-	else if (d->bossmode==B06_AFTER_EVENT)	{	if (thescript()==1)	{	d->bossmode=B09_STAGE_LOAD;	}	}	//[***090313	追加	ここに移動。
-	//parsys_display();
-	if (1==is_panel_window)		{	score_display();}
-//	gframe++;
+//
+	#if 0/*ゲーム時間デバッグ用*/
+	/* パネルのスコア欄にゲーム時間を 表示させる。っていうか書き換えちゃう。 */
+	((PLAYER_DATA *)player->data)->score		= (game_time);
+	#endif
+//
+	/* 動作 */
+	bg_work_draw();
+	//controller_work();
+	sprite_work000(SP_GROUP_ALL);
+//	sprite_work222(SP_GROUP_ALL);/*弾幕用*/
+	/* 描画 */
+	sprite_display000(SP_GROUP_ALL);
+//	sprite_display222(SP_GROUP_ALL);/*弾幕用*/
+	draw_score_chache();
+	// この辺は速度低下するのでコールバックにすべき
+	if (/*STATE_FLAG_06_IS_SCRIPT==*/(pd->state_flag & STATE_FLAG_06_IS_SCRIPT))				{	script_display();	}		//parsys_display();
+	if (/*STATE_FLAG_09_IS_PANEL_WINDOW==*/(pd->state_flag & STATE_FLAG_09_IS_PANEL_WINDOW))	{	score_display();	}
 }
+
+/*---------------------------------------------------------
+	ポーズメニュー用時間調整
+	-------------------------------------------------------
+	ポーズ中は時間が狂うので(ゲーム時間を)調整する為の仕組み
+	メニュー(menu.c)のポーズから復帰する際にのみ使用する。
+---------------------------------------------------------*/
 
 void adjust_start_time(Uint32 pause_time)
 {
-	level_start_time+=PSP_GetTicks()-pause_time;
+	stage_start_time += psp_get_uint32_ticks()-pause_time;
 }

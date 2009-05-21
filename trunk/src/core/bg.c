@@ -1,372 +1,412 @@
-#include "bg.h"
 
-extern double fps_factor;
-extern SDL_Surface *screen;
-extern SPRITE *player;
+/*---------------------------------------------------------
 
-/*static*/ double bg_alpha;
+---------------------------------------------------------*/
 
-int is_bg_add;	//[***090201		追加:追加フラグ
-int is_bg_end;	//[***090201		追加:前背景終了フラグ
-int is_bg_fin;	//[***090202		追加:背景非ループフラグ
-int n_bg;		//[***090209		追加:追加背景番号
-
-/* clouds */
-static SPRITE *w1[5];
-static SPRITE *w2[10];
-static SPRITE *w3[20];
+#include "support.h"
 
 /* tile */
-static SDL_Surface *btile1=NULL;
-static SDL_Surface *btile2=NULL;		//[***090201		追加
-static double btile_y;
+static SDL_Surface *bg0_bmp/*=NULL*/;
+static SDL_Surface *bg1_bmp/*=NULL*/;		// [***090201		追加
 
-static int akt_bgtype;
+static SDL_Surface *draw_bmp;
+static SDL_Surface *load_bmp;
 
-enum
+static /*dou ble*/signed int bg0_bmp_y256;
+
+static int which_bg;						// [***090209追加:	次回どちらに読むのかを示す番号。0==bg0_bmp, 1==bg1_bmp			//	追加背景番号
+
+static int number_of_bg;					/* bg追加した枚数 */
+//static int use_clouds;
+
+
+static int exsist_tuika;					/* 追加bgはある？フラグ */
+
+static int current_bg0_y_scroll_speed256;	/* bg0のスクロール、現在速度 */
+static int request_bg0_y_scroll_speed256;	/* bg0のスクロール、予約速度 */
+
+static unsigned int laster_sprit256;		/* bg0_bmpと bg1_bmpの 表示ラスタ分割位置 */
+
+static int sprit_flag;						/* 分割位置を判断する必要があるか？フラグ */
+
+//#define USE_EXTRACT_WAIT (0)
+//#if (1==USE_EXTRACT_WAIT)
+//static int now_exetracting;
+//#endif
+
+
+/*---------------------------------------------------------
+	子関数
+---------------------------------------------------------*/
+
+static void load_btile(STAGE_DATA *l, int num)
 {
-	TYPE_00_BACKZ_A_Z=0,
-	TYPE_01_BACKZ,
-	TYPE_02_WOLKE0Z_Z,
-};
-
-
-/* 速度の要る場所では sp rintf() は使わない方が良い */ 		/* 文字列処理(sp rintf)は非常に遅い */
-static char *render_filename(int type, int lev, int n_bg)
-{
-	char work_filename[32/*20*/];
-	char *filename;
-	filename=work_filename;
-	switch (type)
+	char *text;
+	text=l->user_string;
+	switch (num)
 	{
-	case TYPE_00_BACKZ_A_Z:
-	//	sp rintf(filename,"back%d_a-%d.jpg", lev, n_bg);
-		strcpy(filename,"backZ_a-Z.jpg");
-		filename[4]= ('0'+lev);
-		filename[8]= ('0'+n_bg);
+	case 0/*1*/:
+		if (NULL != bg0_bmp)	{	unloadbmp_by_surface(bg0_bmp);	bg0_bmp = NULL; }
+		bg0_bmp = loadbmp0(text/*filename*/, 0, 1);
+//		#if (1==USE_EXTRACT_WAIT)
+//		now_exetracting=60;
+//		#endif
 		break;
-	case TYPE_01_BACKZ:
-	//	sp rintf(filename,"back%d.jpg",lev);
-		strcpy(filename,"backZ.jpg");
-		filename[4]= ('0'+lev);
-		break;
-	case TYPE_02_WOLKE0Z_Z:
-	//	sp rintf(filename,"wolke03_%d.png", lev, n_bg);/*逆順*/
-		strcpy(filename,"wolke0Z_Z.png");
-		filename[6]= ('0'+n_bg);
-		filename[8]= ('0'+lev);
+	case 1/*2*/:
+		if (NULL != bg1_bmp)	{	unloadbmp_by_surface(bg1_bmp);	bg1_bmp = NULL; }
+		bg1_bmp = loadbmp0(text/*filename*/, 0, 1);
+//		#if (1==USE_EXTRACT_WAIT)
+//		now_exetracting=60;
+//		#endif
 		break;
 	}
-	return filename;
 }
 
-void tile_add(/*int lev*/)		//[***090201		追加
-{
-	int lev = player_now_stage;
-	btile2=loadbmp(/*filename*/render_filename(TYPE_00_BACKZ_A_Z, lev, n_bg));
-	is_bg_add=1;		//二枚目の背景追加フラグ
-}
+/*---------------------------------------------------------
+	子関数
+---------------------------------------------------------*/
 
-
-static void tile_init(/*int lev*/)
+static void bg2_swap(void)
 {
-	int lev = player_now_stage;
-	//if (NULL==btile1)
-	//{
-		btile1=loadbmp(/*filename*/render_filename(TYPE_01_BACKZ, lev, 0));
-	//}
-	btile_y=GAME_WIDTH;
-}
-
-typedef struct
-{
-	double speed_base;
-	double speed_rand;
-} CLOUDS_DATA;
-
-static void clouds_mover(SPRITE *c)
-{
-	CLOUDS_DATA *d=(CLOUDS_DATA *)c->data;
-	c->y+=d->speed_base*fps_factor;
-	c->y+=d->speed_rand*fps_factor;
-	if (c->y>GAME_HEIGHT)
+	if (0==which_bg)/* フラグの意味が次なので逆になる */
 	{
-		c->y-=GAME_HEIGHT+c->w;
-		d->speed_rand=(double)(rand()&(256-1))/256;
-		c->x=rand()%GAME_WIDTH-c->w;
-		//c->alpha=bg_alpha;
-		c->alpha=200;
+		draw_bmp = bg1_bmp;
+		load_bmp = bg0_bmp;
+	}
+	else
+	{
+		draw_bmp = bg0_bmp;
+		load_bmp = bg1_bmp;
 	}
 }
 
-static void clouds_init(/*int lev*/)
+/*---------------------------------------------------------
+
+---------------------------------------------------------*/
+
+static int current_bg_alpha;
+static int request_bg_alpha;
+
+void set_bg_alpha(int set_bg_alpha)
 {
-	int i;
-	CLOUDS_DATA *d;
-	char filename[32/*20*/];
-	int lev = player_now_stage;
-//	sp rintf(filename,"wolke03_%d.png",lev);
-	strcpy(filename,render_filename(TYPE_02_WOLKE0Z_Z, lev, 3));
-	for (i=0;i<5;i++)
-	{
-		w3[i]=sprite_add_file(filename,1,PR_BACK0);
-		w3[i]->x=rand()%GAME_WIDTH-w3[i]->w;
-		w3[i]->y=rand()%GAME_HEIGHT;
-		w3[i]->flags&=~SP_FLAG_COLCHECK;
-		w3[i]->flags|=SP_FLAG_VISIBLE;
-		w3[i]->type=SP_ETC;
-		w3[i]->mover=clouds_mover;
-		d=mmalloc(sizeof(CLOUDS_DATA));
-		w3[i]->data=d;
-		w3[i]->alpha=bg_alpha;
-		d->speed_base=1;
-		d->speed_rand=(double)(rand()&(256-1))/256;
-	}
-//	sp rintf(filename,"wolke02_%d.png",lev);
-	strcpy(filename,render_filename(TYPE_02_WOLKE0Z_Z, lev, 2));
-	for (i=0;i<2;i++)
-	{
-		w2[i]=sprite_add_file(filename,1,PR_BACK1);
-		w2[i]->x=rand()%GAME_WIDTH-w2[i]->w;
-		w2[i]->y=rand()%GAME_HEIGHT;
-		w2[i]->flags&=~SP_FLAG_COLCHECK;
-		w2[i]->flags|=SP_FLAG_VISIBLE;
-		w2[i]->type=SP_ETC;
-		w2[i]->mover=clouds_mover;
-		d=mmalloc(sizeof(CLOUDS_DATA));
-		w2[i]->data=d;
-		w2[i]->alpha=bg_alpha;
-		d->speed_base=2;
-		d->speed_rand=(double)(rand()&(256-1))/256;
-	}
-//	sp rintf(filename,"wolke01_%d.png",lev);
-	strcpy(filename,render_filename(TYPE_02_WOLKE0Z_Z, lev, 1));
-	for (i=0;i<1;i++)
-	{
-		w1[i]=sprite_add_file(filename,1,PR_BACK2);
-		w1[i]->x=rand()%GAME_WIDTH-w1[i]->w;
-		w1[i]->y=rand()%GAME_HEIGHT;
-		w1[i]->flags&=~SP_FLAG_COLCHECK;
-		w1[i]->flags|=SP_FLAG_VISIBLE;
-		w1[i]->type=SP_ETC;
-		w1[i]->mover=clouds_mover;
-		d=mmalloc(sizeof(CLOUDS_DATA));
-		w1[i]->data=d;
-		w1[i]->alpha=bg_alpha;
-		d->speed_base=3;
-		d->speed_rand=(double)(rand()&(256-1))/256;
-	}
+	request_bg_alpha = set_bg_alpha;
 }
+/*---------------------------------------------------------
 
-
-
-void bg_init(int bg_type/*,int lev*/)
-{
-	if ((bg_type>=BG_LAST)||(bg_type<BG_BLACK))
-	{	error(ERR_FATAL,"unknown BG_TYPE: %d",bg_type);}
-
-	akt_bgtype = bg_type;
-	bg_alpha=0;
-	switch (bg_type)
-	{
-	case BG_BLACK:														break;
-	case BG_CLOUDS: 	tile_init(/*lev*/); 	clouds_init(/*lev*/);	break;
-	case BG_STARS:		/* stars_init(); */ 							break;
-	case BG_TILE:		tile_init(/*lev*/); 							break;
-	}
-}
-
-static void tile_remove(void)
-{
-	if (btile1!=NULL)
-	{	unloadbmp_by_surface(btile1);}
-	btile1=NULL;
-
-	if (btile2!=NULL)
-	{	unloadbmp_by_surface(btile2);}
-	btile2=NULL;
-}
+---------------------------------------------------------*/
 
 static void tile_work(void)
 {
-	if (!is_bg_fin)	//非ループフラグが立ってないとき(通常ルート)
+//
+	if (current_bg_alpha == request_bg_alpha) /*最もありそうな可能性を排除*/
 	{
-		btile_y+=fps_factor;
-		if (is_bg_end)		//背景追加命令が出てから前背景が終端まで来たとき
+		;
+	}
+	else
+	if (current_bg_alpha > request_bg_alpha)
+	{
+		current_bg_alpha -= 4/*6*/;
+	}
+	else
+	{
+		current_bg_alpha += 4/*6*/;
+	//	if (245 < current_bg_alpha) 	/* じわじわするので */
+	//	{	current_bg_alpha = 255; 	}
+	}
+
+//	if (current_bg_alpha < 250/*255*/ )
+//			{	current_bg_alpha += 6;		}
+//	else	{	current_bg_alpha = 255; 	}
+//
+	if (current_bg0_y_scroll_speed256 == request_bg0_y_scroll_speed256) /*最もありそうな可能性を排除*/
+	{
+		;
+	}
+	else
+	if (current_bg0_y_scroll_speed256 > request_bg0_y_scroll_speed256)
+	{
+		current_bg0_y_scroll_speed256--;
+	}
+	else
+	{
+		current_bg0_y_scroll_speed256++;
+	}
+//
+	bg0_bmp_y256 -= current_bg0_y_scroll_speed256;
+	//
+	if (laster_sprit256 < t256(272) )
+	{
+		laster_sprit256 += current_bg0_y_scroll_speed256;
+		sprit_flag = 1; 	/* 分割位置を判断する必要がある */
+	}
+	else
+	{
+		laster_sprit256 = t256(272);
+		sprit_flag = 0; 	/* 分割位置を判断する必要がない */
+	}
+	if (bg0_bmp_y256 < (0) )
+	{
+		if (1==exsist_tuika)
 		{
-			if (btile_y>btile2->h-1)
+			exsist_tuika = 0;
+			if (1 < number_of_bg)	/* 2枚以上bg追加した場合のみ、分割ラインを設定する */
 			{
-				btile_y-=btile2->h;
+				laster_sprit256 = t256(0);
+				sprit_flag = 1; 	/* 分割位置を判断する必要がある */
+				/*	ここの sprit_flag = 1; がここにもあるのは、一見効率悪いが、
+					処理の順序を変えると他の問題(加算順序による誤差の辻褄合わせ)が出てもっと効率悪くなるので、
+					ここで辻褄を合わせている。 */
 			}
-			else if (btile_y>GAME_HEIGHT && btile1!=NULL) //下準備
-			{
-				#if 0
-				unloadbmp_by_surface(btile1);
-				btile1=NULL;
-				unloadbmp_by_surface(btile2);
-				btile2=NULL;
-				#else
-				tile_remove();
-				#endif
-				btile1=loadbmp(/*filename*/render_filename(TYPE_00_BACKZ_A_Z, player_now_stage/*level*/, n_bg));
-				is_bg_add=0;
-				is_bg_end=0;
-				n_bg++;
-			}
+			bg2_swap();
 		}
-		else	//特殊な命令が出てないときor背景追加命令が出てから前背景が終端まで来てないとき
+		bg0_bmp_y256 += ((bg0_bmp->h)<<8);
+	}
+//
+	#if 0/*laster_spritデバッグ用*/
+	/* パネルのスコア欄にlaster_spritを グレイズ欄に追加bg枚数を 表示させる。っていうか書き換えちゃう。 */
+	((PLAYER_DATA *)player->data)->score		= ((laster_sprit256)>>8);
+	((PLAYER_DATA *)player->data)->graze_point	= number_of_bg;
+	#endif
+}
+
+/*---------------------------------------------------------
+
+---------------------------------------------------------*/
+
+enum
+{
+	BLIT_TYPE01_255 = 0,	/* 単純転送(アルファなし) */
+	BLIT_TYPE02_127,		/* 暗い転送(アルファ半分固定) */
+	BLIT_TYPE03_000,		/* 汎用転送(アルファ任意) */
+};
+static void tile_draw(SDL_Surface *src)
+{
+	/* psp の液晶は残像が残るので、これぐらいやっても、殆んど違いが判らない(但し60fps付近で動いてる場合のみ) */
+	/* 0 < type3 < 122 < type2 < 132 < type3 <	250 < type1 */
+	int blit_type;
+			if (250 < current_bg_alpha )	{	blit_type = BLIT_TYPE01_255;	}/* アルファ殆んど無いなら勝手になし */
+	else	if (132 < current_bg_alpha )	{	blit_type = BLIT_TYPE03_000;	}
+	else	if (122 < current_bg_alpha )	{	blit_type = BLIT_TYPE02_127;	}/* 半分付近なら、勝手に半分固定 */
+	else									{	blit_type = BLIT_TYPE03_000;	}
+//
+	/*blit*/
+	{
+		SDL_Surface *dst;
+		dst = screen;
+		if (SDL_MUSTLOCK(src))	{	SDL_LockSurface(src);	}/*ロックする*/
+		if (SDL_MUSTLOCK(dst))	{	SDL_LockSurface(dst);	}/*ロックする*/
 		{
-			if (btile_y>btile1->h-1)	//btile_yが前背景と同じ高さになったとき
+			int src_max_h;		src_max_h = src->h;
+			unsigned int jj;	jj = (bg0_bmp_y256>>8);
+			unsigned int j2;	j2 = (jj*380);
+			unsigned int yy256;
+			for (yy256=0; yy256<GAME_HEIGHT*256; yy256+=256)
 			{
-				if (is_bg_add)			//背景追加命令が出たとき
+				Uint16 *pd; 	pd = (Uint16 *)dst->pixels + (yy256+yy256)/*(yy<<9)*/;	/*(yy*480)*/  /* (yy<<9); (yy*512)*/
+			/*	Uint16 *ps; 	ps = (Uint16 *)src->pixels + (jj*380);*/	/*(jj*480)*/
+				Uint16 *ps; 	ps = (Uint16 *)src->pixels + (j2);		/*(jj*480)*/
+				jj++;j2 += (380);
+				if (jj > (src_max_h-1)) {jj -= src_max_h;	j2 = (jj*380);}
+				unsigned int xx;
+				for (xx=0; xx<GAME_WIDTH; xx++)
 				{
-					btile_y=0;
-					is_bg_end=1;		//前背景終了フラグ
+					/* ここを 関数ポインタで分岐させると、とてつもなく遅い。vsync取ってないとはいえ 約60fps が 30fps 未満になる */
+					/* って事は、ここだけで 16[msec]以上消費するって事なのかな？？？ */
+					/* psp(MIPS) は pcと違ってポインタ使った場合のペナルティーがとてつもなくでかい。 */
+					/* おそらくCPU内蔵の命令キャッシュ(I-Chache)が壊れるので、とてつもなく遅くなるんだろうな */
+					if (BLIT_TYPE01_255==blit_type)
+					{
+						(*pd) = (*ps);	/* 単純転送(アルファなし) */
+					}
+					else
+					if (BLIT_TYPE02_127==blit_type)
+					{
+						(*pd) = (((*ps)&PSP_SCREEN_FORMAT_LMASK)>>1);	/* 暗い転送(アルファ半分固定) */
+					}
+					else	//if (BLIT_TYPE03_000==blit_type)
+					{	/* 汎用転送(アルファ任意) */
+						const Uint16 aaa = (*ps);
+						(*pd) = (Uint16)(/*(PSP_SCREEN_FORMAT_AMASK)|*/((
+							(((aaa & PSP_SCREEN_FORMAT_BMASK)*current_bg_alpha) & (PSP_SCREEN_FORMAT_BMASK<<8)) |
+							(((aaa & PSP_SCREEN_FORMAT_GMASK)*current_bg_alpha) & (PSP_SCREEN_FORMAT_GMASK<<8)) |
+							(((aaa & PSP_SCREEN_FORMAT_RMASK)*current_bg_alpha) & (PSP_SCREEN_FORMAT_RMASK<<8))
+						)>>8));
+					}
+					pd++;
+					ps++;
 				}
-				else		//通常処理
+				if (0 != sprit_flag)		/* 分割位置を判断する必要==1があるか？ */
 				{
-					btile_y-=btile1->h;
+					if ( (yy256+t256(1)) >/*=*/ (laster_sprit256) )/* 画面分割位置 */	/* 注意： 256固定小数点なので >= は使えない */
+					{
+						sprit_flag = 0; 	/* 分割位置を判断する必要がない */
+						if (SDL_MUSTLOCK(src))	{	SDL_UnlockSurface(src); 	}/*ロック解除*/
+						src = load_bmp;
+						if (SDL_MUSTLOCK(src))	{	SDL_LockSurface(src);	}/*ロックする*/
+					}
 				}
 			}
 		}
-	}
-	else		//非ループの場合 ※今の所機能してないかもしれない
-	{
-		if (is_bg_end)
-		{
-			if (btile_y+fps_factor <= btile2->h-1)
-			{
-				btile_y+=fps_factor;
-			}
-		}
-		else
-		{
-			if (btile_y+fps_factor <= btile1->h-1)
-			{
-				btile_y+=fps_factor;
-			}
-		}
-	}
-}
-static void tile_display(void)
-{
-	int i,j;
-	SDL_Rect r;
-	SDL_Rect r2;
-	if (bg_alpha<255)
-	{
-		psp_clear_screen();
-		SDL_SetAlpha(btile1,SDL_SRCALPHA,bg_alpha);
-	}
-	else
-	{
-		SDL_SetAlpha(btile1,SDL_SRCALPHA,255);
-	}
-	if (is_bg_add || is_bg_end)
-	{
-		SDL_SetAlpha(btile2,SDL_SRCALPHA,bg_alpha);
-		r2.w=btile2->w;
-		r2.h=btile2->h;
-	}
-
-	r.w=btile1->w;
-	r.h=btile1->h;
-
-	if (is_bg_end)
-	{
-		for (i=0;i<GAME_WIDTH;i+=btile2->w)
-		{
-			r2.x=i;
-			r2.y=-btile2->h+btile_y;
-			SDL_BlitSurface(btile2,NULL,screen,&r2);
-		}
-		for (i=0;i<GAME_WIDTH;i+=btile1->w)
-		{
-			for (j=btile_y;j<GAME_HEIGHT;j+=btile1->h)
-			{
-				r.x=i;
-				r.y=j;
-				SDL_BlitSurface(btile1,NULL,screen,&r);
-			}
-		}
-	}
-	else
-	{
-		for (i=0;i<GAME_WIDTH;i+=btile1->w)
-		{
-			for (j=-btile1->h;j<GAME_HEIGHT;j+=btile1->h)
-			{
-				r.x=i;
-				r.y=j+btile_y;
-				SDL_BlitSurface(btile1,NULL,screen,&r);
-			}
-		}
+		if (SDL_MUSTLOCK(src))	{	SDL_UnlockSurface(src); 	}/*ロック解除*/
+		if (SDL_MUSTLOCK(dst))	{	SDL_UnlockSurface(dst); 	}/*ロック解除*/
 	}
 }
 
-void bg_work(void)
+/*---------------------------------------------------------
+
+---------------------------------------------------------*/
+
+void bg_work_draw(void)
 {
-	if (akt_bgtype<0)
+//	#if (1==USE_EXTRACT_WAIT)
+//	{
+//		/* 画像読み込み中(IMG_ Load()内部の画像展開処理(libpngとかlibjpegとか)が遅いので処理落ち中) */
+//		now_exetracting--;
+//		if (0 < now_exetracting)
+//		{
+//			return; 	/* 処理落ち時に描かなくしてみたけど、全然変わらない */
+//		}
+//		now_exetracting=1;
+//	}
+//	#endif
+	if (0 == number_of_bg)
 	{
-		error(ERR_WARN,"bg_work with no bg_type\n[%d]==akt_bgtype",akt_bgtype );
-		return;
-	}
-
-	if (bg_alpha<255)
-	{	bg_alpha+=6*fps_factor;}
-	else
-	{	bg_alpha=255;}
-
-	switch (akt_bgtype)
-	{
-	case BG_BLACK:
 		psp_clear_screen();
-		break;
-
-	case BG_CLOUDS:
-		// SDL_FillRect(screen,NULL,SDL_MapRGB(screen->format,0,0,0xff));
-		//psp_clear_screen();
-		//SDL_FillRect(screen,NULL,SDL_MapRGB(screen->format,0,0,bg_alpha));
+	}
+	else
+	{
 		tile_work();
-		tile_display();
-		break;
-
-	case BG_STARS:
-		psp_clear_screen();
-		break;
-
-	case BG_TILE:
-		tile_work();
-		tile_display();
-		break;
+		tile_draw(draw_bmp/*bg0_bmp*/);
 	}
 }
 
-static void clouds_remove(void)
+/*---------------------------------------------------------
+
+---------------------------------------------------------*/
+extern void clouds_destroy(void);
+void bg2_destroy(void)
 {
-	int i;
-	for (i=0;i<5;i++)
+	if (0 != number_of_bg)
 	{
-		if (i<1) w1[i]->type=SP_DELETE;
-		if (i<2) w2[i]->type=SP_DELETE;
-		w3[i]->type=SP_DELETE;
+		number_of_bg = 0;
+		//tile_remove();
+		//static void tile_remove(void)
+		{
+			if (NULL != bg0_bmp)	{	unloadbmp_by_surface(bg0_bmp);	bg0_bmp = NULL; }
+			if (NULL != bg1_bmp)	{	unloadbmp_by_surface(bg1_bmp);	bg1_bmp = NULL; }
+		}
 	}
+	clouds_destroy();
 }
 
 
-void bg_destroy(void)
+//extern int tile_bg2_add(void/*int lev*/);
+/*---------------------------------------------------------
+	敵を追加する
+---------------------------------------------------------*/
+extern int tiny_strcmp(char *aaa, const char *bbb);
+void add_enemy_load_bg(STAGE_DATA *l)
 {
-	if (akt_bgtype<0)
+	char *text;
+	text=l->user_string;
+	//	if (NULL != (text) )
+	//if ( 0 == tiny_strcmp(text,"0") ) /* ファイル名が０の場合システムコマンド[拡張予定] */
+	if ( '0' == text[0] )	/* ファイル名の1字目が０の場合システムコマンド[拡張予定] */
 	{
-		error(ERR_WARN,"bg_destroy with no bg_type\n[%d]==akt_bgtype",akt_bgtype );
-		return;
+		;
 	}
-	switch (akt_bgtype)
+	else
 	{
-	case BG_BLACK:								break;
-	case BG_CLOUDS: 	tile_remove();	clouds_remove();		break;
-	case BG_STARS:		/* stars_remove();*/	break;
-	case BG_TILE:		tile_remove();			break;
+		load_btile(l, which_bg/*0*/ /*1*/);
+		which_bg++;
+		which_bg &= 1;
+		number_of_bg++;
+		if (/*0*/1 == number_of_bg) 	/* 初回のみ*/
+		{
+		//	number_of_bg = 1;
+			current_bg_alpha = 0;		/* 初回のみ*/
+			request_bg_alpha = 255; 	/* 初回のみ*/
+			bg0_bmp_y256 = 0;			/* 初回のみ*/
+			draw_bmp = bg0_bmp; 		/* 初回のみロード時に描画用にする */
+			load_bmp = bg0_bmp;
+		}
+		exsist_tuika			= 1;
 	}
-	akt_bgtype = BG_THROW/*-1*/;
+}
+
+/*---------------------------------------------------------
+	ステージ読み込み開始時に、毎回初期化する
+---------------------------------------------------------*/
+void bg2_start_stage(void)
+{
+	number_of_bg			= 0;	/* 初回のみを判断するのと兼用 */
+	which_bg				= 0 /*1*/ /*0*/;
+	exsist_tuika			= 0;
+	bg2_destroy();
+//	if (1==use_clouds) {}
+	request_bg0_y_scroll_speed256 = current_bg0_y_scroll_speed256 = t256(0.5);/*初期値*/
+}
+
+/*---------------------------------------------------------
+	psp起動時に一度だけ初期化する
+---------------------------------------------------------*/
+extern void clouds_system_init(void);
+void bg2_system_init(void)
+{
+//	#if (1==USE_EXTRACT_WAIT)
+//	now_exetracting 		= 1;
+//	#endif
+
+//	number_of_bg			= 0;
+//	use_clouds				= 0;
+	/* 画像読み込み用サーフェイス */
+	bg0_bmp 				= //NULL;
+	bg1_bmp 				= //NULL;
+	draw_bmp				= //NULL/*bg0_bmp*/;
+	load_bmp				= NULL/*bg0_bmp*/;
+	sprit_flag				= 0;	/* 分割位置を判断する必要がない */
+	laster_sprit256 		= t256(272);
+	clouds_system_init();
+}
+
+/*---------------------------------------------------------
+	BGコントロールコマンド(テスト中)
+---------------------------------------------------------*/
+enum
+{
+	BG2_00_ERROR = 0,
+	BG2_01_SET_SCROOL_OFFSET,
+	BG2_02_BG_STOP,
+//	BG2_03_BG_SWAP,
+	BG2_03_DESTOROY_CLOUDS,
+};
+void bg2_control(STAGE_DATA *l)
+{
+	short xxx;
+	short yyy;
+//	short speed256;
+	xxx = l->user_x;
+	yyy = l->user_y;
+//	speed256 = l->scroll_speed256;
+	//
+	request_bg0_y_scroll_speed256 = l->scroll_speed256; 	/* bg0のスクロール、予約速度を設定 */
+	switch (xxx)
+	{
+	case BG2_01_SET_SCROOL_OFFSET:	/* スクロール値を直接セット */
+		bg0_bmp_y256 = yyy;
+		break;
+	case BG2_02_BG_STOP:	/* テスト中 */
+		laster_sprit256 = t256(272);
+		sprit_flag = 0; 	/* 分割位置を判断する必要がない */
+		break;
+//	case BG2_03_BG_SWAP:	/* テスト中 */
+//		bg0_bmp_y256 = 0;
+//		which_bg++;
+//		which_bg &= 1;
+//		bg2_swap();
+//		break;
+	case BG2_03_DESTOROY_CLOUDS:	/* テスト中 */
+		clouds_destroy();
+		break;
+	}
 }

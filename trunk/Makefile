@@ -1,11 +1,21 @@
 
 TARGET = kene
 
-PSP_EBOOT_TITLE = kene_r17_test01
-PSP_EBOOT_ICON = ICON0.PNG
-PSP_EBOOT_ICON1= ICON0.PMF
-PSP_EBOOT_PIC1 = PIC1.PNG
-PSP_EBOOT_SND0 = SND0.AT3
+PSP_EBOOT_TITLE = kene_r23
+
+#SIMPLE = 1
+SIMPLE = 0
+ifneq ($(SIMPLE),1)
+	PSP_EBOOT_ICON = ICON0.PNG
+	PSP_EBOOT_ICON1= ICON0.PMF
+	PSP_EBOOT_PIC1 = PIC1.PNG
+	PSP_EBOOT_SND0 = SND0.AT3
+else
+	PSP_EBOOT_ICON = ICON0.PNG
+	PSP_EBOOT_ICON1=
+	PSP_EBOOT_PIC1 =
+	PSP_EBOOT_SND0 =
+endif
 
 EXTRA_TARGETS = mk_dir EBOOT.PBP
 
@@ -32,9 +42,9 @@ LDFLAGS =
 #LIBS_org += $(shell $(SDL_CONFIG) --libs) -lpsppower
 
 	# GL使う場合
-	LIBS += -lSDL -lGL -lpspvfpu 
+#	LIBS += -lSDL -lGL -lpspvfpu 
 	# GL使わない場合
-#	LIBS += -lSDL_noGL
+	LIBS += -lSDL_noGL
 
 LIBS += -lSDL_mixer
 LIBS += -lvorbisidec
@@ -65,36 +75,36 @@ OBJS += $(OBJ)/core/zenkaku.o
 
 OBJS += $(OBJ)/core/enemy.o
 
-OBJS += $(OBJ)/core/enemy/enemy_fairy.o
-OBJS += $(OBJ)/core/enemy/enemy_greatfairy.o
-OBJS += $(OBJ)/core/enemy/enemy_greeter.o
-OBJS += $(OBJ)/core/enemy/enemy_curver.o
-OBJS += $(OBJ)/core/enemy/enemy_crusher.o
-OBJS += $(OBJ)/core/enemy/enemy_cube.o
-OBJS += $(OBJ)/core/enemy/enemy_drager.o
-OBJS += $(OBJ)/core/enemy/enemy_eyefo.o
-OBJS += $(OBJ)/core/enemy/enemy_xev.o
-OBJS += $(OBJ)/core/enemy/enemy_mine.o
-OBJS += $(OBJ)/core/enemy/enemy_rwingx.o
-OBJS += $(OBJ)/core/enemy/enemy_cir.o
-OBJS += $(OBJ)/core/enemy/enemy_zatak.o
-OBJS += $(OBJ)/core/enemy/enemy_badguy.o
-OBJS += $(OBJ)/core/enemy/enemy_grounder.o
-OBJS += $(OBJ)/core/enemy/enemy_magicformatiion.o
-OBJS += $(OBJ)/core/enemy/enemy_proball.o
-OBJS += $(OBJ)/core/enemy/enemy_plasmaball.o
-OBJS += $(OBJ)/core/enemy/enemy_ming.o
-OBJS += $(OBJ)/core/enemy/enemy_splash.o
+OBJS += $(OBJ)/core/enemy/boss_01_alice.o
+OBJS += $(OBJ)/core/enemy/boss_02_cirno.o
+OBJS += $(OBJ)/core/enemy/boss_03_aya.o
+OBJS += $(OBJ)/core/enemy/boss_04_kaguya.o
+OBJS += $(OBJ)/core/enemy/boss_05_sakuya.o
 
-OBJS += $(OBJ)/core/enemy/enemy_boss01.o
-OBJS += $(OBJ)/core/enemy/enemy_boss02.o
-OBJS += $(OBJ)/core/enemy/enemy_boss03.o
-OBJS += $(OBJ)/core/enemy/enemy_boss04.o
-OBJS += $(OBJ)/core/enemy/enemy_boss05.o
+OBJS += $(OBJ)/core/enemy/chuu_01_youkai1.o
 
-OBJS += $(OBJ)/core/enemy/enemy_bgpanel.o
-OBJS += $(OBJ)/core/enemy/enemy_bgpanel2.o
-OBJS += $(OBJ)/core/enemy/enemy_gametext.o
+OBJS += $(OBJ)/core/enemy/zako_01_obake.o
+OBJS += $(OBJ)/core/enemy/zako_02_yukari1.o
+OBJS += $(OBJ)/core/enemy/zako_03_yukari2.o
+OBJS += $(OBJ)/core/enemy/zako_04_aka_kedama.o
+OBJS += $(OBJ)/core/enemy/zako_05_niji_kedama.o
+OBJS += $(OBJ)/core/enemy/zako_06_midori_kedama1.o
+OBJS += $(OBJ)/core/enemy/zako_07_midori_kedama2.o
+OBJS += $(OBJ)/core/enemy/zako_08_kedama1.o
+OBJS += $(OBJ)/core/enemy/zako_09_inyou1.o
+OBJS += $(OBJ)/core/enemy/zako_10_tatsumaki1.o
+OBJS += $(OBJ)/core/enemy/zako_11_kakomi1.o
+OBJS += $(OBJ)/core/enemy/zako_12_meido1.o
+OBJS += $(OBJ)/core/enemy/zako_13_meido2.o
+OBJS += $(OBJ)/core/enemy/zako_14_meido3.o
+OBJS += $(OBJ)/core/enemy/zako_15_meido4.o
+OBJS += $(OBJ)/core/enemy/zako_16_ao_yousei1.o
+OBJS += $(OBJ)/core/enemy/zako_17_ao_yousei2.o
+
+OBJS += $(OBJ)/core/enemy/eigo_text.o
+OBJS += $(OBJ)/core/enemy/game_clear.o
+OBJS += $(OBJ)/core/enemy/tikei.o
+OBJS += $(OBJ)/core/enemy/clouds.o
 
 OBJS += $(OBJ)/core/support.o
 OBJS += $(OBJ)/core/intro.o
@@ -141,9 +151,13 @@ include $(PSPSDK)/lib/build.mak
 #src/core/support.c: In function 'blit_scaled':
 #src/core/support.c(573) : warning: control may reach end of non-void function 'getpixel' being inlined
 #make: *** [obj/core/support.o] Error 1
-# ???
-$(OBJ)/core/support.o: $(SRC)/core/support.c
-	psp-gcc -O3   $(CXXFLAGS) -c $< -o $@
+# ???  警告: 制御が非 void 関数の終りに到達しました 
+#$(OBJ)/core/support.o: $(SRC)/core/support.c
+#	psp-gcc -O3   $(CXXFLAGS) -c $< -o $@
+#	//else
+#	//{
+#		return (0);
+#	//}
 
 $(OBJ)/%.o: $(SRC)/%.c
 	psp-gcc -O3 -Werror $(CXXFLAGS) -c $< -o $@

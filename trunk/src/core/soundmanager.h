@@ -1,32 +1,24 @@
-/*
- * $Id: soundmanager.h,v 1.1.1.1 2002/11/03 11:08:24 kenta Exp $
- *
- * Copyright 2002 Kenta Cho. All rights reserved.
- */
-
-/**
- * BGM/SE manager header file.
- *
- * @version $Revision: 1.1.1.1 $
- */
 #ifndef _BGM_VOICE_H_
 #define _BGM_VOICE_H_
 
-extern void closeSound(void);
-extern void clear_music(void);//extern void stopMusic(void);
-extern void initSound(void);
-//extern void playMusic(char *play_music_file_name);
-extern void fadeMusic(void);
+extern void init_audio(void);
+extern void exit_audio(void);
 
-extern void pauseMusic(void);
-extern void resumeMusic(void);
-extern void playChunk(int req_idx);
-extern void setChunkVolume(int volume);
-extern void setMusicVolume(int volume);
-//
-extern void voice_play_vbl(void);
+extern void set_voice_volume(int volume);
+extern void set_music_volume(int volume);
+
+extern void stop_music(void);
+extern void fadeout_music(void);
+extern void pause_music(void);
+extern void resume_music(void);
+
 extern void play_music(int num);
-void voice_play(int req, int play_track );
+
+extern void play_voice_auto_track(int req_idx);
+
+extern void voice_play_vbl(void);
+extern void voice_play(int req, int play_track );
+
 enum
 {
 	BGM_00_intro = 0,
@@ -46,6 +38,26 @@ enum
 	BGM_14_boss6,
 	BGM_15_boss7,
 };
+
+enum
+{
+	VOICE00_SHOT = 0,			/* ショット音 */
+	VOICE01_HIT,				/* 音 */
+	VOICE02_ZAKO_HAKAI, 		/* サコ死に音 + 弾消し音 + メニュー */
+	VOICE03_BOSS_HAKAI, 		/* ボス死に音? */
+	VOICE04_SHIP_HAKAI, 		/* 自機破壊音 */
+	VOICE05_BONUS,				/* アイテム取得音 */
+	VOICE06_EXTEND, 			/* 残機増加音 */
+	VOICE07_BOMB,				/* 音 */
+	VOICE08_DEATH,				/* サコ死に音専用 */
+	VOICE09_GRAZE,				/* グレイズ音 */
+	VOICE10_MAGICF_E_SHOT,		/* 音 */
+	VOICE11_SAKUYA_E_SHOT00,	/* 音 */
+	VOICE12_SAKUYA_B2_SHOT, 	/* 音 */
+	VOICE13_SAKUYA_SHOT02,		/* 音 */
+	VOICE14_YOKAI1_E_SHOT01,	/* 音 */
+};
+
 enum
 {
 	TRACK00_BULLETS = 0,
