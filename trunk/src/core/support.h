@@ -1,6 +1,7 @@
 #ifndef _SUPPORT_H_
 #define _SUPPORT_H_
 
+// PSPSDK(standard)
 
 #include <psptypes.h>
 #include <pspaudio.h>
@@ -11,23 +12,48 @@
 #include <pspkernel.h>
 #include <psppower.h>
 #include <psprtc.h>
+
+// C(standard)
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <malloc.h>
 
+// PSPSDK(debug)
+
 #include <pspdebug.h>
+#ifdef ENABLE_PROFILE
+	#include <pspprof.h>
+#endif
+
+// PSPSDK(optional)
+
+//#include <pspsdk.h>
+//#include <psputility.h>
+//#include <pspmoduleinfo.h>
+//#include <pspnet_apctl.h>
+//#include <pspnet_inet.h>
+//#include <pspnet_resolver.h>
+//#include <netinet/in.h>
+//#include "net_io.h"
+//#include <pspuser.h>
+
+// C(optional)
 
 #include <unistd.h>
 #include <stdarg.h>
-//#include <math.h>
 #include <dirent.h>
 #include <ctype.h>
+#include <math.h>/*sin(),atan2()*/
+//#include <signal.h>
+
 
 #ifdef ENABLE_PSP
 	//# /* カスタムライブラリを使う */
 	#include "SDL.h"
 	#include "SDL_image.h"
+	#include "SDL_mixer.h"
 #else
 	//# /* 標準ライブラリを使う */
 	#include <SDL/SDL.h>
@@ -35,33 +61,26 @@
 	#include <SDL/SDL_mixer.h>/*#include "SDL_mixer.h"*/
 #endif
 
-#ifndef UINT8
-	#define UINT8 Uint8
-#endif
-#ifndef UINT16
-	#define UINT16 Uint16
-#endif
-#ifndef UINT32
-	#define UINT32 Uint32
-#endif
-
-#ifndef INT8
-	#define INT8 Sint8
-#endif
-#ifndef INT16
-	#define INT16 Sint16
-#endif
-#ifndef INT32
-	#define INT32 Sint32
-#endif
-
-//#include <SDL/SDL_image.h>
-//#include	<pspuser.h>
-//#include	<pspgu.h>
-//#include	<pspdisplay.h>
-
-//#include <signal.h>
-
+	//
+	#ifndef UINT8
+		#define UINT8 Uint8
+	#endif
+	#ifndef UINT16
+		#define UINT16 Uint16
+	#endif
+	#ifndef UINT32
+		#define UINT32 Uint32
+	#endif
+	//
+	#ifndef INT8
+		#define INT8 Sint8
+	#endif
+	#ifndef INT16
+		#define INT16 Sint16
+	#endif
+	#ifndef INT32
+		#define INT32 Sint32
+	#endif
 
 /*---------------------------------------------------------
   macros
@@ -69,15 +88,6 @@
 /* キャッシュなしVRAM  VRAM[y][x]としてアクセス */
 //#define	VRAM		((long(*)[BUF_WIDTH])(((char*)0x4000000)+0x40000000))
 
-
-//#include <SDL/SDL.h>
-//#include <pspkernel.h>
-//#include <pspdebug.h>
-//#include <pspctrl.h>
-//#include <stdlib.h>
-//#include <string.h>
-//#include "stdarg.h"
-#include <math.h>
 
 
 
@@ -136,6 +146,14 @@
 #define GAME_WIDTH		(380)
 #define GAME_HEIGHT 	(272)
 
+enum
+{
+	SDL_00_SCREEN=0,
+	SDL_01_BACK_SCREEN,
+	SDL_02_TEX_SCREEN,
+	SDL_03_000_SCREEN,
+};
+
 //1231101(Gu) 1229917(SDL)
 //#define USE_GU			(1)
 #define USE_GU			(0)
@@ -150,7 +168,7 @@
 		#define USE_ZBUFFER 	(1)
 	#endif
 #else
-	#define SDL_VRAM_SCREEN 	screen
+	#define SDL_VRAM_SCREEN 	sdl_screen[SDL_00_SCREEN]
 	#define SDL_BUF_WIDTH512	PSP_WIDTH480
 #endif
 
@@ -162,61 +180,68 @@
 	#define USE_ZOOM_XY 	1
 #endif
 
+/* C:/cygwin/pspdev/psp/include/math.h で宣言されているので要らない */
+//#ifndef M_PI
+//	#define M_PI			(3.14159265358979323846)
+//#endif
 
-#ifndef M_PI
-	#define M_PI		(3.14159265358979323846)
-#endif
+//#define M_PI_H			(0.52359877559829887307)		/* π ÷ 6 */
 
-//#define M_PI_H		(0.52359877559829887307)		/* π ÷ 6 */
-
-//#define degtorad(x) (((M_PI*2)/360.0)*(x))		/* 2π ÷ 360 * X */
-//#define radtodeg(x) ( (int)((x)*((360.0)/(M_PI*2))+360)%360 )
+//#define degtorad(x)		(((M_PI*2)/360.0)*(x))		/* 2π ÷ 360 * X */
+//#define radtodeg(x)		( (int)((x)*((360.0)/(M_PI*2))+360)%360 )
 
 /* １周が360度の単位系(deg360)を１周が２πの単位系(radian)へ変換。及び逆変換。 */
-#define deg360_2rad(x) (((M_PI*2)/(360.0))*(x))
-#define rad2deg360(x) ( (int)((x)*((360.0)/(M_PI*2))+360)%360 )
+#define deg360_2rad(x)		(((M_PI*2)/(360.0))*(x))
+#define rad2deg360(x)		( (int)((x)*((360.0)/(M_PI*2))+360)%360 )
 
 /* １周が512度の単位系(deg512)を１周が２πの単位系(radian)へ変換。及び逆変換。 */
-#define deg512_2rad(x) (((M_PI*2)/(512.0))*(x))
-//#define rad2deg512(x) ( (int)((x)*((512.0)/(M_PI*2))+512)%512 )
-//#define rad2deg512(x) ( (int)((x)*((512.0)/(M_PI*2))+512)&(512-1) )
-#define rad2deg512(x) ( (int)((x)*((512.0)/(M_PI*2))/*+512*/)&(512-1) )
+#define deg512_2rad(x)		(((M_PI*2)/(512.0))*(x))
+//#define rad2deg512(x) 	( (int)((x)*((512.0)/(M_PI*2))+512)%512 )
+//#define rad2deg512(x) 	( (int)((x)*((512.0)/(M_PI*2))+512)&(512-1) )
+#define rad2deg512(x)		( (int)((x)*((512.0)/(M_PI*2))/*+512*/)&(512-1) )
 
 /* １周が4096度の単位系(deg4096)を１周が２πの単位系(radian)へ変換。及び逆変換。 */
-#define deg4096_2rad(x) (((M_PI*2)/(4096.0))*(x))
-//#define rad2deg4096(x) ( (int)((x)*((4096.0)/(M_PI*2))+4096)%4096 )
-//#define rad2deg4096(x) ( (int)((x)*((4096.0)/(M_PI*2))+4096)&(4096-1) )
-#define rad2deg4096(x) ( (int)((x)*((4096.0)/(M_PI*2))/*+4096*/)&(4096-1) )
+#define deg4096_2rad(x) 	(((M_PI*2)/(4096.0))*(x))
+//#define rad2deg4096(x)	( (int)((x)*((4096.0)/(M_PI*2))+4096)%4096 )
+//#define rad2deg4096(x)	( (int)((x)*((4096.0)/(M_PI*2))+4096)&(4096-1) )
+#define rad2deg4096(x)		( (int)((x)*((4096.0)/(M_PI*2))/*+4096*/)&(4096-1) )
 
 /* １周が65536度の単位系(deg65536)を１周が２πの単位系(radian)へ変換。及び逆変換。 */
-#define deg65536_2rad(x) (((M_PI*2)/(65536.0))*(x))
-//#define rad2deg65536(x) ( (int)((x)*((65536.0)/(M_PI*2))+65536)%65536 )
-//#define rad2deg65536(x) ( (int)((x)*((65536.0)/(M_PI*2))+65536)&(65536-1) )
-#define rad2deg65536(x) ( (int)((x)*((65536.0)/(M_PI*2))/*+65536*/)&(65536-1) )
+#define deg65536_2rad(x)	(((M_PI*2)/(65536.0))*(x))
+//#define rad2deg65536(x)	( (int)((x)*((65536.0)/(M_PI*2))+65536)%65536 )
+//#define rad2deg65536(x)	( (int)((x)*((65536.0)/(M_PI*2))+65536)&(65536-1) )
+#define rad2deg65536(x) 	( (int)((x)*((65536.0)/(M_PI*2))/*+65536*/)&(65536-1) )
 
 /* １周が360度の単位系(deg360)を１周が512度の単位系(deg512)へ変換。及び逆変換。 */
-#define deg_360_to_512(x) ((int)((x)*(512.0/360.0)))
-#define deg_512_to_360(x) ((int)((x)*(360.0/512.0)))
+#define deg_360_to_512(x)	((int)((x)*(512.0/360.0)))
+#define deg_512_to_360(x)	((int)((x)*(360.0/512.0)))
 
 /* １周が360度の単位系(deg360)を１周が1024度の単位系(deg1024)へ変換。及び逆変換。 */
-#define deg_360_to_1024(x) ((int)((x)*(1024.0/360.0)))
-#define deg_1024_to_360(x) ((int)((x)*(360.0/1024.0)))
+#define deg_360_to_1024(x)	((int)((x)*(1024.0/360.0)))
+#define deg_1024_to_360(x)	((int)((x)*(360.0/1024.0)))
 
 /* １周が360度の単位系(deg360)を１周が4096度の単位系(deg4096)へ変換。及び逆変換。 */
-#define deg_360_to_4096(x) ((int)((x)*(4096.0/360.0)))
-#define deg_4096_to_360(x) ((int)((x)*(360.0/4096.0)))
+#define deg_360_to_4096(x)	((int)((x)*(4096.0/360.0)))
+#define deg_4096_to_360(x)	((int)((x)*(360.0/4096.0)))
 
 /* １周の範囲内にクリッピング */
-#define mask512(aaa) {aaa &= (512-1);}
-#define mask4096(aaa) {aaa &= (4096-1);}
+#define mask512(aaa)	{aaa &= (512-1);}
+#define mask4096(aaa)	{aaa &= (4096-1);}
 
 /* 数字をスコアに変換。及び逆変換。 */
-#define score(x)   ((int)(((int)(x))/10))
-#define score_r(x) ((int)(((int)(x))*10))
+#define score(x)	((int)(((int)(x))/10))
+#define score_r(x)	((int)(((int)(x))*10))
 
 /* 数字を256固定小数点形式に変換。及びdou bleへ逆変換。 */
-#define t256(x) 			((int)((x)*256))
-//#define t256_to_dou ble(x)   (((dou ble)(x))*(1.0/256.0))
+#define t256(x) 				((int)((x)*256))
+//#define t256_to_dou ble(x)	(((dou ble)(x))*(1.0/256.0))
+#define t256_floor(x)			((x)>>(8))
+
+/* 数字を8固定小数点形式に変換。及びdou bleへ逆変換。 */
+#define t8(x)					((short)((x)*8))
+//#define t8_to_dou ble(x)		(((dou ble)(x))*(1.0/8.0))
+#define t8_floor(x) 			((x)>>(3))
+
 
 /* aaa%の確率で */
 #define rand_percent(aaa) ((unsigned char)(ra_nd())<=(unsigned char)( (aaa*256)/100 ) ) /* aaa%の確率で */
@@ -249,10 +274,8 @@ intで値を保持して、使う度に変換、逆変換した方が、ずっと速い。
 /* 変な名前になってるのは rand( で検索するため */
 #if 0
 	#define ra_nd(x)		(rand(x))
-	//2082097
 #else
 	extern int ra_nd(void);
-	//2082161
 #endif
 
 /* 難易度スコア補正 */
@@ -278,21 +301,21 @@ enum /*_state*/
 	ST_WORK_GAME_PLAY		= 0x0200,
 	ST_INIT_MENU			= 0x0300,
 	ST_WORK_MENU			= 0x0400,
-	ST_INIT_PLAYER_SELECT	= 0x0500,
-	ST_WORK_PLAYER_SELECT	= 0x0600,
-	ST_INIT_NAME_ENTRY		= 0x0700,
-	ST_WORK_NAME_ENTRY		= 0x0800,
+//	ST_INIT_PLAYER_SELECT				吸収。なし
+	ST_WORK_PLAYER_SELECT	= 0x0500,
+	ST_INIT_NAME_ENTRY		= 0x0600,
+	ST_WORK_NAME_ENTRY		= 0x0700,
 //
-	ST_WORK_STAGE_CLEAR 	= 0x0900,
+	ST_WORK_STAGE_CLEAR 	= 0x0800,
 //
 //	ST_INIT_GAME_OVER					吸収。なし
-	ST_WORK_GAME_OVER		= 0x0a00,
+	ST_WORK_GAME_OVER		= 0x0900,
 //	ST_INIT_RESULT						吸収。なし
-	ST_WORK_RESULT			= 0x0b00,
+	ST_WORK_RESULT			= 0x0a00,
 //	ST_INIT_KEY_CONFIG					吸収。なし
-	ST_WORK_KEY_CONFIG		= 0x0c00,
+	ST_WORK_KEY_CONFIG		= 0x0b00,
 //	ST_INIT_STORY						吸収。なし
-	ST_WORK_STORY			= 0x0d00,		/* [***20090223 追加  */
+	ST_WORK_STORY			= 0x0c00,		/* [***20090223 追加  */
 //	ST_INTRO,
 //	ST_START_INTRO,
 //	ST_GAME_DEMO,
@@ -313,7 +336,7 @@ enum /*_keynum_*/		//キーコンフィグ用
 	KINOU_07_SNAP_SHOT,
 	KINOU_01_SELECT,
 	KINOU_08_SYSTEM,
-	KINOU_13_MAX 	/* キーコンフィグ用の最大数 */
+	KINOU_13_MAX	/* キーコンフィグ用の最大数 */
 };
 #else
 enum /*_keynum_*/		//キーコンフィグ用
@@ -331,7 +354,7 @@ enum /*_keynum_*/		//キーコンフィグ用
 	KINOU_10_OPTION,
 	KINOU_11_SHOT,
 	KINOU_12_BOMB,
-	KINOU_13_MAX 	/* キーコンフィグ用の最大数 */
+	KINOU_13_MAX	/* キーコンフィグ用の最大数 */
 };
 #endif
 
@@ -367,7 +390,7 @@ enum /*_game_rank_*/
 
 extern int psp_loop;
 
-enum /*_game_rank_*/
+enum
 {
 	key_00_sl = 0,	//SELECT
 	key_01_st,		//START
@@ -381,7 +404,7 @@ enum /*_game_rank_*/
 	key_09_ma,	//○,
 	key_10_ba,	//×,
 	key_11_si,	//□,
-	key_MAX 	/* ランクの最大数==(最高ランク+1) */
+	key_MAX 	/* 最大数 */
 };
 
 extern int keyconfig[key_MAX];
@@ -389,7 +412,8 @@ extern int keyconfig[key_MAX];
 
 
 //extern dou ble fps_fa ctor;
-extern SDL_Surface *screen;
+//extern SDL_Surface *screen;
+extern SDL_Surface *sdl_screen[4];
 
 #include "sprite.h"
 
@@ -453,10 +477,22 @@ extern void display_vidinfo(void);
 
 
 extern void psp_clear_screen(void);/* 仮想スクリーンを黒で消す */
-extern void psp_push_screen(void);/* 仮想スクリーンを退避 */
-extern void psp_pop_screen(void);/* 仮想スクリーンを復活 */
+//extern void psp_push_screen(void);/* 仮想スクリーンを退避 */
+//extern void psp_pop_screen(void);/* 仮想スクリーンを復活 */
+#define psp_push_screen(aaa) psp_move_screen( SDL_00_SCREEN, SDL_01_BACK_SCREEN )
+#define psp_pop_screen(aaa)  psp_move_screen( SDL_01_BACK_SCREEN, SDL_00_SCREEN )
+extern void psp_move_screen(int src_screen_number, int dst_screen_number );
 
 /* 1:エンディングデバッグ機能。0:この機能OFF */
 #define USE_ENDING_DEBUG (1)
+
+
+/* 1:キーコンフィグ使う。0:キーコンフィグ機能OFF */
+
+//#define USE_KEY_CONFIG (0)
+#define USE_KEY_CONFIG (1)
+
+/* [1:キーコンフィグ使う場合で] 1:方向キーのキーコンフィグを使う。0:方向キーのキーコンフィグ機能OFF */
+#define USE_KEY_CONFIG_ALLOW (0)
 
 #endif

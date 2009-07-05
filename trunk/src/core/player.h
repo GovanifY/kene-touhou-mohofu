@@ -76,4 +76,7 @@ typedef struct
 	int strength;
 } WEAPON_BASE;
 
+#define DEFAULT_MAX_CONTINUE	(3)
+
+
 #endif /* _PLAYER_H_ */

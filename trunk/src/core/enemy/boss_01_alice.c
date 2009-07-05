@@ -4,14 +4,22 @@
 /*---------------------------------------------------------
 	アリス
 	-------------------------------------------------------
-	ボスタイマー未対応
+	ボスタイマー未対応中
 ---------------------------------------------------------*/
 
 typedef struct _boss01_data
 {
-	ENEMY_BASE enemy_base;
+	BOSS_BASE boss_base;
+	int state1; 	//形態
 	int health_flag;
 } BOSS01_DATA;
+
+enum
+{
+/*0*/	ALICE_01_KEITAI = 0,	// 第一形態: 全員で攻撃
+/*1*/	ALICE_02_KEITAI,		// 第二形態: フォーメション2
+/*2*/	ALICE_03_KEITAI,		// 第三形態: アリス単体
+};
 
 // FLG_FIRE1 弾フラグ。真ん中の人形が壊れていて、かつ指定位置に付いた時。onになる。
 #define FLG_FIRE1 0x01/*左上の藍い娘(人形)が指定位置に付いたか*/
@@ -80,18 +88,18 @@ static void callback_enemy_boss01_hitbyweapon(SPRITE *s, SPRITE *t/*, int angle*
 	switch (i)
 	{
 	case 0: /* is left back? */
-		if (0==(b01flags&FLG_DOLL3)/*sb01[3]->flags&SP_FLAG_VISIBLE*/)		{					i=3;	}	/* left front */
+		if (0==(b01flags&FLG_DOLL3)/*sb01[3]->flags&SP_FLAG_VISIBLE*/)			{					i=3;	}	/* left front */
 		break;
 	case 1: /* is boss core? (center back) */
-			 if (0==(b01flags&FLG_DOLL3)/*sb01[3]->flags&SP_FLAG_VISIBLE*/) {					i=3;	}	/* left   front */
-		else if (0==(b01flags&FLG_DOLL5)/*sb01[5]->flags&SP_FLAG_VISIBLE*/) {					i=5;	}	/* right  front */
-		else if (0==(b01flags&FLG_DOLL0)/*sb01[0]->flags&SP_FLAG_VISIBLE*/) {	if (0==(b01flags&FLG_FIRE1)) {	i=0;}	}	/* left   back */
-		else if (0==(b01flags&FLG_DOLL2)/*sb01[2]->flags&SP_FLAG_VISIBLE*/) {	if (0==(b01flags&FLG_FIRE2)) {	i=2;}	}	/* right  back */
-		else if (0==(b01flags&FLG_DOLL4)/*sb01[4]->flags&SP_FLAG_VISIBLE*/) {					i=4;	}	/* center front */
-	/*	else										{					i=1;	}	   center back */
+			 if (0==(b01flags&FLG_DOLL3)/*sb01[3]->flags&SP_FLAG_VISIBLE*/) 	{					i=3;	}	/* left   front */
+		else if (0==(b01flags&FLG_DOLL5)/*sb01[5]->flags&SP_FLAG_VISIBLE*/) 	{					i=5;	}	/* right  front */
+		else if (0==(b01flags&FLG_DOLL0)/*sb01[0]->flags&SP_FLAG_VISIBLE*/) 	{	if (0==(b01flags&FLG_FIRE1)) {	i=0;}	}	/* left   back */
+		else if (0==(b01flags&FLG_DOLL2)/*sb01[2]->flags&SP_FLAG_VISIBLE*/) 	{	if (0==(b01flags&FLG_FIRE2)) {	i=2;}	}	/* right  back */
+		else if (0==(b01flags&FLG_DOLL4)/*sb01[4]->flags&SP_FLAG_VISIBLE*/) 	{					i=4;	}	/* center front */
+	/*	else																	{					i=1;	}	   center back */
 		break;
 	case 2: /* is right back? */
-		if (0==(b01flags&FLG_DOLL5)/*sb01[5]->flags&SP_FLAG_VISIBLE*/)		{					i=5;	}
+		if (0==(b01flags&FLG_DOLL5)/*sb01[5]->flags&SP_FLAG_VISIBLE*/)			{					i=5;	}
 		break;
 	//case 4: /* center front */
 	//	//完全に姿を現すまで攻撃を一切受けない。代わりにアリス本体が攻撃を受け止める。
@@ -104,22 +112,22 @@ static void callback_enemy_boss01_hitbyweapon(SPRITE *s, SPRITE *t/*, int angle*
 	data=(BOSS01_DATA *)sb01[i]->data;
 	if (/*((BOSS01_DATA *)sb01[1]->data)->state*/b01state>1)
 	{
-		data->enemy_base.health -= w->strength;
+		data->boss_base.health -= w->strength;
 	}
 
 
-	if ((data->enemy_base.health<=15)&&(data->health_flag==0))
+	if ((data->boss_base.health<=15)&&(data->health_flag==0))
 	{
 		data->health_flag=1;
-		explosion_add_type(sb01[i]->x256+((sb01[i]->w)<<7),sb01[i]->y256+((sb01[i]->h)<<7),/*0,*/EXPLOSION_FIRE08);
+		explosion_add_type(sb01[i]->x256+((sb01[i]->w128)),sb01[i]->y256+((sb01[i]->h128)),/*0,*/EXPLOSION_FIRE08);
 	}
-	if (data->enemy_base.health<=0)/* 該当者の体力切れなら */
+	if (data->boss_base.health<=0)/* 該当者の体力切れなら */
 	{
 		b01flags			|= (FLG_DOLL0<<i);/* 倒した人をONにする */
-		explosion_add_type(sb01[i]->x256+((sb01[i]->w)<<7),sb01[i]->y256+((sb01[i]->h)<<7),/*0,*/EXPLOSION_ZAKO04/*EXPLOSION_FIRE08*/);
+		explosion_add_type(sb01[i]->x256+((sb01[i]->w128)),sb01[i]->y256+((sb01[i]->h128)),/*0,*/EXPLOSION_ZAKO04/*EXPLOSION_FIRE08*/);
 		sb01[i]->flags		&= (~(SP_FLAG_VISIBLE));
 		item_create_for_boss(sb01[i], ITEM_CREATE_MODE_02);
-		player_add_score(data->enemy_base.score);
+		player_add_score(data->boss_base.score);
 		if (i==1)	// アリスかどうかチェック
 		{
 			b01flags |= FLG_ALL_CAST;	// アリスを倒すと皆破壊される。
@@ -144,15 +152,15 @@ static void callback_enemy_boss01_hitbyweapon(SPRITE *s, SPRITE *t/*, int angle*
 		sb01[0]->flags	&= (~(SP_FLAG_VISIBLE));
 		sb01[2]->flags	&= (~(SP_FLAG_VISIBLE));
 //
-
-	//	((PLAYER_DATA *)player->data)->bo ssmode=B02_BOSS_DESTROY;
-		((PLAYER_DATA *)player->data)->state_flag |= STATE_FLAG_11_IS_BOSS_DESTROY;
-		for (i=0;i<6;i++)
+		player_set_destoroy_boss();
+		for (i=0; i<6; i++)
 		{
 		//	explosion_add_type(sb01[i]->x256+((sb01[i]->w)<<7),sb01[i]->y256+((sb01[i]->h)<<7),/*(ra_nd()&(16-1)/*%20*/),*/EXPLOSION_FIRE08);
-			explosion_add_circle(sb01[i], 1);	/* B02_BOSS_DESTROY が必要 */
+			explosion_add_circle(sb01[i], 1);	/* player_set_destoroy_boss();B02_BOSS_DESTROY が必要 */
 			sb01[i]->type=SP_DELETE;
 		}
+		/* コールバック登録 */
+		((PLAYER_DATA *)player->data)->callback_boss_hitbyweapon = callback_enemy_boss01_hitbyweapon_dummy; /* ダミーコールバック登録 */
 	}
 }
 
@@ -162,10 +170,8 @@ static void callback_enemy_boss01_hitbyweapon(SPRITE *s, SPRITE *t/*, int angle*
 
 static void enemy_boss01_setpos(int x256, int y256)
 {
-//	int x;
-//	int y;
-//	x=(x256>>8);
-//	y=(y256>>8);
+//	int x = t256_floor(x256);
+//	int y = t256_floor(y256);
 	/*
 		真ん中の人形が破壊されると、アリスの左右にいる人形の行動パターンが変わる。
 	*/
@@ -223,7 +229,7 @@ static void enemy_boss01_setpos(int x256, int y256)
 
 	BOSS01_DATA *bdata;
 	bdata=(BOSS01_DATA *)sb01[0]->data;
-	if ((FLG_FIRE1==(b01flags&FLG_FIRE1))&&(bdata->enemy_base.health>0)) //破壊済みなのに攻撃してこないように
+	if ((FLG_FIRE1==(b01flags&FLG_FIRE1))&&(bdata->boss_base.health>0)) //破壊済みなのに攻撃してこないように
 	{	/* 東方っぽく無いのは、弾速が速すぎるからだと思うので修正(3+b01level) */
 		if (bwait1<=0)
 		{
@@ -235,7 +241,7 @@ static void enemy_boss01_setpos(int x256, int y256)
 		{	bwait1--;}
 	}
 	bdata=(BOSS01_DATA *)sb01[2]->data;
-	if ((FLG_FIRE2==(b01flags&FLG_FIRE2))&&(bdata->enemy_base.health>0))
+	if ((FLG_FIRE2==(b01flags&FLG_FIRE2))&&(bdata->boss_base.health>0))
 	{
 		if (bwait2<=0)
 		{
@@ -421,6 +427,32 @@ static void enemy_boss01_move(SPRITE *c)
 			enemy_boss01_nway_fire(sb01[4], (firewait3<<(3+8))/*x_offset256*/);/*enemy_boss01_fire(2);*/
 		}
 	}
+	BOSS01_DATA *data;
+	data=(BOSS01_DATA *)sb01[1]->data;
+//	あとでコールバックにして共通化する。
+	{
+		data->boss_base.boss_timer -= 1/*fps_fa ctor*/;
+		#if 1/*時間切れ(色々問題あるのでとりあえず無効)*/
+		if ((data->boss_base.boss_timer < 1))
+		{
+			data->boss_base.boss_timer = (60*64);
+		//	if ((data->state1 < SAKUYA_05_KEITAI/*4*/))
+		//	{
+		//		//レミリア戦の開始イベントが見れなくなっちゃうのでここは無効
+		//		#if (0==USE_REMILIA)
+		//		/* vs REMILIA */
+		//		if (2==select_player)
+		//		{data->boss_base.health=0/*1*/;}
+		//		else
+		//		#endif
+		//		{data->boss_base.health 	= ((/*4*/SAKUYA_05_KEITAI*1024)-1)-(data->state1<<10/**1024*/);}
+		//		sakuya_put_items(/*c,*/s);
+		//	}
+		}
+		#endif
+	}
+//
+
 }
 
 /*---------------------------------------------------------
@@ -438,12 +470,12 @@ void add_boss_alice(STAGE_DATA *l)/*int lv*/
 	b01flags=0;
 	br1_angle512=deg_360_to_512(0);
 	br2_angle512=deg_360_to_512(0);
-//	sb01[0] = sprite_add_file 0("boss/boss01_0.png", 4, PRIORITY_03_ENEMY, 0); sb01[0]->anim_speed=8;/*"boss01-lo.png"62x49, offset(3-4+4)x(15)*/
-//	sb01[1] = sprite_add_file 0("boss/boss01_1.png", 8, PRIORITY_03_ENEMY, 0); sb01[1]->anim_speed=0;/*"boss01-mo.png"60x42, offset*/
-//	sb01[2] = sprite_add_file 0("boss/boss01_2.png", 4, PRIORITY_03_ENEMY, 0); sb01[2]->anim_speed=8;/*"boss01-ro.png"53x42, offset(1-4+4)x(15)*/
-//	sb01[3] = sprite_add_file 0("boss/boss01_3.png", 2, PRIORITY_03_ENEMY, 0); sb01[3]->anim_speed=8;/*"boss01-lu.png"62x67, offset(9-3)x(3)*/
-//	sb01[4] = sprite_add_file 0("boss/boss01_4.png", 2, PRIORITY_03_ENEMY, 0); sb01[4]->anim_speed=8;/*"boss01-mu.png"60x57, offset(7-4)x(8)*/ //key
-//	sb01[5] = sprite_add_file 0("boss/boss01_3.png", 2, PRIORITY_03_ENEMY, 0); sb01[5]->anim_speed=8;/*"boss01-ru.png"53x57, offset(8-3)x(10)*/
+//	sb01[0] = spr ite_add_file 0("boss/boss01_0.png", 4, PRIORITY_03_ENEMY, 0); sb01[0]->anim_speed=8;/*"boss01-lo.png"62x49, offset(3-4+4)x(15)*/
+//	sb01[1] = spr ite_add_file 0("boss/boss01_1.png", 8, PRIORITY_03_ENEMY, 0); sb01[1]->anim_speed=0;/*"boss01-mo.png"60x42, offset*/
+//	sb01[2] = spr ite_add_file 0("boss/boss01_2.png", 4, PRIORITY_03_ENEMY, 0); sb01[2]->anim_speed=8;/*"boss01-ro.png"53x42, offset(1-4+4)x(15)*/
+//	sb01[3] = spr ite_add_file 0("boss/boss01_3.png", 2, PRIORITY_03_ENEMY, 0); sb01[3]->anim_speed=8;/*"boss01-lu.png"62x67, offset(9-3)x(3)*/
+//	sb01[4] = spr ite_add_file 0("boss/boss01_4.png", 2, PRIORITY_03_ENEMY, 0); sb01[4]->anim_speed=8;/*"boss01-mu.png"60x57, offset(7-4)x(8)*/ //key
+//	sb01[5] = spr ite_add_file 0("boss/boss01_3.png", 2, PRIORITY_03_ENEMY, 0); sb01[5]->anim_speed=8;/*"boss01-ru.png"53x57, offset(8-3)x(10)*/
 //
 	sb01[0] = sprite_add_res(BASE_BOSS_ALICE_0_PNG); /*"boss01-lo.png"62x49, offset(3-4+4)x(15)*/
 	sb01[1] = sprite_add_res(BASE_BOSS_ALICE_1_PNG); /*"boss01-mo.png"60x42, offset*/
@@ -455,16 +487,16 @@ void add_boss_alice(STAGE_DATA *l)/*int lv*/
 	/*data->state*/b01state = 0;
 	BOSS01_DATA *data;
 	int i;
-	for (i=0;i<6;i++)
+	for (i=0; i<6; i++)
 	{
 		const unsigned short b01_health[6] =
 		{
-		/*	   if (i==0)	{	data->enemy_base.health=*/ 400,//;	}	// [***090114		変更(+50)
-		/*else if (i==1)	{	data->enemy_base.health=*/1023,//;	}	//アリス本体のHP。もう少し高くてもいいかも。// [***090305	変更
-		/*else if (i==2)	{	data->enemy_base.health=*/ 400,//;	}	// [***090114		変更(+50)
-		/*else if (i==3)	{	data->enemy_base.health=*/ 200,//;	}	// [***090114	変更(+20)
-		/*else if (i==4)	{	data->enemy_base.health=*/	20,//;	}	// 真ん中の子 ((RANK_MAX-difficulty)*20)
-		/*else if (i==5)	{	data->enemy_base.health=*/ 200 //;	}	// [***090114	変更(+20)
+		/*	   if (i==0)	{	data->boss_base.health=*/ 400,//;	}	// [***090114		変更(+50)
+		/*else if (i==1)	{	data->boss_base.health=*/1023,//;	}	//アリス本体のHP。もう少し高くてもいいかも。// [***090305	変更
+		/*else if (i==2)	{	data->boss_base.health=*/ 400,//;	}	// [***090114		変更(+50)
+		/*else if (i==3)	{	data->boss_base.health=*/ 200,//;	}	// [***090114	変更(+20)
+		/*else if (i==4)	{	data->boss_base.health=*/	20,//;	}	// 真ん中の子 ((RANK_MAX-difficulty)*20)
+		/*else if (i==5)	{	data->boss_base.health=*/ 200 //;	}	// [***090114	変更(+20)
 		};
 		// 4==真ん中の子(最高ランクの場合20、以下ランク下がるごとに20ずつ増える) /* ((RANK_MAX-difficulty)*20) */
 		const unsigned short b01_04[4] = {	200,	100,	50, 	20, 	};
@@ -476,19 +508,21 @@ void add_boss_alice(STAGE_DATA *l)/*int lv*/
 		sb01[i]->data			= data;
 		data->health_flag		= 0;
 
-		data->enemy_base.health = ((4==i)?(b01_04[difficulty]):(b01_health[i]));
+		data->boss_base.health = ((4==i)?(b01_04[difficulty]):(b01_health[i]));
 		//
 		if (i==1)/* アリス本人 */
 		{	sb01[i]->callback_mover 	= enemy_boss01_move;
-			data->enemy_base.score		= adjust_score_by_difficulty(score( 500000));	/*	50万 (計100万==(50万)+(5x10万)) */
-		//	data->enemy_base.score		= score(1000)*(difficulty+1);
+			data->boss_base.score		= adjust_score_by_difficulty(score( 500000));	/*	50万 (計100万==(50万)+(5x10万)) */
+		//	data->boss_base.score		= score(1000)*(difficulty+1);
 		}
 		else/* 人形達 */
 		{
-			data->enemy_base.score		= adjust_score_by_difficulty(score( 100000));	/*	10万 */
-		//	data->enemy_base.score		= score( 500)*(difficulty+1);
+			data->boss_base.score		= adjust_score_by_difficulty(score( 100000));	/*	10万 */
+		//	data->boss_base.score		= score( 500)*(difficulty+1);
 		}
 	}
+	//
+	data->boss_base.boss_timer		= 60*64;	/*	[] */
 //	((PLAYER_DATA *)player->data)->bo ssmode = B00_NONE/*B01_BA TTLE*/;
 	((PLAYER_DATA *)player->data)->boss = sb01[1];
 	/* コールバック登録 */

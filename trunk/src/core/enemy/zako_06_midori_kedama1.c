@@ -19,7 +19,7 @@ typedef struct
 #define NUM_OF_ENEMIES (3)
 
 /*---------------------------------------------------------
-
+	“GˆÚ“®
 ---------------------------------------------------------*/
 
 static void move_midori_kedama1(SPRITE *s)
@@ -46,7 +46,7 @@ static void move_midori_kedama1(SPRITE *s)
 		break;/* ??? [***20090210	’Ç‰Á  */
 	case 1:
 		speed256 = t256(3.5/*6*/);
-		if (s->x256 <= -((s->w)<<8))
+		if (s->x256 <= -((s->w128+s->w128)))
 		{
 			s->type=SP_DELETE;
 		}

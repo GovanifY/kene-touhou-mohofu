@@ -18,8 +18,10 @@ typedef struct
 //	int level;
 } KAKOMI1_DATA;
 
-/*---------------------------------------------------------
+#define NUM_OF_ENEMIES (16)
 
+/*---------------------------------------------------------
+	“GˆÚ“®
 ---------------------------------------------------------*/
 
 static void move_kakomi1(SPRITE *s)
@@ -75,7 +77,7 @@ void add_zako_kakomi1(STAGE_DATA *l)/*int lv*/
 	lv	= l->user_y;
 //
 	int i;
-	for (i=0;i<16;i++)
+	for (i=0; i<NUM_OF_ENEMIES; i++)
 	{
 		SPRITE *s;
 		s					= sprite_add_res(BASE_GREAT_FAIRY02_PNG); 	s->anim_speed=5;/*1*/ /*16"cu be.png")*/
@@ -96,3 +98,4 @@ void add_zako_kakomi1(STAGE_DATA *l)/*int lv*/
 //		data->level 		= lv;
 	}
 }
+#undef NUM_OF_ENEMIES

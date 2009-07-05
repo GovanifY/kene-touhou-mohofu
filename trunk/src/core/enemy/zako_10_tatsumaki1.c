@@ -27,7 +27,7 @@ static int destoroy;
 #define NUM_OF_ENEMIES (24)
 
 /*---------------------------------------------------------
-
+	“G‚â‚ç‚ê
 ---------------------------------------------------------*/
 
 static void lose_tatsumaki1(SPRITE *s)
@@ -46,7 +46,7 @@ static void lose_tatsumaki1(SPRITE *s)
 //66%==SP_ITEM_02_BOMB or 33%==SP_ITEM_01_P008 (SP_ITEM_EXTRA_HOMING+(ra_nd()&3/*%3*/)),
 
 /*---------------------------------------------------------
-
+	“GˆÚ“®
 ---------------------------------------------------------*/
 
 static void move_tatsumaki1(SPRITE *s)
@@ -77,9 +77,9 @@ static void move_tatsumaki1(SPRITE *s)
 		else
 		{
 			s->x256 += d->speed256/**fps_fa ctor*/;
-			if (s->x256 >= t256(GAME_WIDTH-10)-((s->w)<<8))
+			if (s->x256 >= t256(GAME_WIDTH-10)-((s->w128+s->w128)))
 			{
-				s->x256 = t256(GAME_WIDTH-10)-((s->w)<<8);
+				s->x256 = t256(GAME_WIDTH-10)-((s->w128+s->w128));
 				d->speed256 = t256(2)/*3*/;/*‘¬‚·‚¬*/
 				d->state = 2;
 			}
@@ -134,8 +134,8 @@ void add_zako_tatsumaki1(STAGE_DATA *l)/*int lv*/
 		s->callback_mover	= move_tatsumaki1;
 		s->callback_loser	= lose_tatsumaki1;
 		s->anim_frame		= (i&(16-1));/*(i&(8-1)) (i%11)*/
-		s->x256 			= t256(GAME_WIDTH/2)-((s->w)<<7);
-		s->y256 			= -(((i+1)*s->h)<<8);
+		s->x256 			= t256(GAME_WIDTH/2)-((s->w128));
+		s->y256 			= -(((i+1)*(s->h128+s->h128)));
 		TATSUMAKI1_DATA *data;
 		data				= mmalloc(sizeof(TATSUMAKI1_DATA));
 		s->data 			= data;

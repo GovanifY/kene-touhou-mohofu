@@ -21,7 +21,7 @@ static int level;
 #define NUM_OF_ENEMIES (9/*10*/)
 
 /*---------------------------------------------------------
-
+	“G‚â‚ç‚ê
 ---------------------------------------------------------*/
 
 static void lose_midori_kedama2(SPRITE *s)
@@ -35,7 +35,7 @@ static void lose_midori_kedama2(SPRITE *s)
 }
 
 /*---------------------------------------------------------
-
+	“GˆÚ“®
 ---------------------------------------------------------*/
 
 static void move_midori_kedama2(SPRITE *s)
@@ -83,7 +83,7 @@ static void move_midori_kedama2(SPRITE *s)
 	{
 	//	s->y256 -= t256(4);/*‚Í‚â‚·‚¬*/
 		s->y256 -= t256(1.5);
-		if (s->y256 < -((s->h)<<8) )	/* ‰æ–ÊŠO‚Éo‚½‚ç */	/*-((s->w)<<8)*/
+		if (s->y256 < -((s->h128+s->h128)) )	/* ‰æ–ÊŠO‚Éo‚½‚ç */	/*-((s->w)<<8)*/
 		{
 			s->flags &= (~(SP_FLAG_VISIBLE));
 		}

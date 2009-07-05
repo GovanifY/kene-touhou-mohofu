@@ -33,9 +33,9 @@ static void clouds_mover(SPRITE *src)
 	src->y256 += d->speed_rand256/**fps_fa ctor*/;
 	if (src->y256 > t256(GAME_HEIGHT))
 	{
-		src->y256			-= (t256(GAME_HEIGHT)+((src->w)<<8));
+		src->y256			-= (t256(GAME_HEIGHT)+((src->w128+src->w128)));
 		d->speed_rand256	= (ra_nd()&((128)-1));
-		src->x256			= (ra_nd()&((256*256)-1))+(ra_nd()&((128*256)-1))/*(ra_nd()%GAME_WIDTH)*/-((src->w)<<8);
+		src->x256			= (ra_nd()&((256*256)-1))+(ra_nd()&((128*256)-1))/*(ra_nd()%GAME_WIDTH)*/-((src->w128+src->w128));
 		//c->alpha			= bg_alpha;
 //		src->alpha			= 200;/*遅すぎる([60-50fps -> [40-30]fps)*/
 	}
@@ -64,9 +64,27 @@ static void clouds_mover(SPRITE *src)
 /*---------------------------------------------------------
 	ここでロードすると確実に処置落ちするよ
 ---------------------------------------------------------*/
+//	char *filename,
+//	int total_frames,
+//	int x_divide_frames,
+//	int y_divide_frames,
+//	Uint8 priority,
+//	int use_alpha,
+//	int anime_speed
+
+//	char *filename,			/*filename*/(l->user_string),
+//	int total_frames,		1/*(l->user_x)*/,
+//	int x_divide_frames,	1,
+//	int y_divide_frames,	1,
+//	Uint8 priority,			PRIORITY_00_BG/*P R_BACK0*/,
+//	int use_alpha,			0,
+//	int anime_speed			3
+
+static char clouds_filename_work[32];
+
 extern void load_bg2_chache(char *filename, int use_alpha);
 /*l->user_string,l->user_x,l->user_y*/
-/*static*/extern SPRITE *sprite_add_internal_000(char *filename, int frames, Uint8 priority, int use_alpha, int anime_speed);
+/*static*/extern SPRITE *sprite_add_internal_res(IMAGE_RESOURCE *image_resource_ptr);
 void add_clouds(STAGE_DATA *l)
 {
 	if ((MAX_CLOUDS-1) < used_clouds)
@@ -77,10 +95,23 @@ void add_clouds(STAGE_DATA *l)
 	// error check
 	load_bg2_chache(/*filename*/(l->user_string), 0);
 //
+	static IMAGE_RESOURCE my_resource[1] =
 	{
-		w3[used_clouds] 				= sprite_add_internal_000(/*filename*/(l->user_string), 1/*(l->user_x)*/, PRIORITY_00_BG/*P R_BACK0*/, 0, 3);
-	//	w3[used_clouds] 				= sprite_add_file(filename,1,PRIORITY_01_SHOT/*P R_BACK1*/);
-	//	w3[used_clouds] 				= sprite_add_file(filename,1,PRIORITY_01_SHOT/*P R_BACK2*/);
+		{
+			&clouds_filename_work[0],
+			0,
+			1/*(l->user_x)*/,
+			1,
+			1,
+			PRIORITY_00_BG/*P R_BACK0*/,
+			0, 0, 0
+		}
+	};
+	strcpy(clouds_filename_work, /*filename*/(l->user_string));
+	{
+		w3[used_clouds] 				= sprite_add_internal_res((IMAGE_RESOURCE *)my_resource);
+	//	w3[used_clouds] 				= spr ite_add_file(filename,1,PRIORITY_01_SHOT/*P R_BACK1*/);
+	//	w3[used_clouds] 				= spr ite_add_file(filename,1,PRIORITY_01_SHOT/*P R_BACK2*/);
 		w3[used_clouds]->x256			=  (ra_nd()&((256*256)-1))+(ra_nd()&((128*256)-1))/*(ra_nd()%GAME_WIDTH)*/ /*((w3[i]->w)<<8)*/;
 		w3[used_clouds]->y256			= -64-(ra_nd()&((256*256)-1))/*(ra_nd()%GAME_HEIGHT)*/;
 		w3[used_clouds]->flags			&= (~(SP_FLAG_COLISION_CHECK));/*あたり判定なし*/

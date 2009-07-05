@@ -86,7 +86,6 @@ enum
 	}
 }
 
-extern SDL_Surface *back_screen;
 extern void ini_save(void); 	// [***090115
 /*static*/ void key_config_work(void)
 {
@@ -144,14 +143,13 @@ extern void ini_save(void); 	// [***090115
 //
 	static int bg_alpha_aaa;
 //	int i;
-//1231881
 	switch (psp_loop/*key_config_state*/)
 	{
 	case (ST_WORK_KEY_CONFIG|KEY_CONFIG_STATE_00_INIT):
 		play_music(BGM_05_stage5);
 		{
 			SDL_Surface *loadpic	= loadbmp0("bg/key_config.jpg", 0, 0);/*"bg/key_haikei_surface.png"*/
-			SDL_BlitSurface(loadpic, NULL, back_screen, NULL);
+			SDL_BlitSurface(loadpic, NULL, sdl_screen[SDL_01_BACK_SCREEN], NULL);
 			unloadbmp_by_surface(loadpic);
 			//unloadbmp_by_surface(key_haikei_surface);
 		}
@@ -260,11 +258,11 @@ extern void ini_save(void); 	// [***090115
 			psp_push_screen();
 			psp_loop++;//key_config_state = (ST_WORK_KEY_CONFIG|KEY_CONFIG_STATE_02_SELECT_LEFT_MENU);
 		}
-		SDL_SetAlpha(/*key_haikei_surface*/back_screen, SDL_SRCALPHA, bg_alpha_aaa);
-		psp_pop_screen();//SDL_BlitSurface(key_haikei_surface,NULL,screen,NULL);
+		SDL_SetAlpha(/*key_haikei_surface*/sdl_screen[SDL_01_BACK_SCREEN], SDL_SRCALPHA, bg_alpha_aaa);
+		psp_pop_screen();//SDL_BlitSurface(key_haikei_surface,NULL,sdl_screen[SDL_00_SCREEN],NULL);
 		break;
 	case (ST_WORK_KEY_CONFIG|KEY_CONFIG_STATE_02_SELECT_LEFT_MENU):
-		psp_pop_screen();//SDL_BlitSurface(key_haikei_surface,NULL,screen,NULL);
+		psp_pop_screen();//SDL_BlitSurface(key_haikei_surface,NULL,sdl_screen[SDL_00_SCREEN],NULL);
 		if (0==my_pad)
 		{
 			if (my_pad_alter & PSP_KEY_UP)				// 上ボタン入力
@@ -429,17 +427,14 @@ extern void ini_save(void); 	// [***090115
 					if (menu_cursor1==i)	{	jj= 2;	}
 					else					{	jj= 0;	}
 					rect_locate_offset.x = X_LOCATE_OFFSET_04-(jj);
-					{	/* 標準形式からkey_config画像形式(key_bgの並び方)へ変換する  */
-					//	static const Uint8 gazo_iti_henkan[12] = { 10,11,4,7, 5,6,9,8, 3,0,1,2 };
-						rect_locate_offset.y = Y_LOCATE_OFFSET+(/*num*/ /*gazo_iti_henkan[i]*/i<<4)-(jj);
-					}
+					rect_locate_offset.y = Y_LOCATE_OFFSET+(/*num*/i<<4)-(jj);
 					SDL_SetAlpha(	key_name_surface[kinou_number], SDL_SRCALPHA, /*bg_alpha_aaa*/(127+(jj<<6)));
-					SDL_BlitSurface(key_name_surface[kinou_number], NULL,screen,&rect_locate_offset);
+					SDL_BlitSurface(key_name_surface[kinou_number], NULL,sdl_screen[SDL_00_SCREEN],&rect_locate_offset);
 				//	rect_src_offset.x = 0;
 				//	rect_src_offset.y = (kinou_number<<4);
 				//	rect_src_offset.w = (16*9);
 				//	rect_src_offset.h = (16);
-				//	SDL_BlitSurface(back_screen,&rect_src_offset,screen,&rect_locate_offset);
+				//	SDL_BlitSurface(sdl_screen[SDL_01_BACK_SCREEN],&rect_src_offset,sdl_screen[SDL_00_SCREEN],&rect_locate_offset);
 				}
 			}
 			/* リセットタイプの描画 */
@@ -449,7 +444,7 @@ extern void ini_save(void); 	// [***090115
 				rect_locate_offset.x = X_LOCATE_OFFSET_03-(jj);
 				rect_locate_offset.y = Y_LOCATE_OFFSET+(/*num*/12/*i*/<<4)-(jj);
 				SDL_SetAlpha(	key_name_surface[(MAX_KINOU_11+MAX_BUTTON_12+MAX_MENU_02)+key_setting_default_type], SDL_SRCALPHA, /*bg_alpha_aaa*/(127+(jj<<6)));
-				SDL_BlitSurface(key_name_surface[(MAX_KINOU_11+MAX_BUTTON_12+MAX_MENU_02)+key_setting_default_type], NULL,screen,&rect_locate_offset);
+				SDL_BlitSurface(key_name_surface[(MAX_KINOU_11+MAX_BUTTON_12+MAX_MENU_02)+key_setting_default_type], NULL,sdl_screen[SDL_00_SCREEN],&rect_locate_offset);
 			}
 			/* ボタン名称描画 */
 			for (i=0; i<(MAX_BUTTON_12+MAX_MENU_02)/*MAX_KEY_SETTING_12*/; i++)
@@ -459,7 +454,7 @@ extern void ini_save(void); 	// [***090115
 				rect_locate_offset.x = (X_LOCATE_OFFSET_02)-(jj);
 				rect_locate_offset.y = (Y_LOCATE_OFFSET)+(/*num*/ /*gazo_iti_henkan[i]*/i<<4)-(jj);
 				SDL_SetAlpha(	key_name_surface[i+(MAX_KINOU_11)], SDL_SRCALPHA, /*bg_alpha_aaa*/(127+(jj<<6)));
-				SDL_BlitSurface(key_name_surface[i+(MAX_KINOU_11)], NULL,screen,&rect_locate_offset);
+				SDL_BlitSurface(key_name_surface[i+(MAX_KINOU_11)], NULL,sdl_screen[SDL_00_SCREEN],&rect_locate_offset);
 			}
 		}
 		break;
@@ -477,7 +472,7 @@ extern void ini_save(void); 	// [***090115
 		play_music(BGM_00_intro);
 		{
 			SDL_Surface *loadpic	= loadbmp0("bg/title_bg.jpg", 0, 0);/*"bg/key_haikei_surface.png"*/
-			SDL_BlitSurface(loadpic, NULL, back_screen, NULL);
+			SDL_BlitSurface(loadpic, NULL, sdl_screen[SDL_01_BACK_SCREEN], NULL);
 			unloadbmp_by_surface(loadpic);
 			//unloadbmp_by_surface(key_haikei_surface);
 		}
@@ -492,8 +487,8 @@ extern void ini_save(void); 	// [***090115
 			/* メインメニューに戻る */
 			psp_loop=(ST_INIT_MENU|0/*ST_ME NU_SUB_MAIN_MENU*/);	//newsta te(ST_MENU/*ST_INTRO*/,0,1);
 		}
-		SDL_SetAlpha(/*key_haikei_surface*/back_screen, SDL_SRCALPHA, bg_alpha_aaa);
-		psp_pop_screen();//SDL_BlitSurface(key_haikei_surface,NULL,screen,NULL);
+		SDL_SetAlpha(/*key_haikei_surface*/sdl_screen[SDL_01_BACK_SCREEN], SDL_SRCALPHA, bg_alpha_aaa);
+		psp_pop_screen();//SDL_BlitSurface(key_haikei_surface,NULL,sdl_screen[SDL_00_SCREEN],NULL);
 		break;
 	}
 }

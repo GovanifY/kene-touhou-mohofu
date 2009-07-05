@@ -51,7 +51,7 @@ static void gameover_display(void/*dou ble s1, dou ble s2*/)
 	d.h = ((str_01_game_over_surface->h*go_size1_256)>>8);
 	d.x = (GAME_WIDTH /2)	-((d.w)/2); 	// [***090203
 	d.y = 96;//98;//(GAME_HEIGHT/2)-30-((d.h)/2); 	// [***090203
-	blit_scaled(str_01_game_over_surface,&s,screen,&d);
+	blit_scaled(str_01_game_over_surface, &s, sdl_screen[SDL_00_SCREEN], &d);
 //
 	s.w = (str_02_score_surface->w);
 	s.h = (str_02_score_surface->h);
@@ -59,7 +59,7 @@ static void gameover_display(void/*dou ble s1, dou ble s2*/)
 	d.h = ((str_02_score_surface->h*go_size2_256)>>8);
 	d.x = (GAME_WIDTH /2)	-((d.w)/2); 	// [***090203
 	d.y = 160;//158;//(GAME_HEIGHT/2)+30-((d.h)/2); 	// [***090203
-	blit_scaled(str_02_score_surface,&s,screen,&d);
+	blit_scaled(str_02_score_surface, &s, sdl_screen[SDL_00_SCREEN], &d);
 }
 
 /*---------------------------------------------------------
@@ -82,7 +82,7 @@ void gameover_work(void)
 //
 	if ( (ST_WORK_GAME_OVER|GAME_OVER_00_INIT) != (psp_loop) )
 	{
-		psp_pop_screen();	//SDL_BlitSurface(back_screen,NULL,screen,NULL);
+		psp_pop_screen();	//SDL_BlitSurface(back_screen, NULL, sdl_screen[SDL_00_SCREEN], NULL);
 	}
 	switch ((Uint8)(psp_loop&0xff)/*state.substate*/)
 	{
@@ -100,9 +100,9 @@ void gameover_work(void)
 		/* KETMŒÝŠ·‚È‚ç ‚±‚±‚Å back buffer screen ‚ð clear screen ‚·‚×‚« */
 		psp_push_screen();
 		#endif
-		SDL_SetAlpha(screen,SDL_SRCALPHA,128);
-		psp_push_screen();	//SDL_BlitSurface(screen,NULL,back_screen,NULL);
-		SDL_SetAlpha(screen,SDL_SRCALPHA,255);
+		SDL_SetAlpha(sdl_screen[SDL_00_SCREEN],SDL_SRCALPHA,128);
+		psp_push_screen();	//SDL_BlitSurface(sdl_screen[SDL_00_SCREEN], NULL, back_screen, NULL);
+		SDL_SetAlpha(sdl_screen[SDL_00_SCREEN],SDL_SRCALPHA,255);
 		go_size1_256		= 0;
 		go_size2_256		= 0;
 		game_over_time_out	= 0;/*wait*/

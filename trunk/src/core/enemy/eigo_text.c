@@ -65,8 +65,30 @@ static void move_game_image(SPRITE *s)
 
 static void add_common(STAGE_DATA *l, SDL_Surface *tmp)
 {
+	static IMAGE_RESOURCE my_resource[1] =
+	{
+		{
+			NULL,/*dummy*/
+			0,/*dummy*/
+			1,
+			1,
+			1,
+			PRIORITY_04_ITEM,
+			0, 0, 0
+		}
+	};
+//
 	SPRITE *s;
-	s					= sprite_add_000(tmp, 1, PRIORITY_04_ITEM, SP_FLAG_NOT_CACHE/*1*/, 0);
+	s					= sprite_add_res_list(
+		tmp,
+//		1,
+//		1,
+//		1,
+//		PRIORITY_04_ITEM,
+		SP_FLAG_NOT_CACHE/*1*/,
+//		0	/*anime_speed*/
+		(IMAGE_RESOURCE *)my_resource
+	);
 	s->flags			|= (SP_FLAG_FREE_SURFACE|SP_FLAG_VISIBLE|SP_FLAG_TIME_OVER);
 	s->type 			= SP_ETC;
 
@@ -138,11 +160,11 @@ void add_enemy_load_picture(STAGE_DATA *l)
 			SDL_SRCCOLORKEY|SDL_SWSURFACE,
 			surface->w,
 			surface->h,
-			screen->format->BitsPerPixel,
-			screen->format->Rmask,
-			screen->format->Gmask,
-			screen->format->Bmask,
-			screen->format->Amask);
+			sdl_screen[SDL_00_SCREEN]->format->BitsPerPixel,
+			sdl_screen[SDL_00_SCREEN]->format->Rmask,
+			sdl_screen[SDL_00_SCREEN]->format->Gmask,
+			sdl_screen[SDL_00_SCREEN]->format->Bmask,
+			sdl_screen[SDL_00_SCREEN]->format->Amask);
 		SDL_SetColorKey(tmp,SDL_SRCCOLORKEY|SDL_RLEACCEL,0x00000000);
 		SDL_BlitSurface(surface,NULL,tmp,NULL);
 		SDL_FreeSurface(surface);

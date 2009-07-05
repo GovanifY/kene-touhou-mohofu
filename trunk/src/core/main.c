@@ -28,8 +28,11 @@
 	PSP module info section
 ---------------------------------------------------------*/
 
-PSP_MODULE_INFO("KENE", 0x0000, 0, 4);	/* PSPのOSに教えてあげる名前とかスレッドの優先度とかだよ */
-PSP_MAIN_THREAD_ATTR(THREAD_ATTR_USER); /* ユーザーモードで起動するよ */
+PSP_MODULE_INFO("KENE", 0x0000, 0, 4);	/* PSPのOSに教えてあげる名前。ユーザーモードで起動する。 */
+PSP_MAIN_THREAD_ATTR(THREAD_ATTR_USER|PSP_THREAD_ATTR_CLEAR_STACK); /* このプログラムが使うOS資源。*/
+/* ユーザーモードで動作する(範囲しか使わない)よ。(kernel系コールを使わない。) */
+/* VFPU とか USB/WLAN とか SCRATCH_SRAM とか使わないよ。 */
+/* 終了時にこのプログラムが使ったスタック(変数領域)をOSに消してもらうよ。 */
 PSP_MAIN_THREAD_STACK_SIZE_KB(32);		/* (プログラムが使用する変数の)スタック領域のサイズだよ */
 										/* ここが大きいとmallocできる量がその分減るよ */
 /* 2008年ぐらいの古い PSPSDK は -1(自動) に対応していないので -1 にするとハングアップするよ */
@@ -46,6 +49,11 @@ static int exit_callback(int arg1, int arg2, void *common)
 {
 	/* コールバック側から、メイン側の状態を操作する */
 	psp_loop = ST_PSP_QUIT;//newsta te(ST_PSP_QUIT,0,1);// [***** 追加:090103
+	#if 0
+	/* 要るかも */
+	sceKernelDelayThread(1000000);/* コールバック側が1秒待つ */
+	psp_loop = ST_PSP_QUIT;/* もう一回終了フラグ */
+	#endif
 	return (0); 	/* コールバック側の終了 */
 }
 	/* それ以外の事をしたらまずい(メイン側で同じ事をするので) */
@@ -60,8 +68,7 @@ static int exit_callback(int arg1, int arg2, void *common)
 static int callback_homekey_thread(SceSize args, void *argp)
 {
 	/* 新規にコールバックを作成 */
-	int callback_id;
-	callback_id = sceKernelCreateCallback("exit callback", exit_callback, NULL);
+	int callback_id = sceKernelCreateCallback("exit callback", exit_callback, NULL);
 	sceKernelRegisterExitCallback(callback_id); 	/* [HOME]キー用のコールバックを登録 */
 	sceKernelSleepThreadCB();
 	return (0);
@@ -75,8 +82,7 @@ static int callback_homekey_thread(SceSize args, void *argp)
 static /*int*/void regist_home_key(void)
 {
 	/* 新規にスレッドを作成 */
-	int thread_id/* = 0*/;
-	thread_id = sceKernelCreateThread("update thread", callback_homekey_thread, 0x11, 0xFA0, 0, 0); /* スレッドの優先度等を設定 */
+	int thread_id = sceKernelCreateThread("update thread", callback_homekey_thread, 0x11, 0xFA0, 0, 0); /* スレッドの優先度等を設定 */
 	if (thread_id >= 0) 	/* スレッドが作成出来たら */
 	{
 		sceKernelStartThread(thread_id, 0, 0);	/* スレッド開始 */
@@ -135,7 +141,7 @@ int main(int argc, char *argv[])
 		case (ST_WORK_GAME_PLAY>>8):		shooting_game_work();	break;
 		case (ST_INIT_MENU>>8): 			all_menu_init();		break;
 		case (ST_WORK_MENU>>8): 			all_menu_work();		break;
-		case (ST_INIT_PLAYER_SELECT>>8):	player_opt_init();		break;
+//		case (ST_INIT_PLAYER_SELECT>>8):	player_opt_init();		break;吸収。なし
 		case (ST_WORK_PLAYER_SELECT>>8):	player_opt_work();		break;
 		case (ST_INIT_NAME_ENTRY>>8):		name_entry_init();		break;
 		case (ST_WORK_NAME_ENTRY>>8):		name_entry_work();		break;
@@ -150,10 +156,10 @@ int main(int argc, char *argv[])
 		case (ST_WORK_KEY_CONFIG>>8):		key_config_work();		break;
 	//	case (ST_INIT_STORY>>8):			story_init();			break;吸収。なし
 		case (ST_WORK_STORY>>8):			story_work();			break;
-	//	case ST_INTRO:						intro_init();			break;
-	//	case ST_INTRO:						intro_work();			break;
-	//	case ST_START_INTRO:				startintro_init();		break;
-	//	case ST_START_INTRO:				startintro_work();		break;
+	//	case (ST_INTRO>>8): 				intro_init();			break;
+	//	case (ST_INTRO>>8): 				intro_work();			break;
+	//	case (ST_START_INTRO>>8):			startintro_init();		break;
+	//	case (ST_START_INTRO>>8):			startintro_work();		break;
 		}
 		vbl_draw_screen();	/* 画面描画とキー入力(本当は v-blanc タイミングで) */
 	}

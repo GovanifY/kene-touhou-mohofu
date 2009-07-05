@@ -19,7 +19,7 @@ typedef struct
 
 
 /*---------------------------------------------------------
-
+	“G‚â‚ç‚ê
 ---------------------------------------------------------*/
 
 static void lose_ao_yousei1(SPRITE *s)
@@ -29,8 +29,9 @@ static void lose_ao_yousei1(SPRITE *s)
 	//item_create(s, (((ra_nd()&0x07)&0xff)|SP_ITEM_00_P001), 1, (ITEM_MOVE_FLAG_01_COLLECT|ITEM_MOVE_FLAG_06_RAND_XY)/*(up_flags)*/ );
 	item_create(s, (enemy_get_random_item()), 1, (ITEM_MOVE_FLAG_01_COLLECT|ITEM_MOVE_FLAG_06_RAND_XY)/*(up_flags)*/ );
 }
-/*---------------------------------------------------------
 
+/*---------------------------------------------------------
+	“GˆÚ“®
 ---------------------------------------------------------*/
 
 static void move_ao_yousei1(SPRITE *s)

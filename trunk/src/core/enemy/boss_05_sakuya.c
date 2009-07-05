@@ -5,7 +5,7 @@
 	\˜Z–é ç–é
 	PAD
 	-------------------------------------------------------
-	ƒ{ƒXƒ^ƒCƒ}[–¢‘Î‰ž
+	ƒ{ƒXƒ^ƒCƒ}[‘Î‰ž’†
 ---------------------------------------------------------*/
 
 /* 1:ƒŒƒ~‚Æç–é‚ª’e–‹—ûK‚ð‚·‚éB0:ƒŒƒ~‚Æç–é‚Íí‚í‚È‚¢B */
@@ -14,12 +14,10 @@ extern int select_player;
 
 typedef struct _boss05_data
 {
-	ENEMY_BASE enemy_base;
-	int type;	/* 0: normal, 1: destroyed */
-	int state1; //Œ`‘Ô
-	int state2; //s“®
+	BOSS_BASE boss_base;
+	int state1; 	//Œ`‘Ô
+	int state2; 	//s“®
 //
-	/*dou ble*/int time_out; //§ŒÀŽžŠÔ
 	/*dou ble*/int wait1;
 	/*dou ble*/int wait2_256;
 	/*dou ble*/int wait3;
@@ -28,6 +26,7 @@ typedef struct _boss05_data
 	/*dou ble*/int angle512;
 	/*dou ble*/int length_s_p256;	/* ç–é‚ÆƒvƒŒƒCƒ„[‚Æ‚Ì‹——£ */
 } BOSS05_DATA;
+//	int aaa_type;		/* 0: normal, 1: destroyed */
 
 typedef struct _boss05_maho_data
 {
@@ -74,7 +73,7 @@ static void sakuya_put_items(SPRITE *s/*, SPRITE *t*/)
 	data->wait1 		= 80;
 	data->wait2_256 	= t256(-100);
 	data->wait3 		= 0;//???
-	data->time_out		= 60*60;	// 60 [•b] ???	4096/*2500*/	/*3000*/;//???
+	data->boss_base.boss_timer		= (60*64);	// 60 [•b] ???	4096/*2500*/	/*3000*/;//???
 }
 
 /*---------------------------------------------------------
@@ -86,24 +85,25 @@ static void callback_enemy_boss05_hitbyweapon(SPRITE *s, SPRITE *t/*, int angle*
 {
 	explosion_add_type(t->x256,t->y256,/*0,*/EXPLOSION_MINI00);/*æ‚ÉŽÀs‚µ‚½•û‚ª‘¬‚¢*/
 	//
-	BOSS05_DATA *data=(BOSS05_DATA *)s->data;
-	WEAPON_BASE *w=(WEAPON_BASE *)t->data;
+	BOSS05_DATA *data	= (BOSS05_DATA *)s->data;
+	WEAPON_BASE *w		= (WEAPON_BASE *)t->data;
 
-	data->enemy_base.health -= w->strength;
-	if (data->enemy_base.health < (/*4*/SAKUYA_05_KEITAI-data->state1)*1024)
+	data->boss_base.health -= w->strength;
+	if (data->boss_base.health < (/*4*/SAKUYA_05_KEITAI-data->state1)*1024)
 	{
 		sakuya_put_items(s/*,t*/);
 	}
 
-	if (data->enemy_base.health < 1)/*‘Sˆõ“|‚µ‚½H*/
+	if (data->boss_base.health < 1)/*‘Sˆõ“|‚µ‚½H*/
 	{
 		item_create(s, SP_ITEM_05_HOSI/*SP_ITEM_06_TENSU*/, 15, ITEM_MOVE_FLAG_01_COLLECT);/*¯“_‚ðo‚·*/
-		player_add_score(data->enemy_base.score);
-	//	((PLAYER_DATA *)player->data)->bo ssmode=B02_BOSS_DESTROY;
-		((PLAYER_DATA *)player->data)->state_flag |= STATE_FLAG_11_IS_BOSS_DESTROY;
+		player_add_score(data->boss_base.score);
 		//
-		explosion_add_circle(s, 1); 	/* B02_BOSS_DESTROY ‚ª•K—v */
-		s->type=SP_DELETE;
+		player_set_destoroy_boss();
+		explosion_add_circle(s, 1); 	/* player_set_destoroy_boss();B02_BOSS_DESTROY ‚ª•K—v */
+		s->type 	= SP_DELETE;
+		/* ƒR[ƒ‹ƒoƒbƒN“o˜^ */
+		((PLAYER_DATA *)player->data)->callback_boss_hitbyweapon = callback_enemy_boss05_hitbyweapon_dummy; /* ƒ_ƒ~[ƒR[ƒ‹ƒoƒbƒN“o˜^ */
 	}
 }
 
@@ -117,12 +117,12 @@ static void callback_enemy_boss05_hitbyweapon(SPRITE *s, SPRITE *t/*, int angle*
 
 static void enemy_boss05_waitstate(SPRITE *s, int nextstate, int anim_frame)
 {
-	BOSS05_DATA *data=(BOSS05_DATA *)s->data;
+	BOSS05_DATA *data = (BOSS05_DATA *)s->data;
 	if (data->wait1>0)
 	{	data->wait1 -= 1/*fps_fa ctor*/;}
 	else
 	{
-		data->state2=nextstate;
+		data->state2 = nextstate;
 		s->anim_frame=anim_frame;
 	}
 }
@@ -134,9 +134,9 @@ static void enemy_boss05_waitstate(SPRITE *s, int nextstate, int anim_frame)
 static void enemy_boss05_out(SPRITE *s)
 {
 	if (s->x256 < t256(50)) 								{	s->x256 = t256(50);}
-	if (s->x256 > t256(GAME_WIDTH)-t256(50)-((s->w)<<8))	{	s->x256 = t256(GAME_WIDTH)-t256(50)-((s->w)<<8);}
+	if (s->x256 > t256(GAME_WIDTH)-t256(50)-((s->w128+s->w128)))	{	s->x256 = t256(GAME_WIDTH)-t256(50)-((s->w128+s->w128));}
 	if (s->y256 < t256(10)) 								{	s->y256 = t256(10);}
-	if (s->y256 > t256(GAME_HEIGHT)-t256(120)+((s->h)<<8))	{	s->y256 = t256(GAME_HEIGHT)-t256(120)+((s->h)<<8);}
+	if (s->y256 > t256(GAME_HEIGHT)-t256(120)+((s->h128+s->h128)))	{	s->y256 = t256(GAME_HEIGHT)-t256(120)+((s->h128+s->h128));}
 }
 
 static void enemy_boss05_more_angle(SPRITE *s, /*dou ble*/int speed256, /*dou ble*/int angle4096, /*dou ble*/int a_angle4096, int k)
@@ -209,7 +209,7 @@ static void enemy_boss05_knifes2(SPRITE *s, /*dou ble*/int speed256)
 	//		angle512 += 256;
 	//	}
 		int i;
-		for (i=0;i<16/*18*/;i++)
+		for (i=0; i<16/*18*/; i++)
 		{
 			enemy_knife_create(s, (speed256), (angle512), i/*anime_pattern*/);
 			angle512 += 32/*29*/;
@@ -240,21 +240,21 @@ static void enemy_boss05_knifes3(SPRITE *s/*,*/ /*dou ble speed,*/ /*dou ble*/ /
 	data->wait2_256 = t256(0);
 	while (1)
 	{
-		tmp888 = (((int)ra_nd()+((data->wait2_256)>>8) )&(8-1)/*%8*/);
+		tmp888 = (((int)ra_nd()+(t256_floor(data->wait2_256)) )&(8-1)/*%8*/);
 		data->wait2_256 += t256(1);
 		len256 += t256(0.1);
-		tmp1_256 = player->x256 + ((player->w-s->w)<<7) + ((cos512((tmp888<<6))*len256)>>8);
-		tmp2_256 = player->y256 + ((player->h-s->h)<<7) + ((sin512((tmp888<<6))*len256)>>8);
+		tmp1_256 = player->x256 + ((player->w128-s->w128)) + ((cos512((tmp888<<6))*len256)>>8);
+		tmp2_256 = player->y256 + ((player->h128-s->h128)) + ((sin512((tmp888<<6))*len256)>>8);
 		if ((( t256(30) < tmp1_256) && (tmp1_256 < t256(GAME_WIDTH-30)))&&
 			(( t256(30) < tmp2_256) && (tmp2_256 < t256(GAME_HEIGHT-72))))
 		{	break;}
 	}
 	/*dou ble*/int tmp_x256;
 	/*dou ble*/int tmp_y256;
-	tmp_x256 = player->x256 + ((player->w)<<7);
-	tmp_y256 = player->y256 + ((player->h)<<7);
+	tmp_x256 = player->x256 + ((player->w128));
+	tmp_y256 = player->y256 + ((player->h128));
 	int i;
-	for (i=0;i<8;i++)
+	for (i=0; i<8; i++)
 	{
 		if (tmp888==i)
 		{
@@ -295,8 +295,8 @@ static void enemy_boss05_maho_move(SPRITE *s)
 	BOSS05_MAHO_DATA *d=(BOSS05_MAHO_DATA *)s->data;
 	if (d->state01<5)
 	{
-		s->x256 = d->c->x256+((d->c->w-s->w)<<7);
-		s->y256 = d->c->y256+((d->c->h-s->h)<<7);
+		s->x256 = d->c->x256+((d->c->w128-s->w128));
+		s->y256 = d->c->y256+((d->c->h128-s->h128));
 		if (((BOSS05_DATA *)d->c->data)->state1==SAKUYA_05_KEITAI/*4*/ /*¯Œ^‚ð•`‚¢‚Ä‚à‚¢‚¢‚æ*/)
 		{
 			d->state01=5;/*¯Œ^‚ð•`‚­‚º*/
@@ -376,16 +376,16 @@ static void enemy_boss05_maho_move(SPRITE *s)
 		s->anim_frame=0;
 		if (((BOSS05_DATA *)d->c->data)->state2==1)
 		{
-			d->angle512=atan_512(t256(48)-s->y256-((s->h)<<7), t256(190)-s->x256-((s->w)<<7));/*¯Œ^ü1*/
+			d->angle512=atan_512(t256(48)-s->y256-((s->h128)), t256(190)-s->x256-((s->w128)));/*¯Œ^ü1*/
 			d->state01=6;
 			d->state02=0x0;
 		}
 		break;
 	case 6:
-		if (s->y256+((s->h)<<7) <= t256(48))
+		if (s->y256+((s->h128)) <= t256(48))
 		{
 			d->state01=7;
-			d->angle512=atan_512(t256(217)-s->y256-((s->h)<<7), t256(248)-s->x256-((s->w)<<7));/*¯Œ^ü2*/
+			d->angle512=atan_512(t256(217)-s->y256-((s->h128)), t256(248)-s->x256-((s->w128)));/*¯Œ^ü2*/
 			d->wait=50;
 			d->nnn++;	if (d->nnn>(/*4-0*/3/*difficulty*/) )	{d->nnn=1/*0*/;}
 			d->mmm++;	d->mmm &= 1;
@@ -421,10 +421,10 @@ static void enemy_boss05_maho_move(SPRITE *s)
 		break;
 
 	case 9:
-		if (s->y256+((s->h)<<7) >= t256(217))
+		if (s->y256+((s->h128)) >= t256(217))
 		{
 			d->state01=10;
-			d->angle512=atan_512(t256(113)-s->y256-((s->h)<<7), t256(100)-s->x256-((s->w)<<7));/*¯Œ^ü3*/
+			d->angle512=atan_512(t256(113)-s->y256-((s->h128)), t256(100)-s->x256-((s->w128)));/*¯Œ^ü3*/
 			d->wait=50;
 			d->state02=0x0;
 		}
@@ -454,10 +454,10 @@ static void enemy_boss05_maho_move(SPRITE *s)
 		break;
 
 	case 12:
-		if (s->y256+((s->h)<<7) <= t256(113))
+		if (s->y256+((s->h128)) <= t256(113))
 		{
 			d->state01=13;
-			d->angle512=atan_512(t256(113)-s->y256-((s->h)<<7), t256(280)-s->x256-((s->w)<<7));/*¯Œ^ü4*/
+			d->angle512=atan_512(t256(113)-s->y256-((s->h128)), t256(280)-s->x256-((s->w128)));/*¯Œ^ü4*/
 			d->wait=50;
 			d->state02=0x0;
 		}
@@ -487,10 +487,10 @@ static void enemy_boss05_maho_move(SPRITE *s)
 		break;
 
 	case 15:
-		if (s->x256+((s->w)<<7) >= t256(280))
+		if (s->x256+((s->w128)) >= t256(280))
 		{
 			d->state01=16;
-			d->angle512=atan_512(t256(217)-s->y256-((s->h)<<7), t256(138)-s->x256-((s->w)<<7));/*¯Œ^ü5*/
+			d->angle512=atan_512(t256(217)-s->y256-((s->h128)), t256(138)-s->x256-((s->w128)));/*¯Œ^ü5*/
 			d->wait=50;
 			d->state02=0x0;
 		}
@@ -520,10 +520,10 @@ static void enemy_boss05_maho_move(SPRITE *s)
 		break;
 
 	case 18:
-		if (s->y256+((s->h)<<7) >= t256(217) )
+		if (s->y256+((s->h128)) >= t256(217) )
 		{
 			d->state01=19;
-			d->angle512=atan_512(t256(48)-s->y256-((s->h)<<7), t256(190)-s->x256-((s->w)<<7));/*¯Œ^ü1*/
+			d->angle512=atan_512(t256(48)-s->y256-((s->h128)), t256(190)-s->x256-((s->w128)));/*¯Œ^ü1*/
 			d->wait=50;
 			d->state02=0x0;
 		}
@@ -584,8 +584,8 @@ static void enemy_boss05_maho_create(SPRITE *s) 	//–‚•ûwƒOƒ‰ƒtƒBƒbƒN¶¬
 	data->mmm			= 0;
 	s2->alpha			= 0;
 	s2->callback_mover	= enemy_boss05_maho_move;
-	s2->x256			= s->x256+((s->w-s2->w)<<7);
-	s2->y256			= s->y256+((s->h-s2->h)<<7);
+	s2->x256			= s->x256+((s->w128-s2->w128));
+	s2->y256			= s->y256+((s->h128-s2->h128));
 }
 
 
@@ -666,7 +666,7 @@ static void move_sakuya(SPRITE *s, int speed256, int target_point_name)
 static void enemy_boss05_move(SPRITE *s)
 {
 	BOSS05_DATA *data=(BOSS05_DATA *)s->data;
-	PLAYER_DATA *pd=(PLAYER_DATA *)player->data;
+	PLAYER_DATA *pd = (PLAYER_DATA *)player->data;
 	switch (data->state1)
 	{
 	case SAKUYA_01_KEITAI/*0*/: // ‘æˆêŒ`‘Ô: ¶‰E‚É“®‚¢‚Ä¬’eŒ‚‚¿
@@ -686,11 +686,11 @@ static void enemy_boss05_move(SPRITE *s)
 				pd->state_flag |= STATE_FLAG_10_IS_LOAD_SCRIPT;
 				data->state2=10;
 			}
-			data->time_out		= 60*60;	// 60 [•b] ??? /*ŽžŠÔ§ŒÀƒJƒEƒ“ƒg–³Œø‰»*/
+			data->boss_base.boss_timer		= (60*64);	// 60 [•b] ??? /*ŽžŠÔ§ŒÀƒJƒEƒ“ƒg–³Œø‰»*/
 			break;
 		/*Š®‘S‚ÉŽp‚ðŒ»‚·*/
 		case 10:	/* */
-			data->time_out		= 60*60;	// 60 [•b] ??? /*ŽžŠÔ§ŒÀƒJƒEƒ“ƒg–³Œø‰»*/
+			data->boss_base.boss_timer		= (60*64);	// 60 [•b] ??? /*ŽžŠÔ§ŒÀƒJƒEƒ“ƒg–³Œø‰»*/
 		//	if (pd->bo ssmode==B01_BA TTLE)
 		//	if ((STATE_FLAG_05_IS_BOSS|0) == (pd->state_flag&(STATE_FLAG_05_IS_BOSS|STATE_FLAG_06_IS_SCRIPT)))
 			if ( ((((PLAYER_DATA *)player->data)->state_flag) & STATE_FLAG_05_IS_BOSS) )
@@ -700,7 +700,7 @@ static void enemy_boss05_move(SPRITE *s)
 				#if (0==USE_REMILIA)/* ‚Æ‚è‚ ‚¦‚¸ð–é‚Æ‘Îíƒ`ƒFƒbƒN */
 				/* vs REMILIA */
 				if (2==select_player)
-				{data->enemy_base.health=0/*1*/;}
+				{data->boss_base.health=0/*1*/;}
 				#endif
 			//	/*ŽžŠÔ§ŒÀƒJƒEƒ“ƒg—LŒø‰»*/
 				data->state2=1;
@@ -757,7 +757,7 @@ static void enemy_boss05_move(SPRITE *s)
 			}
 			break;
 		case 4: 	/* ‰E */
-			if (s->x256+((s->w)<<8) <= t256(GAME_WIDTH-50) )
+			if (s->x256+((s->w128+s->w128)) <= t256(GAME_WIDTH-50) )
 			{
 				s->y256 += t256(1)/*fps_fa ctor*/;
 				s->x256 += t256(3)/*fps_fa ctor*/;
@@ -857,7 +857,7 @@ static void enemy_boss05_move(SPRITE *s)
 			{
 				play_voice_auto_track(VOICE11_SAKUYA_E_SHOT00);
 				{
-				//	 ((data->wait2_256>>8)&(2-1)/*%2*/)2083221
+				//	 ((t256_floor(data->wait2_256))&(2-1)/*%2*/)2083221
 					int k=(((data->wait2_256)>>10)&1);
 					bullet_create_mamemaki(s, (data->wait2_256>>3/*/10*/), k);
 				}
@@ -1012,12 +1012,12 @@ static void enemy_boss05_move(SPRITE *s)
 				}
 				if (0==(((int)data->wait2_256)&(16-1)/*%21 t256(15*1.42)*/))
 				{
-					enemy_fall_knife_create(s, /*(0.7)*/t256(2)/*(2)*/, (deg_360_to_512(360)-((((int)(data->wait2_256))>>8)&(256-1)/*%(180*1.42)*/)), t256(0.03));
+					enemy_fall_knife_create(s, /*(0.7)*/t256(2)/*(2)*/, (deg_360_to_512(360)-((t256_floor(data->wait2_256))&(256-1)/*%(180*1.42)*/)), t256(0.03));
 					//if (difficulty)
 					{
-						enemy_fall_knife_create(s, /*(0.7)*/t256(2)/*(2)*/, (deg_360_to_512(270)-((((int)(data->wait2_256))>>8)&(256-1)/*%(180*1.42)*/)), t256(0.04));
+						enemy_fall_knife_create(s, /*(0.7)*/t256(2)/*(2)*/, (deg_360_to_512(270)-((t256_floor(data->wait2_256))&(256-1)/*%(180*1.42)*/)), t256(0.04));
 					//	if (difficulty>1)
-						{	enemy_fall_knife_create(s, /*(0.7)*/t256(2)/*(2)*/, (deg_360_to_512(180)-((((int)(data->wait2_256))>>8)&(256-1)/*%(180*1.42)*/)), t256(0.02));}
+						{	enemy_fall_knife_create(s, /*(0.7)*/t256(2)/*(2)*/, (deg_360_to_512(180)-((t256_floor(data->wait2_256))&(256-1)/*%(180*1.42)*/)), t256(0.02));}
 					}
 					play_voice_auto_track(VOICE12_SAKUYA_B2_SHOT);
 				}
@@ -1089,12 +1089,12 @@ static void enemy_boss05_move(SPRITE *s)
 				data->wait2_256 += t256(4)/*(3*1.42)*/;
 				if (0x0000==((data->wait2_256)&(0x0f00))/*%(12*1.42)*/)
 				{
-					enemy_fall_knife_create(s, t256(3), ((((int)data->wait2_256>>8)&(256-1)/*%(180*1.42)*/)+deg_360_to_512(180)), t256(0.03));
+					enemy_fall_knife_create(s, t256(3), (((t256_floor(data->wait2_256))&(256-1)/*%(180*1.42)*/)+deg_360_to_512(180)), t256(0.03));
 					if (difficulty)
 					{
-						enemy_fall_knife_create(s, t256(3), ((((int)data->wait2_256>>8)&(256-1)/*%(180*1.42)*/)+deg_360_to_512(90)), t256(0.04));
+						enemy_fall_knife_create(s, t256(3), (((t256_floor(data->wait2_256))&(256-1)/*%(180*1.42)*/)+deg_360_to_512(90)), t256(0.04));
 						if (difficulty>1)
-						{	enemy_fall_knife_create(s, t256(3), ((((int)data->wait2_256>>8)&(256-1)/*%(180*1.42)*/)), t256(0.02));}
+						{	enemy_fall_knife_create(s, t256(3), (((t256_floor(data->wait2_256))&(256-1)/*%(180*1.42)*/)), t256(0.02));}
 					}
 					play_voice_auto_track(VOICE12_SAKUYA_B2_SHOT);
 				}
@@ -1143,10 +1143,10 @@ static void enemy_boss05_move(SPRITE *s)
 			else
 			{
 //				data->move_angle512=atan_512_SAKUYA_MID;
-				if (0 == (((int)data->wait2_256>>8)&(32-1)/*%20*/) )
+				if (0 == ((t256_floor(data->wait2_256))&(32-1)/*%20*/) )
 				{
 					int b_wait2_high;
-					b_wait2_high=(((int)((data->wait2_256>>8)>>5/*/20*/)));
+					b_wait2_high=(((int)((t256_floor(data->wait2_256))>>5/*/20*/)));
 					s->anim_frame=(s->anim_frame+1)%7;
 						enemy_boss05_knifes1(s, (b_wait2_high<<8)+t256(4.0), deg_360_to_512(30)-(b_wait2_high)*deg_360_to_512(40), -80);
 						enemy_boss05_knifes1(s, (b_wait2_high<<8)+t256(3.0), deg_360_to_512(30)-(b_wait2_high)*deg_360_to_512(30), -60);
@@ -1178,7 +1178,7 @@ static void enemy_boss05_move(SPRITE *s)
 			{
 				data->state2=1;
 //++				pd->bo ssmode=B00_NONE/*B01_BA TTLE*/;
-//???			data->time_out += (20*60);			// + 20 [•b] ???	/* 16.666[•b] 1000 ???*/
+//???			data->boss_base.boss_timer += (20*64);			// + 20 [•b] ???	/* 16.666[•b] 1000 ???*/
 				s->anim_frame=15;
 			}
 			else
@@ -1235,7 +1235,7 @@ static void enemy_boss05_move(SPRITE *s)
 			}
 			break;
 		case 3:
-			data->angle512=atan_512(player->y256-s->y256+((player->h)<<7),player->x256-s->x256-((player->w)<<7) );
+			data->angle512=atan_512(player->y256-s->y256+((player->h128)),player->x256-s->x256-((player->w128)) );
 			data->wait2_256 -= t256(1)/*fps_fa ctor*/;
 			if (data->wait2_256<t256(0))
 			{
@@ -1315,7 +1315,7 @@ static void enemy_boss05_move(SPRITE *s)
 			}
 			else
 			{
-				if (s->x256 > t256(GAME_WIDTH-100)-((s->w)<<8) )
+				if (s->x256 > t256(GAME_WIDTH-100)-((s->w128+s->w128)) )
 				{
 					data->state2=4;
 					s->anim_frame=1;
@@ -1336,7 +1336,7 @@ static void enemy_boss05_move(SPRITE *s)
 			{
 				data->state2=1;
 //++				pd->bo ssmode=B00_NONE/*B01_BA TTLE*/;
-				data->move_angle512=atan_512(t256(30)-(s->y256),t256(GAME_WIDTH/2)-((s->w)<<7)-(s->x256));
+				data->move_angle512=atan_512(t256(30)-(s->y256),t256(GAME_WIDTH/2)-((s->w128))-(s->x256));
 			}
 			else
 			{
@@ -1426,8 +1426,8 @@ static void enemy_boss05_move(SPRITE *s)
 			}
 			break;
 		}
-		if ((player->x256+((player->w)<<7) < s->x256+((s->w)<<7)+t256(25))&&
-			(player->x256+((player->w)<<7) > s->x256+((s->w)<<7)-t256(25)))
+		if ((player->x256+((player->w128)) < s->x256+((s->w128))+t256(25))&&
+			(player->x256+((player->w128)) > s->x256+((s->w128))-t256(25)))
 		{	data->wait2_256 += t256(1)/*fps_fa ctor*/;}
 		if (data->wait2_256 > t256(20)+(3-difficulty)*t256(30))
 		{
@@ -1480,10 +1480,10 @@ static void enemy_boss05_move(SPRITE *s)
 		if (s->anim_frame>15)
 		{
 			data->wait3 += 1/*fps_fa ctor*/;
-			if (data->wait3>=4)
+			if (data->wait3 >= 4)
 			{
 				s->anim_frame--;
-				data->wait3=0;
+				data->wait3 = 0;
 			}
 		}
 		enemy_boss05_out(s);
@@ -1492,20 +1492,21 @@ static void enemy_boss05_move(SPRITE *s)
 	}
 //
 	{
-		data->time_out -= 1/*fps_fa ctor*/;
+		data->boss_base.boss_timer -= 1/*fps_fa ctor*/;
 		#if 1/*ŽžŠÔØ‚ê(FX–â‘è‚ ‚é‚Ì‚Å‚Æ‚è‚ ‚¦‚¸–³Œø)*/
-		if ((data->time_out < 1))
+		if ((data->boss_base.boss_timer < 1))
 		{
+			data->boss_base.boss_timer = (60*64);
 			if ((data->state1 < SAKUYA_05_KEITAI/*4*/))
 			{
 				//ƒŒƒ~ƒŠƒAí‚ÌŠJŽnƒCƒxƒ“ƒg‚ªŒ©‚ê‚È‚­‚È‚Á‚¿‚á‚¤‚Ì‚Å‚±‚±‚Í–³Œø
 				#if (0==USE_REMILIA)
 				/* vs REMILIA */
 				if (2==select_player)
-				{data->enemy_base.health=0/*1*/;}
+				{data->boss_base.health=0/*1*/;}
 				else
 				#endif
-				{data->enemy_base.health		= ((/*4*/SAKUYA_05_KEITAI*1024)-1)-(data->state1<<10/**1024*/);}
+				{data->boss_base.health 	= ((/*4*/SAKUYA_05_KEITAI*1024)-1)-(data->state1<<10/**1024*/);}
 				sakuya_put_items(/*c,*/s);
 			}
 		}
@@ -1527,35 +1528,35 @@ void add_boss_sakuya(STAGE_DATA *l)/*int lv*/
 {
 	BOSS05_DATA *data;
 	SPRITE *s;
-//	s					= sprite_add_file 0("boss/sakuya.png"/*"boss04.png"*/, 19, PRIORITY_03_ENEMY, 0); s->anim_speed=0;
+//	s					= spr ite_add_file 0("boss/sakuya.png"/*"boss04.png"*/, 19, PRIORITY_03_ENEMY, 0); s->anim_speed=0;
 	s					= sprite_add_res(BASE_BOSS_SAKUYA_PNG);
 	s->flags			|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK);
 	s->anim_frame		= 4;
 	s->type 			= SP_BOSS/*SP_BOSS05*/;
 	s->callback_mover	= enemy_boss05_move;
-	s->x256 			= (t256(GAME_WIDTH/2))-((s->w)<<7);
-	s->y256 			= -((s->h)<<8);
+	s->x256 			= (t256(GAME_WIDTH/2))-((s->w128));
+	s->y256 			= -((s->h128+s->h128));
 
 	data				= mmalloc(sizeof(BOSS05_DATA));
 	s->data 			= data;
 
-	data->enemy_base.health=((/*5*/SAKUYA_06_KEITAI*1024)-1);		/*5119==((5*1024)-1)*/
+	data->boss_base.health=((/*5*/SAKUYA_06_KEITAI*1024)-1);		/*5119==((5*1024)-1)*/
 
 //ƒŒƒ~ƒŠƒAí‚ÌŠJŽnƒCƒxƒ“ƒg‚ªŒ©‚ê‚È‚­‚È‚Á‚¿‚á‚¤‚Ì‚Å‚±‚±‚Í–³Œø
 //				/* vs REMILIA */
-//				if (2==select_player)	{	data->enemy_base.health=1; }
+//				if (2==select_player)	{	data->boss_base.health=1; }
 	/*score(5000)+score(4000)*difficulty*/
-	data->enemy_base.score = adjust_score_by_difficulty(score(5000000));	/* 500–œ */
+	data->boss_base.score = adjust_score_by_difficulty(score(5000000)); 	/* 500–œ */
 	data->state1		= SAKUYA_01_KEITAI/*0*/;
 	data->state2		= 0;
 	data->wait1 		= 0;
 	data->wait2_256 	= t256(0);
 	data->wait3 		= 0;
-	data->type			= 0;
+//	data->aaa_type		= 0;
 //	data->level 		= (l->user_y);	/*lv*/
 	data->move_angle512 = (0);
-//	data->time_out		= (20*60);		/*1000*/	// + 20 [•b] ???	/* 16.666[•b] 1000 ???*/
-	data->time_out		= 60*60;	// 60 [•b] ???
+//	data->boss_base.boss_timer		= (20*64);		/*1000*/	// + 20 [•b] ???	/* 16.666[•b] 1000 ???*/
+	data->boss_base.boss_timer		= (60*64);	// 60 [•b] ???
 
 	((PLAYER_DATA *)player->data)->boss=s;
 //	((PLAYER_DATA *)player->data)->bo ssmode=B00_NONE/*B01_BA TTLE*/;

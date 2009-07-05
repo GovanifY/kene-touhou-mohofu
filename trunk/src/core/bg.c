@@ -164,7 +164,7 @@ static void tile_work(void)
 //
 	#if 0/*laster_spritデバッグ用*/
 	/* パネルのスコア欄にlaster_spritを グレイズ欄に追加bg枚数を 表示させる。っていうか書き換えちゃう。 */
-	((PLAYER_DATA *)player->data)->score		= ((laster_sprit256)>>8);
+	((PLAYER_DATA *)player->data)->score		= (t256_floor(laster_sprit256));
 	((PLAYER_DATA *)player->data)->graze_point	= number_of_bg;
 	#endif
 }
@@ -192,12 +192,12 @@ static void tile_draw(SDL_Surface *src)
 	/*blit*/
 	{
 		SDL_Surface *dst;
-		dst = screen;
+		dst = sdl_screen[SDL_00_SCREEN];
 		if (SDL_MUSTLOCK(src))	{	SDL_LockSurface(src);	}/*ロックする*/
 		if (SDL_MUSTLOCK(dst))	{	SDL_LockSurface(dst);	}/*ロックする*/
 		{
 			int src_max_h;		src_max_h = src->h;
-			unsigned int jj;	jj = (bg0_bmp_y256>>8);
+			unsigned int jj;	jj = (t256_floor(bg0_bmp_y256));
 			unsigned int j2;	j2 = (jj*380);
 			unsigned int yy256;
 			for (yy256=0; yy256<GAME_HEIGHT*256; yy256+=256)

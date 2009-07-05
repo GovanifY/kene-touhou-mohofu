@@ -70,8 +70,8 @@ static void move_items(SPRITE *src)
 		/*自分に集まる*/
 		int aaa_x256;
 		int aaa_y256;
-		aaa_x256 = ((data->x_sa256 * data->y_sum256)>>8); 	/**fps_fa ctor*/
-		aaa_y256 = ((data->y_sa256 * data->y_sum256)>>8); 	/**fps_fa ctor*/
+		aaa_x256 = ((data->x_sa256 * data->y_sum256)>>8);	/**fps_fa ctor*/
+		aaa_y256 = ((data->y_sa256 * data->y_sum256)>>8);	/**fps_fa ctor*/
 		if ( (SP_ITEM_05_HOSI) == (src->type))	/* 星点のみ特別処理 */
 		{
 			if (
@@ -86,8 +86,8 @@ static void move_items(SPRITE *src)
 				/*effect_sound_number=*/ effect_sound_hosi=1;/*play_voice_auto_track(VOICE05_BONUS);*/
 			}
 		}
-		src->x256 = player->x256 + (aaa_x256); 	/**fps_fa ctor*/
-		src->y256 = player->y256 + (aaa_y256); 	/**fps_fa ctor*/
+		src->x256 = player->x256 + (aaa_x256);	/**fps_fa ctor*/
+		src->y256 = player->y256 + (aaa_y256);	/**fps_fa ctor*/
 	}
 }
 
@@ -99,7 +99,7 @@ static SPRITE *item_mono_create(SPRITE *src/*int x, int y*/, int sel_type)
 {
 //	アイテムの種類を選ぶ
 	SPRITE *s;
-//	s			= sprite_add_file 0("bonus_items.png", 8, PRIORITY_04_ITEM, 0); 	s->anim_speed=0;
+//	s			= spr ite_add_file 0("bonus_items.png", 8, PRIORITY_04_ITEM, 0);	s->anim_speed=0;
 	s			= sprite_add_res(BASE_BONUS_ITEMS_PNG);
 	sel_type &= 0x07;
 	s->anim_frame = ((/*SP_ITEM_FIRE_POWER-*/sel_type)/*&0x07*/);
@@ -282,7 +282,7 @@ void clear_score_chache(void)
 }
 
 /*---------------------------------------------------------
-	screenサーフェイスに、スコアをレンダリング
+	sdl_screen[SDL_00_SCREEN]サーフェイスに、スコアをレンダリング
 ---------------------------------------------------------*/
 
 //	   void font07_render_scorenum_xy( int time_out, int number, int x256, int y256)
@@ -292,7 +292,7 @@ void draw_score_chache(void)
 //				SDL_Rect s,d;
 //				s.w=(8); d.w=(8);
 //				s.h=(8); d.h=(8);
-	if (SDL_MUSTLOCK(screen))	{	SDL_LockSurface(screen);	}/*ロックする*/
+	if (SDL_MUSTLOCK(sdl_screen[SDL_00_SCREEN]))	{	SDL_LockSurface(sdl_screen[SDL_00_SCREEN]); }/*ロックする*/
 	int i;
 	for (i=0; i<MAX_SCORE_CHACHE; i++)
 	{
@@ -311,23 +311,21 @@ void draw_score_chache(void)
 			//		);
 //				s.x = ((aaa->number)<<3)+(8);
 //				s.y = 0;
-//				d.x = ((aaa->x256)>>8);
-//				d.y = ((aaa->y256)>>8)/*+((aaa->time_out)>>5) 上に移動*/;
+//				d.x = (t256_floor(aaa->x256));
+//				d.y = (t256_floor(aaa->y256))/*+((aaa->time_out)>>5) 上に移動*/;
 //				#if 0
 //				/*遅い*/
 //				SDL_SetAlpha(font07_img,SDL_SRCALPHA,(aaa->time_out));
 //				#endif
-//				SDL_BlitSurface(font07_img,&s,screen,&d);
-				Uint8 ddd;
+//				SDL_BlitSurface(font07_img,&s,sdl_screen[SDL_00_SCREEN],&d);
 				Uint16 alpha256;	alpha256 = (aaa->time_out);
-				int iii;	iii = (aaa->number);
 
 				Uint16 *pd;
 				{
 					Uint32 y2562 = ((aaa->y256)&0x1ff00);
-					pd = (Uint16 *)screen->pixels + (y2562+y2562) + ((aaa->x256)>>8);/*x 512/256 */
+					pd = (Uint16 *)sdl_screen[SDL_00_SCREEN]->pixels + (y2562+y2562) + (t256_floor(aaa->x256));/*x 512/256 */
 				}
-				int kkk;
+				int iii;	iii = (aaa->number);
 				int yyy;
 				for (yyy=0; yyy<6; yyy++)
 				{
@@ -347,22 +345,25 @@ f8(v,v,v,M,M,v,v,v),f8(v,v,v,v,v,v,v,v),f8(M,M,M,M,M,M,M,v),f8(M,M,M,M,M,M,M,v),
 					#undef v
 					#undef M
 					#undef f8
-					kkk = 1;
-					ddd = score_font_08x05[iii];
-					int xxx;
-					for (xxx=0; xxx<8; xxx++)
 					{
-						if (ddd & (kkk) )
-						{	/* 汎用転送(アルファ任意) */
-						#define bgRGB (*pd)
-						#define fgRGB (0xffff)
-						(*pd) = (Uint16)MAKECOL16(
-							(((GETR16F(fgRGB) * (alpha256)) + (GETR16F(bgRGB) * (256 - alpha256))) >> 8),
-							(((GETG16F(fgRGB) * (alpha256)) + (GETG16F(bgRGB) * (256 - alpha256))) >> 8),
-							(((GETB16F(fgRGB) * (alpha256)) + (GETB16F(bgRGB) * (256 - alpha256))) >> 8)	);
+						const Uint8 ddd = score_font_08x05[iii];
+						int kkk;
+						kkk = 1;
+						int xxx;
+						for (xxx=0; xxx<8; xxx++)
+						{
+							if (ddd & (kkk) )
+							{	/* 汎用転送(アルファ任意) */
+							#define bgRGB (*pd)
+							#define fgRGB (0xffff)
+							(*pd) = (Uint16)MAKECOL16(
+								(((GETR16F(fgRGB) * (alpha256)) + (GETR16F(bgRGB) * (256 - alpha256))) >> 8),
+								(((GETG16F(fgRGB) * (alpha256)) + (GETG16F(bgRGB) * (256 - alpha256))) >> 8),
+								(((GETB16F(fgRGB) * (alpha256)) + (GETB16F(bgRGB) * (256 - alpha256))) >> 8)	);
+							}
+							pd++;
+							kkk += kkk;
 						}
-						pd++;
-						kkk += kkk;
 					}
 					pd += (512-8);
 					iii += 10;
@@ -370,7 +371,7 @@ f8(v,v,v,M,M,v,v,v),f8(v,v,v,v,v,v,v,v),f8(M,M,M,M,M,M,M,v),f8(M,M,M,M,M,M,M,v),
 			}
 		}
 	}
-	if (SDL_MUSTLOCK(screen))	{	SDL_UnlockSurface(screen);	}/*ロック解除*/
+	if (SDL_MUSTLOCK(sdl_screen[SDL_00_SCREEN]))	{	SDL_UnlockSurface(sdl_screen[SDL_00_SCREEN]);	}/*ロック解除*/
 }
 
 /*---------------------------------------------------------
@@ -430,12 +431,6 @@ static void bonus_info_shered_add_score10_value(SPRITE *src, int score_value)
 	regist_score(0, x256, y256);/* "0" スコアの末尾は必ず０ */
 }
 
-void player_add_score(int score_num)
-{
-	((PLAYER_DATA *)player->data)->my_score += score_num;
-	/* エクステンドチェック */
-
-}
 /*---------------------------------------------------------
 	取ったアイテムの得点を説明表示(任意得点の場合)
 ---------------------------------------------------------*/
@@ -454,17 +449,29 @@ void bonus_info_score_nodel(SPRITE *src/*int x, int y*/, int score_type)
 {
 	static const unsigned short score_tbl[32] =
 	{
-		score(	 10), score(   20), score(	 30), score(   40),
-		score(	 50), score(   60), score(	 70), score(   80),
-		score(	 90), score(  100), score(	200), score(  300),
-		score(	400), score(  500), score(	600), score(  700),
+		score(76800), score(   10), score(	 20), score(   30),
+		score(	 40), score(   50), score(	 60), score(   70),
+		score(	 80), score(   90), score(	100), score(  200),
+		score(	300), score(  400), score(	500), score(  600),
 		//
-		score(	800), score(  900), score( 1000), score( 2000),
-		score( 3000), score( 4000), score( 5000), score( 6000),
-		score( 7000), score( 8000), score( 9000), score(10000),
-		score(11000), score(12000), score(51200), score(76800),
+		score(	700), score(  800), score(	900), score( 1000),
+		score( 2000), score( 3000), score( 4000), score( 5000),
+		score( 6000), score( 7000), score( 8000), score( 9000),
+		score(10000), score(11000), score(12000), score(51200),
 	};
 	int score_num;	score_num = score_tbl[(score_type)/*&(32-1)*/];
 	bonus_info_any_score_nodel(src, score_num);
 }
 
+/*---------------------------------------------------------
+	スコア加算されると、必ずここが呼ばれる。
+	ここでエクステンドチェック(残機が得点で増えるチェック)を
+	する予定。(だけど、まだ作っていない)
+---------------------------------------------------------*/
+
+void player_add_score(int score_num)
+{
+	((PLAYER_DATA *)player->data)->my_score += score_num;
+	/* エクステンドチェック */
+
+}

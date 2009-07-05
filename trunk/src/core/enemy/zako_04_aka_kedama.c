@@ -24,7 +24,7 @@ static int level;
 #define mmm_angle512 state
 
 /*---------------------------------------------------------
-
+	“G‚â‚ç‚ê
 ---------------------------------------------------------*/
 
 static void lose_aka_kedama1(SPRITE *s)
@@ -34,7 +34,7 @@ static void lose_aka_kedama1(SPRITE *s)
 }
 
 /*---------------------------------------------------------
-
+	“GˆÚ“®(•ª—ôŒã)
 ---------------------------------------------------------*/
 
 static void move_aka_kedama1_2nd(SPRITE *s)
@@ -58,15 +58,15 @@ static void move_aka_kedama1_2nd(SPRITE *s)
 	}
 	s->x256+=((cos512((d->mmm_angle512))*t256(3))>>8)/**fps_fa ctor*/;
 	s->y256+=((sin512((d->mmm_angle512))*t256(3))>>8)/**fps_fa ctor*/;
-	if ((s->x256<0-((s->w)<<8))||(s->x256 > t256(GAME_WIDTH))||
-		(s->y256<0-((s->h)<<8))||(s->y256 > t256(GAME_HEIGHT)))
+	if ((s->x256<0-((s->w128+s->w128)))||(s->x256 > t256(GAME_WIDTH))||
+		(s->y256<0-((s->h128+s->h128)))||(s->y256 > t256(GAME_HEIGHT)))
 	{
 		s->type=SP_DELETE;
 	}
 }
 
 /*---------------------------------------------------------
-
+	“G‚ð’Ç‰Á‚·‚é(•Ïg)
 ---------------------------------------------------------*/
 
 static void add_local_aka_kedama1_2nd(SPRITE *src/*, int lv*/)
@@ -94,7 +94,7 @@ static void add_local_aka_kedama1_2nd(SPRITE *src/*, int lv*/)
 }
 
 /*---------------------------------------------------------
-
+	“GˆÚ“®(–{‘Ì)
 ---------------------------------------------------------*/
 
 static void move_aka_kedama1_1st(SPRITE *s)
@@ -130,15 +130,15 @@ static void move_aka_kedama1_1st(SPRITE *s)
 		d->time_out--;
 		if (1 > d->time_out)
 		{
-			add_local_aka_kedama1_2nd(s/*,d->level*/);
-			s->type=SP_DELETE;
+			add_local_aka_kedama1_2nd(s/*,d->level*/);/* •Ïg •ª—ô */
+			s->type=SP_DELETE;	/* –{‘Ì‚Í‚¨‚µ‚Ü‚¢ */
 		}
 		break;
 	}
 }
 
 /*---------------------------------------------------------
-	“G‚ð’Ç‰Á‚·‚é
+	“G‚ð’Ç‰Á‚·‚é(–{‘Ì)
 ---------------------------------------------------------*/
 
 void add_zako_aka_kedama1(STAGE_DATA *l)/*int lv*/

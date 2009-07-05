@@ -33,15 +33,22 @@ enum
 
 typedef struct
 {
-	int score;		/* 共用 */
-	int health; 	/* 共用 */
+	int score;			/* 共用 */
+	int health; 		/* 共用 */
 } ENEMY_BASE;
 
-typedef struct		/* enemyの一般形 */
+typedef struct
 {
-	ENEMY_BASE b;	/* 共用 */
-	int state;
-} ENEMY_DATA;
+	int score;			/* 共用 */
+	int health; 		/* 共用 */
+	int boss_timer; 	/* 共用 */	// 制限時間
+} BOSS_BASE;
+
+//typedef struct		/* enemyの一般形 */
+//{
+//	ENEMY_BASE b;	/* 共用 */
+//	int state;
+//} ENE MY_DATA;
 
 
 typedef struct
@@ -101,5 +108,9 @@ void bullet_create_n_way_dan_type(SPRITE *s, int speed256, int angle512, int bu_
 
 extern void enemy_set_random_seed(void/*int set_seed*/);
 extern int enemy_get_random_item(void);
+
+
+/* ボスを倒したらすぐ呼ばれる(プレイヤーを無敵にする為)(フラグは仕様上時間待ちがある為、現在この用途には使えない) */
+extern void player_set_destoroy_boss(void);
 
 #endif /* _ENEMY_H_ */

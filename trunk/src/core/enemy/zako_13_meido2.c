@@ -23,7 +23,7 @@ static int data_level256;
 #define NUM_OF_ENEMIES (12)
 
 /*---------------------------------------------------------
-
+	“G‚â‚ç‚ê
 ---------------------------------------------------------*/
 
 static void lose_meido2(SPRITE *s)
@@ -32,7 +32,7 @@ static void lose_meido2(SPRITE *s)
 }
 
 /*---------------------------------------------------------
-
+	“GˆÚ“®
 ---------------------------------------------------------*/
 
 static void move_meido2(SPRITE *s)
@@ -151,7 +151,7 @@ void add_zako_meido2(STAGE_DATA *l)/*int lv*/
 		if (i<6)
 		{
 			data->angle512	= deg_360_to_512(10);
-			s->x256 		= -((s->w)<<8);
+			s->x256 		= -((s->w128+s->w128));
 		}
 		else
 		{

@@ -26,7 +26,7 @@ static int destoroy;
 #define NUM_OF_ENEMIES (10)
 
 /*---------------------------------------------------------
-
+	敵やられ
 ---------------------------------------------------------*/
 
 static void lose_yukari1(SPRITE *s)
@@ -53,7 +53,7 @@ static void lose_yukari1(SPRITE *s)
 }
 
 /*---------------------------------------------------------
-
+	敵移動
 ---------------------------------------------------------*/
 
 static void move_yukari1(SPRITE *s)
@@ -100,8 +100,8 @@ static void move_yukari1(SPRITE *s)
 		}
 		break;
 	case 2:
-		if ((s->x256<-((s->w)<<8))||(s->x256 > t256(GAME_WIDTH))||
-			(s->y256<-((s->h)<<8))||(s->y256 > t256(GAME_HEIGHT)))
+		if ((s->x256<-((s->w128+s->w128)))||(s->x256 > t256(GAME_WIDTH))||
+			(s->y256<-((s->h128+s->h128)))||(s->y256 > t256(GAME_HEIGHT)))
 		{	s->flags	&= (~(SP_FLAG_VISIBLE));}
 		break;
 	}
@@ -146,16 +146,16 @@ void add_zako_yukari1(STAGE_DATA *l)/*int lv*/
 		//ウィンドウ幅の変更
 		switch (i)
 		{
-		case 0: s->x256=t256(GAME_WIDTH/2); 						s->y256=-t256(30)			  ; data->type=0;	break;
-		case 1: s->x256=t256(GAME_WIDTH/2)-t256(s->w/2);			s->y256=-t256(30)-	t256(s->h); data->type=1;	break;
-		case 2: s->x256=t256(GAME_WIDTH/2)+t256(s->w/2);			s->y256=-t256(30)-	t256(s->h); data->type=2;	break;
-		case 3: s->x256=t256(GAME_WIDTH/2)-t256(s->w);				s->y256=-t256(30)-2*t256(s->h); data->type=1;	break;
-		case 4: s->x256=t256(GAME_WIDTH/2); 						s->y256=-t256(30)-2*t256(s->h); data->type=0;	break;
-		case 5: s->x256=t256(GAME_WIDTH/2)+t256(s->w);				s->y256=-t256(30)-2*t256(s->h); data->type=2;	break;
-		case 6: s->x256=t256(GAME_WIDTH/2)-t256(s->w)-t256(s->w/2); s->y256=-t256(30)-3*t256(s->h); data->type=1;	break;
-		case 7: s->x256=t256(GAME_WIDTH/2)-t256(s->w/2);			s->y256=-t256(30)-3*t256(s->h); data->type=1;	break;
-		case 8: s->x256=t256(GAME_WIDTH/2)+t256(s->w/2);			s->y256=-t256(30)-3*t256(s->h); data->type=2;	break;
-		case 9: s->x256=t256(GAME_WIDTH/2)+t256(s->w)+t256(s->w/2); s->y256=-t256(30)-3*t256(s->h); data->type=2;	break;
+		case 0: s->x256 = t256(GAME_WIDTH/2);								s->y256 = -t256(30);						data->type=0;	break;
+		case 1: s->x256 = t256(GAME_WIDTH/2)-(s->w128); 					s->y256 = -t256(30)-(  (s->h128+s->h128));	data->type=1;	break;
+		case 2: s->x256 = t256(GAME_WIDTH/2)+(s->w128); 					s->y256 = -t256(30)-(  (s->h128+s->h128));	data->type=2;	break;
+		case 3: s->x256 = t256(GAME_WIDTH/2)-(s->w128+s->w128); 			s->y256 = -t256(30)-(  (s->h128)<<2);		data->type=1;	break;
+		case 4: s->x256 = t256(GAME_WIDTH/2);								s->y256 = -t256(30)-(  (s->h128)<<2);		data->type=0;	break;
+		case 5: s->x256 = t256(GAME_WIDTH/2)+(s->w128+s->w128); 			s->y256 = -t256(30)-(  (s->h128)<<2);		data->type=2;	break;
+		case 6: s->x256 = t256(GAME_WIDTH/2)-(s->w128+s->w128)-(s->w128);	s->y256 = -t256(30)-(3*(s->h128+s->h128));	data->type=1;	break;
+		case 7: s->x256 = t256(GAME_WIDTH/2)-(s->w128); 					s->y256 = -t256(30)-(3*(s->h128+s->h128));	data->type=1;	break;
+		case 8: s->x256 = t256(GAME_WIDTH/2)+(s->w128); 					s->y256 = -t256(30)-(3*(s->h128+s->h128));	data->type=2;	break;
+		case 9: s->x256 = t256(GAME_WIDTH/2)+(s->w128+s->w128)+(s->w128);	s->y256 = -t256(30)-(3*(s->h128+s->h128));	data->type=2;	break;
 		}
 	}
 }

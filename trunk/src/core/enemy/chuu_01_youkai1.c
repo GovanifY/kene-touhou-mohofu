@@ -17,16 +17,17 @@ typedef struct
 	SPRITE *s2;
 } YOKAI1_DATA;
 
+/* boss wurde von player-weapon ber??rt */
+static void callback_enemy_chuu_yokai1_hitbyweapon_dummy(SPRITE *s, SPRITE *t/*, int angle*/)
+{	/* 完全に姿を現すまで攻撃は、すべて無効とする。 */
+}
 /*---------------------------------------------------------
-
+	s = ボス本体 boss sprite
+	t = プレイヤーの弾 player's weapon
 ---------------------------------------------------------*/
-
-void enemy_zako_yokai1_nonshield_hitbyweapon(SPRITE *s, SPRITE *t/*, int angle*/)
+ //if (s->type!=SP_SHOT_ZAKO)	{	callback_enemy_chuu_yokai1_hitbyweapon(tt,s/*,angle*/);	}	break;
+static void callback_enemy_chuu_yokai1_hitbyweapon(SPRITE *s, SPRITE *t/*, int angle*/)
 {
-	/*
-		s = ボス本体 boss sprite
-		t = プレイヤーの弾 player's weapon
-	*/
 	YOKAI1_DATA *data=(YOKAI1_DATA *)s->data;
 	WEAPON_BASE *w=(WEAPON_BASE *)t->data;
 	explosion_add_type(t->x256,t->y256,/*0,*/EXPLOSION_MINI00);
@@ -39,8 +40,10 @@ void enemy_zako_yokai1_nonshield_hitbyweapon(SPRITE *s, SPRITE *t/*, int angle*/
 		player_add_score(data->b.score);
 //
 		explosion_add_circle(s, 0);
-		s->type=SP_DELETE;
-		data->s2->type=SP_DELETE;
+		s->type 		= SP_DELETE;
+		data->s2->type	= SP_DELETE;
+		/* コールバック登録 */
+		((PLAYER_DATA *)player->data)->callback_boss_hitbyweapon = callback_enemy_chuu_yokai1_hitbyweapon_dummy; /* ダミーコールバック登録 */
 	}
 }
 
@@ -105,7 +108,7 @@ static void move_yokai1(SPRITE *s)
 	case 5:/* 上へ退場 */
 		data->s2->y256 -= t256(2);		/**fps_fa ctor*/
 		s->y256 -= t256(2)/**fps_fa ctor*/;
-		if ( -((s->h)<<8) > s->y256)
+		if ( -((s->h128+s->h128)) > s->y256)
 		{
 			s->type=SP_DELETE;
 			data->s2->type=SP_DELETE;
@@ -126,8 +129,8 @@ static SPRITE *create_usiro_no_mahojin(SPRITE *s)	//魔方陣グラフィック生成
 	s2->anim_frame		= 0;
 	s2->type			= SP_PLAYER2;
 	s2->alpha			= 0;
-	s2->x256			= s->x256+((s->w-s2->w)<<7);
-	s2->y256			= s->y256+((s->h-s2->h)<<7);
+	s2->x256			= s->x256+((s->w128-s2->w128));
+	s2->y256			= s->y256+((s->h128-s2->h128));
 	return (s2);
 }
 
@@ -152,4 +155,6 @@ void add_chuu_youkai1(STAGE_DATA *l)/*int lv*/
 	data->b.health		= 200+(difficulty<<4);	/* easyでも存在感を印象づける為に 200 は必要 */ 	// 50+150*difficulty;
 	data->nnn			= 0;
 	data->s2			= create_usiro_no_mahojin(s);
+	/* コールバック登録 */
+	((PLAYER_DATA *)player->data)->callback_boss_hitbyweapon = callback_enemy_chuu_yokai1_hitbyweapon; /* コールバック登録 */
 }

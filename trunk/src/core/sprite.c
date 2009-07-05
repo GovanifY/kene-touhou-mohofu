@@ -1,194 +1,187 @@
 
 /*---------------------------------------------------------
 	スプライト マネージャ
----------------------------------------------------------*/
+--------------------------------------------------------- */
 
 #include "support.h"
 
 /*---------------------------------------------------------
 	リソース resource
----------------------------------------------------------*/
-
-typedef struct
-{
-	const char *file_name;
-	Uint8 use_alpha;
-	Uint8 frames;
-	Uint8 priority;
-	Uint8 anime_speed;
-} IMAGE_RESOURCE;
+--------------------------------------------------------- */
 
 static IMAGE_RESOURCE my_resource[] =
-{	/*ショット*/
-	/*	0 REIMU */	{	"jiki/shot_re.png", 		0,	 1, PRIORITY_01_SHOT,	0 },	/*"plasma.png"*/
-	/*	1 MARISA */ {	"jiki/shot_ma.png", 		0,	 1, PRIORITY_01_SHOT,	0 },	/*"plasma_ma.png"*/
-	/*	2 REMILIA */{	"jiki/shot_oz.png", 		0,	 1, PRIORITY_01_SHOT,	0 },	/*"plasma_oz.png"*/
-	/*	3 CIRNO */	{	"jiki/shot_ci.png", 		0,	 1, PRIORITY_01_SHOT,	0 },	/*"plasma_ci.png"*/
-	/*	4 YUYUKO */ {	"jiki/shot_yu.png", 		0,	 1, PRIORITY_01_SHOT,	0 },
+{	/*ショット */
+	/*	0 REIMU */	{	"jiki/shot_re.png", 			0,	 1,   1,   1, PRIORITY_01_SHOT,   0, 4, 0 },	/* "plasma.png" */
+	/*	1 MARISA */ {	"jiki/shot_ma.png", 			0,	 1,   1,   1, PRIORITY_01_SHOT,   0, 4, 0 },	/* "plasma_ma.png" */
+	/*	2 REMILIA */{	"jiki/shot_oz.png", 			0,	 1,   1,   1, PRIORITY_01_SHOT,   0, 4, 0 },	/* "plasma_oz.png" */
+	/*	3 CIRNO */	{	"jiki/shot_ci.png", 			0,	 1,   1,   1, PRIORITY_01_SHOT,   0, 6, 0 },	/* "plasma_ci.png" */
+	/*	4 YUYUKO */ {	"jiki/shot_yu.png", 			0,	 1,   1,   1, PRIORITY_01_SHOT,   0, 8, 0 },
 //
-	/*	5 REIMU */	{	"jiki/needle_re.png",		1,	 2, PRIORITY_01_SHOT,	1 },	//shot->anim_speed=1;
-	/*	6 MARISA */ {	"jiki/needle_ma.png",		0,	 1, PRIORITY_01_SHOT,	0 },	//shot->anim_speed=0;
-	/*	7 REMILIA */{	"jiki/needle_oz.png",		1,	 5, PRIORITY_01_SHOT,	3 },	//shot->anim_speed=3;	/* alpha==1に修正。 alpha==0なのにalpha出てる？？？*/
-	/*	8 CIRNO */	{	"jiki/needle_ci.png",		0,	 1, PRIORITY_01_SHOT,	0 },	//shot->anim_speed=0;
-	/*	9 YUYUKO */ {	"jiki/needle_yu.png",		0,	 1, PRIORITY_01_SHOT,	0 },	//shot->anim_speed=0;
+	/*	5 REIMU */	{	"jiki/needle_re.png",			1,	 2,   2,   1, PRIORITY_01_SHOT,   1, 6, 0 },	// 針弾
+	/*	6 MARISA */ {	"jiki/needle_ma.png",			0,	 1,   1,   1, PRIORITY_01_SHOT,   0, 8, 0 },	// 森弾
+	/*	7 REMILIA */{	"jiki/needle_oz.png",			1,	 5,   5,   1, PRIORITY_01_SHOT,   3, 8, 0 },	// こうもり弾		/* alpha==1に修正。 alpha==0なのにalpha出てる？？？ */
+	/*	8 CIRNO */	{	"jiki/needle_ci.png",			0,	 1,   1,   1, PRIORITY_01_SHOT,   0,16, 0 },	// ウェイブ弾
+	/*	9 YUYUKO */ {	"jiki/needle_yu.png",			0,	 1,   1,   1, PRIORITY_01_SHOT,   0, 8, 0 },	// ピンク蝶弾
 //
-	/* 10 REIMU */	{	"jiki/homing_re.png",		0,	 6, PRIORITY_01_SHOT,	0 },	/*"tshoot.png",*/
-	/* 11 MARISA */ {	"jiki/homing_ma.png",		0,	 6, PRIORITY_01_SHOT,	0 },	/*"tshoot-ma.png"*/
-	/* 12 REMILIA */{	"jiki/homing_oz.png",		0,	 6, PRIORITY_01_SHOT,	0 },	/*"tshoot-oz.png"*/
-	/* 13 CIRNO */	{	"jiki/homing_ci.png",		0,	 6, PRIORITY_01_SHOT,	0 },	/*"tshoot-ci.png"*/
-	/* 14 YUYUKO */ {	"jiki/homing_yu.png",		0,	 6, PRIORITY_01_SHOT,	0 },
-//	/*自分*/
-	/* 15 REIMU */	{	"jiki/jiki_re.png", 		0,	12, PRIORITY_02_PLAYER, 0 },	//"ship-med.png",		0,	 11,
-	/* 16 MARISA */ {	"jiki/jiki_ma.png", 		0,	12, PRIORITY_02_PLAYER, 0 },	//"ship-med-ma.png",	0,	 11,
-	/* 17 REMILIA */{	"jiki/jiki_oz.png", 		0,	12, PRIORITY_02_PLAYER, 0 },	//"ship-med-oz.png",	0,	 11,
-	/* 18 CIRNO */	{	"jiki/jiki_ci.png", 		0,	12, PRIORITY_02_PLAYER, 0 },	//"ship-med-ci.png",	0,	 11,
-	/* 19 YUYUKO */ {	"jiki/jiki_yu.png", 		0,	12, PRIORITY_02_PLAYER, 0 },
-//	/*あたり判定*/
-	/* 20 REIMU */	{	"jiki/core_re.png", 		0,	 1, PRIORITY_03_ENEMY,	0 },	//"core.png",
-	/* 21 MARISA */ {	"jiki/core_ma.png", 		0,	 1, PRIORITY_03_ENEMY,	0 },	//"core-ma.png",
-	/* 22 REMILIA */{	"jiki/core_oz.png", 		0,	 1, PRIORITY_03_ENEMY,	0 },	//"core-oz.png",
-	/* 23 CIRNO */	{	"jiki/core_ci.png", 		0,	 1, PRIORITY_03_ENEMY,	0 },	//"core-ci.png",
-	/* 24 YUYUKO */ {	"jiki/core_yu.png", 		0,	 1, PRIORITY_03_ENEMY,	0 },
+	/* 10 REIMU */	{	"jiki/homing_re.png",			0,	 6,   6,   1, PRIORITY_01_SHOT,   0,16, 0 },	/* "tshoot.png", */
+	/* 11 MARISA */ {	"jiki/homing_ma.png",			0,	 6,   6,   1, PRIORITY_01_SHOT,   0,16, 0 },	/* "tshoot-ma.png" */
+	/* 12 REMILIA */{	"jiki/homing_oz.png",			0,	 6,   6,   1, PRIORITY_01_SHOT,   0,16, 0 },	/* "tshoot-oz.png" */
+	/* 13 CIRNO */	{	"jiki/homing_ci.png",			0,	 6,   6,   1, PRIORITY_01_SHOT,   0,16, 0 },	/* "tshoot-ci.png" */
+	/* 14 YUYUKO */ {	"jiki/homing_yu.png",			0,	 6,   6,   1, PRIORITY_01_SHOT,   0,16, 0 },	// 青蝶弾
+//	/*自分 */
+	/* 15 REIMU */	{	"jiki/jiki_re.png", 			0,	12,  12,   1, PRIORITY_02_PLAYER, 0,16, 0 },	// "ship-med.png",		0,	 11,
+	/* 16 MARISA */ {	"jiki/jiki_ma.png", 			0,	12,  12,   1, PRIORITY_02_PLAYER, 0,16, 0 },	// "ship-med-ma.png",	0,	 11,
+	/* 17 REMILIA */{	"jiki/jiki_oz.png", 			0,	12,  12,   1, PRIORITY_02_PLAYER, 0,16, 0 },	// "ship-med-oz.png",	0,	 11,
+	/* 18 CIRNO */	{	"jiki/jiki_ci.png", 			0,	12,  12,   1, PRIORITY_02_PLAYER, 0,16, 0 },	// "ship-med-ci.png",	0,	 11,
+	/* 19 YUYUKO */ {	"jiki/jiki_yu.png", 			0,	12,  12,   1, PRIORITY_02_PLAYER, 0,16, 0 },
+//	/*あたり判定 */
+	/* 20 REIMU */	{	"jiki/core_re.png", 			0,	 1,   1,   1, PRIORITY_03_ENEMY,  0, 2, 0 },	// "core.png",
+	/* 21 MARISA */ {	"jiki/core_ma.png", 			0,	 1,   1,   1, PRIORITY_03_ENEMY,  0, 4, 0 },	// "core-ma.png",
+	/* 22 REMILIA */{	"jiki/core_oz.png", 			0,	 1,   1,   1, PRIORITY_03_ENEMY,  0, 4, 0 },	// "core-oz.png",
+	/* 23 CIRNO */	{	"jiki/core_ci.png", 			0,	 1,   1,   1, PRIORITY_03_ENEMY,  0, 3, 0 },	// "core-ci.png",
+	/* 24 YUYUKO */ {	"jiki/core_yu.png", 			0,	 1,   1,   1, PRIORITY_03_ENEMY,  0, 4, 0 },
 //	/* オプション用素材 */
-	/* 25 REIMU */	{	"jiki/option1_re.png",		0,	 8, PRIORITY_02_PLAYER, 0 },	/*"option.png"*/
-	/* 26 MARISA */ {	"jiki/option1_ma.png",		0,	 8, PRIORITY_02_PLAYER, 0 },	/*"mari_op.png"*/
-	/* 27 REMILIA */{	"jiki/option1_oz.png",		0,	 8, PRIORITY_02_PLAYER, 0 },	/*"oze_op1.png"*/
-	/* 28 CIRNO */	{	"jiki/option1_ci.png",		0,	 8, PRIORITY_02_PLAYER, 0 },	/*"ci_op1.png"*/
-	/* 29 YUYUKO */ {	"jiki/option1_yu.png",		0,	 8, PRIORITY_02_PLAYER, 0 },
+	/* 25 REIMU */	{	"jiki/option1_re.png",			0,	 8,   8,   1, PRIORITY_02_PLAYER, 0, 0, 0 },	/* "option.png" */
+	/* 26 MARISA */ {	"jiki/option1_ma.png",			0,	 8,   8,   1, PRIORITY_02_PLAYER, 0, 0, 0 },	/* "mari_op.png" */
+	/* 27 REMILIA */{	"jiki/option1_oz.png",			0,	 8,   8,   1, PRIORITY_02_PLAYER, 0, 0, 0 },	/* "oze_op1.png" */
+	/* 28 CIRNO */	{	"jiki/option1_ci.png",			0,	 8,   8,   1, PRIORITY_02_PLAYER, 0, 0, 0 },	/* "ci_op1.png" */
+	/* 29 YUYUKO */ {	"jiki/option1_yu.png",			0,	 8,   8,   1, PRIORITY_02_PLAYER, 0, 0, 0 },
 //
-	/* 30 REIMU */	{	"jiki/option2_re.png",		0,	 8, PRIORITY_02_PLAYER, 0 },	/*[起動チェックで使うので有る名前で]*/
-	/* 31 MARISA */ {	"jiki/option2_ma.png",		0,	 8, PRIORITY_02_PLAYER, 0 },	/*[起動チェックで使うので有る名前で]*/
-	/* 32 REMILIA */{	"jiki/option2_oz.png",		0,	 8, PRIORITY_02_PLAYER, 0 },	/*"oze_op2.png"*/
-	/* 33 CIRNO */	{	"jiki/option2_ci.png",		0,	 8, PRIORITY_02_PLAYER, 0 },	/*"ci_op2.png"*/
-	/* 34 YUYUKO */ {	"jiki/option2_yu.png",		0,	 8, PRIORITY_02_PLAYER, 0 },
+	/* 30 REIMU */	{	"jiki/option2_re.png",			0,	 8,   8,   1, PRIORITY_02_PLAYER, 0, 0, 0 },	/* [起動チェックで使うので有る名前で] */
+	/* 31 MARISA */ {	"jiki/option2_ma.png",			0,	 8,   8,   1, PRIORITY_02_PLAYER, 0, 0, 0 },	/* [起動チェックで使うので有る名前で] */
+	/* 32 REMILIA */{	"jiki/option2_oz.png",			0,	 8,   8,   1, PRIORITY_02_PLAYER, 0, 0, 0 },	/* "oze_op2.png" */
+	/* 33 CIRNO */	{	"jiki/option2_ci.png",			0,	 8,   8,   1, PRIORITY_02_PLAYER, 0, 0, 0 },	/* "ci_op2.png" */
+	/* 34 YUYUKO */ {	"jiki/option2_yu.png",			0,	 8,   8,   1, PRIORITY_02_PLAYER, 0, 0, 0 },
 //
-	/* 35 REIMU */	{	"jiki/option3_re.png",		0,	 8, PRIORITY_02_PLAYER, 0 },	/*[起動チェックで使うので有る名前で]*/
-	/* 36 MARISA */ {	"jiki/option3_ma.png",		0,	 8, PRIORITY_02_PLAYER, 0 },	/*[起動チェックで使うので有る名前で]*/
-	/* 37 REMILIA */{	"jiki/option3_oz.png",		0,	 8, PRIORITY_02_PLAYER, 0 },	/*"oze_op3.png"*/
-	/* 38 CIRNO */	{	"jiki/option3_ci.png",		0,	 8, PRIORITY_02_PLAYER, 0 },	/*"ci_op3.png"*/
-	/* 39 YUYUKO */ {	"jiki/option3_yu.png",		0,	 8, PRIORITY_02_PLAYER, 0 },
+	/* 35 REIMU */	{	"jiki/option3_re.png",			0,	 8,   8,   1, PRIORITY_02_PLAYER, 0, 0, 0 },	/* [起動チェックで使うので有る名前で] */
+	/* 36 MARISA */ {	"jiki/option3_ma.png",			0,	 8,   8,   1, PRIORITY_02_PLAYER, 0, 0, 0 },	/* [起動チェックで使うので有る名前で] */
+	/* 37 REMILIA */{	"jiki/option3_oz.png",			0,	 8,   8,   1, PRIORITY_02_PLAYER, 0, 0, 0 },	/* "oze_op3.png" */
+	/* 38 CIRNO */	{	"jiki/option3_ci.png",			0,	 8,   8,   1, PRIORITY_02_PLAYER, 0, 0, 0 },	/* "ci_op3.png" */
+	/* 39 YUYUKO */ {	"jiki/option3_yu.png",			0,	 8,   8,   1, PRIORITY_02_PLAYER, 0, 0, 0 },
 //
-	/* 40 REIMU */	{	"jiki/option4_re.png",		0,	 8, PRIORITY_02_PLAYER, 0 },	/*[起動チェックで使うので有る名前で]*/
-	/* 41 MARISA */ {	"jiki/option4_ma.png",		0,	 8, PRIORITY_02_PLAYER, 0 },	/*[起動チェックで使うので有る名前で]*/
-	/* 42 REMILIA */{	"jiki/option4_oz.png",		0,	 8, PRIORITY_02_PLAYER, 0 },	/*"oze_op4.png"*/
-	/* 43 CIRNO */	{	"jiki/option4_ci.png",		0,	 8, PRIORITY_02_PLAYER, 0 },	/*"ci_op4.png"*/
-	/* 44 YUYUKO */ {	"jiki/option4_yu.png",		0,	 8, PRIORITY_02_PLAYER, 0 },
+	/* 40 REIMU */	{	"jiki/option4_re.png",			0,	 8,   8,   1, PRIORITY_02_PLAYER, 0, 0, 0 },	/* [起動チェックで使うので有る名前で] */
+	/* 41 MARISA */ {	"jiki/option4_ma.png",			0,	 8,   8,   1, PRIORITY_02_PLAYER, 0, 0, 0 },	/* [起動チェックで使うので有る名前で] */
+	/* 42 REMILIA */{	"jiki/option4_oz.png",			0,	 8,   8,   1, PRIORITY_02_PLAYER, 0, 0, 0 },	/* "oze_op4.png" */
+	/* 43 CIRNO */	{	"jiki/option4_ci.png",			0,	 8,   8,   1, PRIORITY_02_PLAYER, 0, 0, 0 },	/* "ci_op4.png" */
+	/* 44 YUYUKO */ {	"jiki/option4_yu.png",			0,	 8,   8,   1, PRIORITY_02_PLAYER, 0, 0, 0 },
 
 //	/* ボム用素材 */
-	/* 45 REIMU */	{	"jiki/bomber1_re.png",		1,	32, PRIORITY_03_ENEMY,	0 },	/*"cshoot1.png""cshoot.png"*/
-	/* 46 MARISA */ {	"jiki/bomber1_ma.png",		0,	 3, PRIORITY_01_SHOT,	5 },	/*"star_shield_blue.png"*/
-	/* 47 REMILIA */{	"jiki/bomber1_oz.png",		0,	10, PRIORITY_01_SHOT,	3 },	/*"cross_red.png"*/
-	/* 48 CIRNO */	{	"jiki/bomber1_ci.png",		0,	 3, PRIORITY_01_SHOT,	5 },	/*"cirno_shield_blue.png"*/
-	/* 49 YUYUKO */ {	"jiki/bomber1_yu.png",		0,	 3, PRIORITY_01_SHOT,	5 },
+	/* 45 REIMU */	{	"jiki/bomber1_re.png",			1,	32,  32,   1, PRIORITY_03_ENEMY,  0, 4, 0 },	/* "cshoot1.png""cshoot.png" */
+	/* 46 MARISA */ {	"jiki/bomber1_ma.png",			0,	 3,   3,   1, PRIORITY_01_SHOT,   5,16, 0 },	/* "star_shield_blue.png" */
+	/* 47 REMILIA */{	"jiki/bomber1_oz.png",			0,	10,  10,   1, PRIORITY_01_SHOT,   3,16, 0 },	/* "cross_red.png" */
+	/* 48 CIRNO */	{	"jiki/bomber1_ci.png",			0,	 3,   3,   1, PRIORITY_01_SHOT,   5,32, 0 },	/* "cirno_shield_blue.png" */
+	/* 49 YUYUKO */ {	"jiki/bomber1_yu.png",			0,	 3,   3,   1, PRIORITY_01_SHOT,   5, 4, 0 },
 //
-	/* 50 REIMU */	{	"jiki/bomber2_re.png",		1,	32, PRIORITY_03_ENEMY,	0 },	/*"cshoot2r.png""cshoot2.png"*/
-	/* 51 MARISA */ {	"jiki/bomber2_ma.png",		0,	 3, PRIORITY_01_SHOT,	5 },	/*"star_shields_red.png"*/
-	/* 52 REMILIA */{	"jiki/bomber2_oz.png",	1/*0*/,  4, PRIORITY_01_SHOT,	3 },	/*"fire_wind_l.png"*/
-	/* 53 CIRNO */	{	"jiki/bomber2_ci.png",		0,	 3, PRIORITY_01_SHOT,	5 },	/*"cirno_shields_red.png"*/
-	/* 54 YUYUKO */ {	"jiki/bomber2_yu.png",		0,	 3, PRIORITY_01_SHOT,	5 },
+	/* 50 REIMU */	{	"jiki/bomber2_re.png",			1,	32,  32,   1, PRIORITY_03_ENEMY,  0, 4, 0 },	/* "cshoot2r.png""cshoot2.png" */
+	/* 51 MARISA */ {	"jiki/bomber2_ma.png",			0,	 3,   3,   1, PRIORITY_01_SHOT,   5,16, 0 },	/* "star_shields_red.png" */
+	/* 52 REMILIA */{	"jiki/bomber2_oz.png",			1,	 4,   4,   1, PRIORITY_01_SHOT,   3,16, 0 },	/* "fire_wind_l.png" */ 	/*0a */
+	/* 53 CIRNO */	{	"jiki/bomber2_ci.png",			0,	 3,   3,   1, PRIORITY_01_SHOT,   5,32, 0 },	/* "cirno_shields_red.png" */
+	/* 54 YUYUKO */ {	"jiki/bomber2_yu.png",			0,	 3,   3,   1, PRIORITY_01_SHOT,   5, 4, 0 },
 //
-	/* 55 REIMU */	{	"jiki/bomber1_re.png",		1,	32, PRIORITY_03_ENEMY,	0 },	/*[起動チェックで使うので有る名前で]*/
-	/* 56 MARISA */ {	"jiki/bomber3_ma.png",		0,	 3, PRIORITY_01_SHOT,	5 },	/*"star_shield_green.png"*/
-	/* 57 REMILIA */{	"jiki/bomber3_oz.png",	1/*0*/,  4, PRIORITY_01_SHOT,	3 },	/*"fire_wind_r.png"*/
-	/* 58 CIRNO */	{	"jiki/bomber3_ci.png",		0,	 3, PRIORITY_01_SHOT,	5 },	/*"cirno_shield_green.png"*/
-	/* 59 YUYUKO */ {	"jiki/bomber3_yu.png",		0,	 3, PRIORITY_01_SHOT,	5 },
+	/* 55 REIMU */	{	"jiki/bomber1_re.png",			1,	32,  32,   1, PRIORITY_03_ENEMY,  0, 2, 0 },	/* [起動チェックで使うので有る名前で] */
+	/* 56 MARISA */ {	"jiki/bomber3_ma.png",			0,	 3,   3,   1, PRIORITY_01_SHOT,   5,16, 0 },	/* "star_shield_green.png" */
+	/* 57 REMILIA */{	"jiki/bomber3_oz.png",			1,	 4,   4,   1, PRIORITY_01_SHOT,   3,16, 0 },	/* "fire_wind_r.png" */ 	/*0a */
+	/* 58 CIRNO */	{	"jiki/bomber3_ci.png",			0,	 3,   3,   1, PRIORITY_01_SHOT,   5,32, 0 },	/* "cirno_shield_green.png" */
+	/* 59 YUYUKO */ {	"jiki/bomber3_yu.png",			0,	 3,   3,   1, PRIORITY_01_SHOT,   5, 4, 0 },
 //
-	/* 60 REIMU */	{	"jiki/bomber1_re.png",		1,	32, PRIORITY_03_ENEMY,	0 },	/*[起動チェックで使うので有る名前で]*/
-	/* 61 MARISA */ {	"jiki/bomber4_ma.png",		0,	 3, PRIORITY_01_SHOT,	5 },	/*"star_shields_blue.png"*/
-	/* 62 REMILIA */{	"jiki/bomber4_oz.png",	1/*0*/,  4, PRIORITY_01_SHOT,	3 },	/*"fire_wind_u.png"*/
-	/* 63 CIRNO */	{	"jiki/bomber4_ci.png",		0,	 3, PRIORITY_01_SHOT,	5 },	/*"cirno_shields_blue.png"*/
-	/* 64 YUYUKO */ {	"jiki/bomber4_yu.png",		0,	 3, PRIORITY_01_SHOT,	5 },
+	/* 60 REIMU */	{	"jiki/bomber1_re.png",			1,	32,  32,   1, PRIORITY_03_ENEMY,  0, 2, 0 },	/* [起動チェックで使うので有る名前で] */
+	/* 61 MARISA */ {	"jiki/bomber4_ma.png",			0,	 3,   3,   1, PRIORITY_01_SHOT,   5, 8, 0 },	/* "star_shields_blue.png" */
+	/* 62 REMILIA */{	"jiki/bomber4_oz.png",			1,	 4,   4,   1, PRIORITY_01_SHOT,   3,16, 0 },	/* "fire_wind_u.png" */ 	/*0a */
+	/* 63 CIRNO */	{	"jiki/bomber4_ci.png",			0,	 3,   3,   1, PRIORITY_01_SHOT,   5,24, 0 },	/* "cirno_shields_blue.png" */
+	/* 64 YUYUKO */ {	"jiki/bomber4_yu.png",			0,	 3,   3,   1, PRIORITY_01_SHOT,   5, 4, 0 },
 //
-	/* 65 REIMU */	{	"jiki/bomber1_re.png",		1,	32, PRIORITY_03_ENEMY,	0 },	/*[起動チェックで使うので有る名前で]*/
-	/* 66 MARISA */ {	"jiki/bomber5_ma.png",		0,	 3, PRIORITY_01_SHOT,	5 },	/*"star_shield_red.png"*/
-	/* 67 REMILIA */{	"jiki/bomber4_oz.png",	1/*0*/,  4, PRIORITY_01_SHOT,	3 },	/*[起動チェックで使うので有る名前で]*/
-	/* 68 CIRNO */	{	"jiki/bomber5_ci.png",		0,	 3, PRIORITY_01_SHOT,	5 },	/*"cirno_shield_red.png"*/
-	/* 69 YUYUKO */ {	"jiki/bomber3_yu.png",		0,	 3, PRIORITY_01_SHOT,	5 },	/*[起動チェックで使うので有る名前で]*/
+	/* 65 REIMU */	{	"jiki/bomber1_re.png",			1,	32,  32,   1, PRIORITY_03_ENEMY,  0, 2, 0 },	/* [起動チェックで使うので有る名前で] */
+	/* 66 MARISA */ {	"jiki/bomber5_ma.png",			0,	 3,   3,   1, PRIORITY_01_SHOT,   5, 8, 0 },	/* "star_shield_red.png" */
+	/* 67 REMILIA */{	"jiki/bomber4_oz.png",			1,	 4,   4,   1, PRIORITY_01_SHOT,   3, 2, 0 },	/* [起動チェックで使うので有る名前で] */	/*0a */
+	/* 68 CIRNO */	{	"jiki/bomber5_ci.png",			0,	 3,   3,   1, PRIORITY_01_SHOT,   5,24, 0 },	/* "cirno_shield_red.png" */
+	/* 69 YUYUKO */ {	"jiki/bomber5_yu.png",			0,	 8,   8,   1, PRIORITY_01_SHOT,   0,80, 0 },	/* 幽々子ボムの扇本体 */
 //
-	/* 70 REIMU */	{	"jiki/bomber1_re.png",		1,	32, PRIORITY_03_ENEMY,	0 },	/*[起動チェックで使うので有る名前で]*/
-	/* 71 MARISA */ {	"jiki/bomber6_ma.png",		0,	 3, PRIORITY_01_SHOT,	5 },	/*"star_shields_green.png"*/
-	/* 72 REMILIA */{	"jiki/bomber4_oz.png",	1/*0*/,  4, PRIORITY_01_SHOT,	3 },	/*[起動チェックで使うので有る名前で]*/
-	/* 73 CIRNO */	{	"jiki/bomber6_ci.png",		0,	 3, PRIORITY_01_SHOT,	5 },	/*"cirno_shields_green.png"*/
-	/* 74 YUYUKO */ {	"jiki/bomber4_yu.png",		0,	 3, PRIORITY_01_SHOT,	5 },	/*[起動チェックで使うので有る名前で]*/
+	/* 70 REIMU */	{	"jiki/bomber1_re.png",			1,	32,  32,   1, PRIORITY_03_ENEMY,  0, 2, 0 },	/* [起動チェックで使うので有る名前で] */
+	/* 71 MARISA */ {	"jiki/bomber6_ma.png",			0,	 3,   3,   1, PRIORITY_01_SHOT,   5, 8, 0 },	/* "star_shields_green.png" */
+	/* 72 REMILIA */{	"jiki/bomber4_oz.png",			1,	 4,   4,   1, PRIORITY_01_SHOT,   3, 2, 0 },	/* [起動チェックで使うので有る名前で] */	/*0a */
+	/* 73 CIRNO */	{	"jiki/bomber6_ci.png",			0,	 3,   3,   1, PRIORITY_01_SHOT,   5,24, 0 },	/* "cirno_shields_green.png" */
+	/* 74 YUYUKO */ {	"jiki/bomber4_yu.png",			0,	 3,   3,   1, PRIORITY_01_SHOT,   5, 2, 0 },	/* [起動チェックで使うので有る名前で] */
 //
-	/* 75 */		{	"jiki/bomber_slow.png", 	1,	 4, PRIORITY_01_SHOT,	0 },
-	/* 76 */		{	"panel/bonus_items.png",	0,	 8, PRIORITY_04_ITEM,	0 },
+	/* 75 */		{	"jiki/bomber_slow.png", 		1,	 4,   4,   1, PRIORITY_01_SHOT,   0, 0, 0 },
+	/* 76 */		{	"panel/bonus_items.png",		0,	 8,   8,   1, PRIORITY_04_ITEM,   0,12, 0 },
 //
-	/* 77 */	//	{	"tama/kugel.png",			0,	 1, PRIORITY_05_BULLETS,	0 },
-	/* 78 */	//	{	"tama/kugel2.png",			0,	 1, PRIORITY_05_BULLETS,	0 },
-	/* 79 */		{	"tama/bullet_beam16.png",	0,	16, PRIORITY_05_BULLETS,	0 },
-	/* 80 */		{	"tama/bullet_maru16.png",	0,	16, PRIORITY_05_BULLETS,	0 },
+	/* 77 */	//	{	"tama/kugel.png",				0,	 1,   1,   1, PRIORITY_05_BULLETS,	  0, 2, 0 },
+	/* 78 */	//	{	"tama/kugel2.png",				0,	 1,   1,   1, PRIORITY_05_BULLETS,	  0, 2, 0 },
+	/* 79 */		{	"tama/bullet_beam16.png",		0,	16,  16,   1, PRIORITY_05_BULLETS,	  0, 2, 0 },	/* 針弾 (敵弾) */
+	/* 80 */		{	"tama/bullet_maru16.png",		0,	16,  16,   1, PRIORITY_05_BULLETS,	  0, 2, 0 },	/* 白丸(小) (敵弾) */	/* 赤丸(中) (敵弾) */
 //
-	/* 81 */		{	"tama/bullet_ming32.png",	0,	32, PRIORITY_05_BULLETS,	0 },
-	/* 82 */		{	"tama/jippou32.png",		0,	32, PRIORITY_05_BULLETS,	0 },
+	/* 81 */		{	"tama/bullet_ming32.png",		0,	32,  32,   1, PRIORITY_05_BULLETS,	  0, 2, 0 },	/* ゆかりん弾 (敵弾) */
+	/* 82 */		{	"tama/jippou32.png",			0,	32,  32,   1, PRIORITY_05_BULLETS,	  0, 2, 0 },	/* 白模擬弾 (敵弾) */
 //
-	/* 83 */		{	"tama/oodama08.png",		1,	 8, PRIORITY_05_BULLETS,	0 },/* 大玉(黒青赤...)  黒玉(輪) PRIORITY_03_ENEMY は、あたり判定部分 */
-	/* 83 */	//	{	"tama/bigkugel2.png",		0,	 1, PRIORITY_03_ENEMY,		0 },/* 黒玉(輪)  あたり判定部分*/
-	/* 84 */	//	{	"tama/bigkugel1.png",		1,	 1, PRIORITY_05_BULLETS,	0 },/* 大玉(青) 表示部分 */
-	/* 85 */	//	{	"tama/new_bigkugel.png",	1,	 1, PRIORITY_05_BULLETS,	0 },/* 大玉(赤) 表示部分*/
+					/* 追加予定 */																				/* クナイ弾 (敵弾) */
 //
-	/* 86 */		{	"tama/knife.png",			1,	 1, PRIORITY_05_BULLETS,	0 },/*垂直降下ナイフ(赤)*/
-	/* 87 */		{	"tama/knife_core16.png",	1,	16, PRIORITY_05_BULLETS,	0 },/*全方向ナイフ(青)*/
+	/* 83 */		{	"tama/oodama08.png",			1,	 8,   8,   1, PRIORITY_05_BULLETS,	  0, 4, 0 },/* 大玉(黒青赤...)	黒玉(輪) PRIORITY_03_ENEMY は、あたり判定部分 */
+	/* 83 */	//	{	"tama/bigkugel2.png",			0,	 1,   1,   1, PRIORITY_03_ENEMY,	  0, 2, 0 },/* 黒玉(輪)  あたり判定部分 */
+	/* 84 */	//	{	"tama/bigkugel1.png",			1,	 1,   1,   1, PRIORITY_05_BULLETS,	  0, 2, 0 },/* 大玉(青) 表示部分 */
+	/* 85 */	//	{	"tama/new_bigkugel.png",		1,	 1,   1,   1, PRIORITY_05_BULLETS,	  0, 2, 0 },/* 大玉(赤) 表示部分 */
 //
-	/* 88 */		{	"zako/mahoujin_0.png",		1/*0*/,  2, PRIORITY_01_SHOT,	0 },	/**/
-	/* 89 */		{	"zako/tikei_bgpanel1.png",		0,	 1, PRIORITY_00_BG, 	0 },
-	/* 90 */		{	"zako/tikei_bgpanel2.png",		0,	 1, PRIORITY_00_BG, 	0 },
-	/* 91 */		{	"zako/tikei_grounder08.png",	0,	 8, PRIORITY_01_SHOT,	2 },
+	/* 86 */		{	"tama/knife.png",				1,	 1,   1,   1, PRIORITY_05_BULLETS,	  0, 2, 0 },/* 垂直降下ナイフ(赤) */
+	/* 87 */		{	"tama/knife_core16.png",		1,	16,  16,   1, PRIORITY_05_BULLETS,	  0, 2, 0 },/* 全方向ナイフ(青) */
 //
-	/* 92 */		{	"zako/obake08.png", 			0,	 8, PRIORITY_03_ENEMY,	0 },	/**/
-	/* 93 */		{	"zako/yukari32.png",			0,	32, PRIORITY_03_ENEMY,	0 },	/**/
-	/* 94 */		{	"zako/aka_kedama08.png",		0,	 8, PRIORITY_03_ENEMY,	4 },	/*4 1*/
-	/* 95 */		{	"zako/niji_kedama16.png",		0,	16, PRIORITY_03_ENEMY,	1 },	/**/
+	/* 88 */		{	"zako/mahoujin_0.png",			1,	 2,   2,   1, PRIORITY_01_SHOT,   0, 0, 0 },/*0a */ /* 敵の後ろのアレ */
+	/* 89 */		{	"zako/tikei_bgpanel1.png",		0,	 1,   1,   1, PRIORITY_00_BG,	  0, 0, 0 },	/* 地形３連パネル */
+	/* 90 */		{	"zako/tikei_bgpanel2.png",		0,	 1,   1,   1, PRIORITY_00_BG,	  0, 0, 0 },	/* 地形パネル棒 */
+	/* 91 */		{	"zako/tikei_grounder08.png",	0,	 8,   8,   1, PRIORITY_01_SHOT,   2,16, 0 },	/* マンホール */
 //
-	/* 96 */		{	"zako/midoori_kedama16.png",	0,	16, PRIORITY_03_ENEMY,	4 },	/*4 1*/
-	/* 97 */		{	"zako/kedama16.png",			0,	16, PRIORITY_03_ENEMY,	5 },	/**/
-	/* 98 */		{	"zako/inyou1_16.png",			0,	16, PRIORITY_03_ENEMY,	0 },	/**/
-	/* 99 */		{	"zako/tatsumaki16.png", 		0,	16, PRIORITY_03_ENEMY,	2 },	/**/
+	/* 92 */		{	"zako/obake08.png", 			0,	 8,   8,   1, PRIORITY_03_ENEMY,  0, 8, 0 },	/* ザコ */
+	/* 93 */		{	"zako/yukari32.png",			0,	32,  32,   1, PRIORITY_03_ENEMY,  0, 2, 0 },	/* ザコ */
+	/* 94 */		{	"zako/aka_kedama08.png",		0,	 8,   8,   1, PRIORITY_03_ENEMY,  4, 6, 0 },	/* ザコ 4 1 */
+	/* 95 */		{	"zako/niji_kedama16.png",		0,	16,  16,   1, PRIORITY_03_ENEMY,  1, 8, 0 },	/* ザコ */
 //
-	/*100 */		{	"zako/great_fairy02.png",		0,	 2, PRIORITY_03_ENEMY,	0 },	/*-*/
-	/*101 */		{	"zako/aka_meido08.png", 		0,	 8, PRIORITY_03_ENEMY,	0 },	/**/
-	/*102 */		{	"zako/ao_yousei24.png", 		0,	24, PRIORITY_03_ENEMY,	0 },	/**/
-	/*103 */		{	"zako/homing16.png",			0,	16, PRIORITY_05_BULLETS,0 },	/**/
+	/* 96 */		{	"zako/midoori_kedama16.png",	0,	16,  16,   1, PRIORITY_03_ENEMY,  4, 4, 0 },	/* ザコ 4 1 */
+	/* 97 */		{	"zako/kedama16.png",			0,	16,  16,   1, PRIORITY_03_ENEMY,  5, 4, 0 },	/* ザコ */
+	/* 98 */		{	"zako/inyou1_16.png",			0,	16,  16,   1, PRIORITY_03_ENEMY,  0,40, 0 },	/* ザコ */
+	/* 99 */		{	"zako/tatsumaki16.png", 		0,	16,  16,   1, PRIORITY_03_ENEMY,  2,16, 0 },	/* ザコ */
+//
+	/*100 */		{	"zako/great_fairy02.png",		0,	 2,   2,   1, PRIORITY_03_ENEMY,  0,16, 0 },	/* ザコ(中ザコ) - */
+	/*101 */		{	"zako/aka_meido08.png", 		0,	 8,   8,   1, PRIORITY_03_ENEMY,  0,24, 0 },	/* ザコ */
+	/*102 */		{	"zako/ao_yousei24.png", 		0,	24,  24,   1, PRIORITY_03_ENEMY,  0,12, 0 },	/* ザコ */
+	/*103 */		{	"zako/homing16.png",			0,	16,  16,   1, PRIORITY_05_BULLETS,0, 2, 0 },	/* ザコ 誘導弾 */
 //	/* 小爆発 */
-	/*104 */		{	"effect/tr_blue.png",			0,	 6, PRIORITY_04_ITEM,	1 },
-	/*105 */		{	"effect/tr_red.png",			0,	 6, PRIORITY_04_ITEM,	1 },
-	/*106 */		{	"effect/tr_green.png",			0,	 6, PRIORITY_04_ITEM,	1 },
+	/*104 */		{	"effect/tr_blue.png",			0,	 6,   6,   1, PRIORITY_04_ITEM,   1, 0, 0 },
+	/*105 */		{	"effect/tr_red.png",			0,	 6,   6,   1, PRIORITY_04_ITEM,   1, 0, 0 },
+	/*106 */		{	"effect/tr_green.png",			0,	 6,   6,   1, PRIORITY_04_ITEM,   1, 0, 0 },
 //	/* ザコ消滅爆発 */
-	/*107 */		{	"effect/bakuha05.png",			1,	 5, PRIORITY_04_ITEM,	3 },
-	/*108 */		{	"effect/bakuha06.png",			1,	 5, PRIORITY_04_ITEM,	3 },
-	/*109 */		{	"effect/bakuha07.png",			1,	 5, PRIORITY_04_ITEM,	3 },
+	/*107 */		{	"effect/bakuha05.png",			1,	 5,   5,   1, PRIORITY_04_ITEM,   3, 0, 0 },
+	/*108 */		{	"effect/bakuha06.png",			1,	 5,   5,   1, PRIORITY_04_ITEM,   3, 0, 0 },
+	/*109 */		{	"effect/bakuha07.png",			1,	 5,   5,   1, PRIORITY_04_ITEM,   3, 0, 0 },
 //	/* 火炎爆発 */
-	/*110 */		{	"effect/ex.png",				0,	29, PRIORITY_04_ITEM,	3 },
+	/*110 */		{	"effect/ex.png",				0,	29,  29,   1, PRIORITY_04_ITEM,   3, 0, 0 },
 //
-	/*111 */		{	"boss/boss01_0.png",			0,	4, PRIORITY_03_ENEMY,	8 },
-	/*112 */		{	"boss/boss01_1.png",			0,	8, PRIORITY_03_ENEMY,	0 },
-	/*113 */		{	"boss/boss01_2.png",			0,	4, PRIORITY_03_ENEMY,	8 },
-	/*114 */		{	"boss/boss01_3.png",			0,	2, PRIORITY_03_ENEMY,	8 },
-	/*115 */		{	"boss/boss01_4.png",			0,	2, PRIORITY_03_ENEMY,	8 },
+	/*111 */		{	"boss/boss01_0.png",			0,	 4,   4,   1, PRIORITY_03_ENEMY,  8, 4, 0 },
+	/*112 */		{	"boss/boss01_1.png",			0,	 8,   8,   1, PRIORITY_03_ENEMY,  0, 8, 0 },
+	/*113 */		{	"boss/boss01_2.png",			0,	 4,   4,   1, PRIORITY_03_ENEMY,  8, 4, 0 },
+	/*114 */		{	"boss/boss01_3.png",			0,	 2,   2,   1, PRIORITY_03_ENEMY,  8, 4, 0 },
+	/*115 */		{	"boss/boss01_4.png",			0,	 2,   2,   1, PRIORITY_03_ENEMY,  8, 4, 0 },
 //
-	/*116 */		{	"boss/aya.png", 				0,	9, PRIORITY_03_ENEMY,	0 },
+	/*116 */		{	"boss/aya.png", 				0,	 9,   9,   1, PRIORITY_03_ENEMY,  0, 8, 0 },
 //
-	/*117 */		{	"boss/boss04_0.png",			0,	2, PRIORITY_03_ENEMY,	0 },
-	/*118 */		{	"boss/boss04_1.png",			0,	2, PRIORITY_03_ENEMY,	0 },
-	/*119 */		{	"boss/boss04_2.png",			0,	2, PRIORITY_03_ENEMY,	0 },
-	/*120 */		{	"boss/boss04_3.png",			0,	2, PRIORITY_03_ENEMY,	0 },
-	/*121 */		{	"boss/boss04_4.png",			0,	2, PRIORITY_03_ENEMY,	0 },
-	/*122 */		{	"boss/boss04_5.png",			0,	2, PRIORITY_03_ENEMY,	0 },
+	/*117 */		{	"boss/boss04_0.png",			0,	 2,   2,   1, PRIORITY_03_ENEMY,  0, 4, 0 },
+	/*118 */		{	"boss/boss04_1.png",			0,	 2,   2,   1, PRIORITY_03_ENEMY,  0, 8, 0 },
+	/*119 */		{	"boss/boss04_2.png",			0,	 2,   2,   1, PRIORITY_03_ENEMY,  0, 4, 0 },
+	/*120 */		{	"boss/boss04_3.png",			0,	 2,   2,   1, PRIORITY_03_ENEMY,  0, 4, 0 },
+	/*121 */		{	"boss/boss04_4.png",			0,	 2,   2,   1, PRIORITY_03_ENEMY,  0, 4, 0 },
+	/*122 */		{	"boss/boss04_5.png",			0,	 2,   2,   1, PRIORITY_03_ENEMY,  0, 4, 0 },
 //
-	/*123 */		{	"boss/sakuya.png",				0,	19, PRIORITY_03_ENEMY,	0 },
+	/*123 */		{	"boss/sakuya.png",				0,	19,  19,   1, PRIORITY_03_ENEMY,  0, 8, 0 },
 //
-	/*124 */	//	{	"panel/key_icon.png",			1,	12, PRIORITY_01_SHOT,	2 },
+	/*124 */	//	{	"panel/key_icon.png",			1,	12,  12,   1, PRIORITY_01_SHOT,   2, 2, 0 },
 };
 
 
 /*---------------------------------------------------------
 	あたり判定 collision
----------------------------------------------------------*/
+--------------------------------------------------------- */
 
 #if (1==USE_ZUKEI_ATARI_HANTEI)
 /*---------------------------------------------------------
 	図形あたり判定の子関数(単色図形であたり判定を判断)
----------------------------------------------------------*/
+--------------------------------------------------------- */
 
 //static SDL_Rect rc;/* チェック用、矩形判定領域 */
 static int rc_x;/* チェック用、矩形判定領域 */
@@ -204,12 +197,12 @@ static int sprite_memory_and(Uint8 *s1, Uint8 *s2, unsigned int shift1, unsigned
 		if (( (*s1) & (i1) ) &&
 			( (*s2) & (i2) )	)
 		{
-			return (1)/*(b+1)*/;/*あたった*/
+			return (1)/*(b+1) */;/*あたった */
 		}
-		i1 += i1;/*i1 <<= 1;*/		if (0x100 == i1) { i1 = 0x01; s1++; }
-		i2 += i2;/*i2 <<= 1;*/		if (0x100 == i2) { i2 = 0x01; s2++; }
+		i1 += i1;/*i1 <<= 1; */ 	if (0x100 == i1) { i1 = 0x01; s1++; }
+		i2 += i2;/*i2 <<= 1; */ 	if (0x100 == i2) { i2 = 0x01; s2++; }
 	}
-	return (0);/*あたってない*/
+	return (0);/*あたってない */
 }
 #else
 static int sprite_memory_and(Uint8 *s1, Uint8 *s2, unsigned int shift1, unsigned int shift2, int length)
@@ -225,29 +218,29 @@ static int sprite_memory_and(Uint8 *s1, Uint8 *s2, unsigned int shift1, unsigned
 		if (( (*s1) & (stbl[shift1]) ) &&
 			( (*s2) & (stbl[shift2]) )	)
 		{
-			return (1)/*(b+1)*/;/*あたった*/
+			return (1)/*(b+1) */;/*あたった */
 		}
 		shift1++;	if (8 == shift1) { shift1 = 0; s1++; }
 		shift2++;	if (8 == shift2) { shift2 = 0; s2++; }
 	}
-	return (0);/*あたってない*/
+	return (0);/*あたってない */
 }
 #endif
 
 /*---------------------------------------------------------
 	図形あたり判定
----------------------------------------------------------*/
+--------------------------------------------------------- */
 
 static int sprite_collision_pixel(SPRITE *a, SPRITE *b)
 {
 	Sint16 w1 = a->w;
 	Sint16 h1 = a->h;
-	Sint16 x1 = ((a->x256)>>8);
-	Sint16 y1 = ((a->y256)>>8);
+	Sint16 x1 = (t256_floor(a->x256));
+	Sint16 y1 = (t256_floor(a->y256));
 	Sint16 w2 = b->w;
 	Sint16 h2 = b->h;
-	Sint16 x2 = ((b->x256)>>8);
-	Sint16 y2 = ((b->y256)>>8);
+	Sint16 x2 = (t256_floor(b->x256));
+	Sint16 y2 = (t256_floor(b->y256));
 
 	Sint32 x1o = 0;
 	Sint32 x2o = 0;
@@ -294,7 +287,7 @@ static int sprite_collision_pixel(SPRITE *a, SPRITE *b)
 	}
 	else
 	{
-		return (0);/*あたってない*/
+		return (0);/*あたってない */
 	}
 //
 	if (x1+w1 < x2+w2)
@@ -308,10 +301,10 @@ static int sprite_collision_pixel(SPRITE *a, SPRITE *b)
 //
 	for (y=rc_y; ((y<=y1+h1) && (y<=y2+h2)); y++)
 	{
-		if (/*offs offs =*/ sprite_memory_and(map1, map2, i1, i2, length) )
+		if (/*offs offs = */ sprite_memory_and(map1, map2, i1, i2, length) )
 		{
 			// col-koord: x=rc_x+offs-1, y=y
-			return (1);/*あたった*/
+			return (1);/*あたった */
 		}
 		offs = ((y-y1) * w1) + x1o;
 		map1 = a->colision_bmp->col[a->anim_frame];
@@ -323,67 +316,159 @@ static int sprite_collision_pixel(SPRITE *a, SPRITE *b)
 		map2 += (offs>>3);
 		i2 = (offs&(8-1));
 	}
-	return (0);/*あたってない*/
+	return (0);/*あたってない */
 }
 #endif
 /*---------------------------------------------------------
 	矩形あたり判定
----------------------------------------------------------*/
-
-static int sprite_collision_bounding(SPRITE *a, SPRITE *b)
+--------------------------------------------------------- */
+#if (0)
+static int sprite_collision_bounding(SPRITE *obj1, SPRITE *obj2)
 {
-	if (a->x256 < b->x256)
+	if (obj1->x256 < obj2->x256)
 	{
-		if (a->x256+((a->w)<<8) > b->x256)
+		if (obj1->x256+((obj1->w)<<8) > obj2->x256)
 		{
-			if (a->y256 < b->y256)
-			{	if (a->y256+((a->h)<<8) > b->y256)
+			if (obj1->y256 < obj2->y256)
+			{	if (obj1->y256+((obj1->h)<<8) > obj2->y256)
 				{
 					#if (1==USE_ZUKEI_ATARI_HANTEI)
-					rc_x=((b->x256)>>8);	rc_y=((b->y256)>>8);
+					rc_x=(t256_floor(obj2->x256)); rc_y=(t256_floor(obj2->y256));
 					#endif
-					return (1);/*あたった*/
+					return (1);/*あたった */
 				}
 			}
 			else
-			{	if (b->y256+((b->h)<<8) > a->y256)
+			{	if (obj2->y256+((obj2->h)<<8) > obj1->y256)
 				{
 					#if (1==USE_ZUKEI_ATARI_HANTEI)
-					rc_x=((b->x256)>>8);	rc_y=((a->y256)>>8);
+					rc_x=(t256_floor(obj2->x256)); rc_y=(t256_floor(obj1->y256));
 					#endif
-					return (1);/*あたった*/
+					return (1);/*あたった */
 				}
 			}
 		}
 	}
 	else
 	{
-		if (b->x256+((b->w)<<8) > a->x256)
+		if (obj2->x256+((obj2->w)<<8) > obj1->x256)
 		{
-			if (b->y256 < a->y256)
-			{	if (b->y256+((b->h)<<8) > a->y256)
+			if (obj2->y256 < obj1->y256)
+			{	if (obj2->y256+((obj2->h)<<8) > obj1->y256)
 				{
 					#if (1==USE_ZUKEI_ATARI_HANTEI)
-					rc_x=((a->x256)>>8);	rc_y=((a->y256)>>8);
+					rc_x=(t256_floor(obj1->x256)); rc_y=(t256_floor(obj1->y256));
 					#endif
-					return (1);/*あたった*/
+					return (1);/*あたった */
 			}	}
 			else
-			{	if (a->y256+((a->h)<<8) > b->y256)
+			{	if (obj1->y256+((obj1->h)<<8) > obj2->y256)
 				{
 					#if (1==USE_ZUKEI_ATARI_HANTEI)
-					rc_x=((a->x256)>>8);	rc_y=((b->y256)>>8);
+					rc_x=(t256_floor(obj1->x256)); rc_y=(t256_floor(obj2->y256));
 					#endif
-					return (1);/*あたった*/
+					return (1);/*あたった */
 			}	}
 		}
 	}
-	return (0);/*あたってない*/
+	return (0);/*あたってない */
 }
+#endif
+
+#if (0)
+static int sprite_collision_bounding(SPRITE *obj1, SPRITE *obj2)
+{
+	Sint32 min_x256;
+	Sint32 max_x256;
+	Sint32 zzz_x256;
+	Sint32 min_y256;
+	Sint32 max_y256;
+	Sint32 zzz_y256;
+	if (obj1->x256 < obj2->x256)
+	{
+		min_x256 = obj1->x256;	zzz_x256 = ((obj1->w)<<8);
+		max_x256 = obj2->x256;
+	}
+	else
+	{
+		min_x256 = obj2->x256;	zzz_x256 = ((obj2->w)<<8);
+		max_x256 = obj1->x256;
+	}
+	if (obj1->y256 < obj2->y256)
+	{
+		min_y256 = obj1->y256;	zzz_y256 = ((obj1->h)<<8);
+		max_y256 = obj2->y256;
+	}
+	else
+	{
+		min_y256 = obj2->y256;	zzz_y256 = ((obj2->h)<<8);
+		max_y256 = obj1->y256;
+	}
+//
+	if (min_x256+zzz_x256 > max_x256)
+	{
+		if (min_y256+zzz_y256 > max_y256)
+		{
+			#if (1==USE_ZUKEI_ATARI_HANTEI)
+			rc_x=(t256_floor(max_x256));	rc_y=(t256_floor(max_y256));
+			#endif
+			return (1);/*あたった */
+		}
+	}
+	return (0);/*あたってない */
+}
+#endif
+/*---------------------------------------------------------
+	矩形/円 あたり判定
+	-------------------------------------------------------
+	オブジェクト同士の当たり判定
+	大まかに矩形で判別した後、近そうなら円の衝突判定
+--------------------------------------------------------- */
+
+#if (1)
+static /*BOOL */int collision_hit( /*obj_t */SPRITE *obj1, /*obj_t */SPRITE *obj2 )
+{
+	/* --- 判定有効なオブジェクトでなかったら終了 */
+//	if (obj2->m_Hit256R == 0/*.0 */ /*FALSE */)
+	if (256 > obj2->m_Hit256R /*FALSE */)
+	{
+		return (0/*FALSE */);	/* not hit. 当たってない */
+	}
+//	if (obj1->m_Hit256R == 0/*.0 */ /*FALSE */)
+	if (256 > obj1->m_Hit256R /*FALSE */)
+	{
+		return (0/*FALSE */);	/* not hit. 当たってない */
+	}
+//
+	/*flo at */int dr, dx, dy;
+	dr = (obj2->m_Hit256R + obj1->m_Hit256R);
+	dx = ((obj2->x256+obj2->w128) - (obj1->x256+obj1->w128));
+	dy = ((obj2->y256+obj2->h128) - (obj1->y256+obj1->h128));
+	/* check collision, delta x position. 矩形判定（Ｘ軸） */
+	if (dx < 0/*.0 */)	{	dx = (-dx); }	/*dx = abs(dx); */
+	if (dx > dr)	{	return (0/*FALSE */);	}	/* not hit, because not near the dx. Ｘの差分が大きいので、当たってない */
+
+	/* check collision, delta y position. 矩形判定（Ｙ軸） */
+	if (dy < 0/*.0 */)	{	dy = (-dy); }	/*dy = abs(dy); */
+	if (dy > dr)	{	return (0/*FALSE */);	}	/*	not hit, because not near the dy. Ｙの差分が大きいので、当たってない */
+
+	/* check collision, circle delta round distance.  円の半径で判定 */
+	dr *= dr;
+	dx *= dx;
+	dy *= dy;
+	dx += dy;
+	if (dr < dx)/*if ( (dr^2) < ( (dx^2) + (dy^2) )) */
+	{
+		return (0/*FALSE */);	/* not hit. 当たってない */
+	}
+	return (1/*TRUE */); /* hit. 当たった */
+}
+#endif
+
 
 /*---------------------------------------------------------
 	スプライトのあたり判定
----------------------------------------------------------*/
+--------------------------------------------------------- */
 
 SPRITE *sprite_list000_head = NULL; 	// スプライトのリスト構造
 
@@ -408,6 +493,7 @@ SPRITE *sprite_collision_check(SPRITE *tocheck, int type)
 						/* あたり判定があり、かつ、表示可能なもののみチェック */
 					)
 				{
+					#if 0
 					/* 4. 矩形あたり判定チェック */
 					if (sprite_collision_bounding(s,tocheck))	/* 矩形あたり判定 */	/* Bounding Box Collosion? */
 					{
@@ -416,22 +502,30 @@ SPRITE *sprite_collision_check(SPRITE *tocheck, int type)
 						if (sprite_collision_pixel(s,tocheck))	/* 図形あたり判定 */	/* Pixel-Level Collison */
 						#endif
 						{
-							return (s);/*あたった*/
+							return (s);/*あたった */
 						}
 					}
+					#endif
+					#if 1
+					/* 4. 矩形/円あたり判定チェック   大まかに矩形で判別した後、近そうなら円の衝突判定 */
+					if (collision_hit(s,tocheck))	/* 矩形/円あたり判定 */
+					{
+						return (s);/*あたった */
+					}
+					#endif
 				}
 			}
 		}
-		s = s->next;/*次*/
+		s = s->next;/*次 */
 	}
-	return (NULL);/*あたってない*/
+	return (NULL);/*あたってない */
 }
 
 #if (1==USE_ZUKEI_ATARI_HANTEI)
 
 /*---------------------------------------------------------
 	図形あたり判定用の図形を削除
----------------------------------------------------------*/
+--------------------------------------------------------- */
 
 static void sprite_remove_colision_map(COLISION_MAP_CACHE *c)
 {
@@ -448,7 +542,7 @@ static void sprite_remove_colision_map(COLISION_MAP_CACHE *c)
 
 /*---------------------------------------------------------
 	図形あたり判定用の図形を渡す
----------------------------------------------------------*/
+--------------------------------------------------------- */
 
 static COLISION_MAP_CACHE *colmap_cache = NULL;/* 図形あたり判定用の図形キャッシュリスト */
 
@@ -468,7 +562,7 @@ static COLISION_MAP_CACHE *sprite_get_colision_map(SDL_Surface *img, int frames)
 
 /*---------------------------------------------------------
 	図形あたり判定用の図形を新規作成の子関数
----------------------------------------------------------*/
+--------------------------------------------------------- */
 
 static Uint32 getpixel16(SDL_Surface *surface, int x, int y)
 {
@@ -494,7 +588,7 @@ static void sprite_create_colision_map(SDL_Surface *src, Uint8 *dst, int w, int 
 				{
 					*dst = (*dst) | bit;
 				}
-				bit += bit/*bit <<= 1*/;	if (0x100 == bit) { bit = 0x01; dst++; }
+				bit += bit/*bit <<= 1 */;	if (0x100 == bit) { bit = 0x01; dst++; }
 			}
 		}
 	}
@@ -503,7 +597,7 @@ static void sprite_create_colision_map(SDL_Surface *src, Uint8 *dst, int w, int 
 
 /*---------------------------------------------------------
 	図形あたり判定用の図形を新規作成(図形あたり判定用の図形キャッシュリストに追加)
----------------------------------------------------------*/
+--------------------------------------------------------- */
 
 static COLISION_MAP_CACHE *sprite_add_colision_map(SDL_Surface *img, int frames)
 {
@@ -523,7 +617,7 @@ static COLISION_MAP_CACHE *sprite_add_colision_map(SDL_Surface *img, int frames)
 	c->refcount 	= 1;
 	c->col			= mmalloc(sizeof(Uint8 *)*frames);
 
-	colbsize		= (((img->w/frames)*(img->h+2))>>3)/*/8*/;
+	colbsize		= (((img->w/frames)*(img->h+2))>>3)/ */8 */;
 
 	for (i=0;i<frames;i++)
 	{
@@ -547,7 +641,7 @@ static COLISION_MAP_CACHE *sprite_add_colision_map(SDL_Surface *img, int frames)
 
 /*---------------------------------------------------------
 	スプライト リストに登録されたスプライトを消す。
----------------------------------------------------------*/
+--------------------------------------------------------- */
 
 static void sprite_remove_one(SPRITE *src)
 {
@@ -557,7 +651,7 @@ static void sprite_remove_one(SPRITE *src)
 	while (NULL != s)/* スプライト リストの終わりまで探す */
 	{
 		n = s->next;
-		if (s == src)/*見つかった？*/
+		if (s == src)/*見つかった？ */
 		{
 			if (NULL == p)
 			{
@@ -591,18 +685,18 @@ static void sprite_remove_one(SPRITE *src)
 				free (s->data);
 			}
 			free (s);
-			return;/*正常*/
+			return;/*正常 */
 		}
 		p = s;
 		s = n;
 	}
-	CHECKPOINT;/*異常*/
+	CHECKPOINT;/*異常 */
 	error(ERR_WARN,"sprite not found in list");
 }
 
 /*---------------------------------------------------------
 	スプライト リストに登録されたスプライトを全部消す。
----------------------------------------------------------*/
+--------------------------------------------------------- */
 
 //void sprite_remove_all222(int type){}
 void sprite_remove_all000(int type)
@@ -637,7 +731,7 @@ void sprite_remove_all000(int type)
 
 /*---------------------------------------------------------
 	スプライトを一フレーム分動作させる。
----------------------------------------------------------*/
+--------------------------------------------------------- */
 
 //void sprite_work222(int type){}
 void sprite_work000(int type)
@@ -656,13 +750,13 @@ void sprite_work000(int type)
 			//s->ticks++;
 			if (s->type & type) /* typeが一致する場合のみ */
 			{
-				/*逆転アニメ禁止に変更*/
+				/*逆転アニメ禁止に変更 */
 			//	if (s->anim_speed != 0)
 				if (0 < s->anim_speed)
 				{
-					s->anim_count++;			//		s->anim_count++/*=fps_fa ctor*/;
+					s->anim_count++;			//		s->anim_count++/*=fps_fa ctor */;
 					// if (s->anim_count==abs(s->anim_speed))
-					if (s->anim_count >= /*abs*/(s->anim_speed))
+					if (s->anim_count >= /*abs */(s->anim_speed))
 					{
 						s->anim_count = 0;
 					//	if (s->anim_speed > 0)
@@ -671,7 +765,7 @@ void sprite_work000(int type)
 							if (s->anim_frame >= (s->frames))
 							{	s->anim_frame = 0;}
 						}
-					//	else		/*逆転アニメ禁止に変更*/
+					//	else		/*逆転アニメ禁止に変更 */
 					//	{
 					//		s->anim_frame--;
 					//		if (s->anim_frame < 0)
@@ -701,7 +795,7 @@ void sprite_work000(int type)
 			if ( (SP_FLAG_TIME_OVER == (s->flags&SP_FLAG_TIME_OVER)) )
 			{
 				s->timeover_ticks++;
-				if ( 1000 < (s->timeover_ticks) )/*16秒*/	/*(1024-1) <*/ /*(0x0400 & (s->ticks))*/
+				if ( 1000 < (s->timeover_ticks) )/*16秒 */	/*(1024-1) < */ /*(0x0400 & (s->ticks)) */
 				{
 				//	s->timeover_ticks = 0;
 					s->type = SP_DELETE;	/* 自動消去にする。 */
@@ -733,8 +827,45 @@ void sprite_work000(int type)
 				#endif
 
 /*---------------------------------------------------------
+	スプライトを描画する。
+--------------------------------------------------------- */
+static void sprite_draw000(SPRITE *s)
+{
+		SDL_Rect dest;
+		SDL_Rect src;
+		dest.x = (t256_floor(s->x256));
+		dest.y = (t256_floor(s->y256));
+		dest.w = ((s->w128)>>7);
+		dest.h = ((s->h128)>>7);
+//
+		src.w = dest.w/*s->w*/;
+		src.h = dest.h/*s->h*/;
+		src.x = /*s->w*/(dest.w)*(s->anim_frame);
+		src.y = 0;
+//
+//		if (s->flags&SP_FLAG_CHEAP_ALPHA)
+//		{
+//			blit_cheap_alpha(s->sprite_bmp, &t, sdl_screen[SDL_00_SCREEN], &r);
+//		}
+//		else
+//		{
+			#if 0
+			/* アルファ値が変わった場合のみ */
+			if (s->alpha_chache != s->alpha)
+			{
+				s->alpha_chache = s->alpha;
+				SDL_SetAlpha(s->sprite_bmp,SDL_SRCALPHA,s->alpha_chache);
+			}
+			#else
+				SDL_SetAlpha(s->sprite_bmp,SDL_SRCALPHA,s->alpha);
+			#endif
+			SDL_BlitSurface(s->sprite_bmp, &src, sdl_screen[SDL_00_SCREEN], &dest);
+//		}
+}
+/*---------------------------------------------------------
 	スプライトを表示する。
----------------------------------------------------------*/
+--------------------------------------------------------- */
+
 #define USE_DEBUG	(0)
 #if (1==USE_DEBUG)
 extern int debug_num1;
@@ -752,15 +883,13 @@ void sprite_display000(int type)
 
 	SPRITE *s;
 	s = sprite_list000_head;/* スプライト リストの先頭 から探す */
-	SDL_Rect t;
-	t.y=0;
 	while (NULL != s)
 	{
 		#if (1==USE_DEBUG)
 		if (s->type != SP_DELETE )
 		{
-			debug_count1++;/*有効 スプライト カウント*/
-			//	max 	debug_count2/debug_count1			/*	*/
+			debug_count1++;/*有効 スプライト カウント */
+			//	max 	debug_count2/debug_count1			/*	 */
 			//	max 				PRIORITY_00_BG
 			//	max 				PRIORITY_01_SHOT		/* 自弾/地上ザコ敵/魔方陣 */
 			//	max 				PRIORITY_02_PLAYER		/* 自機 */
@@ -772,7 +901,7 @@ void sprite_display000(int type)
 			//	咲夜4096精密弾lunatic446/455	(輝夜 第3形態lunatic 337/351)
 			if (PRIORITY_05_BULLETS==s->priority)
 			{
-				debug_count2++;/*有効 スプライト カウント*/
+				debug_count2++;/*有効 スプライト カウント */
 			}
 		}
 		#endif
@@ -784,38 +913,11 @@ void sprite_display000(int type)
 			{
 				if ((s->flags&SP_FLAG_VISIBLE)) /* 表示可能な場合のみ */
 				{
-					SDL_Rect r;
-					r.x = ((s->x256)>>8);
-					r.y = ((s->y256)>>8);
-					r.w = s->w;
-					r.h = s->h;
-//
-					t.w = s->w;
-					t.h = s->h;
-					t.x = s->w*s->anim_frame;
-//
-//					if (s->flags&SP_FLAG_CHEAP_ALPHA)
-//					{
-//						blit_cheap_alpha(s->sprite_bmp,&t,screen,&r);
-//					}
-//					else
-//					{
-						#if 0
-						/* アルファ値が変わった場合のみ */
-						if (s->alpha_chache != s->alpha)
-						{
-							s->alpha_chache = s->alpha;
-							SDL_SetAlpha(s->sprite_bmp,SDL_SRCALPHA,s->alpha_chache);
-						}
-						#else
-							SDL_SetAlpha(s->sprite_bmp,SDL_SRCALPHA,s->alpha);
-						#endif
-						SDL_BlitSurface(s->sprite_bmp,&t,screen,&r);
-//					}
+					sprite_draw000(s);
 				}
 			}
 		}
-		s=s->next;/*次*/
+		s=s->next;/*次 */
 	}
 //
 	#if (1==USE_DEBUG)
@@ -827,19 +929,43 @@ void sprite_display000(int type)
 
 /*---------------------------------------------------------
 	スプライトをリストに追加する。
----------------------------------------------------------*/
+--------------------------------------------------------- */
+//#if (0)
+//SPRITE *spr ite_add_000xy00(
+//	SDL_Surface *surface,
+//	int total_frames,
+//	int x_divide_frames,
+//	int y_divide_frames,
+//	Uint8 priority,
+//	int set_flags/*nocache */,
+//	int anime_speed)
+//#endif
 
-SPRITE *sprite_add_000(SDL_Surface *surface, int frames, Uint8 priority, int set_flags/*nocache*/, int anime_speed)
+//	int total_frames,
+//	int x_divide_frames,
+//	int y_divide_frames,
+//	Uint8 priority,
+//	int anime_speed
+
+#if (1)
+SPRITE *sprite_add_res_list(
+	SDL_Surface *surface,
+	int set_flags/*nocache */,
+	IMAGE_RESOURCE *image_resource_ptr
+	)
+#endif
 {
+	int priority;			priority		= image_resource_ptr->priority;
+//
 	SPRITE *obj;/* 新規作成するスプライト */
 	SPRITE *s;
-	SPRITE *tail_obj/*=NULL*/;	/* 追加するリストの候補位置。切断する場合は切断位置。 */
+	SPRITE *tail_obj/*=NULL */; /* 追加するリストの候補位置。切断する場合は切断位置。 */
 	obj 		= mmalloc(sizeof(SPRITE));
 	s			= sprite_list000_head;	// スプライトリストの先頭。呼び出し
 	tail_obj	= NULL;
 	/*---------------------------------------------------------
 		スプライトの表示プライオリティーを満たす位置を調べて、そこに挿入する。
-	---------------------------------------------------------*/
+	--------------------------------------------------------- */
 	while (
 		(NULL != s) &&				/* リストの頭までしらべたなら終わり */
 		(s->priority < priority)	/* 表示プライオリティーを満たす位置まで来たら終わり */
@@ -860,7 +986,7 @@ SPRITE *sprite_add_000(SDL_Surface *surface, int frames, Uint8 priority, int set
 	}
 	/*---------------------------------------------------------
 		スプライトの設定をする。
-	---------------------------------------------------------*/
+	--------------------------------------------------------- */
 	#if 0
 	{	/* この機能(個別のスプライトに番号を割り当て番号で判別する)は大した意味がないので無くした。
 			(個別のスプライトを判別したい場合は、ポインタで判別すればこの機能は不要なので) */
@@ -871,20 +997,31 @@ SPRITE *sprite_add_000(SDL_Surface *surface, int frames, Uint8 priority, int set
 	#endif
 //
 	obj->sprite_bmp 	= surface;
-	obj->w				= surface->w/frames;
-	obj->h				= surface->h;
+//
+	int x_divide_frames;	x_divide_frames = image_resource_ptr->x_divide_frames;
+	int y_divide_frames;	y_divide_frames = image_resource_ptr->y_divide_frames;
+//
+	obj->w128				= ((surface->w/x_divide_frames)<<7);
+	obj->h128				= ((surface->h/y_divide_frames)<<7);
+//
+	int total_frames;		total_frames	= image_resource_ptr->total_frames;
+	int anime_speed;		anime_speed 	= image_resource_ptr->anime_speed;
+	int m_Hit256R;			m_Hit256R		= image_resource_ptr->atari_hankei;
+//
+
+	obj->m_Hit256R	= (m_Hit256R<<8);
 
 	#if (1==USE_ZUKEI_ATARI_HANTEI)
-	obj->colision_bmp		= sprite_add_colision_map(surface, frames);
+	obj->colision_bmp		= sprite_add_colision_map(surface, total_frames);
 	#endif /* (1==USE_ZUKEI_ATARI_HANTEI) */
 
-	obj->frames 	= frames;
+	obj->frames 	= total_frames;
 	obj->priority	= priority;
-	obj->flags		= set_flags; /*0;	if (nocache) s->flags |= SP_FLAG_NOT_CACHE;*/
+	obj->flags		= set_flags; /*0;	if (nocache) s->flags |= SP_FLAG_NOT_CACHE; */
 	obj->alpha		= 255;
 
 	obj->anim_frame = 0;
-	obj->anim_speed = anime_speed/*0*/;
+	obj->anim_speed = anime_speed/*0 */;
 	obj->anim_count = 0;
 
 	obj->timeover_ticks 	= 0;
@@ -895,9 +1032,35 @@ SPRITE *sprite_add_000(SDL_Surface *surface, int frames, Uint8 priority, int set
 	return (obj);
 }
 
+
+//	char *filename,
+//	int total_frames,
+//	int x_divide_frames,
+//	int y_divide_frames,
+//	Uint8 priority,
+//	int use_alpha,
+//	int anime_speed
+
+//		fff,
+//		total_frames,
+//		x_divide_frames,
+//		y_divide_frames,
+//		priority,
+//		use_alpha,
+//		anime_speed
+
+	//		total_frames,
+	//		x_divide_frames,
+	//		y_divide_frames,
+	//		priority,
+	//		anime_speed
+
 /* clouds敵の場合、ファイル名 */
-/*static*/ SPRITE *sprite_add_internal_000(char *filename, int frames, Uint8 priority, int use_alpha, int anime_speed)
+/*static */ SPRITE *sprite_add_internal_res(IMAGE_RESOURCE *image_resource_ptr)
 {
+	char *filename; 		filename		= (char *)image_resource_ptr->file_name;
+	int use_alpha;			use_alpha		= image_resource_ptr->use_alpha;
+//
 	SDL_Surface *s;
 	SPRITE *sp;
 	s		= loadbmp0(filename, use_alpha, 1);
@@ -905,28 +1068,25 @@ SPRITE *sprite_add_000(SDL_Surface *surface, int frames, Uint8 priority, int set
 	{
 		SDL_SetColorKey(s,SDL_SRCCOLORKEY|SDL_RLEACCEL,0x00000000);
 	}
-	sp		= sprite_add_000(s, frames, priority, 0/*flags*/, anime_speed);
+	sp	= sprite_add_res_list( s, 0/*flags */, image_resource_ptr);
 	return (sp);
 }
 SPRITE *sprite_add_res(int image_resource_num)
 {
-	char *fff;	fff = (char *)my_resource[image_resource_num].file_name;
-	int aaa;	aaa = my_resource[image_resource_num].frames;
-	int bbb;	bbb = my_resource[image_resource_num].priority;
-	int ccc;	ccc = my_resource[image_resource_num].use_alpha;
-	int ddd;	ddd = my_resource[image_resource_num].anime_speed;
-	return (sprite_add_internal_000( fff, aaa, bbb, ccc, ddd));
+	IMAGE_RESOURCE *image_resource_ptr;
+	image_resource_ptr = &my_resource[image_resource_num];
+	return (sprite_add_internal_res( image_resource_ptr ));
 }
 
 /*---------------------------------------------------------
 	画像キャッシュに載せる(ゲーム中に画像展開すると処理落ちが激しくて
 	ゲームにならない。そこで予めキャッシュに載せとく)
----------------------------------------------------------*/
+--------------------------------------------------------- */
 
-/*static*/ void load_bg2_chache(char *filename, int use_alpha)
+/*static */ void load_bg2_chache(char *filename, int use_alpha)
 {
 	SDL_Surface *tmp;
-	tmp = loadbmp0(filename, /*0*/use_alpha, 1);
+	tmp = loadbmp0(filename, /*0 */use_alpha, 1);
 	unloadbmp_by_surface(tmp);
 };
 
@@ -939,7 +1099,7 @@ SPRITE *sprite_add_res(int image_resource_num)
 	画像キャッシュに載せたい順に読み込む。
 	ファイルの確認も兼ねる。
 	alle benoetigten Bilder in den Cache laden
----------------------------------------------------------*/
+--------------------------------------------------------- */
 extern void load_bg2_chache(char *filename, int use_alpha);
 void preload_gfx(void)
 {
@@ -948,11 +1108,11 @@ void preload_gfx(void)
 	{
 		char *fff;	fff = (char *)my_resource[image_resource_num].file_name;
 		int ccc;	ccc = my_resource[image_resource_num].use_alpha;
-		load_bg2_chache(fff/*char *filename*/, ccc /*use_alpha*/);
+		load_bg2_chache(fff/*char *filename */, ccc /*use_alpha */);
 	}
 }
 
-//SPRITE *sprite_add_file 0(char *filename, int frames, Uint8 priority, int use_alpha)
+//SPRITE *spr ite_add_file 0(char *filename, int total_frames, int x_divide_frames, int y_divide_frames, Uint8 priority, int use_alpha)
 //{
 //	SDL_Surface *s;
 //	SPRITE *sp;
@@ -961,22 +1121,23 @@ void preload_gfx(void)
 //	{
 //		SDL_SetColorKey(s,SDL_SRCCOLORKEY|SDL_RLEACCEL,0x00000000);
 //	}
-//	sp		= sprite_add_000(s, frames, priority, 0/*flags*/, 0);
+//	sp		= spr ite_add_000xy00(s, total_frames, x_divide_frames, y_divide_frames, priority, 0/*flags */, 0);
 //	return (sp);
 //}
-//SPRITE *sprite_add_file1(char *filename, int frames, Uint8 priority)
+//SPRITE *spr ite_add_file1(char *filename, int total_frames, int x_divide_frames, int y_divide_frames, Uint8 priority)
 //{
-//	return (sprite_add_file 0( filename, frames,  priority, 0));
+//	return (spr ite_add_file 0( filename, total_frames, x_divide_frames, y_divide_frames, priority, 0));
 //}
-//SPRITE *sprite_add_file2(char *filename, int frames, Uint8 priority)
+//SPRITE *spr ite_add_file2(char *filename, int total_frames, int x_divide_frames, int y_divide_frames, Uint8 priority)
 //{
-//	return sprite_add_file 0( filename, frames,  priority, 1);
+//	return spr ite_add_file 0( filename, int total_frames, x_divide_frames, y_divide_frames, priority, 1);
 //}
 //SPRITE *sprite_add_res(int image_resource_num)
 //{
 //	char *fff;	fff = (char *)my_resource[image_resource_num].file_name;
 //	int aaa;	aaa = my_resource[image_resource_num].frames;
+//	int aaa;	aaa = my_resource[image_resource_num].frames;
 //	int bbb;	bbb = my_resource[image_resource_num].priority;
 //	int ccc;	ccc = my_resource[image_resource_num].use_alpha;
-//	return (sprite_add_file 0( fff, aaa, bbb, ccc));
+//	return (spr ite_add_file 0( fff, aaa, aaa, bbb, ccc));
 //}

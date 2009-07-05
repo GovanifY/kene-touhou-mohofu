@@ -22,14 +22,14 @@
 
 ---------------------------------------------------------*/
 
-/* ----- 曲のトラック */
-static Mix_Music *music_track;
-
 /* ----- 曲の数(読み込みファイル数) */
 #define USE_MUSIC_FILES 14 /**/
 
 /* ----- 効果音の数(読み込みファイル数) */
 #define USE_VOICE_FILES 15 /*いくつか追加*/
+
+/* ----- 曲のトラック */
+static Mix_Music *music_track;
 
 /* ----- 効果音のトラック */
 static Mix_Chunk *voice_track[USE_VOICE_FILES];
@@ -120,16 +120,20 @@ void play_music(int num)
 	//	"boss6",	/* 14 */
 	//	"boss7",	/* 15 */
 	};		// いろいろ追加
-	/* それまでの演奏停止 */
-//	if ( music_track != NULL )
-//	{
-//		//if ( Mix_PlayingMusic() )
-//		{	Mix_HaltMusic();	}
-//		Mix_FreeMusic(music_track);
-//		music_track = NULL;
-//	}
-	stop_music();
-	/* BGM 演奏開始 */
+	/* ----- それまでの演奏停止 */
+	//stop_music();
+	//void stop_music(void)
+	{
+	//	if ( !use_audio ) return;
+		if ( music_track != NULL )
+		{
+			//if ( Mix_PlayingMusic() )
+			{	Mix_HaltMusic();	}
+			Mix_FreeMusic(music_track);
+			music_track = NULL;
+		}
+	}
+	/* ----- BGM 演奏開始 */
 	char name[64/*72*/];
 	{
 		const char *name_extention[] =
@@ -286,11 +290,14 @@ void voice_play_vbl(void)
 
 void set_voice_volume(int volume)
 {
+	#ifdef ENABLE_PSP
+	#else
 	int i;
 	for (i=0; i<USE_VOICE_FILES; i++)
 	{
 		Mix_VolumeChunk(voice_track[i], volume);
 	}
+	#endif
 }
 
 /*---------------------------------------------------------
@@ -299,7 +306,7 @@ void set_voice_volume(int volume)
 
 void set_music_volume(int volume)
 {
-	Mix_VolumeMusic( volume);
+	Mix_VolumeMusic(volume);
 }
 
 /*---------------------------------------------------------

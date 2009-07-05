@@ -22,7 +22,7 @@ static int level;
 #define NUM_OF_ENEMIES (10)
 
 /*---------------------------------------------------------
-
+	“G‚â‚ç‚ê
 ---------------------------------------------------------*/
 
 static void lose_kedama1(SPRITE *s)
@@ -33,8 +33,9 @@ static void lose_kedama1(SPRITE *s)
 		item_create(s, enemy_get_random_item(), 1, (ITEM_MOVE_FLAG_01_COLLECT|ITEM_MOVE_FLAG_06_RAND_XY)/*(up_flags)*/ );
 	}
 }
-/*---------------------------------------------------------
 
+/*---------------------------------------------------------
+	“GˆÚ“®
 ---------------------------------------------------------*/
 
 static void move_kedama1(SPRITE *s)
@@ -58,7 +59,7 @@ static void move_kedama1(SPRITE *s)
 		}
 		break;/*??? [***090215 ’Ç‰Á */
 	case 1:
-		if (s->x256 <= -((s->w)<<8))
+		if (s->x256 <= -((s->w128+s->w128)))
 		{
 			s->type=SP_DELETE;
 		}

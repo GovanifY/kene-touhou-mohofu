@@ -49,7 +49,7 @@ static int ini_load_item(FILE *fp, char *search, char *result)
 			while (*c != '=')	/* '=' ‚ğ’T‚· */
 			{
 				i++;
-				if (i >= 30)	{	return -1;	}	/* ’·‚·‚¬‚½‚çƒGƒ‰[ */
+				if (i >= 30)	{	return (-1);	}	/* ’·‚·‚¬‚½‚çƒGƒ‰[ */
 				*sc++ = *c++;
 			}
 			c++;		/* '=' ‚ğ–³‹ ('=' ‚Ì•ª‚ğ‚Æ‚Î‚·) */
@@ -98,7 +98,7 @@ static int ini_load_local(void)
 	int_result=0;/*ˆÙí*/
 	int ng1;
 	ng1 = 0;/*fopen()¬Œ÷*/
-	if ( NULL == (fp = fopen(fn,"r")))	{	ng1 = 1;/*fopen()¸”s*/ goto error00/*return -1*/;	}
+	if ( NULL == (fp = fopen(fn, "r")))	{	ng1 = 1;/*fopen()¸”s*/ goto error00/*return -1*/;	}
 //
 //	if (ini_load_item(fp, "moddir", moddir)==-1)	{	goto error00/*return -1*/;	}
 //	fscanf(fp,"moddir=%s",moddir);
@@ -299,5 +299,5 @@ void save_screen_shot(void)
 	screen_num++;
 	screen_num &= 0x1f;
 	screen_buf[22]= ((9+1)<screen_num)?(('A'-(9+1)-1)+screen_num):(('0'-1)+screen_num);
-	SDL_SaveBMP(screen, screen_buf);
+	SDL_SaveBMP(sdl_screen[SDL_00_SCREEN], screen_buf);
 }

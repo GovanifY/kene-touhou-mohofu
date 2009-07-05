@@ -3,11 +3,6 @@
 
 /*---------------------------------------------------------
 	’nŒ`‚ÉŠÖ˜A‚·‚é“G
-	
-	enemy_bgpanel.c
-	enemy_bgpanel2.c
-	enemy_grounder.c
-	enemy_magicformatiion.c
 	-------------------------------------------------------
 
 ---------------------------------------------------------*/
@@ -261,11 +256,11 @@ int type;
 //
 xxx=l->user_x;
 yyy=l->user_y;
-speed256=l->scroll_speed256;
-type=/*type*/l->user_command/*1-1*/;
+speed256 = l->scroll_speed256;
+type = /*type*/l->user_command/*1-1*/;
 //
 	short yy2;
-	yy2=yyy;
+	yy2 = yyy;
 	BGPANEL_DATA *data;
 //	GROUNDER_DATA *data;
 //	MAGICF_DATA *data;
@@ -278,7 +273,7 @@ type=/*type*/l->user_command/*1-1*/;
 //	data->level 	= 0;
 //
 	SPRITE *s;
-	s=NULL;
+	s = NULL;
 //
 	switch (type)
 	{
@@ -341,6 +336,6 @@ type=/*type*/l->user_command/*1-1*/;
 //
 		s->anim_frame		= 0;
 		s->x256 			=  ((xxx)<<8);
-	//	s->y256 			=  ((yyy)<<8)-((s->h)<<8);
-		s->y256 			= -((yy2)<<8)-((s->h)<<8);
+	//	s->y256 			=  ((yyy)<<8)-((s->h128+s->h128));
+		s->y256 			= -((yy2)<<8)-((s->h128+s->h128));
 }

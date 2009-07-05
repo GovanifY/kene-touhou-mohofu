@@ -18,7 +18,7 @@ typedef struct
 } AO_YOUSEI2_DATA;
 
 /*---------------------------------------------------------
-
+	“G‚â‚ç‚ê
 ---------------------------------------------------------*/
 
 static void lose_ao_yousei2(SPRITE *s)
@@ -26,8 +26,9 @@ static void lose_ao_yousei2(SPRITE *s)
 //	case SP_ZAKO_17_AO_YOUSEI2:
 	item_create(s, ((SP_ITEM_06_TENSU&0xff)|SP_ITEM_00_P001), 1, (ITEM_MOVE_FLAG_01_COLLECT|ITEM_MOVE_FLAG_06_RAND_XY)/*(up_flags)*/ );
 }
-/*---------------------------------------------------------
 
+/*---------------------------------------------------------
+	“GˆÚ“®
 ---------------------------------------------------------*/
 #define SSS00 ( 0)/*‰E*/
 #define SSS04 ( 4)/*‰EŽÎ‚ß‰º*/
@@ -76,7 +77,7 @@ static void move_ao_yousei2(SPRITE *s)
 		bullet_create_hari_dan180(s, /*((1+difficulty)<<7)*/t256(2.5)/*t256(3)*/, ANGLE_JIKINERAI_DAN, t256(0), t256(0));
 		bullet_create_hari_dan180(s, /*((1+difficulty)<<8)*/t256(3.5)/*t256(4)*/, ANGLE_JIKINERAI_DAN, t256(0), t256(0));
 
-		p512=atan_512(player->y256-s->y256+((player->h)<<7),player->x256-s->x256-((player->w)<<7));
+		p512=atan_512(player->y256-s->y256+((player->h128)),player->x256-s->x256-((player->w128)));
 		if (difficulty>0)
 		{
 		int k;
@@ -173,8 +174,8 @@ void add_zako_ao_yousei2(STAGE_DATA *l)/*int lv*/
 	s->anim_frame	=  spr_tbl[lv][3];
 	s->y256 		= (spr_tbl[lv][2]<<8);
 	s->x256 		= (spr_tbl[lv][0]<<8);
-		 if (1==spr_tbl[lv][1]) {s->x256 -= ((s->w)<<8);}
-	else if (3==spr_tbl[lv][1]) {s->x256 -= ((s->w)<<7);}
+		 if (1==spr_tbl[lv][1]) {s->x256 -= ((s->w128+s->w128));}
+	else if (3==spr_tbl[lv][1]) {s->x256 -= ((s->w128));}
 
 	AO_YOUSEI2_DATA *data;
 	data			= mmalloc(sizeof(AO_YOUSEI2_DATA));

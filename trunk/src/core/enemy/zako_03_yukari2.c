@@ -27,7 +27,7 @@ static int destoroy;
 #define NUM_OF_ENEMIES (5)
 
 /*---------------------------------------------------------
-
+	“G‚â‚ç‚ê
 ---------------------------------------------------------*/
 
 static void lose_yukari2(SPRITE *s)
@@ -46,7 +46,7 @@ static void lose_yukari2(SPRITE *s)
 }
 
 /*---------------------------------------------------------
-
+	“GˆÚ“®
 ---------------------------------------------------------*/
 
 static void move_yukari2(SPRITE *s)
@@ -78,7 +78,7 @@ static void move_yukari2(SPRITE *s)
 		}
 		break;
 	case 1:
-		if (s->y256 < -((s->h)<<8) )
+		if (s->y256 < -((s->h128+s->h128)) )
 		{
 			s->flags	&= (~(SP_FLAG_VISIBLE));
 		}
@@ -151,14 +151,14 @@ void add_zako_yukari2(STAGE_DATA *l)/*int lv*/
 		s->flags			|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK|SP_FLAG_TIME_OVER);
 		s->callback_mover	= move_yukari2;
 		s->callback_loser	= lose_yukari2;
-		if (0==static_last) {	s->x256=t256(0);						}	//‰Eã‚©‚ç“oê
-		else				{	s->x256=t256(GAME_WIDTH)-t256(s->w);	}	//¶ã‚©‚ç“oê
-		s->y256 			= -i*s->h*256;
+		if (0==static_last) {	s->x256=t256(0);								}	//‰Eã‚©‚ç“oê
+		else				{	s->x256=t256(GAME_WIDTH)-(s->w128+s->w128); 	}	//¶ã‚©‚ç“oê
+		s->y256 			= -i*(s->h128+s->h128);
 		YUKARI2_DATA *data;
 		data				= mmalloc(sizeof(YUKARI2_DATA));
 		s->data 			= data;
-		data->angle512		= atan_512((t256(GAME_HEIGHT)-((s->h)<<8)-t256(60))-s->y256,t256(GAME_WIDTH/2)-s->x256);	//ƒEƒBƒ“ƒhƒE•‚Ì•ÏX
-		data->max_y256		= (t256(GAME_HEIGHT)-((s->h)<<8)-t256(60));
+		data->angle512		= atan_512((t256(GAME_HEIGHT)-((s->h128+s->h128))-t256(60))-s->y256,t256(GAME_WIDTH/2)-s->x256);	//ƒEƒBƒ“ƒhƒE•‚Ì•ÏX
+		data->max_y256		= (t256(GAME_HEIGHT)-((s->h128+s->h128))-t256(60));
 		data->speed256		= (t256(2.5/*3.0*/)+((difficulty)<<4) ) /*4*/;/*Žn‚ß‚¾‚¯‚Í‘¬‚¢*/
 		data->state 		= 0;
 		data->b.score		= score(5*2);

@@ -9,6 +9,7 @@ enum /*_menu_states_*/
 {
 	ST_MENU_SUB_MAIN_MENU = 0,	/*intro.c*/
 	ST_MENU_SUB_PAUSE,			/*thegame.c*/
+	ST_MENU_SUB_ASK_CONTINUE,	/*thegame.c*/
 	ST_MENU_SUB_OPTION,
 	//#if (1==DEBUG_MODE)
 	ST_MENU_SUB_STAGE_SELECT,

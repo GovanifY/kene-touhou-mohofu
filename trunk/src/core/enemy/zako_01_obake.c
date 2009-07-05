@@ -15,8 +15,10 @@ typedef struct
 	int anim_count;
 } OBAKE_DATA;
 
-/*---------------------------------------------------------
+#define NUM_OF_ENEMIES (2)
 
+/*---------------------------------------------------------
+	“GˆÚ“®
 ---------------------------------------------------------*/
 
 static void move_obake(SPRITE *s)
@@ -54,7 +56,7 @@ static void move_obake(SPRITE *s)
 void add_zako_obake(STAGE_DATA *l)/*int lv*/
 {
 	int i;
-	for (i=0;i<2;i++)
+	for (i=0; i<NUM_OF_ENEMIES; i++)
 	{
 		SPRITE *s;
 		s					= sprite_add_res(BASE_OBAKE08_PNG);	//	s->anim_speed=0;/*11"ir is.png"*/
@@ -74,3 +76,4 @@ void add_zako_obake(STAGE_DATA *l)/*int lv*/
 		data->anim_count	= 0;
 	}
 }
+#undef NUM_OF_ENEMIES

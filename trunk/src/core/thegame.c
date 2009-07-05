@@ -71,7 +71,7 @@ extern void add_enemy_load_picture( 	STAGE_DATA *l);// /*char *filename,int xpos
 
 int difficulty=RANK_NORMAL;
 
-static Uint32 stage_start_time;
+//static Uint32 stage_start_time;
 //static Uint32 game_start_time;
 
 /*---------------------------------------------------------
@@ -149,9 +149,11 @@ static void thegame_level(STAGE_DATA *l)/*, int lev*/
 /*---------------------------------------------------------
 
 ---------------------------------------------------------*/
+static Uint32 game_v_time;
 void init_stage_start_time(void)
 {
-	stage_start_time=psp_get_uint32_ticks();
+//	stage_start_time=psp_get_uint32_ticks();
+	game_v_time=0;
 }
 
 /*---------------------------------------------------------
@@ -176,8 +178,8 @@ void common_load_init(void)
 //	game_start_time=psp_get_uint32_ticks();
 
 //	stage_start_time=psp_get_uint32_ticks();
-//	game_time=(psp_get_uint32_ticks()-stage_start_time);
-//	game_time=(psp_get_uint32_ticks()-stage_start_time);
+//	game_v_time=(psp_get_uint32_ticks()-stage_start_time);
+//	game_v_time=(psp_get_uint32_ticks()-stage_start_time);
 	//	play_music(BGM_01_stage1);	コメントアウト
 	psp_loop = (ST_WORK_GAME_PLAY|0);
 }
@@ -196,7 +198,7 @@ void shooting_game_init(void)
 	#if (1==USE_ENDING_DEBUG)
 	/*player_init();より後の必要*/
 	if (5==continue_stage)
-	{	PLAYER_DATA *pd=(PLAYER_DATA *)player->data;
+	{	PLAYER_DATA *pd = (PLAYER_DATA *)player->data;
 	//	pd->bo ssmode	= B07_AF TER_LOAD;
 		pd->state_flag	|= (STATE_FLAG_10_IS_LOAD_SCRIPT|STATE_FLAG_05_IS_BOSS|STATE_FLAG_11_IS_BOSS_DESTROY);
 		continue_stage--;
@@ -212,7 +214,7 @@ extern void init_stage_start_time(void);
 extern void player_stage_clear(void);
 void stage_clear_work(void)
 {
-	//PLAYER_DATA *pd=(PLAYER_DATA *)player->data;
+	//PLAYER_DATA *pd = (PLAYER_DATA *)player->data;
 	//
 	player_stage_clear();
 //
@@ -222,39 +224,37 @@ void stage_clear_work(void)
 /*---------------------------------------------------------
 	ボス特殊処理
 ---------------------------------------------------------*/
-static Uint32 game_time;
+
 //	if (B02_BOSS_DESTROY==pd->bo ssmode) //ボスを倒したときの処理
 //	if (/*STATE_FLAG_11_IS_BOSS_DESTROY==*/ (pd->state_flag & STATE_FLAG_11_IS_BOSS_DESTROY))
-//	{
-//	}
-//	else
 extern void player_loop_quit(void);
+extern int	now_max_continue;
 void boss_destroy(void) 	//ボスを倒したときの処理
 {
-		item_from_bullets(SP_ITEM_05_HOSI);
-		//TIME_20_DBWAITフレーム待ってから実行。ボスを倒した時に画面に表示されている弾を全て消す処理のために必要。
-		stop_music();
-		play_voice_auto_track(VOICE03_BOSS_HAKAI);		// [***090313		追加	もっとスマートなやり方がありそうだけど思いつかなかった。
-		;
+	item_from_bullets(SP_ITEM_05_HOSI);
+	// TIME_20_DBWAITフレーム待ってから実行。ボスを倒した時に画面に表示されている弾を全て消す処理のために必要。
+	stop_music();
+	play_voice_auto_track(VOICE03_BOSS_HAKAI);		// [***090313		追加	もっとスマートなやり方がありそうだけど思いつかなかった。
 //
 	{
-	PLAYER_DATA *pd=(PLAYER_DATA *)player->data;
+		PLAYER_DATA *pd = (PLAYER_DATA *)player->data;
 		pd->state_flag &= (~(STATE_FLAG_13_DRAW_BOSS_GAUGE));/*off*/
 //		pd->state_flag		&= (~(STATE_FLAG_03_SCORE_AUTO_GET_ITEM));		/* 終わり */
-		if (0==practice_mode)/*練習モードではボス後イベントは見れないよ。*/
+		if (0==practice_mode)/* 練習モードではボス後イベントは見れないよ。 */
 		{
-		//	pd->bo ssmode=B07_AFTER_LOAD;
+		//	pd->bo ssmode	= B07_AFTER_LOAD;
 			pd->state_flag |= STATE_FLAG_10_IS_LOAD_SCRIPT;
 		}
-		else/*練習モード*/
+		else/* 練習モード */
 		{
+			now_max_continue = 1;	/* コンティニューさせない */
 			player_loop_quit();
 		}
 	}
 }
 void incliment_scene(void)
 {
-	PLAYER_DATA *pd=(PLAYER_DATA *)player->data;
+	PLAYER_DATA *pd = (PLAYER_DATA *)player->data;
 	{
 		/*ボス戦闘後イベント*/
 	//	if (B09_STAGE_LOAD==pd->bo ssmode) // 9:stage読み込み
@@ -276,7 +276,7 @@ void incliment_scene(void)
 extern void script_load(void);
 void my_special(void)
 {
-	PLAYER_DATA *pd=(PLAYER_DATA *)player->data;
+	PLAYER_DATA *pd = (PLAYER_DATA *)player->data;
 //	if (pd->bo ssmode==B05_BEFORE_LOAD) 	// [***090313	追加
 //	if (pd->bo ssmode==B07_AFTER_LOAD)		// [***090313	追加
 	if (pd->state_flag & STATE_FLAG_10_IS_LOAD_SCRIPT)		// [***090313	追加
@@ -325,10 +325,10 @@ extern void draw_score_chache(void);
 void shooting_game_work(void)
 {
 //	if (psp_loop != (ST_WORK_GAME_PLAY&0xff00) /*|| state.newsta te==1*/) return;
-	/* game_time=Zeit seit Spielbeginn in 1/10 sec. */
-	game_time=(psp_get_uint32_ticks()-stage_start_time);
+	/* game_v_time=Zeit seit Spielbeginn in 1/10 sec. */
+	game_v_time++;//=(psp_get_uint32_ticks()-stage_start_time);
 //
-	PLAYER_DATA *pd=(PLAYER_DATA *)player->data;
+	PLAYER_DATA *pd = (PLAYER_DATA *)player->data;
 	if (pd->state_flag & STATE_FLAG_14_GAME_LOOP_QUIT)
 	{
 		;	/* GAMEOUT中 */
@@ -360,7 +360,7 @@ void shooting_game_work(void)
 				if (l->done == 0)	/* enemy set done flag */
 				{
 					#if 1
-					if (game_time >= l->time)
+					if (game_v_time >= (l->v_time))
 					#else
 					if (v_time >= ((l->time) ) )
 					#endif
@@ -387,7 +387,7 @@ void shooting_game_work(void)
 //
 	#if 0/*ゲーム時間デバッグ用*/
 	/* パネルのスコア欄にゲーム時間を 表示させる。っていうか書き換えちゃう。 */
-	((PLAYER_DATA *)player->data)->score		= (game_time);
+	((PLAYER_DATA *)player->data)->score		= (game_v_time);
 	#endif
 //
 	/* 動作 */
@@ -411,7 +411,7 @@ void shooting_game_work(void)
 	メニュー(menu.c)のポーズから復帰する際にのみ使用する。
 ---------------------------------------------------------*/
 
-void adjust_start_time(Uint32 pause_time)
-{
-	stage_start_time += psp_get_uint32_ticks()-pause_time;
-}
+//void adjust_start_time(Uint32 pause_time)
+//{
+//	//stage_start_time += psp_get_uint32_ticks()-pause_time;
+//}

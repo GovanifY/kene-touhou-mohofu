@@ -31,8 +31,11 @@
 /*---------------------------------------------------------
 	グローバル変数
 ---------------------------------------------------------*/
-/*extern*/SDL_Surface *screen;
-SDL_Surface *back_screen;
+// /*extern*/SDL_Surface *screen;
+// SDL_Surface *back_screen;
+// SDL_Surface *tex_screen;
+
+SDL_Surface *sdl_screen[4];
 
 //int debug=0;
 //int use_joystick=1;
@@ -47,12 +50,10 @@ SDL_Surface *back_screen;
 /* この関数はただの初期化。命令キャッシュに乗らないよ */
 void init_math(void)
 {
+	unsigned int i;
+	for (i=0; i<SINTABLE_SIZE; i++)
 	{
-		int i;
-		for (i=0; i<SINTABLE_SIZE; i++)
-		{
-			sin_tbl512[i] = (int)(sin( (i*(M_PI*2) /SINTABLE_SIZE) )*256/**65536.0*/ );
-		}
+		sin_tbl512[i] = (int)(sin( (i*(M_PI*2) / SINTABLE_SIZE) )*256/**65536.0*/ );
 	}
 }
 /* この関数はCPU内蔵の命令キャッシュに乗るよ */
@@ -68,16 +69,29 @@ psp の MIPS CPU 内 のコプロセッサが処理をする。
 (CPU内蔵の命令キャッシュに乗るために実行速度が速くなる)
 */
 
+
+/*---------------------------------------------------------
+	将来的にリプレイに対応できるように、
+	自前の乱数ルーチンを用意しとく。
+	(かなりテキトーですが)
+---------------------------------------------------------*/
+
 static int rnd;
 int ra_nd(void)
 {
 	rnd = (rnd * 8513/*multiplier*/) + 179/*addend*/;
 	rnd = ((rnd) ^ (rnd>>8));
-	return rnd;
+	return (rnd);
 }
+
+/*---------------------------------------------------------
+	乱数初期値設定(将来的にリプレイに対応できるように、
+	面の始めに固定値を設定する)
+---------------------------------------------------------*/
+
 void set_rnd_seed(int set_seed)
 {
-	rnd = (set_seed);
+	rnd = set_seed;
 }
 
 /*---------------------------------------------------------
@@ -110,27 +124,48 @@ void keyboard_clear(void)
 		keyboard[i] = 0;
 	}
 }
+
 extern void save_screen_shot(void);
 /*global*/Uint32 my_pad;		/*今回入力*/
 /*global*/Uint32 my_pad_alter;	/*前回入力*/
+/*global*/short my_analog_x;	/* アナログ量、補正済み */
+/*global*/short my_analog_y;	/* アナログ量、補正済み */
+
 void keyboard_poll(void)
 {
 	SceCtrlData pad;
 	sceCtrlReadBufferPositive(&pad, 1);
-	int pad_data = pad.Buttons;
-	/* PSPのアナログ入力はデジタル入力へ変換 */
-	if (pad.Lx < 64/*70*/)			{		pad_data |= PSP_CTRL_LEFT;	}
-	else if (pad.Lx > 192/*185*/)	{		pad_data |= PSP_CTRL_RIGHT; }
-
-	if (pad.Ly < 64/*70*/)			{		pad_data |= PSP_CTRL_UP;	}
-	else if (pad.Ly > 192/*185*/)	{		pad_data |= PSP_CTRL_DOWN;	}
+	#if (1==USE_KEY_CONFIG)
+		int
+	#else
+		my_pad_alter = my_pad;
+		#define pad_data my_pad
+	#endif /* (1==USE_KEY_CONFIG) */
+	pad_data = pad.Buttons;
+	my_analog_x = 0;
+	my_analog_y = 0;
+	/* 標準アナログキー機能 */
+//	if (1==use_analog)
+	{
+		/* PSPのアナログ入力はデジタル入力へ変換、アナログ量は中心を削除し256固定小数点形式へ補正 */
+		if (pad.Lx < 64/*70*/)			{		pad_data |= PSP_CTRL_LEFT;		my_analog_x =  ((64-pad.Lx)<<2);	}
+		else if (pad.Lx > 192/*185*/)	{		pad_data |= PSP_CTRL_RIGHT; 	my_analog_x =  ((pad.Lx-192)<<2);	}
+		//
+		if (pad.Ly < 64/*70*/)			{		pad_data |= PSP_CTRL_UP;		my_analog_y =  ((64-pad.Ly)<<2);	}
+		else if (pad.Ly > 192/*185*/)	{		pad_data |= PSP_CTRL_DOWN;		my_analog_y =  ((pad.Ly-192)<<2);	}
+	}
+	#if (1==USE_KEY_CONFIG)
 	/* PSPのデジタル入力をキーコンフィグの形式に変換 */
 	if (pad_data & PSP_CTRL_SELECT) 	{keyboard[keyconfig[key_00_sl]] |= (pad_data & PSP_CTRL_SELECT);}	else	{keyboard[keyconfig[key_00_sl]] &= (~PSP_CTRL_SELECT);}
 	if (pad_data & PSP_CTRL_START)		{keyboard[keyconfig[key_01_st]] |= (pad_data & PSP_CTRL_START);}	else	{keyboard[keyconfig[key_01_st]] &= (~PSP_CTRL_START);}
+
+	#if (1==USE_KEY_CONFIG_ALLOW)
 	if (pad_data & PSP_CTRL_UP) 		{keyboard[keyconfig[key_02_u]]	|= (pad_data & PSP_CTRL_UP);}		else	{keyboard[keyconfig[key_02_u]]	&= (~PSP_CTRL_UP);}
 	if (pad_data & PSP_CTRL_RIGHT)		{keyboard[keyconfig[key_03_r]]	|= (pad_data & PSP_CTRL_RIGHT);}	else	{keyboard[keyconfig[key_03_r]]	&= (~PSP_CTRL_RIGHT);}
 	if (pad_data & PSP_CTRL_DOWN)		{keyboard[keyconfig[key_04_d]]	|= (pad_data & PSP_CTRL_DOWN);} 	else	{keyboard[keyconfig[key_04_d]]	&= (~PSP_CTRL_DOWN);}
 	if (pad_data & PSP_CTRL_LEFT)		{keyboard[keyconfig[key_05_l]]	|= (pad_data & PSP_CTRL_LEFT);} 	else	{keyboard[keyconfig[key_05_l]]	&= (~PSP_CTRL_LEFT);}
+	#endif /* (1==USE_KEY_CONFIG_ALLOW) */
+
 	if (pad_data & PSP_CTRL_LTRIGGER)	{keyboard[keyconfig[key_06_lt]] |= (pad_data & PSP_CTRL_LTRIGGER);} else	{keyboard[keyconfig[key_06_lt]] &= (~PSP_CTRL_LTRIGGER);}
 	if (pad_data & PSP_CTRL_RTRIGGER)	{keyboard[keyconfig[key_07_rt]] |= (pad_data & PSP_CTRL_RTRIGGER);} else	{keyboard[keyconfig[key_07_rt]] &= (~PSP_CTRL_RTRIGGER);}
 	if (pad_data & PSP_CTRL_TRIANGLE)	{keyboard[keyconfig[key_08_sa]] |= (pad_data & PSP_CTRL_TRIANGLE);} else	{keyboard[keyconfig[key_08_sa]] &= (~PSP_CTRL_TRIANGLE);}
@@ -141,14 +176,22 @@ void keyboard_poll(void)
 	my_pad_alter = my_pad;
 	my_pad = 0;
 //	if (keyboard[KINOU_01_SELECT])		{my_pad |= (PSP_KEY_SELECT);}
-	if (keyboard[KINOU_02_PAUSE]) 		{my_pad |= (PSP_KEY_PAUSE);}
+	if (keyboard[KINOU_02_PAUSE])		{my_pad |= (PSP_KEY_PAUSE);}
 //
-		 if (keyboard[KINOU_03_UP])		{my_pad |= (PSP_KEY_UP);}
-	else if (keyboard[KINOU_05_DOWN]) 	{my_pad |= (PSP_KEY_DOWN);}
+	#if (1==USE_KEY_CONFIG_ALLOW)
+		 if (keyboard[KINOU_03_UP]) 	{my_pad |= (PSP_KEY_UP);}
+	else if (keyboard[KINOU_05_DOWN])	{my_pad |= (PSP_KEY_DOWN);}
 		 if (keyboard[KINOU_04_RIGHT])	{my_pad |= (PSP_KEY_RIGHT);}
-	else if (keyboard[KINOU_06_LEFT]) 	{my_pad |= (PSP_KEY_LEFT);}
+	else if (keyboard[KINOU_06_LEFT])	{my_pad |= (PSP_KEY_LEFT);}
+	#else
+//		 if (pad_data & PSP_CTRL_UP)	{my_pad |= (PSP_KEY_UP);}
+//	else if (pad_data & PSP_CTRL_DOWN)	{my_pad |= (PSP_KEY_DOWN);}
+//		 if (pad_data & PSP_CTRL_RIGHT) {my_pad |= (PSP_KEY_RIGHT);}
+//	else if (pad_data & PSP_CTRL_LEFT)	{my_pad |= (PSP_KEY_LEFT);}
+	my_pad |= (pad_data & (PSP_CTRL_UP|PSP_CTRL_RIGHT|PSP_KEY_DOWN|PSP_CTRL_LEFT));
+	#endif /* (1==USE_KEY_CONFIG_ALLOW) */
 //
-//	if (keyboard[KINOU_07_SNAP_SHOT]) 	{my_pad |= (PSP_KEY_SC_SHOT);}/*ここでしか使わないので必要ない*/
+//	if (keyboard[KINOU_07_SNAP_SHOT])	{my_pad |= (PSP_KEY_SC_SHOT);}/*ここでしか使わないので必要ない*/
 	if (keyboard[KINOU_08_SYSTEM])		{my_pad |= (PSP_KEY_SYSTEM);}
 	if (keyboard[KINOU_09_SLOW])		{my_pad |= (PSP_KEY_SLOW);}
 	if (keyboard[KINOU_10_OPTION])		{my_pad |= (PSP_KEY_OPTION);}
@@ -157,12 +200,30 @@ void keyboard_poll(void)
 
 	/* スクリーンショット機能。 */
 	// keypollに入れると何故かうまくいかなかったのでこっちに場所を変更。
-	if (keyboard[KINOU_07_SNAP_SHOT]/*my_pad & PSP_KEY_SC_SHOT*/) {	save_screen_shot(); }
+	if (keyboard[KINOU_07_SNAP_SHOT]/*my_pad & PSP_KEY_SC_SHOT*/) { 	save_screen_shot(); }
+	#else
+	if (/*keyboard[KINOU_07_SNAP_SHOT]*/my_pad & PSP_KEY_SC_SHOT) { 	save_screen_shot(); }
+	#endif /* (1==USE_KEY_CONFIG) */
+
+	/* アナログサポート機能 */
+//	if (1==use_analog)
+	{
+		/* デジタルよりアナログ優先 */
+		if (0 == (my_analog_x+my_analog_y) )
+		/*アナログ押してないと思われる場合(アナログ押してる場合はアナログ量をそのまま使う)*/
+		{
+			/* デジタルよりアナログ量を算出 */
+				 if (pad_data & PSP_CTRL_UP)	{my_analog_y =	256;}
+			else if (pad_data & PSP_CTRL_DOWN)	{my_analog_y =	256;}
+				 if (pad_data & PSP_CTRL_RIGHT) {my_analog_x =	256;}
+			else if (pad_data & PSP_CTRL_LEFT)	{my_analog_x =	256;}
+		}
+	}
 }
-//		 if (keyboard[KINOU_06_LEFT]) 	{my_pad |= PSP_CTRL_LEFT;	/*direction=-1;*/		}
+//		 if (keyboard[KINOU_06_LEFT])	{my_pad |= PSP_CTRL_LEFT;	/*direction=-1;*/		}
 //	else if (keyboard[KINOU_04_RIGHT])	{my_pad |= PSP_CTRL_RIGHT;	/*direction=1;*/		}
-//		 if (keyboard[KINOU_03_UP])		{my_pad |= PSP_CTRL_UP; 	}
-//	else if (keyboard[KINOU_05_DOWN]) 	{my_pad |= PSP_CTRL_DOWN;	}
+//		 if (keyboard[KINOU_03_UP]) 	{my_pad |= PSP_CTRL_UP; 	}
+//	else if (keyboard[KINOU_05_DOWN])	{my_pad |= PSP_CTRL_DOWN;	}
 
 //int keyboard_keypressed()
 //{
@@ -296,16 +357,21 @@ void *mmalloc(size_t size)
 void psp_clear_screen(void)
 {
 	/* 将来Guで描いた場合。ハードウェアー機能で、置き換えられるので今のうちにまとめとく */
-	SDL_FillRect(screen,NULL,SDL_MapRGB(screen->format,0,0,0));
+	SDL_FillRect(sdl_screen[SDL_00_SCREEN],NULL,SDL_MapRGB(sdl_screen[SDL_00_SCREEN]->format,0,0,0));
 }
-void psp_push_screen(void)
+//void psp_move_screen(SDL_Surface *src_screen, SDL_Surface *dst_screen )
+void psp_move_screen(int src_screen_number, int dst_screen_number )
 {
-	SDL_BlitSurface(screen,NULL,back_screen,NULL);
+	SDL_BlitSurface(sdl_screen[src_screen_number],NULL,sdl_screen[dst_screen_number],NULL);
 }
-void psp_pop_screen(void)
-{
-	SDL_BlitSurface(back_screen,NULL,screen,NULL);
-}
+//void psp_push_screen(void)
+//{
+//	SDL_BlitSurface(sdl_screen[SDL_00_SCREEN],NULL,sdl_screen[SDL_01_BACK_SCREEN],NULL);
+//}
+//void psp_pop_screen(void)
+//{
+//	SDL_BlitSurface(sdl_screen[SDL_01_BACK_SCREEN],NULL,sdl_screen[SDL_00_SCREEN],NULL);
+//}
 
 
 /*---------------------------------------------------------
@@ -446,7 +512,7 @@ SDL_Surface *loadbmp0(char *filename, int use_alpha, int use_chache)
 	if ( NULL == s1 )
 	{
 		CHECKPOINT;
-		error(ERR_FATAL,"cant load image %s:\n %s",fn,SDL_GetError());
+		error(ERR_FATAL,"cant load image %s:\n"/*" %s"*/,fn/*,SDL_GetError()*/);
 	}
 	if (use_alpha)
 	{
@@ -459,7 +525,7 @@ SDL_Surface *loadbmp0(char *filename, int use_alpha, int use_chache)
 	if ( NULL == s2 )
 	{
 		CHECKPOINT;
-		error(ERR_FATAL,"cant convert image %s to display format: %s",fn,SDL_GetError());
+		error(ERR_FATAL,"cant convert image %s to display format:"/*" %s"*/,fn/*,SDL_GetError()*/);
 	}
 	SDL_FreeSurface(s1);
 	s1 = NULL;
@@ -855,8 +921,12 @@ void display_vidinfo()
 }
 */
 
+#if ((1==USE_GU)|| defined(ENABLE_PSP))
+//#if (1==USE_GU)
 
+static unsigned int   __attribute__((aligned(16))) gulist[262144];
 
+#endif
 
 #if (1==USE_GU)
 
@@ -864,8 +934,6 @@ void display_vidinfo()
 
 /* 0:頂点カラーとか使わない． */
 #define USE_VCOLOR 1/*1*/
-
-static unsigned int   __attribute__((aligned(16))) gulist[262144];
 
 // /* Vertex Declarations Begin */
 //#define GU_TEXTURE_SHIFT(n)	((n)<<0)
@@ -937,12 +1005,11 @@ static SDL_Surface *SDL_VRAM_SCREEN;
 #if (1==USE_GU)
 static UINT16 *render_image;
 static UINT16 *render_image_back;
+static UINT16 *render_image_tex;
 #endif
 
 void psp_video_init(void)
 {
-
-
 	if (atexit(SDL_Quit))
 	{
 		CHECKPOINT;
@@ -962,21 +1029,21 @@ void psp_video_init(void)
 	}
 	#if (1==USE_GU)
 	//#define SDL_BUF_WIDTH512 (512)
-	screen = SDL_CreateRGBSurface(
+	sdl_screen[SDL_00_SCREEN] = SDL_CreateRGBSurface(
 		/*SDL_SWSURFACE*/SDL_HWSURFACE,/*VRAMへ*/
-		SDL_BUF_WIDTH512/*PSP_WIDTH480*/,/*screen->w*/
-		PSP_HEIGHT272,/*screen->h*/
+		SDL_BUF_WIDTH512/*PSP_WIDTH480*/,/*sdl_screen[SDL_00_SCREEN]->w*/
+		PSP_HEIGHT272,/*sdl_screen[SDL_00_SCREEN]->h*/
 		PSP_DEPTH16,/*SDL_VRAM_SCREEN->format->BitsPerPixel*/
 		/*0x001f*/PSP_SCREEN_FORMAT_RMASK/*SDL_VRAM_SCREEN->format->Rmask*/,	/*5*/
 		/*0x07e0*/PSP_SCREEN_FORMAT_GMASK/*SDL_VRAM_SCREEN->format->Gmask*/,	/*6*/
 		/*0xf800*/PSP_SCREEN_FORMAT_BMASK/*SDL_VRAM_SCREEN->format->Bmask*/,	/*5*/
 		/*0x0000*/PSP_SCREEN_FORMAT_AMASK/*SDL_VRAM_SCREEN->format->Amask*/);	/*0*/
-		if (SDL_MUSTLOCK(screen))	{	SDL_LockSurface(screen);	}
-		render_image = (UINT16 *)screen->pixels;
-		if (SDL_MUSTLOCK(screen))	{	SDL_UnlockSurface(screen);	}
+		if (SDL_MUSTLOCK(sdl_screen[SDL_00_SCREEN]))	{	SDL_LockSurface(sdl_screen[SDL_00_SCREEN]); }
+		render_image = (UINT16 *)sdl_screen[SDL_00_SCREEN]->pixels;
+		if (SDL_MUSTLOCK(sdl_screen[SDL_00_SCREEN]))	{	SDL_UnlockSurface(sdl_screen[SDL_00_SCREEN]);	}
 	#endif
-//	back_screen = NULL;
-	back_screen = SDL_CreateRGBSurface(
+//	sdl_screen[SDL_01_BACK_SCREEN] = NULL;
+	sdl_screen[SDL_01_BACK_SCREEN] = SDL_CreateRGBSurface(
 		SDL_SWSURFACE/*SDL_HWSURFACE*/,/*メインメモリへ*/
 		SDL_BUF_WIDTH512/*PSP_WIDTH480*/,/*screen->w*/
 		PSP_HEIGHT272,/*screen->h*/
@@ -986,26 +1053,69 @@ void psp_video_init(void)
 		/*0xf800*/PSP_SCREEN_FORMAT_BMASK/*SDL_VRAM_SCREEN->format->Bmask*/,	/*5*/
 		/*0x0000*/PSP_SCREEN_FORMAT_AMASK/*SDL_VRAM_SCREEN->format->Amask*/);	/*0*/
 	#if (1==USE_GU)
-		if (SDL_MUSTLOCK(back_screen))	{	SDL_LockSurface(back_screen);	}
-		render_image_back = (UINT16 *)back_screen->pixels;
-		if (SDL_MUSTLOCK(back_screen))	{	SDL_UnlockSurface(back_screen); }
+		if (SDL_MUSTLOCK(sdl_screen[SDL_01_BACK_SCREEN]))	{	SDL_LockSurface(sdl_screen[SDL_01_BACK_SCREEN]);	}
+		render_image_back = (UINT16 *)sdl_screen[SDL_01_BACK_SCREEN]->pixels;
+		if (SDL_MUSTLOCK(sdl_screen[SDL_01_BACK_SCREEN]))	{	SDL_UnlockSurface(sdl_screen[SDL_01_BACK_SCREEN]); }
 	#endif
 	#if (0)
-	if (NULL == back_screen)
+	if (NULL == sdl_screen[SDL_01_BACK_SCREEN])
 	{
 		CHECKPOINT;
 		error(ERR_FATAL,"cant create SDL_Surface: "/*"%s", SDL_GetError()*/);
 	}
 	#endif
-
-
+	sdl_screen[SDL_02_TEX_SCREEN] = SDL_CreateRGBSurface(
+		SDL_SWSURFACE/*SDL_HWSURFACE*/,/*メインメモリへ*/
+		SDL_BUF_WIDTH512/*PSP_WIDTH480*/,/*screen->w*/
+		PSP_HEIGHT272,/*screen->h*/
+		PSP_DEPTH16,/*SDL_VRAM_SCREEN->format->BitsPerPixel*/
+		/*0x001f*/PSP_SCREEN_FORMAT_RMASK/*SDL_VRAM_SCREEN->format->Rmask*/,	/*5*/
+		/*0x07e0*/PSP_SCREEN_FORMAT_GMASK/*SDL_VRAM_SCREEN->format->Gmask*/,	/*6*/
+		/*0xf800*/PSP_SCREEN_FORMAT_BMASK/*SDL_VRAM_SCREEN->format->Bmask*/,	/*5*/
+		/*0x0000*/PSP_SCREEN_FORMAT_AMASK/*SDL_VRAM_SCREEN->format->Amask*/);	/*0*/
 	#if (1==USE_GU)
+		if (SDL_MUSTLOCK(sdl_screen[SDL_02_TEX_SCREEN]))	{	SDL_LockSurface(sdl_screen[SDL_02_TEX_SCREEN]); }
+		render_image_tex = (UINT16 *)sdl_screen[SDL_02_TEX_SCREEN]->pixels;
+		if (SDL_MUSTLOCK(sdl_screen[SDL_02_TEX_SCREEN]))	{	SDL_UnlockSurface(sdl_screen[SDL_02_TEX_SCREEN]); }
+	#endif
+
+
+	#if 0//defined(ENABLE_PSP)
+	sceGuInit();
+	sceGuStart(GU_DIRECT, gulist);
+
+	//{
+	//	sceGuDrawBuffer(SDL_GU_PSM_0000, (void*)0x88000, BUF_WIDTH512);
+		sceGuDrawBuffer(SDL_GU_PSM_0000, (void*)0, BUF_WIDTH512);
+	//	sceGuDispBuffer(PSP_WIDTH480, PSP_HEIGHT272, (void*)0x00000, BUF_WIDTH512);
+	//	sceGuDispBuffer(PSP_WIDTH480, PSP_HEIGHT272, (void*)0x44000, BUF_WIDTH512);
+	//	sceGuDispBuffer(PSP_WIDTH480, PSP_HEIGHT272, (void*)0x40000, BUF_WIDTH512);
+		sceGuDispBuffer(PSP_WIDTH480, PSP_HEIGHT272, (void*)0x88000, BUF_WIDTH512);
+		#if (1==USE_ZBUFFER)
+		sceGuDepthBuffer((void*)0x88000, BUF_WIDTH512);
+		#endif /* (1==USE_ZBUFFER) */
+	//}
+
+	sceGuFinish();
+	sceGuSync(0, 0);
+
+//	sceDisplayWaitVblankStart();/*vsync*/
+	sceGuDisplay(GU_TRUE/*1*/);/*画面ON*/
+	/* ここまで初期設定 */
+	#endif
+
+//	#if ((1==USE_GU)|| defined(ENABLE_PSP))
+	#if (1==USE_GU)
+	//# /* カスタムライブラリかGuを使う場合 */
 	/* ----- GU initialise */
 	sceGuInit();
 	#if 0
 	sceGuDisplay(GU_FALSE);/*画面OFF*/	/* 無くても殆ど同じ(あった方が初期化は極微妙に速いのかも知れない) */
 	#endif
+	//# /* Guを使う場合 */
+	//#if (1==USE_GU)
 	sceGuStart(GU_DIRECT, gulist);
+	//#endif /*(1==USE_GU)*/
 	#if 1//(16 == SCREEN_DEPTH/*depth*/)/*15 bit(5551), 16 bit(5650) */
 	//{
 		sceGuDrawBuffer(SDL_GU_PSM_0000, (void*)0, BUF_WIDTH512);
@@ -1086,7 +1196,10 @@ void psp_video_init(void)
 
 	#if 1//1
 	sceGuTexMode(/*GU_PSM_5551*/SDL_GU_PSM_0000/*GU_PSM_5650*/, 0, 0, 0/*0 swizzle*/);
+	//# /* Guを使う場合 */
+	#if (1==USE_GU)
 	sceGuTexImage(0, 512, 512, 512, render_image);
+	#endif /*(1==USE_GU)*/
 //	//sceGuTexFlush();
 	//#if (0)
 			//	sceGuTexFunc(GU_TFX_MODULATE, GU_TCC_RGBA);/*半透明*/
@@ -1165,7 +1278,7 @@ void vbl_draw_screen(void)
 	sceGuStart(GU_DIRECT, gulist );
 
 //	sceDisplayWaitVblankStart();/*vsync*/
-//	SDL_BlitSurface(screen,NULL,SDL_VRAM_SCREEN,NULL);
+//	SDL_BlitSurface(sdl_screen[SDL_00_SCREEN], NULL, SDL_VRAM_SCREEN, NULL);
 //	{
 //	//	memcpy( (UINT16 *)((UINT32) 0x44000000), render_image, (512*256) );/*test*/
 //	//	memcpy( (UINT16 *)((UINT32) 0x44000000), render_image, (512*272*2) );
@@ -1196,14 +1309,14 @@ void vbl_draw_screen(void)
 //
 	#else
 	//fps_show();
-	SDL_Flip(screen);
+	SDL_Flip(sdl_screen[SDL_00_SCREEN]);
 	#if (1==USE_VSYNC)
 	sceDisplayWaitVblankStart();/*vsync*/
 	#endif /* (1==USE_VSYNC) */
-	//SDL_UpdateRect(screen, 0, 0, 0, 0);
+	//SDL_UpdateRect(sdl_screen[SDL_00_SCREEN], 0, 0, 0, 0);
 	#endif
 //
-	fps_newframe();
+	//fps_newframe();
 	//voice_play_vbl();
 	keyboard_poll();/*キー入力(処理の都合上、ここに移動)*/
 }

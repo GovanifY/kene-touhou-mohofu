@@ -32,12 +32,17 @@ void game_system_init(void/*int argc, char *argv[]*/)
 	if (my_err < 0)
 	{
 		CHECKPOINT;
-		error(ERR_FATAL,"cant init SDL: %s",SDL_GetError());
+		error(ERR_FATAL,"cant init SDL:"/*" %s",SDL_GetError()*/);
 	}
 	#endif
 	SDL_InitSubSystem(SDL_INIT_AUDIO);
+
 	/* ----- ゲームモジュール選択 */
+	//#if defined(ENABLE_PSP)
+	//#else
 	pspDebugScreenInit();
+	//#endif
+
 	sceCtrlSetSamplingCycle(0);
 	sceCtrlSetSamplingMode(PSP_CTRL_MODE_ANALOG);
 	ini_load();
@@ -53,22 +58,22 @@ void game_system_init(void/*int argc, char *argv[]*/)
 //
 	script_system_init();/* 組み込み */
 //
-	{//static SDL_Surface *loadpic=NULL;		// load画面用
+	{//static SDL_Surface *loadpic = NULL;		// load画面用
 		SDL_Surface *loadpic=loadbmp0("bg/loading.png", 0, 0);
-		SDL_BlitSurface(loadpic, NULL, back_screen, NULL);
+		SDL_BlitSurface(loadpic, NULL, sdl_screen[SDL_01_BACK_SCREEN], NULL);
 		unloadbmp_by_surface(loadpic);
 	}
 	psp_pop_screen();
 	#if (1==USE_GU)
 	#else
-	SDL_Flip(screen);
+	SDL_Flip(sdl_screen[SDL_00_SCREEN]);
 	#endif
 	preload_gfx();	/*	読み込んだ順番に画像キャッシュに配置されるので、
 						画像キャッシュの順番を決める為の読み込み */
 //
 	font_init();
 	menusystem_init();
-	fps_init();
+	//fps_init();
 	bg2_system_init();
 	/* ゲームコア game_core_init(); */
 //
@@ -88,5 +93,12 @@ void game_system_exit(void)
 	exit_audio();
 	//fprintf(stdout,"Thank you for playing\n");
 	SDL_Quit(); 	// [***** 追加:090103
+	#ifdef ENABLE_PROFILE
+	gprof_cleanup();
+	#endif
 	sceKernelExitGame();
 }
+#if 0
+psp-gprof ./kene.elf gmon.out > gmon.txt
+
+#endif

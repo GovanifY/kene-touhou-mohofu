@@ -8,7 +8,7 @@
 
 typedef struct _stage_data
 {
-	Uint32 time;
+	Uint32 v_time;		/* 1/60 単位の時間カウンタ */
 	int done;
 	Uint32 user_x;		/* para 0 */	/*ctype*/	/* [***090210	追加 */
 	int user_y; 		/* para 2 */

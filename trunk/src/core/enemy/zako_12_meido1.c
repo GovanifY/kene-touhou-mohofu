@@ -23,7 +23,7 @@ typedef struct
 #define NUM_OF_ENEMIES (8)
 
 /*---------------------------------------------------------
-
+	“G‚â‚ç‚ê
 ---------------------------------------------------------*/
 
 static void lose_meido1(SPRITE *s)
@@ -32,7 +32,7 @@ static void lose_meido1(SPRITE *s)
 }
 
 /*---------------------------------------------------------
-
+	“GˆÚ“®
 ---------------------------------------------------------*/
 
 static void move_meido1(SPRITE *s)
@@ -101,8 +101,8 @@ static void move_meido1(SPRITE *s)
 		}
 		break;
 	case 3/*4*/:
-		if ((s->x256<-((s->w)<<7)) || (s->x256 > t256(GAME_WIDTH)) ||
-			(s->y256<-((s->h)<<7)) || (s->y256 > t256(GAME_HEIGHT)))
+		if ((s->x256<-((s->w128))) || (s->x256 > t256(GAME_WIDTH)) ||
+			(s->y256<-((s->h128))) || (s->y256 > t256(GAME_HEIGHT)))
 		{	s->type=SP_DELETE;}
 		break;
 	}

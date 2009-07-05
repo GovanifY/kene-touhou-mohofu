@@ -1,6 +1,6 @@
 
 /*---------------------------------------------------------
-
+	フォント
 ---------------------------------------------------------*/
 
 #include "support.h"
@@ -46,7 +46,7 @@
 static FONT fonts[FONT_MAX];
 
 /*---------------------------------------------------------
-
+	フォント
 ---------------------------------------------------------*/
 
 void font_init(void)
@@ -81,11 +81,11 @@ SDL_Surface *font_render(char *text,int font_number)
 	unsigned int i,j;
 
 	txt_image_surface=SDL_CreateRGBSurface(SDL_SRCCOLORKEY|SDL_HWSURFACE,strlen(text)*fonts[font_number].w,fonts[font_number].h,
-		screen->format->BitsPerPixel,
-		screen->format->Rmask,
-		screen->format->Gmask,
-		screen->format->Bmask,
-		screen->format->Amask);
+		sdl_screen[SDL_00_SCREEN]->format->BitsPerPixel,
+		sdl_screen[SDL_00_SCREEN]->format->Rmask,
+		sdl_screen[SDL_00_SCREEN]->format->Gmask,
+		sdl_screen[SDL_00_SCREEN]->format->Bmask,
+		sdl_screen[SDL_00_SCREEN]->format->Amask);
 	SDL_SetColorKey(txt_image_surface,SDL_SRCCOLORKEY|SDL_RLEACCEL,0x00000000);
 
 	for (i=0;i<strlen(text);i++) {
@@ -146,7 +146,7 @@ static void font_render_surface_xy(SDL_Surface *txt_image_surface, char *text, i
 void font_print_screen_xy(char *text, int font_number, int x, int y)
 {
 //	SDL_SetColorKey(fonts[font_number].fontimg/*screen*/,SDL_SRCCOLORKEY|SDL_RLEACCEL,0x00000000);
-	font_render_surface_xy(screen, text, font_number, x, y);
+	font_render_surface_xy(sdl_screen[SDL_00_SCREEN], text, font_number, x, y);
 }
 
 /*---------------------------------------------------------
@@ -171,18 +171,18 @@ SDL_Surface *font_render(char *text, int font_number)
 		#endif
 		strlen(text)*fonts[font_number].w,
 		fonts[font_number].h,
-		screen->format->BitsPerPixel,
-		screen->format->Rmask,
-		screen->format->Gmask,
-		screen->format->Bmask,
-		screen->format->Amask);
+		sdl_screen[SDL_00_SCREEN]->format->BitsPerPixel,
+		sdl_screen[SDL_00_SCREEN]->format->Rmask,
+		sdl_screen[SDL_00_SCREEN]->format->Gmask,
+		sdl_screen[SDL_00_SCREEN]->format->Bmask,
+		sdl_screen[SDL_00_SCREEN]->format->Amask);
 	SDL_SetColorKey(txt_image_surface,SDL_SRCCOLORKEY|SDL_RLEACCEL,0x00000000);
 	font_render_surface_xy(txt_image_surface, text, font_number, 0, 0);
 	return (txt_image_surface);
 }
-
+#if 0
 /*---------------------------------------------------------
-
+	フォント
 ---------------------------------------------------------*/
 
 void font_print(char *text, int font_number, int x, int y)
@@ -194,7 +194,7 @@ void font_print(char *text, int font_number, int x, int y)
 	r.y = y;
 	r.w = text_surface->w;
 	r.h = text_surface->h;
-	SDL_BlitSurface(text_surface, NULL, screen, &r);
+	SDL_BlitSurface(text_surface, NULL, sdl_screen[SDL_00_SCREEN], &r);
 	SDL_FreeSurface(text_surface);
 }
-
+#endif

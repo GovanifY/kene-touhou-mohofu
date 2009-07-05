@@ -110,7 +110,7 @@ enum
 	BASE_TAMA_BULLET_MING32_PNG,
 	BASE_TAMA_BULLET_JIPPOU32_PNG,
 //
-	BASE_TAMA_OODAMA_08_PNG,/* 大玉(黒青赤...)  黒玉(輪) PRIORITY_03_ENEMY は、あたり判定部分 */
+	BASE_TAMA_OODAMA_08_PNG,/* 大玉(黒青赤...)	黒玉(輪) PRIORITY_03_ENEMY は、あたり判定部分 */
 //	BASE_TAMA_OODAMA_00_PNG,/* 黒玉(輪)  あたり判定部分*/
 //	BASE_TAMA_OODAMA_01_PNG,/* 大玉(青) 表示部分 */
 //	BASE_TAMA_OODAMA_02_PNG,/* 大玉(赤) 表示部分*/
@@ -208,10 +208,8 @@ enum
 enum /*_priority_*/
 {
 // [背景関連]
-	PRIORITY_00_BG = 0, 			//	P R_BACK0 = 0,
-	PRIORITY_01_SHOT,				//	P RIORITY_01_GROUNDER,		/*自弾/地上ザコ敵/魔方陣*/
-//	P R_BACK1,
-//	P R_BACK2,
+	PRIORITY_00_BG = 0, 	//	P R_BACK0 = 0,
+	PRIORITY_01_SHOT,		//	P RIORITY_01_GROUNDER,		/*自弾/地上ザコ敵/魔方陣*/
 // [自機関連]
 	PRIORITY_02_PLAYER, 	/* 自機 */
 // [敵関連]
@@ -220,6 +218,20 @@ enum /*_priority_*/
 	PRIORITY_04_ITEM,		/* アイテム/漢字スコア */	//P R_PLAYER2,			/*当たり表示*/
 // [敵弾関連]
 	PRIORITY_05_BULLETS/*PRIORITY_03_ENEMY_WEAPON*/,		/*敵弾*/
+};
+// プライオリティは Gu に移行した場合に、
+// 半透明がある場合はハードウェアー処理できないので
+// 結局ソフトウェアーで対応(Zソート)する事になります。
+// (半透明無しの場合はdepth-buffer使えばハードウェアー処理できる。)
+// (プライオリティは3Dとして考えた場合のZ軸、描画で拡大縮小等はしない)
+// したがって、なるべく少なくした方が、「あとで」(速度面で)有利です。
+// (リスト処理は遅いので、プライオリティ別のバッファをプライオリティ数用意すると、
+// 同プライオリティーではソートする必要がないので、ソートが省略できる)
+
+
+//	P R_BACK1,
+//	P R_BACK2,
+
 //
 //	P R_TARGET,
 //	P R_TMP,
@@ -228,7 +240,6 @@ enum /*_priority_*/
 //	P R_FRONT0,
 //	P R_FRONT1,
 //	P R_FRONT2
-};
 
 #define USER_BOMOUT_WAIT (30)
 
@@ -246,7 +257,6 @@ enum /*_priority_*/
 #define SP_GROUP_TEXTS			0x2000
 #define SP_GROUP_ETC			0x4000
 #define SP_GROUP_ALL			0xff00
-
 
 enum SPRITE_TYPE
 {
@@ -342,7 +352,9 @@ typedef struct _colision_map_cache
 
 /* 針弾とかあるから、現在図形判定しないと詐欺判定になる。 */
 /* あたり判定無くしても速度は変わらないがメモリが節約できるので将来的にはこの辺も改良したい。 */
-#define USE_ZUKEI_ATARI_HANTEI (1)
+//#define USE_ZUKEI_ATARI_HANTEI (1)
+#define USE_ZUKEI_ATARI_HANTEI (0)
+
 typedef struct _sprite
 {
 	int type;						/* 種類及び使用可否 / Sprite-Type, (siehe enum SPRITE_TYPE), 0 = remove */
@@ -350,12 +362,14 @@ typedef struct _sprite
 	#if (1==USE_ZUKEI_ATARI_HANTEI)
 	COLISION_MAP_CACHE *colision_bmp;		/* あたり判定用画像 / Zeiger auf Col-Map-Cache entry */
 	#endif /* (1==USE_ZUKEI_ATARI_HANTEI) */
+	int m_Hit256R;					/* あたり判定用 */
+//
 	int timeover_ticks; 			/* 作成してからの経過時間 (現在KETM自体にバグがある為、一定時間経過すると強制消去する) / number of ticks since creation */
 //[4]
-	int x256;						/* x表示位置 (256固定小数点形式) / akt. Position */ 	/*dou ble*/
-	int y256;						/* y表示位置 (256固定小数点形式) / akt. Position */ 	/*dou ble*/
-	int w;							/* 横幅 (整数形式) / Breite, He */
-	int h;							/* 高さ (整数形式) / Breite, He */
+	int x256;						/* x表示位置  (256固定小数点形式) / akt. Position */	/*dou ble*/
+	int y256;						/* y表示位置  (256固定小数点形式) / akt. Position */	/*dou ble*/
+	int w128;						/* 横幅の半分 (256固定小数点形式) / Breite, He */
+	int h128;						/* 高さの半分 (256固定小数点形式) / Breite, He */
 //[8]
 	void *data; 					/* Zeiger auf Strukur mit zus舩zlichen Daten */
 	void (*callback_mover)(struct _sprite *s);/* Custom-Move-Routine */
@@ -386,12 +400,56 @@ typedef struct _sprite
 #define SP_FLAG_TIME_OVER		0x80	/* 一定時間での自動消去、許可フラグ(ONなら自動消去する) */
 
 
-//extern SPRITE *sprite_add_file 0(char *filename, int frames, Uint8 priority, int use_alpha);
-extern SPRITE *sprite_add_file(char *filename, int frames, Uint8 priority);
-extern SPRITE *sprite_add_file2(char *filename, int frames, Uint8 priority);
+
+/*---------------------------------------------------------
+	リソース resource
+---------------------------------------------------------*/
+
+typedef struct
+{
+	const char *file_name;
+	Uint8 use_alpha;
+	Uint8 total_frames;
+	Uint8 x_divide_frames;
+	Uint8 y_divide_frames;
+//
+	Uint8 priority;
+	Uint8 anime_speed;
+	Uint8 atari_hankei;
+	Uint8 aaa_dummy_resurved;
+} IMAGE_RESOURCE;
+
+
+
+
+//extern SPRITE *spr ite_add_file 0(char *filename, int frames, Uint8 priority, int use_alpha);
+//extern SPRITE *spr ite_add_file(char *filename, int frames, Uint8 priority);
+//extern SPRITE *spr ite_add_file2(char *filename, int frames, Uint8 priority);
 extern SPRITE *sprite_add_res(int image_resource_num);
 
-extern SPRITE *sprite_add_000(SDL_Surface *surface, int frames, Uint8 priority, int set_flags/*nocache*/, int anime_speed);
+#if (0)
+extern SPRITE *spr ite_add_000xy00(
+	SDL_Surface *surface,
+	int total_frames,
+	int x_divide_frames,
+	int y_divide_frames,
+	Uint8 priority,
+	int set_flags/*nocache*/,
+	int anime_speed
+);
+#endif
+#if (1)
+extern SPRITE *sprite_add_res_list(
+	SDL_Surface *surface,
+//	int total_frames,
+//	int x_divide_frames,
+//	int y_divide_frames,
+//	Uint8 priority,
+	int set_flags/*nocache*/,
+//	int anime_speed
+	IMAGE_RESOURCE *image_resource_ptr
+	);
+#endif
 
 extern void sprite_remove_all000(int type);
 extern void sprite_remove_all222(int type);/*弾幕用*/
