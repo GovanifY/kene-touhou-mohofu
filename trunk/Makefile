@@ -4,7 +4,7 @@
 
 TARGET = kene
 
-PSP_EBOOT_TITLE = kene_r25
+PSP_EBOOT_TITLE = kene_r26
 
 #------------------------------------------------------------------------------
 # PSP setting
@@ -299,6 +299,7 @@ OBJDIRS += $(OBJ)/core/enemy
 
 
 OBJS += $(OBJ)/core/bullet_object.o
+OBJS += $(OBJ)/core/danmaku.o
 
 OBJS += $(OBJ)/core/enemy/boss_01_alice.o
 OBJS += $(OBJ)/core/enemy/boss_02_cirno.o

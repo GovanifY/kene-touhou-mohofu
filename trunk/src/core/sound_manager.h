@@ -41,21 +41,25 @@ enum
 
 enum
 {
-	VOICE00_SHOT = 0,			/* ショット音 */
-	VOICE01_HIT,				/* 音 */
-	VOICE02_ZAKO_HAKAI, 		/* サコ死に音 + 弾消し音 + メニュー */
-	VOICE03_BOSS_HAKAI, 		/* ボス死に音? */
-	VOICE04_SHIP_HAKAI, 		/* 自機破壊音 */
-	VOICE05_BONUS,				/* アイテム取得音 */
-	VOICE06_EXTEND, 			/* 残機増加音 */
-	VOICE07_BOMB,				/* 音 */
-	VOICE08_DEATH,				/* サコ死に音専用 */
-	VOICE09_GRAZE,				/* グレイズ音 */
-	VOICE10_MAGICF_E_SHOT,		/* 音 */
-	VOICE11_SAKUYA_E_SHOT00,	/* 音 */
-	VOICE12_SAKUYA_B2_SHOT, 	/* 音 */
-	VOICE13_SAKUYA_SHOT02,		/* 音 */
-	VOICE14_YOKAI1_E_SHOT01,	/* 音 */
+	VOICE00_SHOT = 0,			/* ショット音						[ちりちりちり] */
+	VOICE01_HIT,				/* 音								[びょいー] */
+	VOICE02_ZAKO_HAKAI, 		/* サコ死に音 + 弾消し音 + メニュー [ちゅ] */
+	VOICE03_BOSS_HAKAI, 		/* ボス死に音?						[ぼがーーん] */
+	VOICE04_SHIP_HAKAI, 		/* 自機破壊音						[ぴちゅーん] */
+	VOICE05_BONUS,				/* アイテム取得音					[かつん] */
+	VOICE06_EXTEND, 			/* 残機増加音						[びゅわわわわん] */
+	VOICE07_BOMB,				/* 音								[かしゅるしゃしゃん] */
+//
+	VOICE08_DEATH,				/* サコ死に音専用					[どすーーー] */
+	VOICE09_GRAZE,				/* グレイズ音						[か] */
+	VOICE10_MAGICF_E_SHOT,		/* 音 [ふわ] */
+	VOICE11_SAKUYA_E_SHOT00,	/* 音 [どどどどど] */
+	VOICE12_SAKUYA_B2_SHOT, 	/* 音 [ぱあん] */
+	VOICE13_SAKUYA_SHOT02,		/* 音 [ちゅるちゅるちゅる] */
+	VOICE14_YOKAI1_E_SHOT01,	/* 音 [ばあん] */
+	VOICE15_COUNT_TIMER,		/* 時間制限カウント音 [] */
+//
+	VOICE16_MAX_FILES,
 };
 
 enum

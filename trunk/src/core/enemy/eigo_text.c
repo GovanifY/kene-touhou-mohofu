@@ -23,31 +23,31 @@ typedef struct
 
 static void move_game_image(SPRITE *s)
 {
-	GAME_IMAGE_DATA *g=(GAME_IMAGE_DATA *)s->data;
+	GAME_IMAGE_DATA *g = (GAME_IMAGE_DATA *)s->data;
 	switch (g->state)
 	{
 	case 0:
 		s->alpha += 3/*fps_fa ctor*/;
 		if (250 < s->alpha)
 		{
-			s->alpha=255;
-			g->wait=100;
-			g->state=1;
+			s->alpha	= 255;
+			g->wait 	= 100;
+			g->state	= 1;
 		}
 		break;
 	case 1:
 		g->wait -= 1/*fps_fa ctor*/;
 		if (g->wait<1)
 		{
-			g->state=2;
+			g->state = 2;
 		}
 		break;
 	case 2:
 		s->alpha -= 8/*fps_fa ctor*/;
 		if (s->alpha < 50)
 		{
-			s->alpha=0;
-			s->type=SP_DELETE;
+			s->alpha = 0;
+			s->type = SP_DELETE;
 		}
 		break;
 	}
@@ -89,7 +89,7 @@ static void add_common(STAGE_DATA *l, SDL_Surface *tmp)
 		(IMAGE_RESOURCE *)my_resource
 	);
 	s->flags			|= (SP_FLAG_FREE_SURFACE|SP_FLAG_VISIBLE|SP_FLAG_TIME_OVER);
-	s->type 			= SP_ETC;
+	s->type 			= SP_MUTEKI;
 
 	if (0==l->user_x)	/* È—ªŽž‚ÍƒZƒ“ƒ^ƒŠƒ“ƒO */
 	{
@@ -145,7 +145,7 @@ void add_enemy_load_picture(STAGE_DATA *l)
 	SDL_Surface *surface;
 	{
 		char fn[128/*64 50*/];
-	//	strcpy(fn, data_dir); 	strcat(fn, "/");
+	//	strcpy(fn, data_dir);	strcat(fn, "/");
 		strcpy(fn, DIRECTRY_NAME_DATA "/");
 		char *filename;
 		filename		= l->user_string;

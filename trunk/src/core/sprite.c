@@ -12,34 +12,66 @@ static IMAGE_RESOURCE my_bullet_resource[] =
 {
 #if 1
 	/* [有る名前で] */
-	//#define DUMMY_IMG	"tama/bullet_maru16.png"
+	//#define DUMMY_IMG "tama/bullet_maru16.png"
 	#define DUMMY_IMG	"jiki/core_re.png"
-	/* 77 */	//	{	"tama/kugel.png",							0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,	  0, 2, 0 },
-	/* 78 */	//	{	"tama/kugel2.png",							0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,	  0, 2, 0 },
-	/* 79 */		{	/*"tama/bullet_beam16.png"*/DUMMY_IMG,		0,	16,  iyx(16,   1), PRIORITY_05_BULLETS,	  0, 2, 0 },	/* 針弾 (敵弾) */
-	/* 80 */		{	/*"tama/bullet_maru16.png"*/DUMMY_IMG,		0,	16,  iyx(16,   1), PRIORITY_05_BULLETS,	  0, 2, 0 },	/* 白丸(小) (敵弾) */	/* 赤丸(中) (敵弾) */
+
+	#if 0
+	/* 77 */	//	{	"tama/kugel.png",							0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0, 2, 0 },
+	/* 78 */	//	{	"tama/kugel2.png",							0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0, 2, 0 },
+	/* 79 */		{	/*"tama/bullet_beam16.png"*/DUMMY_IMG,		0,	16,  iyx(16,   1), PRIORITY_05_BULLETS,   0, 2, 0 },	/* 針弾 (敵弾) */
+	/* 80 */		{	/*"tama/bullet_maru16.png"*/DUMMY_IMG,		0,	16,  iyx(16,   1), PRIORITY_05_BULLETS,   0, 2, 0 },	/* 白丸(小) (敵弾) */	/* 赤丸(中) (敵弾) */
 //
-	/* 81 */		{	/*"tama/bullet_ming32.png"*/DUMMY_IMG,		0,	32,  iyx(32,   1), PRIORITY_05_BULLETS,	  0, 2, 0 },	/* ゆかりん弾 (敵弾) */
-	/* 82 */		{	/*"tama/jippou32.png"*/DUMMY_IMG,			0,	32,  iyx(32,   1), PRIORITY_05_BULLETS,	  0, 2, 0 },	/* 白模擬弾 (敵弾) */
+	/* 81 */		{	/*"tama/bullet_ming32.png"*/DUMMY_IMG,		0,	32,  iyx(32,   1), PRIORITY_05_BULLETS,   0, 2, 0 },	/* ゆかりん弾 (敵弾) */
+	/* 82 */		{	/*"tama/jippou32.png"*/DUMMY_IMG,			0,	32,  iyx(32,   1), PRIORITY_05_BULLETS,   0, 2, 0 },	/* 白模擬弾 (敵弾) */
 //
 					/* 追加予定 */																				/* クナイ弾 (敵弾) */
 //
-	/* 83 */		{	/*"tama/oodama08.png"*/DUMMY_IMG,			1,	 8,  iyx( 8,   1), PRIORITY_05_BULLETS,	  0, 4, 0 },/* 大玉(黒青赤...)	黒玉(輪) PRIORITY_03_ENEMY は、あたり判定部分 */
+	/* 83 */		{	/*"tama/oodama08.png"*/DUMMY_IMG,			1,	 8,  iyx( 8,   1), PRIORITY_05_BULLETS,   0, 4, 0 },/* 大弾(黒青赤...)	黒玉(輪) PRIORITY_03_ENEMY は、あたり判定部分 */
 	/* 83 */	//	{	"tama/bigkugel2.png",						0,	 1,  iyx( 1,   1), PRIORITY_03_ENEMY,	  0, 2, 0 },/* 黒玉(輪)  あたり判定部分 */
-	/* 84 */	//	{	"tama/bigkugel1.png",						1,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,	  0, 2, 0 },/* 大玉(青) 表示部分 */
-	/* 85 */	//	{	"tama/new_bigkugel.png",					1,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,	  0, 2, 0 },/* 大玉(赤) 表示部分 */
+	/* 84 */	//	{	"tama/bigkugel1.png",						1,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0, 2, 0 },/* 大弾(青) 表示部分 */
+	/* 85 */	//	{	"tama/new_bigkugel.png",					1,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0, 2, 0 },/* 大弾(赤) 表示部分 */
 //
-	/* 86 */		{	/*"tama/knife.png"*/DUMMY_IMG,				1,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,	  0, 2, 0 },/* 垂直降下ナイフ(赤) */
-	/* 87 */		{	/*"tama/knife_core16.png"*/DUMMY_IMG,		1,	16,  iyx(16,   1), PRIORITY_05_BULLETS,	  0, 2, 0 },/* 全方向ナイフ(青) */
-
-	/*103 */		{	"zako/homing16.png",						0,	16,  iyx(16,   1), PRIORITY_05_BULLETS,	  0, 2, 0 },	/* ザコ 誘導弾 */
-
+	/* 86 */		{	/*"tama/knife.png"*/DUMMY_IMG,				1,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0, 2, 0 },/* 垂直降下ナイフ(赤) */
+	/* 87 */		{	/*"tama/knife_core16.png"*/DUMMY_IMG,		1,	16,  iyx(16,   1), PRIORITY_05_BULLETS,   0, 2, 0 },/* 全方向ナイフ(青) */
+	#else
+	/*	0 */		{	/*"tama/bullet_beam16.png"*/DUMMY_IMG,		0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0, (2), 0 },	/* 2 */
+	/*	1 */		{	/*"tama/bullet_beam16.png"*/DUMMY_IMG,		0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0, (4), 0 },	/* 4 */
+	#endif
+	/*103 */		{	"zako/homing16.png",						0,	16,  iyx(16,   1), PRIORITY_05_BULLETS,   0, (2), 0 },	/* ザコ 誘導弾 */
+//
+	/*	3 */		{	/*"tama/bullet_beam16.png"*/DUMMY_IMG,		0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0, (16), 0 }, /* 4 */
+	/*	4 */		{	/*"tama/bullet_beam16.png"*/DUMMY_IMG,		0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0, (80), 0 }, /* 4 */
+//
+	/*	5 */		{	/*"tama/bullet_beam16.png"*/DUMMY_IMG,		0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0, (2/*4*/), 0 }, /* re / */
+	/*	6 */		{	/*"tama/bullet_beam16.png"*/DUMMY_IMG,		0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0, (16), 0 }, 	/* ma / */
+	/*	7 */		{	/*"tama/bullet_beam16.png"*/DUMMY_IMG,		0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0, (16), 0 }, 	/* oz / */
+	/*	8 */		{	/*"tama/bullet_beam16.png"*/DUMMY_IMG,		0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0, (32), 0 }, 	/* ci / */
+	/*	9 */		{	/*"tama/bullet_beam16.png"*/DUMMY_IMG,		0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0, (4), 0 },		/* yu / */
+//
+	/*	5 */		{	/*"tama/bullet_beam16.png"*/DUMMY_IMG,		0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0, (4), 0 },	/* re / */
+	/*	6 */		{	/*"tama/bullet_beam16.png"*/DUMMY_IMG,		0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0, (4), 0 },	/* ma / */
+	/*	7 */		{	/*"tama/bullet_beam16.png"*/DUMMY_IMG,		0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0, (4), 0 },	/* oz / */
+	/*	8 */		{	/*"tama/bullet_beam16.png"*/DUMMY_IMG,		0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0, (6), 0 },	/* ci / */
+	/*	9 */		{	/*"tama/bullet_beam16.png"*/DUMMY_IMG,		0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0, (8), 0 },	/* yu / */
+//
+	/*	5 */		{	/*"tama/bullet_beam16.png"*/DUMMY_IMG,		0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0, (6), 0 },	/* re / */
+	/*	6 */		{	/*"tama/bullet_beam16.png"*/DUMMY_IMG,		0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0, (8), 0 },	/* ma / */
+	/*	7 */		{	/*"tama/bullet_beam16.png"*/DUMMY_IMG,		0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0, (12), 0 }, /* oz / */
+	/*	8 */		{	/*"tama/bullet_beam16.png"*/DUMMY_IMG,		0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0, (16), 0 }, /* ci / */
+	/*	9 */		{	/*"tama/bullet_beam16.png"*/DUMMY_IMG,		0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0, (8), 0 },	/* yu / */
+//
 #endif
 };
 
-
-static IMAGE_RESOURCE my_resource[] =
-{	/*ショット */
+#if 0
+//	/*自分 */
+	/* 15 REIMU */	{	"jiki/jiki_re.png", 			0,	12,  iyx(12,   1), PRIORITY_02_PLAYER, 0,(16), 0 }, // "ship-med.png",		0,	 11,
+	/* 16 MARISA */ {	"jiki/jiki_ma.png", 			0,	12,  iyx(12,   1), PRIORITY_02_PLAYER, 0,16, 0 },	// "ship-med-ma.png",	0,	 11,
+	/* 17 REMILIA */{	"jiki/jiki_oz.png", 			0,	12,  iyx(12,   1), PRIORITY_02_PLAYER, 0,16, 0 },	// "ship-med-oz.png",	0,	 11,
+	/* 18 CIRNO */	{	"jiki/jiki_ci.png", 			0,	12,  iyx(12,   1), PRIORITY_02_PLAYER, 0,16, 0 },	// "ship-med-ci.png",	0,	 11,
+	/* 19 YUYUKO */ {	"jiki/jiki_yu.png", 			0,	12,  iyx(12,   1), PRIORITY_02_PLAYER, 0,16, 0 },
+//
+	/*ショット */
 	/*	0 REIMU */	{	"jiki/shot_re.png", 			0,	 1,  iyx( 1,   1), PRIORITY_01_SHOT,   0, 4, 0 },	/* "plasma.png" */
 	/*	1 MARISA */ {	"jiki/shot_ma.png", 			0,	 1,  iyx( 1,   1), PRIORITY_01_SHOT,   0, 4, 0 },	/* "plasma_ma.png" */
 	/*	2 REMILIA */{	"jiki/shot_oz.png", 			0,	 1,  iyx( 1,   1), PRIORITY_01_SHOT,   0, 4, 0 },	/* "plasma_oz.png" */
@@ -52,48 +84,6 @@ static IMAGE_RESOURCE my_resource[] =
 	/*	8 CIRNO */	{	"jiki/needle_ci.png",			0,	 1,  iyx( 1,   1), PRIORITY_01_SHOT,   0,16, 0 },	// ウェイブ弾
 	/*	9 YUYUKO */ {	"jiki/needle_yu.png",			0,	 1,  iyx( 1,   1), PRIORITY_01_SHOT,   0, 8, 0 },	// ピンク蝶弾
 //
-	/* 10 REIMU */	{	"jiki/homing_re.png",			0,	 6,  iyx( 6,   1), PRIORITY_01_SHOT,   0,16, 0 },	/* "tshoot.png", */
-	/* 11 MARISA */ {	"jiki/homing_ma.png",			0,	 6,  iyx( 6,   1), PRIORITY_01_SHOT,   0,16, 0 },	/* "tshoot-ma.png" */
-	/* 12 REMILIA */{	"jiki/homing_oz.png",			0,	 6,  iyx( 6,   1), PRIORITY_01_SHOT,   0,16, 0 },	/* "tshoot-oz.png" */
-	/* 13 CIRNO */	{	"jiki/homing_ci.png",			0,	 6,  iyx( 6,   1), PRIORITY_01_SHOT,   0,16, 0 },	/* "tshoot-ci.png" */
-	/* 14 YUYUKO */ {	"jiki/homing_yu.png",			0,	 6,  iyx( 6,   1), PRIORITY_01_SHOT,   0,16, 0 },	// 青蝶弾
-//	/*自分 */
-	/* 15 REIMU */	{	"jiki/jiki_re.png", 			0,	12,  iyx(12,   1), PRIORITY_02_PLAYER, 0,16, 0 },	// "ship-med.png",		0,	 11,
-	/* 16 MARISA */ {	"jiki/jiki_ma.png", 			0,	12,  iyx(12,   1), PRIORITY_02_PLAYER, 0,16, 0 },	// "ship-med-ma.png",	0,	 11,
-	/* 17 REMILIA */{	"jiki/jiki_oz.png", 			0,	12,  iyx(12,   1), PRIORITY_02_PLAYER, 0,16, 0 },	// "ship-med-oz.png",	0,	 11,
-	/* 18 CIRNO */	{	"jiki/jiki_ci.png", 			0,	12,  iyx(12,   1), PRIORITY_02_PLAYER, 0,16, 0 },	// "ship-med-ci.png",	0,	 11,
-	/* 19 YUYUKO */ {	"jiki/jiki_yu.png", 			0,	12,  iyx(12,   1), PRIORITY_02_PLAYER, 0,16, 0 },
-//	/*あたり判定 */
-	/* 20 REIMU */	{	"jiki/core_re.png", 			0,	 1,  iyx( 1,   1), PRIORITY_03_ENEMY,  0, 1/*2*/, 0 },	// "core.png",
-	/* 21 MARISA */ {	"jiki/core_ma.png", 			0,	 1,  iyx( 1,   1), PRIORITY_03_ENEMY,  0, 2/*4*/, 0 },	// "core-ma.png",
-	/* 22 REMILIA */{	"jiki/core_oz.png", 			0,	 1,  iyx( 1,   1), PRIORITY_03_ENEMY,  0, 2/*4*/, 0 },	// "core-oz.png",
-	/* 23 CIRNO */	{	"jiki/core_ci.png", 			0,	 1,  iyx( 1,   1), PRIORITY_03_ENEMY,  0, 1/*3*/, 0 },	// "core-ci.png",
-	/* 24 YUYUKO */ {	"jiki/core_yu.png", 			0,	 1,  iyx( 1,   1), PRIORITY_03_ENEMY,  0, 2/*4*/, 0 },
-//	/* オプション用素材 */
-	/* 25 REIMU */	{	"jiki/option1_re.png",			0,	 8,  iyx( 8,   1), PRIORITY_02_PLAYER, 0, 0, 0 },	/* "option.png" */
-	/* 26 MARISA */ {	"jiki/option1_ma.png",			0,	 8,  iyx( 8,   1), PRIORITY_02_PLAYER, 0, 0, 0 },	/* "mari_op.png" */
-	/* 27 REMILIA */{	"jiki/option1_oz.png",			0,	 8,  iyx( 8,   1), PRIORITY_02_PLAYER, 0, 0, 0 },	/* "oze_op1.png" */
-	/* 28 CIRNO */	{	"jiki/option1_ci.png",			0,	 8,  iyx( 8,   1), PRIORITY_02_PLAYER, 0, 0, 0 },	/* "ci_op1.png" */
-	/* 29 YUYUKO */ {	"jiki/option1_yu.png",			0,	 8,  iyx( 8,   1), PRIORITY_02_PLAYER, 0, 0, 0 },
-//
-	/* 30 REIMU */	{	"jiki/option2_re.png",			0,	 8,  iyx( 8,   1), PRIORITY_02_PLAYER, 0, 0, 0 },	/* [起動チェックで使うので有る名前で] */
-	/* 31 MARISA */ {	"jiki/option2_ma.png",			0,	 8,  iyx( 8,   1), PRIORITY_02_PLAYER, 0, 0, 0 },	/* [起動チェックで使うので有る名前で] */
-	/* 32 REMILIA */{	"jiki/option2_oz.png",			0,	 8,  iyx( 8,   1), PRIORITY_02_PLAYER, 0, 0, 0 },	/* "oze_op2.png" */
-	/* 33 CIRNO */	{	"jiki/option2_ci.png",			0,	 8,  iyx( 8,   1), PRIORITY_02_PLAYER, 0, 0, 0 },	/* "ci_op2.png" */
-	/* 34 YUYUKO */ {	"jiki/option2_yu.png",			0,	 8,  iyx( 8,   1), PRIORITY_02_PLAYER, 0, 0, 0 },
-//
-	/* 35 REIMU */	{	"jiki/option3_re.png",			0,	 8,  iyx( 8,   1), PRIORITY_02_PLAYER, 0, 0, 0 },	/* [起動チェックで使うので有る名前で] */
-	/* 36 MARISA */ {	"jiki/option3_ma.png",			0,	 8,  iyx( 8,   1), PRIORITY_02_PLAYER, 0, 0, 0 },	/* [起動チェックで使うので有る名前で] */
-	/* 37 REMILIA */{	"jiki/option3_oz.png",			0,	 8,  iyx( 8,   1), PRIORITY_02_PLAYER, 0, 0, 0 },	/* "oze_op3.png" */
-	/* 38 CIRNO */	{	"jiki/option3_ci.png",			0,	 8,  iyx( 8,   1), PRIORITY_02_PLAYER, 0, 0, 0 },	/* "ci_op3.png" */
-	/* 39 YUYUKO */ {	"jiki/option3_yu.png",			0,	 8,  iyx( 8,   1), PRIORITY_02_PLAYER, 0, 0, 0 },
-//
-	/* 40 REIMU */	{	"jiki/option4_re.png",			0,	 8,  iyx( 8,   1), PRIORITY_02_PLAYER, 0, 0, 0 },	/* [起動チェックで使うので有る名前で] */
-	/* 41 MARISA */ {	"jiki/option4_ma.png",			0,	 8,  iyx( 8,   1), PRIORITY_02_PLAYER, 0, 0, 0 },	/* [起動チェックで使うので有る名前で] */
-	/* 42 REMILIA */{	"jiki/option4_oz.png",			0,	 8,  iyx( 8,   1), PRIORITY_02_PLAYER, 0, 0, 0 },	/* "oze_op4.png" */
-	/* 43 CIRNO */	{	"jiki/option4_ci.png",			0,	 8,  iyx( 8,   1), PRIORITY_02_PLAYER, 0, 0, 0 },	/* "ci_op4.png" */
-	/* 44 YUYUKO */ {	"jiki/option4_yu.png",			0,	 8,  iyx( 8,   1), PRIORITY_02_PLAYER, 0, 0, 0 },
-
 //	/* ボム用素材 */
 	/* 45 REIMU */	{	"jiki/bomber1_re.png",			1,	32,  iyx(16,   2), PRIORITY_03_ENEMY,  0, 4, 0 },	/* "cshoot1.png""cshoot.png" */
 	/* 46 MARISA */ {	"jiki/bomber1_ma.png",			0,	 3,  iyx( 3,   1), PRIORITY_01_SHOT,   5,16, 0 },	/* "star_shield_blue.png" */
@@ -131,37 +121,82 @@ static IMAGE_RESOURCE my_resource[] =
 	/* 73 CIRNO */	{	"jiki/bomber6_ci.png",			0,	 3,  iyx( 3,   1), PRIORITY_01_SHOT,   5,24, 0 },	/* "cirno_shields_green.png" */
 	/* 74 YUYUKO */ {	"jiki/bomber4_yu.png",			0,	 3,  iyx( 3,   1), PRIORITY_01_SHOT,   5, 2, 0 },	/* [起動チェックで使うので有る名前で] */
 //
-	/* 75 */		{	"jiki/bomber_slow.png", 		1,	 4,  iyx( 4,   1), PRIORITY_01_SHOT,   0, 0, 0 },
-	/* 76 */		{	"panel/bonus_items.png",		0,	 8,  iyx( 8,   1), PRIORITY_04_ITEM,   0,12, 0 },
 //
+//	/* 低速ボム */
+	/* 10 REIMU */	{	"jiki/homing_re.png",			0,	 6,  iyx( 6,   1), PRIORITY_01_SHOT,   0,16, 0 },	/* "tshoot.png", */
+	/* 11 MARISA */ {	"jiki/homing_ma.png",			0,	 6,  iyx( 6,   1), PRIORITY_01_SHOT,   0,16, 0 },	/* "tshoot-ma.png" */
+	/* 12 REMILIA */{	"jiki/homing_oz.png",			0,	 6,  iyx( 6,   1), PRIORITY_01_SHOT,   0,16, 0 },	/* "tshoot-oz.png" */
+	/* 13 CIRNO */	{	"jiki/homing_ci.png",			0,	 6,  iyx( 6,   1), PRIORITY_01_SHOT,   0,16, 0 },	/* "tshoot-ci.png" */
+	/* 14 YUYUKO */ {	"jiki/homing_yu.png",			0,	 6,  iyx( 6,   1), PRIORITY_01_SHOT,   0,16, 0 },	// 青蝶弾
+	#endif
 #if 0
-	/* 77 */	//	{	"tama/kugel.png",				0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,	  0, 2, 0 },
-	/* 78 */	//	{	"tama/kugel2.png",				0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,	  0, 2, 0 },
-	/* 79 */		{	"tama/bullet_beam16.png",		0,	16,  iyx(16,   1), PRIORITY_05_BULLETS,	  0, 2, 0 },	/* 針弾 (敵弾) */
-	/* 80 */		{	"tama/bullet_maru16.png",		0,	16,  iyx(16,   1), PRIORITY_05_BULLETS,	  0, 2, 0 },	/* 白丸(小) (敵弾) */	/* 赤丸(中) (敵弾) */
+	/* 77 */	//	{	"tama/kugel.png",				0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0, 2, 0 },
+	/* 78 */	//	{	"tama/kugel2.png",				0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0, 2, 0 },
+	/* 79 */		{	"tama/bullet_beam16.png",		0,	16,  iyx(16,   1), PRIORITY_05_BULLETS,   0, 2, 0 },	/* 針弾 (敵弾) */
+	/* 80 */		{	"tama/bullet_maru16.png",		0,	16,  iyx(16,   1), PRIORITY_05_BULLETS,   0, 2, 0 },	/* 白丸(小) (敵弾) */	/* 赤丸(中) (敵弾) */
 //
-	/* 81 */		{	"tama/bullet_ming32.png",		0,	32,  iyx(32,   1), PRIORITY_05_BULLETS,	  0, 2, 0 },	/* ゆかりん弾 (敵弾) */
-	/* 82 */		{	"tama/jippou32.png",			0,	32,  iyx(32,   1), PRIORITY_05_BULLETS,	  0, 2, 0 },	/* 白模擬弾 (敵弾) */
+	/* 81 */		{	"tama/bullet_ming32.png",		0,	32,  iyx(32,   1), PRIORITY_05_BULLETS,   0, 2, 0 },	/* ゆかりん弾 (敵弾) */
+	/* 82 */		{	"tama/jippou32.png",			0,	32,  iyx(32,   1), PRIORITY_05_BULLETS,   0, 2, 0 },	/* 白模擬弾 (敵弾) */
 //
 					/* 追加予定 */																				/* クナイ弾 (敵弾) */
 //
-	/* 83 */		{	"tama/oodama08.png",			1,	 8,  iyx( 8,   1), PRIORITY_05_BULLETS,	  0, 4, 0 },/* 大玉(黒青赤...)	黒玉(輪) PRIORITY_03_ENEMY は、あたり判定部分 */
+	/* 83 */		{	"tama/oodama08.png",			1,	 8,  iyx( 8,   1), PRIORITY_05_BULLETS,   0, 4, 0 },/* 大弾(黒青赤...)	黒玉(輪) PRIORITY_03_ENEMY は、あたり判定部分 */
 	/* 83 */	//	{	"tama/bigkugel2.png",			0,	 1,  iyx( 1,   1), PRIORITY_03_ENEMY,	  0, 2, 0 },/* 黒玉(輪)  あたり判定部分 */
-	/* 84 */	//	{	"tama/bigkugel1.png",			1,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,	  0, 2, 0 },/* 大玉(青) 表示部分 */
-	/* 85 */	//	{	"tama/new_bigkugel.png",		1,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,	  0, 2, 0 },/* 大玉(赤) 表示部分 */
+	/* 84 */	//	{	"tama/bigkugel1.png",			1,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0, 2, 0 },/* 大弾(青) 表示部分 */
+	/* 85 */	//	{	"tama/new_bigkugel.png",		1,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0, 2, 0 },/* 大弾(赤) 表示部分 */
 //
-	/* 86 */		{	"tama/knife.png",				1,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,	  0, 2, 0 },/* 垂直降下ナイフ(赤) */
-	/* 87 */		{	"tama/knife_core16.png",		1,	16,  iyx(16,   1), PRIORITY_05_BULLETS,	  0, 2, 0 },/* 全方向ナイフ(青) */
+	/* 86 */		{	"tama/knife.png",				1,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0, 2, 0 },/* 垂直降下ナイフ(赤) */
+	/* 87 */		{	"tama/knife_core16.png",		1,	16,  iyx(16,   1), PRIORITY_05_BULLETS,   0, 2, 0 },/* 全方向ナイフ(青) */
 
-	/*103 */		{	"zako/homing16.png",			0,	16,  iyx(16,   1), PRIORITY_05_BULLETS,	  0, 2, 0 },	/* ザコ 誘導弾 */
-
+	/*103 */		{	"zako/homing16.png",			0,	16,  iyx(16,   1), PRIORITY_05_BULLETS,   0, 2, 0 },	/* ザコ 誘導弾 */
 #endif
+
+static IMAGE_RESOURCE my_resource[] =
+{
+//	/* 自分のあたり判定位置表示用コア */
+	/* 20 REIMU */	{	"jiki/core_re.png", 			0,	 1,  iyx( 1,   1), PRIORITY_03_ENEMY,  0, 1/*2*/, 0 },	// "core.png",
+	/* 21 MARISA */ {	"jiki/core_ma.png", 			0,	 1,  iyx( 1,   1), PRIORITY_03_ENEMY,  0, 2/*4*/, 0 },	// "core-ma.png",
+	/* 22 REMILIA */{	"jiki/core_oz.png", 			0,	 1,  iyx( 1,   1), PRIORITY_03_ENEMY,  0, 2/*4*/, 0 },	// "core-oz.png",
+	/* 23 CIRNO */	{	"jiki/core_ci.png", 			0,	 1,  iyx( 1,   1), PRIORITY_03_ENEMY,  0, 1/*3*/, 0 },	// "core-ci.png",
+	/* 24 YUYUKO */ {	"jiki/core_yu.png", 			0,	 1,  iyx( 1,   1), PRIORITY_03_ENEMY,  0, 2/*4*/, 0 },
+
 //
+//	/* オプション用素材 */
+	/* 25 REIMU */	{	"jiki/option1_re.png",			0,	 8,  iyx( 8,   1), PRIORITY_02_PLAYER, 0, 0, 0 },	/* "option.png" */
+	/* 26 MARISA */ {	"jiki/option1_ma.png",			0,	 8,  iyx( 8,   1), PRIORITY_02_PLAYER, 0, 0, 0 },	/* "mari_op.png" */
+	/* 27 REMILIA */{	"jiki/option1_oz.png",			0,	 8,  iyx( 8,   1), PRIORITY_02_PLAYER, 0, 0, 0 },	/* "oze_op1.png" */
+	/* 28 CIRNO */	{	"jiki/option1_ci.png",			0,	 8,  iyx( 8,   1), PRIORITY_02_PLAYER, 0, 0, 0 },	/* "ci_op1.png" */
+	/* 29 YUYUKO */ {	"jiki/option1_yu.png",			0,	 8,  iyx( 8,   1), PRIORITY_02_PLAYER, 0, 0, 0 },
+//
+	/* 30 REIMU */	{	"jiki/option2_re.png",			0,	 8,  iyx( 8,   1), PRIORITY_02_PLAYER, 0, 0, 0 },	/* [起動チェックで使うので有る名前で] */
+	/* 31 MARISA */ {	"jiki/option2_ma.png",			0,	 8,  iyx( 8,   1), PRIORITY_02_PLAYER, 0, 0, 0 },	/* [起動チェックで使うので有る名前で] */
+	/* 32 REMILIA */{	"jiki/option2_oz.png",			0,	 8,  iyx( 8,   1), PRIORITY_02_PLAYER, 0, 0, 0 },	/* "oze_op2.png" */
+	/* 33 CIRNO */	{	"jiki/option2_ci.png",			0,	 8,  iyx( 8,   1), PRIORITY_02_PLAYER, 0, 0, 0 },	/* "ci_op2.png" */
+	/* 34 YUYUKO */ {	"jiki/option2_yu.png",			0,	 8,  iyx( 8,   1), PRIORITY_02_PLAYER, 0, 0, 0 },
+//
+	/* 35 REIMU */	{	"jiki/option3_re.png",			0,	 8,  iyx( 8,   1), PRIORITY_02_PLAYER, 0, 0, 0 },	/* [起動チェックで使うので有る名前で] */
+	/* 36 MARISA */ {	"jiki/option3_ma.png",			0,	 8,  iyx( 8,   1), PRIORITY_02_PLAYER, 0, 0, 0 },	/* [起動チェックで使うので有る名前で] */
+	/* 37 REMILIA */{	"jiki/option3_oz.png",			0,	 8,  iyx( 8,   1), PRIORITY_02_PLAYER, 0, 0, 0 },	/* "oze_op3.png" */
+	/* 38 CIRNO */	{	"jiki/option3_ci.png",			0,	 8,  iyx( 8,   1), PRIORITY_02_PLAYER, 0, 0, 0 },	/* "ci_op3.png" */
+	/* 39 YUYUKO */ {	"jiki/option3_yu.png",			0,	 8,  iyx( 8,   1), PRIORITY_02_PLAYER, 0, 0, 0 },
+//
+	/* 40 REIMU */	{	"jiki/option4_re.png",			0,	 8,  iyx( 8,   1), PRIORITY_02_PLAYER, 0, 0, 0 },	/* [起動チェックで使うので有る名前で] */
+	/* 41 MARISA */ {	"jiki/option4_ma.png",			0,	 8,  iyx( 8,   1), PRIORITY_02_PLAYER, 0, 0, 0 },	/* [起動チェックで使うので有る名前で] */
+	/* 42 REMILIA */{	"jiki/option4_oz.png",			0,	 8,  iyx( 8,   1), PRIORITY_02_PLAYER, 0, 0, 0 },	/* "oze_op4.png" */
+	/* 43 CIRNO */	{	"jiki/option4_ci.png",			0,	 8,  iyx( 8,   1), PRIORITY_02_PLAYER, 0, 0, 0 },	/* "ci_op4.png" */
+	/* 44 YUYUKO */ {	"jiki/option4_yu.png",			0,	 8,  iyx( 8,   1), PRIORITY_02_PLAYER, 0, 0, 0 },
+//
+//	/* その他の自機素材 */
+	/* 76 */		{	"panel/bonus_items.png",		0,	 8,  iyx( 8,   1), PRIORITY_04_ITEM,   0,12, 0 },
+//
+//	/* BG面エフェクト */
+//	/* 75 */		{	"jiki/bomber_slow.png", 		1,	 4,  iyx( 4,   1), PRIORITY_01_SHOT,   0, 0, 0 },
 	/* 88 */		{	"zako/mahoujin_0.png",			1,	 2,  iyx( 2,   1), PRIORITY_01_SHOT,   0, 0, 0 },/*0a */ /* 敵の後ろのアレ */
+//
 	/* 89 */		{	"zako/tikei_bgpanel1.png",		0,	 1,  iyx( 1,   1), PRIORITY_00_BG,	  0, 0, 0 },	/* 地形３連パネル */
 	/* 90 */		{	"zako/tikei_bgpanel2.png",		0,	 1,  iyx( 1,   1), PRIORITY_00_BG,	  0, 0, 0 },	/* 地形パネル棒 */
 	/* 91 */		{	"zako/tikei_grounder08.png",	0,	 8,  iyx( 8,   1), PRIORITY_01_SHOT,   2,16, 0 },	/* マンホール */
-//
+//	/* ザコ */
 	/* 92 */		{	"zako/obake08.png", 			0,	 8,  iyx( 8,   1), PRIORITY_03_ENEMY,  0, 8, 0 },	/* ザコ */
 	/* 93 */		{	"zako/yukari8x4.png",			0,	32,  iyx( 8,   4), PRIORITY_03_ENEMY,  0, 2, 0 },	/* ザコ */
 	/* 94 */		{	"zako/aka_kedama08.png",		0,	 8,  iyx( 8,   1), PRIORITY_03_ENEMY,  4, 6, 0 },	/* ザコ 4 1 */
@@ -174,7 +209,34 @@ static IMAGE_RESOURCE my_resource[] =
 //
 	/*100 */		{	"zako/great_fairy02.png",		0,	 2,  iyx( 2,   1), PRIORITY_03_ENEMY,  0,16, 0 },	/* ザコ(中ザコ) - */
 	/*101 */		{	"zako/aka_meido08.png", 		0,	 8,  iyx( 8,   1), PRIORITY_03_ENEMY,  0,24, 0 },	/* ザコ */
-	/*102 */		{	"zako/ao_yousei4x6.png", 		0,	24,  iyx( 4,   6), PRIORITY_03_ENEMY,  0,12, 0 },	/* ザコ "zako/ao_yousei24.png" */
+	/*102 */		{	"zako/ao_yousei4x6.png",		0,	24,  iyx( 4,   6), PRIORITY_03_ENEMY,  0,12, 0 },	/* ザコ "zako/ao_yousei24.png" */
+//	/* ボス */
+//	/*111 */		{	"boss/boss01_0.png",			0,	 4,  iyx( 4,   1), PRIORITY_03_ENEMY,  8, 4, 0 },
+//	/*112 */		{	"boss/boss01_1.png",			0,	 8,  iyx( 8,   1), PRIORITY_03_ENEMY,  0, 8, 0 },
+//	/*113 */		{	"boss/boss01_2.png",			0,	 4,  iyx( 4,   1), PRIORITY_03_ENEMY,  8, 4, 0 },
+//	/*114 */		{	"boss/boss01_3.png",			0,	 2,  iyx( 2,   1), PRIORITY_03_ENEMY,  8, 4, 0 },
+//	/*115 */		{	"boss/boss01_4.png",			0,	 2,  iyx( 2,   1), PRIORITY_03_ENEMY,  8, 4, 0 },
+
+	/*111 */		{	"boss/alice.png",				0,	12,  iyx( 4,   3), PRIORITY_03_ENEMY,  8, 4, 0 },	/* アリス */
+	/*112 */		{	"boss/alice_dolls.png", 		0,	16,  iyx( 4,   4), PRIORITY_03_ENEMY,  0, 8, 0 },	/* 人形 */
+//
+	/*116 */		{	"boss/aya.png", 				0,	 9,  iyx( 9,   1), PRIORITY_03_ENEMY,  0, 8, 0 },	/* 文 */
+//
+	/*117 */		{	"boss/kaguya.png",				0,	12,  iyx( 6,   2), PRIORITY_03_ENEMY,  0, 8, 0 },	/* 輝夜 */
+//	/*117 */		{	"boss/boss04_0.png",			0,	 2,  iyx( 1,   1), PRIORITY_03_ENEMY,  0, 4, 0 },
+//	/*118 */		{	"boss/boss04_1.png",			0,	 2,  iyx( 1,   1), PRIORITY_03_ENEMY,  0, 8, 0 },
+//	/*119 */		{	"boss/boss04_2.png",			0,	 2,  iyx( 1,   1), PRIORITY_03_ENEMY,  0, 4, 0 },
+//	/*120 */		{	"boss/boss04_3.png",			0,	 2,  iyx( 1,   1), PRIORITY_03_ENEMY,  0, 4, 0 },
+//	/*121 */		{	"boss/boss04_4.png",			0,	 2,  iyx( 1,   1), PRIORITY_03_ENEMY,  0, 4, 0 },
+//	/*122 */		{	"boss/boss04_5.png",			0,	 2,  iyx( 1,   1), PRIORITY_03_ENEMY,  0, 4, 0 },
+//
+	/*123 */		{	"boss/sakuya.png",				0,	20,  iyx(10,   2), PRIORITY_03_ENEMY,  0, 8, 0 },	/* 咲夜 */
+//
+	/*124 */	//	{	"panel/key_icon.png",			1,	12,  iyx(12,   1), PRIORITY_01_SHOT,   2, 2, 0 },
+
+	/* フロント面エフェクト */
+
+
 //	/* 小爆発 */
 	/*104 */		{	"effect/tr_blue.png",			0,	 6,  iyx( 6,   1), PRIORITY_04_ITEM,   1, 0, 0 },
 	/*105 */		{	"effect/tr_red.png",			0,	 6,  iyx( 6,   1), PRIORITY_04_ITEM,   1, 0, 0 },
@@ -185,26 +247,7 @@ static IMAGE_RESOURCE my_resource[] =
 	/*109 */		{	"effect/bakuha07.png",			1,	 5,  iyx( 5,   1), PRIORITY_04_ITEM,   3, 0, 0 },
 //	/* 火炎爆発 */
 	/*110 */		{	"effect/ex.png",				0,	29,  iyx(29,   1), PRIORITY_04_ITEM,   3, 0, 0 },
-//
-	/*111 */		{	"boss/boss01_0.png",			0,	 4,  iyx( 4,   1), PRIORITY_03_ENEMY,  8, 4, 0 },
-	/*112 */		{	"boss/boss01_1.png",			0,	 8,  iyx( 8,   1), PRIORITY_03_ENEMY,  0, 8, 0 },
-	/*113 */		{	"boss/boss01_2.png",			0,	 4,  iyx( 4,   1), PRIORITY_03_ENEMY,  8, 4, 0 },
-	/*114 */		{	"boss/boss01_3.png",			0,	 2,  iyx( 2,   1), PRIORITY_03_ENEMY,  8, 4, 0 },
-	/*115 */		{	"boss/boss01_4.png",			0,	 2,  iyx( 2,   1), PRIORITY_03_ENEMY,  8, 4, 0 },
-//
-	/*116 */		{	"boss/aya.png", 				0,	 9,  iyx( 9,   1), PRIORITY_03_ENEMY,  0, 8, 0 },
-//
-	/*117 */		{	"boss/kaguya.png",				0,	 6,  iyx( 6,   1), PRIORITY_03_ENEMY,  0, 8, 0 },
-//	/*117 */		{	"boss/boss04_0.png",			0,	 2,  iyx( 1,   1), PRIORITY_03_ENEMY,  0, 4, 0 },
-//	/*118 */		{	"boss/boss04_1.png",			0,	 2,  iyx( 1,   1), PRIORITY_03_ENEMY,  0, 8, 0 },
-//	/*119 */		{	"boss/boss04_2.png",			0,	 2,  iyx( 1,   1), PRIORITY_03_ENEMY,  0, 4, 0 },
-//	/*120 */		{	"boss/boss04_3.png",			0,	 2,  iyx( 1,   1), PRIORITY_03_ENEMY,  0, 4, 0 },
-//	/*121 */		{	"boss/boss04_4.png",			0,	 2,  iyx( 1,   1), PRIORITY_03_ENEMY,  0, 4, 0 },
-//	/*122 */		{	"boss/boss04_5.png",			0,	 2,  iyx( 1,   1), PRIORITY_03_ENEMY,  0, 4, 0 },
-//
-	/*123 */		{	"boss/sakuya.png",				0,	19,  iyx(10,   2), PRIORITY_03_ENEMY,  0, 8, 0 },
-//
-	/*124 */	//	{	"panel/key_icon.png",			1,	12,  iyx(12,   1), PRIORITY_01_SHOT,   2, 2, 0 },
+
 };
 
 
@@ -462,7 +505,7 @@ void sprite_work000(int type)
 		while (NULL != s)
 		{
 			n = s->next;
-			#if 1/* 自動的に消える機能 */
+			#if 000/* 自動的に消える機能 */
 			/* 一定時間での自動消去、許可フラグONの場合、 */
 			if ( (SP_FLAG_TIME_OVER == (s->flags&SP_FLAG_TIME_OVER)) )
 			{
@@ -569,7 +612,10 @@ void sprite_display000(int type)
 			if (s->type & type) /* typeが一致する場合のみ */
 			{
 				#if 1
-				if (0==(s->type & SP_GROUP_BULLETS)) /* とりあえず弾は描かない */
+				if (0==(s->type & (
+					SP_GROUP_BULLETS |		/* 弾は描かない */
+					SP_GROUP_JIKI_GET_ITEM	/* jikiは描かない */
+				)))
 				#endif
 				{
 					if ((s->flags&SP_FLAG_VISIBLE)) /* 表示可能な場合のみ */
@@ -671,12 +717,15 @@ SPRITE *sprite_add_res_list(
 	obj->flags		= set_flags; /*0;	if (nocache) s->flags |= SP_FLAG_NOT_CACHE; */
 	obj->alpha		= 255;
 
-	obj->yx_anim_frame = 0x00;
-	obj->anim_speed = anime_speed/*0 */;
-	obj->anim_count = 0;
-	obj->m_angle512 = 0;
+	obj->yx_anim_frame	= 0x00;
+	obj->anim_speed 	= anime_speed/*0 */;
+	obj->anim_count 	= 0;
+	obj->m_angleCCW512	= 0;			/* 描画用角度(下が0度で左回り(反時計回り)) */	/* 0 == 傾かない。下が0度 */
 //
+	#if 000/* 自動的に消える機能 */
 	obj->timeover_ticks 	= 0;
+	#endif
+	obj->m_zoom_x256		= 256;	/* 表示拡大率 256 == [ x 1.00 ] */
 //
 	obj->data				= NULL;
 	obj->callback_mover 	= NULL;

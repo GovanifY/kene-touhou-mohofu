@@ -10,11 +10,11 @@
 typedef struct
 {
 	ENEMY_BASE base;
-	int state;
-	int level;
-	int wait;
-	int ani_turn;
-	int n;
+	int state;		/* —d¸‚Ìó‘Ô */
+	int level;		/* İ’èƒtƒ@ƒCƒ‹‚©‚ç‚Ì—d¸‚Ì‹­‚³ */
+	int time_out;	/* ó‘Ô‘JˆÚ—p‚ÌŠÔØ‚ê */
+	int ani_turn;	/* ƒAƒjƒ[ƒVƒ‡ƒ“•ûŒü(‰H‚Ìã‰º) */
+	int nnn;		/* ’e‚ğŒ‚‚Â‰ñ” */
 } AO_YOUSEI2_DATA;
 
 /*---------------------------------------------------------
@@ -30,6 +30,14 @@ static void lose_ao_yousei2(SPRITE *s)
 /*---------------------------------------------------------
 	“GˆÚ“®
 ---------------------------------------------------------*/
+enum
+{
+	STATE_00 = 0,
+	STATE_01,
+	STATE_02,
+	STATE_03,
+};
+
 #define SSS00 ( 0<<2)/*‰E*/
 #define SSS04 ( 4<<2)/*‰EÎ‚ß‰º*/
 #define SSS08 ( 8<<2)/*‰º‚P*/
@@ -40,42 +48,41 @@ static void move_ao_yousei2(SPRITE *s)
 {
 	AO_YOUSEI2_DATA *d = (AO_YOUSEI2_DATA *)s->data;
 	int p512;
-
+//
+	d->time_out--;	/* í‚ÉŠÔŒo‰ß */
 	switch (d->state)
 	{
-	case 0: 	//“oê
-		if (d->wait<40)
+	case STATE_00:	/* “oê */
+		if (d->time_out < 0)
 		{
+			d->time_out = 10;
+			d->state++;// = STATE_01;/*Ÿ‚Ö*/
+		}
+		else
+		{	/* “oê‚Ì“®‚« */
 				 if (d->level<3)	{	s->x256 -= t256(2)/**fps_fa ctor*/; 	}
 			else if (d->level<7)	{	s->y256 += t256(2)/**fps_fa ctor*/; 	}
 			else					{	s->x256 += t256(2)/**fps_fa ctor*/; 	}
-			d->wait++;
-		}
-		else
-		{
-			d->state=1;
-			d->wait=10;
 		}
 		break;
-	case 1: 	//wait
-		if (d->wait<0)
-		{	d->state=2;}
+	case STATE_01:	/* ­‚µ‘Ò‚Â */
+		if (d->time_out < 0)
+		{
+			d->time_out = 50;
+			d->state++;// = STATE_02;/*Ÿ‚Ö*/
+		}
 		else
 		{
 			p512=atan_512(player->y256-s->y256,player->x256-s->x256);
 			mask512(p512);
 		//	const Uint8 aa_offs[8] = { OF_16, OF_12, OF_08, OF_04, OF_00, OF_04, OF_08, OF_12 };
 			const Uint8 aa_offs[8] = { SSS00, SSS04, SSS08, SSS16, SSS20, SSS16, SSS08, SSS04 };
-			s->yx_anim_frame = (s->yx_anim_frame&(4-1))+aa_offs[(p512>>6)];			/* 64  32== 512/16 */
-			d->wait--;
+			s->yx_anim_frame = (s->yx_anim_frame&(4-1))+aa_offs[(p512>>6)]; 		/* 64  32== 512/16 */
 		}
 		break;
-	case 2: 	//shot
-		d->n++;
-		d->wait=50;
-		d->state=1;
-		bullet_create_offset_dan_type(s, /*((1+difficulty)<<7)*/t256(2.5)/*t256(3)*/, ANGLE_JIKINERAI_DAN, t256(0), t256(0), BULLET_HARI32_00_AOI);
-		bullet_create_offset_dan_type(s, /*((1+difficulty)<<8)*/t256(3.5)/*t256(4)*/, ANGLE_JIKINERAI_DAN, t256(0), t256(0), BULLET_HARI32_00_AOI);
+	case STATE_02:	/* ’e‚ğŒ‚‚Â */
+		bullet_create_offset_dan_type(s, /*((1+difficulty)<<7)*/t256(2.5)/*t256(3)*/, ANGLE_JIKI_NERAI_DAN, t256(0), t256(0), BULLET_HARI32_00_AOI);
+		bullet_create_offset_dan_type(s, /*((1+difficulty)<<8)*/t256(3.5)/*t256(4)*/, ANGLE_JIKI_NERAI_DAN, t256(0), t256(0), BULLET_HARI32_00_AOI);
 
 		p512=atan_512(player->y256-s->y256+((player->h128)),player->x256-s->x256-((player->w128)));
 		if (difficulty>0)
@@ -100,23 +107,29 @@ static void move_ao_yousei2(SPRITE *s)
 				}
 			}
 		}
-		if (d->n>3)
-		{	d->state=3;}
-		break;
-	case 3: 	//‘Şê€”õ
-			 if (d->level<3)	{	s->yx_anim_frame=(s->yx_anim_frame&(4-1))+SSS00;}
-		else if (d->level<7)	{	s->yx_anim_frame=(s->yx_anim_frame&(4-1))+SSS08;}
-		else					{	s->yx_anim_frame=(s->yx_anim_frame&(4-1))+SSS00;}
-		d->state=4;
-		d->wait=0;
-		break;
-	case 4: 	//‘Şê
-		if (d->wait>50)
+
+		d->nnn--;
+		if (d->nnn < 0)
 		{
-			s->type=SP_DELETE;
+			/* ‘Şê€”õ */
+				 if (d->level<3)	{	s->yx_anim_frame=(s->yx_anim_frame&(4-1))+SSS00;}
+			else if (d->level<7)	{	s->yx_anim_frame=(s->yx_anim_frame&(4-1))+SSS08;}
+			else					{	s->yx_anim_frame=(s->yx_anim_frame&(4-1))+SSS00;}
+			d->state++;// = STATE_03;/*Ÿ‚Ö*/
+			d->time_out = 50;
 		}
 		else
 		{
+			d->state--;// = STATE_01;/*–ß‚é*/
+		}
+		break;
+	case STATE_03:	/* ‘Şê */
+		if (d->time_out < 0)
+		{
+			s->type = SP_DELETE;
+		}
+		else
+		{	/* ‘Şê‚Ì“®‚« */
 				 if (d->level<3)	{	s->x256 += t256(2)/**fps_fa ctor*/;}
 			else if (d->level<7)	{	s->y256 -= t256(2)/**fps_fa ctor*/;}
 			else					{	s->x256 -= t256(2)/**fps_fa ctor*/;}
@@ -153,7 +166,7 @@ void add_zako_ao_yousei2(STAGE_DATA *l)/*int lv*/
 //
 	if ( (lv)>9) {lv=9;}
 	SPRITE *s;
-	s					= sprite_add_res(BASE_AO_YOUSEI24_PNG);	//s->anim_speed=0;/*20"sp lash.png"*/
+	s					= sprite_add_res(BASE_AO_YOUSEI24_PNG); //s->anim_speed=0;/*20"sp lash.png"*/
 	s->type 			= SP_ZAKO/*_17_AO_YOUSEI2*/;
 	s->flags			|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK|SP_FLAG_TIME_OVER);
 	s->callback_mover	= move_ao_yousei2;
@@ -182,9 +195,9 @@ void add_zako_ao_yousei2(STAGE_DATA *l)/*int lv*/
 	s->data 			= data;
 	data->base.score	= score(50*2);
 	data->base.health	= 20+(difficulty<<2);
-	data->state 		= 0;
+	data->state 		= STATE_00;
 	data->level 		= lv;
-	data->wait			= 0;
+	data->time_out		= 40;
 	data->ani_turn		= 0;
-	data->n 			= 0;
+	data->nnn			= 3;	/* 3‰ñŒ‚‚Â */
 }

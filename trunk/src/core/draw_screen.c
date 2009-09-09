@@ -57,10 +57,18 @@ void init_math(void)
 		sin_tbl512[i] = (int)(sin( (i*(GU_PI*2) / SINTABLE_SIZE) )*256/**65536.0*/ );
 	}
 }
+#if 0
+/* CWの場合 */
+#else
+/* CCWの場合 */
+	/*とりあえず*/
+	#define rad2deg512(x)		( (int)((x)*((512.0)/(T_GU_M_PI*2))/*+512*/)&(512-1) )
+#endif
 /* この関数はCPU内蔵の命令キャッシュに乗るよ */
 int atan_512( int y, int x )
 {
-	return (rad2deg512(atan2(y,x)));
+//	return (rad2deg512(atan2(y,x)));	// CW
+	return (rad2deg512(atan2(x,y)));	// CCW(?)
 }
 /*
 psp では、 atan2(), sin(), sqrt() 等の超越関数系命令は、
@@ -543,67 +551,36 @@ SDL_Surface *loadbmp0(char *filename, int use_alpha, int use_chache)
 //}
 
 /*---------------------------------------------------------
-		*sがMY_IMAGE_LIST内にあるか確認をし、あった場合 図形キャッシュリストの参照数を減らす。
-	×	*sがMY_IMAGE_LIST内にあるか確認をし、あった場合 xxx_[そのSurfaceのrefcountを0にする。]
+	*sがMY_IMAGE_LIST内にあるか確認をし、
+	画像が見つかった場合、図形キャッシュリストの参照数を一つ減らす。
 ---------------------------------------------------------*/
 
 void unloadbmp_by_surface(SDL_Surface *s)
 {
-	MY_IMAGE_LIST *i = my_image_list;/*図形キャッシュリストの先頭*/
+	MY_IMAGE_LIST *i = my_image_list;/* 図形キャッシュリストの先頭 */
 	while (NULL != i)
 	{
-		if (s == i->img)
+		if (s == i->img)	/* 画像が見つかった */
 		{
-			if (0 == i->refcount)
+			if (0 == i->refcount)	/* 図形キャッシュリストの参照数 */
 			{
+				/* ロードしてないのに開放。 */
 				CHECKPOINT;
 				error(ERR_WARN, "unloadbmp_by_surface: refcount for object %s is already zero",i->name);
 			}
 			else
 			{
-				i->refcount--;
+				i->refcount--;	/* 一つ減らす。 */
 			}
-			return;
+			return; 	/* 正常終了 */
 		}
 		i = i->next;
 	}
+	/* 見つからない。 */
 	CHECKPOINT;
 	error(ERR_WARN, "unloadbmp_by_surface: object not found");
+//	return; 	/* 異常終了 */
 }
-
-/*---------------------------------------------------------
-
----------------------------------------------------------*/
-
-#if 0
-void unload_bmp_by_name(char *name)/*sprite.c*/
-{
-	char fn[64/*50*/];
-//	strcpy(fn, data_dir);	strcat(fn, "/");
-	strcpy(fn, DIRECTRY_NAME_DATA "/");
-	strcat(fn,name);
-	MY_IMAGE_LIST *i = my_image_list;
-	while (NULL != i)
-	{
-		if (0 == tiny_strcmp(i->name,fn))
-		{
-			if (0 == i->refcount)
-			{
-				CHECKPOINT;
-				error(ERR_WARN, "unload_bmp_by_name: refcount for object %s is already zero",i->name);
-			}
-			else
-			{
-				i->refcount--;
-			}
-			return;
-		}
-		i = i->next;
-	}
-	CHECKPOINT;
-	error(ERR_WARN, "unload_bmp_by_name: object not found");
-}
-#endif
 
 //#define sign(x) ((x) > 0 ? 1 : ((x) == 0 ? 0 : (-1) ))
 
@@ -734,210 +711,11 @@ void blit_scaled(SDL_Surface *src, SDL_Rect *src_rct, SDL_Surface *dst, SDL_Rect
 }
 #endif
 
-/*
-void draw_line(SDL_Surface *s, int x1, int y1, int x2, int y2, Uint32 farbe1, Uint32 farbe2)
-{
-	int dx,dx_sign,dx_abs,px,x;
-	int dy,dy_sign,dy_abs,py,y;
-	int i;
-	dx=x2-x1;	dx_sign=sign(dx);	dx_abs=abs(dx); px=x1;	x=0;
-	dy=y2-y1;	dy_sign=sign(dy);	dy_abs=abs(dy); py=y1;	y=0;
-	if (SDL_MUSTLOCK(s))	{	SDL_LockSurface(s); 	}
-	if (dx_abs>=dy_abs)
-	{
-		for (i=0;i<dx_abs;i++)
-		{
-			y+=dy_abs;		if (y>=dx_abs)	{	y-=dx_abs;	py+=dy_sign;	}
-			putpixel(s,px,py-1,farbe2);
-			putpixel(s,px,py  ,farbe1);
-			putpixel(s,px,py+1,farbe2);
-			px+=dx_sign;
-		}
-	}
-	else
-	{
-		for (i=0;i<dy_abs;i++)
-		{
-			x+=dx_abs;		if (x>=dy_abs)	{	x-=dy_abs;	px+=dx_sign;	}
-			putpixel(s,px-1,py,farbe2);
-			putpixel(s,px  ,py,farbe1);
-			putpixel(s,px+1,py,farbe2);
-			py+=dy_sign;
-		}
-	}
-	if (SDL_MUSTLOCK(s))	{	SDL_UnlockSurface(s);	}
-}
-void draw_line_simple(SDL_Surface *s, int x1, int y1, int x2, int y2, Uint32 farbe1)
-{
-	int dx,dx_sign,dx_abs,px,x;
-	int dy,dy_sign,dy_abs,py,y;
-	int i;
-	dx=x2-x1;	dx_sign=sign(dx);	dx_abs=abs(dx); px=x1;	x=0;
-	dy=y2-y1;	dy_sign=sign(dy);	dy_abs=abs(dy); py=y1;	y=0;
-	if (SDL_MUSTLOCK(s))	{	SDL_LockSurface(s); 	}
-	if (dx_abs>=dy_abs)
-	{
-		for (i=0;i<dx_abs;i++)
-		{
-			y+=dy_abs;		if (y>=dx_abs)	{	y-=dx_abs;	py+=dy_sign;	}
-			putpixel(s,px,py,farbe1);
-			px+=dx_sign;
-		}
-	}
-	else
-	{
-		for (i=0;i<dy_abs;i++)
-		{
-			x+=dx_abs;		if (x>=dy_abs)	{	x-=dy_abs;	px+=dx_sign;	}
-			putpixel(s,px,py,farbe1);
-			py+=dy_sign;
-		}
-	}
-	if (SDL_MUSTLOCK(s))	{	SDL_UnlockSurface(s);	}
-}
-*/
 
-/* just a quick hack - dont know if i will use it in the final game...
- * blits only every 2nd pixel, to archive a cheap 50%-alpha effect.
- */
- /*
-void blit_calpha(SDL_Surface *src, SDL_Rect *src_rct, SDL_Surface *dst, SDL_Rect *dst_rct)
-{
-	Sint32 x, y;
-	Uint32 col, key;
-	Uint16 *ps,*pd;
-	Uint16 *sps,*spd;
-	if (src->format->BitsPerPixel!=dst->format->BitsPerPixel)
-	{
-		CHECKPOINT;
-		error(ERR_FATAL, "cant handle different pixelformats (yet?)");
-	}
-	if (src->format->BitsPerPixel!=16)
-	{
-		CHECKPOINT;
-		error(ERR_FATAL, "can only handle 16bit-pixelformat");
-	}
-	key=src->format->colorkey;
-
-	if (SDL_MUSTLOCK(src))		SDL_LockSurface(src);
-	if (SDL_MUSTLOCK(dst))		SDL_LockSurface(dst);
-	ps=(Uint16 *)src->pixels+src_rct->y*src->pitch/2+src_rct->x;
-	pd=(Uint16 *)dst->pixels+dst_rct->y*dst->pitch/2+dst_rct->x;
-	for (y=0;y<src_rct->h;y++)
-	{
-		sps=ps;
-		spd=pd;
-		if (y&1)	{	ps++;	pd++;	}
-		for (x=0;x<src_rct->w;x+=2)
-		{
-			if	((x+dst_rct->x>=0) &&
-				(x+dst_rct->x<dst->w) &&
-				(y+dst_rct->y>=0) &&
-				(y+dst_rct->y<dst->h))
-			{
-				col=*(ps);
-				if (col!=key)
-				{	*(pd)=col;}
-			}
-			pd+=2;
-			ps+=2;
-		}
-		ps=sps+src->pitch/2;
-		pd=spd+dst->pitch/2;
-	}
-	if (SDL_MUSTLOCK(src))		SDL_UnlockSurface(src);
-	if (SDL_MUSTLOCK(dst))		SDL_UnlockSurface(dst);
-}
-*/
-
-/*
-void toggle_fullscreen()
-{
-	SDL_Surface *tmp;
-
-	if (videoflags==SDL_DOUBLEBUF)
-		videoflags=SDL_FULLSCREEN;
-	else
-		videoflags=SDL_DOUBLEBUF;
-
-	tmp=SDL_ConvertSurface(screen,screen->format,screen->flags);
-	if (tmp==NULL) {
-		CHECKPOINT;
-		error(ERR_FATAL, "cant copy screen");
-	}
-	if ((screen=SDL_SetVideoMode(WIDTH,HEIGHT,depth,videoflags))==NULL) {
-		CHECKPOINT;
-		error(ERR_FATAL, "cant open change fullscreen/window: %s",SDL_GetError());
-	}
-	SDL_BlitSurface(tmp,NULL,screen,NULL);
-	//SDL_FreeSurface(tmp);
-	// display_vidinfo();
-}
-*/
-/*
-void display_vidinfo()
-{
-	const SDL_VideoInfo *s;
-	char driver[256];
-	SDL_Rect **modes;
-	int i;
-
-	error(ERR_DEBUG, "============ SDL VideoInfo ============");
-
-	s=SDL_GetVideoInfo();
-
-	if (SDL_VideoDriverName(driver,256)==NULL)
-		error(ERR_WARN, "couldn't get video driver name");
-	else
-		error(ERR_DEBUG, "Video Driver: %s",driver);
-
-	error(ERR_DEBUG, "BitsPerPixel: %d",s->vfmt->BitsPerPixel);
-	if (s->vfmt->palette==NULL) {
-		error(ERR_DEBUG, "R Mask      : 0x%.8x",s->vfmt->Rmask);
-		error(ERR_DEBUG, "G Mask      : 0x%.8x",s->vfmt->Gmask);
-		error(ERR_DEBUG, "B Mask      : 0x%.8x",s->vfmt->Bmask);
-	}
-	error(ERR_DEBUG, "HW Surface  : %savailable",s->hw_available ? "" : "not ");
-	error(ERR_DEBUG, "Win-Manager : %savailable",s->wm_available ? "" : "not ");
-	error(ERR_DEBUG, "H->H Blit   : %savailable",s->blit_hw ? "" : "not ");
-	error(ERR_DEBUG, "H->H Blit CC: %savailable",s->blit_hw_CC ? "" : "not ");
-	error(ERR_DEBUG, "H->H Blit A : %savailable",s->blit_hw_A ? "" : "not ");
-	error(ERR_DEBUG, "S->H Blit   : %savailable",s->blit_sw ? "" : "not ");
-	error(ERR_DEBUG, "S->H Blit CC: %savailable",s->blit_sw_CC ? "" : "not ");
-	error(ERR_DEBUG, "S->H Blit A : %savailable",s->blit_sw_A ? "" : "not ");
-	error(ERR_DEBUG, "Color Fill  : %savailable",s->blit_fill ? "" : "not ");
-	error(ERR_DEBUG, "Video-Mem   : %d",s->video_mem);
-
-	error(ERR_DEBUG, "Available Fullscreen modes:");
-	modes=SDL_ListModes(NULL,SDL_FULLSCREEN);
-	for (i=0;modes[i];i++) {
-		error(ERR_DEBUG, "%d: %dx%d",i+1,modes[i]->w,modes[i]->h);
-	}
-	error(ERR_DEBUG, "Available HW-surfaces modes:");
-	modes=SDL_ListModes(NULL,SDL_FULLSCREEN|SDL_HWSURFACE);
-	for (i=0;modes[i];i++) {
-		error(ERR_DEBUG, "%d: %dx%d",i+1,modes[i]->w,modes[i]->h);
-	}
-	error(ERR_DEBUG, "=======================================");
-}
-*/
 
 /*------------------------------------------------------------- */
 
 #if (1==USE_GU)
-
-//#define USE_SDL_image 1
-#define USE_SDL_image 0
-#if (1==USE_SDL_image)
-	//#include "_SDL_image.h"//#include "_SDL_image.h"
-	#define MY_DIB_SURFACE	SDL_Surface
-	#define MY_DIB_DATA 	pixels
-#else
-	#include "graphics.h"
-	#define MY_DIB_SURFACE	Image
-//	#define MY_DIB_DATA 	data
-	#define MY_DIB_DATA 	pixels
-#endif
 
 
 //#define USE_16BIT_BLIT 0
@@ -946,7 +724,7 @@ void display_vidinfo()
 //#define USE_BLIT_COLOR_BIT 32
 #define USE_BLIT_COLOR_BIT 16
 
-/*  */
+/*	*/
 //#if (1==USE_16BIT_BLIT)
 //	#define USE_COLOR_16_AND_32 0
 //#endif
@@ -1036,16 +814,44 @@ static	unsigned int __attribute__((aligned(16))) gulist[PACKET_SIZE];
 //#define USE_SWIZZLE 0
 #define USE_SWIZZLE 1
 
-/* --- 管理する最大テクスチャー数 */
-#define TEXTUREMAX	2
 
+/* 管理するテクスチャー */
+enum
+{
+	TEX_00_BACK_GROUND = 0, 	/* 3D背景1 */
+//	TEX_01_BACK_TEXTURE,		/* 背景障害物 */
+//	TEX_02_MAHOUJIN,			/* 魔方陣 */
+	TEX_03_JIKI,				/* 自弾/自機 */
+//	TEX_04_TEKI,				/* ボス/ザコ敵 */
+//	TEX_05_EFFECT,				/* アイテム/漢字スコア/当たり表示/爆発 */
+	TEX_06_BULLET,				/* 敵弾 */
+//	TEX_07_SCORE_PANEL, 		/* スコアパネル/スコアフォント文字 */
+//	TEX_08_TACHIE,				/* 立ち絵 */
+//	TEX_09_MESSAGE, 			/* メッセージ固定文字 */
+	TEXTURE_MAX 				/* --- 管理する最大テクスチャー数 */
+};
 
-/* -------------------------------------------------------------- */
-/* --- スクリーン管理											  */
-/* -------------------------------------------------------------- */
+/*---------------------------------------------------------
+	スクリーン管理
+---------------------------------------------------------*/
+
+//#define USE_SDL_image 1
+#define USE_SDL_image 0
+#if (1==USE_SDL_image)
+	//#include "_SDL_image.h"//#include "_SDL_image.h"
+	#define MY_DIB_SURFACE	SDL_Surface
+	#define MY_DIB_DATA 	pixels
+	#define MY_DIB_WK512	unused1
+#else
+	#include "graphics.h"
+	#define MY_DIB_SURFACE	my_image
+//	#define MY_DIB_DATA 	data
+	#define MY_DIB_DATA 	pixels
+	#define MY_DIB_WK512	wk512
+#endif
 
 static	TGameSprite  ggg_Sprites[SPRITEMAX];
-static	MY_DIB_SURFACE *my_texture[TEXTUREMAX];
+static	MY_DIB_SURFACE *my_texture[TEXTURE_MAX];
 
 typedef struct
 {
@@ -1089,14 +895,22 @@ unsigned int draw_bg_screen;
 unsigned int conv_bg_alpha;
 
 
-
+extern int select_player;
 static void TGameTexture_Load_Surface(int num, char *filename);//, /*int*/UINT8 true32bit);
+void select_jiki_load_surface(void)
+{
+	char filename[128];
+	strcpy(filename, DIRECTRY_NAME_DATA "/jiki/jiki0Z.png");
+	filename[11+DIRECTRY_NAME_LENGTH] = ('0'+select_player);
+	TGameTexture_Load_Surface( TEX_03_JIKI, filename);//, 0/*TR UE*/ /*FA LSE*/);/*game*/
+//	draw_jiki_screen = 1;
+}
 void stage_bg_load_surface(void)
 {
 	char filename[128];
 	strcpy(filename, DIRECTRY_NAME_DATA "/bg/backZ_256.png");
 	filename[8+DIRECTRY_NAME_LENGTH] = ('0'+/*level*/player_now_stage/*load_stage_number*/ /*player_now_stage*/);
-	TGameTexture_Load_Surface( 1, filename);//, 0/*TR UE*/ /*FA LSE*/);/*game*/
+	TGameTexture_Load_Surface( TEX_00_BACK_GROUND, filename);//, 0/*TR UE*/ /*FA LSE*/);/*game*/
 	draw_bg_screen = 1;
 }
 
@@ -1220,17 +1034,11 @@ void psp_video_init(void)
 	sceGuOffset(2048 - (PSP_WIDTH480 / 2), 2048 - (PSP_HEIGHT272 / 2));
 	sceGuViewport(2048, 2048, PSP_WIDTH480, PSP_HEIGHT272);
 
-	#if (1==USE_ZBUFFER)
-	/* psp の z値は 65535(近く) から 0(遠く)で、Z値が通常と逆。 */
-	/* このz値は unsigned short なので、少しはみ出すと、回り込んで変な描画になってしまう。 */
-	/* そこで、回り込まないように、適当に余裕分を見繕う。PSPSDK のサンプルでは */
-	/* 0xc350(50000) 近く側の境界面、0x2710(10000)遠く側の境界面 となっているが、適当な値なら何でもよい */
-	/* sceGuDepthRange(0xc350, 0x2710); */
-	#define  Z_CLIP_LENGTH	(10000)
-	sceGuDepthRange((0xffff-Z_CLIP_LENGTH), Z_CLIP_LENGTH);
-	#endif /* (1==USE_ZBUFFER) */
-	sceGuScissor(0, 0, PSP_WIDTH480, PSP_HEIGHT272);
+	#if 1
+	/* 描画範囲を設定する */
 	sceGuEnable(GU_SCISSOR_TEST);
+	sceGuScissor(0, 0, PSP_WIDTH480, PSP_HEIGHT272);
+	#endif
 
 	#if 1/*???*/
 	//sceGuAlphaFunc(GU_ALWAYS,0,0xff);
@@ -1254,7 +1062,14 @@ void psp_video_init(void)
 	//sceGuEnable(GU_DEPTH_TEST);			/* 有効 */
 	//sceGuDisable(GU_DEPTH_TEST);			/* 無効 */	/*noiz07*/
 	sceGuDisable(GU_DEPTH_TEST);
-	sceGuDepthRange(65535, 0);
+	/* psp の z値は 65535(近く) から 0(遠く)で、Z値が通常と逆。 */
+	/* このz値は unsigned short なので、少しはみ出すと、回り込んで変な描画になってしまう。 */
+	/* そこで、回り込まないように、適当に余裕分を見繕う。PSPSDK のサンプルでは */
+	/* 0xc350(50000) 近く側の境界面、0x2710(10000)遠く側の境界面 となっているが、適当な値なら何でもよい */
+	/* sceGuDepthRange(0xc350, 0x2710); */
+	#define  Z_CLIP_LENGTH	(10000)
+	sceGuDepthRange((0xffff-Z_CLIP_LENGTH), Z_CLIP_LENGTH);
+//	sceGuDepthRange(65535, 0);
 	sceGuDepthFunc(GU_GEQUAL);
 	sceGuDepthMask(GU_TRUE);
 	#endif/* (1==USE_ZBUFFER) */
@@ -1262,8 +1077,26 @@ void psp_video_init(void)
 	#if 1
 	/* カリングモード(裏向きポリゴンは描画しない)で、有効座標系(右手座標系にするか左手座標系にするか)を決める */
 	sceGuEnable(GU_CULL_FACE);	/* カリング有効(裏向きポリゴンは描画しない) */
-	sceGuFrontFace(GU_CW);		/* 右手座標系(OpenGL 標準?) */
-//	sceGuFrontFace(GU_CCW); 	/* 左手座標系(Direct X 標準?) */
+	sceGuFrontFace(GU_CW);		/* clock wise(時計周り)           右回り、右手座標系(OpenGL 標準?)   */
+//	sceGuFrontFace(GU_CCW); 	/* counter clock wise(反時計周り) 左回り、左手座標系(Direct X 標準?) */
+/*
+  時計回り(とけいまわり)というのは、時計の針が進む方向と同じ回転方向の事である。
+上→右→下→左、あるいは北→東→南→西の順に回転する方向である。右回りとも言われる。
+  逆の回転方向を「反時計回り」(はんとけいまわり)という。同様に、これは左回りと言われる。
+反時計回りは英語圏では counterclockwise と呼ばれるが、これは CCW と略す場合が多い。
+
+  時計回りの回転方向は日時計を模している。日時計は北回帰線より北で発明された。
+日時計の回転方向は、北回帰線より北においては時計回りになるが南では反時計回りになる。
+
+  方位(方位角)は、北を0°として時計回りに数を増やすが、
+逆に数学においては、平面角は反時計回りの方向を正として計測される。
+
+  瓶のふたやネジ等は、時計回りに回すと締まり、反時計回りに回すと緩むように作られているが、
+これらは右ききの場合、時計回りの方が力が入り易いという理由による。
+力の入れすぎで破損するのを防ぐ為にガス管ではこれらとは逆方向になっている。
+
+そーなのかー
+*/
 	#endif
 
 #if 1/*???*/
@@ -1292,27 +1125,27 @@ void psp_video_init(void)
 	#endif/* (1==USE_ZBUFFER) */
 //	sceGuClear(GU_COLOR_BUFFER_BIT/*|GU_DEPTH_BUFFER_BIT*/);	/*noiz07*/
 
-		#if 1
-				sceGuTexFunc(GU_TFX_MODULATE, GU_TCC_RGBA);/*半透明*/
-		#else
-				sceGuTexFunc(GU_TFX_REPLACE, GU_TCC_RGBA);/*半透明不可？*/
-		#endif
+	#if 1
+		sceGuTexFunc(GU_TFX_MODULATE, GU_TCC_RGBA);/*半透明*/
+	#else
+		sceGuTexFunc(GU_TFX_REPLACE, GU_TCC_RGBA);/*半透明不可？*/
+	#endif
 
-				sceGuTexFilter(GU_LINEAR, GU_LINEAR);
-				sceGuTexScale(1.0f, 1.0f);//sceGuTexScale(1,1);
-				sceGuTexOffset(0.0f, 0.0f);
+	sceGuTexFilter(GU_LINEAR, GU_LINEAR);
+	sceGuTexScale(1.0f, 1.0f);//sceGuTexScale(1,1);
+	sceGuTexOffset(0.0f, 0.0f);
 //
 	/* 環境色を決める？ */
 	sceGuTexEnvColor(	0x00000000);
 //	sceGuTexEnvColor(	0x00ffff00);
 	sceGuAmbientColor(	0xffffffff);
-	sceGuColor(			0xff000000);
+	sceGuColor( 		0xff000000);
 
 //
 
 
 //	u8	ColorKey	= 1;
-//カラーキーを設定する
+/* カラーキーを設定する */
 //	if (ColorKey)
 	{
 //		if (!sceGuGetStatus(GU_COLOR_TEST))
@@ -1347,7 +1180,7 @@ void psp_video_init(void)
 	/* --- テクスチャマネージャの初期化 */
 	//static TGameTexture *TGameTexture_Create(void)
 	{
-		for (i=0; i<TEXTUREMAX; i++)
+		for (i=0; i<TEXTURE_MAX; i++)
 		{
 			my_texture[i] = NULL;
 		}
@@ -1356,7 +1189,7 @@ void psp_video_init(void)
 	/* --- スプライトマネージャの初期化 */
 	for (i=0; i<SPRITEMAX; i++)
 	{
-		ggg_Sprites[i].TextureId	= 0/*-1*/;
+		ggg_Sprites[i].texture_id	= 0/*-1*/;
 	//	ggg_Sprites[i].Texture_ptr	= NULL;
 		ggg_Sprites[i].used 		= 0/*FA LSE*/;
 		#if (1==USE_ZOOM_XY)
@@ -1382,12 +1215,12 @@ void psp_video_init(void)
 	//	#endif
 	//};
 //		#ifdef PSP
-	//	TGameTexture_Load_Surface( 0, TEXTURE_NAME_00);//, 1/*TR UE*/ /*FA LSE*/);/*game*/
-		TGameTexture_Load_Surface( 0, TEXTURE_NAME_00);//, 0/*TR UE*/ /*FA LSE*/);/*game*/
-//		TGameTexture_Load_Surface( 1, TEXTURE_NAME_01);//, 0/*FA LSE*/);/*title*/
+	//	TGameTexture_Load_Surface( TEX_06_BULLET, TEXTURE_NAME_00);//, 1/*TR UE*/ /*FA LSE*/);/*game*/
+		TGameTexture_Load_Surface( TEX_06_BULLET, TEXTURE_NAME_00);//, 0/*TR UE*/ /*FA LSE*/);/*game*/
+//		TGameTexture_Load_Surface( TEX_00_BACK_GROUND, TEXTURE_NAME_01);//, 0/*FA LSE*/);/*title*/
 //		#else
-//		TGameTexture_Load_Surface( 0, TEXTURE_NAME_00);//, 1/*TR UE*/);/*Pure*/
-//		TGameTexture_Load_Surface( 1, TEXTURE_NAME_01);//, 1/*TR UE*/);/*Pure*/
+//		TGameTexture_Load_Surface( TEX_06_BULLET, TEXTURE_NAME_00);//, 1/*TR UE*/);/*Pure*/
+//		TGameTexture_Load_Surface( TEX_00_BACK_GROUND, TEXTURE_NAME_01);//, 1/*TR UE*/);/*Pure*/
 //		#endif
 	}
 	#endif /* (1==USE_GU) */
@@ -1399,9 +1232,12 @@ void psp_video_init(void)
 }
 /*-------------*/
 /*-------------*/
+
+/*---------------------------------------------------------
+	テクスチャをロードする
+---------------------------------------------------------*/
+
 #define USE_T128_SWIZZLE 0
-/* ---------------------------------------- */
-/* --- テクスチャをロードする				*/
 #if (1==USE_T128_SWIZZLE)
 static void convert_swizzle_RGB8888_T128/*512*/
 (
@@ -1417,7 +1253,7 @@ static void convert_swizzle_RGB8888_T128/*512*/
 	{
 		const u8	*src_x = src_y;
 		u8 block_x;
-		block_x = /*width_blocks*/((TW128/*512*/*4)	>>4/*/ 16*/);/*max: 32-1*/
+		block_x = /*width_blocks*/((TW128/*512*/*4) >>4/*/ 16*/);/*max: 32-1*/
 		while (block_x--)
 		{
 			const u32	*src = (u32*)src_x;
@@ -1518,9 +1354,10 @@ static void convert_swizzle
 	#define AMASK16 0x00008000
 //#endif
 
-/* ---------------------------------------- */
-/* --- テクスチャーの読み込み、登録 		*/
-/* ---------------------------------------- */
+/*---------------------------------------------------------
+	テクスチャーの読み込み、登録
+---------------------------------------------------------*/
+
 static void TGameTexture_Load_Surface(
 		int num,
 		char *filename//,
@@ -1546,18 +1383,7 @@ static void TGameTexture_Load_Surface(
 
 	/* ----- テクスチャ番号が不正だったら終了 */
 //	if (num < 0) return;
-//	if (num > TEXTUREMAX) return;
-
-	int mymap_128 = 128;
-	switch (num)
-	{
-	case 0: mymap_128 = 128;
-		break;
-	default:
-	case 1: mymap_128 = 256;
-	}
-	#define my_map_TW128 mymap_128
-	#define my_map_TH128 mymap_128
+//	if (num > TEXTURE_MAX) return;
 
 	/* ----- 既にテクスチャがあったら解放 */
 	if (my_texture[num] != NULL)
@@ -1565,7 +1391,7 @@ static void TGameTexture_Load_Surface(
 		#if (1==USE_SDL_image)
 		SDL_FreeSurface(my_texture[num]);
 		#else
-		my_png_freeImage(my_texture[num]);
+		png_free_my_image(my_texture[num]);
 		#endif
 		my_texture[num] = NULL;
 	}
@@ -1575,8 +1401,48 @@ static void TGameTexture_Load_Surface(
 	plane = IMG_Load(filename);
 //	plane = SDL_LoadBMP(filename);
 	#else
-	plane = my_png_loadImage(filename);//
+	plane = png_load_my_image(filename);//
 	#endif
+
+	#if 0
+	int mymap_128;
+		mymap_128 = my_texture[num]->texture_width;
+	#else
+		int mymap_128 = 128;
+		switch (num)
+		{
+	//	case TEX_02_MAHOUJIN:
+		case TEX_06_BULLET:
+									mymap_128 = 128;
+			break;
+		default:
+		#if 0
+		case TEX_00_BACK_GROUND:
+		case TEX_03_JIKI:
+		#endif
+									mymap_128 = 256;
+		}
+	#endif
+		#define my_map_TW128 mymap_128
+		#define my_map_TH128 mymap_128
+
+	#if (0)
+	if (mymap_128 != my_texture[num]->texture_width)
+	{
+	//	pspDebugScreenInit();/*要る*/
+	//	pspDebugScreenClear();
+	//	pspDebugScreenSetXY(0,0);
+	//	pspDebugScreenPrintf(
+		error(ERR_FATAL,
+			"[%d] (%d) : %d : %d",
+			num,
+			mymap_128,
+			my_texture[num]->texture_width,
+			my_texture[num]->texture_height);
+		hit_any_key();
+	}
+	#endif
+
 
 	if (NULL == plane)
 	{
@@ -1719,8 +1585,10 @@ static void TGameTexture_Load_Surface(
 
 
 
-/* ---------------------------------------- */
-/* --- スプライトの表示(画面転送)			*/
+/*---------------------------------------------------------
+	スプライトの表示 (回転拡大縮小なし)
+	スプライトの表示(画面転送)
+---------------------------------------------------------*/
 
 #if (1==USE_ZBUFFER)
 	/* ハードウェアーでソート */
@@ -1730,7 +1598,7 @@ static void TGameTexture_Load_Surface(
 	#define SPR_PRIORITY	(0)
 #endif
 /* --- スプライトを一枚スクリーンに貼り付ける */
-static void Render_Rect(/*TGameScreen *pclass,*/ TGameSprite *spr)
+static void render_object_no_rot_zoom(/*TGameScreen *pclass,*/ TGameSprite *spr)
 {
 	/* --- 表示スイッチ */
 //	if (spr->used ==  0/*FA LSE*/) return;
@@ -1739,8 +1607,14 @@ static void Render_Rect(/*TGameScreen *pclass,*/ TGameSprite *spr)
 	/* --- 半透明合成値 */
 	#if (1==USE_VCOLOR)
 		#if (16==USE_BLIT_COLOR_BIT)
-		/*ARGB4444*/
-	unsigned /*int*/short blendlevel = (((spr->alpha & 0xf0) << 8) | 0x0fff);
+			#if 0
+				/*ARGB4444*/
+				unsigned /*int*/short blendlevel = (((spr->alpha & 0xf0) << 8) | 0x0fff);
+			#endif
+			#if 1
+				/*ARGB0565*/
+				unsigned /*int*/short blendlevel = MAKECOL16( (spr->alpha), (spr->alpha), (spr->alpha) );
+			#endif
 		#else
 	unsigned int blendlevel = (((spr->alpha & 0xff) << 24) | 0x00ffffff);
 		#endif
@@ -1812,9 +1686,11 @@ static void Render_Rect(/*TGameScreen *pclass,*/ TGameSprite *spr)
 }
 
 
-/* ---------------------------------------- */
-/* --- スプライトの表示(回転拡大縮小あり) */
-static void Render_Zoom_Rot(/*TGameScreen *pclass,*/ TGameSprite *spr)
+/*---------------------------------------------------------
+	スプライトの表示 (回転拡大縮小あり)
+---------------------------------------------------------*/
+
+static void render_object_use_rot_zoom(/*TGameScreen *pclass,*/ TGameSprite *spr)
 {
 	/* --- 表示スイッチ */
 //	if (spr->used ==  0/*FA LSE*/) return;
@@ -1835,8 +1711,14 @@ static void Render_Zoom_Rot(/*TGameScreen *pclass,*/ TGameSprite *spr)
 	/* --- 半透明合成値 */
 	#if (1==USE_VCOLOR)
 		#if (16==USE_BLIT_COLOR_BIT)
-		/*ARGB4444*/
-	unsigned /*int*/short blendlevel = (((spr->alpha & 0xf0) << 8) | 0x0fff);
+			#if 0
+					/*ARGB4444*/
+				unsigned /*int*/short blendlevel = (((spr->alpha & 0xf0) << 8) | 0x0fff);
+			#endif
+			#if 1
+				/*ARGB0565*/
+				unsigned /*int*/short blendlevel = MAKECOL16( (spr->alpha), (spr->alpha), (spr->alpha) );
+			#endif
 		#else
 	unsigned int blendlevel = (((spr->alpha & 0xff) << 24) | 0x00ffffff);
 		#endif
@@ -1954,6 +1836,10 @@ static void Render_Zoom_Rot(/*TGameScreen *pclass,*/ TGameSprite *spr)
 			#endif
 			#if 1
 			/* (???)下が 0度で反時計回りの角度系 */
+			irx = ((ify * sin_angle) + (ifx * cos_angle));	irx = (irx >>8/*16*/);	//	rx = rx / (65536.0);
+			iry = ((ify * cos_angle) - (ifx * sin_angle));	iry = (iry >>8/*16*/);	//	ry = ry / (65536.0);
+			#endif
+			#if 0
 			/* 左が 0度で反時計回りの角度系 */
 			irx = ((ifx * sin_angle) - (ify * cos_angle));	irx = (irx >>8/*16*/);	//	rx = rx / (65536.0);
 			iry = ((ifx * cos_angle) + (ify * sin_angle));	iry = (iry >>8/*16*/);	//	ry = ry / (65536.0);
@@ -1982,15 +1868,45 @@ static void Render_Zoom_Rot(/*TGameScreen *pclass,*/ TGameSprite *spr)
 	sceGuDrawArray(GU_TRIANGLE_STRIP, TEXTURE_FLAGS5650, (count4), 0, vertices);
 }
 
+/*---------------------------------------------------------
+	フレームタイミングによる全描画
+---------------------------------------------------------*/
 
-/* ---------------------------------------- */
-/* --- フレームタイミングによる全描画		*/
+#if 000
+static /*int*/UINT8 texture_cacheId = 127/*-1*/;
+static void trans_texture(void)
+{
+	MY_DIB_SURFACE *texture_cache_ptr;
+	//	texture_cache_ptr = NULL/*0*/;
+	//	texture_cache_ptr = ggg_Sprites[i].Texture_ptr;
+		texture_cache_ptr = my_texture[texture_cacheId];
+		/* - テクスチャ転送コマンド */
+		sceGuBlendFunc(GU_ADD, GU_SRC_ALPHA, GU_ONE_MINUS_SRC_ALPHA, 0, 0);
+		#if (1==USE_COLOR_16_AND_32)
+		if (/*g_scr.*/ texture_cache_ptr->format->BitsPerPixel == 16)
+		{
+			sceGuTexMode(GU_PSM_5551, 0, 0, /*1*/(USE_SWIZZLE)/*0 swizzle*/);
+		}
+		else
+		#endif
+		{
+			sceGuTexMode(GU_PSM_8888, 0, 0, /*1*/(USE_SWIZZLE)/*0 swizzle*/);
+		}
+		sceGuTexImage(0,
+			 512/*texture_cache_ptr->w*/,
+			 512/*texture_cache_ptr->h*/,
+			 512/*texture_cache_ptr->w*/,
+			 texture_cache_ptr->MY_DIB_DATA);
+	//	sceGuTexFunc(GU_TFX_MODULATE, GU_TCC_RGBA);
+		sceGuTexFilter(GU_LINEAR, GU_LINEAR);
+	//	sceGuTexScale(1.0f,1.0f);
+	//	sceGuTexOffset(0.0f,0.0f);
+}
+#endif
+
 /*extern*/ int debug_view_objs;
 static void blit_all_objects(void /*TGameScreen *pclass*/)
 {
-#if 000
-	static /*int*/UINT8 texture_cacheId = 127/*-1*/;
-#endif
 //const TGameScreen *pclass =g_scr;
 
 	debug_view_objs=0;
@@ -2003,42 +1919,19 @@ static void blit_all_objects(void /*TGameScreen *pclass*/)
 		i--;/*註：先引き*/
 		if (/*g_scr.*/ ggg_Sprites[i]./*->*/used == 1/*TR UE*/)
 		{
-		//	if ( ggg_Sprites[i].TextureId	!= 127/*-1*/)
+		//	if ( ggg_Sprites[i].texture_id	!= 127/*-1*/)
 		//	if ( ggg_Sprites[i].Texture_ptr != NULL)
 			{
 				debug_view_objs++;
 				/* --- テクスチャの転送が必要なら */
 #if 000
-				if (( ggg_Sprites[i].TextureId	 != texture_cacheId) /*||
-					( ggg_Sprites[i].Texture_ptr != texture_cache_ptr)*/)
 				{
-					texture_cacheId   = ggg_Sprites[i].TextureId;
-				MY_DIB_SURFACE *texture_cache_ptr;
-				//	texture_cache_ptr = NULL/*0*/;
-				//	texture_cache_ptr = ggg_Sprites[i].Texture_ptr;
-					texture_cache_ptr = my_texture[texture_cacheId];
-					/* - テクスチャ転送コマンド */
-					sceGuBlendFunc(GU_ADD, GU_SRC_ALPHA, GU_ONE_MINUS_SRC_ALPHA, 0, 0);
-
-					#if (1==USE_COLOR_16_AND_32)
-					if (/*g_scr.*/ texture_cache_ptr->format->BitsPerPixel == 16)
+					if (( ggg_Sprites[i].texture_id  != texture_cacheId) /*||
+						( ggg_Sprites[i].Texture_ptr != texture_cache_ptr)*/)
 					{
-						sceGuTexMode(GU_PSM_5551,0,0,1/*0 swizzle*/);
+						texture_cacheId   = ggg_Sprites[i].texture_id;
+						trans_texture();
 					}
-					else
-					#endif
-					{
-						sceGuTexMode(GU_PSM_8888,0,0,1/*0 swizzle*/);
-					}
-					sceGuTexImage(0,
-						 512/*texture_cache_ptr->w*/,
-						 512/*texture_cache_ptr->h*/,
-						 512/*texture_cache_ptr->w*/,
-						 texture_cache_ptr->MY_DIB_DATA);
-				//	sceGuTexFunc(GU_TFX_MODULATE, GU_TCC_RGBA);
-					sceGuTexFilter(GU_LINEAR, GU_LINEAR);
-				//	sceGuTexScale(1.0f,1.0f);
-				//	sceGuTexOffset(0.0f,0.0f);
 				}
 #endif
 				/* --- スプライトの描画 */
@@ -2056,12 +1949,12 @@ static void blit_all_objects(void /*TGameScreen *pclass*/)
 						)
 						{
 							/* 回転拡大縮小なし、単純矩形コピー */
-							Render_Rect( &ggg_Sprites[i]);
+							render_object_no_rot_zoom( &ggg_Sprites[i]);
 						}
 						else
 						{
 							/* 回転拡大縮小あり */
-							Render_Zoom_Rot( &ggg_Sprites[i]);
+							render_object_use_rot_zoom( &ggg_Sprites[i]);
 						}
 					}
 				}
@@ -2075,11 +1968,16 @@ static void blit_all_objects(void /*TGameScreen *pclass*/)
 
 
 
+/*---------------------------------------------------------
+
+---------------------------------------------------------*/
 
 static	int ggg_SpriteSerial;
 
-/* ---------------------------------------- */
-/* --- インクリメントでスプライトを渡す */
+/*---------------------------------------------------------
+	インクリメントでスプライトを渡す
+---------------------------------------------------------*/
+
 TGameSprite *TGameScreen_GetSpriteSerial(void/*TGameScreen *pclass*/)
 {
 	if (/*pclass*/ggg_SpriteSerial < SPRITEMAX)
@@ -2089,9 +1987,10 @@ TGameSprite *TGameScreen_GetSpriteSerial(void/*TGameScreen *pclass*/)
 	return (/*pclass*/ /*g_scr->*/&ggg_Sprites[(/*pclass*/ggg_SpriteSerial - 1)]);
 }
 
+/*---------------------------------------------------------
+	スプライトの全クリア
+---------------------------------------------------------*/
 
-/* ---------------------------------------- */
-/* --- スプライトの全クリア */
 void TGameScreen_ClearSprite(void/*TGameScreen *pclass*/)
 {
 	int i;
@@ -2111,14 +2010,14 @@ extern SPRITE *sprite_list000_head;
 
 typedef struct
 {
-	unsigned short	u;
-	unsigned short	v;
+	unsigned char	u;
+	unsigned char	v;
 //
-	unsigned short	w;
-	unsigned short	h;
+	unsigned char	w;
+	unsigned char	h;
 } Vtama00;
-static Vtama00 tama00[(7*8)] =
-{
+static Vtama00 tama00[(6*8*8)] =
+{//1
 	{  1, 1,  8, 8},// BULLET_MARU8_00_AKA
 	{ 10, 1,  8, 8},// BULLET_MARU8_01_YUKARI,
 	{ 19, 1,  8, 8},// BULLET_MARU8_02_AOI,
@@ -2127,7 +2026,7 @@ static Vtama00 tama00[(7*8)] =
 	{ 46, 1,  8, 8},// BULLET_MARU8_05_MIDORI,
 	{ 55, 1,  8, 8},// BULLET_MARU8_06_KIIRO,
 	{ 64, 1,  8, 8},// BULLET_MARU8_07_AOI,
-//
+//2
 	{ 73, 1,  6, 6},// BULLET_MINI8_00_AKA,
 	{ 80, 1,  6, 6},// BULLET_MINI8_01_AKA,
 	{ 87, 1,  6, 6},// BULLET_MINI8_02_KIIRO,
@@ -2136,7 +2035,7 @@ static Vtama00 tama00[(7*8)] =
 	{108, 1,  6, 6},// BULLET_MINI8_05_AOI,
 	{115, 1,  6, 6},// BULLET_MINI8_06_AOI,
 	{122, 1,  6, 6},// BULLET_MINI8_07_YUKARI,
-//
+//3
 	{  1,10, 12,12},// BULLET_MARU12_00_SIRO,
 	{ 14,10, 12,12},// BULLET_MARU12_01_AKA,
 	{ 27,10, 12,12},// BULLET_MARU12_02_MIDORI,
@@ -2145,34 +2044,43 @@ static Vtama00 tama00[(7*8)] =
 	{ 64,11, 10,10},// BULLET_MARU10_01_MIDORI,
 	{ 75,11, 10,10},// BULLET_MARU10_02_MIDORI,
 	{ 86,11, 10,10},// BULLET_MARU10_03_MIDORI,
-//
+//4
 	{105, 9,  5,32},// BULLET_HARI32_00_AOI
 	{111, 9,  5,32},// BULLET_HARI32_01_AKA
 	{117, 9,  5,32},// BULLET_HARI32_02_KIIRO
 	{123, 9,  5,32},// BULLET_HARI32_03_DAIDAI
-	{ 97,10,  7,15},// BULLET_CAP16_04_SIROI
-	{ 97,26,  7,15},// BULLET_CAP16_04_AKA
-	{ 10,74,  8,21},// BULLET_KNIFE20_06_AOI,
-	{ 19,74,  9,21},// BULLET_KNIFE20_07_AKA,
-//
+	{ 89,42,  9,21},// BULLET_KNIFE20_04_AOI,
+	{ 99,42,  9,21},// BULLET_KNIFE20_05_AKA,
+	{109,42,  9,21},// BULLET_KNIFE20_06_YUKARI,
+	{119,42,  9,21},// BULLET_KNIFE20_07_MIDORI,
+//5
 	{  1,23, 15,14},// BULLET_UROKO14_00_AOI,
 	{ 17,23, 15,14},// BULLET_UROKO14_01_AKA,
 	{ 33,23, 15,14},// BULLET_UROKO14_02_YUKARI,
 	{ 49,23, 15,14},// BULLET_UROKO14_03_MIDORI,
 	{ 65,23, 15,14},// BULLET_UROKO14_04_MIZUIRO,
 	{ 81,23, 15,14},// BULLET_UROKO14_05_KIIRO,
-	{  1,38,  7,15},// BULLET_KNAI20_06_AOI
-	{ 17,38,  7,15},// BULLET_KNAI20_07_MIDORI
-//
+	{ 97,10,  7,14},// BULLET_CAP16_04_SIROI
+	{ 97,26,  7,14},// BULLET_CAP16_05_SIROI
+//6
+	{ 49,53,  7,10},// BULLET_KOME_01_AOI,
+	{ 57,53,  7,10},// BULLET_KOME_02_AKA,
+	{ 65,53,  7,10},// BULLET_KOME_03_YUKARI,
+	{ 73,53,  7,10},// BULLET_KOME_04_MIDORI,
+	{ 81,53,  7,10},// BULLET_KOME_05_KIIRO,
+	{  1,38,  7,15},// BULLET_KUNAI12_06_AOI
 	{  9,38,  7,15},// BULLET_KUNAI12_00_AKA,
+	{ 17,38,  7,15},// BULLET_KUNAI12_07_MIDORI
+//7
 	{  9,38,  7,15},// BULLET_KUNAI12_01_AKA,
 	{ 25,38,  7,15},// BULLET_KUNAI12_02_MIDORI,
 	{ 33,38,  7,15},// BULLET_KUNAI12_03_YUKARI,
 	{ 41,38,  7,15},// BULLET_KUNAI12_04_AOI,
-	{ 49,38,  9,14},// BULLET_OFUDA12_05_AOI,
-	{ 59,38,  9,14},// BULLET_OFUDA12_06_AKA,
-	{ 69,38,  9,14},// BULLET_OFUDA12_07_MIDORI,
-//
+	{ 49,38,  9,14},// BULLET_OFUDA12_00_AOI,
+	{ 59,38,  9,14},// BULLET_OFUDA12_01_AKA,
+	{ 69,38,  9,14},// BULLET_OFUDA12_02_YUKARI,
+	{ 79,38,  9,14},// BULLET_OFUDA12_03_MIDORI,
+//8
 	{  1,64, 32,32},// BULLET_OODAMA32_00_SIROI,
 	{ 32,64, 32,32},// BULLET_OODAMA32_01_AOI,
 	{ 64,64, 32,32},// BULLET_OODAMA32_02_AKA,
@@ -2182,21 +2090,399 @@ static Vtama00 tama00[(7*8)] =
 	{ 64,96, 32,32},// BULLET_OODAMA32_06_KIIRO,
 	{ 96,96, 32,32},// BULLET_OODAMA32_07_PINK,
 //
+//[00霊夢]
+//						//	左へ移動のアニメーション	[中心→左側4→左側3→左側2→左側1→左側1→左側1→...]
+// [1]					//	JIKI_PLAYER_00_LEFT 	/* 左側1 */ 	/* 最も左 */			= SP_GROUP_JIKI_GET_ITEM/*0x08
+	{  0,  0, 31, 31},//	JIKI_PLAYER_01_LEFT,	/* 左側2 */
+	{ 32,  0, 31, 31},//	JIKI_PLAYER_02_LEFT,	/* 左側3 */
+	{ 64,  0, 31, 31},//	JIKI_PLAYER_03_LEFT,	/* 左側4 */ 	/* 中より左 */
+	{ 96,  0, 31, 31},//	繰り返しアニメーション		[中心1→中心2→中心3→中心4→中心1→中心2→中心3→中心4→...]
+	{  0, 32, 31, 31},//	JIKI_PLAYER_04_MID, 	/* 中心1 */
+	{ 32, 32, 31, 31},//	JIKI_PLAYER_05_MID, 	/* 中心2 */
+	{ 64, 32, 31, 31},//	JIKI_PLAYER_06_MID, 	/* 中心3 */
+	{ 96, 32, 31, 31},//	JIKI_PLAYER_07_MID, 	/* 中心4 */
+// [2]				//	右へ移動のアニメーション	[中心→右側1→右側2→右側3→右側4→右側4→右側4→...]
+	{  0, 64, 31, 31},//	JIKI_PLAYER_08_RIGHT,	/* 右側1 */ 	/* 中より右 */
+	{ 32, 64, 31, 31},//	JIKI_PLAYER_09_RIGHT,	/* 右側2 */
+	{ 64, 64, 31, 31},//	JIKI_PLAYER_10_RIGHT,	/* 右側3 */
+	{ 96, 64, 31, 31},//	JIKI_PLAYER_11_RIGHT,	/* 右側4 */ 	/* 最も右 */	JIKI_ETC_00,		/* レーザー1 */
+	{  1, 64, 32, 32},//	JIKI_ETC_00,		/* レーザー1 */
+	{  1, 64, 32, 32},//	JIKI_ETC_01,		/* レーザー2 */
+	{  1, 64, 32, 32},//	JIKI_ETC_02,		/* レーザー3 */
+	{  1, 64, 32, 32},//	JIKI_ETC_03,		/* レーザー4 */
+// [3]
+	{  1, 64, 32, 32},//	JIKI_BOMBER_00, 	/* レーザー5 */
+	{  1, 64, 32, 32},//	JIKI_BOMBER_01, 	/* レーザー6 */
+	{222,  0, 32, 32},//	JIKI_BOMBER_02, 	/* 星1 / 蝶1 / 十字炎1 */
+	{222, 32, 32, 32},//	JIKI_BOMBER_03, 	/* 星2 / 蝶2 / 十字炎2 */
+	{222, 64, 32, 32},//	JIKI_BOMBER_04, 	/* 星3 / 蝶3 / 十字炎3 */
+	{222, 96, 32, 32},//	JIKI_BOMBER_05, 	/* 星4 / 蝶4 / 十字炎4 */
+	{  0,128,127,127},//	JIKI_BOMBER_06, 	/* 星5 / 蝶5 / 長炎1 / 結界白 */
+	{128,128,127,127},//	JIKI_BOMBER_07, 	/* 星6 / 蝶6 / 長炎2 / 結界黄  */
+// [4]
+	{222, 96, 32, 32},//	JIKI_SHOT_00,		/* 長炎3 / 赤札C */
+	{222, 96, 32, 32},//	JIKI_SHOT_01,		/* 長炎4 / 赤札B(霊夢の回転ショット) */
+	{128,  0, 10, 36},//	JIKI_SHOT_02,		/* 赤札A / 黄星 / 小炎 / 氷 / 青蝶 */
+	{  1, 64, 32, 32},//	JIKI_SHOT_03,		/* こうもり弾1 / 黄札1 */
+	{  1, 64, 32, 32},//	JIKI_SHOT_04,		/* こうもり弾2 / 黄札2 */
+	{  1, 64, 32, 32},//	JIKI_SHOT_05,		/* こうもり弾3 / 黄札3 */
+	{  1, 64, 32, 32},//	JIKI_SHOT_06,		/* こうもり弾4 / 黄札4 */
+	{139,  0,  5, 32},//	JIKI_SHOT_07,		/* こうもり弾5 / 針弾 / 森弾 / ウェイブ弾 / ピンク蝶弾 */
+// [5]
+	{  1, 64, 32, 32},//	JIKI_OPTION_00_00,
+	{  1, 64, 32, 32},//	JIKI_OPTION_00_01,
+	{  1, 64, 32, 32},//	JIKI_OPTION_00_02,
+	{  1, 64, 32, 32},//	JIKI_OPTION_00_03,
+	{  1, 64, 32, 32},//	JIKI_OPTION_00_04,
+	{  1, 64, 32, 32},//	JIKI_OPTION_00_05,
+	{  1, 64, 32, 32},//	JIKI_OPTION_00_06,
+	{  1, 64, 32, 32},//	JIKI_OPTION_00_07,
+// [6]
+	{  1, 64, 32, 32},//	JIKI_OPTION_01_00,
+	{  1, 64, 32, 32},//	JIKI_OPTION_01_01,
+	{  1, 64, 32, 32},//	JIKI_OPTION_01_02,
+	{  1, 64, 32, 32},//	JIKI_OPTION_01_03,
+	{  1, 64, 32, 32},//	JIKI_OPTION_01_04,
+	{  1, 64, 32, 32},//	JIKI_OPTION_01_05,
+	{  1, 64, 32, 32},//	JIKI_OPTION_01_06,
+	{  1, 64, 32, 32},//	JIKI_OPTION_01_07,
+// [7]
+	{  1, 64, 32, 32},//	JIKI_OPTION_02_00,
+	{  1, 64, 32, 32},//	JIKI_OPTION_02_01,
+	{  1, 64, 32, 32},//	JIKI_OPTION_02_02,
+	{  1, 64, 32, 32},//	JIKI_OPTION_02_03,
+	{  1, 64, 32, 32},//	JIKI_OPTION_02_04,
+	{  1, 64, 32, 32},//	JIKI_OPTION_02_05,
+	{  1, 64, 32, 32},//	JIKI_OPTION_02_06,
+	{  1, 64, 32, 32},//	JIKI_OPTION_02_07,
+// [8]
+	{  1, 64, 32, 32},//	JIKI_OPTION_03_00,
+	{  1, 64, 32, 32},//	JIKI_OPTION_03_01,
+	{  1, 64, 32, 32},//	JIKI_OPTION_03_02,
+	{  1, 64, 32, 32},//	JIKI_OPTION_03_03,
+	{  1, 64, 32, 32},//	JIKI_OPTION_03_04,
+	{  1, 64, 32, 32},//	JIKI_OPTION_03_05,
+	{  1, 64, 32, 32},//	JIKI_OPTION_03_06,
+	{  1, 64, 32, 32},//	JIKI_OPTION_03_07,
+
+//
+// [01魔理沙]
+//					//	左へ移動のアニメーション	[中心→左側4→左側3→左側2→左側1→左側1→左側1→...]
+// [1]				//	JIKI_PLAYER_00_LEFT 	/* 左側1 */ 	/* 最も左 */			= SP_GROUP_JIKI_GET_ITEM/*0x08
+	{  0,  0, 31, 31},//	JIKI_PLAYER_01_LEFT,	/* 左側2 */
+	{ 32,  0, 31, 31},//	JIKI_PLAYER_02_LEFT,	/* 左側3 */
+	{ 64,  0, 31, 31},//	JIKI_PLAYER_03_LEFT,	/* 左側4 */ 	/* 中より左 */
+	{ 96,  0, 31, 31},//	繰り返しアニメーション		[中心1→中心2→中心3→中心4→中心1→中心2→中心3→中心4→...]
+	{  0, 32, 31, 31},//	JIKI_PLAYER_04_MID, 	/* 中心1 */
+	{ 32, 32, 31, 31},//	JIKI_PLAYER_05_MID, 	/* 中心2 */
+	{ 64, 32, 31, 31},//	JIKI_PLAYER_06_MID, 	/* 中心3 */
+	{ 96, 32, 31, 31},//	JIKI_PLAYER_07_MID, 	/* 中心4 */
+// [2]				//	右へ移動のアニメーション	[中心→右側1→右側2→右側3→右側4→右側4→右側4→...]
+	{  0, 64, 31, 31},//	JIKI_PLAYER_08_RIGHT,	/* 右側1 */ 	/* 中より右 */
+	{ 32, 64, 31, 31},//	JIKI_PLAYER_09_RIGHT,	/* 右側2 */
+	{ 64, 64, 31, 31},//	JIKI_PLAYER_10_RIGHT,	/* 右側3 */
+	{ 96, 64, 31, 31},//	JIKI_PLAYER_11_RIGHT,	/* 右側4 */ 	/* 最も右 */	JIKI_ETC_00,		/* レーザー1 */
+	{  1, 64, 32, 32},//	JIKI_ETC_00,		/* レーザー1 */
+	{  1, 64, 32, 32},//	JIKI_ETC_01,		/* レーザー2 */
+	{  1, 64, 32, 32},//	JIKI_ETC_02,		/* レーザー3 */
+	{  1, 64, 32, 32},//	JIKI_ETC_03,		/* レーザー4 */
+// [3]
+	{  1, 64, 32, 32},//	JIKI_BOMBER_00, 	/* レーザー5 */
+	{  1, 64, 32, 32},//	JIKI_BOMBER_01, 	/* レーザー6 */
+	{169,  0, 86, 81},//	JIKI_BOMBER_02, 	/* 星1 / 蝶1 / 十字炎1 */
+	{169, 82, 86, 81},//	JIKI_BOMBER_03, 	/* 星2 / 蝶2 / 十字炎2 */
+	{169,164, 86, 81},//	JIKI_BOMBER_04, 	/* 星3 / 蝶3 / 十字炎3 */
+	{169,  0, 86, 81},//	JIKI_BOMBER_05, 	/* 星4 / 蝶4 / 十字炎4 */
+	{169, 82, 86, 81},//	JIKI_BOMBER_06, 	/* 星5 / 蝶5 / 長炎1 / 結界白 */
+	{169,164, 86, 81},//	JIKI_BOMBER_07, 	/* 星6 / 蝶6 / 長炎2 / 結界黄  */
+// [4]
+	{  1, 64, 32, 32},//	JIKI_SHOT_00,		/* 長炎3 */
+	{  1, 64, 32, 32},//	JIKI_SHOT_01,		/* 長炎4 */
+	{128,  0, 10, 39},//	JIKI_SHOT_02,		/* 赤札 / 黄星 / 小炎 / 氷 / 青蝶 */
+	{  1, 64, 32, 32},//	JIKI_SHOT_03,		/* こうもり弾1 / 黄札1 */
+	{  1, 64, 32, 32},//	JIKI_SHOT_04,		/* こうもり弾2 / 黄札2 */
+	{  1, 64, 32, 32},//	JIKI_SHOT_05,		/* こうもり弾3 / 黄札3 */
+	{  1, 64, 32, 32},//	JIKI_SHOT_06,		/* こうもり弾4 / 黄札4 */
+	{139,  0, 15, 18},//	JIKI_SHOT_07,		/* こうもり弾5 / 針弾 / 森弾 / ウェイブ弾 / ピンク蝶弾 */
+// [5]
+	{  1, 64, 32, 32},//	JIKI_OPTION_00_00,
+	{  1, 64, 32, 32},//	JIKI_OPTION_00_01,
+	{  1, 64, 32, 32},//	JIKI_OPTION_00_02,
+	{  1, 64, 32, 32},//	JIKI_OPTION_00_03,
+	{  1, 64, 32, 32},//	JIKI_OPTION_00_04,
+	{  1, 64, 32, 32},//	JIKI_OPTION_00_05,
+	{  1, 64, 32, 32},//	JIKI_OPTION_00_06,
+	{  1, 64, 32, 32},//	JIKI_OPTION_00_07,
+// [6]
+	{  1, 64, 32, 32},//	JIKI_OPTION_01_00,
+	{  1, 64, 32, 32},//	JIKI_OPTION_01_01,
+	{  1, 64, 32, 32},//	JIKI_OPTION_01_02,
+	{  1, 64, 32, 32},//	JIKI_OPTION_01_03,
+	{  1, 64, 32, 32},//	JIKI_OPTION_01_04,
+	{  1, 64, 32, 32},//	JIKI_OPTION_01_05,
+	{  1, 64, 32, 32},//	JIKI_OPTION_01_06,
+	{  1, 64, 32, 32},//	JIKI_OPTION_01_07,
+// [7]
+	{  1, 64, 32, 32},//	JIKI_OPTION_02_00,
+	{  1, 64, 32, 32},//	JIKI_OPTION_02_01,
+	{  1, 64, 32, 32},//	JIKI_OPTION_02_02,
+	{  1, 64, 32, 32},//	JIKI_OPTION_02_03,
+	{  1, 64, 32, 32},//	JIKI_OPTION_02_04,
+	{  1, 64, 32, 32},//	JIKI_OPTION_02_05,
+	{  1, 64, 32, 32},//	JIKI_OPTION_02_06,
+	{  1, 64, 32, 32},//	JIKI_OPTION_02_07,
+// [8]
+	{  1, 64, 32, 32},//	JIKI_OPTION_03_00,
+	{  1, 64, 32, 32},//	JIKI_OPTION_03_01,
+	{  1, 64, 32, 32},//	JIKI_OPTION_03_02,
+	{  1, 64, 32, 32},//	JIKI_OPTION_03_03,
+	{  1, 64, 32, 32},//	JIKI_OPTION_03_04,
+	{  1, 64, 32, 32},//	JIKI_OPTION_03_05,
+	{  1, 64, 32, 32},//	JIKI_OPTION_03_06,
+	{  1, 64, 32, 32},//	JIKI_OPTION_03_07,
+
+//
+// [02レミ]
+//					//	左へ移動のアニメーション	[中心→左側4→左側3→左側2→左側1→左側1→左側1→...]
+// [1]				//	JIKI_PLAYER_00_LEFT 	/* 左側1 */ 	/* 最も左 */			= SP_GROUP_JIKI_GET_ITEM/*0x08
+	{  0,  0, 31, 31},//	JIKI_PLAYER_01_LEFT,	/* 左側2 */
+	{ 32,  0, 32, 31},//	JIKI_PLAYER_02_LEFT,	/* 左側3 */
+	{ 64,  0, 31, 31},//	JIKI_PLAYER_03_LEFT,	/* 左側4 */ 	/* 中より左 */
+	{ 96,  0, 31, 31},//	繰り返しアニメーション		[中心1→中心2→中心3→中心4→中心1→中心2→中心3→中心4→...]
+	{  0, 32, 31, 31},//	JIKI_PLAYER_04_MID, 	/* 中心1 */
+	{ 32, 32, 31, 31},//	JIKI_PLAYER_05_MID, 	/* 中心2 */
+	{ 64, 32, 31, 31},//	JIKI_PLAYER_06_MID, 	/* 中心3 */
+	{ 96, 32, 31, 31},//	JIKI_PLAYER_07_MID, 	/* 中心4 */
+// [2]				//	右へ移動のアニメーション	[中心→右側1→右側2→右側3→右側4→右側4→右側4→...]
+	{  0, 64, 31, 31},//	JIKI_PLAYER_08_RIGHT,	/* 右側1 */ 	/* 中より右 */
+	{ 32, 64, 31, 31},//	JIKI_PLAYER_09_RIGHT,	/* 右側2 */
+	{ 64, 64, 31, 31},//	JIKI_PLAYER_10_RIGHT,	/* 右側3 */
+	{ 96, 64, 31, 31},//	JIKI_PLAYER_11_RIGHT,	/* 右側4 */ 	/* 最も右 */	JIKI_ETC_00,		/* レーザー1 */
+	{  1, 64, 32, 32},//	JIKI_ETC_00,		/* レーザー1 */
+	{  1, 64, 32, 32},//	JIKI_ETC_01,		/* レーザー2 */
+	{  1, 64, 32, 32},//	JIKI_ETC_02,		/* レーザー3 */
+	{  1, 64, 32, 32},//	JIKI_ETC_03,		/* レーザー4 */
+// [3]
+	{  1, 64, 32, 32},//	JIKI_BOMBER_00, 	/* レーザー5 */
+	{  1, 64, 32, 32},//	JIKI_BOMBER_01, 	/* レーザー6 */
+	{ 16,128,  4, 16},//	JIKI_BOMBER_02, 	/* 星1 / 蝶1 / 歪炎A1 / 十字炎1 */
+	{ 32,128,  4, 16},//	JIKI_BOMBER_03, 	/* 星2 / 蝶2 / 歪炎A2 / 十字炎2 */
+	{ 48,128,  4, 16},//	JIKI_BOMBER_04, 	/* 星3 / 蝶3 / 歪炎A3 / 十字炎3 */
+	{ 64,128,  4, 16},//	JIKI_BOMBER_05, 	/* 星4 / 蝶4 / 歪炎A4 / 十字炎4 */
+	{ 80,128,  4, 16},//	JIKI_BOMBER_06, 	/* 星5 / 蝶5 / 歪炎B1 / 長炎1 / 結界白 */
+	{ 96,128,  4, 16},//	JIKI_BOMBER_07, 	/* 星6 / 蝶6 / 歪炎B2 / 長炎2 / 結界黄  */
+// [4]
+	{ 96,128,  4, 16},//	JIKI_SHOT_00,		/* 歪炎B3 / 長炎3 */
+	{112,128,  4, 16},//	JIKI_SHOT_01,		/* 歪炎B4 / 長炎4 */
+	{128,  0,  6, 26},//	JIKI_SHOT_02,		/* 赤札 / 黄星 / 小炎 / 氷 / 青蝶 */
+	{  1, 64, 32, 32},//	JIKI_SHOT_03,		/* こうもり弾1 / 黄札1 */
+	{  1, 64, 32, 32},//	JIKI_SHOT_04,		/* こうもり弾2 / 黄札2 */
+	{  1, 64, 32, 32},//	JIKI_SHOT_05,		/* こうもり弾3 / 黄札3 */
+	{  1, 64, 32, 32},//	JIKI_SHOT_06,		/* こうもり弾4 / 黄札4 */
+	{135,  0, 10, 10},//	JIKI_SHOT_07,		/* こうもり弾5 / 針弾 / 森弾 / ウェイブ弾 / ピンク蝶弾 */
+// [5]
+	{  1, 64, 32, 32},//	JIKI_OPTION_00_00,
+	{  1, 64, 32, 32},//	JIKI_OPTION_00_01,
+	{  1, 64, 32, 32},//	JIKI_OPTION_00_02,
+	{  1, 64, 32, 32},//	JIKI_OPTION_00_03,
+	{  1, 64, 32, 32},//	JIKI_OPTION_00_04,
+	{  1, 64, 32, 32},//	JIKI_OPTION_00_05,
+	{  1, 64, 32, 32},//	JIKI_OPTION_00_06,
+	{  1, 64, 32, 32},//	JIKI_OPTION_00_07,
+// [6]
+	{  1, 64, 32, 32},//	JIKI_OPTION_01_00,
+	{  1, 64, 32, 32},//	JIKI_OPTION_01_01,
+	{  1, 64, 32, 32},//	JIKI_OPTION_01_02,
+	{  1, 64, 32, 32},//	JIKI_OPTION_01_03,
+	{  1, 64, 32, 32},//	JIKI_OPTION_01_04,
+	{  1, 64, 32, 32},//	JIKI_OPTION_01_05,
+	{  1, 64, 32, 32},//	JIKI_OPTION_01_06,
+	{  1, 64, 32, 32},//	JIKI_OPTION_01_07,
+// [7]
+	{  1, 64, 32, 32},//	JIKI_OPTION_02_00,
+	{  1, 64, 32, 32},//	JIKI_OPTION_02_01,
+	{  1, 64, 32, 32},//	JIKI_OPTION_02_02,
+	{  1, 64, 32, 32},//	JIKI_OPTION_02_03,
+	{  1, 64, 32, 32},//	JIKI_OPTION_02_04,
+	{  1, 64, 32, 32},//	JIKI_OPTION_02_05,
+	{  1, 64, 32, 32},//	JIKI_OPTION_02_06,
+	{  1, 64, 32, 32},//	JIKI_OPTION_02_07,
+// [8]
+	{  1, 64, 32, 32},//	JIKI_OPTION_03_00,
+	{  1, 64, 32, 32},//	JIKI_OPTION_03_01,
+	{  1, 64, 32, 32},//	JIKI_OPTION_03_02,
+	{  1, 64, 32, 32},//	JIKI_OPTION_03_03,
+	{  1, 64, 32, 32},//	JIKI_OPTION_03_04,
+	{  1, 64, 32, 32},//	JIKI_OPTION_03_05,
+	{  1, 64, 32, 32},//	JIKI_OPTION_03_06,
+	{  1, 64, 32, 32},//	JIKI_OPTION_03_07,
+
+//
+// [03チルノ]
+//					//	左へ移動のアニメーション	[中心→左側4→左側3→左側2→左側1→左側1→左側1→...]
+// [1]				//	JIKI_PLAYER_00_LEFT 	/* 左側1 */ 	/* 最も左 */			= SP_GROUP_JIKI_GET_ITEM/*0x08
+	{  0,  0, 31, 31},//	JIKI_PLAYER_01_LEFT,	/* 左側2 */
+	{ 32,  0, 31, 31},//	JIKI_PLAYER_02_LEFT,	/* 左側3 */
+	{ 64,  0, 31, 31},//	JIKI_PLAYER_03_LEFT,	/* 左側4 */ 	/* 中より左 */
+	{ 96,  0, 31, 31},//	繰り返しアニメーション		[中心1→中心2→中心3→中心4→中心1→中心2→中心3→中心4→...]
+	{  0, 32, 31, 31},//	JIKI_PLAYER_04_MID, 	/* 中心1 */
+	{ 32, 32, 31, 31},//	JIKI_PLAYER_05_MID, 	/* 中心2 */
+	{ 64, 32, 31, 31},//	JIKI_PLAYER_06_MID, 	/* 中心3 */
+	{ 96, 32, 31, 31},//	JIKI_PLAYER_07_MID, 	/* 中心4 */
+// [2]				//	右へ移動のアニメーション	[中心→右側1→右側2→右側3→右側4→右側4→右側4→...]
+	{  0, 64, 31, 31},//	JIKI_PLAYER_08_RIGHT,	/* 右側1 */ 	/* 中より右 */
+	{ 32, 64, 31, 31},//	JIKI_PLAYER_09_RIGHT,	/* 右側2 */
+	{ 64, 64, 31, 31},//	JIKI_PLAYER_10_RIGHT,	/* 右側3 */
+	{ 96, 64, 31, 31},//	JIKI_PLAYER_11_RIGHT,	/* 右側4 */ 	/* 最も右 */	JIKI_ETC_00,		/* レーザー1 */
+	{  1, 64, 32, 32},//	JIKI_ETC_00,		/* レーザー1 */
+	{  1, 64, 32, 32},//	JIKI_ETC_01,		/* レーザー2 */
+	{  1, 64, 32, 32},//	JIKI_ETC_02,		/* レーザー3 */
+	{  1, 64, 32, 32},//	JIKI_ETC_03,		/* レーザー4 */
+// [3]
+	{  1, 64, 32, 32},//	JIKI_BOMBER_00, 	/* レーザー5 */
+	{  1, 64, 32, 32},//	JIKI_BOMBER_01, 	/* レーザー6 */
+	{169,  0, 86, 85},//	JIKI_BOMBER_02, 	/* 星1 / 蝶1 / 十字炎1 */
+	{169, 86, 86, 84},//	JIKI_BOMBER_03, 	/* 星2 / 蝶2 / 十字炎2 */
+	{169,171, 86, 84},//	JIKI_BOMBER_04, 	/* 星3 / 蝶3 / 十字炎3 */
+	{169,  0, 86, 85},//	JIKI_BOMBER_05, 	/* 星4 / 蝶4 / 十字炎4 */
+	{169, 86, 86, 84},//	JIKI_BOMBER_06, 	/* 星5 / 蝶5 / 長炎1 / 結界白 */
+	{169,171, 86, 84},//	JIKI_BOMBER_07, 	/* 星6 / 蝶6 / 長炎2 / 結界黄  */
+// [4]
+	{  1, 64, 32, 32},//	JIKI_SHOT_00,		/* 長炎3 */
+	{  1, 64, 32, 32},//	JIKI_SHOT_01,		/* 長炎4 */
+	{128,  0,  9, 34},//	JIKI_SHOT_02,		/* 赤札 / 黄星 / 小炎 / 氷 / 青蝶 */
+	{  1, 64, 32, 32},//	JIKI_SHOT_03,		/* こうもり弾1 / 黄札1 */
+	{  1, 64, 32, 32},//	JIKI_SHOT_04,		/* こうもり弾2 / 黄札2 */
+	{  1, 64, 32, 32},//	JIKI_SHOT_05,		/* こうもり弾3 / 黄札3 */
+	{  1, 64, 32, 32},//	JIKI_SHOT_06,		/* こうもり弾4 / 黄札4 */
+	{138,  0, 15, 14},//	JIKI_SHOT_07,		/* こうもり弾5 / 針弾 / 森弾 / ウェイブ弾 / ピンク蝶弾 */
+// [5]
+	{  1, 64, 32, 32},//	JIKI_OPTION_00_00,
+	{  1, 64, 32, 32},//	JIKI_OPTION_00_01,
+	{  1, 64, 32, 32},//	JIKI_OPTION_00_02,
+	{  1, 64, 32, 32},//	JIKI_OPTION_00_03,
+	{  1, 64, 32, 32},//	JIKI_OPTION_00_04,
+	{  1, 64, 32, 32},//	JIKI_OPTION_00_05,
+	{  1, 64, 32, 32},//	JIKI_OPTION_00_06,
+	{  1, 64, 32, 32},//	JIKI_OPTION_00_07,
+// [6]
+	{  1, 64, 32, 32},//	JIKI_OPTION_01_00,
+	{  1, 64, 32, 32},//	JIKI_OPTION_01_01,
+	{  1, 64, 32, 32},//	JIKI_OPTION_01_02,
+	{  1, 64, 32, 32},//	JIKI_OPTION_01_03,
+	{  1, 64, 32, 32},//	JIKI_OPTION_01_04,
+	{  1, 64, 32, 32},//	JIKI_OPTION_01_05,
+	{  1, 64, 32, 32},//	JIKI_OPTION_01_06,
+	{  1, 64, 32, 32},//	JIKI_OPTION_01_07,
+// [7]
+	{  1, 64, 32, 32},//	JIKI_OPTION_02_00,
+	{  1, 64, 32, 32},//	JIKI_OPTION_02_01,
+	{  1, 64, 32, 32},//	JIKI_OPTION_02_02,
+	{  1, 64, 32, 32},//	JIKI_OPTION_02_03,
+	{  1, 64, 32, 32},//	JIKI_OPTION_02_04,
+	{  1, 64, 32, 32},//	JIKI_OPTION_02_05,
+	{  1, 64, 32, 32},//	JIKI_OPTION_02_06,
+	{  1, 64, 32, 32},//	JIKI_OPTION_02_07,
+// [8]
+	{  1, 64, 32, 32},//	JIKI_OPTION_03_00,
+	{  1, 64, 32, 32},//	JIKI_OPTION_03_01,
+	{  1, 64, 32, 32},//	JIKI_OPTION_03_02,
+	{  1, 64, 32, 32},//	JIKI_OPTION_03_03,
+	{  1, 64, 32, 32},//	JIKI_OPTION_03_04,
+	{  1, 64, 32, 32},//	JIKI_OPTION_03_05,
+	{  1, 64, 32, 32},//	JIKI_OPTION_03_06,
+	{  1, 64, 32, 32},//	JIKI_OPTION_03_07,
+
+//
+// [04幽々子]
+//					//	左へ移動のアニメーション	[中心→左側4→左側3→左側2→左側1→左側1→左側1→...]
+// [1]				//	JIKI_PLAYER_00_LEFT 	/* 左側1 */ 	/* 最も左 */			= SP_GROUP_JIKI_GET_ITEM/*0x08
+	{  0,  0, 31, 31},//	JIKI_PLAYER_01_LEFT,	/* 左側2 */
+	{ 32,  0, 31, 31},//	JIKI_PLAYER_02_LEFT,	/* 左側3 */
+	{ 64,  0, 31, 31},//	JIKI_PLAYER_03_LEFT,	/* 左側4 */ 	/* 中より左 */
+	{ 96,  0, 31, 31},//	繰り返しアニメーション		[中心1→中心2→中心3→中心4→中心1→中心2→中心3→中心4→...]
+	{  0, 32, 31, 31},//	JIKI_PLAYER_04_MID, 	/* 中心1 */
+	{ 32, 32, 31, 31},//	JIKI_PLAYER_05_MID, 	/* 中心2 */
+	{ 64, 32, 31, 31},//	JIKI_PLAYER_06_MID, 	/* 中心3 */
+	{ 96, 32, 31, 31},//	JIKI_PLAYER_07_MID, 	/* 中心4 */
+// [2]				//	右へ移動のアニメーション	[中心→右側1→右側2→右側3→右側4→右側4→右側4→...]
+	{  0, 64, 31, 31},//	JIKI_PLAYER_08_RIGHT,	/* 右側1 */ 	/* 中より右 */
+	{ 32, 64, 31, 31},//	JIKI_PLAYER_09_RIGHT,	/* 右側2 */
+	{ 64, 64, 31, 31},//	JIKI_PLAYER_10_RIGHT,	/* 右側3 */
+	{ 96, 64, 31, 31},//	JIKI_PLAYER_11_RIGHT,	/* 右側4 */ 	/* 最も右 */	JIKI_ETC_00,		/* レーザー1 */
+	{  1, 64, 32, 32},//	JIKI_ETC_00,		/* レーザー1 */
+	{  1, 64, 32, 32},//	JIKI_ETC_01,		/* レーザー2 */
+	{  1, 64, 32, 32},//	JIKI_ETC_02,		/* レーザー3 */
+	{  1, 64, 32, 32},//	JIKI_ETC_03,		/* レーザー4 */
+// [3]
+	{  1, 64, 32, 32},//	JIKI_BOMBER_00, 	/* レーザー5 */
+	{  1, 64, 32, 32},//	JIKI_BOMBER_01, 	/* レーザー6 */
+	{168,  0, 46, 37},//	JIKI_BOMBER_02, 	/* 星1 / 蝶1 / 十字炎1 */
+	{168, 40, 46, 37},//	JIKI_BOMBER_03, 	/* 星2 / 蝶2 / 十字炎2 */
+	{168,  0, 46, 37},//	JIKI_BOMBER_04, 	/* 星3 / 蝶3 / 十字炎3 */
+	{168, 40, 46, 37},//	JIKI_BOMBER_05, 	/* 星4 / 蝶4 / 十字炎4 */
+	{168,  0, 46, 37},//	JIKI_BOMBER_06, 	/* 星5 / 蝶5 / 長炎1 / 結界白 */
+	{168, 40, 46, 37},//	JIKI_BOMBER_07, 	/* 星6 / 蝶6 / 長炎2 / 結界黄  */
+// [4]
+	{  0,151,197,104},//	JIKI_SHOT_00,		/* 長炎3 / [幽々子ボムの扇本体] */
+	{  1, 64, 32, 32},//	JIKI_SHOT_01,		/* 長炎4 */
+	{128,  0, 18, 31},//	JIKI_SHOT_02,		/* 赤札 / 黄星 / 小炎 / 氷 / 青蝶 */
+	{  1, 64, 32, 32},//	JIKI_SHOT_03,		/* こうもり弾1 / 黄札1 */
+	{  1, 64, 32, 32},//	JIKI_SHOT_04,		/* こうもり弾2 / 黄札2 */
+	{  1, 64, 32, 32},//	JIKI_SHOT_05,		/* こうもり弾3 / 黄札3 */
+	{  1, 64, 32, 32},//	JIKI_SHOT_06,		/* こうもり弾4 / 黄札4 */
+	{147,  0, 20, 38},//	JIKI_SHOT_07,		/* こうもり弾5 / 針弾 / 森弾 / ウェイブ弾 / ピンク蝶弾 */
+// [5]
+	{  1, 64, 32, 32},//	JIKI_OPTION_00_00,
+	{  1, 64, 32, 32},//	JIKI_OPTION_00_01,
+	{  1, 64, 32, 32},//	JIKI_OPTION_00_02,
+	{  1, 64, 32, 32},//	JIKI_OPTION_00_03,
+	{  1, 64, 32, 32},//	JIKI_OPTION_00_04,
+	{  1, 64, 32, 32},//	JIKI_OPTION_00_05,
+	{  1, 64, 32, 32},//	JIKI_OPTION_00_06,
+	{  1, 64, 32, 32},//	JIKI_OPTION_00_07,
+// [6]
+	{  1, 64, 32, 32},//	JIKI_OPTION_01_00,
+	{  1, 64, 32, 32},//	JIKI_OPTION_01_01,
+	{  1, 64, 32, 32},//	JIKI_OPTION_01_02,
+	{  1, 64, 32, 32},//	JIKI_OPTION_01_03,
+	{  1, 64, 32, 32},//	JIKI_OPTION_01_04,
+	{  1, 64, 32, 32},//	JIKI_OPTION_01_05,
+	{  1, 64, 32, 32},//	JIKI_OPTION_01_06,
+	{  1, 64, 32, 32},//	JIKI_OPTION_01_07,
+// [7]
+	{  1, 64, 32, 32},//	JIKI_OPTION_02_00,
+	{  1, 64, 32, 32},//	JIKI_OPTION_02_01,
+	{  1, 64, 32, 32},//	JIKI_OPTION_02_02,
+	{  1, 64, 32, 32},//	JIKI_OPTION_02_03,
+	{  1, 64, 32, 32},//	JIKI_OPTION_02_04,
+	{  1, 64, 32, 32},//	JIKI_OPTION_02_05,
+	{  1, 64, 32, 32},//	JIKI_OPTION_02_06,
+	{  1, 64, 32, 32},//	JIKI_OPTION_02_07,
+// [8]
+	{  1, 64, 32, 32},//	JIKI_OPTION_03_00,
+	{  1, 64, 32, 32},//	JIKI_OPTION_03_01,
+	{  1, 64, 32, 32},//	JIKI_OPTION_03_02,
+	{  1, 64, 32, 32},//	JIKI_OPTION_03_03,
+	{  1, 64, 32, 32},//	JIKI_OPTION_03_04,
+	{  1, 64, 32, 32},//	JIKI_OPTION_03_05,
+	{  1, 64, 32, 32},//	JIKI_OPTION_03_06,
+	{  1, 64, 32, 32},//	JIKI_OPTION_03_07,
 };
 
-void aaa_trans_bullets(void)
+void aaa_trans_bullets(int num, int obj_group, Vtama00 *aaa_tama00)
 {
 	TGameSprite *obj;
 	SPRITE *sss = sprite_list000_head;/* スプライト リストの先頭 から探す */
 	while (NULL != sss)/* スプライト リストの最後まで調べる */
 	{
-		if (/*SP_BULLET*/SP_GROUP_BULLETS & sss->type)
+		if (/*SP_BULLET*/obj_group/*SP_GROUP_BULLETS*/ & sss->type)
 		{
 			/* --- オブジェクトポインタ受け取り */
 			obj 				= TGameScreen_GetSpriteSerial();
 			obj->used			= 1/*TR UE*/;
 			obj->alpha			= sss->alpha;	/* α値(0xff==255 で不透明、0 で透明) */
-			obj->TextureId		= 1;//sss->m_TextureId ;
+			obj->texture_id 	= TEX_06_BULLET;//sss->m_texture_id ;
 
 			/* --- オブジェクト表示設定 */
 			obj->x256			= ((int)sss->x256 /*>>8*/ /*/(2 *256)*/ ) /*+(56)*/ /*+ 80*/;
@@ -2206,45 +2492,74 @@ void aaa_trans_bullets(void)
 		//		obj->x -= (sss->w / 2);
 		//		obj->y -= (sss->h / 2);
 		//	}
-			obj->w			= tama00[(SP_GROUP_SUB_TYPE & sss->type)].w/*((sss->w128)>>7)*/;
-			obj->h			= tama00[(SP_GROUP_SUB_TYPE & sss->type)].h/*((sss->h128)>>7)*/;
-			obj->tx 		= tama00[(SP_GROUP_SUB_TYPE & sss->type)].u/*1*/;//sss->texture_x;
-			obj->ty 		= tama00[(SP_GROUP_SUB_TYPE & sss->type)].v;//sss->texture_y;
+			{
+				int tama_index = (SP_GROUP_SUB_TYPE_128 & sss->type);
+				obj->w			= aaa_tama00[tama_index].w/*((sss->w128)>>7)*/;
+				obj->h			= aaa_tama00[tama_index].h/*((sss->h128)>>7)*/;
+				obj->tx 		= aaa_tama00[tama_index].u/*1*/;//sss->texture_x;
+				obj->ty 		= aaa_tama00[tama_index].v;//sss->texture_y;
+			}
 			#if (1==USE_ZOOM_XY)
 			obj->zoom_x256	= sss->m_zoom_xy256;		/* 拡大率 0x100==256 が x1.0倍 */
 			obj->zoom_y256	= sss->m_zoom_xy256;		/* 拡大率 0x100==256 が x1.0倍 */
 			#else //(0==USE_ZOOM_XY)
-			obj->zoom_xy256 = 256;//sss->m_zoom_xy256;		/* 拡大率 0x100==256 が x1.0倍 */
+		//	obj->zoom_xy256 = 256;//sss->m_zoom_xy256;		/* 拡大率 0x100==256 が x1.0倍 */
+			obj->zoom_xy256 = sss->m_zoom_x256;//sss->m_zoom_xy256;		/* 拡大率 0x100==256 が x1.0倍 */
 			#endif/* (1==USE_ZOOM_XY) */
-			obj->rotation_z = (sss->m_angle512/*<<(7)*/) /*m_RollZ*/; 		/* 角度は0-512度 */ 	/* 角度は0-65535度 */
+			/* 描画用角度(下が0度で左回り(反時計回り)) */
+			obj->rotation_z = (sss->m_angleCCW512/*<<(7)*/) /*m_RollZ*/;		/* 角度は0-512度 */ 	/* 角度は0-65535度 */
 //
 			#if (1==USE_ZBUFFER)
 			obj->priority	= sss->m_priority/*aaa*/;		/* 表示優先順位 */
 			#endif/* (1==USE_ZBUFFER) */
-
-
 		//	s->type = SP_DELETE;
 		}
 		sss = sss->next;/*次*/
 	}
 }
-static void bullet_trans_test(void)
+
+/*---------------------------------------------------------
+
+---------------------------------------------------------*/
+
+static void bullet_transfer_object(void)
 {
 	TGameScreen_ClearSprite();
-	aaa_trans_bullets();
+	aaa_trans_bullets(TEX_06_BULLET, SP_GROUP_BULLETS, tama00+0);
 }
+
+/*---------------------------------------------------------
+
+---------------------------------------------------------*/
+
+static void jiki_transfer_object(void)
+{
+	TGameScreen_ClearSprite();
+//	aaa_trans_bullets(TEX_03_JIKI, SP_GROUP_JIKI_GET_ITEM, tama00+(2*4*8*8));
+	aaa_trans_bullets(TEX_03_JIKI, SP_GROUP_JIKI_GET_ITEM, tama00+(8*8)+(select_player<<6) );
+}
+
+/*---------------------------------------------------------
+
+---------------------------------------------------------*/
+
 /*-------------*/
 		#if 1
 extern /*static*/ int current_bg0_y_scroll_speed256;	/* bg0のスクロール、現在速度 */
-	int val1 = 0;
+/*	int val1 = 0;*/
 	int val3 = 0;
 	int val3_256 = 0;
-static void bg_trans_test(void)
+static void gu_draw_bg(void)
 {
 //	#define V10 (5*2)
-	#define V10 (8*2)
+	#define V10 (6*2)
+//	#define V10 (8*2)
+//	#define V12 (V10+(8*2))
+//	#define V12 (V10+(4*2)) 	/*dame*/
+	#define V12 (V10+(5*2))
+
 	Vertex_uvcxyz* vertices;
-	vertices = (Vertex_uvcxyz*)sceGuGetMemory(V10*sizeof(Vertex_uvcxyz));
+	vertices = (Vertex_uvcxyz*)sceGuGetMemory((/*V10*/V12)*sizeof(Vertex_uvcxyz));
 
 	/* --- 半透明合成値 */
 	#if (1==USE_VCOLOR)
@@ -2267,15 +2582,48 @@ static void bg_trans_test(void)
 		val3 &= 255;
 		#endif
 
-#define Y200 (0)
+#define Y000 (0)
+#define Y100 (100)
 #define Y272 ((PSP_HEIGHT272)/*-1*/)
 		unsigned int j;
 		unsigned short x2;
 		unsigned short x3;
 		unsigned short x4;
-		x2 = ((GAME_WIDTH/2) - (100)-32) + ((val1&127)-64);
-		x3 = ((GAME_WIDTH/2) - (200)-32);
-		x4 = 0;
+/*	上側 */
+		/* 176==(GAME_WIDTH/2) */
+		x2 = ((GAME_WIDTH/2) - 176 -8) /*+ ((val1&127)-64)*/;
+		x3 = ((GAME_WIDTH/2) - 256 -32 -64 +8+1);
+		x4 = 180+1;
+		for (j=0; j<V12; j+=2)
+		{
+			vertices[j].x = x3;
+			vertices[j].y = Y100;
+			vertices[j].z = 0;
+			vertices[j].u = x4;
+			vertices[j].v = 255+(val3);
+			#if (1==USE_VCOLOR)
+			vertices[j].color	= blendlevel;
+			#endif
+	//
+			vertices[j+1].x = x2;
+			vertices[j+1].y = Y000;
+			vertices[j+1].z = 0;
+			vertices[j+1].u = x4;
+			vertices[j+1].v = 0+(val3);
+			#if (1==USE_VCOLOR)
+			vertices[j+1].color = blendlevel;
+			#endif
+			x2 +=  36;/*上縁側*/
+			x3 +=  72;/*下縁側*/
+			x4 +=  32/*64*/;/*テクスチャ*/
+		}
+// 1 3 5 7 9
+// 0 2 4 6 8
+		sceGuDrawArray(GU_TRIANGLE_STRIP, TEXTURE_FLAGS5650, (V12), /*0*/NULL, vertices);
+/*	下側 */
+		x2 = ((GAME_WIDTH/2) -176) /*+ ((val1&127)-64)*/;/*(固定端)*/
+		x3 = ((GAME_WIDTH/2) -256 -32);
+		x4 = 256-1;
 		for (j=0; j<V10; j+=2)
 		{
 			vertices[j].x = x3;
@@ -2288,19 +2636,17 @@ static void bg_trans_test(void)
 			#endif
 	//
 			vertices[j+1].x = x2;
-			vertices[j+1].y = Y200;
+			vertices[j+1].y = Y100;
 			vertices[j+1].z = 0;
 			vertices[j+1].u = x4;
 			vertices[j+1].v = 0+(val3);
 			#if (1==USE_VCOLOR)
-			vertices[j+1].color	= blendlevel;
+			vertices[j+1].color = blendlevel;
 			#endif
-			x2 +=  64;/*上縁側*/
-			x3 += 100;/*下縁側*/
-			x4 +=  64;/*テクスチャ*/
+			x2 +=  72;/*上縁側*/
+			x3 += 128;/*下縁側*/
+			x4 +=  32/*64*/;/*テクスチャ*/
 		}
-// 1 3 5 7 9
-// 0 2 4 6 8
 		sceGuDrawArray(GU_TRIANGLE_STRIP, TEXTURE_FLAGS5650, (V10), /*0*/NULL, vertices);
 	//	sceGuDrawArray(GU_TRIANGLE_STRIP, TEXTURE_FLAGS4444, (V10), /*0*/NULL, vertices);
 	//	sceGuDrawArray(GU_TRIANGLE_STRIP, TEXTURE_FLAGS, 4, /*0*/NULL, vertices);
@@ -2314,10 +2660,14 @@ static void bg_trans_test(void)
 /*-------------*/
 /*-------------*/
 
+/*---------------------------------------------------------
+
+---------------------------------------------------------*/
+
 #if (1==USE_GU)
 #if (1)
 
-static void rect_trans_test(void)
+static void gu_draw_sdl_screen(void)
 {
 /* 実験:
 (a) SLICE_SIZE 64 で 512 x 272 転送 (場合分けなし)
@@ -2383,8 +2733,25 @@ static void rect_trans_test(void)
 	sceGuDrawArray(GU_SPRITES, TEXTURE_FLAGS5650, (count2), NULL, vertices);
 }
 
+/*---------------------------------------------------------
 
-static void rect_trans_test_script_window(void)
+---------------------------------------------------------*/
+
+#if 0
+	#define SCRIPT_WINDOW_X_SIZE_340		(340)
+	#define SCRIPT_WINDOW_Y_SIZE_070		(70)
+	#define SCRIPT_WINDOW_SPACE_020 		(20)
+	#define SCRIPT_WINDOW_X_POSITION_020	(SCRIPT_WINDOW_SPACE_020)
+	#define SCRIPT_WINDOW_Y_POSITION_182	(272-70-20)/* 182 == (272-70-20) == (GAME_HEIGHT-SCRIPT_WINDOW_Y_SIZE_070-SCRIPT_WINDOW_SPACE_020) */
+#else
+	#define SCRIPT_WINDOW_X_SIZE_340		(340)
+	#define SCRIPT_WINDOW_Y_SIZE_070		(70)
+	/* 6 == ((480-128-340)/2) == ((GAME_WIDTH-SCRIPT_WINDOW_X_SIZE_340)/2) == SCRIPT_WINDOW_SPACE_020 */
+	#define SCRIPT_WINDOW_SPACE_020 		(6)
+	#define SCRIPT_WINDOW_X_POSITION_020	(SCRIPT_WINDOW_SPACE_020)
+	#define SCRIPT_WINDOW_Y_POSITION_182	(GAME_HEIGHT-SCRIPT_WINDOW_Y_SIZE_070-SCRIPT_WINDOW_SPACE_020)
+#endif
+static void gu_draw_serifu_screen(void)
 {
 /* 実験:
 (a) SLICE_SIZE 64 で 512 x 272 転送 (場合分けなし)
@@ -2434,13 +2801,13 @@ static void rect_trans_test_script_window(void)
 	//	#endif
 		vertices[(i)].u = j;
 		vertices[(i)].v = 1+(0);
-		vertices[(i)].x = (10)+(20)+j/**480/512*/;
-		vertices[(i)].y = (10)+(182)+0;
+		vertices[(i)].x = (10)+(SCRIPT_WINDOW_X_POSITION_020)+j/**480/512*/;
+		vertices[(i)].y = (10)+(SCRIPT_WINDOW_Y_POSITION_182)+0;
 		vertices[(i)].z = 0;
 		vertices[(i)+1].u = (j+w_size99);
 		vertices[(i)+1].v = 1+(1+4+47/*70*/)/*272*/ /*320*/;
-		vertices[(i)+1].x = (10)+(20)+(j+w_size99)/**480/512*/;
-		vertices[(i)+1].y = (10)+(182)+(1+4+47/*70*/)/*272*/;
+		vertices[(i)+1].x = (10)+(SCRIPT_WINDOW_X_POSITION_020)+(j+w_size99)/**480/512*/;
+		vertices[(i)+1].y = (10)+(SCRIPT_WINDOW_Y_POSITION_182)+(1+4+47/*70*/)/*272*/;
 		vertices[(i)+1].z = 0;
 		i += 2;
 		j += SLICE_SIZE32;
@@ -2448,54 +2815,62 @@ static void rect_trans_test_script_window(void)
 	sceGuDrawArray(GU_SPRITES, TEXTURE_FLAGS5650, (count29), NULL, vertices);
 }
 
+/*---------------------------------------------------------
+
+---------------------------------------------------------*/
+
 static void gu_draw_script(void)
 {
-		/* -- せりふウィンドウを描画 */
-		/* テクスチャーがあるとテクスチャー優先でフラットポリゴンが描画出来ないので */
-		/* 一時的にテクスチャー無効モードに切り替える */
-		sceGuDisable(GU_TEXTURE_2D);/* テクスチャー無効モードにする */
-		{
-			//#define TEXTURE_FLAGS1111		(GU_TEXTURE_16BIT | 				GU_VERTEX_16BIT | GU_TRANSFORM_2D)
-			#define TEXTURE_FLAGS1111		( 									GU_VERTEX_16BIT | GU_TRANSFORM_2D)
-			//GU_VERTEX_32BITF|GU_TRANSFORM_2D
-			// we make local copies of the line into the main buffer here, so we don't have to flush the cache
-			Point_Vertex* my_vertices = sceGuGetMemory((5) * sizeof(Point_Vertex));
+	/* -- せりふウィンドウを描画 */
+	/* テクスチャーがあるとテクスチャー優先でフラットポリゴンが描画出来ないので */
+	/* 一時的にテクスチャー無効モードに切り替える */
+	sceGuDisable(GU_TEXTURE_2D);/* テクスチャー無効モードにする */
+	{
+		//#define TEXTURE_FLAGS1111 	(GU_TEXTURE_16BIT | 				GU_VERTEX_16BIT | GU_TRANSFORM_2D)
+		#define TEXTURE_FLAGS1111		(									GU_VERTEX_16BIT | GU_TRANSFORM_2D)
+		//GU_VERTEX_32BITF|GU_TRANSFORM_2D
+		// we make local copies of the line into the main buffer here, so we don't have to flush the cache
+		Point_Vertex* my_vertices = sceGuGetMemory((5) * sizeof(Point_Vertex));
 
-			// create a lineloop
-			my_vertices[0].x = (20)      /*x-width*/; 	my_vertices[0].y = (182)     /*y-height*/;
-			my_vertices[1].x = (20)+(340)/*x+width*/; 	my_vertices[1].y = (182)     /*y-height*/;
-			my_vertices[2].x = (20)+(340)/*x+width*/; 	my_vertices[2].y = (182)+(70)/*y+height*/;
-			my_vertices[3].x = (20)      /*x-width*/; 	my_vertices[3].y = (182)+(70)/*y+height*/;
-			my_vertices[4].x = (20)      /*x-width*/; 	my_vertices[4].y = (182)     /*y-height*/;
-		//
-		//	#define argb 0xffffffff
-			#define argb 0x7f0f0f0f
-		//	#define argb 0x7f7f7f7f
-		//	sceGuColor(/*0xaaaa*/ ((argb&0x7f7f7f7f)>>1) /*argb*/);
-			sceGuColor(argb/*0xffff*/ /*argb*/);
-			sceGuDrawArray(GU_TRIANGLES/*GU_LINE_STRIP*/, TEXTURE_FLAGS1111, (3), NULL, my_vertices);
-			sceGuDrawArray(GU_TRIANGLES/*GU_LINE_STRIP*/, TEXTURE_FLAGS1111, (3), NULL, &my_vertices[2]);
-		//
-			sceGuColor(/*0xaaaa*/ ((argb&0x7f7f7f7f)>>1) /*argb*/);
-		//	sceGuColor(argb/*0xffff*/ /*argb*/);
-			sceGuDrawArray(GU_LINE_STRIP, TEXTURE_FLAGS1111, (5), NULL, my_vertices);
-		}
-		/* テクスチャー有効モードでは、線や面等のフラットポリゴンが使えない */
-		sceGuEnable(GU_TEXTURE_2D); 	/* テクスチャー有効モードに戻す */
+		// create a lineloop
+		my_vertices[0].x = (SCRIPT_WINDOW_X_POSITION_020)	   /*x-width*/; 						my_vertices[0].y = (SCRIPT_WINDOW_Y_POSITION_182)	  /*y-height*/;
+		my_vertices[1].x = (SCRIPT_WINDOW_X_POSITION_020)+(SCRIPT_WINDOW_X_SIZE_340)/*x+width*/;	my_vertices[1].y = (SCRIPT_WINDOW_Y_POSITION_182)	  /*y-height*/;
+		my_vertices[2].x = (SCRIPT_WINDOW_X_POSITION_020)+(SCRIPT_WINDOW_X_SIZE_340)/*x+width*/;	my_vertices[2].y = (SCRIPT_WINDOW_Y_POSITION_182)+(SCRIPT_WINDOW_Y_SIZE_070)/*y+height*/;
+		my_vertices[3].x = (SCRIPT_WINDOW_X_POSITION_020)	   /*x-width*/; 						my_vertices[3].y = (SCRIPT_WINDOW_Y_POSITION_182)+(SCRIPT_WINDOW_Y_SIZE_070)/*y+height*/;
+		my_vertices[4].x = (SCRIPT_WINDOW_X_POSITION_020)	   /*x-width*/; 						my_vertices[4].y = (SCRIPT_WINDOW_Y_POSITION_182)	  /*y-height*/;
 	//
-		sceGuTexFunc(GU_TFX_REPLACE, GU_TCC_RGB);/*???*/		/*勝手にdouble buffer???*/
-		sceGuBlendFunc(GU_ADD, GU_SRC_ALPHA, GU_ONE_MINUS_SRC_ALPHA, 0, 0);
-		sceGuTexMode(/*GU_PSM_5551*/SDL_GU_PSM_0000/*GU_PSM_5650*/, 0, 0, 0/*0 swizzle*/);
-		sceGuTexImage(0, 512, 512, 512, msg_window_image);
-		rect_trans_test_script_window();
+	//	#define argb 0xffffffff
+		#define argb 0x7f0f0f0f
+	//	#define argb 0x7f7f7f7f
+	//	sceGuColor(/*0xaaaa*/ ((argb&0x7f7f7f7f)>>1) /*argb*/);
+		sceGuColor(argb/*0xffff*/ /*argb*/);
+		sceGuDrawArray(GU_TRIANGLES/*GU_LINE_STRIP*/, TEXTURE_FLAGS1111, (3), NULL, my_vertices);
+		sceGuDrawArray(GU_TRIANGLES/*GU_LINE_STRIP*/, TEXTURE_FLAGS1111, (3), NULL, &my_vertices[2]);
+	//
+		sceGuColor(/*0xaaaa*/ ((argb&0x7f7f7f7f)>>1) /*argb*/);
+	//	sceGuColor(argb/*0xffff*/ /*argb*/);
+		sceGuDrawArray(GU_LINE_STRIP, TEXTURE_FLAGS1111, (5), NULL, my_vertices);
+	}
+	/* テクスチャー有効モードでは、線や面等のフラットポリゴンが使えない */
+	sceGuEnable(GU_TEXTURE_2D); 	/* テクスチャー有効モードに戻す */
+//
+	sceGuTexFunc(GU_TFX_REPLACE, GU_TCC_RGB);/*???*/		/*勝手にdouble buffer???*/
+	sceGuBlendFunc(GU_ADD, GU_SRC_ALPHA, GU_ONE_MINUS_SRC_ALPHA, 0, 0);
+	sceGuTexMode(/*GU_PSM_5551*/SDL_GU_PSM_0000/*GU_PSM_5650*/, 0, 0, 0/*0 swizzle*/);
+	sceGuTexImage(0, 512, 512, 512, msg_window_image);
+	gu_draw_serifu_screen();
 }
 
 #endif/*(000)*/
 #endif
 
+/*---------------------------------------------------------
+
+---------------------------------------------------------*/
+
 #define USE_VSYNC			(0)
 #define USE_MAX_GU_TIME 	(0)
-extern int draw_script_screen; 					/* せりふウィンドウ表示フラグ */
+extern int draw_script_screen;					/* せりふウィンドウ表示フラグ */
 void vbl_draw_screen(void)
 {
 	do_input_vbl();/*キー入力(処理の都合上、ここに移動)*/
@@ -2560,7 +2935,7 @@ void vbl_draw_screen(void)
 	sceKernelDcacheWritebackAll();
 	//#endif // (0==USE_MAX_TRANS)
 
-//	if (1==draw_bg_screen) 	/* pspは0レジスタがあるので0と比較したほうが速い */
+//	if (1==draw_bg_screen)	/* pspは0レジスタがあるので0と比較したほうが速い */
 	if (0!=draw_bg_screen)
 	{
 	/* -- BG 画面を描画 */
@@ -2577,15 +2952,47 @@ void vbl_draw_screen(void)
 		sceGuTexMode(/*GU_PSM_5551*/GU_PSM_8888/*GU_PSM_5650*/, 0, 0, /*1*/(USE_SWIZZLE)/*1 swizzle*/);
 			#endif
 	//	sceGuTexImage(0, TW128, TH128, 512, bullet_image);
-	//	sceGuTexImage(0, TW128/2, TH128/2, TW128/2/*WK512*/, my_texture[0]->pixels);
-	//	sceGuTexImage(0, TW128, TH128, TW128/*WK512*/, my_texture[1]->pixels);
-		sceGuTexImage(0, 256, 256, 256/*WK512*/, my_texture[1]->pixels);
-
+	//	sceGuTexImage(0, TW128/2, TH128/2, TW128/2/*WK512*/, my_texture[TEX_06_BULLET]->pixels);
+	//	sceGuTexImage(0, TW128, TH128, TW128/*WK512*/, my_texture[TEX_00_BACK_GROUND]->pixels);
+		sceGuTexImage(0, 256, 256, 256/*WK512*/, my_texture[TEX_00_BACK_GROUND]->pixels);
+		sceGuTexFilter(GU_LINEAR, GU_LINEAR);
 	//	sceGuEnable(GU_CLIP_PLANES);
-		bg_trans_test();
+		gu_draw_bg();
 	//	sceGuDisable(GU_CLIP_PLANES);
 	}
-
+/* -- 背景障害物を描画 */
+	#if (1)
+	#endif
+/* -- 魔方陣を描画 */
+	#if (1)
+	#endif
+/* -- jikiを描画 */
+	#if (1)
+	if (0!=draw_bg_screen)
+	{
+	//	sceGuTexFunc(GU_TFX_REPLACE, GU_TCC_RGB);/*???*/		/*勝手にdouble buffer???*/
+	//	sceGuTexFunc(GU_TFX_MODULATE, GU_TCC_RGBA);/*半透明*/
+		sceGuTexFunc(GU_TFX_MODULATE, GU_TCC_RGB);
+	//
+		sceGuBlendFunc(GU_ADD, GU_SRC_ALPHA, GU_ONE_MINUS_SRC_ALPHA, 0, 0);
+	//
+			#if (16==USE_BLIT_COLOR_BIT)
+	//	sceGuTexMode(/*GU_PSM_5551*/SDL_GU_PSM_0000/*GU_PSM_5650*/, 0, 0, /*1*/(USE_SWIZZLE)/*1 swizzle*/);
+	//	sceGuTexMode(/*GU_PSM_5551*/GU_PSM_5551/*GU_PSM_5650*/, 0, 0, /*1*/(USE_SWIZZLE)/*1 swizzle*/);
+	//	sceGuTexMode(/*GU_PSM_5551*/GU_PSM_4444/*GU_PSM_5650*/, 0, 0, /*1*/(USE_SWIZZLE)/*1 swizzle*/);
+		sceGuTexMode(/*GU_PSM_5551*/GU_PSM_5650/*GU_PSM_5650*/, 0, 0, /*1*/(USE_SWIZZLE)/*1 swizzle*/);
+			#else
+		sceGuTexMode(/*GU_PSM_5551*/GU_PSM_8888/*GU_PSM_5650*/, 0, 0, /*1*/(USE_SWIZZLE)/*1 swizzle*/);
+			#endif
+	//	sceGuTexImage(0, TW128, TH128, 512, bullet_image);
+	//	sceGuTexImage(0, TW128, TH128, WK512, my_texture[TEX_06_BULLET]->pixels);
+		sceGuTexImage(0, 256, 256, 256, my_texture[TEX_03_JIKI]->pixels);
+		sceGuTexFilter(GU_LINEAR, GU_LINEAR);
+		jiki_transfer_object();
+		blit_all_objects();
+	}
+	#endif /*(000)*/
+//
 /* -- SDL 画面を描画 */
 	#if (1)
 //	sceGuTexFunc(GU_TFX_MODULATE, GU_TCC_RGBA);/*半透明*/
@@ -2611,35 +3018,42 @@ void vbl_draw_screen(void)
 	sceGuTexMode(/*GU_PSM_5551*/SDL_GU_PSM_0000/*GU_PSM_5650*/, 0, 0, 0/*0 swizzle*/);
 //	sceGuTexMode(/*GU_PSM_5551*/GU_PSM_5551/*GU_PSM_5650*/, 0, 0, 0/*0 swizzle*/);
 	sceGuTexImage(0, 512, 512, 512, render_image);
-	rect_trans_test();
+	sceGuTexFilter(GU_NEAREST, GU_NEAREST);
+	gu_draw_sdl_screen();
 	#endif /*(000)*/
+//
+/* -- ITEMを描画 */
+
+
 //
 /* -- 敵弾を描画 */
 	#if (1)
-//	sceGuTexFunc(GU_TFX_REPLACE, GU_TCC_RGB);/*???*/		/*勝手にdouble buffer???*/
-//	sceGuTexFunc(GU_TFX_MODULATE, GU_TCC_RGBA);/*半透明*/
-	sceGuTexFunc(GU_TFX_MODULATE, GU_TCC_RGB);
-//
-	sceGuBlendFunc(GU_ADD, GU_SRC_ALPHA, GU_ONE_MINUS_SRC_ALPHA, 0, 0);
-//
-		#if (16==USE_BLIT_COLOR_BIT)
-//	sceGuTexMode(/*GU_PSM_5551*/SDL_GU_PSM_0000/*GU_PSM_5650*/, 0, 0, /*1*/(USE_SWIZZLE)/*1 swizzle*/);
-//	sceGuTexMode(/*GU_PSM_5551*/GU_PSM_5551/*GU_PSM_5650*/, 0, 0, /*1*/(USE_SWIZZLE)/*1 swizzle*/);
-//	sceGuTexMode(/*GU_PSM_5551*/GU_PSM_4444/*GU_PSM_5650*/, 0, 0, /*1*/(USE_SWIZZLE)/*1 swizzle*/);
-	sceGuTexMode(/*GU_PSM_5551*/GU_PSM_5650/*GU_PSM_5650*/, 0, 0, /*1*/(USE_SWIZZLE)/*1 swizzle*/);
-		#else
-	sceGuTexMode(/*GU_PSM_5551*/GU_PSM_8888/*GU_PSM_5650*/, 0, 0, /*1*/(USE_SWIZZLE)/*1 swizzle*/);
-		#endif
-//	sceGuTexImage(0, TW128, TH128, 512, bullet_image);
-//	sceGuTexImage(0, TW128, TH128, WK512, my_texture[0]->pixels);
-	sceGuTexImage(0, 128, 128, 128, my_texture[0]->pixels);
-	sceGuTexFilter(GU_LINEAR, GU_LINEAR);
-	bullet_trans_test();
-	blit_all_objects();
+	{
+	//	sceGuTexFunc(GU_TFX_REPLACE, GU_TCC_RGB);/*???*/		/*勝手にdouble buffer???*/
+	//	sceGuTexFunc(GU_TFX_MODULATE, GU_TCC_RGBA);/*半透明*/
+		sceGuTexFunc(GU_TFX_MODULATE, GU_TCC_RGB);
+	//
+		sceGuBlendFunc(GU_ADD, GU_SRC_ALPHA, GU_ONE_MINUS_SRC_ALPHA, 0, 0);
+	//
+			#if (16==USE_BLIT_COLOR_BIT)
+	//	sceGuTexMode(/*GU_PSM_5551*/SDL_GU_PSM_0000/*GU_PSM_5650*/, 0, 0, /*1*/(USE_SWIZZLE)/*1 swizzle*/);
+	//	sceGuTexMode(/*GU_PSM_5551*/GU_PSM_5551/*GU_PSM_5650*/, 0, 0, /*1*/(USE_SWIZZLE)/*1 swizzle*/);
+	//	sceGuTexMode(/*GU_PSM_5551*/GU_PSM_4444/*GU_PSM_5650*/, 0, 0, /*1*/(USE_SWIZZLE)/*1 swizzle*/);
+		sceGuTexMode(/*GU_PSM_5551*/GU_PSM_5650/*GU_PSM_5650*/, 0, 0, /*1*/(USE_SWIZZLE)/*1 swizzle*/);
+			#else
+		sceGuTexMode(/*GU_PSM_5551*/GU_PSM_8888/*GU_PSM_5650*/, 0, 0, /*1*/(USE_SWIZZLE)/*1 swizzle*/);
+			#endif
+	//	sceGuTexImage(0, TW128, TH128, 512, bullet_image);
+	//	sceGuTexImage(0, TW128, TH128, WK512, my_texture[TEX_06_BULLET]->pixels);
+		sceGuTexImage(0, 128, 128, 128, my_texture[TEX_06_BULLET]->pixels);
+		sceGuTexFilter(GU_LINEAR, GU_LINEAR);
+		bullet_transfer_object();
+		blit_all_objects();
+	}
 	#endif /*(000)*/
 
 	/* -- スクリプト画面を描画 */
-//	if (1==draw_script_screen)  	/* pspは0レジスタがあるので0と比較したほうが速い */
+//	if (1==draw_script_screen)		/* pspは0レジスタがあるので0と比較したほうが速い */
 	if (0!=draw_script_screen)
 	{		gu_draw_script();	}
 

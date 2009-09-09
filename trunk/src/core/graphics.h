@@ -15,12 +15,13 @@
 
 typedef struct
 {
-	int textureWidth;	// the real width of data, 2^n with n>=0
-	int textureHeight;	// the real height of data, 2^n with n>=0
-	int imageWidth; 	// the image width
-	int imageHeight;
 	/*Color*/u32* pixels;
-} Image;
+	int texture_width;		// the real width of data, 2^n with n>=0
+	int texture_height; 	// the real height of data, 2^n with n>=0
+	int texture_format; 	//
+//	int imageWidth; 		// the image width
+//	int imageHeight;
+} my_image;
 
 /**
  * Load a PNG image.
@@ -29,7 +30,7 @@ typedef struct
  * @param filename - filename of the PNG image to load
  * @return pointer to a new allocated Image struct, or NULL on failure
  */
-extern Image* my_png_loadImage(const char *filename);
+extern my_image 	*png_load_my_image(const char *filename);
 
 /**
  * Frees an allocated image.
@@ -37,6 +38,6 @@ extern Image* my_png_loadImage(const char *filename);
  * @pre image != null
  * @param image a pointer to an image struct
  */
-extern void my_png_freeImage(Image *image);
+extern void png_free_my_image(my_image *image);
 
 #endif

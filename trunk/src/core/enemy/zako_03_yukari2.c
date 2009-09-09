@@ -86,8 +86,9 @@ static void move_yukari2(SPRITE *s)
 		break;
 	}
 	/*Ž—‚Ä‚é‚ª‚¿‚å‚Á‚Æˆá‚¤--ˆÈ‰ºrwingx.c‚Æ“¯‚¶*/
-	s->x256+=((cos512((d->angle512))*d->speed256)>>8)/**fps_fa ctor*/;
-	s->y256+=((sin512((d->angle512))*d->speed256)>>8)/**fps_fa ctor*/;
+/* CCW‚Ìê‡ */
+	s->x256+=((sin512((d->angle512))*d->speed256)>>8)/**fps_fa ctor*/;
+	s->y256+=((cos512((d->angle512))*d->speed256)>>8)/**fps_fa ctor*/;
 //	s->anim_frame=(deg_512_to_360(d->angle512+deg_360_to_512(270))/10)%36;
 //	s->anim_frame = ((((d->angle512/*+deg_360_to_512(270)*/)&(512-1))*(36/2))>>8);
 //	s->anim_frame = ((((d->angle512/*+deg_360_to_512(270)*/)&(512-1))*(32/2))>>8);

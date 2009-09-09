@@ -5,41 +5,43 @@
 	射命丸 文
 	天狗
 	-------------------------------------------------------
-	ボスタイマー未対応
+	ToDo:
+	ボスタイマー対応中
 	-------------------------------------------------------
 	自分で思ったよりも第2形態の攻撃パターンがカオスになってしまった。
 	もっと丁寧に作り直した方がいいかも。
 	[*** 090114 	天狗の速度を難易度ごとに変えてみた。
 ---------------------------------------------------------*/
 
-typedef struct _boss02_data
+typedef struct /*_boss02_data*/
 {
 	BOSS_BASE boss_base;
 	/*static*/ int angle512/*angle_radian*/;/*radianで持つよりintで持って使う度に変換した方が速い*/
 	int state1;
-	int state2; 	// 攻撃パターン変更用
-	int wait1;		// 移動待ち
-	int wait2;		// モーション変更用
+	int wait1;			/* 移動待ち */
+	int wait2;			/* モーション変更用 */
 	int xp256;
 	int n_wait3;
 //	int level;
+	int aya_speed;		/*	難度別速度 */
+	int danmaku_type;	/*	弾幕タイプ */
+	int move_type;		/*	移動タイプ */
+	int ice_dan;		/*	ice_dan変更用 */
 } BOSS02_DATA;
 
-typedef struct
+/* 弾幕タイプ */
+enum
 {
-//	int boss_id;	// get_SPRITE ->id;
-	int angle512;
-	int wait;
-} BOSS02_SR_DATA;
+	DT00 = 0,
+	DT01,
+	DT02,
+	DT03,
+	DT04,
+	DT05,
+	DT06,
+	DT07,
+};
 
-typedef struct
-{
-	int stat;
-	int add_angle512;
-	int angle512;
-	int speed256;
-	int time_out;
-} BOSS02_ICE_DATA;
 
 /*---------------------------------------------------------
 
@@ -47,328 +49,81 @@ typedef struct
 	s = ボス本体 boss sprite
 	t = プレイヤーの弾 player's weapon
 ---------------------------------------------------------*/
+		#if 0
 static void callback_enemy_boss02_hitbyweapon_dummy(SPRITE *s, SPRITE *t/*, int angle*/)
-{
+{	/* 完全に姿を現すまで攻撃は、すべて無効とする。 */
 }
+		#endif
+
 static void callback_enemy_boss02_hitbyweapon(SPRITE *s, SPRITE *t/*, int angle*/)
 {
 	explosion_add_type(t->x256,t->y256,/*0,*/EXPLOSION_MINI00);/*先に実行した方が速い*/
+//
+	BOSS02_DATA *data	= (BOSS02_DATA *)s->data;
+	WEAPON_BASE *w		= (WEAPON_BASE *)t->data;
+//
+	{
+		data->boss_base.boss_health -= w->strength;/* ボス攻撃して体力減らす */
+		if (0 > data->boss_base.boss_health)
+		{
+			data->boss_base.boss_health = 0;
+		}
+	}
+}
 //	parsys_add(NULL,100,0,t->x,t->y,30,0,0,50,PIXELATE,NULL);
+
+/*---------------------------------------------------------
+
+---------------------------------------------------------*/
+
+static void aya_put_items(SPRITE *s/*, SPRITE *t*/)
+{
+	play_voice_auto_track(VOICE07_BOMB);
+	item_from_bullets(SP_ITEM_05_HOSI);
+	item_create_for_boss(s, ITEM_CREATE_MODE_02);
+	explosion_add_circle(/*d*/s, 1);
+//
 	BOSS02_DATA *data=(BOSS02_DATA *)s->data;
-	WEAPON_BASE *w=(WEAPON_BASE *)t->data;
-//
-	int data_base_health_alt;
-	data_base_health_alt = data->boss_base.health;
-	data->boss_base.health -= w->strength;
-//
-	if ( ((data_base_health_alt)&(1024-1)) < ((data->boss_base.health)&(1024-1)) )
-	{
-		play_voice_auto_track(VOICE07_BOMB);
-		item_from_bullets(SP_ITEM_05_HOSI);
-		item_create_for_boss(s, ITEM_CREATE_MODE_02);
-		data->state2++;
-		if (2 < data->state2)	{	data->state2 = 2;	}
-		//
-		if (2 == data->state2)
-		{
-		//	data->state2	= 2;
-			data->state1	= 0;
-			data->wait1 	= 40;
-			player_add_score(data->boss_base.score);
-		}
-		explosion_add_circle(/*d*/s, 1);
-	}
-	// HPが残り1024になった時。攻撃パターン変更
-//	else if ((data->boss_base.health<=(1024*2/*1024*1*/)) ) {	}
-
-	if (data->boss_base.health <= 0)/*全員倒した？*/
-	{
-		item_create_for_boss(s, ITEM_CREATE_MODE_01);
-//
-		player_add_score(data->boss_base.score);
+	data->boss_base.boss_health 	= (1024-1); 	/* life_point消費しゲージ補充 */
+	data->boss_base.boss_timer		= (40*64);		/* 40*64==40[count] 	約40[秒(64/60)](単位は秒ではない) */		/* ボスタイマー初期化 */
+	data->danmaku_type++;
+//	if (DT02 < data->danmaku_type)	{	data->danmaku_type = DT02;	}
 	//
-		player_set_destoroy_boss();
-		explosion_add_circle(/*d*/s, 1);	/* player_set_destoroy_boss();B02_BOSS_DESTROY が必要 */
-		/*d*/s->type	= SP_DELETE;
-		/* コールバック登録 */
-		((PLAYER_DATA *)player->data)->callback_boss_hitbyweapon = callback_enemy_boss02_hitbyweapon_dummy; /* ダミーコールバック登録 */
+	{
+		const unsigned char aaa_bbb[16] =
+		{
+			0,0,1,0, 1,0,1,1,
+			1,0,0,1, 0,1,0,0,
+		};
+		data->move_type 	= aaa_bbb[(data->danmaku_type&7)];
+		data->ice_dan		= aaa_bbb[(data->danmaku_type&7)+8];
+	}
+	#if 0/*対策済み*/
+	{
+		/* 下にきすぎちゃう場合があるので、とりあえず仮対策 */
+		#define MAX_AYA_LOW_Y256 (t256(200))
+		if (MAX_AYA_LOW_Y256 < s->y256)
+		{
+			s->y256 = MAX_AYA_LOW_Y256;/* ワープ */
+		}
+		#undef MAX_AYA_LOW_Y256
+	}
+	#endif
+	//
+	//if (0 != data->move_type)
+	{
+	//	data->danmaku_type	= DT02;
+		data->state1	= 0;
+		data->wait1 	= 40;
+	//	player_add_score(data->boss_base.score);
 	}
 }
 
 /*---------------------------------------------------------
 
 ---------------------------------------------------------*/
-#if (1==USE_CONTROLLER)
-static void enemy_boss02_sr_controller1(CONTROLLER *c)
-{
-	BOSS02_SR_DATA *e=(BOSS02_SR_DATA *)c->e;
-	if (e->wait>0)
-	{
-		e->wait -= 1/*fps_fa ctor*/;
-	}
-	else
-	{
-		SPRITE *src;/* srcはbossオブジェ */
-		src 		= sprite_get_by_id(e->boss_id); //なければNULL
-		e->wait 	= 10;
-		e->angle512 += deg_360_to_512(15);
-		if ((e->angle512 > deg_360_to_512(360-15))||(src==NULL))
-		{
-			controller_remove_one(c);
-		}
-		else
-		{
-			bullet_create_offset_dan_type(src, t256(7), e->angle512, /*offsx*/t256(0-16)/*(src->w/2)*/, /*offsy*/t256(0)/*(src->h/2)*/, BULLET_HARI32_01_AKA);
-		}
-	}
-}
-#endif //(1==USE_CONTROLLER)
-/*---------------------------------------------------------
 
----------------------------------------------------------*/
-
-static void enemy_boss02_sr_add1(SPRITE *c)
-{
-	#if (1==USE_CONTROLLER)
-	CONTROLLER *s;
-	s				= controller_add();
-	#endif //(1==USE_CONTROLLER)
-	BOSS02_SR_DATA *data;
-	data			= mmalloc(sizeof(BOSS02_SR_DATA));
-	data->angle512	= deg_360_to_512(0);
-	data->wait		= 10;
-
-//	data->boss_id	= c->id;	//get_SPRITE ->id;
-	#if (1==USE_CONTROLLER)
-	s->con			= enemy_boss02_sr_controller1;
-	s->e			= data;
-	#endif //(1==USE_CONTROLLER)
-}
-
-/*---------------------------------------------------------
-
----------------------------------------------------------*/
-	#if (1==USE_CONTROLLER)
-
-static void enemy_boss02_sr_controller2(CONTROLLER *c)
-{
-	BOSS02_SR_DATA *e=(BOSS02_SR_DATA *)c->e;
-	if (e->wait>0)
-	{
-		e->wait -= 1/*fps_fa ctor*/;
-	}
-	else
-	{
-		SPRITE *src;/* srcはbossオブジェ */
-		src 		= sprite_get_by_id(e->boss_id); //なければNULL
-		e->wait 	= 10;
-		e->angle512 -= deg_360_to_512(15);
-		if ((e->angle512 <= deg_360_to_512(15))||(src==NULL))
-		{
-			controller_remove_one(c);
-		}
-		else
-		{
-			bullet_create_offset_dan_type(src, t256(7), e->angle512, /*offsx*/t256(0-16)/*(src->w/2)*/, /*offsy*/t256(0)/*(src->h/2)*/, BULLET_HARI32_01_AKA);
-		}
-	}
-}
-	#endif //(1==USE_CONTROLLER)
-
-/*---------------------------------------------------------
-
----------------------------------------------------------*/
-
-static void enemy_boss02_sr_add2(SPRITE *c)
-{
-	#if (1==USE_CONTROLLER)
-	s			= controller_add();
-	CONTROLLER *s;
-	#endif //(1==USE_CONTROLLER)
-	BOSS02_SR_DATA *data;
-	data			= mmalloc(sizeof(BOSS02_SR_DATA));
-	data->angle512	= deg_360_to_512(360)-1;/*追加 (-1)*/
-	data->wait		= 8;
-//	data->boss_id	= c->id;	//get_SPRITE ->id;
-	#if (1==USE_CONTROLLER)
-	s->con			= enemy_boss02_sr_controller2;
-	s->e			= data;
-	#endif //(1==USE_CONTROLLER)
-}
-
-/*---------------------------------------------------------
-
----------------------------------------------------------*/
-
-static void enemy_boss02_ice_move(SPRITE *s)
-{
-	BOSS02_ICE_DATA *data = (BOSS02_ICE_DATA *)s->data;
-	switch (data->stat)
-	{
-	case 0:
-		data->time_out -= 1/*fps_fa ctor*/;
-		if (data->time_out <= 0)
-		{	data->stat = 1;}
-		data->angle512 += data->add_angle512/**fps_fa ctor*/;
-		break;
-	case 1:
-		{
-			const short sss[4] =
-			{
-				t256(2.5),		/* easy:   2 これが避けれないって事は無いと思うケド */
-				t256(3/*4*/),	/* normal: 4 */
-				t256(5/*6*/),	/* hard:   6 落ち着いてよく見れば避けれます */
-				t256(10/*12*/)	/* luna:  12 落ち着いてよく見れば避けれますが、たまに失敗するwww */
-			};
-			data->speed256 = sss[difficulty]/*t256(12)*/;
-		}
-		data->angle512	= (ra_nd()&(128-1)/*%90*/)+deg_360_to_512(45);
-		data->stat		= 2;
-		break;
-	}
-//	if (d->angle512 < deg_360_to_512(0))	{	d->angle512 += deg_360_to_512(360);}
-//	if (d->angle512 > deg_360_to_512(360))	{	d->angle512 -= deg_360_to_512(360);}
-	mask512(data->angle512);
-
-	/*以下rwingx.cと同じ*/
-	s->x256+=((cos512((data->angle512))*data->speed256)>>8)/**fps_fa ctor*/;
-	s->y256+=((sin512((data->angle512))*data->speed256)>>8)/**fps_fa ctor*/;
-//	s->anim_frame=(deg_512_to_360(data->angle512+deg_360_to_512(270))/10)%36;
-//	s->anim_frame = ((((data->angle512+deg_360_to_512(270))&(512-1))*(36/2))>>8);
-//	s->anim_frame = ((((data->angle512)&(512-1))*(32/2))>>8);
-	s->anim_frame = ((((data->angle512)&(512-1)))>>4);
-	/*(ここまで)[以下rwingx.cと同じ]*/
-//
-			#if 1
-			/* 描画用角度 */
-		//	s->m_angle512		= data->angle512;
-			int aaa512; 	aaa512 = (/*127*/255-data->angle512);	mask512((aaa512));
-			s->m_angle512		= aaa512;
-			#endif
-	if ((s->x256 < t256(-100))||(s->x256 > t256(100)+t256(GAME_WIDTH))||
-		(s->y256 < t256(-100))||(s->y256 > t256(100)+t256(GAME_HEIGHT) ) )
-	{	s->type=SP_DELETE;}
-}
-
-/*---------------------------------------------------------
-
----------------------------------------------------------*/
-
-#define NUM_OF_ENEMIES (30)
-
-	#if (1==USE_CONTROLLER)
-static void enemy_boss02_ice_controller(CONTROLLER *c)
-{
-	int *id_array = c->e;
-	SPRITE *s;
-	int i;
-	int dead=0;
-//	SPRITE *master;
-//	master=sp rite_get_by_id(id_array[0]);
-//	BOSS02_ICE_DATA *data;
-//	data=(BOSS02_ICE_DATA *)master->data;
-	for (i=0; i<NUM_OF_ENEMIES; i++)
-	{
-		s=sprite_get_by_id(id_array[i]);
-		if (s==NULL)
-		{
-			dead=1;
-			break;
-		}
-	}
-	if (dead==1)
-	{
-		for (i=0; i<NUM_OF_ENEMIES; i++)
-		{
-			s=sprite_get_by_id(id_array[i]);
-			if (NULL != s)
-			{	s->type=SP_DELETE;}
-		}
-		controller_remove_one(c);
-	//	return;
-	}
-	else
-	{
-		for (i=NUM_OF_ENEMIES-1; i>=1; i--)
-		{
-			SPRITE *l;
-			s=sprite_get_by_id(id_array[i]);
-			l=sprite_get_by_id(id_array[i-1]);
-			if ((NULL != s)&&(NULL != l))
-			{
-				s->x256 = l->x256;
-				s->y256 = l->y256;
-				s->anim_frame = l->anim_frame;
-			}
-		}
-	}
-}
-	#endif //(1==USE_CONTROLLER)
-
-/*---------------------------------------------------------
-
----------------------------------------------------------*/
-
-static void enemy_boss02_ice_add(SPRITE *s)
-{
-	#if (1==USE_CONTROLLER)
-	CONTROLLER *e;
-	int *id_array;
-	#endif //(1==USE_CONTROLLER)
-	SPRITE		*s2;
-	int i;
-	int j;
-	int rand_add_angle;
-	rand_add_angle=(ra_nd()&(8-1));
-	BOSS02_ICE_DATA *data;
-	for (j=0; j<2; j++)
-	{
-		#if (1==USE_CONTROLLER)
-		e				= controller_add();
-	//	NUM_OF_ENEMIES=30;
-		id_array		= mmalloc(sizeof(int)*NUM_OF_ENEMIES);
-		e->e			= id_array;
-		e->con			= enemy_boss02_ice_controller;
-		#endif //(1==USE_CONTROLLER)
-
-		for (i=0; i<NUM_OF_ENEMIES; i++)
-		{
-		//	s2					= spr ite_add_file 0("tama/jippou32.png",32,PRIORITY_05_BULLETS/*PRIORITY_03_ENEMY_WEAPON*/, 0);/*36"boss02_w.png"*/
-		//	s2					= sprite_add_res(BASE_TAMA_BULLET_JIPPOU32_PNG);
-			s2					= sprite_add_bullet(TAMA_TYPE_BULLET_JIPPOU32_PNG);
-			#if (1==USE_CONTROLLER)
-			id_array[i] 		= s2->id;
-			#endif //(1==USE_CONTROLLER)
-			s2->type			= BULLET_CAP16_04_SIROI;/*SP_BULLET*/ /*SP_BOSS02ICE*/
-			s2->flags			|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK|SP_FLAG_TIME_OVER);
-		//	if (0==i)
-			{
-			}
-		//	else
-		//	{
-		//		s2->callback_mover	= NULL;
-		//		s2->data			= NULL;
-		//	}
-				s2->callback_mover	= enemy_boss02_ice_move;
-				data				= mmalloc(sizeof(BOSS02_ICE_DATA));
-				s2->data			= data;
-			//	data->add_angle512	= (j == 0)?(deg_360_to_512(+5)):(deg_360_to_512(-5));
-				data->add_angle512	= rand_add_angle;
-				data->angle512		= (i<<4)/*deg_360_to_512(90)*/;
-				data->stat			= 0;
-				data->time_out		= 120/*100*/;
-				data->speed256		= t256(4);
-			//	s2->x256			= s->x256 + ((0==j)?(t256(-19)):(t256(81)));
-				s2->x256			= s->x256 + ((0==j)?(t256(-64)):(t256(64)));
-				s2->y256			= s->y256 /*+ t256(135)*/;
-			//	s2->y256			= s->y256 /*+ t256(138)*/;
-		}
-		rand_add_angle = -rand_add_angle;
-	}
-}
-#undef NUM_OF_ENEMIES
-
-static void enemy_boss02_waitstate(SPRITE *s, int next_set_state)
+static void sakuya_wait_state(SPRITE *s/*, int next_set_state*/)
 {
 	BOSS02_DATA *data = (BOSS02_DATA *)s->data;
 	if (data->wait1 > 0)
@@ -390,8 +145,8 @@ static void enemy_boss02_waitstate(SPRITE *s, int next_set_state)
 	}
 	else
 	{
-		data->state1 = next_set_state;
-		bullet_create_oodama0(s, t256(4)+(difficulty<<7), ANGLE_JIKINERAI_DAN, 10, 0, ((s->w128)), ((s->h128)));
+		data->state1++/* = next_set_state*/;
+		bullet_create_oodama0(s, t256(4)+(difficulty<<7), ANGLE_JIKI_NERAI_DAN, 10, 0, ((s->w128)), ((s->h128)));
 	}
 }
 
@@ -400,11 +155,10 @@ static void enemy_boss02_waitstate(SPRITE *s, int next_set_state)
 ---------------------------------------------------------*/
 enum
 {
-	ST_00 = 0,
-	ST_01,
-	ST_02,
+	ST_02 = 0,
 	ST_03,
 	ST_04,
+	ST_04bbb,
 	ST_05,
 	ST_06,
 	ST_07,
@@ -413,6 +167,10 @@ enum
 	ST_10,
 	ST_11,
 	ST_12,
+	ST_12bbb,
+	ST_00,
+	ST_01,
+
 };
 enum
 {
@@ -431,58 +189,105 @@ enum
 	SS12,
 };
 
-static void enemy_boss02_momiji_add(SPRITE *s)
+/*---------------------------------------------------------
+
+---------------------------------------------------------*/
+
+static void bullet_create_aya_momiji(SPRITE *s)
 {
-	bullet_create_momiji_dan(s, t256(3.5), deg_360_to_512(30*(3-2)) );
-	bullet_create_momiji_dan(s, t256(4.0), deg_360_to_512(30*(3+0)) );
-	bullet_create_momiji_dan(s, t256(3.5), deg_360_to_512(30*(3+2)) );
+#if 0
+/* CWの場合 */
+	bullet_create_momiji_dan(s, t256(3.5), deg_360_to_512((30*(3-2))) );
+	bullet_create_momiji_dan(s, t256(4.0), deg_360_to_512((30*(3+0))) );
+	bullet_create_momiji_dan(s, t256(3.5), deg_360_to_512((30*(3+2))) );
+#else
+/* CCWの場合 */
+//	bullet_create_momiji_dan(s, t256(3.5), -deg_360_to_512CCW((30*(3-2))) );
+//	bullet_create_momiji_dan(s, t256(4.0), -deg_360_to_512CCW((30*(3+0))) );
+//	bullet_create_momiji_dan(s, t256(3.5), -deg_360_to_512CCW((30*(3+2))) );
+//2016201
+	bullet_create_momiji_dan(s, t256(3.5), deg_360_to_512CCW(360+90-(30*(3-2))) );
+	bullet_create_momiji_dan(s, t256(4.0), deg_360_to_512CCW(360+90-(30*(3+0))) );
+	bullet_create_momiji_dan(s, t256(3.5), deg_360_to_512CCW(360+90-(30*(3+2))) );
+#endif
 }
-static void enemy_boss02_move(SPRITE *s)
+
+/*---------------------------------------------------------
+
+---------------------------------------------------------*/
+
+extern void bullet_create_aya_ice(SPRITE *s);
+
+static int bullet_create_oodama3(SPRITE *s, int speed256, int ransu512)
+{	int angle_jikinerai_512;
+	angle_jikinerai_512=atan_512(player->y256-s->y256,player->x256-s->x256);
+#if 0
+/* CWの場合 */
+	bullet_create_oodama0(s, speed256, angle_jikinerai_512-deg_360_to_512((30)), ransu512, 0, ((s->w128*86*2)>>8), (s->h128)); /*t256(s->w/3), t256(s->h/2)*/
+	bullet_create_oodama0(s, speed256, angle_jikinerai_512					   , ransu512, 0, ((s->w128*86*2)>>8), (s->h128)); /*t256(s->w/3), t256(s->h/2)*/
+	bullet_create_oodama0(s, speed256, angle_jikinerai_512+deg_360_to_512((30)), ransu512, 0, ((s->w128*86*2)>>8), (s->h128)); /*t256(s->w/3), t256(s->h/2)*/
+#else
+/* CCWの場合 */
+//	bullet_create_oodama0(s, speed256, angle_jikinerai_512+deg_360_to_512CCW((30)), ransu512, 0, ((s->w128*86*2)>>8), (s->h128)); /*t256(s->w/3), t256(s->h/2)*/
+//	bullet_create_oodama0(s, speed256, angle_jikinerai_512						  , ransu512, 0, ((s->w128*86*2)>>8), (s->h128)); /*t256(s->w/3), t256(s->h/2)*/
+//	bullet_create_oodama0(s, speed256, angle_jikinerai_512-deg_360_to_512CCW((30)), ransu512, 0, ((s->w128*86*2)>>8), (s->h128)); /*t256(s->w/3), t256(s->h/2)*/
+	bullet_create_oodama0(s, speed256, angle_jikinerai_512-deg_360_to_512CCW(360-(30)), ransu512, 0, ((s->w128*86*2)>>8), (s->h128)); /*t256(s->w/3), t256(s->h/2)*/
+	bullet_create_oodama0(s, speed256, angle_jikinerai_512							  , ransu512, 0, ((s->w128*86*2)>>8), (s->h128)); /*t256(s->w/3), t256(s->h/2)*/
+	bullet_create_oodama0(s, speed256, angle_jikinerai_512+deg_360_to_512CCW(360-(30)), ransu512, 0, ((s->w128*86*2)>>8), (s->h128)); /*t256(s->w/3), t256(s->h/2)*/
+#endif
+	return (angle_jikinerai_512);
+}
+
+/*---------------------------------------------------------
+
+---------------------------------------------------------*/
+
+static void bullet_create_kougeki_01(SPRITE *s)
+{	BOSS02_DATA *data=(BOSS02_DATA *)s->data;
+//	if (DT00==data->danmaku_type)
+//	if (2 < ((data->danmaku_type+1) & 0x03/*DT00*/))
+	if (0!=data->ice_dan)
+	{	bullet_create_aya_ice(s);}
+};
+static void bullet_create_kougeki_02(SPRITE *s)
+{	BOSS02_DATA *data=(BOSS02_DATA *)s->data;
+//	if (DT01==data->danmaku_type)
+	if (0!=(data->danmaku_type & 1/*DT01*/))
+	{	bullet_create_aya_momiji(s);}
+};
+/*
+000 0 --
+001 1
+010 2
+011 3 --
+100 4
+
+*/
+
+/*---------------------------------------------------------
+
+---------------------------------------------------------*/
+
+static void move_aya(SPRITE *s)
 {
 	BOSS02_DATA *data=(BOSS02_DATA *)s->data;
-	switch (data->state2)
-	{
-	case 0: 		// 攻撃パターン1
-	case 1:
+
+	if (0==data->move_type)
+	{		/* 移動パターン1(低速移動) */
 		switch (data->state1)
 		{
-		case ST_00: /* nach unten */
-			if (s->y256 < t256(30))
-			{	s->y256 += t256(2) /**fps_fa ctor*/;}
-			else
-			{
-				data->state1 = ST_01;
-			//	((PLAYER_DATA *)player->data)->bo ssmode=B05_BE FORE_LOAD;
-				((PLAYER_DATA *)player->data)->state_flag |= STATE_FLAG_10_IS_LOAD_SCRIPT;
-				data->wait1 = 0;
-			}
-			break;
-
-		case ST_01:
-		//	if (((PLAYER_DATA *)player->data)->bo ssmode==B01_BA TTLE)
-		//	if ((STATE_FLAG_05_IS_BOSS|0) == (((PLAYER_DATA *)player->data)->state_flag&(STATE_FLAG_05_IS_BOSS|STATE_FLAG_06_IS_SCRIPT)))
-			if ( ((((PLAYER_DATA *)player->data)->state_flag) & STATE_FLAG_05_IS_BOSS) )
-			{
-				data->wait1 += 1/*fps_fa ctor*/;
-				if (data->wait1 >= 40)
-				{
-					data->state1 = ST_02;
-				}
-			}
-			break;
-
 		case ST_02: /* y-pos erreicht: rundumschuss */
+			#if (1==USE_CONTROLLER)
 			enemy_boss02_sr_add1(s);
-			if (0==data->state2)
-			{	enemy_boss02_ice_add(s);}
-			else if (1==data->state2)
-			{	enemy_boss02_momiji_add(s);}
+			#endif //(1==USE_CONTROLLER)
+			bullet_create_kougeki_01(s);
+			bullet_create_kougeki_02(s);
 			data->wait1 = 20;
-			data->state1 = ST_03;
+			data->state1++/* = ST_03*/;
 			break;
 
-		case ST_03: /* warten */
-			enemy_boss02_waitstate(s,ST_04);
+		case ST_03: /* waiting */
+			sakuya_wait_state(s/*,ST_04*/);
 			break;
 
 		case ST_04: /* nach links bis zum rand */
@@ -501,15 +306,20 @@ static void enemy_boss02_move(SPRITE *s)
 			}
 			else
 			{
+				data->state1++/* = ST_05*/;
+			}
+			break;
+		case ST_04bbb: /*  */
+			{
+				data->state1++/* = ST_05*/;
 				data->wait1 = 20;
-				data->state1 = ST_05;
-				if (1==data->state2)
-				{	enemy_boss02_momiji_add(s);}
+				bullet_create_kougeki_02(s);
 			}
 			break;
 
-		case ST_05: /* warten */
-			enemy_boss02_waitstate(s,ST_06);
+
+		case ST_05: /* waiting */
+			sakuya_wait_state(s/*,ST_06*/);
 			break;
 
 		case ST_06: /* nach rechts bis zur mitte */
@@ -528,27 +338,27 @@ static void enemy_boss02_move(SPRITE *s)
 			}
 			else
 			{
+				#if (1==USE_CONTROLLER)
 				enemy_boss02_sr_add1(s);
+				#endif //(1==USE_CONTROLLER)
 				data->wait1 = 100;
-				data->state1 = ST_07;
-				if (1==data->state2)
-				{	enemy_boss02_momiji_add(s);}
+				data->state1++/* = ST_07*/;
+				bullet_create_kougeki_02(s);
 			}
 			break;
 
-		case ST_07: /* warten */
-			enemy_boss02_waitstate(s,ST_08);
+		case ST_07: /* waiting */
+			sakuya_wait_state(s/*,ST_08*/);
 			break;
 
 		case ST_08:
-			if (0==data->state2)
-			{	enemy_boss02_ice_add(s);}
+			bullet_create_kougeki_01(s);
 			data->wait1 = 100;
-			data->state1 = ST_09;
+			data->state1++/* = ST_09*/;
 			break;
 
-		case ST_09: /* warten */
-			enemy_boss02_waitstate(s,ST_10);
+		case ST_09: /* waiting */
+			sakuya_wait_state(s/*,ST_10*/);
 			break;
 
 		case ST_10: /* nach rechts bis zum rand */
@@ -568,14 +378,13 @@ static void enemy_boss02_move(SPRITE *s)
 			else
 			{
 				data->wait1 = 20;
-				data->state1 = ST_11;
-				if (data->state2==1)
-				{	enemy_boss02_momiji_add(s);}
+				data->state1++/* = ST_11*/;
+				bullet_create_kougeki_02(s);
 			}
 			break;
 
-		case ST_11: /* warten */
-			enemy_boss02_waitstate(s,ST_12);
+		case ST_11: /* waiting */
+			sakuya_wait_state(s/*,ST_12*/);
 			break;
 
 		case ST_12: /* nach links bis zur mitte */
@@ -593,23 +402,54 @@ static void enemy_boss02_move(SPRITE *s)
 				}
 			}
 			else
-			{	data->state1 = ST_02; }
+			{	data->state1++/* = ST_02*/; }
+			break;
+		case ST_12bbb: /*  */
+			{
+				data->state1 = ST_02;
+			}
+			break;
+
+////////////////////////
+		case ST_00: 	/* 下がる */
+			s->y256 += t256(2) /**fps_fa ctor*/;
+			if (s->y256 >= t256(30))
+			{
+				data->state1++/* = ST_01*/;
+				data->wait1 = 0;
+			//	((PLAYER_DATA *)player->data)->bo ssmode=B05_BE FORE_LOAD;
+				((PLAYER_DATA *)player->data)->state_flag |= STATE_FLAG_10_IS_LOAD_SCRIPT;
+			}
+			break;
+		/*姿を現す*/
+		case ST_01:
+		//	if (((PLAYER_DATA *)player->data)->bo ssmode==B01_BA TTLE)
+		//	if ((STATE_FLAG_05_IS_BOSS|0) == (((PLAYER_DATA *)player->data)->state_flag&(STATE_FLAG_05_IS_BOSS|STATE_FLAG_06_IS_SCRIPT)))
+			if ( ((((PLAYER_DATA *)player->data)->state_flag) & STATE_FLAG_05_IS_BOSS) )
+			{
+				/* プレイヤー弾受け付け、コールバックを登録 */
+			//	data->wait1 += (1)/*fps_fa ctor*/;
+			//	if (data->wait1 >= 40)
+			//	{
+					data->state1 = ST_02;
+			//	}
+			}
 			break;
 		}
-		break;
-
-	case 2: 	/* 攻撃パターン2 */
+	}
+	else
+	{	/* 移動攻撃パターン2(高速移動) */
 		switch (data->state1)
 		{
 		case SS00:	/* 不定:初期位置情報の取得->SS01へ */
 			data->angle512/*_radian*/=atan_512(t256(20)-s->y256,t256(GAME_WIDTH/2)-s->x256-((s->w128+s->w128)));
-			data->state1 = SS01;
+			data->state1++/* = SS01*/;
 			break;
 
 		case SS01:	/* 不定:初期位置へ戻る->SS02へ */
 			if (s->y256 < t256(30))
 			{
-				data->state1 = SS02;
+				data->state1++/* = SS02*/;
 				data->wait1 += 10+(3-difficulty)*10;
 /*
 [0] 1  2 [0] 1	2 [0] 1  2 [0] 1  2 				/ 3回に一回
@@ -623,41 +463,51 @@ static void enemy_boss02_move(SPRITE *s)
 				{	static const Uint8 n_wait3_tbl[8/*16*/] =
 					{ 1,2,0,1, 0,2,1,0, /*1,2,0,1, 0,2,1,0,*/ };
 					/* 3回に一回   (0 == ((data->n_wait3)%3)) */
+					data->n_wait3++;
 					data->n_wait3 &= 0x07;
 					if (n_wait3_tbl[data->n_wait3]&0x01)
 					{
 						/* 弾に毒塗ってある設定 */
-						bullet_create_n_way_dan_sa_type(s, t256(5), ANGLE_JIKINERAI_KISUDAN, (int)(512/24), BULLET_UROKO14_00_AOI+(ra_nd()&0x0f),	 8);	/*なるべく共通化*/
+						bullet_create_n_way_dan_sa_type(s, t256(5), ANGLE_JIKI_NERAI_DAN, (int)(512/24), BULLET_KOME_01_AOI+(ra_nd()&0x0f),	 8);	/*なるべく共通化*/
 					}
 					/* 4回に一回   (0 == ((data->n_wait3)%4)) && */
 					/* 但し12回に一回以外  (0 != ((data->n_wait3)%12)) */
 					if (n_wait3_tbl[data->n_wait3]&0x02)
 					{
 						/* 弾に毒塗ってある設定 */
-						bullet_create_n_way_dan_sa_type(s, t256(4), ANGLE_JIKINERAI_KISUDAN, (int)(512/24), BULLET_UROKO14_00_AOI+(ra_nd()&0x0f)/*BULLET_KUNAI12_06_AOI*/,	11);	/*なるべく共通化*/
-						bullet_create_n_way_dan_sa_type(s, t256(3), ANGLE_JIKINERAI_KISUDAN, (int)(512/24), BULLET_UROKO14_00_AOI+(ra_nd()&0x0f)/*BULLET_KUNAI12_07_MIDORI*/, 11);	/*なるべく共通化*/
+						bullet_create_n_way_dan_sa_type(s, t256(4), ANGLE_JIKI_NERAI_DAN, (int)(512/24), BULLET_KOME_01_AOI+(ra_nd()&0x0f)/*BULLET_KUNAI12_06_AOI*/, 11);	/*なるべく共通化*/
+						bullet_create_n_way_dan_sa_type(s, t256(3), ANGLE_JIKI_NERAI_DAN, (int)(512/24), BULLET_KOME_01_AOI+(ra_nd()&0x0f)/*BULLET_KUNAI12_07_MIDORI*/, 11); /*なるべく共通化*/
 					}
 				}
 			}
 			else
 			{
+#if 0
+/* CWの場合 */
 				s->x256 += ((cos512((data->angle512/*_radian*/))*t256(6))>>8)/**fps_fa ctor*/;
 				s->y256 += ((sin512((data->angle512/*_radian*/))*t256(6))>>8)/**fps_fa ctor*/;
-				data->state1 = SS00;
+#else
+/* CCWの場合 */
+				s->x256 += ((sin512((data->angle512/*_radian*/))*t256(6))>>8)/**fps_fa ctor*/;
+				s->y256 += ((cos512((data->angle512/*_radian*/))*t256(6))>>8)/**fps_fa ctor*/;
+#endif
+				data->state1--/* = SS00*/;
+				#if 1/*差分氏互換*/
+				data->n_wait3--;
+				#endif
 			}
 			break;
 
-		case SS02:	/* 初期位置:大玉3つ->SS03, SS04, SS05 */
+		case SS02:	/* 初期位置:大弾3つ->SS03, SS04, SS05 */
 			if (data->wait1<0)
 			{	int angle_jikinerai_512;
-				angle_jikinerai_512=atan_512(player->y256-s->y256,player->x256-s->x256);
-				bullet_create_oodama0(s, t256(5), angle_jikinerai_512-deg_360_to_512(30), 1, 0, ((s->w128*86*2)>>8), (s->h128)); /*t256(s->w/3), t256(s->h/2)*/ //大弾の追加
-				bullet_create_oodama0(s, t256(5), angle_jikinerai_512					, 1, 0, ((s->w128*86*2)>>8), (s->h128)); /*t256(s->w/3), t256(s->h/2)*/
-				bullet_create_oodama0(s, t256(5), angle_jikinerai_512+deg_360_to_512(30), 1, 0, ((s->w128*86*2)>>8), (s->h128)); /*t256(s->w/3), t256(s->h/2)*/
+				angle_jikinerai_512=bullet_create_oodama3(s, t256(5.0), 1/*ransu512*/);
 			//	data->state1 = (ra_nd()%3)+SS03;
 				data->state1 = (((ra_nd()&(256-1))*3)>>8)+SS03;
 				if (data->state1 == SS05)
-				{	data->angle512/*_radian*/=angle_jikinerai_512;}
+				{
+					data->angle512/*_radian*/=angle_jikinerai_512;
+				}
 				else
 				{
 					s->y256 += t256(6)/**fps_fa ctor*/;
@@ -672,7 +522,7 @@ static void enemy_boss02_move(SPRITE *s)
 		case SS03:	/* 左移動中->SS06へ */
 			if (s->x256 >= 0)
 			{
-				s->x256 -= (t256(4)+(difficulty<<8))/**fps_fa ctor*/;
+				s->x256 -= /*(t256(4)+(difficulty<<8))*/(data->aya_speed)/**fps_fa ctor*/;
 				if (s->anim_frame>0)
 				{
 					data->wait2 += 1/*fps_fa ctor*/;
@@ -694,7 +544,7 @@ static void enemy_boss02_move(SPRITE *s)
 		case SS04:	/* 右移動中->SS08へ */
 			if (s->x256 < (t256(GAME_WIDTH)-((s->w128+s->w128))))
 			{
-				s->x256 += (t256(4)+((difficulty)<<8))/**fps_fa ctor*/;
+				s->x256 += /*(t256(4)+(difficulty<<8))*/(data->aya_speed)/**fps_fa ctor*/;
 				if (s->anim_frame<8)
 				{
 					data->wait2 += 1/*fps_fa ctor*/;
@@ -714,66 +564,95 @@ static void enemy_boss02_move(SPRITE *s)
 			break;
 
 		case SS05:	/* プレイヤー位置付近移動中->SS10へ */
+			/* ayaの稼動範囲 */
+			#if 0
+			/* 画面を喰み出た場合に戻る(ボス当たりありにしたので復活時に踏まれて困る) */
 			if (((s->x256 < t256(0))||(s->y256 < t256(0)))||
 				((s->x256+((s->w128+s->w128)) > t256(GAME_WIDTH))||
-				 (s->y256+((s->h128+s->h128)) > t256(GAME_HEIGHT))))
+			//	 (s->y256+((s->h128+s->h128)) > t256(GAME_HEIGHT))))
+				 (s->y256+((s->h128+s->h128)) > t256(220))))/*(踏まれない)*/
+			#else
+			/* 稼動範囲を喰み出た場合に戻る(ボス当たりありにしたので復活時に踏まれて困る) */
+			if (((s->x256 < t256(0))||(s->y256 < t256(0)))||
+				((s->x256+((s->w128+s->w128)) > t256(GAME_WIDTH))||
+			//	 (s->y256+((s->h128+s->h128)) > t256(GAME_HEIGHT))))
+				 (s->y256+((s->h128+s->h128)) > (t256(128)+(difficulty<<(8+5)))  )))	/* difficulty x 32 */
+			/*
+				easy:	128(踏まれない)
+				normal: 160(踏まれない)
+				hard:	192(踏まれない)
+				luna:	224(踏まれる)
+			*/
+			#endif
 			{
 				data->state1 = SS10;
 			}
 			else
 			{
-				s->x256 += ((cos512((data->angle512/*_radian*/))*(t256(4)+((difficulty)<<8)))>>8)/**fps_fa ctor*/;
-				s->y256 += ((sin512((data->angle512/*_radian*/))*(t256(4)+((difficulty)<<8)))>>8)/**fps_fa ctor*/;
+#if 0
+/* CWの場合 */
+				s->x256 += ((cos512((data->angle512/*_radian*/))*(data->aya_speed)/*(t256(4)+(difficulty<<8))*/)>>8)/**fps_fa ctor*/;
+				s->y256 += ((sin512((data->angle512/*_radian*/))*(data->aya_speed)/*(t256(4)+(difficulty<<8))*/)>>8)/**fps_fa ctor*/;
+#else
+/* CCWの場合 */
+				s->x256 += ((sin512((data->angle512/*_radian*/))*(data->aya_speed)/*(t256(4)+(difficulty<<8))*/)>>8)/**fps_fa ctor*/;
+				s->y256 += ((cos512((data->angle512/*_radian*/))*(data->aya_speed)/*(t256(4)+(difficulty<<8))*/)>>8)/**fps_fa ctor*/;
+#endif
 			}
 			break;
-
+//--------
 		case SS06:	/* 左:待機->SS07へ */
-			enemy_boss02_waitstate(s,SS07);
+			sakuya_wait_state(s/*,SS07*/);
 			break;
 
 		case SS07:	/* 左:右回転攻撃->SS00, SS11 */
+			#if (1==USE_CONTROLLER)
 			enemy_boss02_sr_add1(s);
+			#endif //(1==USE_CONTROLLER)
 			if (0==(ra_nd()&(2-1)))
 			{
-				data->state1 = SS00;
-				data->n_wait3++;
+				data->state1 = SS00;/*	data->n_wait3++;*/
 			}
 			else
 			{	data->state1 = SS11;}
 			break;
+//--------
 
 		case SS08:	/* 右:待機->SS09へ */
-			enemy_boss02_waitstate(s,SS09);
+			sakuya_wait_state(s/*,SS09*/);
 			break;
 
 		case SS09:	/* 右:左回転攻撃->ひとまずSS00へ */
+			#if (1==USE_CONTROLLER)
 			enemy_boss02_sr_add2(s);
-			data->state1 = SS00;
-			data->n_wait3++;
+			#endif //(1==USE_CONTROLLER)
+			data->state1 = SS00;/*	data->n_wait3++;*/
 			break;
+//--------
 
-		case SS10:	/* プレイヤー位置付近:大玉3つ->ひとまずSS00へ */
-			{int angle_jikinerai_512;
-				angle_jikinerai_512=atan_512(player->y256-s->y256,player->x256-s->x256);
-				bullet_create_oodama0(s, t256(3), angle_jikinerai_512-deg_360_to_512(30), 20, 0, ((s->w128*86*2)>>8), (s->h128)); /*t256(s->w/3), t256(s->h/2)*/
-				bullet_create_oodama0(s, t256(3), angle_jikinerai_512					, 20, 0, ((s->w128*86*2)>>8), (s->h128)); /*t256(s->w/3), t256(s->h/2)*/
-				bullet_create_oodama0(s, t256(3), angle_jikinerai_512+deg_360_to_512(30), 20, 0, ((s->w128*86*2)>>8), (s->h128)); /*t256(s->w/3), t256(s->h/2)*/
-			}
-			data->state1 = SS00;
-			data->n_wait3++;
+		case SS10:	/* プレイヤー位置付近:大弾3つ->ひとまずSS00へ */
+			bullet_create_oodama3(s, t256(3.0), 20/*ransu512*/);	/* 大弾の追加 */
+			data->state1 = SS00;/*	data->n_wait3++;*/
 			break;
 
 		case SS11:	/* 左:前へ->SS12 */
 			if (s->y256 > t256(GAME_HEIGHT/3) )
-			{	data->state1 =SS12;}
+			{	data->state1++/* = SS12*/;}
 			else
-			{	s->y256 += (t256(5)+((difficulty)<<8))/**fps_fa ctor*/;}
+			{	s->y256 += (t256(1)+(data->aya_speed)/*(t256(4)+(difficulty<<8))*/)/**fps_fa ctor*/;}
 			break;
 
 		case SS12:
 			{
 				/* 弾に毒塗ってある設定 */
-				bullet_create_n_way_dan_sa_type(s, t256(5), ANGLE_JIKINERAI_KISUDAN, deg_360_to_512(30), BULLET_UROKO14_00_AOI+(ra_nd()&0x0f),	 5);	/*なるべく共通化*/
+#if 0
+/* CWの場合 */
+//				bullet_create_n_way_dan_sa_type(s, t256(5), ANGLE_JIKI_NERAI_DAN, deg_360_to_512((30)), BULLET_KOME_01_AOI+(ra_nd()&0x0f),	 5);	/*なるべく共通化*/
+#else
+/* CCWの場合 */
+//				bullet_create_n_way_dan_sa_type(s, t256(5), ANGLE_JIKI_NERAI_DAN, -deg_360_to_512CCW((30)), BULLET_KOME_01_AOI+(ra_nd()&0x0f),	 5);	/*なるべく共通化*/
+				bullet_create_n_way_dan_sa_type(s, t256(5), ANGLE_JIKI_NERAI_DAN, deg_360_to_512CCW(360-(30)), BULLET_KOME_01_AOI+(ra_nd()&0x0f),	 5);	/*なるべく共通化*/
+#endif
 			//	int angle_jikinerai_512;
 			//	angle_jikinerai_512=atan_512(player->y256-s->y256,player->x256-s->x256);
 			//	bullet_create_gg_dan(s, t256(5), angle_jikinerai_512+deg_360_to_512(60),	2/*state_hi*/, 0/*state_lo*/);		//いらない弾達。消した方がいいかも
@@ -782,35 +661,62 @@ static void enemy_boss02_move(SPRITE *s)
 			//	bullet_create_gg_dan(s, t256(5), angle_jikinerai_512-deg_360_to_512(30), -1/*state_hi*/, 0/*state_lo*/);
 			//	bullet_create_gg_dan(s, t256(5), angle_jikinerai_512-deg_360_to_512(60), -2/*state_hi*/, 0/*state_lo*/);
 			}
-			data->state1 = SS00;
-			data->n_wait3++;
+			data->state1 = SS00;/*	data->n_wait3++;*/
 			break;
 		}
 	}
-//	あとでコールバックにして共通化する。
+	/*---------------------------------------------------------
+		ダメージチェック
+	---------------------------------------------------------*/
+//
 	{
-		data->boss_base.boss_timer -= 1/*fps_fa ctor*/;
-		#if 1/*時間切れ(色々問題あるのでとりあえず無効)*/
-		if ((data->boss_base.boss_timer < 1))
+	//	if (b_health_alter_low1024 < (data->boss_base.boss_health & (1024-1)))/* 形態変更したら */
+		if (0==data->boss_base.boss_health)
 		{
-			data->boss_base.boss_timer = (60*64);
-		//	if ((data->state1 < SAKUYA_05_KEITAI/*4*/))
-		//	{
-		//		//レミリア戦の開始イベントが見れなくなっちゃうのでここは無効
-		//		#if (0==USE_REMILIA)
-		//		/* vs REMILIA */
-		//		if (2==select_player)
-		//		{data->boss_base.health=0/*1*/;}
-		//		else
-		//		#endif
-		//		{data->boss_base.health 	= ((/*4*/SAKUYA_05_KEITAI*1024)-1)-(data->state1<<10/**1024*/);}
-		//		sakuya_put_items(/*c,*/s);
-		//	}
+			if (0 != (data->boss_base.boss_life))/* 形態変更したら */
+			{
+				data->boss_base.boss_life--;
+				aya_put_items(s/*,t*/);
+			}
 		}
-		#endif
 	}
 //
+	{
+		if (0 == data->boss_base.boss_life)
+		{
+			if (data->boss_base.boss_health < 1)/*全員倒した？*/
+			{
+				item_create_for_boss(s, ITEM_CREATE_MODE_01);
+				player_add_score(data->boss_base.score);
+			//
+				player_set_destoroy_boss();
+				explosion_add_circle(s, 1); 	/* player_set_destoroy_boss();B02_BOSS_DESTROY が必要 */
+				s->type 	= SP_DELETE;
+			}
+		}
+	}
 }
+				/* コールバック登録 */
+			//	((PLAYER_DATA *)player->data)->callback_boss_hitbyweapon = callback_enemy_boss02_hitbyweapon_dummy; /* ダミーコールバック登録 */
+
+/*d*/
+/*d*/
+	//	HPが残り1024になった時。攻撃パターン変更
+	//	else if ((data->boss_base.boss_health<=(1024*2/*1024*1*/)) ) {	}
+	//	if (data->boss_base.boss_health <= 0)/*全員倒した？*/
+
+			#if 0
+			data->boss_base.boss_health = 0;/* なんかバグるので追加 */
+		/* なんかバグるので追加 */
+		//	((PLAYER_DATA *)player->data)->callback_boss_hitbyweapon = callback_enemy_boss00_hitbyweapon_dummy; /* ダミーコールバック登録 */
+			((PLAYER_DATA *)player->data)->callback_boss_hitbyweapon = callback_enemy_boss02_hitbyweapon_dummy; /* ダミーコールバック登録 */
+			((PLAYER_DATA *)player->data)->boss->type = SP_DELETE;
+			((PLAYER_DATA *)player->data)->boss->callback_mover = NULL;
+			#endif
+			#if 0
+			/* コールバック登録 */
+			((PLAYER_DATA *)player->data)->callback_boss_hitbyweapon = callback_enemy_boss02_hitbyweapon_dummy; /* ダミーコールバック登録 */
+			#endif
 
 
 /*---------------------------------------------------------
@@ -820,29 +726,34 @@ static void enemy_boss02_move(SPRITE *s)
 void add_boss_aya(STAGE_DATA *l)/*int lv*/
 {
 	SPRITE *s;
-//	s					= spr ite_add_file 0("boss/aya.png"/*"boss02_v2.png"*/,9,PRIORITY_03_ENEMY, 0); s->anim_speed=0;
-	s					= sprite_add_res(BASE_BOSS_AYA_PNG);
-	s->flags			|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK);
-	s->anim_frame		= 4;
-	s->type 			= SP_BOSS/*SP_BOSS02*/;
+//	s								= spr ite_add_file 0("boss/aya.png"/*"boss02_v2.png"*/,9,PRIORITY_03_ENEMY, 0); s->anim_speed=0;
+	s								= sprite_add_res(BASE_BOSS_AYA_PNG);
+	s->flags						|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK);
+	s->anim_frame					= 4;
+	s->type 						= SP_BOSS/*SP_BOSS02*/;
 	BOSS02_DATA *data;
-	data				= mmalloc(sizeof(BOSS02_DATA));
-	s->data 			= data;
-	data->boss_base.health		= (difficulty<<10/**1024*/)+3071+1024;
-//	data->boss_base.score		= score(2000)+score(1500)*difficulty;
-	data->boss_base.score		= adjust_score_by_difficulty(score(2000000));	/* 200万 */
-	data->state1		= 0;
-	data->state2		= 0;
-	data->wait1 		= 50;
-	data->wait2 		= 0;
-//	data->level 		= (l->user_y);
-	data->n_wait3		= 1;
-	s->callback_mover	= enemy_boss02_move;
-	s->x256 			= t256(GAME_WIDTH/2)-(s->w128);
-	data->xp256 		= s->x256;
-	s->y256 			= -(s->h128+s->h128);
+	data							= mmalloc(sizeof(BOSS02_DATA));
+	s->data 						= data;
+//	data->boss_base.boss_health 	= (difficulty<<10/**1024*/)+3071+1024;
+	data->boss_base.boss_health 	= 1024-1;
+	data->boss_base.boss_life		= (difficulty)+3;
+//	data->boss_base.score			= score(2000)+score(1500)*difficulty;
+	data->boss_base.score			= adjust_score_by_difficulty(score(2000000));	/* 200万 */
+	data->state1					= ST_00;/*0*/
+	data->wait1 					= 50;
+	data->wait2 					= 0;
+//	data->level 					= (l->user_y);
+	data->n_wait3					= 0/*1*/;
+	data->aya_speed 				= t256(4)+(difficulty<<8);
+	data->danmaku_type				= DT00;
+	data->move_type 				= 0;
+	data->ice_dan					= 1;
+	s->callback_mover				= move_aya;
+	s->x256 						= t256(GAME_WIDTH/2)-(s->w128);
+	data->xp256 					= s->x256;
+	s->y256 						= -(s->h128+s->h128);
 	//
-	data->boss_base.boss_timer		= 60*64;	/*	[] */
+	data->boss_base.boss_timer		= 40*64;	/* 40*64==40[count] 	約40[秒(64/60)](単位は秒ではない) */
 //	((PLAYER_DATA *)player->data)->bo ssmode=B00_NONE/*B01_BA TTLE*/;
 	((PLAYER_DATA *)player->data)->boss=s;
 	/* コールバック登録 */

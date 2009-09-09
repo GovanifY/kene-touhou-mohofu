@@ -69,6 +69,8 @@ static void move_yukari1(SPRITE *s)
 		}
 		break;
 	case 1:
+#if 0
+/* CWの場合 */
 		if (d->type==1)
 		{
 			d->angle512 += deg_360_to_512(4)/**fps_fa ctor*/;/*簡略化の仕様上少し位置がずれる(※１)*/
@@ -92,6 +94,32 @@ static void move_yukari1(SPRITE *s)
 				{	bullet_create_aka_maru_jikinerai(s, t256(d->level+2) );}
 			}
 		}
+#else
+/* CCWの場合 */
+		if (d->type==1)
+		{
+			d->angle512 += deg_360_to_512CCW(/*360+90*/-4)/**fps_fa ctor*/;/*簡略化の仕様上少し位置がずれる(※１)*/
+			if (d->angle512 >= deg_360_to_512CCW(360+90-180))
+			{
+				d->angle512 = deg_360_to_512CCW(360+90-180);
+				d->state=2;
+				if (d->level>0)
+				{	bullet_create_aka_maru_jikinerai(s, t256(d->level+2));}
+			}
+		}
+		else
+		if (d->type==2)
+		{
+			d->angle512 -= deg_360_to_512CCW(/*360+90*/-4)/**fps_fa ctor*/;/*簡略化の仕様上少し位置がずれる(※１)*/
+			if (d->angle512 <= deg_360_to_512CCW(360+90-0))
+			{
+				d->angle512 = deg_360_to_512CCW(360+90-0);
+				d->state=2;
+				if (d->level>0)
+				{	bullet_create_aka_maru_jikinerai(s, t256(d->level+2) );}
+			}
+		}
+#endif
 		else
 		{
 			d->state=2;
@@ -108,8 +136,9 @@ static void move_yukari1(SPRITE *s)
 		break;
 	}
 	/*似てるがちょっと違う--以下rwingx.cと同じ*/
-	s->x256+=((cos512((d->angle512))*d->speed256)>>8)/**fps_fa ctor*/;
-	s->y256+=((sin512((d->angle512))*d->speed256)>>8)/**fps_fa ctor*/;
+/* CCWの場合 */
+	s->x256+=((sin512((d->angle512))*d->speed256)>>8)/**fps_fa ctor*/;
+	s->y256+=((cos512((d->angle512))*d->speed256)>>8)/**fps_fa ctor*/;
 //	s->anim_frame=(deg_512_to_360(d->angle512+deg_360_to_512(270))/10)%36;
 //	s->anim_frame = ((((d->angle512/*+deg_360_to_512(270)*/)&(512-1))*(36/2))>>8);
 //	s->anim_frame = ((((d->angle512/*+deg_360_to_512(270)*/)&(512-1))*(32/2))>>8);
@@ -147,7 +176,13 @@ void add_zako_yukari1(STAGE_DATA *l)/*int lv*/
 		s->data 			= data;
 		data->base.score	= score(25*2);
 		data->base.health	= 1+(difficulty<<2);
-		data->angle512		= deg_360_to_512(90);
+#if 0
+/* CWの場合 */
+//		data->angle512		= deg_360_to_512(90);
+#else
+/* CCWの場合 */
+		data->angle512		= deg_360_to_512CCW(0/*360+90-90*/);
+#endif
 		data->speed256		= t256(2)/*2+difficulty+lv/2*/;/*速すぎ*/
 		data->state 		= 0;
 		data->level 		= lv;

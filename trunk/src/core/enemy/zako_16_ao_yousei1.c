@@ -11,7 +11,7 @@
 typedef struct
 {
 	ENEMY_BASE base;
-	int angleL512;
+	int angleCCW512;	/* â∫Ç™ÇOÇ∆ÇµÇƒç∂âÒÇË(ãtâÒÇË)ÇÃäpìx */
 	int speed256;
 	int state;
 	int time_out;
@@ -41,7 +41,7 @@ static void move_ao_yousei1(SPRITE *s)
 	d->time_out--;
 //	if (1 > d->time_out)
 //	{
-//		s->type=SP_DELETE;
+//		s->type = SP_DELETE;
 //	}
 	switch (d->state)
 	{
@@ -61,7 +61,8 @@ static void move_ao_yousei1(SPRITE *s)
 			{
 				bullet_create_n_way_dan_sa_type(s,
 					(t256(2.0)+((difficulty)<<6)),
-					ANGLE_JIKINERAI_KISUDAN, (int)(512/24),
+					ANGLE_JIKI_NERAI_DAN,
+					(int)(512/24),
 					BULLET_KUNAI12_04_AOI+((ra_nd())&3),
 					8);
 			}	/*Ç»ÇÈÇ◊Ç≠ã§í âª*/
@@ -81,25 +82,26 @@ static void move_ao_yousei1(SPRITE *s)
 		break;
 	case 1: 	/* ó£íE */
 		d->speed256 += 2;
-		d->angleL512 += 2;
-		if (255 < d->angleL512)
+		d->angleCCW512 += 2;
+		if (255 < d->angleCCW512)
 		{
-			d->angleL512 = 255;
+			d->angleCCW512 = 255;/*ê^è„*/
 		}
 		if (1 > s->y256)
 		{
-			s->type=SP_DELETE;
+			s->type = SP_DELETE;
 		}
 		break;
 	}
 	/*à»â∫rwingx.cÇ∆ìØÇ∂*/
-	s->x256+=((sin512((d->angleL512))*d->speed256)>>8)/**fps_fa ctor*/;
-	s->y256+=((cos512((d->angleL512))*d->speed256)>>8)/**fps_fa ctor*/;
+/* CCWÇÃèÍçá */
+	s->x256+=((sin512((d->angleCCW512))*d->speed256)>>8)/**fps_fa ctor*/;
+	s->y256+=((cos512((d->angleCCW512))*d->speed256)>>8)/**fps_fa ctor*/;
 //
 //	s->yx_anim_frame = (8+((d->time_out>>2)&(8-1)));
 	s->yx_anim_frame = (0x20 | ((d->time_out)&(0x10)) | ((d->time_out>>2)&(4-1)));
 /*
-d->time_out       ---a bc--
+d->time_out 	  ---a bc--
 s->yx_anim_frame  yyyy xxxx
 s->yx_anim_frame  --1a --bc
 */
@@ -125,7 +127,13 @@ void add_zako_ao_yousei1(STAGE_DATA *l)/*int lv*/
 	s->x256 			= ((l->user_y)<<8);/*lv*t256(35)+t256(40)*/
 	data->time_out		= 320;
 	data->speed256		= ((l->user_x));			/*t256(0.5)*/	/*+0.15*difficulty*/ /*0.7+0.3*difficulty*/
-	data->angleL512 	= deg_360_to_512(0);
+#if 0
+/* CWÇÃèÍçá */
+	data->angleCCW512	= deg_360_to_512(0);/*ê^â∫*/
+#else
+/* CCWÇÃèÍçá */
+	data->angleCCW512	= deg_360_to_512CCW(360-0);/*ê^â∫*/
+#endif
 	data->state 		= 0;
 	data->base.score	= score(20*2);
 	data->base.health	= 999;/* ìoèÍéûÇÕì|ÇπÇ»Ç¢ */	/*3+(difficulty)*/	/*1+(difficulty<<2)*/

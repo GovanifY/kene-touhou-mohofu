@@ -190,7 +190,8 @@ R8G8B8A8ƒtƒH[ƒ}ƒbƒg‚ÅF‚ğİ’è‚·‚é–‚É‚È‚è‚Ü‚·‚ªAPSP‚ÍƒŠƒgƒ‹ƒGƒ“ƒfƒBƒAƒ“‚ÌCPU‚ğ
 #define PSP_HEIGHT272	(272)
 
 /* ƒVƒ…[ƒeƒBƒ“ƒOGAME•”•ª‚Ì•\¦‰æ–Ê—Ìˆæ */
-#define GAME_WIDTH		(380)
+//#define GAME_WIDTH		(380)
+#define GAME_WIDTH		(PSP_WIDTH480-128)
 #define GAME_HEIGHT 	(272)
 
 #if 1
@@ -215,43 +216,52 @@ R8G8B8A8ƒtƒH[ƒ}ƒbƒg‚ÅF‚ğİ’è‚·‚é–‚É‚È‚è‚Ü‚·‚ªAPSP‚ÍƒŠƒgƒ‹ƒGƒ“ƒfƒBƒAƒ“‚ÌCPU‚ğ
 	#define T_GU_M_PI		GU_PI
 #endif
 
-/* ‚Pü‚ª360“x‚Ì’PˆÊŒn(deg360)‚ğ‚Pü‚ª‚QƒÎ‚Ì’PˆÊŒn(radian)‚Ö•ÏŠ·B‹y‚Ñ‹t•ÏŠ·B */
-#define deg360_2rad(x)		(((T_GU_M_PI*2)/(360.0))*(x))
-#define rad2deg360(x)		( (int)((x)*((360.0)/(T_GU_M_PI*2))+360)%360 )
+#if 0
+/* CW‚Ìê‡ */
+	/* ‚Pü‚ª360“x‚Ì’PˆÊŒn(deg360)‚ğ‚Pü‚ª‚QƒÎ‚Ì’PˆÊŒn(radian)‚Ö•ÏŠ·B‹y‚Ñ‹t•ÏŠ·B */
+	#define deg360_2rad(x)		(((T_GU_M_PI*2)/(360.0))*(x))
+	#define rad2deg360(x)		( (int)((x)*((360.0)/(T_GU_M_PI*2))+360)%360 )
 
-/* ‚Pü‚ª512“x‚Ì’PˆÊŒn(deg512)‚ğ‚Pü‚ª‚QƒÎ‚Ì’PˆÊŒn(radian)‚Ö•ÏŠ·B‹y‚Ñ‹t•ÏŠ·B */
-#define deg512_2rad(x)		(((T_GU_M_PI*2)/(512.0))*(x))
-//#define rad2deg512(x) 	( (int)((x)*((512.0)/(T_GU_M_PI*2))+512)%512 )
-//#define rad2deg512(x) 	( (int)((x)*((512.0)/(T_GU_M_PI*2))+512)&(512-1) )
-#define rad2deg512(x)		( (int)((x)*((512.0)/(T_GU_M_PI*2))/*+512*/)&(512-1) )
+	/* ‚Pü‚ª512“x‚Ì’PˆÊŒn(deg512)‚ğ‚Pü‚ª‚QƒÎ‚Ì’PˆÊŒn(radian)‚Ö•ÏŠ·B‹y‚Ñ‹t•ÏŠ·B */
+	#define deg512_2rad(x)		(((T_GU_M_PI*2)/(512.0))*(x))
+	//#define rad2deg512(x) 	( (int)((x)*((512.0)/(T_GU_M_PI*2))+512)%512 )
+	//#define rad2deg512(x) 	( (int)((x)*((512.0)/(T_GU_M_PI*2))+512)&(512-1) )
+	#define rad2deg512(x)		( (int)((x)*((512.0)/(T_GU_M_PI*2))/*+512*/)&(512-1) )
 
-/* ‚Pü‚ª4096“x‚Ì’PˆÊŒn(deg4096)‚ğ‚Pü‚ª‚QƒÎ‚Ì’PˆÊŒn(radian)‚Ö•ÏŠ·B‹y‚Ñ‹t•ÏŠ·B */
-#define deg4096_2rad(x) 	(((T_GU_M_PI*2)/(4096.0))*(x))
-//#define rad2deg4096(x)	( (int)((x)*((4096.0)/(T_GU_M_PI*2))+4096)%4096 )
-//#define rad2deg4096(x)	( (int)((x)*((4096.0)/(T_GU_M_PI*2))+4096)&(4096-1) )
-#define rad2deg4096(x)		( (int)((x)*((4096.0)/(T_GU_M_PI*2))/*+4096*/)&(4096-1) )
+	/* ‚Pü‚ª4096“x‚Ì’PˆÊŒn(deg4096)‚ğ‚Pü‚ª‚QƒÎ‚Ì’PˆÊŒn(radian)‚Ö•ÏŠ·B‹y‚Ñ‹t•ÏŠ·B */
+	#define deg4096_2rad(x) 	(((T_GU_M_PI*2)/(4096.0))*(x))
+	//#define rad2deg4096(x)	( (int)((x)*((4096.0)/(T_GU_M_PI*2))+4096)%4096 )
+	//#define rad2deg4096(x)	( (int)((x)*((4096.0)/(T_GU_M_PI*2))+4096)&(4096-1) )
+	#define rad2deg4096(x)		( (int)((x)*((4096.0)/(T_GU_M_PI*2))/*+4096*/)&(4096-1) )
 
-/* ‚Pü‚ª65536“x‚Ì’PˆÊŒn(deg65536)‚ğ‚Pü‚ª‚QƒÎ‚Ì’PˆÊŒn(radian)‚Ö•ÏŠ·B‹y‚Ñ‹t•ÏŠ·B */
-#define deg65536_2rad(x)	(((T_GU_M_PI*2)/(65536.0))*(x))
-//#define rad2deg65536(x)	( (int)((x)*((65536.0)/(T_GU_M_PI*2))+65536)%65536 )
-//#define rad2deg65536(x)	( (int)((x)*((65536.0)/(T_GU_M_PI*2))+65536)&(65536-1) )
-#define rad2deg65536(x) 	( (int)((x)*((65536.0)/(T_GU_M_PI*2))/*+65536*/)&(65536-1) )
+	/* ‚Pü‚ª65536“x‚Ì’PˆÊŒn(deg65536)‚ğ‚Pü‚ª‚QƒÎ‚Ì’PˆÊŒn(radian)‚Ö•ÏŠ·B‹y‚Ñ‹t•ÏŠ·B */
+	#define deg65536_2rad(x)	(((T_GU_M_PI*2)/(65536.0))*(x))
+	//#define rad2deg65536(x)	( (int)((x)*((65536.0)/(T_GU_M_PI*2))+65536)%65536 )
+	//#define rad2deg65536(x)	( (int)((x)*((65536.0)/(T_GU_M_PI*2))+65536)&(65536-1) )
+	#define rad2deg65536(x) 	( (int)((x)*((65536.0)/(T_GU_M_PI*2))/*+65536*/)&(65536-1) )
 
-/* ‚Pü‚ª360“x‚Ì’PˆÊŒn(deg360)‚ğ‚Pü‚ª512“x‚Ì’PˆÊŒn(deg512)‚Ö•ÏŠ·B‹y‚Ñ‹t•ÏŠ·B */
-#define deg_360_to_512(x)	((int)((x)*(512.0/360.0)))
-#define deg_512_to_360(x)	((int)((x)*(360.0/512.0)))
+	/* ‚Pü‚ª360“x‚Ì’PˆÊŒn(deg360)‚ğ‚Pü‚ª512“x‚Ì’PˆÊŒn(deg512)‚Ö•ÏŠ·B‹y‚Ñ‹t•ÏŠ·B */
+	#define deg_360_to_512(x)	((int)((x)*(512.0/360.0)))
+	#define deg_512_to_360(x)	((int)((x)*(360.0/512.0)))
 
-/* ‚Pü‚ª360“x‚Ì’PˆÊŒn(deg360)‚ğ‚Pü‚ª1024“x‚Ì’PˆÊŒn(deg1024)‚Ö•ÏŠ·B‹y‚Ñ‹t•ÏŠ·B */
-#define deg_360_to_1024(x)	((int)((x)*(1024.0/360.0)))
-#define deg_1024_to_360(x)	((int)((x)*(360.0/1024.0)))
+	/* ‚Pü‚ª360“x‚Ì’PˆÊŒn(deg360)‚ğ‚Pü‚ª1024“x‚Ì’PˆÊŒn(deg1024)‚Ö•ÏŠ·B‹y‚Ñ‹t•ÏŠ·B */
+	#define deg_360_to_1024(x)	((int)((x)*(1024.0/360.0)))
+	#define deg_1024_to_360(x)	((int)((x)*(360.0/1024.0)))
 
-/* ‚Pü‚ª360“x‚Ì’PˆÊŒn(deg360)‚ğ‚Pü‚ª4096“x‚Ì’PˆÊŒn(deg4096)‚Ö•ÏŠ·B‹y‚Ñ‹t•ÏŠ·B */
-#define deg_360_to_4096(x)	((int)((x)*(4096.0/360.0)))
-#define deg_4096_to_360(x)	((int)((x)*(360.0/4096.0)))
+	/* ‚Pü‚ª360“x‚Ì’PˆÊŒn(deg360)‚ğ‚Pü‚ª4096“x‚Ì’PˆÊŒn(deg4096)‚Ö•ÏŠ·B‹y‚Ñ‹t•ÏŠ·B */
+	#define deg_360_to_4096(x)	((int)((x)*(4096.0/360.0)))
+	#define deg_4096_to_360(x)	((int)((x)*(360.0/4096.0)))
 
-/* ‚Pü‚ª360“x‚Ì’PˆÊŒn(deg360)‚ğ‚Pü‚ª65536“x‚Ì’PˆÊŒn(deg65536)‚Ö•ÏŠ·B‹y‚Ñ‹t•ÏŠ·B */
-#define deg360_to_65536(x)	((int)((x)*(65536.0/360.0)))
-#define deg65536_to_360(x)	((int)((x)*(360.0/65536.0)))
+	/* ‚Pü‚ª360“x‚Ì’PˆÊŒn(deg360)‚ğ‚Pü‚ª65536“x‚Ì’PˆÊŒn(deg65536)‚Ö•ÏŠ·B‹y‚Ñ‹t•ÏŠ·B */
+	#define deg360_to_65536(x)	((int)((x)*(65536.0/360.0)))
+	#define deg65536_to_360(x)	((int)((x)*(360.0/65536.0)))
+
+#else
+/* CCW‚Ìê‡ */
+
+	/* ‚Pü‚ª360“x‚Ì’PˆÊŒn(deg360)‚ğ‚Pü‚ª512“x‚Ì’PˆÊŒn(deg512)‚Ö•ÏŠ·B‹y‚Ñ‹t•ÏŠ·B */
+	#define deg_360_to_512CCW(x)	((int)((x)*(512.0/360.0)))
+#endif
 
 /* ‚Pü‚Ì”ÍˆÍ“à‚ÉƒNƒŠƒbƒsƒ“ƒO */
 #define mask512(aaa)	{aaa &= (512-1);}

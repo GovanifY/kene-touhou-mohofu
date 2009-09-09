@@ -15,12 +15,12 @@
 typedef struct
 {
 	#if 1
-	int strength;/*union WEAPON_BASE*/		/*なんかアイテムに殺されるので追加？？？*/
+	int strength;/*union WEAPON_BASE*/		/* なんかアイテムに殺される(?)ので追加？？？ */
 	#endif
 	int y_sum256;	/* アイテム投げ出し用 y軸 積算値(y軸、上方がマイナス) */
 	int angle512;
-	int flags00;				// 収集フラグ	// [***090116		変更
-//	自動収集
+	int flags00;				/* 収集フラグ	[***090116	変更 */
+/*	自動収集 */
 	int flag_first; 			/* firstフラグ */
 	int x_sa256; 	/* 差分 x */
 	int y_sa256; 	/* 差分 y */
@@ -42,14 +42,23 @@ static void move_items(SPRITE *src)
 	/* 自動収集でなければ、単純に放物線を描いて落ちる */
 	if (0 == ((data->flags00)&ITEM_MOVE_FLAG_01_COLLECT))
 	{
-		if (data->y_sum256 < t256(3) )			// [***090123.0220	変更5=>4=>3
+		if (data->y_sum256 < t256(3.0) )			/* [***090123 [***090220	変更5=>4=>3 */
 		{
 			data->y_sum256 += data->angle512;		/* x1.5 */
 		}
 		src->y256 += (data->y_sum256)/**fps_fa ctor*/;
 		if (src->y256 > GAME_HEIGHT*256)
 		{
-			((PLAYER_DATA *)player->data)->chain_point = 0;
+			/* ウェポンアイテム (小P) (中P) (F) のいずれか逃したら、チェイン破棄 */
+			switch (src->type)
+			{
+			case SP_ITEM_00_P001:	/* ウェポンアイテム(小P) */
+			case SP_ITEM_01_P008:	/* ウェポンアイテム(中P) */
+			case SP_ITEM_04_P128:	/* ウェポンアイテム(F) */
+				((PLAYER_DATA *)player->data)->chain_point = 0;
+				break;
+			/* [点][星][B][1UP]等逃しても、チェイン維持。 */
+			}
 			src->type = SP_DELETE;				/* 画面外に出たらおしまい */
 		}
 	}
@@ -63,11 +72,11 @@ static void move_items(SPRITE *src)
 		if (0 == data->flag_first)
 		{
 			data->flag_first = 1;
-			data->y_sum256 = t256(1.0); 	/*5*0.5*/
+			data->y_sum256 = t256(1.0); 	/* (2.5==5*0.5) */
 		}
 		data->x_sa256 = (src->x256 - player->x256);
 		data->y_sa256 = (src->y256 - player->y256);
-		/*自分に集まる*/
+		/* 自分に集まる */
 		int aaa_x256;
 		int aaa_y256;
 		aaa_x256 = ((data->x_sa256 * data->y_sum256)>>8);	/**fps_fa ctor*/
@@ -131,12 +140,12 @@ static SPRITE *item_mono_create(SPRITE *src/*int x, int y*/, int sel_type)
 		/* 紅は、こうらしい */
 		if ( USER_BOMOUT_WAIT > ((PLAYER_DATA *)player->data)->bomber_time )
 		{	/* ボム中(設定無敵時間中)は100pts.(稼げない) */
-			bonus_info_score_nodel(s, SCORE_100);/*自動消去へ仕様変更s->type=SP_DELETE;*/
+			bonus_info_score_nodel(s, SCORE_100);/*自動消去へ仕様変更s->type = SP_DELETE;*/
 		}
-		else/*星点*/
+		else/* 星点 */
 		{	/* ボム後の実質無敵期間中はこちら(稼げる) */
 			/* ((graze/3)*10)+(500) pts */
-			bonus_info_any_score_nodel(s, (score(500)+(((((PLAYER_DATA *)player->data)->graze_point*86)>>8)/*(pd->graze_point/3)*/)) );/*自動消去へ仕様変更c->type=SP_DELETE;*/
+			bonus_info_any_score_nodel(s, (score(500)+(((((PLAYER_DATA *)player->data)->graze_point*86)>>8)/*(pd->graze_point/3)*/)) );/*自動消去へ仕様変更c->type = SP_DELETE;*/
 		}
 		s->flags			|= (SP_FLAG_VISIBLE|SP_FLAG_TIME_OVER);/*当たり判定なし*/
 	}
@@ -380,7 +389,7 @@ f8(v,v,v,M,M,v,v,v),f8(v,v,v,v,v,v,v,v),f8(M,M,M,M,M,M,M,v),f8(M,M,M,M,M,M,M,v),
 
 static void regist_score(int number, int x256, int y256)
 {
-	if (t256(380) < x256)	{ return; }
+	if (t256((GAME_WIDTH)/*(380)*/) < x256)	{ return; }
 //
 	static int index=0; 	/* 登録出来そうな位置 */
 //	int iii;
@@ -421,7 +430,7 @@ static void bonus_info_shered_add_score10_value(SPRITE *src, int score_value)
 	int jjj;
 	int i;
 	jjj=0;
-	/* 999990点以上は999990点の表示にする */
+	/* 加算スコアが 999990点 以上の場合は 999990点 の表示にする(表示のみ999990点で実際は、ちゃんとその分加算される) */
 	if (99999 < score_value) {	score_value = 99999;  }   /* MAX 999990[pts] */
 	i = 0; while ( 9999 < score_value) { score_value -= 10000; i++; jjj=1; }; if (0!=jjj) { regist_score(i, x256, y256); }	x256 += t256(8);
 	i = 0; while (	999 < score_value) { score_value -=  1000; i++; jjj=1; }; if (0!=jjj) { regist_score(i, x256, y256); }	x256 += t256(8);
@@ -468,10 +477,52 @@ void bonus_info_score_nodel(SPRITE *src/*int x, int y*/, int score_type)
 	ここでエクステンドチェック(残機が得点で増えるチェック)を
 	する予定。(だけど、まだ作っていない)
 ---------------------------------------------------------*/
+#define PLAYER_MAX_SCORE (score( 9999999990))
 
+
+#if (1==USE_EXTEND_CHECK)
+static int extend_check_score;
+static int extend_check_counter;
+#endif
 void player_add_score(int score_num)
 {
 	((PLAYER_DATA *)player->data)->my_score += score_num;
-	/* エクステンドチェック */
-
+	#if (1==USE_EXTEND_CHECK)
+	/* カンスト(スコアカウンター ストップ)チェック */
+	if ( PLAYER_MAX_SCORE < ((PLAYER_DATA *)player->data)->my_score )	/* カンスト チェック */
+	{
+		((PLAYER_DATA *)player->data)->my_score = PLAYER_MAX_SCORE;
+	}
+	#endif
+	/* 1000万、2500万、5000万、10000万でエクステンド */
+	#if (1==USE_EXTEND_CHECK)
+	if ( extend_check_score < ((PLAYER_DATA *)player->data)->my_score ) 	/* エクステンド チェック */
+	{
+		(PLAYER_DATA *)player->data)->zanki++;	/* エクステンド */
+		play_voice_auto_track(VOICE06_EXTEND);	/* エクステンド音 */
+		{
+			static const unsigned int extend_score_tbl[4/*8*/] =
+			{
+				0x7fffffff, 			/* エクステンド ストッパー(これ以上エクステンドしない) */
+				score(	 25000000),
+				score(	 50000000),
+				score(	100000000),
+			};
+			//	score(	 10000000),
+			//	score( 9999999990), 	/*==0x3b9ac9ff*/
+			//	score(21474836470), 	/*==0x7fffffff*/
+			//	score(42949672950), 	/*==0xffffffff*/
+			extend_check_counter++;
+			extend_check_counter &= (4-1);
+			extend_check_score = extend_score_tbl[extend_check_counter];
+		}
+	}
+	#endif
 }
+#if (1==USE_EXTEND_CHECK)
+void player_init_extend_score(void)
+{
+	extend_check_score		= score(   10000000);
+	extend_check_counter	= 0;
+}
+#endif

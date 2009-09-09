@@ -11,8 +11,8 @@ typedef struct
 {
 	ENEMY_BASE b;
 	int state;
-	int wait1;	//行動wait
-	int wait2;	//攻撃wait
+	int wait1;	/* 行動wait */
+	int wait2;	/* 攻撃wait */
 	int nnn;
 	SPRITE *s2;
 } YOKAI1_DATA;
@@ -25,7 +25,7 @@ static void callback_enemy_chuu_yokai1_hitbyweapon_dummy(SPRITE *s, SPRITE *t/*,
 	s = ボス本体 boss sprite
 	t = プレイヤーの弾 player's weapon
 ---------------------------------------------------------*/
- //if (s->type!=SP_SHOT_ZAKO)	{	callback_enemy_chuu_yokai1_hitbyweapon(tt,s/*,angle*/);	}	break;
+ //if (s->type!=S P_SHOT_ZAKO)	{	callback_enemy_chuu_yokai1_hitbyweapon(tt,s/*,angle*/);	}	break;
 static void callback_enemy_chuu_yokai1_hitbyweapon(SPRITE *s, SPRITE *t/*, int angle*/)
 {
 	YOKAI1_DATA *data=(YOKAI1_DATA *)s->data;
@@ -66,7 +66,7 @@ static void move_yokai1(SPRITE *s)
 		if (1 > data->wait1)
 		{
 			if (2 != data->nnn) {	data->wait1=150;	data->state=2;	}
-			else				{					data->state=5;	}
+			else				{						data->state=5;	}
 		}
 		break;
 	case 2:
@@ -83,7 +83,12 @@ static void move_yokai1(SPRITE *s)
 				/* 3:  8 == 20-(3*4) */
 				data->wait2 = (20-((difficulty)<<2))/*8*/ /*10*/;
 				play_voice_auto_track(VOICE14_YOKAI1_E_SHOT01);
-				bullet_create_n_way_dan_sa_type(s, (t256(3.0)+((difficulty)<<6)), ANGLE_JIKINERAI_KISUDAN, (int)(512/24), BULLET_UROKO14_03_MIDORI, 8);
+				bullet_create_n_way_dan_sa_type(s,
+					(t256(3.0)+((difficulty)<<6)),
+					ANGLE_JIKI_NERAI_DAN,
+					(int)(512/24),
+					BULLET_UROKO14_03_MIDORI,
+					8);
 			}
 		}
 		break;
@@ -101,7 +106,12 @@ static void move_yokai1(SPRITE *s)
 			{
 				data->wait2 = (20-((difficulty)<<2))/*8*/ /*10*/;
 				play_voice_auto_track(VOICE14_YOKAI1_E_SHOT01);
-				bullet_create_n_way_dan_sa_type(s, t256(3.25)+((difficulty)<<6), ANGLE_JIKINERAI_KISUDAN, (int)(512/24), BULLET_UROKO14_04_MIZUIRO, 7);
+				bullet_create_n_way_dan_sa_type(s,
+					t256(3.25)+((difficulty)<<6),
+					ANGLE_JIKI_NERAI_DAN,
+					(int)(512/24),
+					BULLET_UROKO14_04_MIZUIRO,
+					7);
 			}
 		}
 		break;
@@ -110,8 +120,8 @@ static void move_yokai1(SPRITE *s)
 		s->y256 -= t256(2)/**fps_fa ctor*/;
 		if ( -((s->h128+s->h128)) > s->y256)
 		{
-			s->type=SP_DELETE;
-			data->s2->type=SP_DELETE;
+			s->type = SP_DELETE;
+			data->s2->type = SP_DELETE;
 		}
 		break;
 	}
@@ -127,7 +137,7 @@ static SPRITE *create_usiro_no_mahojin(SPRITE *s)	//魔方陣グラフィック生成
 	s2					= sprite_add_res(BASE_MAHOUJIN_0_PNG);		//s2->anim_speed	= 0;/*"boss04-lo.png"*/
 	s2->flags			|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK|SP_FLAG_TIME_OVER);
 	s2->anim_frame		= 0;
-	s2->type			= SP_PLAYER2;
+	s2->type			= SP_MUTEKI;
 	s2->alpha			= 0;
 	s2->x256			= s->x256+((s->w128-s2->w128));
 	s2->y256			= s->y256+((s->h128-s2->h128));

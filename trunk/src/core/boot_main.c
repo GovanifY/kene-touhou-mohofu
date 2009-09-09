@@ -95,8 +95,8 @@ static /*int*/void regist_home_key(void)
 	game_main()
 ---------------------------------------------------------*/
 
-extern void shooting_game_init(void);
-extern void shooting_game_work(void);
+extern void shooting_game_core_init(void);
+extern void shooting_game_core_work(void);
 
 extern void all_menu_init(void);
 extern void all_menu_work(void);
@@ -130,29 +130,29 @@ static void game_main(void)
 	{
 		switch ((Uint8)(psp_loop>>8))
 		{
-		case (ST_INIT_GAME_PLAY>>8):		shooting_game_init();	break;
-		case (ST_WORK_GAME_PLAY>>8):		shooting_game_work();	break;
-		case (ST_INIT_MENU>>8): 			all_menu_init();		break;
-		case (ST_WORK_MENU>>8): 			all_menu_work();		break;
-//		case (ST_INIT_PLAYER_SELECT>>8):	player_opt_init();		break;吸収。なし
-		case (ST_WORK_PLAYER_SELECT>>8):	player_opt_work();		break;
-		case (ST_INIT_NAME_ENTRY>>8):		name_entry_init();		break;
-		case (ST_WORK_NAME_ENTRY>>8):		name_entry_work();		break;
+		case (ST_INIT_GAME_PLAY>>8):		shooting_game_core_init();	break;
+		case (ST_WORK_GAME_PLAY>>8):		shooting_game_core_work();	break;
+		case (ST_INIT_MENU>>8): 			all_menu_init();			break;
+		case (ST_WORK_MENU>>8): 			all_menu_work();			break;
+//		case (ST_INIT_PLAYER_SELECT>>8):	player_opt_init();			break;吸収。なし
+		case (ST_WORK_PLAYER_SELECT>>8):	player_opt_work();			break;
+		case (ST_INIT_NAME_ENTRY>>8):		name_entry_init();			break;
+		case (ST_WORK_NAME_ENTRY>>8):		name_entry_work();			break;
 //
-		case (ST_WORK_STAGE_CLEAR>>8):		stage_clear_work(); 	break;
+		case (ST_WORK_STAGE_CLEAR>>8):		stage_clear_work(); 		break;
 //
-	//	case (ST_INIT_GAME_OVER>>8):		gameover_init();		break;吸収。なし
-		case (ST_WORK_GAME_OVER>>8):		gameover_work();		break;	/*newsta te(ST_INTRO,0,1);*/
-	//	case (ST_INIT_RESULT>>8):			result_init();			break;吸収。なし
-		case (ST_WORK_RESULT>>8):			result_work();			break;
-	//	case (ST_INIT_KEY_CONFIG>>8):		key_config_init();		break;吸収。なし
-		case (ST_WORK_KEY_CONFIG>>8):		key_config_work();		break;
-	//	case (ST_INIT_STORY>>8):			story_init();			break;吸収。なし
-		case (ST_WORK_STORY>>8):			story_work();			break;
-	//	case (ST_INTRO>>8): 				intro_init();			break;
-	//	case (ST_INTRO>>8): 				intro_work();			break;
-	//	case (ST_START_INTRO>>8):			startintro_init();		break;
-	//	case (ST_START_INTRO>>8):			startintro_work();		break;
+	//	case (ST_INIT_GAME_OVER>>8):		gameover_init();			break;吸収。なし
+		case (ST_WORK_GAME_OVER>>8):		gameover_work();			break;	/*newsta te(ST_INTRO,0,1);*/
+	//	case (ST_INIT_RESULT>>8):			result_init();				break;吸収。なし
+		case (ST_WORK_RESULT>>8):			result_work();				break;
+	//	case (ST_INIT_KEY_CONFIG>>8):		key_config_init();			break;吸収。なし
+		case (ST_WORK_KEY_CONFIG>>8):		key_config_work();			break;
+	//	case (ST_INIT_STORY>>8):			story_init();				break;吸収。なし
+		case (ST_WORK_STORY>>8):			story_work();				break;
+	//	case (ST_INTRO>>8): 				intro_init();				break;
+	//	case (ST_INTRO>>8): 				intro_work();				break;
+	//	case (ST_START_INTRO>>8):			startintro_init();			break;
+	//	case (ST_START_INTRO>>8):			startintro_work();			break;
 		}
 		vbl_draw_screen();	/* 画面描画とキー入力(本当は v-blanc タイミングで) */
 	}

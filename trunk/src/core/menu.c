@@ -142,8 +142,8 @@ static MENU_RESOURCE my_111resource[RES99_MAX][/*8*/MAX_MENU_ITEMS/*10*/] =
 		{	0,NULL, 	},
 	},
 	{	//	RES09_PAUSE_MENU		//	/*const*/ char *pause_menu_options[] =/*(char *)*/pause_menu_options
-		{	155,		"CONTINUE GAME",	},
-		{	200,		"QUIT GAME",		},
+		{	60, 		"CONTINUE GAME",	},/*155*/
+		{	100,		"QUIT GAME",		},/*200*/
 		{	0,NULL, 	},
 	},
 };

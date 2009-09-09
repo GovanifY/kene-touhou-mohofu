@@ -15,8 +15,8 @@
 /* --- 曲の管理最大数 (最大読み込みファイル数) */
 //#define MAX_MUSIC_FILES 8/*32*/
 
-/* --- 効果音の管理最大数 (最大読み込みファイル数)MAX_VOICE_FILES=>USE_VOICE_FILES	*/
-#define MAX_VOICE_FILES 16/*64*/
+/* --- 効果音の管理最大数 (最大読み込みファイル数)MAX_VOICE_ALLOC_FILES=>VOICE16_MAX_FILES	*/
+//#define MAX_VOICE_ALLOC_FILES 16/*64*/
 
 /*---------------------------------------------------------
 
@@ -26,13 +26,13 @@
 #define USE_MUSIC_FILES 14 /**/
 
 /* ----- 効果音の数(読み込みファイル数) */
-#define USE_VOICE_FILES 15 /*いくつか追加*/
+//#define VOICE16_MAX_FILES 15 /*いくつか追加*/
 
 /* ----- 曲のトラック */
 static Mix_Music *music_track;
 
 /* ----- 効果音のトラック */
-static Mix_Chunk *voice_track[USE_VOICE_FILES];
+static Mix_Chunk *voice_track[VOICE16_MAX_FILES];
 
 #define NOT_USE_TRACK (-1)/*未使用フラグ*/
 
@@ -179,7 +179,7 @@ void exit_audio(void)
 	music_track = NULL;
 	/* 効果音の解放 */
 	{int i;
-		for (i=0; i<USE_VOICE_FILES; i++)
+		for (i=0; i<VOICE16_MAX_FILES; i++)
 		{
 			if ( voice_track[i] )
 			{
@@ -293,7 +293,7 @@ void set_voice_volume(int volume)
 	#ifdef ENABLE_PSP
 	#else
 	int i;
-	for (i=0; i<USE_VOICE_FILES; i++)
+	for (i=0; i<VOICE16_MAX_FILES; i++)
 	{
 		Mix_VolumeChunk(voice_track[i], volume);
 	}
@@ -315,7 +315,7 @@ void set_music_volume(int volume)
 
 static void voice_load(void)
 {
-	static const char *voice_file_name[USE_VOICE_FILES] =
+	static const char *voice_file_name[VOICE16_MAX_FILES] =
 	{
 		"shot.wav", 	/*	0 */
 		"hit.wav",		/*	1 */
@@ -332,12 +332,12 @@ static void voice_load(void)
 		"e_shot00.wav", /* 11 */
 		"b2_shot.wav",	/* 12 */
 		"_shot.wav",	/* 13 */
-		"e_shot01.wav"	/* 14 */
-						/* 15 */
+		"e_shot01.wav",	/* 14 */
+		"hit.wav",		/* 15 */
 	};		//いろいろ追加
 	int i;
 	char name[64/*52*/];
-	for ( i=0; i<USE_VOICE_FILES; i++ )
+	for ( i=0; i<VOICE16_MAX_FILES; i++ )
 	{
 	//	strcpy(name, data_dir);
 		strcpy(name, DIRECTRY_NAME_DATA "/sounds/");

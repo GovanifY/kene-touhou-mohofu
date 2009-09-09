@@ -7,7 +7,7 @@
 
 /* ステータスパネル専用フォント、ボスメーター */
 #define FONT01NAME "fonts/font01.png"
-#define FONT01CHARS " 0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklm"/*"ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890+-.:'\"x/=><*()!?@_ "*/
+#define FONT01CHARS " 0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghij"/*"ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890+-.:'\"x/=><*()!?@_ "*/
 #define FONT01W  8/*17*/
 #define FONT01H 10/* 8 17*/
 

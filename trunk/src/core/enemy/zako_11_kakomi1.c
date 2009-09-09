@@ -61,10 +61,11 @@ static void move_kakomi1(SPRITE *s)
 	{
 		d->radius256 += t256(2)/**fps_fa ctor*/;
 		if (d->radius256 > t256(350))
-		{	s->type=SP_DELETE;}
+		{	s->type = SP_DELETE;}
 	}
-	s->x256=((cos512((d->angle512))*(d->radius256))>>8)+t256(GAME_WIDTH/2); 	//ウィンドウ幅の変更
-	s->y256=((sin512((d->angle512))*(d->radius256))>>8)+t256(GAME_HEIGHT/2);
+/* CCWの場合 */
+	s->x256=((sin512((d->angle512))*(d->radius256))>>8)+t256(GAME_WIDTH/2); 	//ウィンドウ幅の変更
+	s->y256=((cos512((d->angle512))*(d->radius256))>>8)+t256(GAME_HEIGHT/2);
 }
 
 /*---------------------------------------------------------

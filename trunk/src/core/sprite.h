@@ -5,10 +5,16 @@
 
 /* Sprites */
 //#define MAX_SPRITE 200
-
-enum
-{
-	BASE_PLAZMA_PNG = 0,
+#if 0
+//	/*自分 */
+	BASE_SHIP_MED_PNG,
+	BASE_SHIP_MED_PNG_ma,
+	BASE_SHIP_MED_PNG_oz,
+	BASE_SHIP_MED_PNG_ci,
+	BASE_SHIP_MED_PNG_yu,
+//
+	/*ショット */
+	BASE_PLAZMA_PNG,
 	BASE_PLAZMA_PNG_ma,
 	BASE_PLAZMA_PNG_oz,
 	BASE_PLAZMA_PNG_ci,
@@ -20,49 +26,7 @@ enum
 	BASE_NEEDLE_PNG_ci,
 	BASE_NEEDLE_PNG_yu,
 //
-	BASE_TSHOOT_PNG,
-	BASE_TSHOOT_PNG_ma,
-	BASE_TSHOOT_PNG_oz,
-	BASE_TSHOOT_PNG_ci,
-	BASE_TSHOOT_PNG_yu,
-//
-	BASE_SHIP_MED_PNG,
-	BASE_SHIP_MED_PNG_ma,
-	BASE_SHIP_MED_PNG_oz,
-	BASE_SHIP_MED_PNG_ci,
-	BASE_SHIP_MED_PNG_yu,
-//
-	BASE_CORE_PNG,
-	BASE_CORE_PNG_ma,
-	BASE_CORE_PNG_oz,
-	BASE_CORE_PNG_ci,
-	BASE_CORE_PNG_yu,
-//
-	BASE_OPTION1_PNG,
-	BASE_OPTION1_PNG_ma,
-	BASE_OPTION1_PNG_oz,
-	BASE_OPTION1_PNG_ci,
-	BASE_OPTION1_PNG_yu,
-//
-	BASE_OPTION2_PNG,
-	BASE_OPTION2_PNG_ma,
-	BASE_OPTION2_PNG_oz,
-	BASE_OPTION2_PNG_ci,
-	BASE_OPTION2_PNG_yu,
-//
-	BASE_OPTION3_PNG,
-	BASE_OPTION3_PNG_ma,
-	BASE_OPTION3_PNG_oz,
-	BASE_OPTION3_PNG_ci,
-	BASE_OPTION3_PNG_yu,
-//
-	BASE_OPTION4_PNG,
-	BASE_OPTION4_PNG_ma,
-	BASE_OPTION4_PNG_oz,
-	BASE_OPTION4_PNG_ci,
-	BASE_OPTION4_PNG_yu,
-//
-//
+//	/* ボム用素材 */
 	BASE_BOMBER1_PNG,
 	BASE_BOMBER1_PNG_ma,
 	BASE_BOMBER1_PNG_oz,
@@ -98,10 +62,14 @@ enum
 	BASE_BOMBER6_PNG_oz,
 	BASE_BOMBER6_PNG_ci,
 	BASE_BOMBER6_PNG_yu,
-//
-	BASE_BOMBER_SLOW_PNG,
-	BASE_BONUS_ITEMS_PNG,
-//
+
+//	/* 低速ボム */
+	BASE_TSHOOT_PNG,
+	BASE_TSHOOT_PNG_ma,
+	BASE_TSHOOT_PNG_oz,
+	BASE_TSHOOT_PNG_ci,
+	BASE_TSHOOT_PNG_yu,
+	#endif
 #if 0
 	//BASE_TAMA_KUGEL_PNG,
 	//BASE_TAMA_KUGEL_MINI2_PNG,
@@ -111,22 +79,66 @@ enum
 	BASE_TAMA_BULLET_MING32_PNG,
 	BASE_TAMA_BULLET_JIPPOU32_PNG,
 //
-	BASE_TAMA_OODAMA_08_PNG,/* 大玉(黒青赤...)	黒玉(輪) PRIORITY_03_ENEMY は、あたり判定部分 */
+	/* 追加予定 */			/* クナイ弾 (敵弾) */
+//
+	BASE_TAMA_OODAMA_08_PNG,/* 大弾(黒青赤...)	黒玉(輪) PRIORITY_03_ENEMY は、あたり判定部分 */
 //	BASE_TAMA_OODAMA_00_PNG,/* 黒玉(輪)  あたり判定部分*/
-//	BASE_TAMA_OODAMA_01_PNG,/* 大玉(青) 表示部分 */
-//	BASE_TAMA_OODAMA_02_PNG,/* 大玉(赤) 表示部分*/
+//	BASE_TAMA_OODAMA_01_PNG,/* 大弾(青) 表示部分 */
+//	BASE_TAMA_OODAMA_02_PNG,/* 大弾(赤) 表示部分*/
 //
 	BASE_TAMA_BULLET_KNIFE01_PNG,/* 垂直降下ナイフ(赤) */
 	BASE_TAMA_BULLET_KNIFE18_PNG,/* 全方向ナイフ(青) */
 
 	BASE_HOMING16_PNG,/* ザコ 誘導弾 */
 #endif
+
+enum
+{
+//	/* 自分のあたり判定位置表示用コア */
+	BASE_CORE_PNG = 0,
+	BASE_CORE_PNG_ma,
+	BASE_CORE_PNG_oz,
+	BASE_CORE_PNG_ci,
+	BASE_CORE_PNG_yu,
 //
+
+//
+//	/* オプション用素材 */
+	BASE_OPTION1_PNG,
+	BASE_OPTION1_PNG_ma,
+	BASE_OPTION1_PNG_oz,
+	BASE_OPTION1_PNG_ci,
+	BASE_OPTION1_PNG_yu,
+//
+	BASE_OPTION2_PNG,
+	BASE_OPTION2_PNG_ma,
+	BASE_OPTION2_PNG_oz,
+	BASE_OPTION2_PNG_ci,
+	BASE_OPTION2_PNG_yu,
+//
+	BASE_OPTION3_PNG,
+	BASE_OPTION3_PNG_ma,
+	BASE_OPTION3_PNG_oz,
+	BASE_OPTION3_PNG_ci,
+	BASE_OPTION3_PNG_yu,
+//
+	BASE_OPTION4_PNG,
+	BASE_OPTION4_PNG_ma,
+	BASE_OPTION4_PNG_oz,
+	BASE_OPTION4_PNG_ci,
+	BASE_OPTION4_PNG_yu,
+//
+//	/* その他の自機素材 */
+	BASE_BONUS_ITEMS_PNG,
+//
+	/* BG面エフェクト */
+//	BASE_BOMBER_SLOW_PNG,
 	BASE_MAHOUJIN_0_PNG,
+//
 	BASE_TIKEI_BGPANEL1_PNG,
 	BASE_TIKEI_BGPANEL2_PNG,
 	BASE_TIKEI_GROUNDER08_PNG,
-//
+//	/* ザコ */
 	BASE_OBAKE08_PNG,
 	BASE_YUKARI32_PNG,
 	BASE_AKA_KEDAMA08_PNG,
@@ -140,22 +152,15 @@ enum
 	BASE_GREAT_FAIRY02_PNG,
 	BASE_AKA_MEIDO08_PNG,
 	BASE_AO_YOUSEI24_PNG,
-//	/* 小爆発 */
-	BASE_TR_BLUE_PNG,
-	BASE_TR_RED_PNG,
-	BASE_TR_GREEN_PNG,
-//	/* ザコ消滅爆発 */
-	BASE_BAKUHA05_PNG,
-	BASE_BAKUHA06_PNG,
-	BASE_BAKUHA07_PNG,
-//	/* 火炎爆発 */
-	BASE_BAKUHA_EX_PNG,
 //
-	BASE_BOSS_ALICE_0_PNG,
-	BASE_BOSS_ALICE_1_PNG,
-	BASE_BOSS_ALICE_2_PNG,
-	BASE_BOSS_ALICE_3_PNG,
-	BASE_BOSS_ALICE_4_PNG,
+//	/* ボス */
+//	BASE_BOSS_ALICE_0_PNG,
+//	BASE_BOSS_ALICE_1_PNG,
+//	BASE_BOSS_ALICE_2_PNG,
+//	BASE_BOSS_ALICE_3_PNG,
+//	BASE_BOSS_ALICE_4_PNG,
+	BASE_BOSS_ALICE_PNG,
+	BASE_BOSS_ALICE_DOLLS_PNG,
 //
 	BASE_BOSS_AYA_PNG,
 //
@@ -171,10 +176,26 @@ enum
 //
 	//BASE_KEY_ICON_PNG,
 //
+	/* フロント面エフェクト */
+
+//	/* 小爆発 */
+	BASE_TR_BLUE_PNG,
+	BASE_TR_RED_PNG,
+	BASE_TR_GREEN_PNG,
+//	/* ザコ消滅爆発 */
+	BASE_BAKUHA05_PNG,
+	BASE_BAKUHA06_PNG,
+	BASE_BAKUHA07_PNG,
+//	/* 火炎爆発 */
+	BASE_BAKUHA_EX_PNG,
+
+
+
 	FILE_RESOURCE_MAX/*最大数*/
 };
 enum
 {
+	#if 0
 	//TAMA_TYPE_KUGEL_PNG,
 	//TAMA_TYPE_KUGEL_MINI2_PNG,
 	TAMA_TYPE_BULLET_BEAM16_PNG,
@@ -183,17 +204,53 @@ enum
 	TAMA_TYPE_BULLET_MING32_PNG,
 	TAMA_TYPE_BULLET_JIPPOU32_PNG,
 //
-	TAMA_TYPE_OODAMA_08_PNG,/* 大玉(黒青赤...)	黒玉(輪) PRIORITY_03_ENEMY は、あたり判定部分 */
+	TAMA_TYPE_OODAMA_08_PNG,/* 大弾(黒青赤...)	黒玉(輪) PRIORITY_03_ENEMY は、あたり判定部分 */
 //	TAMA_TYPE_OODAMA_00_PNG,/* 黒玉(輪)  あたり判定部分*/
-//	TAMA_TYPE_OODAMA_01_PNG,/* 大玉(青) 表示部分 */
-//	TAMA_TYPE_OODAMA_02_PNG,/* 大玉(赤) 表示部分*/
+//	TAMA_TYPE_OODAMA_01_PNG,/* 大弾(青) 表示部分 */
+//	TAMA_TYPE_OODAMA_02_PNG,/* 大弾(赤) 表示部分*/
 //
 	TAMA_TYPE_BULLET_KNIFE01_PNG,/*垂直降下ナイフ(赤)*/
 	TAMA_TYPE_BULLET_KNIFE18_PNG,/*全方向ナイフ(青)*/
+	#else
+	TAMA_ATARI_02,
+	TAMA_ATARI_04,
+	#endif
 	TAMA_TYPE_HOMING16_PNG,
+//
+	JIKI_ATARI_ITEM_16,
+	JIKI_ATARI_ITEM_80,/* 扇本体 */
+//
+	BASE_BOMBER_ATARI_0a,/*4*/
+	BASE_BOMBER_ATARI_0b,/*16*/
+	BASE_BOMBER_ATARI_0c,/*16*/
+	BASE_BOMBER_ATARI_0d,/*32*/
+	BASE_BOMBER_ATARI_0e,/*4*/
+//
+	BASE_SHOT_ATARI_0a,/*4*/
+	BASE_SHOT_ATARI_0b,/*4*/
+	BASE_SHOT_ATARI_0c,/*4*/
+	BASE_SHOT_ATARI_0d,/*6*/
+	BASE_SHOT_ATARI_0e,/*8*/
+//
+	BASE_NEEDLE_ATARI_0a,/*6*/
+	BASE_NEEDLE_ATARI_0b,/*8*/
+	BASE_NEEDLE_ATARI_0c,/*12*/
+	BASE_NEEDLE_ATARI_0d,/*16*/
+	BASE_NEEDLE_ATARI_0e,/*8*/
+//
 };
-#define TAMA_TYPE_BULLET_DUMMY TAMA_TYPE_BULLET_MARU16_PNG
-
+#if 0
+	#define TAMA_TYPE_BULLET_DUMMY TAMA_TYPE_BULLET_MARU16_PNG
+#else
+	#define TAMA_TYPE_BULLET_DUMMY			TAMA_ATARI_02
+	#define TAMA_TYPE_BULLET_BEAM16_PNG 	TAMA_ATARI_02
+	#define TAMA_TYPE_BULLET_MARU16_PNG 	TAMA_ATARI_02
+	#define TAMA_TYPE_BULLET_MING32_PNG 	TAMA_ATARI_02
+	#define TAMA_TYPE_BULLET_JIPPOU32_PNG	TAMA_ATARI_02
+	#define TAMA_TYPE_OODAMA_08_PNG 		TAMA_ATARI_04
+	#define TAMA_TYPE_BULLET_KNIFE01_PNG	TAMA_ATARI_02
+	#define TAMA_TYPE_BULLET_KNIFE18_PNG	TAMA_ATARI_02
+#endif
 
 // 弾幕について
 // 弾幕(敵弾のみ自弾は含まない)はGuで描く事を計画中(というか妄想中)。
@@ -277,42 +334,50 @@ enum /*_priority_*/
 /*
 	ここは種類別ではなくて、機能別に分類してください。
 */
-#define SP_GROUP_PLAYER 		0x0100/*0x0100*/
-#define SP_GROUP_ZAKO			0x0200/*0x0400*/
-#define SP_GROUP_BOSS			0x0400/*0x0400*/
-#define SP_GROUP_BULLETS		0x0800/*0x0800*/
-#define SP_GROUP_ITEMS			0x1000/*0x1000*/
-#define SP_GROUP_PAUSE_OBJS 	0x2000/*0x2000*/
-#define SP_GROUP_ALL_TYPE		0xff00
-#define SP_GROUP_SUB_TYPE		0x00ff
+#define SP_GROUP_SHOT_ZAKO		(0x0000)/*0x0100*/
+#define SP_GROUP_SHOT_BOSS		(0x0080)/*0x0100*/
+//
+#define SP_GROUP_JIKI_GET_ITEM	(0x0100)/*0x0100*/
+#define SP_GROUP_PLAYER_CORE	(0x0200)/*0x0100*/
+#define SP_GROUP_ZAKO			(0x0400)/*0x0400*/
+#define SP_GROUP_BOSS			(0x0800)/*0x0400*/
+#define SP_GROUP_BULLETS		(0x1000)/*0x0800*/
+#define SP_GROUP_ITEMS			(0x2000)/*0x1000*/
+#define SP_GROUP_PAUSE_OBJS 	(0x4000)/*0x2000*/
+#define SP_GROUP_ETC			(0x8000)
+#define SP_GROUP_ALL_TYPE		(0xff00)
+#define SP_GROUP_SUB_TYPE_256	(0x00ff)
+#define SP_GROUP_SUB_TYPE_128	(0x007f)
 //#define SP_GROUP_SHOTS		0x0200
 //#define SP_GROUP_ETC			0x4000
-//#define SP_GROUP_ENEMYS		0x0200/*0x0400*/
-// 共用 */
-//#define SP_GROUP_TEXTS			(SP_GROUP_PLAYER)/*0x2000*/
+//#define SP_GROUP_ENEMYS		0x0200/*0x0400 */
+/* 共用 */
+//#define SP_GROUP_TEXTS			(SP_GROUP_PLAYER)/*0x2000 */
+
+
+
 enum /*sprite_type*/
 {
-//	自分 */
-	SP_PLAYER/*プレイヤーの本体(あたり判定がアイテム取得)*/ 	= /*0x0100*/SP_GROUP_PLAYER,	/* Unser Held */
-	SP_PLAYER2,/*プレイヤーのコア(あたり判定が死亡判定)*/
-//	自弾 */
-	SP_SHOT_BOSS/*プレイヤーのボスに有効弾*/,// 			//	= /*0x0200*/SP_GROUP_SHOTS, 	/* Waffen des Helden */
-	SP_SHOT_ZAKO,/*プレイヤーのボスに無効弾*/
-//	その他 */
-	SP_ETC,//												//	= /*0x4000*/SP_GROUP_ETC,		/* diverses */
-//------------- */
-//	ザコ敵 (ボム中、体当たりでプレイヤー死なない)  */
-	SP_ZAKO 													= /*0x0400*/SP_GROUP_ZAKO,		/* Die Boesen */
-//------------- */
-//	ボス敵 / 中ザコ敵 (ボム中、体当たりでプレイヤー死ぬ)  */
-	SP_CHUU /*特殊敵[中型敵]*/ /*SP_ZAKO_YOKAI1*/				= /*0x0400*/SP_GROUP_BOSS,		// [***090325
+/*	自分A */
+//	S P_PLAYER_ITEM/*プレイヤーの本体(あたり判定がアイテム取得)*/	= /*0x0100*/SP_GROUP_JIKI_GET_ITEM,	/* Unser Held */
+/*	自弾 */
+//	S P_SHOT_BOSS,/*プレイヤーのボスに有効弾*/					//	= /*0x0200*/SP_GROUP_SHOTS, 	/* Waffen des Helden */
+//	S P_SHOT_ZAKO,/*プレイヤーのボスに無効弾*/
+/*	自分B */
+	SP_PLAYER_CORE/*プレイヤーのコア(あたり判定が死亡判定)*/		= /*0x0100*/SP_GROUP_PLAYER_CORE,
+/* ------------- */
+/*	ザコ敵 (ボム中、体当たりでプレイヤー死なない)  */
+	SP_ZAKO 														= /*0x0400*/SP_GROUP_ZAKO,		/* Die Boesen */
+/* ------------- */
+/*	ボス敵 / 中ザコ敵 (ボム中、体当たりでプレイヤー死ぬ)  */
+	SP_CHUU /*特殊敵[中型敵]*/ /*SP_ZAKO_YOKAI1*/					= /*0x0400*/SP_GROUP_BOSS,		/* [***090325 */
 	SP_BOSS,
-//------------- */
-//	敵弾 */
-	SP_BULLET													= /*0x0800*/SP_GROUP_BULLETS,	/* ... und ihre Waffen */
-//------------- */
-//	アイテム */
-	SP_ITEM_00_P001 											= /*0x1000*/SP_GROUP_ITEMS, 	/* Bonus items */
+/* ------------- */
+/*	敵弾 */
+	SP_BULLET														= /*0x0800*/SP_GROUP_BULLETS,	/* ... und ihre Waffen */
+/* ------------- */
+/*	アイテム */
+	SP_ITEM_00_P001 												= /*0x1000*/SP_GROUP_ITEMS, 	/* Bonus items */
 	SP_ITEM_01_P008,	//←ウェポンアイテム(中)	//ウェポンアイテム(強)→SP_ITEM_EXTRA_SHIELD,
 	SP_ITEM_02_BOMB,	//→これらは低速ボムに吸収された。SP_ITEM_EXTRA_HOMING, SP_ITEM_EXTRA_HLASER,
 	SP_ITEM_03_1UP,
@@ -320,15 +385,92 @@ enum /*sprite_type*/
 	SP_ITEM_05_HOSI,
 	SP_ITEM_06_TENSU,
 	SP_ITEM_07_SPECIAL,
-//------------- */
-//	ポーズ中移動可能物 */
-	SP_MENU_TEXT	/* 文字 */									= /*0x2000*/SP_GROUP_PAUSE_OBJS,
-
+/* ------------- */
+/*	ポーズ中移動可能物 */
+	SP_MENU_TEXT	/* 文字 */										= /*0x2000*/SP_GROUP_PAUSE_OBJS,
+/*	その他 */
+	SP_MUTEKI														= /*0x4000*/SP_GROUP_ETC,		/* diverses */
 };
-
 enum
 {
-	BULLET_MARU8_00_AKA 				= /*0x0800*/SP_GROUP_BULLETS,
+//	プレイヤーアニメーション
+//	左へ移動のアニメーション	[中心→左側4→左側3→左側2→左側1→左側1→左側1→...]
+	JIKI_PLAYER_00_LEFT 	/* 左側1 */ 	/* 最も左 */			= SP_GROUP_JIKI_GET_ITEM/*0x0800*/,
+	JIKI_PLAYER_01_LEFT,	/* 左側2 */
+	JIKI_PLAYER_02_LEFT,	/* 左側3 */
+	JIKI_PLAYER_03_LEFT,	/* 左側4 */ 	/* 中より左 */
+//	繰り返しアニメーション		[中心1→中心2→中心3→中心4→中心1→中心2→中心3→中心4→...]
+	JIKI_PLAYER_04_MID, 	/* 中心1 */
+	JIKI_PLAYER_05_MID, 	/* 中心2 */
+	JIKI_PLAYER_06_MID, 	/* 中心3 */
+	JIKI_PLAYER_07_MID, 	/* 中心4 */
+//	右へ移動のアニメーション	[中心→右側1→右側2→右側3→右側4→右側4→右側4→...]
+	JIKI_PLAYER_08_RIGHT,	/* 右側1 */ 	/* 中より右 */
+	JIKI_PLAYER_09_RIGHT,	/* 右側2 */
+	JIKI_PLAYER_10_RIGHT,	/* 右側3 */
+	JIKI_PLAYER_11_RIGHT,	/* 右側4 */ 	/* 最も右 */
+	JIKI_ETC_00,			/* レーザー1 */
+	JIKI_ETC_01,			/* レーザー2 */
+	JIKI_ETC_02,			/* レーザー3 */
+	JIKI_ETC_03,			/* レーザー4 */
+//
+	JIKI_BOMBER_00, 		/* レーザー5 */
+	JIKI_BOMBER_01, 		/* レーザー6 */
+	JIKI_BOMBER_02, 		/* 星1 / 蝶1 / 十字炎1 */
+	JIKI_BOMBER_03, 		/* 星2 / 蝶2 / 十字炎2 */
+	JIKI_BOMBER_04, 		/* 星3 / 蝶3 / 十字炎3 */
+	JIKI_BOMBER_05, 		/* 星4 / 蝶4 / 十字炎4 */
+	JIKI_BOMBER_06, 		/* 星5 / 蝶5 / 長炎1 / 結界白 */
+	JIKI_BOMBER_07, 		/* 星6 / 蝶6 / 長炎2 / 結界黄  */
+//
+	JIKI_SHOT_00,			/* 長炎3 / 赤札C */
+	JIKI_SHOT_01,			/* 長炎4 / 赤札B */
+	JIKI_SHOT_02,			/* 赤札A / 黄星 / 小炎 / 氷 / 青蝶 */
+	JIKI_SHOT_03,			/* こうもり弾1 / 黄札1 */
+	JIKI_SHOT_04,			/* こうもり弾2 / 黄札2 */
+	JIKI_SHOT_05,			/* こうもり弾3 / 黄札3 */
+	JIKI_SHOT_06,			/* こうもり弾4 / 黄札4 */
+	JIKI_SHOT_07,			/* こうもり弾5 / 針弾 / 森弾 / ウェイブ弾 / ピンク蝶弾 */
+//
+	JIKI_OPTION_00_00,
+	JIKI_OPTION_00_01,
+	JIKI_OPTION_00_02,
+	JIKI_OPTION_00_03,
+	JIKI_OPTION_00_04,
+	JIKI_OPTION_00_05,
+	JIKI_OPTION_00_06,
+	JIKI_OPTION_00_07,
+//
+	JIKI_OPTION_01_00,
+	JIKI_OPTION_01_01,
+	JIKI_OPTION_01_02,
+	JIKI_OPTION_01_03,
+	JIKI_OPTION_01_04,
+	JIKI_OPTION_01_05,
+	JIKI_OPTION_01_06,
+	JIKI_OPTION_01_07,
+//
+	JIKI_OPTION_02_00,
+	JIKI_OPTION_02_01,
+	JIKI_OPTION_02_02,
+	JIKI_OPTION_02_03,
+	JIKI_OPTION_02_04,
+	JIKI_OPTION_02_05,
+	JIKI_OPTION_02_06,
+	JIKI_OPTION_02_07,
+//
+	JIKI_OPTION_03_00,
+	JIKI_OPTION_03_01,
+	JIKI_OPTION_03_02,
+	JIKI_OPTION_03_03,
+	JIKI_OPTION_03_04,
+	JIKI_OPTION_03_05,
+	JIKI_OPTION_03_06,
+	JIKI_OPTION_03_07,
+};
+enum
+{
+	BULLET_MARU8_00_AKA 				= SP_GROUP_BULLETS/*0x0800*/,
 	BULLET_MARU8_01_YUKARI,
 	BULLET_MARU8_02_AOI,
 	BULLET_MARU8_03_MIDORI,
@@ -354,34 +496,43 @@ enum
 	BULLET_MARU10_01_MIDORI,
 	BULLET_MARU10_02_MIDORI,
 	BULLET_MARU10_03_MIDORI,
-//
+//4
 	BULLET_HARI32_00_AOI,
 	BULLET_HARI32_01_AKA,
 	BULLET_HARI32_02_KIIRO,
 	BULLET_HARI32_03_DAIDAI,
-	BULLET_CAP16_04_SIROI,
-	BULLET_CAP16_05_AKA,
-	BULLET_KNIFE20_06_AOI,
-	BULLET_KNIFE20_07_AKA,
-//
+	BULLET_KNIFE20_04_AOI,
+	BULLET_KNIFE20_05_AKA,
+	BULLET_KNIFE20_06_YUKARI,
+	BULLET_KNIFE20_07_MIDORI,
+//5
 	BULLET_UROKO14_00_AOI,
 	BULLET_UROKO14_01_AKA,
 	BULLET_UROKO14_02_YUKARI,
 	BULLET_UROKO14_03_MIDORI,
 	BULLET_UROKO14_04_MIZUIRO,
 	BULLET_UROKO14_05_KIIRO,
+	BULLET_CAP16_04_SIROI,
+	BULLET_CAP16_05_SIROI,
+//6
+	BULLET_KOME_01_AOI,
+	BULLET_KOME_02_AKA,
+	BULLET_KOME_03_YUKARI,
+	BULLET_KOME_04_MIDORI,
+	BULLET_KOME_05_KIIRO,
 	BULLET_KUNAI12_06_AOI,
-	BULLET_KUNAI12_07_MIDORI,
-//
 	BULLET_KUNAI12_00_AKA,
+	BULLET_KUNAI12_07_MIDORI,
+//7
 	BULLET_KUNAI12_01_AKA,
 	BULLET_KUNAI12_02_MIDORI,
 	BULLET_KUNAI12_03_YUKARI,
 	BULLET_KUNAI12_04_AOI,
-	BULLET_OFUDA12_05_AOI,
-	BULLET_OFUDA12_06_AKA,
-	BULLET_OFUDA12_07_MIDORI,
-//
+	BULLET_OFUDA12_00_AOI,
+	BULLET_OFUDA12_01_AKA,
+	BULLET_OFUDA12_02_YUKARI,
+	BULLET_OFUDA12_03_MIDORI,
+//8
 	BULLET_OODAMA32_00_SIROI,
 	BULLET_OODAMA32_01_AOI,
 	BULLET_OODAMA32_02_AKA,
@@ -409,7 +560,7 @@ enum
 //	SP_LASER,
 //	SP_BOSS02ICE,
 //	SP_BIGBULLET,
-//	SP_BIGBULLET_DUMMY == SP_ETC,
+//	SP_BIGBULLET_DUMMY == SP_MUTEKI,
 
 //	SP_PL_FIREBALL,
 //	SP_PL_KILLRAY,
@@ -468,9 +619,10 @@ typedef struct _sprite
 	COLISION_MAP_CACHE *colision_bmp;		/* あたり判定用画像 / Zeiger auf Col-Map-Cache entry */
 	#endif /* (1==USE_ZUKEI_ATARI_HANTEI) */
 	int m_Hit256R;					/* あたり判定用 */
-	int m_angle512; 				/* 表示角度 */
+	int m_angleCCW512; 				/* 描画用角度(下が0度で左回り(反時計回り)) */
+	int m_zoom_x256; 				/* 表示拡大率 */
 //
-	int timeover_ticks; 			/* 作成してからの経過時間 (現在KETM自体にバグがある為、一定時間経過すると強制消去する) / number of ticks since creation */
+	//int timeover_ticks; 			/* 作成してからの経過時間 (現在KETM自体にバグがある為、一定時間経過すると強制消去する) / number of ticks since creation */
 //[4]
 	int x256;						/* x表示位置  (256固定小数点形式) / akt. Position */
 	int y256;						/* y表示位置  (256固定小数点形式) / akt. Position */
@@ -595,8 +747,7 @@ extern SPRITE *sprite_collision_check(SPRITE *tocheck, int type);
 //#define GRP_SCREEN_H
 /*	@since		Jul.27.2005 GRP_SCREEN_H		画面表示管理 */
 /* --- 管理する最大スプライト数 */
-//#define  SPRITEMAX	1024
-
+//#define SPRITEMAX	1024
 //#define SPRITEMAX 256
 #define SPRITEMAX	512
 
@@ -604,7 +755,7 @@ typedef struct
 {
 	UINT8 used;
 	UINT8 alpha;
-	UINT8 TextureId;
+	UINT8 texture_id;
 	UINT8 center;	/*dummy*/
 //
 	/* - public */

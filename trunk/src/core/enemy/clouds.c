@@ -115,7 +115,7 @@ void add_clouds(STAGE_DATA *l)
 		w3[used_clouds]->y256			= -64-(ra_nd()&((256*256)-1))/*(ra_nd()%GAME_HEIGHT)*/;
 		w3[used_clouds]->flags			&= (~(SP_FLAG_COLISION_CHECK));/*‚ ‚½‚è”»’è‚È‚µ*/
 		w3[used_clouds]->flags			|= (SP_FLAG_VISIBLE);
-		w3[used_clouds]->type			= SP_ETC;
+		w3[used_clouds]->type			= SP_MUTEKI;
 		w3[used_clouds]->alpha			= /*0*/255/*bg_alpha*/;
 	//	w3[used_clouds]->anim_frame 	= (l->user_x);	/*...*/
 		w3[used_clouds]->callback_mover = clouds_mover;

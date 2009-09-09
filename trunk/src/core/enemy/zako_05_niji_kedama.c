@@ -64,8 +64,9 @@ static void move_niji_kedama1(SPRITE *s)
 	}
 	d->angle512 += /*deg_360_to_512(5)*/(1)/**fps_fa ctor*/;/* deg_360_to_512(5) 速すぎる */
 	mask512(d->angle512);// if (d->angle>=360)	{	d->angle-=360;}
-	s->x256=((cos512((d->angle512))*(d->radius256))>>8)+d->xcenter256;
-	s->y256=((sin512((d->angle512))*(d->radius256))>>8)+d->ycenter256;
+/* CCWの場合 */
+	s->x256=((sin512((d->angle512))*(d->radius256))>>8)+d->xcenter256;
+	s->y256=((cos512((d->angle512))*(d->radius256))>>8)+d->ycenter256;
 
 	if (0 != difficulty)/* easy はホーミング撃たない */
 	{
@@ -91,14 +92,14 @@ static void move_niji_kedama1(SPRITE *s)
 	}
 	else if (d->time_out > 1200)
 	{
-		s->type=SP_DELETE;
+		s->type = SP_DELETE;
 	}
 	else if (d->time_out > 600)
 	{
 		d->ycenter256 -= t256(1)/*fps_fa ctor*/;
 	//	if (d->ycenter256+s->y256 < -((s->w)<<8))
 	//	{
-	//	//	s->type=SP_DELETE;
+	//	//	s->type = SP_DELETE;
 	//	//	s->flags &= (~(SP_FLAG_VISIBLE));
 	//		/* 明らかに少しはみ出て、また戻ってくる軌跡なのに、 */
 	//		/*	画面外に出たのを見えなくする(一度出たら見えないまま)なのは */

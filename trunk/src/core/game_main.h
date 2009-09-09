@@ -230,6 +230,13 @@ typedef struct
 #define DIRECTRY_NAME_LENGTH		(4)
 
 
+
+
+
+
+
+
+
 //void toggle_fullscreen(void);
 extern void error(int errorlevel, char *msg, ...);
 extern SDL_Surface *loadbmp0(char *filename, int use_alpha, int use_chache);
@@ -265,16 +272,20 @@ extern void psp_clear_screen(void);/* 仮想スクリーンを黒で消す */
 #define psp_pop_screen(aaa)  psp_move_screen( SDL_01_BACK_SCREEN, SDL_00_SCREEN )
 extern void psp_move_screen(int src_screen_number, int dst_screen_number );
 
-/* 1:エンディングデバッグ機能。0:この機能OFF */
+/* 0:使わない。1:使う。 1:エンディングデバッグ機能。0:この機能OFF */
 #define USE_ENDING_DEBUG (1)
 
-
-/* 1:キーコンフィグ使う。0:キーコンフィグ機能OFF */
-
+/* 0:使わない。1:使う。 1:キーコンフィグ使う。0:キーコンフィグ機能OFF */
 //#define USE_KEY_CONFIG (0)
 #define USE_KEY_CONFIG (1)
 
-/* [1:キーコンフィグ使う場合で] 1:方向キーのキーコンフィグを使う。0:方向キーのキーコンフィグ機能OFF */
+/* 0:使わない。1:使う。  [1:キーコンフィグ使う場合で] 1:方向キーのキーコンフィグを使う。0:方向キーのキーコンフィグ機能OFF */
 #define USE_KEY_CONFIG_ALLOW (0)
+
+/* 0:しない。 1:する。  コンティニューした場合、スコアランキング */
+#define USE_CONTINUED_RANKING (1)
+
+/* 0:しない。 1:する。 エクステンドチェック(作成中) */
+#define USE_EXTEND_CHECK (0)
 
 #endif /* _GAME_MAIN_H_ */

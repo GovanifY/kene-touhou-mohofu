@@ -21,7 +21,7 @@ typedef struct
 static int level;
 
 /* ‹¤—L•Ï” / shered */
-#define mmm_angle512 state
+#define zzz_angle512 state
 
 /*---------------------------------------------------------
 	“G‚â‚ç‚ê
@@ -56,12 +56,13 @@ static void move_aka_kedama1_2nd(SPRITE *s)
 			bullet_create_aka_maru_jikinerai(s, t256(2.5)+(/*d->*/level<<6) );/*‚‘¬’e*/	/*t256(3+d->level)*/
 		}
 	}
-	s->x256+=((cos512((d->mmm_angle512))*t256(3))>>8)/**fps_fa ctor*/;
-	s->y256+=((sin512((d->mmm_angle512))*t256(3))>>8)/**fps_fa ctor*/;
+/* CCW‚Ìê‡ */
+	s->x256+=((sin512((d->zzz_angle512))*t256(3))>>8)/**fps_fa ctor*/;
+	s->y256+=((cos512((d->zzz_angle512))*t256(3))>>8)/**fps_fa ctor*/;
 	if ((s->x256<0-((s->w128+s->w128)))||(s->x256 > t256(GAME_WIDTH))||
 		(s->y256<0-((s->h128+s->h128)))||(s->y256 > t256(GAME_HEIGHT)))
 	{
-		s->type=SP_DELETE;
+		s->type = SP_DELETE;
 	}
 }
 
@@ -89,7 +90,7 @@ static void add_local_aka_kedama1_2nd(SPRITE *src/*, int lv*/)
 		s->data 			= data;
 		data->base.score	= score(10*2)*(1+level/*lv*/);
 		data->base.health	= (1+level/*lv*/)+(difficulty<<4);
-		data->mmm_angle512	= (i<<6);//  (/*360*/512/8)*i;
+		data->zzz_angle512	= (i<<6);//  (/*360*/512/8)*i;
 	}
 }
 
@@ -106,8 +107,9 @@ static void move_aka_kedama1_1st(SPRITE *s)
 		{
 		int angle512;
 			angle512=atan_512(d->ty256-s->y256,d->tx256-s->x256);
-			s->x256 += ((cos512(angle512)*t256(1.5))>>8)/**fps_fa ctor*/;
-			s->y256 += ((sin512(angle512)*t256(1.5))>>8)/**fps_fa ctor*/;
+/* CCW‚Ìê‡ */
+			s->x256 += ((sin512(angle512)*t256(1.5))>>8)/**fps_fa ctor*/;
+			s->y256 += ((cos512(angle512)*t256(1.5))>>8)/**fps_fa ctor*/;
 		}
 	//	if ((d->tx-1 <= s->x) && (s->x <= d->tx+1) &&
 	//		(d->ty-1 <= s->y) && (s->y <= d->ty+1))
@@ -131,7 +133,7 @@ static void move_aka_kedama1_1st(SPRITE *s)
 		if (1 > d->time_out)
 		{
 			add_local_aka_kedama1_2nd(s/*,d->level*/);/* •Ïg •ª—ô */
-			s->type=SP_DELETE;	/* –{‘Ì‚Í‚¨‚µ‚Ü‚¢ */
+			s->type = SP_DELETE;	/* –{‘Ì‚Í‚¨‚µ‚Ü‚¢ */
 		}
 		break;
 	}

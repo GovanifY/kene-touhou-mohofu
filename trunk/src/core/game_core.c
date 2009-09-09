@@ -161,8 +161,11 @@ void init_stage_start_time(void)
 ---------------------------------------------------------*/
 extern int continue_stage;
 
+#define USE_DBWAIT (0)
+#if (1==USE_DBWAIT)
 #define TIME_20_DBWAIT /*20*/20/*2*/
 static int dbwait/*=TIME_20_DBWAIT*/;		//ボスを倒したときに弾を消滅させるための時間確保
+#endif /* (1==USE_DBWAIT) */
 extern void set_rnd_seed(int set_seed);
 extern /*int*/void load_stage(void/*int level*/);
 extern void player_init(void);
@@ -174,23 +177,37 @@ void common_load_init(void)
 	/* Load next stage */
 	load_stage();//if (0==load_stage(/*level*/))	{	error(ERR_WARN, "no entrys for level %d",level);}
 	// ロード中は処理落ちしているので、ロード後に時間を再作成する。
-	init_stage_start_time();/*stage_start_time=psp_get_uint32_ticks();*/
-//	game_start_time=psp_get_uint32_ticks();
+	init_stage_start_time();/*stage_start_time = psp_get_uint32_ticks();*/
+//	game_start_time = psp_get_uint32_ticks();
 
-//	stage_start_time=psp_get_uint32_ticks();
-//	game_v_time=(psp_get_uint32_ticks()-stage_start_time);
-//	game_v_time=(psp_get_uint32_ticks()-stage_start_time);
+//	stage_start_time = psp_get_uint32_ticks();
+//	game_v_time = (psp_get_uint32_ticks()-stage_start_time);
+//	game_v_time = (psp_get_uint32_ticks()-stage_start_time);
 	//	play_music(BGM_01_stage1);	コメントアウト
 	psp_loop = (ST_WORK_GAME_PLAY|0);
 }
 //	int stage;	stage=((PLAYER_DATA *)player->data)->stage;
 
-void shooting_game_init(void)
+
+
+/*---------------------------------------------------------
+	ゲームコア初回(ゲーム開始時)限定の初期化
+---------------------------------------------------------*/
+#if (1==USE_EXTEND_CHECK)
+extern void player_init_extend_score(void);
+#endif
+//void shooting_game_core_1st_init(void)
+void shooting_game_core_init(void)
 {
 	play_voice_auto_track(VOICE01_HIT);
 //
+	#if (1==USE_DBWAIT)
 	dbwait = TIME_20_DBWAIT;
+	#endif /* (1==USE_DBWAIT) */
 //
+	#if (1==USE_EXTEND_CHECK)
+	player_init_extend_score();
+	#endif
 	score_panel_init();
 	//controller_remove_all();
 	player_init();
@@ -202,7 +219,7 @@ void shooting_game_init(void)
 	//	pd->bo ssmode	= B07_AF TER_LOAD;
 		pd->state_flag	|= (STATE_FLAG_10_IS_LOAD_SCRIPT|STATE_FLAG_05_IS_BOSS|STATE_FLAG_11_IS_BOSS_DESTROY);
 		continue_stage--;
-		practice_mode=0;
+		practice_mode = 0;
 	}
 	#endif //(1==USE_ENDING_DEBUG)
 	player_now_stage/*data->now_stage*/ /*level*/	= continue_stage/*+1-1*/ /*1*/;
@@ -210,6 +227,9 @@ void shooting_game_init(void)
 	common_load_init();
 }
 
+/*---------------------------------------------------------
+	ゲームコア(ゲームクリアー時)の初期化
+---------------------------------------------------------*/
 extern void init_stage_start_time(void);
 extern void player_stage_clear(void);
 void stage_clear_work(void)
@@ -291,11 +311,15 @@ void my_special(void)
 	//	{
 	//	}
 	//	else
+			#if (1==USE_DBWAIT)
 		dbwait--;
 	//	if (0==dbwait)		// [***090313		変更
 		if (1>dbwait)		// [***090313		変更
+			#endif /* (1==USE_DBWAIT) */
 		{
+			#if (1==USE_DBWAIT)
 			dbwait = TIME_20_DBWAIT;
+			#endif /* (1==USE_DBWAIT) */
 		//
 			pd->state_flag &= (~(STATE_FLAG_11_IS_BOSS_DESTROY));/*off*/
 			boss_destroy();
@@ -324,7 +348,7 @@ extern void script_display(void);
 extern void score_display(void);
 extern void bg_work_draw(void);
 extern void draw_score_chache(void);
-void shooting_game_work(void)
+void shooting_game_core_work(void)
 {
 	while ((ST_WORK_GAME_PLAY>>8) == (psp_loop>>8) )
 	{

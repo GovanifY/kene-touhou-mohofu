@@ -193,7 +193,7 @@ static void result_font_render(void)
 		hd->phase_speed256					= result_const_status[RESULT_DATA_02_PHASE_SPEED256][i];
 		hd->amplifier_speed256				= t256(1.0);
 		result_sprites[i]->flags			|= (SP_FLAG_VISIBLE);
-		result_sprites[i]->type 			= SP_MENU_TEXT/*SP_ETC*/;
+		result_sprites[i]->type 			= SP_MENU_TEXT/*SP_MUTEKI*/;
 		result_sprites[i]->x256 			= 0;					//	result_sprites[5]->x		= 0/*30*/;
 		result_sprites[i]->y256 			= 0/*(i*25+110)*/;		//	result_sprites[5]->y		= 0/*50*/;
 		result_sprites[i]->callback_mover	= move_result;
@@ -220,7 +220,7 @@ static void result_font_free(void)
 	int i;
 	for (i=0; i<MAX_7_LINES; i++)
 	{
-		result_sprites[i]->type=SP_DELETE;
+		result_sprites[i]->type = SP_DELETE;
 		#if 1
 		/* ここでハングアップ */
 	//	if (result_surfaces[i])
@@ -343,30 +343,24 @@ extern int	now_max_continue;
 int last_score;
 void check_high_score(void)
 {
-	int my_flag;
-	my_flag=0;
-
-	if ( (/*3*/DEFAULT_MAX_CONTINUE-1) == now_max_continue )
-	{
-		if (last_score > high_score_table[select_player][4].score)
-		{
-			/* you made it! enter your name in the hiscore-list */
-			my_flag=1;
-			psp_loop=(ST_INIT_NAME_ENTRY|0);//newsta te(ST_NAME_ENTRY,0,1);
-		}
-	}
-//	if (1==my_flag) 	/* pspは0レジスタがあるので0と比較したほうが速い */
-	if (0!=my_flag)
+//	int my_flag;my_flag=0;
+	if (
+			#if (0==USE_CONTINUED_RANKING)
+			( (/*3*/DEFAULT_MAX_CONTINUE-1) == now_max_continue ) &&
+			#endif
+			(last_score > high_score_table[select_player][4].score)
+		)
 	{
 		/* you made it! enter your name in the hiscore-list */
+//		my_flag=1;
 		psp_loop=(ST_INIT_NAME_ENTRY|0);//newsta te(ST_NAME_ENTRY,0,1);
 	}
 	else
+//	if (0==my_flag) 	/* pspは0レジスタがあるので0と比較したほうが速い */
 	{
 		/* you'd better play barbie */
 		psp_loop=(ST_INIT_MENU|0/*ST_ME NU_SUB_MAIN_MENU*/);//newsta te(ST_MENU/*ST_INTRO*/,0,1);
 	}
-
 }
 
 /*---------------------------------------------------------
@@ -560,7 +554,13 @@ static void name_entry_draw(void)
 		static int angle512/*=0*/;
 		int xa;
 	//	int ya;
-		angle512 += deg_360_to_512(5/*15*/)/**fps_fa ctor*/;
+#if 0
+/* CWの場合 */
+		angle512 += deg_360_to_512((5)/*15*/)/**fps_fa ctor*/;
+#else
+/* CCWの場合 */
+		angle512 += deg_360_to_512CCW(360-(5)/*15*/)/**fps_fa ctor*/;
+#endif
 		mask512(angle512);//	if (angle>360)	{	angle-=360;}
 		xa		= ((/*cos512*/sin512((angle512)))>>(8-3));
 	//	xa		= ((/*cos512*/sin512((angle512))*10)>>8);

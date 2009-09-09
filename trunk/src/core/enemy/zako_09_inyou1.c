@@ -92,7 +92,12 @@ static void move_inyou1(SPRITE *s)
 			}
 			if ( 0==(ra_nd()&(16-1)) ) /*Šm—¦ã‚°‚½B[1/16]©[1/20]*/ /*%20*/
 			{
-				bullet_create_offset_dan_type(s, t256(5), ANGLE_JIKINERAI_DAN, t256(0), t256(0), BULLET_HARI32_01_AKA);
+				bullet_create_offset_dan_type(s,
+					t256(5),
+					ANGLE_JIKI_NERAI_DAN,
+					t256(0),
+					t256(0),
+					BULLET_HARI32_01_AKA);
 			}
 			d->state=2;
 		}
@@ -101,7 +106,7 @@ static void move_inyou1(SPRITE *s)
 	//	d->limit_y256 -= t256(4)/*t256(50)*/;/* ã‚ª‚é©‰º‚ª‚é */
 	//	if (d->limit_y256 > (GAME_HEIGHT) )
 		if (d->limit_y256 < (0) )
-		{	s->type=SP_DELETE;}
+		{	s->type = SP_DELETE;}
 		else
 		{	d->state=0;}
 		break;

@@ -49,30 +49,36 @@ typedef struct
 /*---------------------------------------------------------
 	消える魔方陣(おｋのやつ)
 ---------------------------------------------------------*/
-
+enum
+{
+	SS00 = 0,
+	SS01,
+	SS02,
+	SS03,
+};
 static void move_magic_formation(SPRITE *s)
 {
 	MAGICF_DATA *data = (MAGICF_DATA *)s->data;
 	switch (data->state)
 	{
-	case 0:
+	case SS00:
 		data->wait1 -= 1/*fps_fa ctor*/;
 		if (data->wait1 < 1/*0*/)
 		{
 		//	data->wait1=8/*5*/;
 		//	s->alpha	= 0;
-			data->state=1;
+			data->state++;/* = SS01;*/
 		}
 		break;
-	case 1: 		/* 出現 */
+	case SS01:		/* 出現 */
 		s->alpha += 3/*4*/ /**fps_fa ctor*/;
 		if (180 < (unsigned int)(s->alpha))
 		{
 			s->alpha = 180;
-			data->state=2;
+			data->state++;/* = SS02;*/
 		}
 		break;
-	case 2:
+	case SS02:
 		if (0 < data->wait2)		// [***090128		変更
 		{
 			data->wait1--;
@@ -81,6 +87,32 @@ static void move_magic_formation(SPRITE *s)
 				data->wait1=8/*5*/;/*プログラムが速くなってる分遅くする*/
 				data->wait2--;
 				play_voice_auto_track(VOICE10_MAGICF_E_SHOT);
+				/* 速度は 1.0-3.0までの無段階乱数に変更 */
+				{	int angle512;
+					angle512=(ra_nd()&(512-1))/*%360*/;
+					bullet_create_tomari2_dan(s,
+						/*t256(sp)*/((ra_nd()&(512-1))+256)/*speed256*/,
+						/*degtorad*/(angle512),
+						t256(0.04),
+						ANGLE_NO_SHOT_DAN);
+				}
+			}
+		}
+		else
+		{
+			data->state++;/* = SS03;*/
+		}
+		break;
+	case SS03:		/* 消える */
+		s->alpha -= 1/*2*/ /**fps_fa ctor*/;
+		if ( 4/*0*/ > (unsigned int)(s->alpha))
+		{
+			s->alpha = 0;
+			s->type = SP_DELETE;
+		}
+		break;
+	}
+}
 #if 0
 				int sp;
 				#if 0
@@ -109,26 +141,6 @@ static void move_magic_formation(SPRITE *s)
 				sp++;	/* sp = 1 or 2 or 3 */
 				/* 速度は (1.0まれ) か 2.0 か 3.0 */
 #endif
-				/* 速度は 1.0-3.0までの無段階乱数に変更 */
-				{	int angle512;
-					angle512=(ra_nd()&(512-1))/*%360*/;
-					bullet_create_tomari2_dan(s, /*t256(sp)*/((ra_nd()&(512-1))+256)/*speed256*/, /*degtorad*/(angle512), t256(0.04), ANGLE_NO_SHOT_DAN);
-				}
-			}
-		}
-		else
-		{	data->state=3;}
-		break;
-	case 3: 		/* 消える */
-		s->alpha -= 1/*2*/ /**fps_fa ctor*/;
-		if ( 4/*0*/ > (unsigned int)(s->alpha))
-		{
-			s->alpha = 0;
-			s->type = SP_DELETE;
-		}
-		break;
-	}
-}
 
 /*---------------------------------------------------------
 	ばらまき攻撃魔方陣
@@ -138,40 +150,56 @@ static void lose_grounder(SPRITE *s)
 {
 //	case SP_GROUNDER:
 	if (rand_percent(30))	{	item_create(s,					  SP_ITEM_00_P001,	1, (ITEM_MOVE_FLAG_01_COLLECT|ITEM_MOVE_FLAG_06_RAND_XY)/*(up_flags)*/ );}
-	if (rand_percent(30))	{	item_create(s,/*->x+ 5, c->y+5,*/ SP_ITEM_06_TENSU, 1, (ITEM_MOVE_FLAG_01_COLLECT|ITEM_MOVE_FLAG_06_RAND_XY)/*(up_flags)*/ );}
 	if (rand_percent(30))	{	item_create(s,/*->x+10, c->y-5,*/ SP_ITEM_00_P001,	1, (ITEM_MOVE_FLAG_01_COLLECT|ITEM_MOVE_FLAG_06_RAND_XY)/*(up_flags)*/ );}
+	if (rand_percent(30))	{	item_create(s,/*->x+ 5, c->y+5,*/ SP_ITEM_06_TENSU, 1, (ITEM_MOVE_FLAG_01_COLLECT|ITEM_MOVE_FLAG_06_RAND_XY)/*(up_flags)*/ );}
 }
 
 /*---------------------------------------------------------
 	ばらまき攻撃魔方陣
 ---------------------------------------------------------*/
-
-static void move_grounder(SPRITE *s)	// [***090124 攻撃パターンを変える
+enum
+{
+	ST00 = 0,
+	ST01,
+	ST02,
+	ST03,
+};
+static void move_grounder(SPRITE *s)	// [***090124 攻撃パターンを変える */
 {
 	GROUNDER_DATA *data = (GROUNDER_DATA *)s->data;
 	switch (data->state)
 	{
-	case 0:
+	case ST00:
 		if ((s->y256 >= player->y256) ||
 			(s->y256 > t256(100)) )
 		{
-			data->state=1;
+			data->state++;/* = ST01;*/
 			bullet_create_aka_maru_jikinerai(s, t256(1) );
 		}
 		break;/*??? [***090210 追加 */
-	case 1:
+	case ST01:
 		if (s->y256 > t256(GAME_HEIGHT+16+2))/* GAME_HEIGHT+16+2==290 */
 		{
-			s->type=SP_DELETE;
+			s->type = SP_DELETE;
 		}
 	}
-	if (data->wait2<(difficulty*7)+10) // [***090128 変更
+	if (data->wait2<(difficulty*7)+10) // [***090128 変更 */
 	{
 		data->wait1--;
 		if (data->wait1 < 1/*0*/)
 		{
 			data->wait1=25-(difficulty*5);
 			play_voice_auto_track(VOICE10_MAGICF_E_SHOT);
+			/* 速度は 1.0-4.0までの乱数(ただし上方域に偏差)に変更 */
+			bullet_create_tomari2_dan(s,
+				((ra_nd()&(1024-1))|(0x100))/*t256(sp)*/,
+				/*deg512_2rad*/((ra_nd()&(512-1)))/*de gtorad(ra_nd()%360)*/,
+				t256(0.03),
+				ANGLE_NO_SHOT_DAN);
+		}
+	}
+	s->y256 += data->speed256/**fps_fa ctor*/;
+}
 #if 0
 			int sp;
 			#if 0
@@ -203,12 +231,6 @@ static void move_grounder(SPRITE *s)	// [***090124 攻撃パターンを変える
 			#endif
 			/* sp == 1 or 2 or 3 or 4 */
 #endif
-			/* 速度は 1.0-4.0までの乱数(ただし上方域に偏差)に変更 */
-			bullet_create_tomari2_dan(s, ((ra_nd()&(1024-1))|(0x100))/*t256(sp)*/, /*deg512_2rad*/((ra_nd()&(512-1)))/*de gtorad(ra_nd()%360)*/, t256(0.03), ANGLE_NO_SHOT_DAN);
-		}
-	}
-	s->y256 += data->speed256/**fps_fa ctor*/;
-}
 
 /*---------------------------------------------------------
 	ベースパネル
@@ -267,7 +289,7 @@ type = /*type*/l->user_command/*1-1*/;
 	data			= mmalloc(sizeof(BGPANEL_DATA));
 //	data			= mmalloc(sizeof(GROUNDER_DATA));
 //	data			= mmalloc(sizeof(MAGICF_DATA));
-	data->state 	= 0;
+	data->state 	= 0;/* SS00 または ST00 */
 //	data->tx256 	= player->x256;
 //	data->ty256 	= player->y256;
 //	data->level 	= 0;
@@ -319,7 +341,7 @@ type = /*type*/l->user_command/*1-1*/;
 		break;
 	case BTYPE_04_MAGIC_FORMATION:		/* 消える魔方陣 */	//	"魔方陣2",	/*	"MAGICF",*/
 		s					= sprite_add_res(BASE_TIKEI_GROUNDER08_PNG);	s->anim_speed	=  3 /*(5-difficulty)*/ /*2*/;/*9"grounder.png"*/
-		s->type 			= SP_PLAYER2;
+		s->type 			= SP_MUTEKI;
 		s->flags			|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK|SP_FLAG_TIME_OVER);
 		s->callback_mover	= move_magic_formation;
 		s->alpha			= 2/*0*/;

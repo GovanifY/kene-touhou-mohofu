@@ -46,7 +46,9 @@ static void move_obake(SPRITE *s)
 	else						{	s->x256 += t256(0.6)/**fps_fa ctor*/;}
 	s->y256 += t256(1.5)/**fps_fa ctor*/;
 	if (s->y256 > t256(GAME_HEIGHT))
-	{	s->type=SP_DELETE;}
+	{
+		s->type = SP_DELETE;
+	}
 }
 
 /*---------------------------------------------------------

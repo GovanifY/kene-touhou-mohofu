@@ -11,8 +11,8 @@ static SDL_Surface *power_gauge;	// パワーゲージ。俺の環境だとloadbmp2で作ると普
 static SDL_Surface *boss_gauge; 	// [***090305		追加:ボスHPゲージ
 
 /* サイドパネルの横表示位置 pannel x offset */
-#define PPP 380
-
+//#define PPP (380)
+#define PPP (GAME_WIDTH)
 
 /*---------------------------------------------------------
  * 10進数表示を行う。
@@ -145,7 +145,7 @@ static void draw_stars_status( int g_num, int num, int y_suf)
 // ketmに差分を上書きすると何故か普通に表示される。
 static void draw_power_gauge(int weapon/*, int dx, int dy*/)
 {
-	#define WP_GAUGE_X_OFS (PPP+7+9)
+	#define WP_GAUGE_X_OFS (PPP+7+9+3*8)
 	#define WP_GAUGE_Y_OFS (124-2)
 	SDL_Rect srec, drec;
 	srec.x = 0;
@@ -171,20 +171,75 @@ static void draw_power_gauge(int weapon/*, int dx, int dy*/)
 static void draw_boss_gauge(void/*int dx, int dy*/) 	// [***090305		変更
 {
 	SPRITE *s = ((PLAYER_DATA *)player->data)->boss;
-	int boss_hp_value=(((BOSS_BASE *)s->data)->health);/*(???)141477*/
+	int boss_hp_low_value=(((BOSS_BASE *)s->data)->boss_health);/*(???)141477*/
+	int boss_life_value=(((BOSS_BASE *)s->data)->boss_life);/*(???)141477*/
 
 	#if 0
-	if (0 > boss_hp_value)	return;/* 負数の場合は何もしない */
-	if (9*1024 < boss_hp_value)	return;/* 範囲外の場合は何もしない */
+	if (0 > boss_hp_low_value)	return;/* 負数の場合は何もしない */
+	if (9*1024 < boss_hp_low_value) return;/* 範囲外の場合は何もしない */
 	#else
-	if (0 != ((boss_hp_value)&(0xffffc000)) ) 	return;/* 範囲外の場合は何もしない */
-	#endif
-
-
-	#if 1
-	unsigned char boss_timer_value = ((((BOSS_BASE *)s->data)->boss_timer)>>6);/* */
+//	if (0 != ((boss_hp_low_value)&(0xffffc000)) )	return;/* 範囲外の場合は何もしない */
+	if (0 > boss_hp_low_value)
+	{
+		(((BOSS_BASE *)s->data)->boss_health) = 0;
+	}
+	if (0==(boss_hp_low_value+boss_life_value))
+	{
+		return;/* 範囲外の場合は何もしない */
+	}
 	#endif
 //
+	#if 1/*ボス時間経過*/
+//	if ()
+//	if ((STATE_FLAG_05_IS_BOSS|0) == (pd->state_flag&(STATE_FLAG_05_IS_BOSS|STATE_FLAG_06_IS_SCRIPT)))
+	{
+		((BOSS_BASE *)s->data)->boss_timer -= 1/*fps_fa ctor*/;
+		if ((((BOSS_BASE *)s->data)->boss_timer < 1))
+		{
+			((BOSS_BASE *)s->data)->boss_timer	= (60*64);
+			((BOSS_BASE *)s->data)->boss_health = 0;
+		}
+	}
+	unsigned char boss_timer_low	= ((((BOSS_BASE *)s->data)->boss_timer)&0x3f);/* */
+	unsigned int boss_timer_value	= ((((BOSS_BASE *)s->data)->boss_timer)>>6);/* */
+	#endif
+	//	99 以上は 99 表示
+	if (99<boss_timer_value)
+	{
+		boss_timer_value = 99;
+	}
+
+/*
+	カウンタについて：
+	カウンタは 9 から点滅＆音を鳴らすという風に
+	心理的に受けとれるようにしてある。
+	これを本当に 9 から処理すると人間の感覚に合わない。
+//
+	音は 10 (の終わり)から鳴らす。これは 10 の始めは 9 の終わりなので、
+	9 から鳴っているとみなせる。(理屈上ズレはない)
+//
+	点滅は 10 から点滅させる。これは 10 から本当に点滅している。
+	注意深く見れば 10 が消えている。(音が鳴る前に 10 が消えている)
+	しかし人間の感覚からすると「 9 から点滅しているように感じる」
+	人間の視覚は予告が無いと区切りに反応しない。
+//
+	11 11 11 10 10 10 09 09 09 08 08 08 (時間の流れ)
+	無 無 無 無 無 無 音 無 無 音 無 無 (音は 10 (の終わり)から鳴らす。理屈上ズレはない)
+	点 点 点 点 点 消 点 点 消 点 点 消 (点滅は 10 から点滅させる。人間の感覚からすると「 9 から点滅しているように感じる」)
+				   ↑
+*/
+
+	if (0==boss_timer_low)
+	{
+		/* カウント 9 から音を鳴らす． */
+	//	if ((10  )>boss_timer_value)	/* (10	)==設定値 10 で、カウント 8 から音が鳴るように聞こえる． */
+		if ((10+1)>boss_timer_value)	/* (10+1)==設定値 11 で、カウント 9 から音が鳴るように聞こえる． */
+		{
+			play_voice_auto_track(VOICE15_COUNT_TIMER);
+		}
+	}
+
+
 	/* boss hp 画像の文字幅分 / gauge stringth x width */
 	#define HPGAUGE_X_OFS (50)
 	#define HPGAUGE_Y_OFS (6)
@@ -196,16 +251,24 @@ static void draw_boss_gauge(void/*int dx, int dy*/) 	// [***090305		変更
 	/* 1024以上の値は数字で表示 */
 	{	char buffer[4/*3*/];
 	#if 1
-	//	スペル残り時間表示
-		strcpy(buffer,"00");
-		dec_display( (boss_timer_value), 2, (char *)buffer);
-		font_print_screen_xy(buffer, FONT01/*FONT06*/, BOSS_TIMER_X_OFS, BOSS_TIMER_Y_OFS);
+
+		//	スペル残り時間表示
+		if (
+			//	(9<boss_timer_value) || 	/* 10以上は無条件で表示 */		/* カウント 8 から点滅してるように見える． */
+				(10<boss_timer_value) ||	/* 11以上は無条件で表示 */		/* カウント 9 から点滅してるように見える． */
+				(20<boss_timer_low) 		/* 点滅 20=(64/3) */
+			)
+		{
+			strcpy(buffer,"00");
+			dec_display( (boss_timer_value), 2, (char *)buffer);
+			font_print_screen_xy(buffer, FONT01/*FONT06*/, BOSS_TIMER_X_OFS, BOSS_TIMER_Y_OFS);
+		}
 	#endif
 	//	残りライフ表示
-	//	sp rintf(buffer,"%d", (boss_hp_value>>10));/*(???)141477*/
-	//	sp rintf(buffer,"%d", (boss_hp_value>>10));/*(???)141477*/
+	//	sp rintf(buffer,"%d", (boss_hp_low_value>>10));/*(???)141477*/
+	//	sp rintf(buffer,"%d", (boss_hp_low_value>>10));/*(???)141477*/
 		strcpy(buffer,"0");
-		dec_display( (boss_hp_value>>10), 1, (char *)buffer);
+		dec_display( (boss_life_value)/*(boss_hp_low_value>>10)*/, 1, (char *)buffer);
 		font_print_screen_xy(buffer, FONT01/*FONT06*/, HP_FONT_X_OFS, HP_FONT_Y_OFS);
 	}
 	/* 1024未満の細かい値はグラフ表示 */
@@ -213,7 +276,7 @@ static void draw_boss_gauge(void/*int dx, int dy*/) 	// [***090305		変更
 		srec.x = 0;
 		srec.y = 0;
 		srec.h = 10;
-		srec.w = HPGAUGE_X_OFS+((boss_hp_value	& 0x03ff)>>2); /* 1023値 → 255ドット */
+		srec.w = HPGAUGE_X_OFS+((boss_hp_low_value	& 0x03ff)>>2); /* 1023値 → 255ドット */
 		drec.w = boss_gauge->w;
 		drec.h = boss_gauge->h;
 		drec.x = 10/*dx*/;
@@ -239,13 +302,15 @@ static void draw_boss_gauge(void/*int dx, int dy*/) 	// [***090305		変更
 	//#define STR_EXTRA_	"hijkl" 		/*5つ*/
 //
 	#define STR_MAX 		"ABCD"			/*4つ*/
-	#define STR_EASY		"  EFGH"		/*4つ*/
-	#define STR_NORMAL		" IJKLM"		/*5つ*/
-	#define STR_HARD		"  NOPQ"		/*4つ*/
+	#define STR_EASY		"EFGH" "  " 	/*4つ*/
+	#define STR_NORMAL		"IJKLM" " " 	/*5つ*/
+	#define STR_HARD		"NOPQ" "  " 	/*4つ*/
 	#define STR_LUNATIC 	"RSTUVW"		/*6つ*/
 	#define STR_EXTRA		"XYZab" 		/*5つ*/
-	#define STR_TIME_		"cdefg" 		/*5つ*/
-	#define STR_RANK_		"hijkl" 		/*5つ*/
+	#define STR_TIME_		"cdef"			/*4つ*/
+//	#define STR_RANK_		"hijkl" 		/*5つ*/
+	#define STR_FPS_		"hij"			/*3つ*/
+	#define CHR_PIRIOD_ 	'g' 			/*1つ*/
 #endif
 
 
@@ -332,12 +397,12 @@ void score_display(void)
 		{	top_score = pd->my_score;}
 	//	sp rintf(buffer,"%09d0", top_score);
 		strcpy(buffer,"0000000000");
-		dec_display(top_score,		9/*8*/, (char *)buffer);		font_print_screen_xy(buffer,FONT01,PPP+1*8+3+5,15+2);
+		dec_display(top_score,		9/*8*/, (char *)buffer);		font_print_screen_xy(buffer,FONT01,PPP+1*8+3+5+3*8,15+2);
 	//
 		/* [ スコア表示 ] */
 	//	sp rintf(buffer,"%09d0", pd->my_score);
 		strcpy(buffer,"0000000000");
-		dec_display(pd->my_score,	9/*8*/, (char *)buffer);		font_print_screen_xy(buffer,FONT01,PPP+1*8+3+5,40+2);
+		dec_display(pd->my_score,	9/*8*/, (char *)buffer);		font_print_screen_xy(buffer,FONT01,PPP+1*8+3+5+3*8,40+2);
 	//
 		/* [ パワーゲージ表示 ] */
 		draw_power_gauge(pd->weapon_power /*,PPP+7,124*/);
@@ -354,7 +419,7 @@ void score_display(void)
 			dec_display( (((int)(pd->weapon_power) * 200) >>8), 2, (char *)&buffer[1]);
 			#endif
 		}
-		font_print_screen_xy(buffer,FONT01,PPP+7*8+3,125-2);
+		font_print_screen_xy(buffer,FONT01,PPP+7*8+3+3*8,125-2);
 		//font_print_screen_xy(buffer,FONT01,PPP+8*8+3,125/*+1*/-2);
 	//
 		/* [ ボム有効時間表示 ] */
@@ -366,7 +431,7 @@ void score_display(void)
 			strcpy(buffer, STR_TIME_"   ");
 			dec_display( (int)(((int)pd->bomber_time) ), 3, (char *)&buffer[5]);
 			buffer[7] = 0/*' '*/;/* 1桁目は表示しない */
-			font_print_screen_xy(buffer,FONT01,PPP+4*8-6,160);
+			font_print_screen_xy(buffer,FONT01,PPP+4*8-6+3*8,160);
 		}
 	//
 		/* [ グレイズスコア表示 ] */
@@ -374,7 +439,7 @@ void score_display(void)
 			strcpy(buffer,"   0");
 			dec_display( pd->graze_point, 4, (char *)&buffer[0]);
 		//	font_print_screen_xy(buffer,FONT01,PPP+7*8+3,140);/*3桁(足りない)*/
-			font_print_screen_xy(buffer,FONT01,PPP+6*8+3,140);/*4桁(稼げる)*/
+			font_print_screen_xy(buffer,FONT01,PPP+6*8+3+3*8,140);/*4桁(稼げる)*/
 	//
 		/* [ 難易度表示 ] */
 		{
@@ -387,12 +452,12 @@ void score_display(void)
 		//	/* 4==PLX_BOMB:*/		STR_EXTRA,
 			//	/*default:*/		"UNKNOWN ???",
 			};
-			font_print_screen_xy( (char *)rank_name[(difficulty)&(4-1)], FONT01,PPP+7*8-4,256);
+			font_print_screen_xy( (char *)rank_name[(difficulty)&(4-1)], FONT01,PPP+/*7*/1*8-4+4,256);
 		}
 	//
 		#if 1
 		/* [ fps 表示(60フレーム単位で表示) ] */
-		/* (pspは1秒が59.なんたらフレームで、厳密に60でないらしいです。 ) */
+		/* (pspは1秒が59.9なんたらフレームで、厳密に60でないらしいです。 ) */
 		{
 		//	static int ttt;
 			static unsigned int ttt;
@@ -422,12 +487,12 @@ void score_display(void)
 	//		font_print_screen_xy(buffer,FONT01,PPP/*+8*4*/,240);
 //
 			/*"60.00fps"*/
-			strcpy(buffer, STR_TIME_"00000");
-			dec_display(ttt,	4, (char *)&buffer[5]);
-			buffer[9] = buffer[8];
-			buffer[8] = buffer[7];
-			buffer[7] = ' ';/*'.'*/
-			font_print_screen_xy(buffer,FONT01,PPP/*+8*4*/,240);
+			strcpy(buffer, /*STR_TIME_*/"00000"STR_FPS_);
+			dec_display(ttt,	4, (char *)&buffer[0/*5*/]);
+			buffer[9-5] = buffer[8-5];
+			buffer[8-5] = buffer[7-5];
+			buffer[7-5] = /*' '*/CHR_PIRIOD_;/*'.'*/
+			font_print_screen_xy(buffer,FONT01,PPP/*+8*4*/+8*8+2,256/*240*/);
 		}
 		#endif
 	//}
@@ -458,14 +523,16 @@ void render_continue(void/*int now_max_continue*/)
 //	sp rintf(buffer,  "TRY CHANCE STILL AT %2d", now_max_continue);
 	strcpy(buffer,	"TRY CHANCE STILL AT  0");
 	dec_display( now_max_continue, 2, (char *)&buffer[20]);
-
-	font_print_screen_xy(buffer, FONT03, 10, 50);
+//
+	font_print_screen_xy(buffer, FONT03, 0/*10*/, 50);
+	#if (0==USE_CONTINUED_RANKING)
 //	/* コンティニューした場合、スコアランキングされません */
-	font_print_screen_xy("IF YOU GOT CONTINUED,", FONT05, 10, 200);
-	font_print_screen_xy("CAN NOT HAVE RANKING.", FONT05, 26, 220);
+	font_print_screen_xy("IF YOU GOT CONTINUED,", FONT05, 0/*10*/, 200);
+	font_print_screen_xy("CAN NOT HAVE RANKING.", FONT05, 16/*26*/, 220);
 //
 	/* あんまり長ったらしい英語にしてもしょーがないから、(長いと表示できないし)
 		意味が違わない範囲で適当に省略 */
+	#endif
 }
 /*---------------------------------------------------------
 	以下メモ(フォントの形式が変わったので表示できない等)

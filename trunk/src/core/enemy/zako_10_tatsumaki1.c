@@ -105,10 +105,10 @@ static void move_tatsumaki1(SPRITE *s)
 		{
 			s->x256 -= d->speed256/**fps_fa ctor*/;
 		}
-		if (s->y256 >= t256(GAME_HEIGHT) )
+		if (s->y256 > t256(GAME_HEIGHT) )/*>=*/
 		{
-		//	s->type=SP_DELETE;
-			s->flags &= (~(SP_FLAG_VISIBLE));
+			s->type = SP_DELETE;
+		//	s->flags &= (~(SP_FLAG_VISIBLE));
 		}
 		break;
 	}

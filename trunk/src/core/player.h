@@ -28,7 +28,7 @@ enum /*_select_pl_*/		// [***090203		追加
 
 /* ボスと戦う際にon(ボス前イベントではOFF) */
 #define STATE_FLAG_05_IS_BOSS						(0x0010)
-/* on */
+/* ゲーム中シナリオスクリプトモードで on になる。ゲームが再開されると off になる。*/
 #define STATE_FLAG_06_IS_SCRIPT 					(0x0020)
 /* on */
 #define STATE_FLAG_07_IS_GRAZE						(0x0040)
@@ -78,7 +78,8 @@ typedef struct
 	int strength;
 } WEAPON_BASE;
 
-#define DEFAULT_MAX_CONTINUE	(3)
+//#define DEFAULT_MAX_CONTINUE	(3)
+#define DEFAULT_MAX_CONTINUE	(30)
 
 
 #endif /* _PLAYER_H_ */
