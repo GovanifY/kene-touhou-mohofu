@@ -1,5 +1,5 @@
 
-#include "enemy.h"
+#include "bullet_object.h"
 
 /*---------------------------------------------------------
 		"ˆÍ—d‰ö1",		"CUBE",
@@ -9,9 +9,9 @@
 
 typedef struct
 {
-	ENEMY_BASE b;
-	/*dou ble*/int radius256;
-	/*dou ble*/int angle512;
+	ENEMY_BASE base;
+	int radius256;
+	int angle512;
 	int flag0;
 	int flag1;
 	int flag2;
@@ -26,7 +26,7 @@ typedef struct
 
 static void move_kakomi1(SPRITE *s)
 {
-	KAKOMI1_DATA *d=(KAKOMI1_DATA *)s->data;
+	KAKOMI1_DATA *d = (KAKOMI1_DATA *)s->data;
 	d->flag2 += 1/*fps_fa ctor*/;
 	if (d->flag2<500)
 	{
@@ -88,8 +88,8 @@ void add_zako_kakomi1(STAGE_DATA *l)/*int lv*/
 		KAKOMI1_DATA *data;
 		data				= mmalloc(sizeof(KAKOMI1_DATA));
 		s->data 			= data;
-		data->b.score		= score(15*2)*(1+lv);
-		data->b.health		= 30+lv+(difficulty<<2);/*1+lv+(difficulty<<2)*/
+		data->base.score	= score(15*2)*(1+lv);
+		data->base.health	= 30+lv+(difficulty<<2);/*1+lv+(difficulty<<2)*/
 		data->radius256 	= t256(350);
 		data->angle512		= (i<<5);//  /*360*/(512/16)*i;
 		data->flag0 		= 1;

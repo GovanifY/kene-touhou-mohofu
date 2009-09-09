@@ -1,5 +1,5 @@
 
-#include "enemy.h"
+#include "bullet_object.h"
 
 /*---------------------------------------------------------
 		"—d‰ö1",		"GFAIRY",
@@ -83,7 +83,7 @@ static void move_yokai1(SPRITE *s)
 				/* 3:  8 == 20-(3*4) */
 				data->wait2 = (20-((difficulty)<<2))/*8*/ /*10*/;
 				play_voice_auto_track(VOICE14_YOKAI1_E_SHOT01);
-				bullet_create_n_way_dan_type(s, (t256(3.0)+((difficulty)<<6)), ANGLE_JIKINERAI_KISUDAN, BU_TYPE01_KUGEL_PNG/*"kugel.png", 0*/, 8);
+				bullet_create_n_way_dan_sa_type(s, (t256(3.0)+((difficulty)<<6)), ANGLE_JIKINERAI_KISUDAN, (int)(512/24), BULLET_UROKO14_03_MIDORI, 8);
 			}
 		}
 		break;
@@ -101,7 +101,7 @@ static void move_yokai1(SPRITE *s)
 			{
 				data->wait2 = (20-((difficulty)<<2))/*8*/ /*10*/;
 				play_voice_auto_track(VOICE14_YOKAI1_E_SHOT01);
-				bullet_create_n_way_dan_type(s, t256(3.25)+((difficulty)<<6), ANGLE_JIKINERAI_KISUDAN, BU_TYPE01_KUGEL_PNG/*"kugel.png", 0*/, 7);
+				bullet_create_n_way_dan_sa_type(s, t256(3.25)+((difficulty)<<6), ANGLE_JIKINERAI_KISUDAN, (int)(512/24), BULLET_UROKO14_04_MIZUIRO, 7);
 			}
 		}
 		break;

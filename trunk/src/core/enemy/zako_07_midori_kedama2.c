@@ -1,5 +1,5 @@
 
-#include "enemy.h"
+#include "bullet_object.h"
 
 /*---------------------------------------------------------
 		"緑毛玉2",		"CRUSHER",
@@ -11,7 +11,7 @@
 
 typedef struct
 {
-	ENEMY_BASE b;
+	ENEMY_BASE base;
 	int wait1;	/* 上下に動いたカウンタ */
 	int wait2;	/* 繰り返した回数のカウンタ */
 } MIDORI_KEDAMA2_DATA;
@@ -40,7 +40,7 @@ static void lose_midori_kedama2(SPRITE *s)
 
 static void move_midori_kedama2(SPRITE *s)
 {
-	MIDORI_KEDAMA2_DATA *d=(MIDORI_KEDAMA2_DATA *)s->data;
+	MIDORI_KEDAMA2_DATA *d = (MIDORI_KEDAMA2_DATA *)s->data;
 	if (0 < d->wait2)
 	{
 		if (0 == d->wait1)
@@ -119,8 +119,8 @@ void add_zako_midori_kedama2(STAGE_DATA *l)/*int lv*/
 		MIDORI_KEDAMA2_DATA *data;
 		data				= mmalloc(sizeof(MIDORI_KEDAMA2_DATA));
 		s->data 			= data;
-		data->b.score		= score(10*2)*(1+lv);
-		data->b.health		= ((2*8)+(lv<<2)+(difficulty<<2));/* (1+lv+(difficulty<<2)) よわすぎ*/
+		data->base.score	= score(10*2)*(1+lv);
+		data->base.health	= ((2*8)+(lv<<2)+(difficulty<<2));/* (1+lv+(difficulty<<2)) よわすぎ*/
 		data->wait1 		= 0;
 		data->wait2 		= 5;/*2*/
 	}

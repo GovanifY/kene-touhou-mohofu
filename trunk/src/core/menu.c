@@ -1,5 +1,5 @@
 
-#include "support.h"
+#include "game_main.h"
 
 /*---------------------------------------------------------
 
@@ -292,7 +292,7 @@ static void generic_menu_work(MENU *m)
 		}
 //
 		{
-			static /*dou ble*/int angle512/*=0*/;
+			static int angle512/*=0*/;
 			angle512 += FPS_MENU_FACTOR15;
 			mask512(angle512);//if (angle>=360) {	angle-=360;}		// angle%=360;
 			int i;
@@ -329,8 +329,8 @@ static void generic_menu_work(MENU *m)
 			//	}
 			}
 		}
-		sprite_work000(SP_GROUP_TEXTS);
-		sprite_display000(SP_GROUP_TEXTS);
+		sprite_work000(SP_GROUP_PAUSE_OBJS/*SP_GROUP_TEXTS*/);
+		sprite_display000(SP_GROUP_PAUSE_OBJS/*SP_GROUP_TEXTS*/);
 		if (0==my_pad)
 		{
 			if (my_pad_alter & PSP_KEY_SHOT_OK)
@@ -340,7 +340,7 @@ static void generic_menu_work(MENU *m)
 				m->time_out 	= -1;/*時間切れなし*/
 			}
 		}
-		if (m->time_out==0)/*時間切れ*/
+		if (0==m->time_out)/*時間切れ*/
 		{
 			m->menu_state	= MENU_STATE_02_FADE_OUT;/* メニュー消去準備 */
 			m->time_out 	= -2;/*時間切れあり*/
@@ -374,8 +374,7 @@ static void generic_menu_init(int res_num/*char *options[]*/, MENU *m, int fade_
 			NULL,/*dummy*/
 			0,/*dummy*/
 			1,
-			1,
-			1,
+			iyx(1,1),
 			PRIORITY_04_ITEM,/*???*/	//	/*j+*/5, /* ????  PRIORITY_*/
 			0, 0, 0
 		}
@@ -663,10 +662,12 @@ static void difficulty_menu_work(void)
 /*---------------------------------------------------------
 
 ---------------------------------------------------------*/
+extern unsigned int draw_bg_screen;				/* 背景ウィンドウ表示フラグ */
 
 static SDL_Surface *intropic/*=NULL*/;
 static void start_menu_init(void)
 {
+	draw_bg_screen = 0; 	/* 背景ウィンドウ表示off */
 	set_music_volume(128);/*とりあえず*/
 	{
 		if (NULL==intropic)
@@ -813,17 +814,17 @@ void game_clear_set_password(void)
 		/* [***090222	追加 */
 		if (0==tiny_strcmp(str_pass_word, YUYUKO_PASSWORD)) /* 既にクリアしてたら */
 		{
-		/*	strcpy(str_pass_word, FURAN_PASSWORD)*/;	/* ＆ 幽々子 ＆ チルノ ＆ レミリア 開放 */
+		/*	strcpy(str_pass_word, FURAN_PASSWORD)*/;	/* ??? ＆ 幽々子 ＆ チルノ ＆ レミリア 開放 */
 		}
 		else
 		if (0==tiny_strcmp(str_pass_word, CIRNO_PASSWORD))	/* 既にクリアしてたら */
 		{
-			strcpy(str_pass_word, YUYUKO_PASSWORD); /* 幽々子 ＆ チルノ＆ レミリア 開放 */
+			strcpy(str_pass_word, YUYUKO_PASSWORD); /* 幽々子 ＆ チルノ ＆ レミリア 開放 */
 		}
 		else
 		if (0==tiny_strcmp(str_pass_word, REMILIA_PASSWORD)) /* 既にクリアしてたら */
 		{
-			strcpy(str_pass_word, CIRNO_PASSWORD);	/* チルノ＆ レミリア 開放 */
+			strcpy(str_pass_word, CIRNO_PASSWORD);	/* チルノ ＆ レミリア 開放 */
 		}
 		else
 		{
@@ -882,7 +883,7 @@ static int can_select_player;		/* [***090222	追加 */
 
 ---------------------------------------------------------*/
 
-static void player_opt_img256(SDL_Surface *src, /*dou ble*/int scale256, int l_or_r)	//r=0, l=1
+static void player_opt_img256(SDL_Surface *src, int scale256, int l_or_r)	//r=0, l=1
 {
 	SDL_Rect sr;
 	SDL_Rect dr;
@@ -910,7 +911,7 @@ void player_opt_work(void)
 	static SDL_Surface *player_select_bg2_surface;
 	static SDL_Surface *player_select_fg0_surface;
 	static SDL_Surface *player_select_fg2_surface;
-	static /*dou ble*/int sp_scale256;
+	static int sp_scale256;
 	static int is_turn_right = 0;
 //	static int sp_wait = 0;
 	static int bg_alpha_bbb;
@@ -978,7 +979,7 @@ void player_opt_work(void)
 				SDL_SetColorKey(player_select_fg2_surface, SDL_SRCCOLORKEY, 0x00000000);
 				if (0==is_turn_right)
 				{	/* [***090222	追加 */
-					if (select_player==0)	{	select_player=can_select_player;	}
+					if (0==select_player)	{	select_player=can_select_player;	}
 					else					{	select_player--;}
 				}
 				else

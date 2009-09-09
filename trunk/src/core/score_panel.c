@@ -3,8 +3,8 @@
 	スコアパネル(表示)関連
 ---------------------------------------------------------*/
 
-#include "support.h"
-#include "enemy.h"
+#include "game_main.h"
+#include "bullet_object.h"
 
 static SDL_Surface *panel_base; 	// パネルベース
 static SDL_Surface *power_gauge;	// パワーゲージ。俺の環境だとloadbmp2で作ると普通に表示されるようになった。
@@ -172,7 +172,15 @@ static void draw_boss_gauge(void/*int dx, int dy*/) 	// [***090305		変更
 {
 	SPRITE *s = ((PLAYER_DATA *)player->data)->boss;
 	int boss_hp_value=(((BOSS_BASE *)s->data)->health);/*(???)141477*/
-	if (0 > boss_hp_value)	return;/*負数の場合は何もしない*/
+
+	#if 0
+	if (0 > boss_hp_value)	return;/* 負数の場合は何もしない */
+	if (9*1024 < boss_hp_value)	return;/* 範囲外の場合は何もしない */
+	#else
+	if (0 != ((boss_hp_value)&(0xffffc000)) ) 	return;/* 範囲外の場合は何もしない */
+	#endif
+
+
 	#if 1
 	unsigned char boss_timer_value = ((((BOSS_BASE *)s->data)->boss_timer)>>6);/* */
 	#endif
@@ -205,7 +213,7 @@ static void draw_boss_gauge(void/*int dx, int dy*/) 	// [***090305		変更
 		srec.x = 0;
 		srec.y = 0;
 		srec.h = 10;
-		srec.w = HPGAUGE_X_OFS+((boss_hp_value	& 0x03FF)>>2); /* 1023値 → 255ドット */
+		srec.w = HPGAUGE_X_OFS+((boss_hp_value	& 0x03ff)>>2); /* 1023値 → 255ドット */
 		drec.w = boss_gauge->w;
 		drec.h = boss_gauge->h;
 		drec.x = 10/*dx*/;
@@ -428,7 +436,7 @@ void score_display(void)
 /*---------------------------------------------------------
 	パネル表示、初期化
 ---------------------------------------------------------*/
-#include "hiscore.h"/**/
+#include "name_entry.h"/**/
 extern int select_player;
 void score_panel_init(void)
 {

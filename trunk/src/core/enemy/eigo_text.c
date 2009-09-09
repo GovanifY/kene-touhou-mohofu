@@ -1,5 +1,5 @@
 
-#include "enemy.h"
+#include "bullet_object.h"
 
 /*---------------------------------------------------------
 	演出用テキスト(英語)
@@ -14,7 +14,7 @@ typedef struct
 	ENEMY_BASE b;		// [***090410		???追加???
 #endif
 	int state;
-	/*dou ble*/int wait;
+	int wait;
 } GAME_IMAGE_DATA;
 
 /*---------------------------------------------------------
@@ -71,8 +71,7 @@ static void add_common(STAGE_DATA *l, SDL_Surface *tmp)
 			NULL,/*dummy*/
 			0,/*dummy*/
 			1,
-			1,
-			1,
+			iyx(1,1),
 			PRIORITY_04_ITEM,
 			0, 0, 0
 		}

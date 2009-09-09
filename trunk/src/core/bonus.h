@@ -1,7 +1,7 @@
 #ifndef _BONUS_H_
 #define _BONUS_H_
 
-#include "support.h"
+#include "game_main.h"
 
 enum
 {

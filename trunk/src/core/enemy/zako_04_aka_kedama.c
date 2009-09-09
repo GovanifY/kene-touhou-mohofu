@@ -1,5 +1,5 @@
 
-#include "enemy.h"
+#include "bullet_object.h"
 
 /*---------------------------------------------------------
 		"Ô–Ñ‹Ê1",		"MINE",
@@ -11,7 +11,7 @@
 
 typedef struct
 {
-	ENEMY_BASE b;
+	ENEMY_BASE base;
 	int state;
 	int tx256;
 	int ty256;
@@ -39,7 +39,7 @@ static void lose_aka_kedama1(SPRITE *s)
 
 static void move_aka_kedama1_2nd(SPRITE *s)
 {
-	AKA_KEDAMA1_DATA *d=(AKA_KEDAMA1_DATA *)s->data;
+	AKA_KEDAMA1_DATA *d = (AKA_KEDAMA1_DATA *)s->data;
 //	if (/*0 <*/ /*d->*/level)	/* easy‚Í‘¬‚¢‚ñ‚¾‚©‚çê‡•ª‚¯‚µ‚È‚¢ */
 	{
 		/*
@@ -87,8 +87,8 @@ static void add_local_aka_kedama1_2nd(SPRITE *src/*, int lv*/)
 		AKA_KEDAMA1_DATA *data;
 		data				= mmalloc(sizeof(AKA_KEDAMA1_DATA));
 		s->data 			= data;
-		data->b.score		= score(10*2)*(1+level/*lv*/);
-		data->b.health		= (1+level/*lv*/)+(difficulty<<4);
+		data->base.score	= score(10*2)*(1+level/*lv*/);
+		data->base.health	= (1+level/*lv*/)+(difficulty<<4);
 		data->mmm_angle512	= (i<<6);//  (/*360*/512/8)*i;
 	}
 }
@@ -99,12 +99,12 @@ static void add_local_aka_kedama1_2nd(SPRITE *src/*, int lv*/)
 
 static void move_aka_kedama1_1st(SPRITE *s)
 {
-	AKA_KEDAMA1_DATA *d=(AKA_KEDAMA1_DATA *)s->data;
+	AKA_KEDAMA1_DATA *d = (AKA_KEDAMA1_DATA *)s->data;
 	switch (d->state)
 	{
 	case 0: /* move */
 		{
-		/*dou ble*/int angle512;
+		int angle512;
 			angle512=atan_512(d->ty256-s->y256,d->tx256-s->x256);
 			s->x256 += ((cos512(angle512)*t256(1.5))>>8)/**fps_fa ctor*/;
 			s->y256 += ((sin512(angle512)*t256(1.5))>>8)/**fps_fa ctor*/;
@@ -160,8 +160,8 @@ void add_zako_aka_kedama1(STAGE_DATA *l)/*int lv*/
 	AKA_KEDAMA1_DATA *data;
 	data				= mmalloc(sizeof(AKA_KEDAMA1_DATA));
 	s->data 			= data;
-	data->b.score		= score(30*2);
-	data->b.health		= 12+lv*2+(difficulty<<2);
+	data->base.score	= score(30*2);
+	data->base.health	= 12+lv*2+(difficulty<<2);
 	data->tx256 		= ((ra_nd()&((256*256)-1)))+t256(64);/*320?*/ /*t256(ra_nd()%270)+t256(50)*/
 //	data->ty256 		= ((ra_nd()&((256*256)-1)))+t256(16);/*350?*/ /*t256(ra_nd()%300)+t256(50)*/
 	data->ty256 		= ((ra_nd()&((256*128)-1)))+t256(16);/*350?*/ /*t256(ra_nd()%300)+t256(50)*/

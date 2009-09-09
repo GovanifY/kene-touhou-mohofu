@@ -1,5 +1,5 @@
 
-#include "enemy.h"
+#include "bullet_object.h"
 
 /*---------------------------------------------------------
 		"Â—d¸1",		"FAIRY",
@@ -10,7 +10,7 @@
 
 typedef struct
 {
-	ENEMY_BASE b;
+	ENEMY_BASE base;
 	int angleL512;
 	int speed256;
 	int state;
@@ -36,7 +36,7 @@ static void lose_ao_yousei1(SPRITE *s)
 
 static void move_ao_yousei1(SPRITE *s)
 {
-	AO_YOUSEI1_DATA *d=(AO_YOUSEI1_DATA *)s->data;
+	AO_YOUSEI1_DATA *d = (AO_YOUSEI1_DATA *)s->data;
 //
 	d->time_out--;
 //	if (1 > d->time_out)
@@ -57,7 +57,14 @@ static void move_ao_yousei1(SPRITE *s)
 			d->state++;
 			break;
 		case 50:
-			if (difficulty) {	bullet_create_n_way_dan_type(s, (t256(2.0)+((difficulty)<<6)), ANGLE_JIKINERAI_KISUDAN, BU_TYPE01_KUGEL_PNG, 8);	}	/*‚È‚é‚×‚­‹¤’Ê‰»*/
+			if (difficulty)
+			{
+				bullet_create_n_way_dan_sa_type(s,
+					(t256(2.0)+((difficulty)<<6)),
+					ANGLE_JIKINERAI_KISUDAN, (int)(512/24),
+					BULLET_KUNAI12_04_AOI+((ra_nd())&3),
+					8);
+			}	/*‚È‚é‚×‚­‹¤’Ê‰»*/
 			break;	/*(t256(3.0)+((difficulty)<<6))*/	/*((difficulty<<(1+8)))*/
 					/*t256((difficulty<<2))*/ /*5*/ 	/*"kugel.png", 0*/
 					/*at an2(player->y-s->y+player->h/2,player->x-s->x-player->w/2)*/
@@ -68,7 +75,7 @@ static void move_ao_yousei1(SPRITE *s)
 			if (difficulty) {	bullet_create_aka_maru_jikinerai(s, (512-d->time_out)+t256(difficulty));	}
 			break;
 		case 250:/* “|‚¹‚é‚æ‚¤‚É‚·‚é */
-			d->b.health 	= (1+(difficulty)); 	/*(3+(difficulty))*/	/*1+(difficulty<<2)*/
+			d->base.health	= (1+(difficulty)); 	/*(3+(difficulty))*/	/*1+(difficulty<<2)*/
 			break;
 		}
 		break;
@@ -89,7 +96,13 @@ static void move_ao_yousei1(SPRITE *s)
 	s->x256+=((sin512((d->angleL512))*d->speed256)>>8)/**fps_fa ctor*/;
 	s->y256+=((cos512((d->angleL512))*d->speed256)>>8)/**fps_fa ctor*/;
 //
-	s->anim_frame = (8+((d->time_out>>2)&(8-1)));
+//	s->yx_anim_frame = (8+((d->time_out>>2)&(8-1)));
+	s->yx_anim_frame = (0x20 | ((d->time_out)&(0x10)) | ((d->time_out>>2)&(4-1)));
+/*
+d->time_out       ---a bc--
+s->yx_anim_frame  yyyy xxxx
+s->yx_anim_frame  --1a --bc
+*/
 }
 
 /*---------------------------------------------------------
@@ -114,6 +127,6 @@ void add_zako_ao_yousei1(STAGE_DATA *l)/*int lv*/
 	data->speed256		= ((l->user_x));			/*t256(0.5)*/	/*+0.15*difficulty*/ /*0.7+0.3*difficulty*/
 	data->angleL512 	= deg_360_to_512(0);
 	data->state 		= 0;
-	data->b.score		= score(20*2);
-	data->b.health		= 999;/* “oê‚Í“|‚¹‚È‚¢ */	/*3+(difficulty)*/	/*1+(difficulty<<2)*/
+	data->base.score	= score(20*2);
+	data->base.health	= 999;/* “oê‚Í“|‚¹‚È‚¢ */	/*3+(difficulty)*/	/*1+(difficulty<<2)*/
 }

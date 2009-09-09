@@ -1,7 +1,7 @@
 #ifndef _HIGH_SCORE_H_
 #define _HIGH_SCORE_H_
 
-//#include "support.h"
+//#include "game_main.h"
 
 #define MAX_8_SAVE_PLAYERS	(8)
 #define MAX_5_RANKING		(5)

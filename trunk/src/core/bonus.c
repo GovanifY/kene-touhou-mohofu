@@ -3,7 +3,7 @@
 	アイテム関連
 ---------------------------------------------------------*/
 
-#include "support.h"
+#include "game_main.h"
 #include "bonus.h"
 
 
@@ -17,13 +17,13 @@ typedef struct
 	#if 1
 	int strength;/*union WEAPON_BASE*/		/*なんかアイテムに殺されるので追加？？？*/
 	#endif
-	/*dou ble*/int y_sum256;	/* アイテム投げ出し用 y軸 積算値(y軸、上方がマイナス) */
-	/*dou ble*/int angle512;
+	int y_sum256;	/* アイテム投げ出し用 y軸 積算値(y軸、上方がマイナス) */
+	int angle512;
 	int flags00;				// 収集フラグ	// [***090116		変更
 //	自動収集
 	int flag_first; 			/* firstフラグ */
-	/*dou ble*/int x_sa256; 	/* 差分 x */
-	/*dou ble*/int y_sa256; 	/* 差分 y */
+	int x_sa256; 	/* 差分 x */
+	int y_sa256; 	/* 差分 y */
 } ITEM_DATA;
 extern int effect_sound_hosi;
 static void move_items(SPRITE *src)
@@ -46,7 +46,7 @@ static void move_items(SPRITE *src)
 		{
 			data->y_sum256 += data->angle512;		/* x1.5 */
 		}
-		src->y256 += (/*t256_to_dou ble*/(data->y_sum256))/**fps_fa ctor*/;
+		src->y256 += (data->y_sum256)/**fps_fa ctor*/;
 		if (src->y256 > GAME_HEIGHT*256)
 		{
 			((PLAYER_DATA *)player->data)->chain_point = 0;
@@ -102,7 +102,7 @@ static SPRITE *item_mono_create(SPRITE *src/*int x, int y*/, int sel_type)
 //	s			= spr ite_add_file 0("bonus_items.png", 8, PRIORITY_04_ITEM, 0);	s->anim_speed=0;
 	s			= sprite_add_res(BASE_BONUS_ITEMS_PNG);
 	sel_type &= 0x07;
-	s->anim_frame = ((/*SP_ITEM_FIRE_POWER-*/sel_type)/*&0x07*/);
+	s->yx_anim_frame = ((/*SP_ITEM_FIRE_POWER-*/sel_type)/*&0x07*/);
 //	出現位置を決める
 	#define OFFSET_X64		(32*256)/* 64はずらし分 2のn乗の必要有り */
 	#define ITEM_WIDTH16	(16*256)/* 16はアイテム幅 */
@@ -233,7 +233,7 @@ void item_from_bullets(int put_item_num)
 	SPRITE *s = sprite_list000_head;/* スプライト リストの先頭 から探す */
 	while (NULL != s)/* スプライト リストの最後まで調べる */
 	{
-		if (/*SP_BULLET*/SP_GROUP_BULLETS & s->type)
+		if (SP_GROUP_BULLETS & s->type)
 		{
 			item_create(s, put_item_num/*SP_ITEM_05_HOSI*/, 1, (ITEM_MOVE_FLAG_01_COLLECT|ITEM_MOVE_FLAG_06_RAND_XY) );
 			s->type = SP_DELETE;

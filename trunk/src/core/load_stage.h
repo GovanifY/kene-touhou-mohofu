@@ -1,7 +1,7 @@
 #ifndef _LOAD_STAGE_FILE_H_
 #define _LOAD_STAGE_FILE_H_
 
-#include "support.h"
+#include "game_main.h"
 
 //#define  MAX_IVENT_ENTRY	512
 #define  MAX_PARA1_44		/*64*/44-4/*(64-(4*5))*/

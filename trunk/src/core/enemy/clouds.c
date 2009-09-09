@@ -1,5 +1,5 @@
 
-#include "support.h"
+#include "game_main.h"
 
 /*---------------------------------------------------------
 	‰‰o—p•‚—V•¨
@@ -18,8 +18,8 @@ static int used_clouds;
 
 typedef struct
 {
-	/*dou ble*/int speed_base256;
-	/*dou ble*/int speed_rand256;
+	int speed_base256;
+	int speed_rand256;
 } CLOUDS_DATA;
 
 /*---------------------------------------------------------
@@ -101,8 +101,7 @@ void add_clouds(STAGE_DATA *l)
 			&clouds_filename_work[0],
 			0,
 			1/*(l->user_x)*/,
-			1,
-			1,
+			iyx(1,1),
 			PRIORITY_00_BG/*P R_BACK0*/,
 			0, 0, 0
 		}

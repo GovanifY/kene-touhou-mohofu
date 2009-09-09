@@ -1,5 +1,5 @@
 
-#include "enemy.h"
+#include "bullet_object.h"
 
 /*---------------------------------------------------------
 	"ƒƒCƒh4",		"CIR",	rwingx_cir
@@ -11,9 +11,9 @@
 
 typedef struct
 {
-	ENEMY_BASE b;
-	/*dou ble*/int angle512;
-	/*dou ble*/int speed256;
+	ENEMY_BASE base;
+	int angle512;
+	int speed256;
 	int state;
 //	int level;
 } MEIDO4_DATA;
@@ -35,7 +35,7 @@ static void lose_meido4(SPRITE *s)
 
 static void move_meido4(SPRITE *s)
 {
-	MEIDO4_DATA *d=(MEIDO4_DATA *)s->data;
+	MEIDO4_DATA *d = (MEIDO4_DATA *)s->data;
 	switch (d->state)
 	{
 	case 0: /* ‰º‚ÉŒü‚©‚¤ / down */
@@ -113,13 +113,13 @@ void add_zako_meido4(STAGE_DATA *l)/*int lv*/
 		MEIDO4_DATA *data;
 		data				= mmalloc(sizeof(MEIDO4_DATA));
 		s->data 			= data;
-		data->b.score		= score(/*25*/15*2);
-		data->b.health		= 5+(difficulty<<2);
+		data->base.score	= score(/*25*/15*2);
+		data->base.health	= 5+(difficulty<<2);
 		data->angle512		= deg_360_to_512(90);
 		data->speed256		= t256(3.0/*6.0*/);
 		data->state 		= 0;
 //		data->level 		= lv;
-		s->x256 			= ((i&(2-1)/*%2*/)==0)?t256(30):t256(50);
+		s->x256 			= (0==(i&(2-1)/*%2*/))?t256(30):t256(50);
 		s->y256 			= -(i*t256(20));
 	}
 }

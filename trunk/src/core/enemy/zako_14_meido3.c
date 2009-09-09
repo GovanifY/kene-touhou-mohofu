@@ -1,5 +1,5 @@
 
-#include "enemy.h"
+#include "bullet_object.h"
 
 /*---------------------------------------------------------
 		"ÉÅÉCÉh3",		"CURVER",	rwingx_curver
@@ -21,15 +21,15 @@
 
 typedef struct
 {
-	ENEMY_BASE b;
-	/*dou ble*/int angle512;
-	/*dou ble*/int speed256;
+	ENEMY_BASE base;
+	int angle512;
+	int speed256;
 	int state;
 	int turn_count;
 //
-	/*dou ble*/int turnspeed512;
-	/*dou ble*/int clip_left256;
-	/*dou ble*/int clip_right256;
+	int turnspeed512;
+	int clip_left256;
+	int clip_right256;
 } MEIDO3_DATA;
 
 static int static_last=0;/* ìoèÍà íuÇÃêÿÇËë÷Ç¶ */
@@ -72,7 +72,7 @@ static void move_meido3(SPRITE *s)
 		{
 		//	data->angle512 = deg_360_to_512(0/*360*/ /*-10*/)/*deg_360_to_512(360)*/;
 			data->state=1;
-			if (0 < /*data->*/level)	{	bullet_create_n_way_dan_type(s, /*speed256*/t256(2), ANGLE_JIKINERAI_DAN/*angle512*/, /*bu_type*/BU_TYPE01_KUNAI_PNG, /*n*/(difficulty<<1)); }/* easyà»äOÇÕë_Ç¢íeÇë≈Ç¬ */
+			if (0 < /*data->*/level)	{	bullet_create_n_way_dan_sa_type(s, /*speed256*/t256(2), ANGLE_JIKINERAI_DAN/*angle512*/, (int)(512/24), BULLET_UROKO14_01_AKA, /*n*/(difficulty<<1)); }/* easyà»äOÇÕë_Ç¢íeÇë≈Ç¬ */
 			/*bullet_create_aka_maru_jikinerai(s, t256(3+(data->level>>1)));*/
 		}
 		break;
@@ -95,7 +95,7 @@ static void move_meido3(SPRITE *s)
 		{
 		//	data->angle512 = deg_360_to_512(180/*+10*/);
 			data->state=3;
-			if (0 < /*data->*/level)	{	bullet_create_n_way_dan_type(s, /*speed256*/t256(2), ANGLE_JIKINERAI_DAN/*angle512*/, /*bu_type*/BU_TYPE01_KUNAI_PNG, /*n*/(difficulty<<1)); 	}/* easyà»äOÇÕë_Ç¢íeÇë≈Ç¬ */
+			if (0 < /*data->*/level)	{	bullet_create_n_way_dan_sa_type(s, /*speed256*/t256(2), ANGLE_JIKINERAI_DAN/*angle512*/, (int)(512/24), BULLET_UROKO14_01_AKA, /*n*/(difficulty<<1)); 	}/* easyà»äOÇÕë_Ç¢íeÇë≈Ç¬ */
 			/*bullet_create_aka_maru_jikinerai(s, t256(3+(data->level>>1)));*/
 		}
 		break;
@@ -146,10 +146,10 @@ void add_zako_meido3(STAGE_DATA *l)/*int lv*/
 		MEIDO3_DATA *data;
 		data				= mmalloc(sizeof(MEIDO3_DATA));
 		s->data 			= data;
-		data->b.score		= score(/*25*/50*2);
-	//	data->b.health		= (12*8)+(difficulty<<3/*4*/)/*5+(difficulty<<2)*/;/*ÇÊÇÌÇ∑Ç¨*/
-	//	data->b.health		= (12*8)+(difficulty<<2/*4*/)/*5+(difficulty<<2)*/;/*ëºÇ™ã≠Ç¢ÇÃÇ≈é„Ç≠Ç∑ÇÈ*/
-		data->b.health		= (10*8)+(difficulty<<2/*4*/)/*5+(difficulty<<2)*/;/*ëºÇ™ã≠Ç¢ÇÃÇ≈é„Ç≠Ç∑ÇÈ*/
+		data->base.score	= score(/*25*/50*2);
+	//	data->base.health	= (12*8)+(difficulty<<3/*4*/)/*5+(difficulty<<2)*/;/*ÇÊÇÌÇ∑Ç¨*/
+	//	data->base.health	= (12*8)+(difficulty<<2/*4*/)/*5+(difficulty<<2)*/;/*ëºÇ™ã≠Ç¢ÇÃÇ≈é„Ç≠Ç∑ÇÈ*/
+		data->base.health	= (10*8)+(difficulty<<2/*4*/)/*5+(difficulty<<2)*/;/*ëºÇ™ã≠Ç¢ÇÃÇ≈é„Ç≠Ç∑ÇÈ*/
 		data->angle512		= 256+16 /*deg_360_to_512(270)*/;
 		data->speed256		= t256(1.5) /*3+difficulty*/;/*ÇÕÇ‚Ç∑Ç¨*/
 		data->turnspeed512	= (7) /*deg_360_to_512*/ /*(4+difficulty)*/;/*ä»ó™âª(360ìxÅ®512ìx)*/

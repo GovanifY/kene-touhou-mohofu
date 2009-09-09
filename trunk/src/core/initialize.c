@@ -3,14 +3,15 @@
 	ゲームシステム初期化処理、関連
 ---------------------------------------------------------*/
 
-#include "support.h"
-#include "scenario.h"
+#include "game_main.h"
+#include "scenario_script.h"
 
 extern SDL_Surface *back_screen;
 
 /*---------------------------------------------------------
 	ゲームシステム初期化処理
 ---------------------------------------------------------*/
+
 extern void init_imglist(void);
 extern void init_math(void);
 extern void keyboard_clear(void);
@@ -32,7 +33,7 @@ void game_system_init(void/*int argc, char *argv[]*/)
 	if (my_err < 0)
 	{
 		CHECKPOINT;
-		error(ERR_FATAL,"cant init SDL:"/*" %s",SDL_GetError()*/);
+		error(ERR_FATAL, "cant init SDL:"/*" %s",SDL_GetError()*/);
 	}
 	#endif
 	SDL_InitSubSystem(SDL_INIT_AUDIO);
@@ -58,12 +59,16 @@ void game_system_init(void/*int argc, char *argv[]*/)
 //
 	script_system_init();/* 組み込み */
 //
+	#if (1==USE_GU)
+	#else
 	{//static SDL_Surface *loadpic = NULL;		// load画面用
 		SDL_Surface *loadpic=loadbmp0("bg/loading.png", 0, 0);
 		SDL_BlitSurface(loadpic, NULL, sdl_screen[SDL_01_BACK_SCREEN], NULL);
 		unloadbmp_by_surface(loadpic);
 	}
 	psp_pop_screen();
+	#endif
+//
 	#if (1==USE_GU)
 	#else
 	SDL_Flip(sdl_screen[SDL_00_SCREEN]);

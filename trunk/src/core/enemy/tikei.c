@@ -1,5 +1,5 @@
 
-#include "enemy.h"
+#include "bullet_object.h"
 
 /*---------------------------------------------------------
 	ínå`Ç…ä÷òAÇ∑ÇÈìG
@@ -11,7 +11,7 @@
 typedef struct
 {
 	ENEMY_BASE b;
-	/*dou ble*/int speed256;
+	int speed256;
 //	int state;
 //	int tx256;
 //	int ty256;
@@ -21,7 +21,7 @@ typedef struct
 typedef struct
 {
 	ENEMY_BASE b;
-	/*dou ble*/int speed256;
+	int speed256;
 	int state;
 	int wait1;		// [***090124		í«â¡
 	int wait2;
@@ -36,9 +36,9 @@ typedef struct
 #if 1
 	ENEMY_BASE b;		// [***090410		???í«â¡???
 #endif
-	/*dou ble*/int speed256;
+	int speed256;
 	int state;
-	/*dou ble*/int wait1;
+	int wait1;
 	int wait2;
 //	int level;
 } MAGICF_DATA;
@@ -86,13 +86,13 @@ static void move_magic_formation(SPRITE *s)
 				#if 0
 				/* sp ÇÕ ñwÇ«2Ç©3Ç≈ÅAñÒ1/80ÇÃämó¶Ç≈ã…ãHÇ…1ÇèoÇ∑ */
 				sp=ra_nd()%3/*+1-1*/;	/* 0 1 2 */
-				if (sp==0/*<2-1*/)
+				if (0==sp/*<2-1*/)
 				{
 					sp=ra_nd()%3/*+1-1*/;
-					if (sp==0/*<2-1*/)
+					if (0==sp/*<2-1*/)
 					{
 						sp=ra_nd()%3/*+1-1*/;
-						if (sp==0/*<2-1*/)
+						if (0==sp/*<2-1*/)
 						{
 							sp=ra_nd()%3/*+1-1*/;
 						}
@@ -296,7 +296,7 @@ type = /*type*/l->user_command/*1-1*/;
 		s->data 			= data;
 		data->b.score		= score(10*2);
 		data->b.health		= 2;/*???*/
-		data->speed256		= /*t256_to_dou ble*/(speed256);
+		data->speed256		= (speed256);
 		break;
 
 	case BTYPE_03_GROUNDER: 		/* ÇŒÇÁÇ‹Ç´çUåÇñÇï˚êw */	//	"ñÇï˚êw1",	/*	"GROUNDER",*/
@@ -315,7 +315,7 @@ type = /*type*/l->user_command/*1-1*/;
 		data->b.health		= 25+(difficulty<<3/*4*/);//+(difficulty*15);
 		data->wait1 		= 100;	// [***090124		í«â¡
 		data->wait2 		= 0;
-		data->speed256		= /*t256_to_dou ble*/(speed256);
+		data->speed256		= (speed256);
 		break;
 	case BTYPE_04_MAGIC_FORMATION:		/* è¡Ç¶ÇÈñÇï˚êw */	//	"ñÇï˚êw2",	/*	"MAGICF",*/
 		s					= sprite_add_res(BASE_TIKEI_GROUNDER08_PNG);	s->anim_speed	=  3 /*(5-difficulty)*/ /*2*/;/*9"grounder.png"*/

@@ -17,8 +17,8 @@
 	zenkaku.h ‚É’è‹`‚³‚ê‚Ä‚¢‚é mh_print() ‚ÉÀ•WA•¶š—ñAF‚ğ“n‚¹‚Î•`‰æ‚³‚ê‚Ü‚·B
 ---------------------------------------------------------*/
 
-#include "support.h"
-#include "scenario.h"
+#include "game_main.h"
+#include "scenario_script.h"
 
 #define USE_2ND_SCREEN		(0)
 
@@ -108,7 +108,8 @@ static void putpixel16(SDL_Surface *surface, int x, int y, Uint32 pixel)
 }
 static void draw_shinonome_moji(SDL_Surface *drawmap, SDL_Surface *backmap, int x, int y, int code_offset, int hidari_gawa)
 {
-	if (1==hidari_gawa)
+//	if (1==hidari_gawa) 	/* psp‚Í0ƒŒƒWƒXƒ^‚ª‚ ‚é‚Ì‚Å0‚Æ”äŠr‚µ‚½‚Ù‚¤‚ª‘¬‚¢ */
+	if (0!=hidari_gawa)
 	{
 		x += FONT_WIDTH;
 	}
@@ -117,7 +118,8 @@ static void draw_shinonome_moji(SDL_Surface *drawmap, SDL_Surface *backmap, int 
 		return;/* •`‰æ‚µ‚È‚¢ */
 	}
 	int haikei_offset;
-	if (1==hidari_gawa)
+//	if (1==hidari_gawa) 	/* psp‚Í0ƒŒƒWƒXƒ^‚ª‚ ‚é‚Ì‚Å0‚Æ”äŠr‚µ‚½‚Ù‚¤‚ª‘¬‚¢ */
+	if (0!=hidari_gawa)
 	{
 		code_offset++;
 		haikei_offset=8;
@@ -139,7 +141,7 @@ static void draw_shinonome_moji(SDL_Surface *drawmap, SDL_Surface *backmap, int 
 		for (dx=0; dx<FONT_WIDTH; dx++)
 		{
 			bitcnt >>= 1;
-			if (0==bitcnt)	// bitcnt==0‚Ì
+			if (0==bitcnt)	// (0==bitcnt)‚Ì
 			{
 				bit = shinonome_font16p[code_offset++];
 				bitcnt = 0x80;		// 1byte‚Ìî•ñ—Ê‚ª8‚Ìˆ× 80 40 20 10 8 4 2 1(0‚É‚È‚Á‚½‚ç‚·‚®80‚É‚È‚é‚½‚ßƒJƒEƒ“ƒg‚³‚ê‚È‚¢)
@@ -319,7 +321,7 @@ static SDL_Surface *font_bg_bitmap/*=NULL*/;
 	}
 	int terminate_this_frame;	terminate_this_frame=0;
 	int need_draw_this_flame;	need_draw_this_flame=0;
-//	if (0 == wait)	{		need_draw_this_flame = 1; }	else
+//	if (0 == wait)	{		need_draw_this_flame = 1; } else
 	{	/* wait ‚ª 0 ‚Ìê‡‚Íˆê‰ñ‚Å‘S•¶š•`‰æ‚·‚é */
 		static unsigned int count_wait_time;
 		count_wait_time++;
@@ -329,7 +331,8 @@ static SDL_Surface *font_bg_bitmap/*=NULL*/;
 			need_draw_this_flame = 1;
 		}
 	}
-	if (1==need_draw_this_flame)
+//	if (1==need_draw_this_flame)	/* psp‚Í0ƒŒƒWƒXƒ^‚ª‚ ‚é‚Ì‚Å0‚Æ”äŠr‚µ‚½‚Ù‚¤‚ª‘¬‚¢ */
+	if (0!=need_draw_this_flame)
 	{
 			#define IS_LOCK_LOCAL_SCREEN (1)
 			#if (1==IS_LOCK_LOCAL_SCREEN)
@@ -401,14 +404,15 @@ static SDL_Surface *font_bg_bitmap/*=NULL*/;
 		}/*while*/
 		else			//I—¹ˆ—
 		{
-			terminate_this_frame = 1; 	/* end frame */
+			terminate_this_frame = 1;	/* end frame */
 		}
 			#if (1==IS_LOCK_LOCAL_SCREEN)
 			if (SDL_MUSTLOCK(drawmap))				{	SDL_UnlockSurface(drawmap); 			}	/* ƒƒbƒN‰ğœ */
 		//	if (SDL_MUSTLOCK(font_color_bitmap))	{	SDL_UnlockSurface(font_color_bitmap);	}	/* ƒƒbƒN‰ğœ */
 			if (SDL_MUSTLOCK(font_bg_bitmap))		{	SDL_UnlockSurface(font_bg_bitmap);		}	/* ƒƒbƒN‰ğœ */
 			#endif
-		if (1==terminate_this_frame)	//I—¹ˆ—
+	//	if (1==terminate_this_frame)	//I—¹ˆ—	/* psp‚Í0ƒŒƒWƒXƒ^‚ª‚ ‚é‚Ì‚Å0‚Æ”äŠr‚µ‚½‚Ù‚¤‚ª‘¬‚¢ */
+		if (0!=terminate_this_frame)	//I—¹ˆ—
 		{
 			{
 			//	count_width=1/* 0 (Š„‚èZ‚È‚Ì‚Å0‚ÍŠëŒ¯) */;/*???*/
@@ -517,11 +521,11 @@ typedef struct /*_sc_sprite*/
 	Uint8 anim_type;				/* ‚Ç‚¤‚¢‚¤•—‚ÉƒAƒjƒ[ƒVƒ‡ƒ“‚³‚¹‚é‚© */
 	Uint8 anim_time;				/* ƒAƒjƒ[ƒVƒ‡ƒ“‰ñ” */
 	Uint8 alpha;					/* alpha’l */
-	Uint8 flags;					/* 0:”ñ•\¦, 1:•\¦, 2:tachie_window(2nd screen)‚É•\¦  ‚±‚±‚Å‚Í•\¦‚³‚¹‚é‚©‚Ç‚¤‚©‚¾‚¯‚¾‚æ */
+	Uint8 flags;					/* 0:”ñ•\¦, 1:•\¦, 2:tachie_window(2nd screen)‚É•\¦	‚±‚±‚Å‚Í•\¦‚³‚¹‚é‚©‚Ç‚¤‚©‚¾‚¯‚¾‚æ */
 	int aktframe;					/* Œ»İ‚ÌƒtƒŒ[ƒ€ */
-	/*dou ble*/int anim_count;		/* ƒAƒjƒ[ƒVƒ‡ƒ“‚Ìƒ^ƒCƒ~ƒ“ƒO */
-	/*dou ble*/int/*int*/ x;		/* xÀ•W‚¾‚æ */
-	/*dou ble*/int/*int*/ y;		/* yÀ•W‚¾‚æ */
+	int anim_count; 	/* ƒAƒjƒ[ƒVƒ‡ƒ“‚Ìƒ^ƒCƒ~ƒ“ƒO */
+	int/*int*/ x;		/* xÀ•W‚¾‚æ */
+	int/*int*/ y;		/* yÀ•W‚¾‚æ */
 	int w;							/* • */			//	int cw; 	/* ’†SÀ•W(•)‚¾‚æ */
 	int h;							/* ‚‚³ */			//	int ch; 	/* ’†SÀ•W(‚‚³)‚¾‚æ */
 	int move_wait;					/* “®‚«‚ª‚ ‚Á‚½‚Æ‚«‚Ì§Œä—p */
@@ -529,7 +533,7 @@ typedef struct /*_sc_sprite*/
 	int target_y;					/* –Ú•WÀ•W */
 	int x256;						/* ¸“xŠm•Û—p(256ŒÅ’è¬”“_Œ`®) */
 	int y256;						/* ¸“xŠm•Û—p(256ŒÅ’è¬”“_Œ`®) */
-	/*dou ble*/int angle512;		/* ³Šm‚È•ûŒü */	//	int r_course;	/* ‘å‘Ì‚Ì•ûŒü */
+	int angle512;		/* ³Šm‚È•ûŒü */	//	int r_course;	/* ‘å‘Ì‚Ì•ûŒü */
 } SC_SPRITE;
 
 
@@ -548,12 +552,10 @@ static int cursor_x_chached;					/* ƒJ[ƒ\ƒ‹ˆÊ’u •Û‘¶—p */
 static int cursor_y_chached;					/* ƒJ[ƒ\ƒ‹ˆÊ’u •Û‘¶—p */
 /*****************************************/
 
-static SDL_Rect msgw_rect;				/* ƒƒbƒZ[ƒWƒEƒBƒ“ƒhƒE•\¦ˆÊ’u */
-
 /*	psp‚Å‚Í ‚±‚±‚Å‰Šú‰»‚µ‚Ä‚à³í“®ì‚µ‚È‚¢ê‡‚ª‚ ‚éB
 	‹N“®‚É‰Šú‰»‚µ‚È‚¢‚Æƒ_ƒB(PC‚Ìƒ\[ƒX‚ğpsp‚ÅƒRƒ“ƒpƒCƒ‹‚µ‚Ä“®‚©‚È‚¢Œ´ˆö‚Ì‚Ğ‚Æ‚Â) */
 static SDL_Surface *msg_window/*=NULL*/;		/* ƒƒbƒZ[ƒWƒEƒBƒ“ƒhƒE */
-static SDL_Surface *std_window/*=NULL*/;		/* ƒEƒBƒ“ƒhƒE */
+//static SDL_Surface *std_window/*=NULL*/;		/* ƒEƒBƒ“ƒhƒE‚Ì”¼“§–¾˜g */
 #if (1==USE_2ND_SCREEN)
 static SDL_Surface *tachie_window/*=NULL*/; 	/* —Dæ—§‚¿ŠGƒEƒBƒ“ƒhƒE */
 #endif /* (1==USE_2ND_SCREEN) */
@@ -564,6 +566,10 @@ static SDL_Surface *filter_window;				/* ‰‰o—pƒEƒBƒ“ƒhƒE */
 static SDL_Surface *font_bg_bitmap/*=NULL*/;
 
 //
+static S_SCRIPT *sscript/*=NULL*/;				/* –½—ß•Û—p */
+static S_SCRIPT *entry_script;					/* –½—ßûW—p */
+static S_SCRIPT *start_script/*=NULL*/; 		/* –½—ßÀs—p */
+//
 #define SPRITE_tachie_l (29)/*-3*/
 #define SPRITE_tachie_r (30)/*-2*/
 #define SPRITE_tachie_m (31)/*-1*/
@@ -572,12 +578,10 @@ static SC_SPRITE *std_obj[SPRITE_MAX/*32*/ /*20*/]; 		/* ”Ä—pƒXƒvƒ‰ƒCƒg */
 //static SC_SPRITE *tachie_r;
 //static SC_SPRITE *tachie_l;
 //
-static S_SCRIPT *sscript/*=NULL*/;				/* –½—ß•Û—p */
-static S_SCRIPT *entry_script;					/* –½—ßûW—p */
-static S_SCRIPT *start_script/*=NULL*/; 		/* –½—ßÀs—p */
+
+
 //
 
-static int is_window/*=0*/; 					/* ƒEƒBƒ“ƒhƒE•\¦ƒtƒ‰ƒO */
 #if (1==USE_2ND_SCREEN)
 static int is_tachie_window/*=0*/;				/* —§‚¿ŠG‹­’²•\¦ƒtƒ‰ƒO */
 #endif /* (1==USE_2ND_SCREEN) */
@@ -623,10 +627,10 @@ static SDL_Surface *load_Surface(char *filename, int alpha)
 	if ( NULL == s1 )
 	{
 		CHECKPOINT;
-		error(ERR_FATAL,"cant load image %s:"/*" %s"*/,fn/*,SDL_GetError()*/);
+		error(ERR_FATAL, "cant load image %s:"/*" %s"*/,fn/*,SDL_GetError()*/);
 		return (NULL);
 	}
-	if (alpha==-1 || alpha==0)
+	if ((-1==alpha) || (0==alpha))
 	{
 		s2 = SDL_DisplayFormat(s1);
 		SDL_SetColorKey(s2,SDL_SRCCOLORKEY|SDL_RLEACCEL,0x00000000);
@@ -638,7 +642,7 @@ static SDL_Surface *load_Surface(char *filename, int alpha)
 	if ( NULL == s2 )
 	{
 		CHECKPOINT;
-		error(ERR_FATAL,"cant convert image %s to display format:"/*" %s"*/,fn/*,SDL_GetError()*/);
+		error(ERR_FATAL, "cant convert image %s to display format:"/*" %s"*/,fn/*,SDL_GetError()*/);
 		return (NULL);
 	}
 	SDL_FreeSurface(s1);
@@ -668,10 +672,10 @@ static SDL_Surface *load_local(char *str, SDL_Surface *s, int alpha)
 	if ( NULL == tmp )
 	{
 		CHECKPOINT;
-		error(ERR_FATAL,"cant load image %s:"/*" %s"*/,fn/*,SDL_GetError()*/);
+		error(ERR_FATAL, "cant load image %s:"/*" %s"*/,fn/*,SDL_GetError()*/);
 	}
-	if (	(alpha==-1) /* ƒXƒNƒŠƒvƒg’†‚ÅÈ—ª‚µ‚½ê‡(ƒfƒtƒHƒ‹ƒg) */
-		|| (alpha==0)	/* –¾¦‚µ‚½ê‡ */
+	if (	(-1==alpha) /* ƒXƒNƒŠƒvƒg’†‚ÅÈ—ª‚µ‚½ê‡(ƒfƒtƒHƒ‹ƒg) */
+		|| (0==alpha)	/* –¾¦‚µ‚½ê‡ */
 	)
 	{
 		/* ƒAƒ‹ƒtƒ@g‚í‚È‚¢ */
@@ -686,7 +690,7 @@ static SDL_Surface *load_local(char *str, SDL_Surface *s, int alpha)
 	if ( NULL == s )
 	{
 		CHECKPOINT;
-		error(ERR_FATAL,"cant convert image %s to display format:"/*" %s"*/,fn/*,SDL_GetError()*/);
+		error(ERR_FATAL, "cant convert image %s to display format:"/*" %s"*/,fn/*,SDL_GetError()*/);
 	}
 	SDL_FreeSurface(tmp);
 	tmp = NULL;
@@ -856,7 +860,7 @@ move_complete:
 
 static int script_wait(int n)
 {
-	static /*dou ble*/int w_tick;
+	static int w_tick;
 	if (inits)
 	{
 		w_tick = n;
@@ -874,26 +878,13 @@ static int script_wait(int n)
 
 ---------------------------------------------------------*/
 
+static void msg_window_clear(void)
+{
+	SDL_FillRect(msg_window,NULL,SDL_MapRGB(msg_window->format,0,0,0));
+}
 static void msg_window_init(void)
 {
-	/* psp‚Å‚Í SDL_FreeSurface() ‚ª³í‚É“®ì‚µ‚Ü‚¹‚ñ‚Ì‚ÅA‚±‚Ì‚Ü‚Ü‚Å‚Íƒƒ‚ƒŠ•s‘«H‚Åƒnƒ“ƒOƒAƒbƒv‚µ‚Ü‚·B */
-	/*msg_window_init()*/
-	if (NULL != msg_window) 	{	SDL_FreeSurface(msg_window);	msg_window = NULL;	}
-	msg_window=SDL_CreateRGBSurface(SDL_SRCCOLORKEY|SDL_SWSURFACE,/* ƒƒCƒ“ƒƒ‚ƒŠ‚ÖŠm•Û‚·‚é */
-			340,
-			100,
-			sdl_screen[SDL_00_SCREEN]->format->BitsPerPixel,
-			sdl_screen[SDL_00_SCREEN]->format->Rmask,
-			sdl_screen[SDL_00_SCREEN]->format->Gmask,
-			sdl_screen[SDL_00_SCREEN]->format->Bmask,
-			sdl_screen[SDL_00_SCREEN]->format->Amask);
-	SDL_SetColorKey(msg_window,SDL_SRCCOLORKEY|SDL_RLEACCEL,0x00000000);
-/* psp ‚Å‚Í Šm•Ûæ‚ª VRAM ‚© ƒƒCƒ“ƒƒ‚ƒŠ ‚©‚Ì2í—Ş‚µ‚©‚ ‚è‚Ü‚¹‚ñB
-‚»‚Ì‚¤‚¿ VRAM Šm•Û‚³‚ê‚½ê‡Apsp‚ÌSDLŒÅ—L‚Ì‹@”\‚Å‚ ‚éSDL‚Ì‰æ‘œƒLƒƒƒbƒVƒ…‹@”\‚ªŸè‚É“­‚­‚Ì‚ÅA
-‚±‚ê‚ªŒ´ˆö‚Å•Ï‚È–‚É‚È‚è‚Ü‚·B(ƒƒCƒ“ƒƒ‚ƒŠŠm•Û‚³‚ê‚½ê‡A‚±‚Ì–â‘è‚Í‹N‚«‚Ü‚¹‚ñ)
-SDL_SWSURFACE ‚ªw’è‚³‚ê‚Ä‚¢‚ê‚ÎA•K‚¸ƒƒCƒ“ƒƒ‚ƒŠ‚ÖŠm•Û‚³‚ê‚é–ó‚Å‚Í‚È‚¢‚æ‚¤‚Å‚·B
-Œ»ó‚±‚Ì•”•ª‚Í VRAM Šm•Û‚³‚ê‚Ä‚¢‚é‚İ‚½‚¢‚Å‚·B VRAM Šm•Û‚³‚ê‚È‚¢‚Æ Alpha ‚ªg‚¦‚È‚¢‚Ì‚©‚à’m‚ê‚Ü‚¹‚ñHHHB
- */
+
 }
 
 /*---------------------------------------------------------
@@ -912,29 +903,32 @@ static void filter_init(int r,int g,int b)
 {
 	/*filter_init()*/
 	SDL_FillRect(filter_window,NULL,SDL_MapRGB(filter_window->format,r,g,b));
-	SDL_SetAlpha(filter_window,SDL_SRCALPHA,0);
+	SDL_SetAlpha(filter_window, SDL_SRCALPHA, 0);
 }
 
 /*---------------------------------------------------------
 
 ---------------------------------------------------------*/
 
+static SDL_Rect msgw_rect;				/* ƒƒbƒZ[ƒWƒEƒBƒ“ƒhƒE•\¦ˆÊ’u */
 static void msgw_rect_init(int x,int y)
 {
-	msgw_rect.x=x;
-	msgw_rect.y=y;
+	msgw_rect.x = x;
+	msgw_rect.y = y;
 }
 
 /*---------------------------------------------------------
 
 ---------------------------------------------------------*/
+
+/*static*/ int draw_script_screen/*=0*/;					/* ‚¹‚è‚ÓƒEƒBƒ“ƒhƒE•\¦ƒtƒ‰ƒO */
 
 static int window_effect(int w_is, int efe)
 {
 	/* ‰½ŒÌ‚©Œø‰Ê‚ª‚È‚¢Œ´ˆö•s–¾ */
 	if (-1 == efe)
 	{
-		is_window = w_is;
+		draw_script_screen = w_is;
 		return (1);
 	}
 //
@@ -942,14 +936,11 @@ static int window_effect(int w_is, int efe)
 	static int st_line;
 //	else
 //	{
-	Sint32 x;
-	Sint32 y;
-	Uint32 col;
 	//
 	if (inits)
 	{
 		lines = 0;
-		is_window = 2;
+		draw_script_screen = 2;
 		msg_window_init();
 		if (efe<1)
 		{	st_line = 1;}
@@ -966,22 +957,28 @@ static int window_effect(int w_is, int efe)
 	else
 	{
 		msg_window_init();/*???*/
-		start_y 	= 0;
-		end_y		= std_window->h-(lines);
+		start_y 	= (0);
+		end_y		= (56)/*std_window->h*/-(lines);
 	}
+	#if (000)
 	if (SDL_MUSTLOCK(msg_window))	{	SDL_LockSurface(msg_window);	}
 	if (SDL_MUSTLOCK(std_window))	{	SDL_LockSurface(std_window);	}
+	{
+		Sint32 y;
 		for (y = start_y; y<end_y; y++)
 		{
-			for (x = 0; x<std_window->w; x++)
+			Sint32 x;
+			for (x = 0; x<(320)/*std_window->w*/; x++)
 			{
-				col = getpixel16(std_window, x, y);
+				Uint32 col = getpixel16(std_window, x, y);
 				putpixel16(msg_window, x, y, col);
 			}
 		}
+	}
 	if (SDL_MUSTLOCK(msg_window))	{	SDL_UnlockSurface(msg_window);	}
 	if (SDL_MUSTLOCK(std_window))	{	SDL_UnlockSurface(std_window);	}
-	if (lines>std_window->h)		{	msg_window_init();	is_window=w_is; return (1); }
+	#endif
+	if (lines>(56)/*std_window->h*/)		{	msg_window_init();	draw_script_screen=w_is; return (1); }
 	lines += st_line;
 //	}
 	return (0);
@@ -1280,10 +1277,10 @@ static void regist_script(
 			SDL_Rect *new_rect2;
 			new_script->command=SCP_TEXT;
 			new_rect2 = mmalloc(sizeof(SDL_Rect));
-			new_rect2->x			= 10;
-			new_rect2->y			= 10;
+			new_rect2->x			= 0/*10*/;
+			new_rect2->y			= 0/*10*/;
 			new_rect2->w			= 310;
-			new_rect2->h			= 1500;
+			new_rect2->h			= 64/*1500*/;
 			new_script->data		= new_rect2;
 //			new_script->para2		= /*c_p2*/c_pn[PARAM_02];	/* ƒfƒtƒHƒ‹ƒg */		/* ‘‚«‚İ‘¬“x */
 //			new_script->para3		= /*c_p3*/c_pn[PARAM_03];	/* ƒfƒtƒHƒ‹ƒg */		/* ‘‚«‚İŒã‚Ìcount_char‚Ìˆ‹ö */
@@ -1327,15 +1324,16 @@ static char buffer_text_1_line[256];	/* parth text, 1 line buffer */ 	/* ‘–¸‚·‚
 #if 1
 static unsigned long file_size;
 static unsigned long file_seek;
-static char *my_buf;
-static void *malloc_buf;
+//static char *my_buf;
+//static void *malloc_buf;
+static char *malloc_buf;
 
 static void *my_fopen(const char *file_name/*, const char *dummy*/)
 {
 	SceUID fd;
 	if (!(fd = sceIoOpen((char *)file_name, PSP_O_RDONLY, 0777)))
 	{
-		return (NULL);
+		goto error111;
 	}
 	file_size = sceIoLseek32(fd, 0, PSP_SEEK_END);
 	file_seek = 0;
@@ -1344,14 +1342,16 @@ static void *my_fopen(const char *file_name/*, const char *dummy*/)
 	if (NULL == malloc_buf)
 	{
 		sceIoClose(fd);
-		return (NULL);
+		goto error111;
 	}
 	sceIoLseek32(fd, 0, PSP_SEEK_SET);
 	sceIoRead( fd, malloc_buf, file_size);
 	sceIoClose(fd);
-	my_buf = malloc_buf;
+//	my_buf = malloc_buf;
 //
 	return (malloc_buf);
+error111:
+	return (NULL);
 }
 static int my_fgets(void/*char *buffer_name, int num, char *wfp*/)
 {
@@ -1361,14 +1361,14 @@ ii=0;
 //	char bbb;
 //bbb=0;
 	fgets_loop:;
-	aaa = /*buffer_name*/buffer_text_1_line[ii] = my_buf[file_seek]/*(*my_buf)*/;
+	aaa = /*buffer_name*/buffer_text_1_line[ii] = /*my_buf*/malloc_buf[file_seek]/*(*my_buf)*/;
 //	my_buf++;
 	ii++;
 	file_seek++;
 	if (0x0a==aaa)	return (1);
 	if (file_size < file_seek)	return (0)/*NULL*/;
 	goto fgets_loop;
-//	error(ERR_FATAL,"TEST %s\nno: %d (%s)",buffer_name,errno,strerror(errno));
+//	error(ERR_FATAL, "TEST %s\nno: %d (%s)",buffer_name,errno,strerror(errno));
 //	return (NULL);
 }
 static void my_fclose(void/*void *wfp*/)
@@ -1436,11 +1436,11 @@ static int load_scenario(char *src_filename)
 		if (*c=='-')		{	chains++;	c++;	}		/* ˜A‘±‚µ‚½–½—ß */
 		else				{	chains=0;	}
 
-		if (NULL==(c = load_command(c, char_command, &end_arg)))	{	error(ERR_WARN,"syntax error in scriptfile '%s', line no: %d", filename, line_num); continue;	}
+		if (NULL==(c = load_command(c, char_command, &end_arg)))	{	error(ERR_WARN, "syntax error in scriptfile '%s', line no: %d", filename, line_num); continue;	}
 		if (!end_arg)
 		{
-			if (*c++ != ' ')									{	error(ERR_WARN,"syntax error in scriptfile '%s', line no: %d", filename, line_num); continue;	}
-			if (NULL==(c = load_str(c, c_p0, &end_arg)))		{	error(ERR_WARN,"syntax error in scriptfile '%s', line no: %d", filename, line_num); continue;	}
+			if (*c++ != ' ')									{	error(ERR_WARN, "syntax error in scriptfile '%s', line no: %d", filename, line_num); continue;	}
+			if (NULL==(c = load_str(c, c_p0, &end_arg)))		{	error(ERR_WARN, "syntax error in scriptfile '%s', line no: %d", filename, line_num); continue;	}
 		}
 		{
 			int kk;
@@ -1448,8 +1448,8 @@ static int load_scenario(char *src_filename)
 			{
 				if (!end_arg)
 				{
-					if (*c++ != ',')									{	error(ERR_WARN,"syntax error in scriptfile '%s', line no: %d", filename, line_num); continue;	}
-					if (NULL==(c = load_int(c, &c_pn[kk], &end_arg)))	{	error(ERR_WARN,"syntax error in scriptfile '%s', line no: %d", filename, line_num); continue;	}
+					if (*c++ != ',')									{	error(ERR_WARN, "syntax error in scriptfile '%s', line no: %d", filename, line_num); continue;	}
+					if (NULL==(c = load_int(c, &c_pn[kk], &end_arg)))	{	error(ERR_WARN, "syntax error in scriptfile '%s', line no: %d", filename, line_num); continue;	}
 				}
 			}
 		}
@@ -1465,7 +1465,7 @@ static int load_scenario(char *src_filename)
 		//ps pDebugScreenPrintf("can't entrys from this file %s",filename);
 		//sc eKernelDelayThread(3000000);
 		#endif
-		error(ERR_WARN,"can't entrys from this file %s",filename);
+		error(ERR_WARN, "can't entrys from this file %s",filename);
 		return (0);
 	}
 	return (1);
@@ -1487,7 +1487,7 @@ static void script_reset(void)
 //	remove_sc_sprite(std_obj[SPRITE_tachie_r]);
 //	remove_sc_sprite(std_obj[SPRITE_tachie_l]);
 	if (NULL != bg_story_window)	{	SDL_FreeSurface(bg_story_window);	bg_story_window 	= NULL; }
-	if (NULL != msg_window) 		{	SDL_FreeSurface(msg_window);		msg_window			= NULL; }
+//	if (NULL != msg_window) 		{	SDL_FreeSurface(msg_window);		msg_window			= NULL; }
 #if (1==USE_2ND_SCREEN)
 //	if (NULL != tachie_window)		{	SDL_FreeSurface(tachie_window); 	tachie_window		= NULL; }
 #endif /* (1==USE_2ND_SCREEN) */
@@ -1509,10 +1509,10 @@ static void script_reset(void)
 	ƒXƒvƒ‰ƒCƒgƒIƒuƒWƒFƒNƒg‚Ì“®ì(“®‚«/ƒAƒjƒ[ƒVƒ‡ƒ“)
 ---------------------------------------------------------*/
 
-static SC_SPRITE *animate_work_my_sprite(SC_SPRITE *sp)
+static /*SC_SPRITE **/void animate_work_my_sprite(SC_SPRITE *sp)
 {
 //	if (NULL == sp) 	{	return (NULL);	}/* d•¡ƒ`ƒFƒbƒN‚È‚Ì‚Å•s—v */
-	if (sp->frames == 1)	{ return (sp);	}/*  */
+	if (sp->frames == 1)	{ return /*(sp)*/;	}/*  */
 	/*
 	/// anim_type‚É‚Â‚¢‚Ä ///
 	0:	¶‚©‚ç‰E‚ÉBÅŒã‚Ü‚Å‚¢‚Á‚½‚ç¶‚Ö–ß‚éB(ƒ‹[ƒv)
@@ -1538,7 +1538,7 @@ static SC_SPRITE *animate_work_my_sprite(SC_SPRITE *sp)
 		case 6: 	break;
 		}
 	}
-	return (sp);
+//	return /*(sp)*/;
 }
 
 /*---------------------------------------------------------
@@ -1554,7 +1554,8 @@ static void draw_my_sprite(int start, int end)
 		{
 			if (std_obj[nnn]->flags)
 			{
-				SDL_Rect src_r,dst_r;
+				SDL_Rect src_r;
+				SDL_Rect dst_r;
 				src_r.x = std_obj[nnn]->w*std_obj[nnn]->aktframe;
 				src_r.y = 0;
 				src_r.w = std_obj[nnn]->w;
@@ -1570,7 +1571,7 @@ static void draw_my_sprite(int start, int end)
 				{	SDL_BlitSurface(std_obj[nnn]->img, &src_r, sdl_screen[SDL_00_SCREEN], &dst_r); }
 				#endif /* (1==USE_2ND_SCREEN) */
 			}
-			std_obj[nnn] = animate_work_my_sprite(std_obj[nnn]);
+			/*std_obj[nnn] =*/ animate_work_my_sprite(std_obj[nnn]);
 		}
 	}
 }
@@ -1676,19 +1677,100 @@ static int load_bg_local(char *filename, int alpha, int fade_command, int set_al
 }
 /*---------------------------------------------------------
 
+---------------------------------------------------------*/
+
+#define USE_KOMONO 0
+
+static void s_draw_the_script(void)
+{
+	/* ----- •`‰æŒn ----- */
+	/* 1. ‚Ü‚¸”wŒi‚ğ•`‚­ */
+	if (is_bg)
+	{
+		if (255 > bg_alpha)
+		{
+			SDL_SetAlpha(bg_story_window, SDL_SRCALPHA, bg_alpha);
+		}
+		SDL_BlitSurface(bg_story_window, NULL, sdl_screen[SDL_00_SCREEN], NULL);
+	}
+
+	/* 2. Ÿ‚É—§‚¿ŠG‚ğ•`‚­ */
+	#if (1==USE_KOMONO)
+	dr aw_my_sprite(0,9);/* ¬•¨ 10–‡ */
+	#endif /* (1==USE_KOMONO) */
+	draw_my_sprite(SPRITE_tachie_l,SPRITE_tachie_l);/* —§‚¿ŠG 1–‡ */
+	#if (1==USE_KOMONO)
+	dr aw_my_sprite(10,11);/* ¬•¨ 2–‡ */
+	#endif /* (1==USE_KOMONO) */
+	draw_my_sprite(SPRITE_tachie_r,SPRITE_tachie_r);/* —§‚¿ŠG 1–‡ */
+	#if (1==USE_KOMONO)
+	dr aw_my_sprite(12,15);/* ¬•¨ 4–‡ */
+
+	/* 7.  ‚ğ•`‚­ */
+	if (is_filter)
+	{
+		SDL_BlitSurface(filter_window, NULL, sdl_screen[SDL_00_SCREEN], NULL);
+	}
+
+	/* 8.  ¬•¨‚ğ•`‚­ */
+	dr aw_my_sprite(16,16);/* ¬•¨ 1–‡ */
+	#endif /* (1==USE_KOMONO) */
+
+	#if (1==USE_2ND_SCREEN)
+	/* 9.  ‚ğ•`‚­(—§‚¿ŠG‹­’²) */
+	if (is_tachie_window)
+	{
+		SDL_BlitSurface(tachie_window, NULL, sdl_screen[SDL_00_SCREEN], NULL);
+	}
+	#endif /* (1==USE_2ND_SCREEN) */
+
+	#if (1==USE_KOMONO)
+	/* 10.	¬•¨‚ğ•`‚­ */
+	dr aw_my_sprite(17,17);/* ¬•¨ 1–‡ */
+
+	/* 12.	¬•¨‚ğ•`‚­ */
+	dr aw_my_sprite(18,19);/* ¬•¨ 2–‡ */
+	#endif /* (1==USE_KOMONO) */
+//
+
+
+#if (000)
+
+	/* 11.	‚¹‚è‚ÓƒEƒBƒ“ƒhƒE‚ğ•`‚­ */
+	if (draw_script_screen)
+	{
+		/* ƒEƒBƒ“ƒhƒE‚Ì”¼“§–¾˜g ‚ğ•`‚­ */
+	//	if (draw_script_screen != 2)
+		{
+			#if (000)
+			SDL_BlitSurface(std_window, NULL, sdl_screen[SDL_00_SCREEN], &msgw_rect);
+			#endif /* (000) */
+		}
+		/*	*/
+			SDL_BlitSurface(msg_window, NULL, sdl_screen[SDL_00_SCREEN], &msgw_rect);
+	}
+#endif /* (000) */
+//
+}
+
+
+/*---------------------------------------------------------
+
 ---- ‚â‚è‚½‚¢‚±‚Æ ----
 	1ƒtƒŒ[ƒ€‚Å‚ÍI‚í‚ç‚È‚¢ˆ—‚ª‚ ‚Á‚½‚Æ‚«‚Ì‚½‚ß‚É‚±‚ÌƒRƒ}ƒ“ƒh‚©‚ç‚Ì–½—ß‚É‚Í‘S‚Ä
 	I‚í‚Á‚½‚±‚Æ‚ğ’m‚ç‚¹‚éˆø”‚ğ•t‚¯‚Ä‚¨‚­‚±‚ÆB=>done‚É‘ã“ü‚ÅI—¹B
 	í‚Échain‚ğŠm”F‚µA0ˆÈŠO‚Ì’l‚ª“ü‚Á‚Ä‚¢‚½‚çŸ‚ÌŠÖ”‚àÀs‚·‚é(next‚ğ’H‚é)B
 ---------------------------------------------------------*/
 
-static int thescript(void)
-{
-	S_SCRIPT *ssc = start_script;
-	int n = 0;						/* Ÿ‚Ì–½—ß‚Éi‚ß‚é‚©‚Ì”»’è */
-	static int tmp_all[16/*15*/];	/* ‚²©—R‚É‚¨g‚¢‚­‚¾‚³‚¢B */
-	SC_SPRITE *sc_tmp = NULL;		/* ã‚É“¯‚¶ */
+static int n9;						/* Ÿ‚Ì–½—ß‚Éi‚ß‚é‚©‚Ì”»’è */
 
+static int return_the_script;
+static /*int*/void work_the_script(void)
+{
+
+	static int tmp_all[16/*15*/];	/* ‚²©—R‚É‚¨g‚¢‚­‚¾‚³‚¢B */
+	S_SCRIPT *ssc = start_script;
+	n9 = 0; 					/* Ÿ‚Ì–½—ß‚Éi‚ß‚é‚©‚Ì”»’è */
 	if (inits)
 	{
 		int i;
@@ -1709,7 +1791,12 @@ static int thescript(void)
 				ssc->done = 1;
 				ssc=ssc->next;
 			}
-			if (NULL == ssc->next)	{	script_reset(); return (1); }
+			if (NULL == ssc->next)
+			{
+				script_reset();
+				return_the_script=(1);
+				return /*(1)*/;
+			}
 		}
 		if (my_pad_alter & PSP_KEY_SHOT_OK) 		/* ‚n‚j“ü—Í */
 		{
@@ -1766,7 +1853,7 @@ static int thescript(void)
 						{
 							if (0x00==(ssc->para3 & 0x02))
 							{
-								;//cursor_continue = 1;		/* ƒJ[ƒ\ƒ‹Œp‘± */
+								;//cursor_continue = 1; 	/* ƒJ[ƒ\ƒ‹Œp‘± */
 							}
 							else
 							{
@@ -1776,6 +1863,7 @@ static int thescript(void)
 							}
 							if (0x04==(ssc->para3 & 0x04))
 							{
+								msg_window_clear(); 	/* ƒEƒBƒ“ƒhƒE‰Šú‰» */
 								msg_window_init();		/* ƒEƒBƒ“ƒhƒE‰Šú‰» */
 							}
 							ssc->done = 1;
@@ -1830,28 +1918,38 @@ static int thescript(void)
 					//ps pDebugScreenPrintf("no sprite in No.%s\n",ssc->para0);
 					//sc eKernelDelayThread(2000000);
 					#endif
-					return (1);
+					return_the_script=(1);
+					return /*(1)*/;
 				}
 				break;
 			case SCP_PARAMSP:
 				tmp_all[ssc->chain] = cha_search(ssc->para0);
-				if (tmp_all[ssc->chain] == -1)		{	return (-1);	}
-			//	else if (tmp_all[ssc->chain] == -2) {	sc_tmp=std_obj[SPRITE_tachie_r];	}
-			//	else if (tmp_all[ssc->chain] == -3) {	sc_tmp=std_obj[SPRITE_tachie_l];	}
-				else								{	sc_tmp=std_obj[((tmp_all[ssc->chain])&(SPRITE_MAX-1))]; }
-				if (ssc->para1 != -1)
+				if (tmp_all[ssc->chain] == -1)
 				{
-					sc_tmp->alpha=ssc->para1;
-					SDL_SetAlpha(sc_tmp->img, SDL_SRCALPHA, sc_tmp->alpha);
+					return_the_script=(-1);
+					return /*(-1)*/;
 				}
-				if (ssc->para2 != -1)
 				{
-					sc_tmp->anim_speed=ssc->para2;
+					SC_SPRITE *sc_tmp;
+//					sc_tmp = NULL;
+				//	else if (tmp_all[ssc->chain] == -2) {	sc_tmp=std_obj[SPRITE_tachie_r];	}
+				//	else if (tmp_all[ssc->chain] == -3) {	sc_tmp=std_obj[SPRITE_tachie_l];	}
+//					else
+					{	sc_tmp=std_obj[((tmp_all[ssc->chain])&(SPRITE_MAX-1))]; }
+					if (ssc->para1 != -1)
+					{
+						sc_tmp->alpha=ssc->para1;
+						SDL_SetAlpha(sc_tmp->img, SDL_SRCALPHA, sc_tmp->alpha);
+					}
+					if (ssc->para2 != -1)
+					{
+						sc_tmp->anim_speed=ssc->para2;
+					}
+					if (ssc->para3 > 4) 		{	sc_tmp->anim_type = 0;				}
+					else if (ssc->para3 == 3)	{	sc_tmp->anim_type = 3;	sc_tmp->aktframe = sc_tmp->frames-1;	}
+					else if (ssc->para3 != -1)	{	sc_tmp->anim_type = ssc->para3; 	}
 				}
-				if (ssc->para3 > 4)			{	sc_tmp->anim_type = 0;				}
-				else if (ssc->para3 == 3) 	{	sc_tmp->anim_type = 3;	sc_tmp->aktframe = sc_tmp->frames-1;	}
-				else if (ssc->para3 != -1)	{	sc_tmp->anim_type = ssc->para3; 	}
-				ssc->done = 1;
+					ssc->done = 1;
 				break;
 			case SCP_RELOADSP:
 				reload_sc_sprite(ssc->para0,ssc->para1,ssc->para2,ssc->para3);
@@ -1862,7 +1960,7 @@ static int thescript(void)
 				break;
 			case SCP_SUFILTER:
 				is_filter = ssc->para1;
-				SDL_SetAlpha(filter_window,SDL_SRCALPHA,ssc->para2);
+				SDL_SetAlpha(filter_window, SDL_SRCALPHA, ssc->para2);
 				ssc->done = 1;
 				break;
 			case SCP_SUL:
@@ -1874,7 +1972,7 @@ static int thescript(void)
 			case SCP_SUSPRITE:
 			//		 if (ssc->para1==-2)	{	std_obj[SPRITE_tachie_r]->flags = ssc->para2; }
 			//	else if (ssc->para1==-3)	{	std_obj[SPRITE_tachie_l]->flags = ssc->para2; }
-			/*	else	*/					{	std_obj[((ssc->para1)&(SPRITE_MAX-1))]->flags = ssc->para2;	}
+			/*	else	*/					{	std_obj[((ssc->para1)&(SPRITE_MAX-1))]->flags = ssc->para2; }
 				ssc->done = 1;
 				break;
 			case SCP_SUTWINDOW:
@@ -1909,73 +2007,34 @@ static int thescript(void)
 				break;
 			}
 		}
-		if (0 == ssc->done)		{	n++;	}		/* Œp‘±ƒtƒ‰ƒO */
+		if (0 == ssc->done) 	{	n9++;	}		/* Œp‘±ƒtƒ‰ƒO */
 		if (NULL==ssc->next)	{	break;	}		/* next‚ªNULL‚Ìê‡ */
 		if ((ssc->chain >= ssc->next->chain) || (0==ssc->chain))	{ break;	}	/* Œ»chain‚ªŸchain‚æ‚è‘å‚«‚¢ê‡ */
 		ssc = ssc->next;
 	}
-
+//
 	/* ----- •`‰æŒn ----- */
-	/* 1. ‚Ü‚¸”wŒi‚ğ•`‚­ */
-	if (is_bg)
-	{
-		if (255 > bg_alpha)
-		{
-			SDL_SetAlpha(bg_story_window, SDL_SRCALPHA, bg_alpha);
-		}
-		SDL_BlitSurface(bg_story_window, NULL, sdl_screen[SDL_00_SCREEN], NULL);
-	}
-
-	/* 2. Ÿ‚É—§‚¿ŠG‚ğ•`‚­ */
-	draw_my_sprite(0,9);/* ¬•¨ 10–‡ */
-	draw_my_sprite(SPRITE_tachie_l,SPRITE_tachie_l);/* —§‚¿ŠG 1–‡ */
-	draw_my_sprite(10,11);/* ¬•¨ 2–‡ */
-	draw_my_sprite(SPRITE_tachie_r,SPRITE_tachie_r);/* —§‚¿ŠG 1–‡ */
-	draw_my_sprite(12,15);/* ¬•¨ 4–‡ */
-
-	/* 7.  ‚ğ•`‚­ */
-	if (is_filter)
-	{
-		SDL_BlitSurface(filter_window, NULL, sdl_screen[SDL_00_SCREEN], NULL);
-	}
-
-	/* 8.  ¬•¨‚ğ•`‚­ */
-	draw_my_sprite(16,16);/* ¬•¨ 1–‡ */
-
-	#if (1==USE_2ND_SCREEN)
-	/* 9.  ‚ğ•`‚­(—§‚¿ŠG‹­’²) */
-	if (is_tachie_window)
-	{
-		SDL_BlitSurface(tachie_window, NULL, sdl_screen[SDL_00_SCREEN], NULL);
-	}
-	#endif /* (1==USE_2ND_SCREEN) */
-
-	/* 10.  ¬•¨‚ğ•`‚­ */
-	draw_my_sprite(17,17);/* ¬•¨ 1–‡ */
-
-	/* 11.  ‚ğ•`‚­ */
-	if (is_window)
-	{
-		if (is_window != 2)
-		{	SDL_BlitSurface(std_window, NULL, sdl_screen[SDL_00_SCREEN], &msgw_rect);	}
-		/*  */
-			SDL_BlitSurface(msg_window, NULL, sdl_screen[SDL_00_SCREEN], &msgw_rect);
-	}
-
-	/* 12.  ¬•¨‚ğ•`‚­ */
-	draw_my_sprite(18,19);/* ¬•¨ 2–‡ */
+	s_draw_the_script();
+//
 //
 	inits = 0;
-	if (n==0)					/* Ÿ‚Ì–½—ß‚Ì‹–‰Â */
+	if (0 == n9)					/* Ÿ‚Ì–½—ß‚Ì‹–‰Â */
 	{
-		inits=1;
+		inits = 1;
 		while (start_script->done)		/* Ÿ‚Ì–½—ß‚Ö */
 		{
-			if (NULL==start_script->next)	{	script_reset(); return (1); }
+			if (NULL == start_script->next)
+			{
+				script_reset();
+				return_the_script=(1);
+				return /*(1)*/;
+			}
 			start_script=start_script->next;
 		}
 	}
-	return (0);
+//
+	return_the_script=(0);
+	return /*(0)*/;
 }
 
 
@@ -1990,22 +2049,28 @@ void script_display(void)
 	if (/*STATE_FLAG_05_IS_BOSS == */(pd->state_flag & STATE_FLAG_05_IS_BOSS))
 	//if (pd->bo ssmode==B06_AFTER_EVENT)
 	{
-		if (1==thescript())
+		work_the_script();
+		if (1==return_the_script)
 		{
 			pd->state_flag &= (~(STATE_FLAG_06_IS_SCRIPT));
 			pd->state_flag |= STATE_FLAG_12_END_SCRIPT; 	/*	pd->bo ssmode=B09_STAGE_LOAD;*/
 		}
+		/*draw_the_script();*/
 	}	// [***090313	’Ç‰Á	‚±‚±‚ÉˆÚ“®B
 	/*ƒ{ƒXí“¬‘OƒCƒxƒ“ƒg*/
 	else
 	//if (pd->bo ssmode==B03_BEFORE_EVENT)
 #endif
 	{
-		if (1==thescript())
+		work_the_script();
+	//	if (1==return_the_script)	/* psp‚Í0ƒŒƒWƒXƒ^‚ª‚ ‚é‚Ì‚Å0‚Æ”äŠr‚µ‚½‚Ù‚¤‚ª‘¬‚¢ */
+		if (0!=return_the_script)
 		{
+			draw_script_screen = 0; /* ‚¹‚è‚ÓƒEƒBƒ“ƒhƒE•\¦ƒtƒ‰ƒO off */
 			pd->state_flag &= (~(STATE_FLAG_06_IS_SCRIPT));
 			pd->state_flag |= STATE_FLAG_12_END_SCRIPT; 	/*pd->bo ssmode=B08_START;*/
 		}
+		/*else	{	draw_the_script();}*/
 	}	// [***090313	’Ç‰Á
 }
 
@@ -2067,7 +2132,9 @@ int script_init(char *filename, char *bg_name, int width)		/* ƒVƒiƒŠƒIƒtƒ@ƒCƒ‹–¼
 	{
 		return (0);
 	}
-	std_window			= loadbmp0("fonts/window.png", 1, 1);/*2*/
+	/* ƒEƒBƒ“ƒhƒE‚Ì”¼“§–¾˜g */
+//	std_window			= loadbmp0("fonts/window.png", 1, 1);/*2*/
+	msg_window_clear(); 	/* ƒEƒBƒ“ƒhƒE‰Šú‰» */
 	msg_window_init();
 	msgw_rect_init(20,182);
 	#if (1==USE_2ND_SCREEN)
@@ -2075,7 +2142,7 @@ int script_init(char *filename, char *bg_name, int width)		/* ƒVƒiƒŠƒIƒtƒ@ƒCƒ‹–¼
 	#endif /* (1==USE_2ND_SCREEN) */
 	inits				= 1;
 	is_bg				= 0;
-	is_window			= 0;
+	draw_script_screen			= 0;
 	#if (1==USE_2ND_SCREEN)
 	is_tachie_window	= 0;
 	#endif /* (1==USE_2ND_SCREEN) */
@@ -2182,7 +2249,9 @@ void story_work(void)
 //			break;
 	case STORY_WORKS:
 		psp_clear_screen();
-		if (thescript())
+		work_the_script();
+		/*draw_the_script();*/
+		if (return_the_script)
 		{
 			psp_loop++;//newsta te(ST_STORY,STORY_QUIT,0);
 		}
@@ -2199,6 +2268,7 @@ void story_work(void)
 			#endif
 //		bg_alpha = 0;
 		inits=1;
+		draw_script_screen = 0; /* ‚¹‚è‚ÓƒEƒBƒ“ƒhƒE•\¦ƒtƒ‰ƒO off */
 		/* ƒƒCƒ“ƒƒjƒ…[‚É–ß‚é */
 		psp_loop=(ST_INIT_MENU|0/*ST_ME NU_SUB_MAIN_MENU*/);//newsta te(ST_MENU/*ST_INTRO*/,0/*1*/,1);
 		break;
@@ -2209,17 +2279,17 @@ void story_work(void)
 /*---------------------------------------------------------
 	psp‚Å‚ÍŠJ•ú‚ª³í“®ìo—ˆ‚È‚¢‚Ì‚ÅA‹N“®‚ÉŠm•Û‚µ‚Ä(I—¹‚Ü‚Å)ŠJ•ú‚µ‚È‚¢
 ---------------------------------------------------------*/
-
+extern UINT16 *msg_window_image;
 void script_system_init(void)/* ‘g‚İ‚İ */
 {
 	#if 1
-	msg_window			= NULL; 	/* ƒƒbƒZ[ƒWƒEƒBƒ“ƒhƒE */
-	std_window			= NULL; 	/* ƒEƒBƒ“ƒhƒE */
+//	msg_window			= NULL; 	/* ƒƒbƒZ[ƒWƒEƒBƒ“ƒhƒE */
+//	std_window			= NULL; 	/* ƒEƒBƒ“ƒhƒE‚Ì”¼“§–¾˜g */
 //
 	sscript 			= NULL; 	/* –½—ß•Û—p */
 	start_script		= NULL; 	/* –½—ßÀs—p */
 //
-	is_window			= 0;	/* ƒEƒBƒ“ƒhƒE•\¦ƒtƒ‰ƒO */
+	draw_script_screen			= 0;	/* ‚¹‚è‚ÓƒEƒBƒ“ƒhƒE•\¦ƒtƒ‰ƒO */
 	#if (1==USE_2ND_SCREEN)
 	is_tachie_window	= 0;	/* —§‚¿ŠG‹­’²•\¦ƒtƒ‰ƒO */
 	#endif /* (1==USE_2ND_SCREEN) */
@@ -2259,7 +2329,7 @@ void script_system_init(void)/* ‘g‚İ‚İ */
 	#if 0
 	if (NULL != filter_window)	{	SDL_FreeSurface(filter_window); filter_window = NULL; }
 	#endif
-	filter_window=SDL_CreateRGBSurface(SDL_SRCCOLORKEY|SDL_SWSURFACE,/* ƒƒCƒ“ƒƒ‚ƒŠ‚ÖŠm•Û‚·‚é */
+	filter_window = SDL_CreateRGBSurface(SDL_SRCCOLORKEY|SDL_SWSURFACE,/* ƒƒCƒ“ƒƒ‚ƒŠ‚ÖŠm•Û‚·‚é */
 			380/*scenario_width*/,
 			272,
 			sdl_screen[SDL_00_SCREEN]->format->BitsPerPixel,
@@ -2267,7 +2337,7 @@ void script_system_init(void)/* ‘g‚İ‚İ */
 			sdl_screen[SDL_00_SCREEN]->format->Gmask,
 			sdl_screen[SDL_00_SCREEN]->format->Bmask,
 			sdl_screen[SDL_00_SCREEN]->format->Amask);
-	SDL_SetColorKey(filter_window,SDL_RLEACCEL,0x00000000);
+	SDL_SetColorKey(filter_window, SDL_RLEACCEL, 0x00000000);
 //
 		#if 1
 		/*???*/
@@ -2281,6 +2351,29 @@ void script_system_init(void)/* ‘g‚İ‚İ */
 		}
 		font_bg_bitmap = SDL_DisplayFormat(font_bg_bitmap);
 		#endif
+
+//
+	/* psp‚Å‚Í SDL_FreeSurface() ‚ª³í‚É“®ì‚µ‚Ü‚¹‚ñ‚Ì‚ÅA‚±‚Ì‚Ü‚Ü‚Å‚Íƒƒ‚ƒŠ•s‘«H‚Åƒnƒ“ƒOƒAƒbƒv‚µ‚Ü‚·B */
+	/*msg_window_init()*/
+//	if (NULL != msg_window) 	{	SDL_FreeSurface(msg_window);	msg_window = NULL;	}
+	msg_window=SDL_CreateRGBSurface(SDL_SRCCOLORKEY|SDL_SWSURFACE,/* ƒƒCƒ“ƒƒ‚ƒŠ‚ÖŠm•Û‚·‚é */
+			320/*340*/,
+			56/*70*/ /*100*/,
+			sdl_screen[SDL_00_SCREEN]->format->BitsPerPixel,
+			sdl_screen[SDL_00_SCREEN]->format->Rmask,
+			sdl_screen[SDL_00_SCREEN]->format->Gmask,
+			sdl_screen[SDL_00_SCREEN]->format->Bmask,
+			sdl_screen[SDL_00_SCREEN]->format->Amask);
+	if (SDL_MUSTLOCK(msg_window))	{	SDL_LockSurface(msg_window); }
+	msg_window_image = (UINT16 *)msg_window->pixels;
+	if (SDL_MUSTLOCK(msg_window))	{	SDL_UnlockSurface(msg_window);	}
+	SDL_SetColorKey(msg_window,SDL_SRCCOLORKEY|SDL_RLEACCEL,0x00000000);
+/* psp ‚Å‚Í Šm•Ûæ‚ª VRAM ‚© ƒƒCƒ“ƒƒ‚ƒŠ ‚©‚Ì2í—Ş‚µ‚©‚ ‚è‚Ü‚¹‚ñB
+‚»‚Ì‚¤‚¿ VRAM Šm•Û‚³‚ê‚½ê‡Apsp‚ÌSDLŒÅ—L‚Ì‹@”\‚Å‚ ‚éSDL‚Ì‰æ‘œƒLƒƒƒbƒVƒ…‹@”\‚ªŸè‚É“­‚­‚Ì‚ÅA
+‚±‚ê‚ªŒ´ˆö‚Å•Ï‚È–‚É‚È‚è‚Ü‚·B(ƒƒCƒ“ƒƒ‚ƒŠŠm•Û‚³‚ê‚½ê‡A‚±‚Ì–â‘è‚Í‹N‚«‚Ü‚¹‚ñ)
+SDL_SWSURFACE ‚ªw’è‚³‚ê‚Ä‚¢‚ê‚ÎA•K‚¸ƒƒCƒ“ƒƒ‚ƒŠ‚ÖŠm•Û‚³‚ê‚é–ó‚Å‚Í‚È‚¢‚æ‚¤‚Å‚·B
+Œ»ó‚±‚Ì•”•ª‚Í VRAM Šm•Û‚³‚ê‚Ä‚¢‚é‚İ‚½‚¢‚Å‚·B VRAM Šm•Û‚³‚ê‚È‚¢‚Æ Alpha ‚ªg‚¦‚È‚¢‚Ì‚©‚à’m‚ê‚Ü‚¹‚ñHHHB
+ */
 }
 
 /*---------------------------------------------------------

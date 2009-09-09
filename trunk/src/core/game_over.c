@@ -3,22 +3,26 @@
 	ゲームオーバーの表示
 ---------------------------------------------------------*/
 
-#include "support.h"
+#include "game_main.h"
 #include "player.h"
 
 /*---------------------------------------------------------
 	ゲームコア終了の後処理
 ---------------------------------------------------------*/
+extern int draw_script_screen; 					/* せりふウィンドウ表示フラグ */
+
 extern void bg2_destroy(void);
 extern int last_score;
 void gamecore_term(void)
 {
+	draw_script_screen = 0; /* せりふウィンドウ表示フラグ off */
+//
 	last_score=((PLAYER_DATA *)player->data)->my_score;
 
 	bg2_destroy();		// [***090126		追加
 	//controller_remove_all();
-	sprite_remove_all000(SP_GROUP_ALL);
-//	sprite_remove_all222(SP_GROUP_ALL);/*弾幕用*/
+	sprite_remove_all000(SP_GROUP_ALL_TYPE);
+//	sprite_remove_all222(SP_GROUP_ALL_TYPE);/*弾幕用*/
 //	parsys_remove_all();
 //	score_cleanup();
 //
@@ -26,6 +30,8 @@ void gamecore_term(void)
 	//stop_music(); 	// [***090123		コメントアウト
 	set_music_volume(128);
 	play_music(BGM_00_intro);
+	player_now_stage = 0;		// [***090702		追加
+
 }
 
 /*---------------------------------------------------------
@@ -35,11 +41,10 @@ void gamecore_term(void)
 static SDL_Surface *str_01_game_over_surface;
 static SDL_Surface *str_02_score_surface;
 
-static /*dou ble*/int go_size1_256;
-static /*dou ble*/int go_size2_256;
+static int go_size1_256;
+static int go_size2_256;
 
-//static void gameover_display(dou ble s1, dou ble s2);
-static void gameover_display(void/*dou ble s1, dou ble s2*/)
+static void gameover_display(void)
 {
 	SDL_Rect s,d;
 	s.x = 0;

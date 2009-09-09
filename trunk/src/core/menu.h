@@ -1,8 +1,8 @@
 #ifndef _MENU_H_
 #define _MENU_H_
 
-#include "support.h"
-#include "fps.h"
+#include "game_main.h"
+//#include "fps.h"
 
 /* Menues */
 enum /*_menu_states_*/

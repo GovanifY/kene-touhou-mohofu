@@ -1,5 +1,5 @@
 
-#include "enemy.h"
+#include "bullet_object.h"
 
 /*---------------------------------------------------------
 	"‰A—z‹Ê1",		"PLASMABALL",
@@ -10,9 +10,9 @@
 
 typedef struct
 {
-	ENEMY_BASE b;
-	/*dou ble*/int angle512;	/* Šp“x[‚PŽü‚ª512] */
-	/*dou ble*/int speed256;	/* ‘¬“x */
+	ENEMY_BASE base;
+	int angle512;	/* Šp“x[‚PŽü‚ª512] */
+	int speed256;	/* ‘¬“x */
 	int state;					/* ó‘Ô */
 //
 //	int destx256;
@@ -31,7 +31,7 @@ typedef struct
 
 static void move_inyou1(SPRITE *s)
 {
-	INYOU1_DATA *d=(INYOU1_DATA *)s->data;
+	INYOU1_DATA *d = (INYOU1_DATA *)s->data;
 	switch (d->state)
 	{
 	case 0:
@@ -47,7 +47,7 @@ static void move_inyou1(SPRITE *s)
 		}
 		break;
 	case 1:
-		if (d->kaiten_houkou==0)
+		if (0==d->kaiten_houkou)
 		{
 			d->angle512 += 12; /*rad2 deg512(0.3)*/ /*24*/ /**fps_fa ctor*/ /* rad2 deg512( 0.3)== 24.4461992589151487740904245119933 */
 			if (d->angle512 > (256+224)) /*(512)*/
@@ -92,7 +92,7 @@ static void move_inyou1(SPRITE *s)
 			}
 			if ( 0==(ra_nd()&(16-1)) ) /*Šm—¦ã‚°‚½B[1/16]©[1/20]*/ /*%20*/
 			{
-				bullet_create_hari_dan180(s, t256(5), ANGLE_JIKINERAI_DAN, t256(0), t256(0));
+				bullet_create_offset_dan_type(s, t256(5), ANGLE_JIKINERAI_DAN, t256(0), t256(0), BULLET_HARI32_01_AKA);
 			}
 			d->state=2;
 		}
@@ -129,10 +129,10 @@ void add_zako_inyou1(STAGE_DATA *l)/*int lv*/
 			INYOU1_DATA *data;
 			data				= mmalloc(sizeof(INYOU1_DATA));
 			s->data 			= data;
-			data->b.score		= score(25*2);
-			data->b.health		= (8*8)+(difficulty<<2);	/*‚â‚í‚ç‚©‚·‚¬*/	/*(2+(difficulty<<2))*/
+			data->base.score	= score(25*2);
+			data->base.health	= (8*8)+(difficulty<<2);	/*‚â‚í‚ç‚©‚·‚¬*/	/*(2+(difficulty<<2))*/
 			data->state 		= 0;
-			data->speed256		= ((ra_nd()&(512-1)))+128;  	/*t256_to_dou ble*/ /*((ra_nd()&(256-1)))*3*/ /*3*((dou ble)ra_nd()/RAND_MAX+1)*/
+			data->speed256		= ((ra_nd()&(512-1)))+128;  	/*((ra_nd()&(256-1)))*3*/ /*3*((dou ble)ra_nd()/RAND_MAX+1)*/
 			data->limit_y256	= t256(128)-((yyy<<(5+8))); 	/*t256(200)-(j*t256(40))*/ 	/* è‡’l */
 			s->x256 			= t256( 32)+((xxx<<(6+8))); 	/*t256( 40)+(i*t256(35))*/
 			s->y256 			= (-((s->w128+s->w128))-(xxx*t256(16))-(yyy*t256(64)));

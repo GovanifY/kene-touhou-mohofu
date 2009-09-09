@@ -1,5 +1,5 @@
 
-#include "enemy.h"
+#include "bullet_object.h"
 
 /*---------------------------------------------------------
 		"óŒñ—ã 1",		"XEV",
@@ -9,7 +9,7 @@
 
 typedef struct
 {
-	ENEMY_BASE b;
+	ENEMY_BASE base;
 	int state;
 	int tx256;
 	int ty256;
@@ -24,8 +24,8 @@ typedef struct
 
 static void move_midori_kedama1(SPRITE *s)
 {
-	/*dou ble*/int speed256=t256(2.5/*0*/);
-	MIDORI_KEDAMA1_DATA *d=(MIDORI_KEDAMA1_DATA *)s->data;
+	int speed256 = t256(2.5/*0*/);
+	MIDORI_KEDAMA1_DATA *d = (MIDORI_KEDAMA1_DATA *)s->data;
 	switch (d->state)
 	{
 	case 0:
@@ -52,7 +52,7 @@ static void move_midori_kedama1(SPRITE *s)
 		}
 		break;/* ??? [***20090409	í«â¡  */
 	}
-	{	/*dou ble*/int angle512;
+	{	int angle512;
 		angle512=atan_512(d->ty256-s->y256,d->tx256-s->x256);
 		s->x256+=((cos512(angle512)*speed256)>>8)/**fps_fa ctor*/;
 		s->y256+=((sin512(angle512)*speed256)>>8)/**fps_fa ctor*/;
@@ -88,8 +88,8 @@ void add_zako_midori_kedama1(STAGE_DATA *l)/*int lv*/
 		MIDORI_KEDAMA1_DATA *data;
 		data				= mmalloc(sizeof(MIDORI_KEDAMA1_DATA));
 		s->data 			= data;
-		data->b.score		= score(5*2);
-		data->b.health		= (8*8)+(difficulty<<2)/*(1+(difficulty<<2))*/;/*Ç‚ÇÌÇÁÇ©Ç∑Ç¨*/
+		data->base.score	= score(5*2);
+		data->base.health	= (8*8)+(difficulty<<2)/*(1+(difficulty<<2))*/;/*Ç‚ÇÌÇÁÇ©Ç∑Ç¨*/
 		data->state 		= 0;
 		data->tx256 		= player->x256;
 	//	data->ty256 		= player->y256; 		/* ì¡çUã÷é~ */

@@ -1,22 +1,22 @@
 
-#include "enemy.h"
+#include "bullet_object.h"
 
 /*---------------------------------------------------------
-		"虹毛玉1",		"EY EFO",
+		"虹毛玉1",		"EYEFO",
 	-------------------------------------------------------
 	バグあり？？？
 ---------------------------------------------------------*/
 
 typedef struct
 {
-	ENEMY_BASE b;
-	/*dou ble*/int angle512;
-	/*dou ble*/int radius256;
+	ENEMY_BASE base;
+	int angle512;
+	int radius256;
 	int level;
 	int flag1;
-	/*dou ble*/int xcenter256;
-	/*dou ble*/int ycenter256;
-	/*dou ble*/int time_out;
+	int xcenter256;
+	int ycenter256;
+	int time_out;
 } NIJI_KEDAMA1_DATA;
 static int destoroy;
 
@@ -45,7 +45,7 @@ static void lose_niji_kedama1(SPRITE *s)
 
 static void move_niji_kedama1(SPRITE *s)
 {
-	NIJI_KEDAMA1_DATA *d=(NIJI_KEDAMA1_DATA *)s->data;
+	NIJI_KEDAMA1_DATA *d = (NIJI_KEDAMA1_DATA *)s->data;
 	if (0 == d->flag1)
 	{
 		d->radius256 += t256(1)/*fps_fa ctor*/;
@@ -131,8 +131,8 @@ void add_zako_niji_kedama1(STAGE_DATA *l)/*int lv*/
 		NIJI_KEDAMA1_DATA *data;
 		data				= mmalloc(sizeof(NIJI_KEDAMA1_DATA));
 		s->data 			= data;
-		data->b.score		= score(30*2);
-		data->b.health		= /*50*/ /*48*/32+(difficulty/*<<2*/);/*10+(difficulty<<2)*/	/* そこそこ倒せる強さにしとく(誘導ミサイルが強いので) */
+		data->base.score	= score(30*2);
+		data->base.health	= /*50*/ /*48*/32+(difficulty/*<<2*/);/*10+(difficulty<<2)*/	/* そこそこ倒せる強さにしとく(誘導ミサイルが強いので) */
 		data->radius256 	= t256(10);
 		data->flag1 		= 0;
 		data->angle512		= (/*360*/512/NUM_OF_ENEMIES)*i;

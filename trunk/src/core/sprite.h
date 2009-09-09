@@ -1,7 +1,7 @@
 #ifndef _SPRITE_H_
 #define _SPRITE_H_
 
-#include "support.h"
+#include "game_main.h"
 
 /* Sprites */
 //#define MAX_SPRITE 200
@@ -102,6 +102,7 @@ enum
 	BASE_BOMBER_SLOW_PNG,
 	BASE_BONUS_ITEMS_PNG,
 //
+#if 0
 	//BASE_TAMA_KUGEL_PNG,
 	//BASE_TAMA_KUGEL_MINI2_PNG,
 	BASE_TAMA_BULLET_BEAM16_PNG,
@@ -115,8 +116,11 @@ enum
 //	BASE_TAMA_OODAMA_01_PNG,/* 大玉(青) 表示部分 */
 //	BASE_TAMA_OODAMA_02_PNG,/* 大玉(赤) 表示部分*/
 //
-	BASE_TAMA_BULLET_KNIFE01_PNG,/*垂直降下ナイフ(赤)*/
-	BASE_TAMA_BULLET_KNIFE18_PNG,/*全方向ナイフ(青)*/
+	BASE_TAMA_BULLET_KNIFE01_PNG,/* 垂直降下ナイフ(赤) */
+	BASE_TAMA_BULLET_KNIFE18_PNG,/* 全方向ナイフ(青) */
+
+	BASE_HOMING16_PNG,/* ザコ 誘導弾 */
+#endif
 //
 	BASE_MAHOUJIN_0_PNG,
 	BASE_TIKEI_BGPANEL1_PNG,
@@ -136,7 +140,6 @@ enum
 	BASE_GREAT_FAIRY02_PNG,
 	BASE_AKA_MEIDO08_PNG,
 	BASE_AO_YOUSEI24_PNG,
-	BASE_HOMING16_PNG,
 //	/* 小爆発 */
 	BASE_TR_BLUE_PNG,
 	BASE_TR_RED_PNG,
@@ -156,12 +159,13 @@ enum
 //
 	BASE_BOSS_AYA_PNG,
 //
-	BASE_BOSS_KAGUYA_0_PNG,
-	BASE_BOSS_KAGUYA_1_PNG,
-	BASE_BOSS_KAGUYA_2_PNG,
-	BASE_BOSS_KAGUYA_3_PNG,
-	BASE_BOSS_KAGUYA_4_PNG,
-	BASE_BOSS_KAGUYA_5_PNG,
+	BASE_BOSS_KAGUYA_PNG,
+//	BASE_BOSS_KAGUYA_0_PNG,
+//	BASE_BOSS_KAGUYA_1_PNG,
+//	BASE_BOSS_KAGUYA_2_PNG,
+//	BASE_BOSS_KAGUYA_3_PNG,
+//	BASE_BOSS_KAGUYA_4_PNG,
+//	BASE_BOSS_KAGUYA_5_PNG,
 //
 	BASE_BOSS_SAKUYA_PNG,
 //
@@ -169,6 +173,28 @@ enum
 //
 	FILE_RESOURCE_MAX/*最大数*/
 };
+enum
+{
+	//TAMA_TYPE_KUGEL_PNG,
+	//TAMA_TYPE_KUGEL_MINI2_PNG,
+	TAMA_TYPE_BULLET_BEAM16_PNG,
+	TAMA_TYPE_BULLET_MARU16_PNG,
+//
+	TAMA_TYPE_BULLET_MING32_PNG,
+	TAMA_TYPE_BULLET_JIPPOU32_PNG,
+//
+	TAMA_TYPE_OODAMA_08_PNG,/* 大玉(黒青赤...)	黒玉(輪) PRIORITY_03_ENEMY は、あたり判定部分 */
+//	TAMA_TYPE_OODAMA_00_PNG,/* 黒玉(輪)  あたり判定部分*/
+//	TAMA_TYPE_OODAMA_01_PNG,/* 大玉(青) 表示部分 */
+//	TAMA_TYPE_OODAMA_02_PNG,/* 大玉(赤) 表示部分*/
+//
+	TAMA_TYPE_BULLET_KNIFE01_PNG,/*垂直降下ナイフ(赤)*/
+	TAMA_TYPE_BULLET_KNIFE18_PNG,/*全方向ナイフ(青)*/
+	TAMA_TYPE_HOMING16_PNG,
+};
+#define TAMA_TYPE_BULLET_DUMMY TAMA_TYPE_BULLET_MARU16_PNG
+
+
 // 弾幕について
 // 弾幕(敵弾のみ自弾は含まない)はGuで描く事を計画中(というか妄想中)。
 // その場合、SDL画面描画後にGuで描くので、
@@ -248,47 +274,126 @@ enum /*_priority_*/
 /*	0 ならば判別処理が省略できる。 -1 だと一々判別処理が入る
 	KETMでは判別しないとならない場所に判別処理が書いてない為、
 	スプライトがおかしくなるバグが複数ヶ所にある。 */
-
-#define SP_GROUP_PLAYER 		0x0100
-#define SP_GROUP_SHOTS			0x0200
-#define SP_GROUP_ENEMYS 		0x0400
-#define SP_GROUP_BULLETS		0x0800
-#define SP_GROUP_ITEMS			0x1000
-#define SP_GROUP_TEXTS			0x2000
-#define SP_GROUP_ETC			0x4000
-#define SP_GROUP_ALL			0xff00
-
-enum SPRITE_TYPE
-{
 /*
 	ここは種類別ではなくて、機能別に分類してください。
 */
-//	自分
+#define SP_GROUP_PLAYER 		0x0100/*0x0100*/
+#define SP_GROUP_ZAKO			0x0200/*0x0400*/
+#define SP_GROUP_BOSS			0x0400/*0x0400*/
+#define SP_GROUP_BULLETS		0x0800/*0x0800*/
+#define SP_GROUP_ITEMS			0x1000/*0x1000*/
+#define SP_GROUP_PAUSE_OBJS 	0x2000/*0x2000*/
+#define SP_GROUP_ALL_TYPE		0xff00
+#define SP_GROUP_SUB_TYPE		0x00ff
+//#define SP_GROUP_SHOTS		0x0200
+//#define SP_GROUP_ETC			0x4000
+//#define SP_GROUP_ENEMYS		0x0200/*0x0400*/
+// 共用 */
+//#define SP_GROUP_TEXTS			(SP_GROUP_PLAYER)/*0x2000*/
+enum /*sprite_type*/
+{
+//	自分 */
 	SP_PLAYER/*プレイヤーの本体(あたり判定がアイテム取得)*/ 	= /*0x0100*/SP_GROUP_PLAYER,	/* Unser Held */
 	SP_PLAYER2,/*プレイヤーのコア(あたり判定が死亡判定)*/
-//	自弾
-	SP_SHOT_BOSS/*プレイヤーのボスに有効弾*/ = /*0x0200*/SP_GROUP_SHOTS,	/* Waffen des Helden */
+//	自弾 */
+	SP_SHOT_BOSS/*プレイヤーのボスに有効弾*/,// 			//	= /*0x0200*/SP_GROUP_SHOTS, 	/* Waffen des Helden */
 	SP_SHOT_ZAKO,/*プレイヤーのボスに無効弾*/
-//	敵
-	SP_ZAKO 					= /*0x0400*/SP_GROUP_ENEMYS, /* Die Boesen */
-	SP_CHUU,	/*特殊敵[中型敵]*/ /*SP_ZAKO_YOKAI1*/
-	SP_BOSS,	// [***090325
-//	敵弾
-	SP_BULLET					= /*0x0800*/SP_GROUP_BULLETS,		/* ... und ihre Waffen */
-//	アイテム
-	SP_ITEM_00_P001 	= /*0x1000*/SP_GROUP_ITEMS, 	/* Bonus items */
+//	その他 */
+	SP_ETC,//												//	= /*0x4000*/SP_GROUP_ETC,		/* diverses */
+//------------- */
+//	ザコ敵 (ボム中、体当たりでプレイヤー死なない)  */
+	SP_ZAKO 													= /*0x0400*/SP_GROUP_ZAKO,		/* Die Boesen */
+//------------- */
+//	ボス敵 / 中ザコ敵 (ボム中、体当たりでプレイヤー死ぬ)  */
+	SP_CHUU /*特殊敵[中型敵]*/ /*SP_ZAKO_YOKAI1*/				= /*0x0400*/SP_GROUP_BOSS,		// [***090325
+	SP_BOSS,
+//------------- */
+//	敵弾 */
+	SP_BULLET													= /*0x0800*/SP_GROUP_BULLETS,	/* ... und ihre Waffen */
+//------------- */
+//	アイテム */
+	SP_ITEM_00_P001 											= /*0x1000*/SP_GROUP_ITEMS, 	/* Bonus items */
 	SP_ITEM_01_P008,	//←ウェポンアイテム(中)	//ウェポンアイテム(強)→SP_ITEM_EXTRA_SHIELD,
-	SP_ITEM_02_BOMB,			//→これらは低速ボムに吸収された。SP_ITEM_EXTRA_HOMING, SP_ITEM_EXTRA_HLASER,
+	SP_ITEM_02_BOMB,	//→これらは低速ボムに吸収された。SP_ITEM_EXTRA_HOMING, SP_ITEM_EXTRA_HLASER,
 	SP_ITEM_03_1UP,
 	SP_ITEM_04_P128,
 	SP_ITEM_05_HOSI,
 	SP_ITEM_06_TENSU,
 	SP_ITEM_07_SPECIAL,
-//	文字
-	SP_MENU_TEXT				= /*0x2000*/SP_GROUP_TEXTS,
-//	その他
-	SP_ETC						= /*0x4000*/SP_GROUP_ETC,		/* diverses */
+//------------- */
+//	ポーズ中移動可能物 */
+	SP_MENU_TEXT	/* 文字 */									= /*0x2000*/SP_GROUP_PAUSE_OBJS,
+
 };
+
+enum
+{
+	BULLET_MARU8_00_AKA 				= /*0x0800*/SP_GROUP_BULLETS,
+	BULLET_MARU8_01_YUKARI,
+	BULLET_MARU8_02_AOI,
+	BULLET_MARU8_03_MIDORI,
+	BULLET_MARU8_04_MIDORI,
+	BULLET_MARU8_05_MIDORI,
+	BULLET_MARU8_06_KIIRO,
+	BULLET_MARU8_07_AOI,
+//
+	BULLET_MINI8_00_AKA,
+	BULLET_MINI8_01_AKA,
+	BULLET_MINI8_02_KIIRO,
+	BULLET_MINI8_03_AKA,
+	BULLET_MINI8_04_KIIRO,
+	BULLET_MINI8_05_AOI,
+	BULLET_MINI8_06_AOI,
+	BULLET_MINI8_07_YUKARI,
+//
+	BULLET_MARU12_00_SIRO,	/*12*/
+	BULLET_MARU12_01_AKA,	/*12*/
+	BULLET_MARU12_02_MIDORI,/*12*/
+	BULLET_MARU12_03_AOI,	/*12*/
+	BULLET_MARU10_00_AOI,
+	BULLET_MARU10_01_MIDORI,
+	BULLET_MARU10_02_MIDORI,
+	BULLET_MARU10_03_MIDORI,
+//
+	BULLET_HARI32_00_AOI,
+	BULLET_HARI32_01_AKA,
+	BULLET_HARI32_02_KIIRO,
+	BULLET_HARI32_03_DAIDAI,
+	BULLET_CAP16_04_SIROI,
+	BULLET_CAP16_05_AKA,
+	BULLET_KNIFE20_06_AOI,
+	BULLET_KNIFE20_07_AKA,
+//
+	BULLET_UROKO14_00_AOI,
+	BULLET_UROKO14_01_AKA,
+	BULLET_UROKO14_02_YUKARI,
+	BULLET_UROKO14_03_MIDORI,
+	BULLET_UROKO14_04_MIZUIRO,
+	BULLET_UROKO14_05_KIIRO,
+	BULLET_KUNAI12_06_AOI,
+	BULLET_KUNAI12_07_MIDORI,
+//
+	BULLET_KUNAI12_00_AKA,
+	BULLET_KUNAI12_01_AKA,
+	BULLET_KUNAI12_02_MIDORI,
+	BULLET_KUNAI12_03_YUKARI,
+	BULLET_KUNAI12_04_AOI,
+	BULLET_OFUDA12_05_AOI,
+	BULLET_OFUDA12_06_AKA,
+	BULLET_OFUDA12_07_MIDORI,
+//
+	BULLET_OODAMA32_00_SIROI,
+	BULLET_OODAMA32_01_AOI,
+	BULLET_OODAMA32_02_AKA,
+	BULLET_OODAMA32_03_YUKARI,
+	BULLET_OODAMA32_04_MIDORI,
+	BULLET_OODAMA32_05_AOI,
+	BULLET_OODAMA32_06_KIIRO,
+	BULLET_OODAMA32_07_PINK,
+};
+
+
+
 //#define SP_LASER			SP_BULLET
 //#define SP_BOSS02ICE		SP_BULLET
 //#define SP_BIGBULLET	SP_BULLET
@@ -363,11 +468,12 @@ typedef struct _sprite
 	COLISION_MAP_CACHE *colision_bmp;		/* あたり判定用画像 / Zeiger auf Col-Map-Cache entry */
 	#endif /* (1==USE_ZUKEI_ATARI_HANTEI) */
 	int m_Hit256R;					/* あたり判定用 */
+	int m_angle512; 				/* 表示角度 */
 //
 	int timeover_ticks; 			/* 作成してからの経過時間 (現在KETM自体にバグがある為、一定時間経過すると強制消去する) / number of ticks since creation */
 //[4]
-	int x256;						/* x表示位置  (256固定小数点形式) / akt. Position */	/*dou ble*/
-	int y256;						/* y表示位置  (256固定小数点形式) / akt. Position */	/*dou ble*/
+	int x256;						/* x表示位置  (256固定小数点形式) / akt. Position */
+	int y256;						/* y表示位置  (256固定小数点形式) / akt. Position */
 	int w128;						/* 横幅の半分 (256固定小数点形式) / Breite, He */
 	int h128;						/* 高さの半分 (256固定小数点形式) / Breite, He */
 //[8]
@@ -381,12 +487,15 @@ typedef struct _sprite
 	Uint8 alpha;					/* 透明度	 / 255: opak, -  0: durchsichtig */
 	Uint8 alpha_chache; 			/* 前回のアルファ値 */
 //
-	Uint8 anim_frame;				/* アニメパターンの番号(何コマ目か) */	 /*int*/			/* akt. Frame */
-	Uint8 frames;					/* 表示パターン総数 / Anzahl Frames */
-	Uint8 anim_count;				/*int*/ /*dou ble*/ 	// Sint8 anim_count;			/* intern: Zaehler f. anim_speed */
+	Uint8 yx_anim_frame;			/* / アニメパターンの番号(何コマ目か) */	 /*int*/			/* akt. Frame */
+	Uint8 yx_frames;				/* / 表示パターン総数 / Anzahl Frames */
+	Uint8 anim_count;				/*int*/ 	// Sint8 anim_count;			/* intern: Zaehler f. anim_speed */
 	Uint8 anim_speed/* 256 */;		/*逆転アニメ禁止に変更*/		/* アニメーション速度 / Geschw. der Animation (negative Werte: Anim l舫ft r�ckw舐ts */	 /*Sint8*/ /*Uint8*/
 //[16]
 } SPRITE;
+#define YX_FRAME_LOW_X	(0x0f)
+#define YX_FRAME_HIGH_Y (0xf0)
+#define anim_frame yx_anim_frame
 
 
 #define SP_FLAG_COLISION_CHECK	0x01	/* Col-Check aktiv */
@@ -407,18 +516,20 @@ typedef struct _sprite
 
 typedef struct
 {
-	const char *file_name;
-	Uint8 use_alpha;
-	Uint8 total_frames;
-	Uint8 x_divide_frames;
-	Uint8 y_divide_frames;
+	const char *file_name;				/* 素材のファイル名 */
+	Uint8 use_alpha;					/* アルファ(画像透明度)使用可否 */
+	Uint8 total_frames_dummy_resurved;	/* 現在ダミー */
+	Uint8 x_divide_frames_m1;			/* (横分割数-1) */
+	Uint8 y_divide_frames_m1;			/* (縦分割数-1) */
 //
-	Uint8 priority;
-	Uint8 anime_speed;
-	Uint8 atari_hankei;
-	Uint8 aaa_dummy_resurved;
+	Uint8 priority; 					/* 描画プライオリティー(表示優先度) */
+	Uint8 anime_speed;					/* アニメーション速度 */
+	Uint8 atari_hankei; 				/* あたり判定円の半径(あたり判定の大きさ) */
+	Uint8 aaa_dummy_resurved;			/* 現在ダミー */
 } IMAGE_RESOURCE;
 
+//#define iyx(aaa,bbb) (((aaa-1)<<4)+(bbb-1)),1
+#define iyx(aaa,bbb) (aaa-1),(bbb-1)
 
 
 
@@ -426,6 +537,7 @@ typedef struct
 //extern SPRITE *spr ite_add_file(char *filename, int frames, Uint8 priority);
 //extern SPRITE *spr ite_add_file2(char *filename, int frames, Uint8 priority);
 extern SPRITE *sprite_add_res(int image_resource_num);
+extern SPRITE *sprite_add_bullet(int bullet_type_num);
 
 #if (0)
 extern SPRITE *spr ite_add_000xy00(
@@ -460,4 +572,63 @@ extern void sprite_work000(int type);/**/
 extern void sprite_work222(int type);/*弾幕用*/
 
 extern SPRITE *sprite_collision_check(SPRITE *tocheck, int type);
+
+
+#if 1
+	/* ソフトウェアーで Zソート */
+	#define USE_ZBUFFER 	(0)
+#else
+	/* ハードウェアーでソート */
+	#define USE_ZBUFFER 	(1)
 #endif
+
+#if 1
+	/* 単純拡大 */
+	#define USE_ZOOM_XY 	0
+#else
+	/* 縦横拡大 */
+	#define USE_ZOOM_XY 	1
+#endif
+
+
+//#ifndef GRP_SCREEN_H
+//#define GRP_SCREEN_H
+/*	@since		Jul.27.2005 GRP_SCREEN_H		画面表示管理 */
+/* --- 管理する最大スプライト数 */
+//#define  SPRITEMAX	1024
+
+//#define SPRITEMAX 256
+#define SPRITEMAX	512
+
+typedef struct
+{
+	UINT8 used;
+	UINT8 alpha;
+	UINT8 TextureId;
+	UINT8 center;	/*dummy*/
+//
+	/* - public */
+	int x256;
+	int y256;
+	int w;
+	int h;
+	int tx;
+	int ty;
+	#if (1==USE_ZOOM_XY)
+	int zoom_x256;
+	int zoom_y256;
+	#else //(0==USE_ZOOM_XY)
+	int zoom_xy256;
+	#endif/* (1==USE_ZOOM_XY) */
+	int rotation_z;
+	#if (1==USE_ZBUFFER)
+	int priority;		/* 表示優先順位 */	/* unsigned short */
+	#endif/* (1==USE_ZBUFFER) */
+
+//	Image *Texture;//
+	//SDL_Surface *Texture_ptr;
+} TGameSprite /*, *PTGameSprite*/;
+
+
+
+#endif/* _SPRITE_H_ */

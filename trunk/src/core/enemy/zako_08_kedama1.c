@@ -1,5 +1,5 @@
 
-#include "enemy.h"
+#include "bullet_object.h"
 
 /*---------------------------------------------------------
 		"–Ñ‹Ê1",	"BADGUY",
@@ -9,11 +9,11 @@
 
 typedef struct
 {
-	ENEMY_BASE b;
+	ENEMY_BASE base;
 	int state;
 	int tx256;
 	int ty256;
-	/*dou ble*/int speed256;
+	int speed256;
 
 } KEDAMA1_DATA;
 
@@ -40,15 +40,15 @@ static void lose_kedama1(SPRITE *s)
 
 static void move_kedama1(SPRITE *s)
 {
-	KEDAMA1_DATA *d=(KEDAMA1_DATA *)s->data;
+	KEDAMA1_DATA *d = (KEDAMA1_DATA *)s->data;
 	switch (d->state)
 	{
 	case 0:
 		if ((s->x256 >= player->x256) ||
 			(s->y256 > /*(480-80)*/t256(GAME_HEIGHT/2)/*(272-32)*/ ) )
 		{
-			d->state=1;
-			s->anim_speed=/*-*/3;	/*‹t“]ƒAƒjƒ‹ÖŽ~‚É•ÏX*/
+			d->state = 1;
+			s->anim_speed = /*-*/3;	/*‹t“]ƒAƒjƒ‹ÖŽ~‚É•ÏX*/
 			d->tx256 = t256(-100);
 			d->ty256 = player->y256;
 			if (0 < /*d->*/level)
@@ -61,11 +61,11 @@ static void move_kedama1(SPRITE *s)
 	case 1:
 		if (s->x256 <= -((s->w128+s->w128)))
 		{
-			s->type=SP_DELETE;
+			s->type = SP_DELETE;
 		}
 		break;/*??? [***090215 ’Ç‰Á */
 	}
-	{	/*dou ble*/int angle512;
+	{	int angle512;
 		angle512=atan_512(d->ty256-s->y256-t256(64)/*+(20)*/,d->tx256-s->x256);
 		s->x256+=((cos512(angle512)*d->speed256)>>8);
 		s->y256+=((sin512(angle512)*d->speed256)>>8);
@@ -101,8 +101,8 @@ void add_zako_kedama1(STAGE_DATA *l)/*int lv*/
 		KEDAMA1_DATA *data;
 		data				= mmalloc(sizeof(KEDAMA1_DATA));
 		s->data 			= data;
-		data->b.score		= score(/*50*/5*2)*(level+1);
-		data->b.health		= (8*8)+(difficulty<<2)/*(1+(difficulty<<2))*/;/*‚â‚í‚ç‚©‚·‚¬*/
+		data->base.score	= score(/*50*/5*2)*(level+1);
+		data->base.health	= (8*8)+(difficulty<<2)/*(1+(difficulty<<2))*/;/*‚â‚í‚ç‚©‚·‚¬*/
 		data->state 		= 0;
 		data->tx256 		= player->x256;
 		data->ty256 		= player->y256;

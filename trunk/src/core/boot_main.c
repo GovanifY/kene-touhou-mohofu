@@ -3,7 +3,7 @@
 	psp‚Ì‹N“®ƒ‹[ƒ`ƒ““™
 ---------------------------------------------------------*/
 
-#include "support.h"
+#include "game_main.h"
 
 #if 0
 	/* makefile ‚É -Dmain=SDL_main ‚ª‚ ‚éê‡  */
@@ -38,7 +38,8 @@ PSP_MAIN_THREAD_STACK_SIZE_KB(32);		/* (ƒvƒƒOƒ‰ƒ€‚ªg—p‚·‚é•Ï”‚Ì)ƒXƒ^ƒbƒN—Ìˆæ‚
 /* 2008”N‚®‚ç‚¢‚ÌŒÃ‚¢ PSPSDK ‚Í -1(©“®) ‚É‘Î‰‚µ‚Ä‚¢‚È‚¢‚Ì‚Å -1 ‚É‚·‚é‚Æƒnƒ“ƒOƒAƒbƒv‚·‚é‚æ */
 #endif
 
-int psp_loop;
+//extern int psp_loop;
+/*extern*/ int psp_loop;
 
 /*---------------------------------------------------------
 	[HOME]ƒL[‚ÅI—¹‚·‚é‚½‚ß‚ÌƒR[ƒ‹ƒoƒbƒN‚ğ“o˜^
@@ -49,7 +50,7 @@ static int exit_callback(int arg1, int arg2, void *common)
 {
 	/* ƒR[ƒ‹ƒoƒbƒN‘¤‚©‚çAƒƒCƒ“‘¤‚Ìó‘Ô‚ğ‘€ì‚·‚é */
 	psp_loop = ST_PSP_QUIT;//newsta te(ST_PSP_QUIT,0,1);// [***** ’Ç‰Á:090103
-	#if 0
+	#if 1
 	/* —v‚é‚©‚à */
 	sceKernelDelayThread(1000000);/* ƒR[ƒ‹ƒoƒbƒN‘¤‚ª1•b‘Ò‚Â */
 	psp_loop = ST_PSP_QUIT;/* ‚à‚¤ˆê‰ñI—¹ƒtƒ‰ƒO */
@@ -91,7 +92,7 @@ static /*int*/void regist_home_key(void)
 }
 
 /*---------------------------------------------------------
-	ƒwƒbƒ_
+	game_main()
 ---------------------------------------------------------*/
 
 extern void shooting_game_init(void);
@@ -121,18 +122,10 @@ extern void key_config_work(void);
 //tern void story_init(void);
 extern void story_work(void);
 
-extern void game_system_init(void/*int argc, char *argv[]*/);
-extern void game_system_exit(void);
-
 extern void vbl_draw_screen(void);/*support.c*/
-/* ‚±‚±‚Í -Dmain=SDL_main ‚Ìê‡Aƒ}ƒNƒ‚È‚Ì‚Å©“®“I‚É int SDL_main(int argc, char *argv[]) ‚É‚È‚éB‚»‚ê‚ğSDL‘¤‚Ìmain()‚©‚çŒÄ‚ÔB */
-int main(int argc, char *argv[])
+
+static void game_main(void)
 {
-//	psp_loop = 1;		/* --- ƒ‹[ƒvƒtƒ‰ƒO(0‚ÅI—¹B0ˆÈŠO‚Í‹N“®’†) */
-	regist_home_key();/* [HOME]ƒL[‚ÅI—¹‚·‚é‚½‚ß‚ÌƒR[ƒ‹ƒoƒbƒN‚ğ“o˜^ */
-	game_system_init();/* ƒQ[ƒ€ƒVƒXƒeƒ€‰Šú‰» */
-//
-	scePowerSetClockFrequency(333,333,166);/* psp ‚Ì ƒNƒƒbƒN‚ğ 333MHz ‚É‚·‚é‚æ */
 	while (ST_PSP_QUIT != psp_loop)
 	{
 		switch ((Uint8)(psp_loop>>8))
@@ -163,6 +156,33 @@ int main(int argc, char *argv[])
 		}
 		vbl_draw_screen();	/* ‰æ–Ê•`‰æ‚ÆƒL[“ü—Í(–{“–‚Í v-blanc ƒ^ƒCƒ~ƒ“ƒO‚Å) */
 	}
+}
+
+
+/*---------------------------------------------------------
+	boot_main()
+---------------------------------------------------------*/
+
+#if (1==HACK_FPU)
+extern void disable_FPU_exeptions_in_main(void);	// FPU—áŠO‚ğ–³Œø‚É‚·‚éB disablefpu.S
+#endif
+
+extern void game_system_init(void/*int argc, char *argv[]*/);
+extern void game_system_exit(void);
+extern void game_main(void);
+
+/* ‚±‚±‚Í -Dmain=SDL_main ‚Ìê‡Aƒ}ƒNƒ‚È‚Ì‚Å©“®“I‚É int SDL_main(int argc, char *argv[]) ‚É‚È‚éB‚»‚ê‚ğSDL‘¤‚Ìmain()‚©‚çŒÄ‚ÔB */
+int main(int argc, char *argv[])
+{
+	#if (1==HACK_FPU)
+	disable_FPU_exeptions_in_main();	/* ‚±‚ÌŠÖ”‚Ímain()’¼‰º‚É‘‚©‚È‚¢‚Æƒ_ƒ‚©‚à‚µ‚ê‚È‚¢($31‚ğ˜M‚é‚Ì‚Å) */
+	#endif
+//	psp_loop = 1;		/* --- ƒ‹[ƒvƒtƒ‰ƒO(0‚ÅI—¹B0ˆÈŠO‚Í‹N“®’†) */
+	regist_home_key();/* [HOME]ƒL[‚ÅI—¹‚·‚é‚½‚ß‚ÌƒR[ƒ‹ƒoƒbƒN‚ğ“o˜^ */
+	game_system_init();/* ƒQ[ƒ€ƒVƒXƒeƒ€‰Šú‰» */
+//
+	scePowerSetClockFrequency(333,333,166);/* psp ‚Ì ƒNƒƒbƒN‚ğ 333MHz ‚É‚·‚é‚æ */
+	game_main();
 	scePowerSetClockFrequency(222,222,111);/* psp ‚Ì ƒNƒƒbƒN‚ğ 222MHz ‚É–ß‚·‚æ */
 //
 	game_system_exit();/* ƒQ[ƒ€ƒVƒXƒeƒ€I—¹ */

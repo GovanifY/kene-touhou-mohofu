@@ -1,5 +1,5 @@
 
-#include "enemy.h"
+#include "bullet_object.h"
 
 /*---------------------------------------------------------
 	"メイド1",		"RWINGX",	rwingx
@@ -10,7 +10,7 @@
 
 typedef struct
 {
-	ENEMY_BASE b;
+	ENEMY_BASE base;
 	int angle512;
 	int speed256;
 	int state;
@@ -37,7 +37,7 @@ static void lose_meido1(SPRITE *s)
 
 static void move_meido1(SPRITE *s)
 {
-	MEIDO1_DATA *d=(MEIDO1_DATA *)s->data;
+	MEIDO1_DATA *d = (MEIDO1_DATA *)s->data;
 	switch (d->state)
 	{
 //	case 0: /* sleep(d->wait) ticks */
@@ -135,8 +135,8 @@ void add_zako_meido1(STAGE_DATA *l)/*int lv*/
 		MEIDO1_DATA *data;
 		data				= mmalloc(sizeof(MEIDO1_DATA));
 		s->data 			= data;
-		data->b.score		= score(25*2)*(1+lv);
-		data->b.health		= 1+lv+(difficulty<<2);
+		data->base.score	= score(25*2)*(1+lv);
+		data->base.health	= 1+lv+(difficulty<<2);
 		data->angle512		= deg_360_to_512(90);//deg_360_to_512(270);/*上向き？？*/
 		data->speed256		= t256(0);//t256(0.5);
 		data->state 		= 0;

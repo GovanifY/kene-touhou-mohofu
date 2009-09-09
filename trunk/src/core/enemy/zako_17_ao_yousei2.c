@@ -1,5 +1,5 @@
 
-#include "enemy.h"
+#include "bullet_object.h"
 
 /*---------------------------------------------------------
 		"青妖精2",		"SPLASH",
@@ -9,7 +9,7 @@
 
 typedef struct
 {
-	ENEMY_BASE b;
+	ENEMY_BASE base;
 	int state;
 	int level;
 	int wait;
@@ -30,16 +30,16 @@ static void lose_ao_yousei2(SPRITE *s)
 /*---------------------------------------------------------
 	敵移動
 ---------------------------------------------------------*/
-#define SSS00 ( 0)/*右*/
-#define SSS04 ( 4)/*右斜め下*/
-#define SSS08 ( 8)/*下１*/
-#define SSS12 (12)/*下２*/
-#define SSS16 (16)/*左斜め下*/
-#define SSS20 (20)/*左*/
+#define SSS00 ( 0<<2)/*右*/
+#define SSS04 ( 4<<2)/*右斜め下*/
+#define SSS08 ( 8<<2)/*下１*/
+#define SSS12 (12<<2)/*下２*/
+#define SSS16 (16<<2)/*左斜め下*/
+#define SSS20 (20<<2)/*左*/
 static void move_ao_yousei2(SPRITE *s)
 {
-	AO_YOUSEI2_DATA *d=(AO_YOUSEI2_DATA *)s->data;
-	/*dou ble*/int p512;
+	AO_YOUSEI2_DATA *d = (AO_YOUSEI2_DATA *)s->data;
+	int p512;
 
 	switch (d->state)
 	{
@@ -66,7 +66,7 @@ static void move_ao_yousei2(SPRITE *s)
 			mask512(p512);
 		//	const Uint8 aa_offs[8] = { OF_16, OF_12, OF_08, OF_04, OF_00, OF_04, OF_08, OF_12 };
 			const Uint8 aa_offs[8] = { SSS00, SSS04, SSS08, SSS16, SSS20, SSS16, SSS08, SSS04 };
-			s->anim_frame= (s->anim_frame&(4-1))+aa_offs[(p512>>6)];			/* 64  32== 512/16 */
+			s->yx_anim_frame = (s->yx_anim_frame&(4-1))+aa_offs[(p512>>6)];			/* 64  32== 512/16 */
 			d->wait--;
 		}
 		break;
@@ -74,8 +74,8 @@ static void move_ao_yousei2(SPRITE *s)
 		d->n++;
 		d->wait=50;
 		d->state=1;
-		bullet_create_hari_dan180(s, /*((1+difficulty)<<7)*/t256(2.5)/*t256(3)*/, ANGLE_JIKINERAI_DAN, t256(0), t256(0));
-		bullet_create_hari_dan180(s, /*((1+difficulty)<<8)*/t256(3.5)/*t256(4)*/, ANGLE_JIKINERAI_DAN, t256(0), t256(0));
+		bullet_create_offset_dan_type(s, /*((1+difficulty)<<7)*/t256(2.5)/*t256(3)*/, ANGLE_JIKINERAI_DAN, t256(0), t256(0), BULLET_HARI32_00_AOI);
+		bullet_create_offset_dan_type(s, /*((1+difficulty)<<8)*/t256(3.5)/*t256(4)*/, ANGLE_JIKINERAI_DAN, t256(0), t256(0), BULLET_HARI32_00_AOI);
 
 		p512=atan_512(player->y256-s->y256+((player->h128)),player->x256-s->x256-((player->w128)));
 		if (difficulty>0)
@@ -104,9 +104,9 @@ static void move_ao_yousei2(SPRITE *s)
 		{	d->state=3;}
 		break;
 	case 3: 	//退場準備
-			 if (d->level<3)	{	s->anim_frame=(s->anim_frame&(4-1))+SSS00;}
-		else if (d->level<7)	{	s->anim_frame=(s->anim_frame&(4-1))+SSS08;}
-		else					{	s->anim_frame=(s->anim_frame&(4-1))+SSS00;}
+			 if (d->level<3)	{	s->yx_anim_frame=(s->yx_anim_frame&(4-1))+SSS00;}
+		else if (d->level<7)	{	s->yx_anim_frame=(s->yx_anim_frame&(4-1))+SSS08;}
+		else					{	s->yx_anim_frame=(s->yx_anim_frame&(4-1))+SSS00;}
 		d->state=4;
 		d->wait=0;
 		break;
@@ -126,16 +126,16 @@ static void move_ao_yousei2(SPRITE *s)
 
 	if (0==d->ani_turn)
 	{
-		s->anim_frame++;
-		if ((s->anim_frame&(4-1))==3)
+		s->yx_anim_frame++;
+		if (3==(s->yx_anim_frame&(4-1)))
 		{
 			d->ani_turn=1;
 		}
 	}
 	else
 	{
-		s->anim_frame--;
-		if ((s->anim_frame&(4-1))==0)
+		s->yx_anim_frame--;
+		if (0==(s->yx_anim_frame&(4-1)))
 		{
 			d->ani_turn=0;
 		}
@@ -158,33 +158,33 @@ void add_zako_ao_yousei2(STAGE_DATA *l)/*int lv*/
 	s->flags			|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK|SP_FLAG_TIME_OVER);
 	s->callback_mover	= move_ao_yousei2;
 	s->callback_loser	= lose_ao_yousei2;
-	short spr_tbl[10][4] =
+	signed short spr_tbl[10][4] =
 	{
-{/* case 0: 	s->x=*/GAME_WIDTH+20,	1,/*-s->w;*/		/*s->y=*/100,		/*s->anim_frame=*/SSS20},	//右下
-{/* case 1: 	s->x=*/GAME_WIDTH+40,	1,/*-s->w;*/		/*s->y=*/70,		/*s->anim_frame=*/SSS20},	//右中
-{/* case 2: 	s->x=*/GAME_WIDTH+60,	1,/*-s->w;*/		/*s->y=*/40,		/*s->anim_frame=*/SSS20},	//右上
-{/* case 3: 	s->x=*/300, 			3,/*-s->w/2;*/		/*s->y=*/-30,		/*s->anim_frame=*/SSS08},	//上右右
-{/* case 4: 	s->x=*/220, 			3,/*-s->w/2;*/		/*s->y=*/-50,		/*s->anim_frame=*/SSS08},	//上右
-{/* case 5: 	s->x=*/160, 			3,/*-s->w/2;*/		/*s->y=*/-50,		/*s->anim_frame=*/SSS08},	//上左
-{/* case 6: 	s->x=*/ 80, 			3,/*-s->w/2;*/		/*s->y=*/-30,		/*s->anim_frame=*/SSS08},	//上左左
-{/* case 7: 	s->x=*/-20, 			0,/*		*/		/*s->y=*/40,		/*s->anim_frame=*/SSS00},	//左上
-{/* case 8: 	s->x=*/-40, 			0,/*		*/		/*s->y=*/70,		/*s->anim_frame=*/SSS00},	//左中
-{/* case 9: 	s->x=*/-60, 			0,/*		*/		/*s->y=*/100,		/*s->anim_frame=*/SSS00},	//左下
+{/* case 0: 	s->x=*/GAME_WIDTH+20,	1,/*-s->w;*/		/*s->y=*/100,		/*s->yx_anim_frame=*/SSS20},	//右下
+{/* case 1: 	s->x=*/GAME_WIDTH+40,	1,/*-s->w;*/		/*s->y=*/70,		/*s->yx_anim_frame=*/SSS20},	//右中
+{/* case 2: 	s->x=*/GAME_WIDTH+60,	1,/*-s->w;*/		/*s->y=*/40,		/*s->yx_anim_frame=*/SSS20},	//右上
+{/* case 3: 	s->x=*/300, 			3,/*-s->w/2;*/		/*s->y=*/-30,		/*s->yx_anim_frame=*/SSS08},	//上右右
+{/* case 4: 	s->x=*/220, 			3,/*-s->w/2;*/		/*s->y=*/-50,		/*s->yx_anim_frame=*/SSS08},	//上右
+{/* case 5: 	s->x=*/160, 			3,/*-s->w/2;*/		/*s->y=*/-50,		/*s->yx_anim_frame=*/SSS08},	//上左
+{/* case 6: 	s->x=*/ 80, 			3,/*-s->w/2;*/		/*s->y=*/-30,		/*s->yx_anim_frame=*/SSS08},	//上左左
+{/* case 7: 	s->x=*/-20, 			0,/*		*/		/*s->y=*/40,		/*s->yx_anim_frame=*/SSS00},	//左上
+{/* case 8: 	s->x=*/-40, 			0,/*		*/		/*s->y=*/70,		/*s->yx_anim_frame=*/SSS00},	//左中
+{/* case 9: 	s->x=*/-60, 			0,/*		*/		/*s->y=*/100,		/*s->yx_anim_frame=*/SSS00},	//左下
 	};
-	s->anim_frame	=  spr_tbl[lv][3];
-	s->y256 		= (spr_tbl[lv][2]<<8);
-	s->x256 		= (spr_tbl[lv][0]<<8);
+	s->yx_anim_frame	=  spr_tbl[lv][3];
+	s->y256 			= (spr_tbl[lv][2]<<8);
+	s->x256 			= (spr_tbl[lv][0]<<8);
 		 if (1==spr_tbl[lv][1]) {s->x256 -= ((s->w128+s->w128));}
 	else if (3==spr_tbl[lv][1]) {s->x256 -= ((s->w128));}
 
 	AO_YOUSEI2_DATA *data;
-	data			= mmalloc(sizeof(AO_YOUSEI2_DATA));
-	s->data 		= data;
-	data->b.score	= score(50*2);
-	data->b.health	= 20+(difficulty<<2);
-	data->state 	= 0;
-	data->level 	= lv;
-	data->wait		= 0;
-	data->ani_turn	= 0;
-	data->n 		= 0;
+	data				= mmalloc(sizeof(AO_YOUSEI2_DATA));
+	s->data 			= data;
+	data->base.score	= score(50*2);
+	data->base.health	= 20+(difficulty<<2);
+	data->state 		= 0;
+	data->level 		= lv;
+	data->wait			= 0;
+	data->ani_turn		= 0;
+	data->n 			= 0;
 }

@@ -4,7 +4,7 @@
 
 TARGET = kene
 
-PSP_EBOOT_TITLE = kene_r24
+PSP_EBOOT_TITLE = kene_r25
 
 #------------------------------------------------------------------------------
 # PSP setting
@@ -30,6 +30,10 @@ USE_PROFILE = 0
 # 1 == GNU PROFILER を使う(ライブラリ)(USE_PROFILE = 1が必要)
 #USE_LIB_PROFILE = 1
 USE_LIB_PROFILE = 0
+
+# 1 == FPU例外を無効にする
+USE_FPU_HACK = 1
+#USE_FPU_HACK = 0
 
 # 0 == シンプルにして EBOOT.PBP のサイズをチェック
 #SIMPLE = 1
@@ -293,15 +297,8 @@ OBJDIRS += $(OBJ)/core/enemy
 
 #	particle.o
 
-OBJS += $(OBJ)/core/main.o
-OBJS += $(OBJ)/core/font.o
-OBJS += $(OBJ)/core/sprite.o
-OBJS += $(OBJ)/core/bonus.o
 
-OBJS += $(OBJ)/core/shinonomefont.o
-OBJS += $(OBJ)/core/zenkaku.o
-
-OBJS += $(OBJ)/core/enemy.o
+OBJS += $(OBJ)/core/bullet_object.o
 
 OBJS += $(OBJ)/core/enemy/boss_01_alice.o
 OBJS += $(OBJ)/core/enemy/boss_02_cirno.o
@@ -334,21 +331,55 @@ OBJS += $(OBJ)/core/enemy/game_clear.o
 OBJS += $(OBJ)/core/enemy/tikei.o
 OBJS += $(OBJ)/core/enemy/clouds.o
 
-OBJS += $(OBJ)/core/support.o
-OBJS += $(OBJ)/core/intro.o
-OBJS += $(OBJ)/core/thegame.o
-OBJS += $(OBJ)/core/loadlv.o
-OBJS += $(OBJ)/core/score.o
-OBJS += $(OBJ)/core/scenario.o
+OBJS += $(OBJ)/core/game_core.o
 OBJS += $(OBJ)/core/player.o
-OBJS += $(OBJ)/core/menu.o
-OBJS += $(OBJ)/core/startintro.o
-OBJS += $(OBJ)/core/gameover.o
-OBJS += $(OBJ)/core/hiscore.o
-OBJS += $(OBJ)/core/fps.o
-OBJS += $(OBJ)/core/soundmanager.o
-OBJS += $(OBJ)/core/bg.o
 
+OBJS += $(OBJ)/core/bonus.o
+#---
+OBJS += $(OBJ)/core/draw_screen.o
+
+OBJS += $(OBJ)/core/sprite.o
+OBJS += $(OBJ)/core/bg.o
+OBJS += $(OBJ)/core/font.o
+#---
+
+OBJS += $(OBJ)/core/sound_manager.o
+
+#---
+OBJS += $(OBJ)/core/score_panel.o
+
+#OBJS += $(OBJ)/core/tiny_strcmp.o
+OBJS += $(OBJ)/core/load_stage.o
+
+#---
+OBJS += $(OBJ)/core/menu.o
+
+OBJS += $(OBJ)/core/game_over.o
+OBJS += $(OBJ)/core/name_entry.o
+
+OBJS += $(OBJ)/core/key_config.o
+
+OBJS += $(OBJ)/core/ini_file.o
+
+#OBJS += $(OBJ)/core/fps.o
+
+
+#2019669
+
+ OBJS += $(OBJ)/core/graphics00.o 
+
+OBJS += $(OBJ)/core/scenario_script.o
+OBJS += $(OBJ)/core/shinonomefont.o
+
+OBJS += $(OBJ)/core/boot_main.o
+OBJS += $(OBJ)/core/initialize.o
+
+#------------------------------------------------------------------------------
+ifneq ($(USE_FPU_HACK),1)
+else
+	OBJS += $(OBJ)/core/disable_fpu.o
+	CFLAGS += -DHACK_FPU=1
+endif
 #------------------------------------------------------------------------------
 ifeq ($(CUSTOM_LIB),1)
 	include $(SRC)/custom.mak
@@ -383,6 +414,7 @@ CFLAGS += -ffast-math
 CFLAGS += -I/usr/local/pspdev/psp/include
 CFLAGS += -I/pspdev/psp/include/SDL
 
+
 # http://www.sra.co.jp/wingnut/gcc/gcc-j.html
 # -fomit-frame-pointer フレームポインタを必要としない関数については、フレームポインタをレジスタに保持しないようにする。
 # これにより、フレームポインタをセーブ、設定、リストアする命令をなくすことができる。
@@ -408,7 +440,9 @@ endif
 #CXXFLAGS = $(CFLAGS) -fno-exceptions -fno-rtti
 #ASFLAGS = $(CFLAGS)
 
-CXXFLAGS = $(CFLAGS) -fno-exceptions -fno-rtti
+CXXFLAGS += $(CFLAGS)
+CXXFLAGS += -fno-exceptions
+CXXFLAGS += -fno-rtti
 
 #BUILD_PRX = 1
 
@@ -482,6 +516,10 @@ $(OBJ)/core/%.o: $(SRC)/core/%.c
 
 # その他のライブラリの場合
 $(OBJ)/%.o: $(SRC)/%.c
+	psp-gcc -O3 -Werror $(CFLAGS) $(LIB_CFLAGS) -c $< -o $@
+
+# アセンブラの場合
+$(OBJ)/%.o: $(SRC)/%.S
 	psp-gcc -O3 -Werror $(CFLAGS) $(LIB_CFLAGS) -c $< -o $@
 
 #	psp-gcc -O3 -Werror $(CFLAGS) -c $< -o $@

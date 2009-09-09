@@ -1,8 +1,8 @@
 #ifndef _PLAYER_H_
 #define _PLAYER_H_
 
-#include "support.h"
-#include "enemy.h"
+#include "game_main.h"
+#include "bullet_object.h"
 
 
 enum /*_select_pl_*/		// [***090203		追加
@@ -33,7 +33,9 @@ enum /*_select_pl_*/		// [***090203		追加
 /* on */
 #define STATE_FLAG_07_IS_GRAZE						(0x0040)
 /* on */
+		#if (0000)
 #define STATE_FLAG_08_OPTION_HIDE					(0x0080)
+		#endif/*0000*/
 
 /* on */
 //efine STATE_FLAG_IS_PANEL_WINDOW_SHIFT			(8)
@@ -51,7 +53,7 @@ enum /*_select_pl_*/		// [***090203		追加
 
 #define STATE_FLAG_14_GAME_LOOP_QUIT				(0x2000)
 #define STATE_FLAG_15_KEY_SHOT						(0x4000)
-#define STATE_FLAG_16_KEY_CONTROL					(0x8000)
+#define STATE_FLAG_16_NOT_KEY_CONTROL				(0x8000)
 
 
 typedef struct
@@ -59,7 +61,7 @@ typedef struct
 	int state_flag; 		/* 設定フラグ */	// [***090116		追加
 	int weapon_power;		/*	0x00-0x7f  (0-127 の128段階==本家と同じ)   max==127==「128段階」*/
 	int chain_point;
-	int bomber_time;/*dou ble*/
+	int bomber_time;
 //
 	int my_score;			/* スコア得点 */
 	int graze_point;		/* グレイズ得点 */

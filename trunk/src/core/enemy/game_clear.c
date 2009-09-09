@@ -1,5 +1,5 @@
 
-#include "support.h"
+#include "game_main.h"
 
 /*---------------------------------------------------------
 	エンディング後の終了判定
@@ -14,7 +14,7 @@ void add_enemy_all_clear(STAGE_DATA *l)
 	now_max_continue=1;
 	{
 		PLAYER_DATA *pd = (PLAYER_DATA *)player->data;
-		//	error(ERR_DEBUG,"sorry, no more levels in this alpha-version");
+		//	error(ERR_DEBUG, "sorry, no more levels in this alpha-version");
 	//	pd->score += pd->zanki*(score(2000)+(difficulty*score(4000)));
 		player_add_score(adjust_score_by_difficulty((
 					(pd->zanki * score(3000000)) +	/* 残機   x 300万 */

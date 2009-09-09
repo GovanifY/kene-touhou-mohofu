@@ -3,41 +3,11 @@
 
 ---------------------------------------------------------*/
 
-#include "support.h"
-#include "loadlv.h"
+#include "game_main.h"
+#include "load_stage.h"
 
-extern int errno;
 
-STAGE_DATA *leveltab = NULL;
-
-/*---------------------------------------------------------
-	qŠÖ”
----------------------------------------------------------*/
-
-static void load_stage_free_entry(void)
-{
-	STAGE_DATA *l = leveltab;
-	STAGE_DATA *n;
-	while (NULL != l)
-	{
-		n=l->next;
-		free (l);
-		l = n;
-	}
-	leveltab = (STAGE_DATA *)NULL;
-}
-
-/*---------------------------------------------------------
-	qŠÖ”
----------------------------------------------------------*/
-
-/* Load parth error. */
-static void load_stage_serror(char *load_filename, int error_line_number)
-{
-	error(ERR_WARN,"syntax error in stagefile '%s', line no: %d", load_filename, error_line_number);
-}
-
-#if 1
+#if 0
 /*---------------------------------------------------------
 	‚½‚Ô‚ñ”Ä—p«‚Ì‚Ü‚é‚Å‚È‚¢strcmpBqŠÖ”
 	-------------------------------------------------------
@@ -47,16 +17,56 @@ static void load_stage_serror(char *load_filename, int error_line_number)
 
 /*static*/ int tiny_strcmp(char *aaa, const char *bbb)
 {
-	loop:
-	if ( (Uint8)(*aaa) != (Uint8)(*bbb) )	{	return (1); 	}
-	aaa++;
-	if (0x00 == (Uint8)(*bbb) ) 			{	return (0); 	}
-	bbb++;
-	goto loop;
+loop:
+	if ( (Uint8)(*aaa++) != (Uint8)(*bbb) ) {	goto not_equal; }
+	if (0x00 != (Uint8)(*bbb++) )			{	goto loop;	}
+	return (0);
+not_equal:
+	return (1);
 }
 #else
 extern int tiny_strcmp(char *aaa, const char *bbb);
+/* MIPS R4000Œn‚É‚ ‚í‚¹‚ÄAÅ“K‰»‚µ‚Ä‚İ‚Ü‚µ‚½B */
 #endif
+
+
+
+
+/*---------------------------------------------------------
+
+---------------------------------------------------------*/
+
+extern int errno;
+
+STAGE_DATA *leveltab = NULL;
+
+/*---------------------------------------------------------
+	qŠÖ”
+	Initial task, "free"ed the altenative entris.
+---------------------------------------------------------*/
+
+static void load_stage_free_entry(void)
+{
+	STAGE_DATA *l = leveltab;
+	STAGE_DATA *n;
+	while (NULL != l)
+	{
+		n = l->next;
+		free (l);
+		l = n;
+	}
+	leveltab = (STAGE_DATA *)NULL;/* head to set NULL */
+}
+
+/*---------------------------------------------------------
+	qŠÖ”
+---------------------------------------------------------*/
+
+/* Load parth error. */
+static void load_stage_set_error(char *load_filename, int error_line_number)
+{
+	error(ERR_WARN, "syntax error in stage data '%s', line no: %d", load_filename, error_line_number);
+}
 
 /*---------------------------------------------------------
 	qŠÖ”
@@ -196,11 +206,11 @@ static void load_stage_add_entry(Uint32 time10, char user_command, char *user_st
 	}
 //
 	if (NULL==leveltab) 	// Å‰‚Ì‰ğÍs‚©H
-	{	new_entry->next=(STAGE_DATA *)NULL;}
+	{	new_entry->next = (STAGE_DATA *)NULL;}
 	else
-	{	new_entry->next=leveltab;	}	// leveltab‚Í‘O‰ñ‚Ìƒf[ƒ^
-
-	leveltab=new_entry; 	// leveltab‚É¡¶¬‚µ‚½ƒf[ƒ^‚ÌƒAƒhƒŒƒX‚ğ‘ã“üB
+	{	new_entry->next = leveltab; 	}	// leveltab‚Í‘O‰ñ‚Ìƒf[ƒ^
+	leveltab = new_entry;		// leveltab‚É¡¶¬‚µ‚½ƒf[ƒ^‚ÌƒAƒhƒŒƒX‚ğ‘ã“üB
+	// next‚É‚Ídatƒtƒ@ƒCƒ‹“I‚É‚ÍŒ»İ‘–¸’†‚Ìs‚Ìã‚Ìs‚ª“ü‚Á‚Ä‚¢‚éB
 }
 
 /* ƒƒ‚ */
@@ -236,47 +246,52 @@ static void load_stage_add_entry(Uint32 time10, char user_command, char *user_st
 		else if (0==tiny_strcmp(new_entry->user_string,"BGPANEL2")) {	new_entry->user_command=BTYPE_02_BGPANEL2;	}
 		else if (0==tiny_strcmp(new_entry->user_string,"BGPANEL"))	{	new_entry->user_command=BTYPE_01_BGPANEL1;	}
 		else														{	new_entry->user_command=BTYPE_00_NONE;
-				error(ERR_WARN,"unknown user_command '%c' in levelfile",new_entry->user_command);}
+				error(ERR_WARN, "unknown user_command '%c' in levelfile",new_entry->user_command);}
 		#endif
 
 /*---------------------------------------------------------
 	qŠÖ”
+	Get ascii strings.
 ---------------------------------------------------------*/
 
-/* Get ascii strings. */
 static char *load_stage_get_str(char *c, char *buffer)
 {
-	int i=0;
+	int i = 0;
 	while (*c != '|')
 	{
 		i++;
 		if (i >= 128)
-		{	return ((char *) NULL);}
+		{	goto ne111;}
 		*buffer++ = *c++;
 	}
 	*buffer = 0;
 	return (c);
+ne111:
+	return ((char *) NULL);
 }
 
 /*---------------------------------------------------------
 	qŠÖ”
+	Get ascii a interger number.
 ---------------------------------------------------------*/
 
 static char *load_stage_get_int(char *c, int *nr)
 {
-	char buffer[128];
+	char buffer[32/*128*/];
 	char *d = buffer;
-	int i=0;
-	while (isdigit(*c)) 	/* isdigit ”š‚©‚Ç‚¤‚©‚Ì”»’è */
+	int i = 0;
+	while (isdigit(*c)) 	/* isdigit : ”š‚©‚Ç‚¤‚©‚Ì”»’è */
 	{
 		i++;
-		if (i >= 128)
-		{	return ((char *) NULL);}
+		if (i >= 32/*128*/)
+		{	goto ne222;}
 		*d++ = *c++;
 	}
 	*d = 0;
 	*nr = atoi(buffer);
 	return (c);
+ne222:
+	return ((char *) NULL);
 }
 
 /*---------------------------------------------------------
@@ -292,15 +307,16 @@ static char buffer_text_1_line[256];	/* parth text, 1 line buffer */ 	/* ‘–¸‚·‚
 #if 1
 static unsigned long file_size;
 static unsigned long file_seek;
-static char *my_buf;
-static void *malloc_buf;
+//static char *my_buf;
+//static void *malloc_buf;
+static char *malloc_buf;
 
 static void *my_fopen(const char *file_name/*, const char *dummy*/)
 {
 	SceUID fd;
 	if (!(fd = sceIoOpen((char *)file_name, PSP_O_RDONLY, 0777)))
 	{
-		return (NULL);
+		goto error111;
 	}
 	file_size = sceIoLseek32(fd, 0, PSP_SEEK_END);
 	file_seek = 0;
@@ -309,12 +325,12 @@ static void *my_fopen(const char *file_name/*, const char *dummy*/)
 	if (NULL == malloc_buf)
 	{
 		sceIoClose(fd);
-		return (NULL);
+		goto error111;
 	}
 	sceIoLseek32(fd, 0, PSP_SEEK_SET);
 	sceIoRead( fd, malloc_buf, file_size);
 	sceIoClose(fd);
-	my_buf = malloc_buf;
+//	my_buf = malloc_buf;
 //
 	#if 0
 	char strbuf[128];
@@ -332,13 +348,15 @@ static void *my_fopen(const char *file_name/*, const char *dummy*/)
 	,my_buf[ 4] ,my_buf[ 5] ,my_buf[ 6] ,my_buf[ 7] ,my_buf[ 8] ,my_buf[ 9] ,my_buf[10] ,my_buf[11]
 	,my_buf[12] ,my_buf[13] ,my_buf[14] ,my_buf[15] ,my_buf[16] ,my_buf[17] ,my_buf[18] ,my_buf[19]
 	);
-	error(ERR_FATAL,"AAA %s\nno: %d (%s)",strbuf, errno, strerror(errno));
+	error(ERR_FATAL, "AAA %s\nno: %d (%s)",strbuf, errno, strerror(errno));
 // # kene -stage1
 // #
 // 23 20 6b ... 65 5f 31 0x0d 0x0a
 // 23 0x0d 0x0a
 	#endif
 	return (malloc_buf);
+error111:
+	return (NULL);
 }
 static int my_fgets(void/*char *buffer_name, int num, char *wfp*/)
 {
@@ -348,14 +366,14 @@ ii=0;
 //	char bbb;
 //bbb=0;
 	fgets_loop:;
-	aaa = /*buffer_name*/buffer_text_1_line[ii] = my_buf[file_seek]/*(*my_buf)*/;
+	aaa = /*buffer_name*/buffer_text_1_line[ii] = /*my_buf*/malloc_buf[file_seek]/*(*my_buf)*/;
 //	my_buf++;
 	ii++;
 	file_seek++;
 	if (0x0a==aaa)	return (1);
 	if (file_size < file_seek)	return (0)/*NULL*/;
 	goto fgets_loop;
-//	error(ERR_FATAL,"TEST %s\nno: %d (%s)",buffer_name,errno,strerror(errno));
+//	error(ERR_FATAL, "TEST %s\nno: %d (%s)",buffer_name,errno,strerror(errno));
 //	return (NULL);
 }
 static void my_fclose(void/*void *wfp*/)
@@ -380,6 +398,7 @@ static void my_fclose(void/*void *wfp*/)
 ---------------------------------------------------------*/
 extern int select_player;
 extern void bg2_start_stage(void); // [***090209		’Ç‰Á
+extern void stage_bg_load_surface(void);
 void load_stage(void/*int level*/)		/* Œ³Xint */
 {
 	bg2_start_stage();	// [***090209		’Ç‰Á
@@ -393,9 +412,6 @@ void load_stage(void/*int level*/)		/* Œ³Xint */
 //
 	load_stage_free_entry();
 //
-	char filename[128];
-//	sp rintf(filename,"%s/dat/level%02d.dat", data_dir, /*level*/player_now_stage);
-//	sp rintf(filename,"%s/dat/stage%01d.txt", data_dir, /*level*/player_now_stage);
 	int load_stage_number = player_now_stage;
 	{	PLAYER_DATA *pd = (PLAYER_DATA *)player->data;
 		/* —HXq “Áê”\—ÍFƒXƒe[ƒWƒNƒŠƒA‚Éƒ{ƒ€‚ª‘‚¦‚é */
@@ -428,6 +444,12 @@ void load_stage(void/*int level*/)		/* Œ³Xint */
 		}
 		pd->state_flag |= STATE_FLAG_09_IS_PANEL_WINDOW;/*ƒpƒlƒ‹•\¦on*/
 	}
+//
+	stage_bg_load_surface();
+//
+	char filename[128];
+//	sp rintf(filename,"%s/dat/level%02d.dat", data_dir, /*level*/player_now_stage);
+//	sp rintf(filename,"%s/dat/stage%01d.txt", data_dir, /*level*/player_now_stage);
 //	sp rintf(filename, "%s/dat/stage%c.txt", data_dir, ('0'+/*level*/load_stage_number/*player_now_stage*/) );
 //	sp rintf(filename, DIRECTRY_NAME_DATA "/dat/stage%c.txt", ('0'+/*level*/load_stage_number/*player_now_stage*/) );
 	strcpy(filename, DIRECTRY_NAME_DATA "/dat/stageZ.txt");
@@ -436,11 +458,11 @@ void load_stage(void/*int level*/)		/* Œ³Xint */
 //	/*FILE*/char *fp;
 	if (NULL==(/*fp=*/my_fopen(filename/*,"r"*/)))
 	{
-		error(ERR_FATAL,"can't read stage data %s\nerrno: %d (%s)",filename,errno,strerror(errno));
+		error(ERR_FATAL, "can't read stage data %s\nerrno: %d (%s)",filename,errno,strerror(errno));
 	}
 //
 	int entrys		= 0;		/* —LŒøs”‚Ì’²¸ */
-	int line_num	= 0;		/* ƒtƒ@ƒCƒ‹‚ÌÀAs” */
+	int line_num	= 0;		/* ƒtƒ@ƒCƒ‹‚ÌÀs” */
 	{loop:;
 		if (/*NULL*/0 != my_fgets(/*buffer_text_1_line,128,fp*/))
 		{
@@ -450,7 +472,7 @@ void load_stage(void/*int level*/)		/* Œ³Xint */
 			int user_x; 				/* ”šƒpƒ‰ƒ[ƒ^[‚P(oŒ»‚wÀ•W‚È‚Ç) */
 			int user_y; 				/* ”šƒpƒ‰ƒ[ƒ^[‚Q(oŒ»‚xÀ•WA“G“ï“x‚È‚Ç) */
 			char *c;					/* ‘–¸ˆÊ’u */
-			line_num++; 		/* ƒtƒ@ƒCƒ‹‚ÌÀAs” */
+			line_num++; 				/* ƒtƒ@ƒCƒ‹‚ÌÀs” */
 			c = buffer_text_1_line;
 //
 			/* skiped lines. */
@@ -459,15 +481,15 @@ void load_stage(void/*int level*/)		/* Œ³Xint */
 			if (*c=='#')		{	goto loop;/*continue;*/ }	/* skiped comment line. */	/* Kommentarzeile ? */
 //
 			/* parth start */	/* Startzeitpunkt holen */
-			if (NULL==(c = load_stage_get_int(c, &time10))) 	{	load_stage_serror(filename, line_num);	goto loop;/*continue;*/;	}	/* load int time10 */	/* ŠÔ‚Ìæ“¾ */
-			if (*c++ != '|')									{	load_stage_serror(filename, line_num);	goto loop;/*continue;*/;	}	/* load '|' */
-			char_user_command = *c++;																										/* load 1 char commnd */		/* ‚P•¶šƒRƒ}ƒ“ƒh */	/* Befehl */
-			if (*c++ != '|')									{	load_stage_serror(filename, line_num);	goto loop;/*continue;*/;	}	/* load '|' */
-			if (NULL==(c = load_stage_get_str(c, user_string))) {	load_stage_serror(filename, line_num);	goto loop;/*continue;*/;	}	/* load str user_string */
-			if (*c++ != '|')									{	load_stage_serror(filename, line_num);	goto loop;/*continue;*/;	}	/* load '|' */
-			if (NULL==(c = load_stage_get_int(c, &user_x))) 	{	load_stage_serror(filename, line_num);	goto loop;/*continue;*/;	}	/* load int user_x */
-			if (*c++ != '|')									{	load_stage_serror(filename, line_num);	goto loop;/*continue;*/;	}	/* load '|' */
-			if (NULL==(c = load_stage_get_int(c, &user_y))) 	{	load_stage_serror(filename, line_num);	goto loop;/*continue;*/;	}	/* load int user_y */
+			if (NULL==(c = load_stage_get_int(c, &time10))) 	{	load_stage_set_error(filename, line_num);	goto loop;/*continue;*/;	}	/* load int time10 */		/* ŠÔ‚Ìæ“¾ */
+			if (*c++ != '|')									{	load_stage_set_error(filename, line_num);	goto loop;/*continue;*/;	}	/* load '|' */
+			char_user_command = *c++;																											/* load 1 char commnd */	/* ‚P•¶šƒRƒ}ƒ“ƒh */	/* Befehl */
+			if (*c++ != '|')									{	load_stage_set_error(filename, line_num);	goto loop;/*continue;*/;	}	/* load '|' */
+			if (NULL==(c = load_stage_get_str(c, user_string))) {	load_stage_set_error(filename, line_num);	goto loop;/*continue;*/;	}	/* load str user_string */
+			if (*c++ != '|')									{	load_stage_set_error(filename, line_num);	goto loop;/*continue;*/;	}	/* load '|' */
+			if (NULL==(c = load_stage_get_int(c, &user_x))) 	{	load_stage_set_error(filename, line_num);	goto loop;/*continue;*/;	}	/* load int user_x */
+			if (*c++ != '|')									{	load_stage_set_error(filename, line_num);	goto loop;/*continue;*/;	}	/* load '|' */
+			if (NULL==(c = load_stage_get_int(c, &user_y))) 	{	load_stage_set_error(filename, line_num);	goto loop;/*continue;*/;	}	/* load int user_y */
 			/* do set register entry. */
 			#define MUSIC_CONVERT_TIME (10)
 			/* ’Ç‰Á“o˜^‚·‚é */
@@ -480,7 +502,7 @@ void load_stage(void/*int level*/)		/* Œ³Xint */
 	//return (entrys);
 	if (0==entrys)		/* —LŒøs”‚ª‚È‚¯‚ê‚ÎƒGƒ‰[ */
 	{
-		error(ERR_WARN,"no entrys for STAGE%d.TXT",/*level*/player_now_stage);
+		error(ERR_WARN, "no entrys for STAGE%d.TXT",/*level*/player_now_stage);
 	}
 	//fps_init();/* ??? auto fps‰Šú‰» */
 }

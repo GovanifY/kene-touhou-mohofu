@@ -3,8 +3,8 @@
 
 ---------------------------------------------------------*/
 
-#include "support.h"
-#include "hiscore.h"/**/
+#include "game_main.h"
+#include "name_entry.h"/**/
 
 /*---------------------------------------------------------
 	ハイスコア表示デモ画面
@@ -80,12 +80,12 @@ static const signed int result_const_status[RESULT_DATA_03_MAX][MAX_7_LINES] =
 
 static void move_result(SPRITE *s)
 {
-	MOVE_FONT_DATA *d=(MOVE_FONT_DATA *)s->data;
+	MOVE_FONT_DATA *d = (MOVE_FONT_DATA *)s->data;
 	if (0==d->move_done_flag)	/* 移動は必要？ */
 	{
 		s->x256 = ((d->xg256) );
 		s->y256 = ((d->yg256) );
-		if (d->direction==0)	/* 移動する向き */
+		if (0==d->direction)	/* 移動する向き */
 		{
 			/* slide-in */
 			d->amplifier256 -= d->amplifier_speed256;
@@ -104,7 +104,8 @@ static void move_result(SPRITE *s)
 		{
 			d->phaseout256 += d->phase_speed256/**fps_fa ctor*/;
 			s->x256 += ((d->phaseout256*d->amplifier256)>>8);
-			if (1==more_show)
+		//	if (1==more_show)	/* pspは0レジスタがあるので0と比較したほうが速い */
+			if (0!=more_show)
 			{
 				s->y256 -= ((d->phase256*d->amplifier256)>>8);		/* phase256 は流用 */
 			}
@@ -142,8 +143,7 @@ static void result_font_render(void)
 			NULL,/*dummy*/
 			0,/*dummy*/
 			1,
-			1,
-			1,
+			iyx(1,1),
 			PRIORITY_01_SHOT,
 			0, 0, 0
 		}
@@ -155,8 +155,8 @@ static void result_font_render(void)
 		{
 			char ttmp[64/*50*/];
 			sprintf(ttmp,"%1d %-3s %09d0",i+1,high_score_table[(show_player_num)][i].name,high_score_table[(show_player_num)][i].score);
-		//	result_surfaces[i]		= font_render(ttmp,i==0?FONT05:FONT01);
-		//	result_surfaces[i]		= font_render(ttmp,i==0?FONT03:FONT07);
+		//	result_surfaces[i]		= font_render(ttmp,(0==i)?FONT05:FONT01);
+		//	result_surfaces[i]		= font_render(ttmp,(0==i)?FONT03:FONT07);
 			result_surfaces[i]		= font_render(ttmp, FONT03);
 		}
 		else
@@ -180,8 +180,7 @@ static void result_font_render(void)
 		result_sprites[i]					= sprite_add_res_list(
 			result_surfaces[i],
 		//	1,
-		//	1,
-		//	1,
+		//	iyx(1,1),
 		//	PRIORITY_01_SHOT,
 			SP_FLAG_NOT_CACHE/*1*/,
 		//	0
@@ -194,12 +193,12 @@ static void result_font_render(void)
 		hd->phase_speed256					= result_const_status[RESULT_DATA_02_PHASE_SPEED256][i];
 		hd->amplifier_speed256				= t256(1.0);
 		result_sprites[i]->flags			|= (SP_FLAG_VISIBLE);
-		result_sprites[i]->type 			= SP_ETC;
+		result_sprites[i]->type 			= SP_MENU_TEXT/*SP_ETC*/;
 		result_sprites[i]->x256 			= 0;					//	result_sprites[5]->x		= 0/*30*/;
 		result_sprites[i]->y256 			= 0/*(i*25+110)*/;		//	result_sprites[5]->y		= 0/*50*/;
 		result_sprites[i]->callback_mover	= move_result;
 	}
-	for (i=0;i<MAX_7_LINES/*5*/;i++)
+	for (i=0; i<MAX_7_LINES/*5*/; i++)
 	{
 		hd=(MOVE_FONT_DATA *)result_sprites[i]->data;
 		hd->phase256			= (i<<6);
@@ -262,7 +261,7 @@ void result_work(void)
 		//if (NULL==back)
 		//{
 		//	CHECKPOINT;
-		//	error(ERR_FATAL,"cant create background surface");
+		//	error(ERR_FATAL, "cant create background surface");
 		//}
 		psp_loop++;//newsta te(ST_RESULT,RESULT_01_SET_LOCATION,0);
 		break;
@@ -317,7 +316,8 @@ void result_work(void)
 		if (move_done_lines==MAX_7_LINES)
 		{
 			result_font_free();
-			if (1==more_show)	/* また見るよ */
+		//	if (1==more_show)	/* pspは0レジスタがあるので0と比較したほうが速い */
+			if (0!=more_show)	/* また見るよ */
 			{
 				psp_loop=(ST_WORK_RESULT|RESULT_01_SET_LOCATION);//newsta te(ST_RESULT,RESULT_01_SET_LOCATION,0);
 			}
@@ -330,8 +330,8 @@ void result_work(void)
 		}
 		break;
 	}
-	sprite_work000(SP_GROUP_ETC);
-	sprite_display000(SP_GROUP_ETC);
+	sprite_work000(SP_GROUP_PAUSE_OBJS/*SP_GROUP_ETC*/);
+	sprite_display000(SP_GROUP_PAUSE_OBJS/*SP_GROUP_ETC*/);
 }
 
 
@@ -355,8 +355,8 @@ void check_high_score(void)
 			psp_loop=(ST_INIT_NAME_ENTRY|0);//newsta te(ST_NAME_ENTRY,0,1);
 		}
 	}
-
-	if (1==my_flag)
+//	if (1==my_flag) 	/* pspは0レジスタがあるので0と比較したほうが速い */
+	if (0!=my_flag)
 	{
 		/* you made it! enter your name in the hiscore-list */
 		psp_loop=(ST_INIT_NAME_ENTRY|0);//newsta te(ST_NAME_ENTRY,0,1);
@@ -382,7 +382,7 @@ typedef struct
 {
 	int xpos;
 	int ypos;
-	/*dou ble*/int scale256;
+	int scale256;
 	char ascii;
 } LETTER;
 static LETTER letter[MAX_40_LETTER];
@@ -514,7 +514,7 @@ void name_entry_init(void)
 	//if (NULL==back)
 	//{
 	//	CHECKPOINT;
-	//	error(ERR_FATAL,"cant create background surface");
+	//	error(ERR_FATAL, "cant create background surface");
 	//}
 	sel=-1;
 	psp_loop=(ST_WORK_NAME_ENTRY|NAME_ENTRY_01_SLIDE_IN);//newsta te(ST_NAME_ENTRY,H CLISTE_ENTRY,0);
@@ -557,7 +557,7 @@ static void name_entry_draw(void)
 	//
 	if (sel >= 0)
 	{
-		static /*dou ble*/int angle512/*=0*/;
+		static int angle512/*=0*/;
 		int xa;
 	//	int ya;
 		angle512 += deg_360_to_512(5/*15*/)/**fps_fa ctor*/;

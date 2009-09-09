@@ -14,8 +14,8 @@
 	ファイル関連処理
 ---------------------------------------------------------*/
 
-#include "support.h"
-#include "hiscore.h"/**/
+#include "game_main.h"
+#include "name_entry.h"/**/
 
 //#define FILE_NAME_SETTING_TXT	"setting.ini"
 #define FILE_NAME_SETTING_TXT	DIRECTRY_NAME_DATA"/setting.txt"
@@ -66,8 +66,8 @@ static int ini_load_item(FILE *fp, char *search, char *result)
 				{
 					*re_e++ = *c++;
 				}
-				re_e=0;
-				int_result=atoi(re_s);
+				re_e = 0;
+				int_result = atoi(re_s);
 				break;
 			}
 			else // 対象を文字列として解析する。 (PARTH_MODE_CHAR)
@@ -75,10 +75,10 @@ static int ini_load_item(FILE *fp, char *search, char *result)
 				char *re_e=result;
 				while (*c != 13)		/* charの方は\nじゃなくて13にしないとちゃんと取ってくれないよ。(13でないとng) */
 				{
-					*re_e++=*c++;
+					*re_e++ = *c++;
 				}
-				re_e=0;
-				int_result=1;
+				re_e = 0;
+				int_result = 1;
 				break;
 			}
 		}
@@ -95,13 +95,13 @@ static int ini_load_local(void)
 	strcpy(fn,"./" FILE_NAME_SETTING_TXT);
 	int tmp;
 	int int_result;
-	int_result=0;/*異常*/
+	int_result = 0;/* 異常 */
 	int ng1;
 	ng1 = 0;/*fopen()成功*/
-	if ( NULL == (fp = fopen(fn, "r")))	{	ng1 = 1;/*fopen()失敗*/ goto error00/*return -1*/;	}
+	if ( NULL == (fp = fopen(fn, "r"))) 	{	ng1 = 1;/*fopen()失敗*/ goto error00;/* return (-1); */ 	}
 //
 //	if (ini_load_item(fp, "moddir", moddir)==-1)	{	goto error00/*return -1*/;	}
-//	fscanf(fp,"moddir=%s",moddir);
+//	fscanf(fp, "moddir=%s",moddir);
 	#define CONFIG_LOAD_ITEM(aaa,bbb) {tmp=ini_load_item(fp, aaa, NULL);	if (-1 != tmp)	{	bbb=tmp;	}	else	{	goto error00/*return -1*/;	}}
 
 	#if 0
@@ -133,8 +133,8 @@ static int ini_load_local(void)
 	#endif
 	CONFIG_LOAD_ITEM("difficulty",	difficulty		);
 	CONFIG_LOAD_ITEM("player",		select_player	);
-	if (ini_load_item(fp, "password", str_pass_word)==-1)	{	goto error00/*return -1*/;	}
-	int_result=1;/*正常*/
+	if (-1 == ini_load_item(fp, "password", str_pass_word)) 	{	goto error00;/* return (-1); */ 	}
+	int_result = 1;/* 正常 */
 //
 error00:
 	/* high_score load */
@@ -152,7 +152,7 @@ error00:
 				if (0==ng2)
 				{
 					char tmp_str32[64/*50*/];
-					if (1 == fscanf(fp,"%23s\n", tmp_str32 ))
+					if (1 == fscanf(fp, "%23s\n", tmp_str32 ))
 					{
 						/* 埋め込む */
 					//	strncpy(high_score_table[j][i].name, &tmp_str32[10], 3);
@@ -164,12 +164,13 @@ error00:
 						tmpscore = atoi(tmp_str16);
 						tmpscore /= 10;
 					}
-					else/*エラー*/
+					else/* エラー */
 					{
 						ng2=1;
 					}
 				}
-				if (1==ng2)
+			//	if (1==ng2)	/* pspは0レジスタがあるので0と比較したほうが速い */
+				if (0!=ng2)
 				{
 					static const int init_score_tbl[5]=
 					{
@@ -182,7 +183,7 @@ error00:
 					strcpy(high_score_table[j][i].name,"ZUN"/*"DEN"*/);
 					tmpscore = init_score_tbl[i];
 				}
-				high_score_table[j][i].score=tmpscore;
+				high_score_table[j][i].score = tmpscore;
 			}
 		}
 	//	top_score = high_score_table[0][0].score;	// 常に表示するハイコアの取得=>score.cで利用
@@ -194,7 +195,7 @@ error00:
 extern void set_default_key(int *key_setting_map, int key_setting_type);
 void ini_load(void)
 {
-	if (0==ini_load_local()) //090110
+	if (0==ini_load_local()) // 090110
 	{
 //		chooseModDir();
 		#if 1
@@ -216,7 +217,7 @@ void ini_load(void)
 	}
 //	範囲外の場合は修正
 	if (difficulty>3 || 0>difficulty)/* (easy)0 1 2 3(Lunatic) */
-	{	difficulty=2;}
+	{	difficulty = 2;}
 }
 
 void ini_save(void)
@@ -226,38 +227,38 @@ void ini_save(void)
 	strcpy(fn, "./" FILE_NAME_SETTING_TXT);
 	if ( NULL == (fp = fopen(fn,"w")))	{	return; 	}
 //
-	const char k=13;
-//	fprintf(fp,"moddir=%s%c\n", 	moddir, 		k);
+	const char k = 13;
+//	fprintf(fp, "moddir=%s%c\n", 	moddir, 		k);
 	#if 0
-	fprintf(fp,"UP=%d%c\n", 		keyconfig[key_02_u],	k);
-	fprintf(fp,"DOWN=%d%c\n",		keyconfig[key_04_d],	k);
-	fprintf(fp,"LEFT=%d%c\n",		keyconfig[key_05_l],	k);
-	fprintf(fp,"RIGHT=%d%c\n",		keyconfig[key_03_r],	k);
-	fprintf(fp,"CROSS=%d%c\n",		keyconfig[key_10_ba],	k);
-	fprintf(fp,"CIRCLE=%d%c\n", 	keyconfig[key_09_ma],	k);
-	fprintf(fp,"TRIANGLE=%d%c\n",	keyconfig[key_08_sa],	k);
-	fprintf(fp,"SQUARE=%d%c\n", 	keyconfig[key_11_si],	k);
-	fprintf(fp,"R_T=%d%c\n",		keyconfig[key_07_rt],	k);
-	fprintf(fp,"L_T=%d%c\n",		keyconfig[key_06_lt],	k);
-	fprintf(fp,"SELECT=%d%c\n", 	keyconfig[key_00_sl],	k);
-	fprintf(fp,"START=%d%c\n",		keyconfig[key_01_st],	k);
+	fprintf(fp, "UP=%d%c\n", 		keyconfig[key_02_u],	k);
+	fprintf(fp, "DOWN=%d%c\n",		keyconfig[key_04_d],	k);
+	fprintf(fp, "LEFT=%d%c\n",		keyconfig[key_05_l],	k);
+	fprintf(fp, "RIGHT=%d%c\n",		keyconfig[key_03_r],	k);
+	fprintf(fp, "CROSS=%d%c\n",		keyconfig[key_10_ba],	k);
+	fprintf(fp, "CIRCLE=%d%c\n", 	keyconfig[key_09_ma],	k);
+	fprintf(fp, "TRIANGLE=%d%c\n",	keyconfig[key_08_sa],	k);
+	fprintf(fp, "SQUARE=%d%c\n", 	keyconfig[key_11_si],	k);
+	fprintf(fp, "R_T=%d%c\n",		keyconfig[key_07_rt],	k);
+	fprintf(fp, "L_T=%d%c\n",		keyconfig[key_06_lt],	k);
+	fprintf(fp, "SELECT=%d%c\n", 	keyconfig[key_00_sl],	k);
+	fprintf(fp, "START=%d%c\n",		keyconfig[key_01_st],	k);
 	#else
-	fprintf(fp,"SELECT=%d%c\n", 	keyconfig[key_00_sl],	k);
-	fprintf(fp,"START=%d%c\n",		keyconfig[key_01_st],	k);
-	fprintf(fp,"UP=%d%c\n", 		keyconfig[key_02_u],	k);
-	fprintf(fp,"RIGHT=%d%c\n",		keyconfig[key_03_r],	k);
-	fprintf(fp,"DOWN=%d%c\n",		keyconfig[key_04_d],	k);
-	fprintf(fp,"LEFT=%d%c\n",		keyconfig[key_05_l],	k);
-	fprintf(fp,"L_T=%d%c\n",		keyconfig[key_06_lt],	k);
-	fprintf(fp,"R_T=%d%c\n",		keyconfig[key_07_rt],	k);
-	fprintf(fp,"TRIANGLE=%d%c\n",	keyconfig[key_08_sa],	k);
-	fprintf(fp,"CIRCLE=%d%c\n", 	keyconfig[key_09_ma],	k);
-	fprintf(fp,"CROSS=%d%c\n",		keyconfig[key_10_ba],	k);
-	fprintf(fp,"SQUARE=%d%c\n", 	keyconfig[key_11_si],	k);
+	fprintf(fp, "SELECT=%d%c\n", 	keyconfig[key_00_sl],	k);
+	fprintf(fp, "START=%d%c\n",		keyconfig[key_01_st],	k);
+	fprintf(fp, "UP=%d%c\n", 		keyconfig[key_02_u],	k);
+	fprintf(fp, "RIGHT=%d%c\n",		keyconfig[key_03_r],	k);
+	fprintf(fp, "DOWN=%d%c\n",		keyconfig[key_04_d],	k);
+	fprintf(fp, "LEFT=%d%c\n",		keyconfig[key_05_l],	k);
+	fprintf(fp, "L_T=%d%c\n",		keyconfig[key_06_lt],	k);
+	fprintf(fp, "R_T=%d%c\n",		keyconfig[key_07_rt],	k);
+	fprintf(fp, "TRIANGLE=%d%c\n",	keyconfig[key_08_sa],	k);
+	fprintf(fp, "CIRCLE=%d%c\n", 	keyconfig[key_09_ma],	k);
+	fprintf(fp, "CROSS=%d%c\n",		keyconfig[key_10_ba],	k);
+	fprintf(fp, "SQUARE=%d%c\n", 	keyconfig[key_11_si],	k);
 	#endif
-	fprintf(fp,"difficulty=%d%c\n", 	difficulty, 		k);
-	fprintf(fp,"player=%d%c\n", 		select_player,  	k);
-	fprintf(fp,"password=%s%c\n",		str_pass_word,		k);
+	fprintf(fp, "difficulty=%d%c\n", 	difficulty, 		k);
+	fprintf(fp, "player=%d%c\n", 		select_player,  	k);
+	fprintf(fp, "password=%s%c\n",		str_pass_word,		k);
 	/* high_score save */
 	{int j;
 		for (j=0; j<MAX_8_SAVE_PLAYERS; j++)
@@ -294,7 +295,7 @@ void save_screen_shot(void)
 {
 	static int screen_num = 0;
 /*static*/ char screen_buf[32/*20*/];
-//	sp rintf(screen_buf,"ms0:/PICTURE/Toho_Moho%d.bmp", screen_num);		//保存場所の変更。
+//	sp rintf(screen_buf,"ms0:/PICTURE/Toho_Moho%d.bmp", screen_num);		// 保存場所の変更。
 	strcpy(screen_buf,"ms0:/PICTURE/Toho_MohoZ.bmp");
 	screen_num++;
 	screen_num &= 0x1f;

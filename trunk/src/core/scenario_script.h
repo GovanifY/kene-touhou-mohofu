@@ -1,7 +1,7 @@
-#ifndef _SCENARIO_H_
-#define _SCENARIO_H_
+#ifndef _SCRIPT_H_
+#define _SCRIPT_H_
 
-#include "support.h"
+#include "game_main.h"
 
 //static extern int thescript(void);
 extern int script_init(char *filename, char *bg_name,int width);

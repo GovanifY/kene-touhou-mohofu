@@ -3,11 +3,11 @@
 
 ---------------------------------------------------------*/
 
-#include "support.h"
+#include "game_main.h"
 
-#include "enemy.h"
-#include "loadlv.h"
-#include "scenario.h"
+#include "bullet_object.h"
+#include "load_stage.h"
+#include "scenario_script.h"
 
 extern STAGE_DATA *leveltab;
 
@@ -69,7 +69,7 @@ extern void add_enemy_load_picture( 	STAGE_DATA *l);// /*char *filename,int xpos
 
 ---------------------------------------------------------*/
 
-int difficulty=RANK_NORMAL;
+int difficulty = RANK_NORMAL;
 
 //static Uint32 stage_start_time;
 //static Uint32 game_start_time;
@@ -80,7 +80,7 @@ int difficulty=RANK_NORMAL;
 
 static void enemy_error(STAGE_DATA *l)/*int lv*/
 {
-//	error(ERR_WARN,"unknown enemy ");
+//	error(ERR_WARN, "unknown enemy ");
 }
 
 /*---------------------------------------------------------
@@ -152,8 +152,8 @@ static void thegame_level(STAGE_DATA *l)/*, int lev*/
 static Uint32 game_v_time;
 void init_stage_start_time(void)
 {
-//	stage_start_time=psp_get_uint32_ticks();
-	game_v_time=0;
+//	stage_start_time = psp_get_uint32_ticks();
+	game_v_time = 0;
 }
 
 /*---------------------------------------------------------
@@ -172,7 +172,7 @@ void common_load_init(void)
 	set_rnd_seed(player_now_stage); 	/* 乱数系列の初期化 */
 //
 	/* Load next stage */
-	load_stage();//if (load_stage(/*level*/)==0)	{	error(ERR_WARN,"no entrys for level %d",level);}
+	load_stage();//if (0==load_stage(/*level*/))	{	error(ERR_WARN, "no entrys for level %d",level);}
 	// ロード中は処理落ちしているので、ロード後に時間を再作成する。
 	init_stage_start_time();/*stage_start_time=psp_get_uint32_ticks();*/
 //	game_start_time=psp_get_uint32_ticks();
@@ -189,15 +189,15 @@ void shooting_game_init(void)
 {
 	play_voice_auto_track(VOICE01_HIT);
 //
-	dbwait=TIME_20_DBWAIT;
+	dbwait = TIME_20_DBWAIT;
 //
 	score_panel_init();
 	//controller_remove_all();
 	player_init();
 //
-	#if (1==USE_ENDING_DEBUG)
+	#if (1 == USE_ENDING_DEBUG)
 	/*player_init();より後の必要*/
-	if (5==continue_stage)
+	if (5 == continue_stage)
 	{	PLAYER_DATA *pd = (PLAYER_DATA *)player->data;
 	//	pd->bo ssmode	= B07_AF TER_LOAD;
 		pd->state_flag	|= (STATE_FLAG_10_IS_LOAD_SCRIPT|STATE_FLAG_05_IS_BOSS|STATE_FLAG_11_IS_BOSS_DESTROY);
@@ -295,7 +295,7 @@ void my_special(void)
 	//	if (0==dbwait)		// [***090313		変更
 		if (1>dbwait)		// [***090313		変更
 		{
-			dbwait=TIME_20_DBWAIT;
+			dbwait = TIME_20_DBWAIT;
 		//
 			pd->state_flag &= (~(STATE_FLAG_11_IS_BOSS_DESTROY));/*off*/
 			boss_destroy();
@@ -318,100 +318,96 @@ void my_special(void)
 	めったに実行しない物は関数化して外に追い出そう。
 ---------------------------------------------------------*/
 
+extern void vbl_draw_screen(void);/*support.c*/
+
 extern void script_display(void);
 extern void score_display(void);
 extern void bg_work_draw(void);
 extern void draw_score_chache(void);
 void shooting_game_work(void)
 {
-//	if (psp_loop != (ST_WORK_GAME_PLAY&0xff00) /*|| state.newsta te==1*/) return;
-	/* game_v_time=Zeit seit Spielbeginn in 1/10 sec. */
-	game_v_time++;//=(psp_get_uint32_ticks()-stage_start_time);
-//
-	PLAYER_DATA *pd = (PLAYER_DATA *)player->data;
-	if (pd->state_flag & STATE_FLAG_14_GAME_LOOP_QUIT)
+	while ((ST_WORK_GAME_PLAY>>8) == (psp_loop>>8) )
 	{
-		;	/* GAMEOUT中 */
-	}
-	else
-	{
-		/* 生きてる */
-	//	if (0==my_pad)
-		if (0==(my_pad & PSP_KEY_PAUSE))
+	//	if (psp_loop != (ST_WORK_GAME_PLAY&0xff00) /*|| state.newsta te==1*/) return;
+		/* game_v_time=Zeit seit Spielbeginn in 1/10 sec. */
+		game_v_time++;//=(psp_get_uint32_ticks()-stage_start_time);
+	//
+		PLAYER_DATA *pd = (PLAYER_DATA *)player->data;
+		if (pd->state_flag & STATE_FLAG_14_GAME_LOOP_QUIT)
 		{
-			if (my_pad_alter & PSP_KEY_PAUSE)
-			{
-			//	if (0==(pd->state_flag & STATE_FLAG_06_IS_SCRIPT))/*たまにうまくいかない事がある*/
-				{
-					psp_loop=(ST_INIT_MENU|ST_MENU_SUB_PAUSE);//newsta te(ST_MENU,ST_MENU_SUB_PAUSE,1);
-				}
-			}
+			;	/* GAMEOUT中 */
 		}
-		#if 1
+		else
 		{
-			STAGE_DATA *l;
-			/*
-			This routine, serch back to begin.
-			このルーチンは逆順に検索します。
-			*/
-			l = leveltab;
-			while (l != NULL)/* [head ==NULL] then end. */
+			/* 生きてる */
+		//	if (0==my_pad)
+			if (0==(my_pad & PSP_KEY_PAUSE))
 			{
-				if (l->done == 0)	/* enemy set done flag */
+				if (my_pad_alter & PSP_KEY_PAUSE)
 				{
-					#if 1
-					if (game_v_time >= (l->v_time))
-					#else
-					if (v_time >= ((l->time) ) )
-					#endif
+				//	if (0==(pd->state_flag & STATE_FLAG_06_IS_SCRIPT))/*たまにうまくいかない事がある*/
 					{
-						thegame_level(l);	/*, *level*/
-						l->done=1;	/* enemy set done flag */
+						psp_loop=(ST_INIT_MENU|ST_MENU_SUB_PAUSE);//newsta te(ST_MENU,ST_MENU_SUB_PAUSE,1);
 					}
 				}
-				l=l->next;/* choice alter. */
 			}
-		}
-		#else
+			#if 1
+			{
+				STAGE_DATA *l;
+				/*
+				This routine, serch back to begin.
+				このルーチンは逆順に検索します。
+				*/
+				l = leveltab;
+				while (l != NULL)/* [head ==NULL] then end. */
+				{
+					if (l->done == 0)	/* enemy set done flag */
+					{
+						#if 1
+						if (game_v_time >= (l->v_time))
+						#else
+						if (v_time >= ((l->time) ) )
+						#endif
+						{
+							thegame_level(l);	/*, *level*/
+							l->done = 1;	/* enemy set done flag */
+						}
+					}
+					l = l->next;/* choice alter. */
+				}
+			}
+			#else
 
+			#endif
+//
+			/* 特殊処理 */
+		//	if (B00_NONE != pd->bo ssmode)
+			if (pd->state_flag & (STATE_FLAG_10_IS_LOAD_SCRIPT|STATE_FLAG_11_IS_BOSS_DESTROY|STATE_FLAG_12_END_SCRIPT))
+			{
+				my_special();
+			}
+//
+		}
+//
+		#if 0/*ゲーム時間デバッグ用*/
+		/* パネルのスコア欄にゲーム時間を 表示させる。っていうか書き換えちゃう。 */
+		((PLAYER_DATA *)player->data)->score		= (game_v_time);
 		#endif
 //
-		/* 特殊処理 */
-	//	if (B00_NONE != pd->bo ssmode)
-		if (pd->state_flag & (STATE_FLAG_10_IS_LOAD_SCRIPT|STATE_FLAG_11_IS_BOSS_DESTROY|STATE_FLAG_12_END_SCRIPT))
-		{
-			my_special();
-		}
+		/* 動作 */
+		bg_work_draw();
+		//controller_work();
+		sprite_work000(SP_GROUP_ALL_TYPE);
+//		sprite_work222(SP_GROUP_ALL_TYPE);/*弾幕用*/
+		/* 描画 */
+		sprite_display000(SP_GROUP_ALL_TYPE);
+//		sprite_display222(SP_GROUP_ALL_TYPE);/*弾幕用*/
+		draw_score_chache();
+		// この辺は速度低下するのでコールバックにすべき
+		if (/*STATE_FLAG_06_IS_SCRIPT==*/(pd->state_flag & STATE_FLAG_06_IS_SCRIPT))				{	script_display();	}		//parsys_display();
+		if (/*STATE_FLAG_09_IS_PANEL_WINDOW==*/(pd->state_flag & STATE_FLAG_09_IS_PANEL_WINDOW))	{	score_display();	}
 //
+		vbl_draw_screen();	/* 画面描画とキー入力(本当は v-blanc タイミングで) */
 	}
 //
-	#if 0/*ゲーム時間デバッグ用*/
-	/* パネルのスコア欄にゲーム時間を 表示させる。っていうか書き換えちゃう。 */
-	((PLAYER_DATA *)player->data)->score		= (game_v_time);
-	#endif
-//
-	/* 動作 */
-	bg_work_draw();
-	//controller_work();
-	sprite_work000(SP_GROUP_ALL);
-//	sprite_work222(SP_GROUP_ALL);/*弾幕用*/
-	/* 描画 */
-	sprite_display000(SP_GROUP_ALL);
-//	sprite_display222(SP_GROUP_ALL);/*弾幕用*/
-	draw_score_chache();
-	// この辺は速度低下するのでコールバックにすべき
-	if (/*STATE_FLAG_06_IS_SCRIPT==*/(pd->state_flag & STATE_FLAG_06_IS_SCRIPT))				{	script_display();	}		//parsys_display();
-	if (/*STATE_FLAG_09_IS_PANEL_WINDOW==*/(pd->state_flag & STATE_FLAG_09_IS_PANEL_WINDOW))	{	score_display();	}
 }
-
-/*---------------------------------------------------------
-	ポーズメニュー用時間調整
-	-------------------------------------------------------
-	ポーズ中は時間が狂うので(ゲーム時間を)調整する為の仕組み
-	メニュー(menu.c)のポーズから復帰する際にのみ使用する。
----------------------------------------------------------*/
-
-//void adjust_start_time(Uint32 pause_time)
-//{
-//	//stage_start_time += psp_get_uint32_ticks()-pause_time;
-//}

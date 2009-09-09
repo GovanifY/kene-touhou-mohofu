@@ -8,8 +8,8 @@
 	// [***090114	大玉の動きを変えてみた
 ---------------------------------------------------------*/
 
-#include "support.h"
-#include "enemy.h"
+#include "game_main.h"
+#include "bullet_object.h"
 
 /*---------------------------------------------------------
 	ベクトル弾(角度変化しないものはこの方式の方が速い)
@@ -36,6 +36,17 @@ typedef struct
 	int state;
 } TOMARI_DAN_DATA;
 
+/* 基本弾(速度、角度、ともに変化しない) */
+typedef struct
+{
+	int vx256;	/*union BULLET_VECTOR_DATA*/	/* 共用regist_vector(); */
+	int vy256;	/*union BULLET_VECTOR_DATA*/	/* 共用regist_vector(); */
+//	int angle512;	/*union BULLET_DATA*/
+//	int speed256;	/*union BULLET_DATA*/
+//
+	int gra256;
+	int sum256;
+} GRAVITY_BULLET_DATA;
 
 /*---------------------------------------------------------
 	分解能4096弾
@@ -75,7 +86,7 @@ typedef struct
 	ENEMY_BASE b;
 	int angle512;
 	int speed256;
-	int time_out;// dou ble range;	dou ble delay;
+	int time_out;	/* range delay */
 } ENEMY_HOMING_DATA;
 
 typedef struct
@@ -83,27 +94,9 @@ typedef struct
 	int angle512;	/*union BULLET_DATA*/
 	int speed256;	/*union BULLET_DATA*/
 //
-	int state_lo;
-	int state_hi;
-} G_BULLET_DATA;
-
-typedef struct
-{
-	int angle512;	/*union BULLET_DATA*/
-	int speed256;	/*union BULLET_DATA*/
-//
 	int gra256;
 	int sum256;
-} GR_BULLET_DATA;
-
-typedef struct
-{
-	int angle512;	/*union BULLET_DATA*/
-	int speed256;	/*union BULLET_DATA*/
-//
-	int gra256;
-	int sum256;
-	int bounds;
+	int bound_counts;	/* 跳ねる予定の回数(0で終わり) */
 } HAZUMI_DAN_DATA;
 
 typedef struct
@@ -111,7 +104,7 @@ typedef struct
 	int angle512;	/*union BULLET_DATA*/
 	int speed256;	/*union BULLET_DATA*/
 //
-	int time_out;// dou ble timer;
+	int time_out;	/* timer */
 } MOMIJI_DATA;
 
 typedef struct
@@ -130,12 +123,13 @@ typedef struct
 	int angle512;	/*union BULLET_DATA*/
 	int speed256;	/*union BULLET_DATA*/
 //
-	SPRITE *hyouji;
+//	SPRITE *hyouji;
 	int time_out;/*OLD_ BIG BULLET_DATA*/				// int wait_bg;
 	int ransu512;/*OLD_ BIG BULLET_DATA*/
 	int add_speed256;/*NEW_ BIG BULLET_DATA*/
 } OODAMA_OYA_DATA;
 
+#if 0
 typedef struct
 {
 	int time_out;
@@ -148,7 +142,7 @@ typedef struct
 //	int sw;
 //	int sh;
 } OODAMA_KO_DATA;
-
+#endif
 
 
 
@@ -195,6 +189,7 @@ typedef struct
 	int speed2_256;
 	int height;
 	int target;
+	int p_angle512;/*表示用角度*/
 } FOLLOW_KNIFE_DATA;
 
 typedef struct
@@ -209,6 +204,7 @@ typedef struct
 	int state;
 	int wait1;	//fire
 	int wait2;	//act
+	int p_angle512;/*表示用角度*/
 } EVEN_KNIFE_DATA;
 
 /*---------------------------------------------------------
@@ -221,37 +217,6 @@ typedef struct
 	int anime_speed;			/* アニメーション速度の設定速度 */
 	int wait_count1;			/* 始まるまでの待ち時間 */
 } EXPLOSION_DATA;
-
-/*---------------------------------------------------------
-
----------------------------------------------------------*/
-
-#if 0
-/*
-いろいろと検証用なのでコメントアウト
-void bullet_way(SPRITE *s ,int way, dou ble angle512, dou ble angle2, dou ble spd)
-{
-	//スプライト情報, n way, 角度ベース, 分割角度幅, 速度
-	int i;
-	for (i=0;i<way;i++)
-	{
-		SPRITE *h;
-		h					= spr ite_add_file 0("kugel.png",1,PRIORITY_05_BULLETS/ * PRIORITY_03_ENEMY * /,0);
-		h->type 			= SP_BULLET;
-		h->flags			|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK|SP_FLAG_TIME_OVER);
-		h->callback_mover	= move_bullet_angle512;
-		h->anim_frame		= 0;
-		h->x256 			= s->x256+((s->w128-h->w128));
-		h->y256 			= s->y256+((s->h128-h->h128));
-		BULLET_DATA *data;
-		data				= mmalloc(sizeof(BULLET_DATA));
-		h->data 			= data;
-		data->angle 		= angle-angle2*(way/2)+angle2*i;
-		data->speed 		= spd;
-	}
-}
-*/
-#endif
 
 /*---------------------------------------------------------
 	角度弾(基本量移動)
@@ -300,7 +265,7 @@ static void move_bullet_angle512(SPRITE *s)
 
 static void move_bullet_vector(SPRITE *s)
 {
-	BULLET_VECTOR_DATA *data=(BULLET_VECTOR_DATA *)s->data;
+	BULLET_VECTOR_DATA *data = (BULLET_VECTOR_DATA *)s->data;
 	//s->anim_frame=(radtodeg(d->angle)/10)+9;	//s->anim_frame%=18;
 //	mono_move(s,/*(BULLET_DATA *)*/d);
 	s->x256 += (data->vx256)/**fps_fa ctor*/;
@@ -319,7 +284,7 @@ static void move_bullet_vector(SPRITE *s)
 ---------------------------------------------------------*/
 
 #if 1
-static void enemy_sp1_bullet_move(SPRITE *s)
+static void move_bullet_sakuya_sp1(SPRITE *s)
 {
 	BULLET_SP1_DATA *d = (BULLET_SP1_DATA *)s->data;
 	d->timer++;
@@ -331,7 +296,8 @@ static void enemy_sp1_bullet_move(SPRITE *s)
 	}
 	else if (d->timer==40)
 	{
-		s->anim_frame = 1;
+	//	s->yx_anim_frame = (1);
+		s->type 		 = BULLET_MARU8_00_AKA+(1);
 		d->angle512 = (*(d->sd_angle512))/*(d->sd->angle512)*/+deg_360_to_512(90)*d->r_or_l;
 		mask512(d->angle512);
 		d->angle2_512 = (*(d->sd_angle512))/*(d->sd->angle512)*/;
@@ -353,7 +319,7 @@ static void enemy_sp1_bullet_move(SPRITE *s)
 	咲夜用の魔方陣用
 ---------------------------------------------------------*/
 
-static void enemy_sp2_bullet_move(SPRITE *s)
+static void move_bullet_sakuya_sp2(SPRITE *s)
 {
 	{	BULLET_SP2_DATA *d = (BULLET_SP2_DATA *)s->data;
 	//	if (2==d->sd->nnn/*%(4-difficulty)*/)/* ステートが１の時配置して、ステートが２になったら動く */
@@ -371,63 +337,32 @@ static void enemy_sp2_bullet_move(SPRITE *s)
 	}
 }
 
-
 /*---------------------------------------------------------
-	表示のみ部分
+	大玉２
 	-------------------------------------------------------
-	霊夢の霊撃の場合、大玉が消せるので、システム側で親を消去する。
-	この為、子は独立して自動消去する。
-	大玉が消えるのがわかり易いように、8フレーム、ウェイトをかけて
-	大玉自体の重量(防いだ感じ)を追加してみた。
-	防いだ感じを減らしたい場合は、少しフレーム数を減らす。
+	咲夜用の素直な大玉
 ---------------------------------------------------------*/
 
-static void move_oodama_kodomo(SPRITE *s)
+static void move_bullet_oodama2_standard(SPRITE *s)
 {
-	OODAMA_KO_DATA *data=(OODAMA_KO_DATA *)s->data;
-
-	/* 数フレーム動かない場合は、自動消去する */
-	if ((data->check_x256 != s->x256) ||
-		(data->check_y256 != s->y256))
+	OODAMA_OYA_DATA *d = (OODAMA_OYA_DATA *)s->data;
+	d->speed256 += d->add_speed256;
+	mono_move(s,(BULLET_DATA *)d);
+	if ((s->x256<-((s->w128+s->w128)))||(s->x256 > t256(GAME_WIDTH))||
+		(s->y256<-((s->h128+s->h128)))||(s->y256 > t256(GAME_HEIGHT)))
 	{
-		data->time_out	= 8;/* 動いたら自動消去しない */
+		s->type=SP_DELETE;/*画面外にでたらおしまい*/
 	}
-	data->time_out--;
-	if ( 1 > data->time_out)
-	{
-		s->type=SP_DELETE;/*おしまい*/
-	}
-	data->check_x256 = s->x256;
-	data->check_y256 = s->y256;
-}
-
-/* この方式では親が先に死んで子供が行方不明になる場合がある。(サイズが 親==子なら問題ない)
-	サイズが 親＞子 な為、親のみ画面外にはみ出した場合の
-	ケースが前バージョンで考慮されていない、
-	単純に if (*(d->type)==SP_DELETE) で判断出来ない。
-	既に再利用されている場合がある。  */
-//	s->x256 = *(data->sx256p)+((data->sw-s->w128));
-//	s->y256 = *(data->sy256p)+((data->sh-s->h128));
-//	if (*(data->type)==SP_DELETE)既に再利用されている場合があるので、これではおかしくなる
-//	{
-//		s->type=SP_DELETE;
-//	}
-
-static void oodama_hyouji(SPRITE *ko, SPRITE *s)
-{
-	ko->x256=s->x256+((s->w128-ko->w128));/**/
-	ko->y256=s->y256+((s->h128-ko->h128));/**/
-//	if (SP_DELETE==s->type)/* 親と同時におしまい */
-//	{
-//	//	ko->type=SP_DELETE;/*おしまい*/
-//	}
+//	oodama_hyouji(d->hyouji, s);
 }
 
 /*---------------------------------------------------------
-	本体部分
+	大玉1
+	-------------------------------------------------------
+	文用の揺らぐ大玉
 ---------------------------------------------------------*/
 
-static void move_oodama1_oya(SPRITE *s)
+static void move_bullet_oodama1_aya_yuragi(SPRITE *s)
 {
 	OODAMA_OYA_DATA *d = (OODAMA_OYA_DATA *)s->data;
 
@@ -446,24 +381,7 @@ static void move_oodama1_oya(SPRITE *s)
 	{
 		s->type=SP_DELETE;/*画面外にでたらおしまい*/
 	}
-	oodama_hyouji(d->hyouji, s);
-}
-
-/*---------------------------------------------------------
-	本体部分２
----------------------------------------------------------*/
-
-static void move_oodama2_oya(SPRITE *s)
-{
-	OODAMA_OYA_DATA *d = (OODAMA_OYA_DATA *)s->data;
-	d->speed256 += d->add_speed256;
-	mono_move(s,(BULLET_DATA *)d);
-	if ((s->x256<-((s->w128+s->w128)))||(s->x256 > t256(GAME_WIDTH))||
-		(s->y256<-((s->h128+s->h128)))||(s->y256 > t256(GAME_HEIGHT)))
-	{
-		s->type=SP_DELETE;/*画面外にでたらおしまい*/
-	}
-	oodama_hyouji(d->hyouji, s);
+//	oodama_hyouji(d->hyouji, s);
 }
 
 /*---------------------------------------------------------
@@ -480,7 +398,6 @@ static int angle_jikinerai512(SPRITE *p, SPRITE *t)
 	//	return (atan_512(p->y256-t->y256-((p->h128	)),p->x256-t->x256-((p->w128	 ))));
 	#endif
 }
-//1287513
 static int angle_jikinerai512_auto(SPRITE *p, SPRITE *t, int angle512)
 {
 	if (ANGLE_JIKINERAI_DAN==angle512)	{	angle512	= angle_jikinerai512(p,t);}
@@ -514,10 +431,10 @@ static void enemy_homing_move(SPRITE *s)
 			/* Zielwinkel erfassen */
 			d->angle512 = angle_jikinerai512(player,s);
 			mask512(d->angle512);
-		//	s->anim_frame = (deg_512_to_360(d->angle512)*20)/360; s->anim_frame %=20;
-		//	s->anim_frame = (((d->angle512)*(20/2))>>8);
-		//	s->anim_frame = (((d->angle512)*(16/2))>>8);
-			s->anim_frame = (((d->angle512))>>(8-3));
+		//	s->yx_anim_frame = (deg_512_to_360(d->angle512)*20)/360; s->yx_anim_frame %=20;
+		//	s->yx_anim_frame = (((d->angle512)*(20/2))>>8);
+		//	s->yx_anim_frame = (((d->angle512)*(16/2))>>8);
+			s->yx_anim_frame = (((d->angle512))>>(8-3));
 		}
 	}
 	else	/*if (d->delay > 0)*/
@@ -544,8 +461,8 @@ static void enemy_homing_move(SPRITE *s)
 ---------------------------------------------------------*/
 
 //
-static void enemy_smallbullet_re_create(SPRITE *s, int speed256, int angle512, int offset_angle512, int adjust_speed256);
-static void enemy_momiji_move(SPRITE *s)
+static void bullet_create_momiji_seed(SPRITE *s, int speed256, int angle512, int offset_angle512, int adjust_speed256);
+static void move_bullet_momiji_oya(SPRITE *s)
 {
 	MOMIJI_DATA *d = (MOMIJI_DATA *)s->data;
 	mono_move(s,(BULLET_DATA *)d);
@@ -556,11 +473,11 @@ static void enemy_momiji_move(SPRITE *s)
 		int jj;
 		for (jj=-(int)(512*2/12); jj<(int)(512*3/12); jj+=(int)(512*1/12) )
 		{
-		//	enemy_smallbullet_re_create(s, t256(3), d->angle512, -(int)(512*2/12), t256(0.04));
-		//	enemy_smallbullet_re_create(s, t256(3), d->angle512, -(int)(512*1/12), t256(0.04));
-			enemy_smallbullet_re_create(s, t256(3), d->angle512, jj,				 t256(0.04));
-		//	enemy_smallbullet_re_create(s, t256(3), d->angle512, +(int)(512*1/12), t256(0.04));
-		//	enemy_smallbullet_re_create(s, t256(3), d->angle512, +(int)(512*2/12), t256(0.04));
+		//	bullet_create_momiji_seed(s, t256(3), d->angle512, -(int)(512*2/12), t256(0.04));
+		//	bullet_create_momiji_seed(s, t256(3), d->angle512, -(int)(512*1/12), t256(0.04));
+			bullet_create_momiji_seed(s, t256(3), d->angle512, jj,				 t256(0.04));
+		//	bullet_create_momiji_seed(s, t256(3), d->angle512, +(int)(512*1/12), t256(0.04));
+		//	bullet_create_momiji_seed(s, t256(3), d->angle512, +(int)(512*2/12), t256(0.04));
 		}
 		s->type=SP_DELETE;
 	}
@@ -645,7 +562,8 @@ static void enemy_stop_bullet2_move(SPRITE *s)
 		break;
 	case 2:/*撃つ(大玉に変身)*/
 		d->timer--;
-		s->anim_frame	= ((d->timer>>3)/*&0x07*/); 			/*警告(変身するので)*/
+	//	s->anim_frame	= ((d->timer>>3)/*&0x07*/); 			/*警告(変身するので)*/
+		s->type 		= BULLET_MARU8_00_AKA+((d->timer>>3)/*&0x07*/); 	/*警告(変身するので)*/
 		if (1 > d->timer)
 		{
 		//	d->timer	= 0;
@@ -689,70 +607,88 @@ static void enemy_stop_bullet2_move(SPRITE *s)
 }
 
 /*---------------------------------------------------------
-
----------------------------------------------------------*/
-
-static void enemy_g_bullet_move(SPRITE *s)
-{
-	G_BULLET_DATA *d = (G_BULLET_DATA *)s->data;
-	s->x256 += ((d->state_lo/*%10*/)<<8);
-	s->y256 += ((d->state_hi/*/10*/)<<8);
-
-	mono_move(s,(BULLET_DATA *)d);
-	if ((s->x256 < t256(0))||(s->x256 > t256(GAME_WIDTH))||
-		(s->y256 < t256(0))||(s->y256 > t256(GAME_HEIGHT)))
-	{
-		s->type=SP_DELETE;
-	}
-}
-
-/*---------------------------------------------------------
 	輝夜、最終形態で投げてくるかなり無茶な弾。
+	-------------------------------------------------------
+	難しすぎるので、色々弱体化www。
+	でも、まだ難しい。
 ---------------------------------------------------------*/
 
-static void enemy_pong_bullet_move(SPRITE *s)
+/* 90/360度回転 */
+static void rot_90_angle512(HAZUMI_DAN_DATA *d)
+{
+	d->angle512 	= atan_512(sin512((d->angle512)),-cos512((d->angle512)));
+}
+static void bullet_move_hazumi_dan(SPRITE *s)
 {
 	HAZUMI_DAN_DATA *d = (HAZUMI_DAN_DATA *)s->data;
-	if (d->sum256 < t256(15) )
-	{	d->sum256 += d->gra256;}
-	s->y256 += d->sum256;
+	if (d->sum256 < t256(15) )		/* 最大重力加速度 */
+	{
+		d->sum256 += d->gra256; 	/* 補正値 */
+	}
+	s->y256 += d->sum256;			/* 積算重力加速度 */
 	mono_move(s,(BULLET_DATA *)d);
 
+	/* 横の壁 */
 	if ((s->x256 < t256(0))||(s->x256 > t256(GAME_WIDTH)))
 	{
-		d->angle512 		= atan_512(sin512((d->angle512)),-cos512((d->angle512)));
+		#if 1
+		rot_90_angle512(d); 	/*	跳ね返る */
+		#else
+		s->type=SP_DELETE;		/*	消える */
+		#endif
 	}
+	/* 床 */
 	else if (s->y256 > t256(GAME_HEIGHT))
 	{
-		if (d->bounds)
+		/* 設定跳ねる回数 */
+		if (0!=d->bound_counts)
 		{
-			d->speed256 	= -d->speed256;
-			d->sum256		= -d->sum256;
-			d->bounds--;
-			s->anim_frame	= d->bounds;		// [***090116		若干変更
-			d->angle512 	= atan_512(sin512((d->angle512)),-cos512((d->angle512)));		// [***090116		追加
+			d->bound_counts--;	/* 跳ねる回数を減らす */
+		//	s->anim_frame	= 4+(d->bound_counts);		// [***090116		若干変更
+			s->type 		= BULLET_MARU8_00_AKA+4+(d->bound_counts);		// [***090116		若干変更
+			d->sum256		= -d->sum256;		/* 重力加速度 */
+			d->speed256 	= -d->speed256; 	/* 速度 */
+			#if 1
+			d->speed256 	+= d->speed256; 	/* 加速(して天井へ逃がす) */
+			#endif
+			rot_90_angle512(d); 		// [***090116		追加
 		}
 		else
-		{	s->type=SP_DELETE;}
+		{
+			s->type=SP_DELETE;		/*	消える */
+		}
 	}
+	#if 1
+	/* 天井 */
+	else if (s->y256 < 0)
+	{
+		s->type=SP_DELETE;		/*	消える */
+	}
+	#endif
 }
 
 /*---------------------------------------------------------
-
+	重力弾の移動
 ---------------------------------------------------------*/
 
-static void enemy_gr_bullet_move(SPRITE *s)
+static void bullet_move_gravity(SPRITE *s)
 {
-	GR_BULLET_DATA *d = (GR_BULLET_DATA *)s->data;
-	d->sum256+=d->gra256;
-	s->y256+=d->sum256;
-	mono_move(s,(BULLET_DATA *)d);
+	GRAVITY_BULLET_DATA *data = (GRAVITY_BULLET_DATA *)s->data;
+	data->sum256 += data->gra256;
+	s->y256 += data->sum256;
+	#if 1
+//	mono_move(s,(BULLET_DATA *)d);
+	s->x256 += (data->vx256)/**fps_fa ctor*/;
+	s->y256 += (data->vy256)/**fps_fa ctor*/;
 
 	if ((s->x256 < t256(0))||(s->x256 > t256(GAME_WIDTH))||
 		(s->y256 < t256(-50))||(s->y256 > t256(GAME_HEIGHT)))
 	{
 		s->type=SP_DELETE;
 	}
+	#else
+	move_bullet_vector(s);
+	#endif
 }
 
 /*---------------------------------------------------------
@@ -838,8 +774,10 @@ static void enemy_follow_knife_move(SPRITE *s)
 	{
 		mono_move(s,(BULLET_DATA *)d);
 		d->speed256 -= t256(0.02);
-		if (s->anim_frame==17)	{	s->anim_frame = 0;}
-		else					{	s->anim_frame++;}
+	//	if (s->anim_frame==17)	{	s->anim_frame = 0;}
+	//	else					{	s->anim_frame++;}
+		d->p_angle512 += 32;
+		mask512(d->p_angle512);/*ねんのため*/
 		if (d->speed256 <= t256(0) )
 		{
 			d->angle512 = atan_512(
@@ -849,8 +787,15 @@ static void enemy_follow_knife_move(SPRITE *s)
 		//	s->anim_frame=/*17-*/(deg_512_to_360(d->angle512)/20)%18;
 		//	s->anim_frame=/*17-*/(deg_512_to_360(d->angle512)/20)%16;
 			mask512(d->angle512);/*ねんのため*/
-			s->anim_frame=/*17-*/((d->angle512)>>5);
+		//	s->anim_frame=/*17-*/((d->angle512)>>5);
+			d->p_angle512=/*17-*/((d->angle512));
 		}
+			#if 1
+			/* 描画用角度 */
+		//	s->m_angle512		= tmp512;
+			int aaa512; 	aaa512 = (/*127*/255-d->p_angle512);	mask512((aaa512));
+			s->m_angle512		= aaa512;
+			#endif
 	}
 	d->time_out--;
 	if (d->time_out<0)
@@ -892,7 +837,17 @@ static void enemy_evenl_knife_move(SPRITE *s)
 			int tmp512;
 			tmp512 = (d->angle512-(int)(512*1/4));
 			mask512(tmp512);/*必ず要る*/
-			s->anim_frame	= /*17-*/((tmp512)>>5);
+		//	s->anim_frame	= 0;// /*17-*/((tmp512)>>5);
+		//	int p_angle512;
+		//	d->p_angle512 = (s->anim_frame*32);
+		//	d->p_angle512 = ((/*17-*/((tmp512)>>5))*32);
+			d->p_angle512 = ((/*17-*/((tmp512) )) );
+			#if 1
+			/* 描画用角度 */
+		//	s->m_angle512		= tmp512;
+			int aaa512; 	aaa512 = (/*127*/255-tmp512);	mask512((aaa512));
+			s->m_angle512		= aaa512;
+			#endif
 		}
 		s->x256 		= d->x256-((cos512((d->angle512))*d->length256)>>8)-((s->w128));
 		s->y256 		= d->y256-((sin512((d->angle512))*d->length256)>>8)-((s->h128));
@@ -911,11 +866,11 @@ static void enemy_evenl_knife_move(SPRITE *s)
 	if (d->wait1>10)
 	{
 		d->wait1 = 0;
-		enemy_knife_create(s, t256(5.0), d->angle512-(int)(512*3/12), s->anim_frame);
-		enemy_knife_create(s, t256(4.0), d->angle512-(int)(512*4/12), s->anim_frame);
-		enemy_knife_create(s, t256(3.0), d->angle512-(int)(512*5/12), s->anim_frame);
+		bullet_create_sakuya_knife(s, t256(5.0), d->angle512-(int)(512*3/12), d->p_angle512);
+		bullet_create_sakuya_knife(s, t256(4.0), d->angle512-(int)(512*4/12), d->p_angle512);
+		bullet_create_sakuya_knife(s, t256(3.0), d->angle512-(int)(512*5/12), d->p_angle512);
 		if (difficulty>1)
-		{	enemy_knife_create(s, t256(2.0), d->angle512-(int)(512*6/12), s->anim_frame);}
+		{	bullet_create_sakuya_knife(s, t256(2.0), d->angle512-(int)(512*6/12), d->p_angle512);}
 	}
 	//s->type=SP_DELETE;
 	if (d->wait2>150+difficulty*50)
@@ -949,7 +904,17 @@ static void enemy_evenr_knife_move(SPRITE *s)
 			int tmp512;
 			tmp512 = (d->angle512+(int)(512*1/4));
 			mask512(tmp512);/*必ず要る*/
-			s->anim_frame	= /*17-*/((tmp512)>>5);
+	//		s->anim_frame	= /*17-*/((tmp512)>>5);
+	//		int p_angle512;
+	//		d->p_angle512 = (s->anim_frame*32);
+	//		d->p_angle512 = ((/*17-*/((tmp512)>>5))*32);
+			d->p_angle512 = (( ((tmp512) )) );
+			#if 1
+			/* 描画用角度 */
+		//	s->m_angle512		= tmp512;
+			int aaa512; 	aaa512 = (/*127*/255-tmp512);	mask512((aaa512));
+			s->m_angle512		= aaa512;
+			#endif
 		}
 		s->x256 		= d->x256-((cos512((d->angle512))*d->length256)>>8)-((s->w128));
 		s->y256 		= d->y256-((sin512((d->angle512))*d->length256)>>8)-((s->h128));
@@ -968,17 +933,14 @@ static void enemy_evenr_knife_move(SPRITE *s)
 		mono_move(s,(BULLET_DATA *)d);
 		break;
 	}
-
-
-
 	if (d->wait1>10)
 	{
 		d->wait1 = 0;
-		enemy_knife_create(s, t256(5.0), d->angle512+(int)(512*3/12), s->anim_frame); //+M_PI/2
-		enemy_knife_create(s, t256(4.0), d->angle512+(int)(512*4/12), s->anim_frame);
-		enemy_knife_create(s, t256(3.0), d->angle512+(int)(512*5/12), s->anim_frame);
+		bullet_create_sakuya_knife(s, t256(5.0), d->angle512+(int)(512*3/12), d->p_angle512); //+M_PI/2
+		bullet_create_sakuya_knife(s, t256(4.0), d->angle512+(int)(512*4/12), d->p_angle512);
+		bullet_create_sakuya_knife(s, t256(3.0), d->angle512+(int)(512*5/12), d->p_angle512);
 		if (difficulty>1)
-		{	enemy_knife_create(s, t256(2.0), d->angle512+(int)(512*6/12), s->anim_frame);}
+		{	bullet_create_sakuya_knife(s, t256(2.0), d->angle512+(int)(512*6/12), d->p_angle512);}
 	}
 	//s->type=SP_DELETE;
 	if (d->wait2>150+difficulty*50)
@@ -1004,8 +966,11 @@ static void move_explosion(SPRITE *s)
 		if (data->anime_count < 1)
 		{
 			data->anime_count = data->anime_speed;
-			if (s->anim_frame < s->frames-1)	{	s->anim_frame++;	}
-			else								{	s->type=SP_DELETE;	}
+			s->anim_frame++;
+			if (s->anim_frame > (s->yx_frames&YX_FRAME_LOW_X) )
+			{
+				s->type=SP_DELETE;
+			}
 		}
 	}
 }
@@ -1017,12 +982,12 @@ static void move_explosion(SPRITE *s)
 void bullet_create_aka_maru_jikinerai(SPRITE *s, int speed256)
 {
 	SPRITE *h;
-//	h					= sprite_add_res(BASE_TAMA_KUGEL_PNG);
-	h					= sprite_add_res(BASE_TAMA_BULLET_MARU16_PNG);
-	h->type 			= SP_BULLET;
+//	h					= sprite_add_bullet(TAMA_TYPE_KUGEL_PNG);
+	h					= sprite_add_bullet(TAMA_TYPE_BULLET_MARU16_PNG);
+	h->type 			= BULLET_MARU8_00_AKA+(0);/*SP_BULLET*/
 	h->callback_mover	= move_bullet_vector/*move_bullet_angle512*/;
 	h->flags			|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK|SP_FLAG_TIME_OVER);
-	h->anim_frame		= 0;
+	h->anim_frame		= (0);
 	h->x256 			= s->x256+((s->w128-h->w128));
 	h->y256 			= s->y256+((s->h128-h->h128));
 	BULLET_VECTOR_DATA *data;
@@ -1038,20 +1003,22 @@ void bullet_create_aka_maru_jikinerai(SPRITE *s, int speed256)
 
 
 /*---------------------------------------------------------
+	出現位置オフセット弾を作成する
 	針弾を作成する
 ---------------------------------------------------------*/
 
-void bullet_create_hari_dan180(SPRITE *s, int speed256, int angle512, int x_offset256, int y_offset256 )
+//void bu llet_create_hari_dan180(SPRITE *s, int speed256, int angle512, int x_offset256, int y_offset256)
+void bullet_create_offset_dan_type(SPRITE *s, int speed256, int angle512, int x_offset256, int y_offset256, int bullet_obj_type )
 {
 	angle512			= angle_jikinerai512_auto(player, s, angle512);
 //
 	SPRITE *h;
 //	h					= spr ite_add_file 0(/*"bs hoot.png"*/"tama/bullet_beam16.png",16/*1*/,PRIORITY_05_BULLETS/*PRIORITY_03_ENEMY_WEAPON*/ /*PRIORITY_03_ENEMY*/, 0);
-	h					= sprite_add_res(BASE_TAMA_BULLET_BEAM16_PNG);
-	h->type 			= SP_BULLET/*SP_LASER*/;
+	h					= sprite_add_bullet(TAMA_TYPE_BULLET_DUMMY/*BEAM16_PNG*/);
+	h->type 			= (bullet_obj_type);/*BULLET_HARI32_00_AOI*/ /*SP_BULLET*/ /*SP_LASER*/
 	h->callback_mover	= move_bullet_vector/*move_bullet_angle512*/;/*enemy_laser_move*/
 	h->flags			|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK|SP_FLAG_TIME_OVER);
-	h->anim_frame		= ((angle512>>4)&0x0f);/*180度*/	//b->anim_frame = 0;
+	h->anim_frame		= 0;//((angle512>>4)&0x0f);/*180度*/	//b->anim_frame = 0;
 	h->x256 			= s->x256+((s->w128-h->w128)) + x_offset256;
 	h->y256 			= s->y256+((s->h128-h->h128)) + y_offset256;
 	{	/*LASER_DATA*/BULLET_VECTOR_DATA *data;
@@ -1060,7 +1027,13 @@ void bullet_create_hari_dan180(SPRITE *s, int speed256, int angle512, int x_offs
 		mask512(angle512);/*念の為*/
 	//	data->angle512 = /*deg512_2rad*/(angle512);
 	//	data->speed256 = (speed256);
-	regist_vector(h, speed256, angle512);
+		#if 1
+		/* 描画用角度 */
+	//	h->m_angle512		= angle512;
+		int aaa512; 	aaa512 = (/*127*/255-angle512);	mask512((aaa512));
+		h->m_angle512		= aaa512;
+		#endif
+		regist_vector(h, speed256, angle512);
 	}
 }
 
@@ -1071,7 +1044,9 @@ void bullet_create_hari_dan180(SPRITE *s, int speed256, int angle512, int x_offs
 void bullet_create_enemy_homing(SPRITE *s)
 {
 	SPRITE *r;
-	r					= sprite_add_res(BASE_HOMING16_PNG);	/*素材変更*/ /*20"rotating_rocket.png"*/
+//	r					= sprite_add_res(BASE_HOMING16_PNG);	/*素材変更*/ /*20"rotating_rocket.png"*/
+//	r->type 			= SP_ZAKO;/*SP_ZAKO*/ /*SP_BULLET*/ /*SP_ENEMY_HOMING*/
+	r					= sprite_add_bullet(TAMA_TYPE_HOMING16_PNG);	/*素材変更*/ /*20"rotating_rocket.png"*/
 	r->type 			= SP_ZAKO;/*SP_ZAKO*/ /*SP_BULLET*/ /*SP_ENEMY_HOMING*/
 	r->callback_mover	= enemy_homing_move;
 	r->flags			|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK|SP_FLAG_TIME_OVER);
@@ -1096,11 +1071,11 @@ void bullet_create_maru8_frame(SPRITE *s, int speed256, int angle512, int set_fr
 	h					= NULL;
 //	h					= spr ite_add_file 0("tama/bs hoot.png", 1, PRIORITY_05_BULLETS/*PRIORITY_03_ENEMY*/, 0);
 //	h					= spr ite_add_file 0("tama/bullet_maru8.png", 8, PRIORITY_05_BULLETS/*PRIORITY_03_ENEMY*/, 0);
-	h					= sprite_add_res(BASE_TAMA_BULLET_MARU16_PNG);
-	h->type 			= SP_BULLET/*SP_LASER*/;
+	h					= sprite_add_bullet(TAMA_TYPE_BULLET_MARU16_PNG);
+	h->type 			= BULLET_MARU8_00_AKA+(set_frame);/*SP_BULLET*/ /*SP_LASER*/
 	h->callback_mover	= move_bullet_vector/*move_bullet_angle512*/;/*enemy_laser_move*/
 	h->flags			|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK|SP_FLAG_TIME_OVER);
-	h->anim_frame		= set_frame;
+	h->anim_frame		= 0;//(set_frame);
 	h->x256 			= (s->x256)+((s->w128-h->w128));
 	h->y256 			= (s->y256)+((s->h128-h->h128));
 	BULLET_VECTOR_DATA *data;
@@ -1116,15 +1091,15 @@ void bullet_create_maru8_frame(SPRITE *s, int speed256, int angle512, int set_fr
 	分裂弾
 ---------------------------------------------------------*/
 
-void enemy_momiji_create(SPRITE *s, int speed256, int angle512)
+void bullet_create_momiji_dan(SPRITE *s, int speed256, int angle512)
 {	/*丸弾８(赤ＲＧＢ緑若黄青)*/
 	SPRITE *h;
 //	h					= spr ite_add_file 0("tama/sp ell_bullet_r.png", 1, PRIORITY_05_BULLETS/*PRIORITY_03_ENEMY*/, 0);
-	h					= sprite_add_res(BASE_TAMA_BULLET_MARU16_PNG);
-	h->type 			= SP_BULLET/*SP_LASER*/;
-	h->callback_mover	= enemy_momiji_move;
+	h					= sprite_add_bullet(TAMA_TYPE_BULLET_MARU16_PNG);
+	h->type 			= BULLET_MARU8_00_AKA+(1);/*1==とりあえず*/ /*SP_BULLET*/ /*SP_LASER*/
+	h->callback_mover	= move_bullet_momiji_oya;
 	h->flags			|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK|SP_FLAG_TIME_OVER);
-	h->anim_frame		= 1;/*とりあえず*/
+	h->anim_frame		= 0;//(1);/*1==とりあえず*/
 	h->x256 			= (s->x256)+((s->w128));
 	h->y256 			= (s->y256)+((s->h128));
 	MOMIJI_DATA *data;
@@ -1139,16 +1114,16 @@ void enemy_momiji_create(SPRITE *s, int speed256, int angle512)
 	小弾生成
 ---------------------------------------------------------*/
 
-static void enemy_smallbullet_re_create(SPRITE *s, int speed256, int angle512, int offset_angle512, int adjust_speed256)
+static void bullet_create_momiji_seed(SPRITE *s, int speed256, int angle512, int offset_angle512, int adjust_speed256)
 {
 	SPRITE *h;
 //	h					= spr ite_add_file 0("tama/kugel2.png", 1, /*PRIORITY_05_BULLETS*/PRIORITY_05_BULLETS/*PRIORITY_03_ENEMY*/, 0);
 //	h					= spr ite_add_res(BASE_TAMA_KUGEL_MINI2_PNG);
-	h					= sprite_add_res(BASE_TAMA_BULLET_MARU16_PNG);
-	h->type 			= SP_BULLET;
+	h					= sprite_add_bullet(TAMA_TYPE_BULLET_MARU16_PNG);
+	h->type 			= BULLET_MARU8_00_AKA+(8+(angle512>>6)); /*BULLET_MINI8_00_AKA*/ /*SP_BULLET*/
 	h->callback_mover	= enemy_smallbullet_re_move;
 	h->flags			|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK|SP_FLAG_TIME_OVER);
-	h->anim_frame		= (8+(angle512>>6)) /*8*/ /*0*/;
+	h->anim_frame		= 0;//(8+(angle512>>6)) /*8*/ /*0*/;
 	h->x256 			= (s->x256)+((s->w128));
 	h->y256 			= (s->y256)+((s->h128));
 	SMALL_RE_DATA *data;
@@ -1163,38 +1138,6 @@ static void enemy_smallbullet_re_create(SPRITE *s, int speed256, int angle512, i
 	data->adjust_speed256	= adjust_speed256;
 }
 
-
-/*---------------------------------------------------------
-
-	小弾に変な角度指定機能を付けたもの。
-	今気付いたけどこれマイナスの値が取れないね。意味わからん。
-	使ってるのは天狗だけ。
-	-------------------------------------------------------
-	state		十進数で一の位がx、十の位がy	指定した分だけ角度が変わる。
-	angle512	ANGLE_JIKINERAI_DAN (999) でプレイヤーに向かう。
----------------------------------------------------------*/
-
-void enemy_gg_bullet_create(SPRITE *s, int speed256, int angle512, int state_hi, int state_lo)
-{
-	SPRITE *h;
-//	h					= sprite_add_res(BASE_TAMA_KUGEL_PNG);
-	h					= sprite_add_res(BASE_TAMA_BULLET_MARU16_PNG);
-	h->type 			= SP_BULLET;
-	h->callback_mover	= enemy_g_bullet_move;
-	h->flags			|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK|SP_FLAG_TIME_OVER);
-	h->anim_frame		= 0;
-	h->x256 			= s->x256+((s->w128-h->w128));
-	h->y256 			= s->y256+((s->h128-h->h128));
-	G_BULLET_DATA *data;
-	data				= mmalloc(sizeof(G_BULLET_DATA));
-	h->data 			= data;
-	angle512			= angle_jikinerai512_auto(player, s, angle512);
-	data->angle512		= angle512;
-	data->speed256		= speed256;
-	data->state_hi		= state_hi;
-	data->state_lo		= state_lo;
-}
-
 /*---------------------------------------------------------
 	輝夜、最終形態で投げてくるかなり無茶な弾。
 	-------------------------------------------------------
@@ -1203,15 +1146,15 @@ void enemy_gg_bullet_create(SPRITE *s, int speed256, int angle512, int state_hi,
 ---------------------------------------------------------*/
 
 // [***090114	追加
-void bullet_create_hazumi_dan(SPRITE *s, int speed256, int angle512, int delta256, int bounds)
+void bullet_create_hazumi_dan(SPRITE *s, int speed256, int angle512, int delta256, int bound_counts)
 {
 	SPRITE *h;			/*丸弾８(赤ＲＧＢ緑若黄青)*/
 //	h					= spr ite_add_file 0("tama/bs hoot2.png",3,/*PRIORITY_05_BULLETS*/PRIORITY_05_BULLETS/*PRIORITY_03_ENEMY*/,0);/*緑黄弾*/
-	h					= sprite_add_res(BASE_TAMA_BULLET_MARU16_PNG);/*緑黄弾*/
-	h->type 			= SP_BULLET/*SP_LASER*/;
-	h->callback_mover	= enemy_pong_bullet_move;
+	h					= sprite_add_bullet(TAMA_TYPE_BULLET_MARU16_PNG);/*緑黄弾*/
+	h->type 			= BULLET_MARU8_00_AKA+(4+bound_counts);/*SP_BULLET*/ /*SP_LASER*/
+	h->callback_mover	= bullet_move_hazumi_dan;
 	h->flags			|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK|SP_FLAG_TIME_OVER);
-	h->anim_frame		= 4+bounds;/*とりあえず*/
+	h->anim_frame		= 0;//(4+bound_counts);/*とりあえず*/
 	h->x256 			= s->x256+((s->w128-h->w128));
 	h->y256 			= s->y256+((s->h128-h->h128));
 	HAZUMI_DAN_DATA *data;
@@ -1222,35 +1165,38 @@ void bullet_create_hazumi_dan(SPRITE *s, int speed256, int angle512, int delta25
 	data->speed256		= speed256;
 	data->gra256		= (delta256);
 	data->sum256		= t256(0);
-	data->bounds		= bounds;
+	data->bound_counts	= bound_counts;
 }
 
 /*---------------------------------------------------------
-
+	重力弾。アリスの人形が撃つ弾。
 	-------------------------------------------------------
 	下方向に加速していく中弾。
-	フレーム毎で計算しているのでかなり加速度を小さくしないと大変なことに。
+	フレーム毎で計算しているのでかなり重力加速度を小さくしないと大変なことに。
 	angle512	ANGLE_JIKINERAI_DAN (999) でプレイヤー狙い
 	delta256	フレーム毎に下方向にどれだけ加速するか
 ---------------------------------------------------------*/
 
-void enemy_gr_bullet_create(SPRITE *s, int speed256, int angle512, int delta256)
+void bullet_create_jyuryoku_dan(SPRITE *s, int speed256, int angle512, int delta256)
 {
 	SPRITE *h;			/*丸弾８(赤ＲＧＢ緑若黄青)*/
 //	h					= spr ite_add_file 0("tama/bs hoot.png",1,/*PRIORITY_05_BULLETS*/PRIORITY_05_BULLETS/*PRIORITY_03_ENEMY*/,0);/*青弾*/
-	h					= sprite_add_res(BASE_TAMA_BULLET_MARU16_PNG);/*青弾*/
-	h->type 			= SP_BULLET/*SP_LASER*/;
-	h->callback_mover	= enemy_gr_bullet_move;
+	h					= sprite_add_bullet(TAMA_TYPE_BULLET_MARU16_PNG);/*青弾*/
+	h->type 			= BULLET_MARU8_00_AKA+(7);/*BULLET_MARU8_07_AOI*/  /*SP_BULLET*/ /*SP_LASER*/
+	h->callback_mover	= bullet_move_gravity;
 	h->flags			|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK|SP_FLAG_TIME_OVER);
-	h->anim_frame		= 7/*0*/;/*とりあえず*/
+	h->anim_frame		= 0;//(7)/*0*/;/*とりあえず*/
 	h->x256 			= s->x256+((s->w128-h->w128));
 	h->y256 			= s->y256+((s->h128-h->h128));
-	GR_BULLET_DATA *data;
-	data				= mmalloc(sizeof(GR_BULLET_DATA));
+	GRAVITY_BULLET_DATA *data;
+	data				= mmalloc(sizeof(GRAVITY_BULLET_DATA));
 	h->data 			= data;
+//
 	angle512			= angle_jikinerai512_auto(player, s, angle512);
-	data->angle512		= angle512;
-	data->speed256		= speed256;
+//	data->angle512		= (angle512);
+//	data->speed256		= (speed256);
+	regist_vector(h, speed256, angle512);
+
 	data->gra256		= (delta256);
 	data->sum256		= t256(0);
 }
@@ -1268,11 +1214,12 @@ void enemy_gr_bullet_create(SPRITE *s, int speed256, int angle512, int delta256)
 	SPRITE *h;			/*丸弾８(赤ＲＧＢ緑若黄青)*/
 //	h					= spr ite_add_file 0("tama/bs hoot2.png", 3, PRIORITY_03_ENEMY, 0);
 //	h					= spr ite_add_file 0("tama/bullet_maru8.png", 8, PRIORITY_03_ENEMY, 0);
-	h					= sprite_add_res(BASE_TAMA_BULLET_MARU16_PNG);		h->priority 	= PRIORITY_03_ENEMY;
-	h->type 			= SP_BULLET/*SP_LASER*/;
-	h->callback_mover	= enemy_sp1_bullet_move;
+	h					= sprite_add_bullet(TAMA_TYPE_BULLET_MARU16_PNG);		h->priority 	= PRIORITY_03_ENEMY;
+	unsigned int aaa = ((ra_nd()&(4-1))+4);
+	h->type 			= BULLET_MARU8_00_AKA+(aaa);/*SP_BULLET*/ /*SP_LASER*/
+	h->callback_mover	= move_bullet_sakuya_sp1;
 	h->flags			|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK|SP_FLAG_TIME_OVER);
-	h->anim_frame		= /*4*/((ra_nd()&(4-1))+4)/*0*/;/*とりあえず*/
+	h->anim_frame		= 0;// /*4*/(aaa)/*0*/;/*とりあえず*/
 	h->anim_speed		= 0;
 	h->x256 			= s->x256+((s->w128-h->w128));
 	h->y256 			= s->y256+((s->h128-h->h128));
@@ -1285,7 +1232,7 @@ void enemy_gr_bullet_create(SPRITE *s, int speed256, int angle512, int delta256)
 	data->angle2_512	= (0);
 //	data->sd			= (BOSS05_DATA *)s->data;
 	data->sd_angle512	= sd_angle512;
-	data->speed256		= /*t256_to_dou ble*/(speed256);
+	data->speed256		= (speed256);
 	data->gra256		= gra256;
 	data->sum256		= t256(0);
 	data->timer 		= 0;
@@ -1305,11 +1252,11 @@ void enemy_gr_bullet_create(SPRITE *s, int speed256, int angle512, int delta256)
 	SPRITE *h;
 //	h					= spr ite_add_file 0("tama/kugel.png", 1, PRIORITY_03_ENEMY, 0);
 //	h					= spr ite_add_res(BASE_TAMA_KUGEL_PNG); h->priority 	= PRIORITY_03_ENEMY;
-	h					= sprite_add_res(BASE_TAMA_BULLET_MARU16_PNG);	h->priority 	= PRIORITY_03_ENEMY;
-	h->type 			= SP_BULLET;
-	h->callback_mover	= enemy_sp2_bullet_move;
+	h					= sprite_add_bullet(TAMA_TYPE_BULLET_MARU16_PNG);	h->priority 	= PRIORITY_03_ENEMY;
+	h->type 			= BULLET_MARU8_00_AKA+(0);/*SP_BULLET*/
+	h->callback_mover	= move_bullet_sakuya_sp2;
 	h->flags			|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK|SP_FLAG_TIME_OVER);
-	h->anim_frame		= 0;
+	h->anim_frame		= 0;//(0);
 	h->anim_speed		= 0;
 	h->x256 			= s->x256+((s->w128-h->w128));
 	h->y256 			= s->y256+((s->h128-h->h128));
@@ -1339,12 +1286,12 @@ void enemy_gr_bullet_create(SPRITE *s, int speed256, int angle512, int delta256)
 void bullet_create_tomari2_dan(SPRITE *s, int speed256, int angle512, int delta256, int next_angle512)
 {
 	SPRITE *h;
-//	h					= sprite_add_res(BASE_TAMA_KUGEL_PNG);/*小赤弾*/
-	h					= sprite_add_res(BASE_TAMA_BULLET_MARU16_PNG);		/*丸弾８(赤ＲＧＢ緑若黄青)*/
-	h->type 			= SP_BULLET;
+//	h					= sprite_add_bullet(TAMA_TYPE_KUGEL_PNG);/*小赤弾*/
+	h					= sprite_add_bullet(TAMA_TYPE_BULLET_MARU16_PNG);		/*丸弾８(赤ＲＧＢ緑若黄青)*/
+	h->type 			= BULLET_MARU8_00_AKA+(0);/*SP_BULLET*/
 	h->callback_mover	= enemy_stop_bullet2_move;
 	h->flags			|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK|SP_FLAG_TIME_OVER);
-	h->anim_frame		= 0;
+	h->anim_frame		= 0;//(0);
 	h->x256 			= s->x256+((s->w128-h->w128));
 	h->y256 			= s->y256+((s->h128-h->h128));
 	TOMARI_DAN_DATA *data;
@@ -1374,15 +1321,15 @@ void bullet_create_tomari2_dan(SPRITE *s, int speed256, int angle512, int delta2
 	4096精密弾
 ---------------------------------------------------------*/
 
-void enemy_angle_bullet_create(SPRITE *s, int speed256, int angle4096, int d_angle4096)
+void bullet_create_rot4096_dan(SPRITE *s, int speed256, int angle4096, int d_angle4096)
 {
 	SPRITE *h;
-//	h					= sprite_add_res(BASE_TAMA_KUGEL_PNG);
-	h					= sprite_add_res(BASE_TAMA_BULLET_MARU16_PNG);
-	h->type 			= SP_BULLET;
+//	h					= sprite_add_bullet(TAMA_TYPE_KUGEL_PNG);
+	h					= sprite_add_bullet(TAMA_TYPE_BULLET_MARU16_PNG);
+	h->type 			= BULLET_MARU8_00_AKA+(0);/*SP_BULLET*/
 	h->callback_mover	= enemy_angle_bullet_move;
 	h->flags			|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK|SP_FLAG_TIME_OVER);
-	h->anim_frame		= 0;
+	h->anim_frame		= 0;//(0);
 	h->x256 			= s->x256+((s->w128-h->w128));
 	h->y256 			= s->y256+((s->h128-h->h128));
 	BULLET_4096_DATA *data;
@@ -1393,7 +1340,7 @@ void enemy_angle_bullet_create(SPRITE *s, int speed256, int angle4096, int d_ang
 //	data->angle512_4096 = ((angle4096)>>3);
 //	mask512(data->angle512_4096);
 //	int speed256;
-//	speed256 = /*t256_to_dou ble*/(speed256);
+//	speed256 = (speed256);
 	data->speed256		= speed256;
 	data->d_angle4096	= (d_angle4096);
 	data->time_count	= 0;
@@ -1403,15 +1350,15 @@ void enemy_angle_bullet_create(SPRITE *s, int speed256, int angle4096, int d_ang
 	垂直降下ナイフ(赤)
 ---------------------------------------------------------*/
 
-void enemy_fall_knife_create(SPRITE *s, int speed256, int angle512, int gra256)
+void bullet_create_sakuya_no_rot_knife(SPRITE *s, int speed256, int angle512, int gra256)
 {
 	SPRITE *h;
 //	h					= spr ite_add_file 0("tama/knife.png",1,/*PRIORITY_05_BULLETS*/PRIORITY_05_BULLETS/*PRIORITY_03_ENEMY*/,1);/*垂直降下ナイフ(赤)*/
-	h					= sprite_add_res(BASE_TAMA_BULLET_KNIFE01_PNG);/*垂直降下ナイフ(赤)*/
-	h->type 			= SP_BULLET/*SP_LASER*/;
+	h					= sprite_add_bullet(TAMA_TYPE_BULLET_KNIFE01_PNG);/*垂直降下ナイフ(赤)*/
+	h->type 			= BULLET_KNIFE20_07_AKA;/*SP_BULLET*/ /*SP_LASER*/
 	h->callback_mover	= enemy_fall_knife_move;
 	h->flags			|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK|SP_FLAG_TIME_OVER);
-	h->anim_frame		= 0;
+	h->anim_frame		= 0;//0;
 	h->x256 			= s->x256+((s->w128-h->w128));
 	h->y256 			= s->y256+((s->h128-h->h128));
 	FALL_KNIFE_DATA *data;
@@ -1428,26 +1375,32 @@ void enemy_fall_knife_create(SPRITE *s, int speed256, int angle512, int gra256)
 	全方向ナイフ(青)	[全方向ナイフ]
 ---------------------------------------------------------*/
 extern int select_player;
-void enemy_knife_create(SPRITE *s, int speed256, int angle512, int anime16_pattern)
+void bullet_create_sakuya_knife(SPRITE *s, int speed256, int angle512, int p_angle512/*anime16_pattern*/)
 {
 	SPRITE *h;
 	#if 0
-	char filename[32/*30*/];
-	sp rintf(filename,"tama/knife%d.png",anime18_pattern);/* 速度の要る場所では sp rintf() は使わない方が良い */	/* 文字列処理(sp rintf)は非常に遅い */
-	h					= spr ite_add_file 0(filename,1,/*PRIORITY_05_BULLETS*/PRIORITY_05_BULLETS/*PRIORITY_03_ENEMY*/,1);/*全方向ナイフ(青)*/
-	h->type 			= SP_BULLET;
-	h->callback_mover	= move_bullet_vector/*move_bullet_angle512*/;
-	h->flags			|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK|SP_FLAG_TIME_OVER);
-	h->anim_frame		= /*anim%18*/0;
+//	char filename[32/*30*/];
+//	sp rintf(filename,"tama/knife%d.png",anime18_pattern);/* 速度の要る場所では sp rintf() は使わない方が良い */	/* 文字列処理(sp rintf)は非常に遅い */
+//	h					= spr ite_add_file 0(filename,1,/*PRIORITY_05_BULLETS*/PRIORITY_05_BULLETS/*PRIORITY_03_ENEMY*/,1);/*全方向ナイフ(青)*/
+//	h->type 			= SP_BULLET;
+//	h->callback_mover	= move_bullet_vector/*move_bullet_angle512*/;
+//	h->flags			|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK|SP_FLAG_TIME_OVER);
+//	h->anim_frame		= /*anim%18*/0;
 	#else
 //	h					= spr ite_add_file 0("tama/knife_core.png",18,/*PRIORITY_05_BULLETS*/PRIORITY_05_BULLETS/*PRIORITY_03_ENEMY*/,1);/*全方向ナイフ(青)*/
-	h					= sprite_add_res(BASE_TAMA_BULLET_KNIFE18_PNG);/*全方向ナイフ(青)*/
-	h->type 			= SP_BULLET;
+	h					= sprite_add_bullet(TAMA_TYPE_BULLET_KNIFE18_PNG);/*全方向ナイフ(青)*/
+	h->type 			= BULLET_KNIFE20_06_AOI;/*SP_BULLET*/
 	h->callback_mover	= move_bullet_vector/*move_bullet_angle512*/;
 	h->flags			|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK|SP_FLAG_TIME_OVER);
 //	h->anim_frame		= anime18_pattern%18/*0*/;
-	h->anim_frame		= anime16_pattern /*%16*/ /*0*/;
+	h->anim_frame		= 0/*anime16_pattern*/ /*%16*/ /*0*/;
 	#endif
+		#if 1
+		/* 描画用角度 */
+	//	h->m_angle512		= p_angle512;
+		int aaa512; 	aaa512 = (/*127*/255-p_angle512);	mask512((aaa512));
+		h->m_angle512		= aaa512;
+		#endif
 	h->x256 			= s->x256+((s->w128-h->w128));
 	h->y256 			= s->y256+((s->h128-h->h128));
 
@@ -1473,14 +1426,14 @@ void enemy_knife_create(SPRITE *s, int speed256, int angle512, int anime16_patte
 	全方向ナイフ(青)	[両手ナイフ]
 ---------------------------------------------------------*/
 
-void enemy_follow_knife_create1(SPRITE *s, int speed256, int angle512, int height)
+void bullet_create_sakuya_follow_knife1(SPRITE *s, int speed256, int angle512, int height)
 {
 	SPRITE *h;
-	h					= sprite_add_res(BASE_TAMA_BULLET_KNIFE18_PNG);/*全方向ナイフ(青)*/
-	h->type 			= SP_BULLET/*SP_LASER*/;
+	h					= sprite_add_bullet(TAMA_TYPE_BULLET_KNIFE18_PNG);/*全方向ナイフ(青)*/
+	h->type 			= BULLET_KNIFE20_06_AOI;/*SP_BULLET*/ /*SP_LASER*/
 	h->callback_mover	= enemy_follow_knife_move;
 	h->flags			|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK|SP_FLAG_TIME_OVER);
-	h->anim_frame		= 0;
+	h->anim_frame		= 0;//0;
 	h->x256 			= s->x256+((s->w128-h->w128));
 	h->y256 			= s->y256+((s->h128-h->h128));
 	FOLLOW_KNIFE_DATA *data;
@@ -1494,14 +1447,14 @@ void enemy_follow_knife_create1(SPRITE *s, int speed256, int angle512, int heigh
 	data->time_out		= 300;
 }
 #if 0
-void enemy_follow_knife_create2(SPRITE *s, int speed256, int angle512, int height)
-{/*dou ble x, dou ble y*/
+void bullet_create_sakuya_follow_knife2(SPRITE *s, int speed256, int angle512, int height)
+{/* x, y*/
 	SPRITE *h;
-	h					= sprite_add_res(BASE_TAMA_BULLET_KNIFE18_PNG);/*全方向ナイフ(青)*/
-	h->type 			= SP_BULLET/*SP_LASER*/;
+	h					= sprite_add_bullet(TAMA_TYPE_BULLET_KNIFE18_PNG);/*全方向ナイフ(青)*/
+	h->type 			= BULLET_KNIFE20_06_AOI;/*SP_BULLET*/ /*SP_LASER*/
 	h->callback_mover	= enemy_follow_knife_move;
 	h->flags			|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK|SP_FLAG_TIME_OVER);
-	h->anim_frame		= 0;
+	h->anim_frame		= 0;//0;
 	h->x256 			= s->x256;
 	h->y256 			= s->y256/*x*/;
 	FOLLOW_KNIFE_DATA *data;
@@ -1525,29 +1478,27 @@ void enemy_follow_knife_create2(SPRITE *s, int speed256, int angle512, int heigh
 		length	enemy-player間の距離/√2
 		r_or_l	0==右	1==左
 	*/
-void enemy_even_knife_create(SPRITE *s, int speed256, int length256, int r_or_l)
+void bullet_create_sakuya_even_knife(SPRITE *s, int speed256, int length256, int r_or_l)
 {
 	SPRITE *h;
-	h					= sprite_add_res(BASE_TAMA_BULLET_KNIFE18_PNG);/*全方向ナイフ(青)*/ 	/*h->use_alpha=0 ????*/
-	h->type 			= SP_BULLET;
+	h					= sprite_add_bullet(TAMA_TYPE_BULLET_KNIFE18_PNG);/*全方向ナイフ(青)*/	/*h->use_alpha=0 ????*/
+	h->type 			= BULLET_KNIFE20_06_AOI;/*SP_BULLET*/ /*SP_LASER*/
 //
 	h->flags			|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK|SP_FLAG_TIME_OVER);
-	h->anim_frame		= 0;
+	h->anim_frame		= 0;//0;
 	h->x256 			= s->x256+((s->w128-h->w128));
 	h->y256 			= s->y256+((s->h128-h->h128));
 	EVEN_KNIFE_DATA *data;
 	data=mmalloc(sizeof(EVEN_KNIFE_DATA));
 	h->data=data;
-
 //
 	int tmp512;
 	tmp512 = angle_jikinerai512(player,s);/*???(original)*/ /* 奇数弾の場合に自機狙い */
 	#if 1
-	if (1==r_or_l)
+//	if (1==r_or_l)	/* pspは0レジスタがあるので0と比較したほうが速い */
+	if (0!=r_or_l)
 	{
 		h->callback_mover	= enemy_evenl_knife_move;
-		//if (tmp512>ra d2deg512(M_PI*2*3/8))	{	tmp512 -= ra d2deg512(M_PI*2*7/8);}
-		//else									{	tmp512 += ra d2deg512(M_PI*2*1/8);}
 		tmp512 += (64)/*M_PI*2*1/8*/;
 	}
 	else
@@ -1555,8 +1506,6 @@ void enemy_even_knife_create(SPRITE *s, int speed256, int length256, int r_or_l)
 	#endif
 	{
 		h->callback_mover	= enemy_evenr_knife_move;
-		//if (tmp512 < -ra d2deg512(M_PI*2*3/8)) {	tmp512 =  ra d2deg512(M_PI*2*7/8)-tmp512;}
-		//else									{	tmp512 -= ra d2deg512(M_PI*2*1/8);}
 		tmp512 -= (64)/*M_PI*2*1/8*/;
 	}
 	mask512(tmp512);
@@ -1579,54 +1528,89 @@ void enemy_even_knife_create(SPRITE *s, int speed256, int length256, int r_or_l)
 
 /*---------------------------------------------------------
 	多方向、等速直進弾を追加する
----------------------------------------------------------*/
+	-------------------------------------------------------
 
-void bullet_create_n_way_dan_type(SPRITE *s, int speed256, int angle512, int bu_type,/*char *filename, int frame,*/ int n)
+---------------------------------------------------------*/
+/*(int)(512/24)*/
+void bullet_create_n_way_dan_sa_type(SPRITE *s, int speed256, int angle512, int div_angle512, int bullet_obj_type, int n_way)
 {
-	//angle_radianはラジアン
-	//frameはフレーム数-1
 	angle512			= angle_jikinerai512_auto(player, s, angle512); /*ANGLE_JIKINERAI_KISUDAN???(original)*/	/* 奇数弾の場合に自機狙い */
 	int i_angle512;
-	i_angle512			= angle512-((n+2)*((int)(512/48)))/*ra d2deg512((M_PI*2)/48))*/; /* 48分割弾 */ 	//π/24 /*0.13089969389957471827*/
+	i_angle512			= angle512-((n_way+2)*((div_angle512>>1)/*(int)(512/48)*/))/*ra d2deg512((M_PI*2)/48))*/; /* 48分割弾 */ 	// /* π/24 0.13089969389957471827 */
 	/* 念の為マスク */
 	mask512(i_angle512);
 //
 	int i;
-	for (i=0;i<n;i++)
+	for (i=0; i<n_way; i++)
 	{
 		SPRITE *h;
+		// frameはフレーム数-1 /*char *filename, int frame,*/
 	//	h					= spr ite_add_file 0("tama/bullet_ming32.png"/*"kugel.png"filename*/, 32/*(0)frame+1*/, PRIORITY_05_BULLETS/*PRIORITY_03_ENEMY*/,0);
-		h					= sprite_add_res(BASE_TAMA_BULLET_MING32_PNG);
-		h->type 			= SP_BULLET;
+		h					= sprite_add_bullet(TAMA_TYPE_BULLET_DUMMY/*_MING32_PNG*/);
+		h->type 			= (bullet_obj_type);/*BULLET_UROKO14_01_AKA+*/ /*SP_BULLET*/
 		h->callback_mover	= move_bullet_vector/*move_bullet_angle512*/;
 		h->flags			|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK|SP_FLAG_TIME_OVER);
 		/*h->anim_speed 	= 0;*/ /*if (frame) {	h->anim_speed=1;}*/
-		h->anim_frame		= ((/*ra d2deg512(angle_radian)*/i_angle512)>>4)/*0*/;
+		h->anim_frame		= 0;//((i_angle512)>>4)/*0*/;
 		h->x256 			= s->x256+((s->w128-h->w128));
 		h->y256 			= s->y256+((s->h128-h->h128));
-		//
 		BULLET_VECTOR_DATA *data;
 		data				= mmalloc(sizeof(BULLET_VECTOR_DATA));
 		h->data 			= data;
-
-		i_angle512 += /*ra d2deg512*/((2)*((int)(512/48))); /*0.26179938779914943654*/
-	//	if (i_angle_radian>M_PI)		{	i_angle_radian-=2*M_PI;}
-	//	else if (i_angle_radian<-M_PI)	{	i_angle_radian+=2*M_PI;}
+		i_angle512			+= div_angle512;	/*(2)*((int)(512/48))*/	/* π/12 0.26179938779914943654 */
 		mask512(i_angle512);
-	//	data->angle512		= /*deg512_2rad*/(i_angle512);	//π/12
+	//	data->angle512		= /*deg512_2rad*/(i_angle512);	//
 	//	data->speed256		= speed256;
+		#if 1
+		/* 描画用角度 */
+	//	h->m_angle512		= i_angle512;
+		int aaa512; 	aaa512 = (/*127*/255-i_angle512);	mask512((aaa512));
+		h->m_angle512		= aaa512;
+		#endif
 		regist_vector(h, speed256, i_angle512);
 	}
 }
+
+/*---------------------------------------------------------
+	検証弾(赤)を作成する
+	いろいろと検証用なのでコメントアウト
+---------------------------------------------------------*/
+#if 0
+void bullet_create_aka_maru_n_way(SPRITE *s, int speed256, int angle512, int div_angle512, int bu_type, int n_way)
+{
+	// スプライト, 速度, 基準角度, 差分角度分割幅, n way(分割数)
+	int i_angle512;
+	i_angle512				= angle512-((n_way+2)*(div_angle512>>1));
+	//
+	int i;
+	for (i=0; i<n_way; i++)
+	{
+		SPRITE *h;
+	//	h					= spr ite_add_file 0("kugel.png",1,PRIORITY_05_BULLETS/ * PRIORITY_03_ENEMY * /,0);
+	//	h					= sprite_add_bullet(TAMA_TYPE_KUGEL_PNG);
+		h					= sprite_add_bullet(TAMA_TYPE_BULLET_MARU16_PNG);
+		h->type 			= BULLET_MARU8_00_AKA+(0);/* SP_BULLET */
+		h->flags			|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK|SP_FLAG_TIME_OVER);
+		h->callback_mover	= move_bullet_angle512;
+		h->anim_frame		= 0;//(0);
+		h->x256 			= s->x256+((s->w128-h->w128));
+		h->y256 			= s->y256+((s->h128-h->h128));
+		BULLET_DATA *data;
+		data				= mmalloc(sizeof(BULLET_DATA));
+		h->data 			= data;
+		i_angle512			+= div_angle512;
+		mask512(i_angle512);
+		data->angle512		= i_angle512;
+		data->speed256		= speed256;
+	}
+}
+#endif
 
 
 /*---------------------------------------------------------
 	天狗用の大弾(青)。乱数で怪しげな動きをする。
 	-------------------------------------------------------
-	いわゆる大弾。1つの弾でスプライトを2つ使っている。
-	当たり判定は下側の見えない方にしかない。
-	-------------------------------------------------------
-
+	見た目＞＞あたり判定です。
 	ransu512	一周が512分割された単位系で、指定角以内のランダムな動きを加える。
 				例えば 60 だと +30 から -30 以内のランダムな値を角度に加える。
 				//
@@ -1636,77 +1620,35 @@ void bullet_create_n_way_dan_type(SPRITE *s, int speed256, int angle512, int bu_
 	ex,ey		出現位置
 ---------------------------------------------------------*/
 
-//void bullet_create_oodama 1(
-//	SPRITE *s,
-//	int xoffs256,
-//	int yoffs256,
-//	int speed256,
-//	int angle512,
-//	int ransu512
-//)
 void bullet_create_oodama0(SPRITE *s, int speed256, int angle512, int ransu512, int add_speed256, int xoffs256, int yoffs256)
 {
 	angle512			= angle_jikinerai512_auto(player, s, angle512);
 	mask512(angle512);
 //
 	SPRITE *h;
-//	h					= spr ite_add_file 0("tama/bigkugel2.png",1,/*PRIORITY_05_BULLETS*/PRIORITY_03_ENEMY/*PRIORITY_03_ENEMY*/,0);/* 黒玉(輪)  あたり判定部分*/
-//	h					= sprite_add_res(BASE_TAMA_OODAMA_00_PNG);/* 黒玉(輪)  あたり判定部分*/
-	h					= sprite_add_res(BASE_TAMA_OODAMA_08_PNG);/* 黒玉(輪)  あたり判定部分*/
+	h					= sprite_add_bullet(TAMA_TYPE_OODAMA_08_PNG);	 /* 大玉(青) 表示部分*/
 	h->priority 		= PRIORITY_03_ENEMY;
-	h->type 			= SP_BULLET/*SP_BIGBULLET*/;
-	h->callback_mover	= move_oodama1_oya;
-//	h->flags			&= (~(SP_FLAG_VISIBLE));/*表示なし*/
-//	h->flags			|= (/*表示なしSP_FLAG_VISIBLE|*/SP_FLAG_COLISION_CHECK);
-	h->flags			|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK|SP_FLAG_TIME_OVER);/*表示しないとあたり判定してくれない*/
-	h->anim_frame		= 0;
+	unsigned int aaa = (((angle512>>6)&(0x06))|(1));
+	h->type 			= BULLET_OODAMA32_00_SIROI+(aaa);/*SP_BULLET*/ /*SP_BIGBULLET*/
+	h->callback_mover	= move_bullet_oodama1_aya_yuragi;
+	h->flags			|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK|SP_FLAG_TIME_OVER);
+	h->anim_frame		= 0;//(aaa);/*((rand()&(0x06))|(1)) (1)*/
 	h->x256 			= s->x256-((h->w128))+xoffs256;
 	h->y256 			= s->y256-((h->h128))+yoffs256;
-	#if 1
-	SPRITE *h2;
-//	h2					= spr ite_add_file 0("tama/bigkugel1.png",1,PRIORITY_05_BULLETS/*P R_TMP*/,1);/* 大玉(青) 表示部分 */
-//	h2					= sprite_add_res(BASE_TAMA_OODAMA_01_PNG);/* 大玉(青) 表示部分 */
-	h2					= sprite_add_res(BASE_TAMA_OODAMA_08_PNG);/* 大玉(青) 表示部分 */
-	h2->type			= SP_ETC/*S P_EN_BIGBULLET_DUMMY*/;
-	h2->callback_mover	= /*NULL*/move_oodama_kodomo;
-	h2->flags			&= (~(SP_FLAG_COLISION_CHECK));/*あたり判定なし*/
-	h2->flags			|= (SP_FLAG_VISIBLE/*あたり判定なし|SP_FLAG_COLISION_CHECK*/|SP_FLAG_TIME_OVER);
-	h2->anim_frame		= (((angle512>>6)&(0x06))|(1));/*((rand()&(0x06))|(1)) (1)*/
-	h2->x256			= s->x256-((h2->w128))+xoffs256;
-	h2->y256			= s->y256-((h2->h128))+yoffs256;
-	#endif
 	OODAMA_OYA_DATA *data;
 	data				= mmalloc(sizeof(OODAMA_OYA_DATA));
 	h->data 			= data;
-	#if 1
-	OODAMA_KO_DATA *h2_data;
-	h2_data 			= mmalloc(sizeof(OODAMA_KO_DATA));
-	h2->data			= /*NULL*/h2_data;
-	h2_data->time_out	= 8;
-	#endif
 //
 	data->angle512		= (angle512);
 	data->speed256		= speed256;
 	data->ransu512		= ransu512;
 	data->time_out		= 16*16;//	data->wait_bg	= 10;
-//
-	#if 1
-	data->hyouji		= h2;
-	#endif
-//	h2_data->sw 		= h->w;
-//	h2_data->sh 		= h->h;
-//	h2_data->type		= &h->type;
-//	h2_data->sx256p 	= &h->x256;
-//	h2_data->sy256p 	= &h->y256;
 }
+
 /*---------------------------------------------------------
-	咲夜用の大弾(赤)。素直な大弾です。
-	原作は見た目＝＝あたり判定だったけど、そりゃ紅はそうかも知れないけど、
-	それじゃあ只の弾でも同じなので(スプライト２つ使う意味が無い)
-	大弾らしく見た目＞＞あたり判定に直しました。
+	咲夜用の大弾(赤)。
 	-------------------------------------------------------
-	いわゆる大弾。1つの弾でスプライトを2つ使っている。
-	当たり判定は下側の見えない方にしかない。
+	見た目＞＞あたり判定です。
 ---------------------------------------------------------*/
 
 void bullet_create_oodama2(SPRITE *s, int speed256, int angle512, int ransu512, int add_speed256, int xoffs256, int yoffs256)
@@ -1715,65 +1657,30 @@ void bullet_create_oodama2(SPRITE *s, int speed256, int angle512, int ransu512, 
 	mask512(angle512);
 //
 	SPRITE *h;
-//	h					= spr ite_add_file 0(/*"new_bigkugel.png"*/"bigkugel1.png"/*"bigkugel1.png"*/,1,/*PRIORITY_05_BULLETS*/PRIORITY_03_ENEMY/*PRIORITY_03_ENEMY*/,0);/* 大玉(青) あたり判定部分*/
-	/* "bigkugel1.png" 大玉(青) あたり判定を使うと、画像キャッシュの状況により、PSPがハングアップ。ってゆーかあたり判定の大きさが同じなら、普通の弾でいいじゃん(謎) */
-//	h					= spr ite_add_file 0("tama/bigkugel2.png",1,/*PRIORITY_05_BULLETS*/PRIORITY_03_ENEMY/*PRIORITY_03_ENEMY*/,0);/* 黒玉(輪)  あたり判定部分*/
-//	h					= sprite_add_res(BASE_TAMA_OODAMA_00_PNG);/* 黒玉(輪)  あたり判定部分*/
-	h					= sprite_add_res(BASE_TAMA_OODAMA_08_PNG);/* 黒玉(輪)  あたり判定部分*/
+	h					= sprite_add_bullet(TAMA_TYPE_OODAMA_08_PNG);	 /* 大玉(赤) 表示部分*/
 	h->priority 		= PRIORITY_03_ENEMY;
-	h->type 			= SP_BULLET/*SP_BIGBULLET*/;
-	h->callback_mover	= move_oodama2_oya;
-//	h->flags			&= (~(SP_FLAG_VISIBLE));/*表示なし*/
-//	h->flags			|= (/*表示なしSP_FLAG_VISIBLE|*/SP_FLAG_COLISION_CHECK);
-	h->flags			|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK|SP_FLAG_TIME_OVER);/*表示しないとあたり判定してくれない*/
-	h->anim_frame		= 0;
+	unsigned int aaa= (((angle512>>6)&(0x05))|(2));
+	h->type 			= BULLET_OODAMA32_00_SIROI+(aaa);/*SP_BULLET*/ /*SP_BIGBULLET*/
+	h->callback_mover	= move_bullet_oodama2_standard;
+	h->flags			|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK|SP_FLAG_TIME_OVER);
+	h->anim_frame		= 0;//(aaa);/*(2) ((rand()&(0x05))|(2))*/
 	h->x256 			= s->x256-((h->w128));
 	h->y256 			= s->y256-((h->h128));
-	#if 1
-	SPRITE *h2;
-//	h2					= spr ite_add_file 0("tama/new_bigkugel.png",1,PRIORITY_05_BULLETS/*P R_TMP*/,1);/* 大玉(赤) 表示部分*/ /*"new_bigkugel.png"*/	/*"bigkugel1.png"*/
-//	h2					= sprite_add_res(BASE_TAMA_OODAMA_02_PNG);/* 大玉(赤) 表示部分*/	/*"new_bigkugel.png"*/	/*"bigkugel1.png"*/
-	h2					= sprite_add_res(BASE_TAMA_OODAMA_08_PNG);/* 大玉(赤) 表示部分*/	/*"new_bigkugel.png"*/	/*"bigkugel1.png"*/
-	h2->type			= SP_ETC/*S P_EN_BIGBULLET_DUMMY*/;
-	h2->callback_mover	= /*NULL*/move_oodama_kodomo;
-	h2->flags			&= (~(SP_FLAG_COLISION_CHECK));/*あたり判定なし*/
-	h2->flags			|= (SP_FLAG_VISIBLE/*あたり判定なし|SP_FLAG_COLISION_CHECK*/|SP_FLAG_TIME_OVER);
-	h2->anim_frame		= (((angle512>>6)&(0x05))|(2));/*(2) ((rand()&(0x05))|(2))*/
-	h2->x256			= s->x256-((h2->w128));
-	h2->y256			= s->y256-((h2->h128));
-	#endif
 	OODAMA_OYA_DATA *data;
 	data				= mmalloc(sizeof(OODAMA_OYA_DATA));
 	h->data 			= data;
-	#if 1
-	OODAMA_KO_DATA *h2_data;
-	h2_data 			= mmalloc(sizeof(OODAMA_KO_DATA));
-	h2->data			= /*NULL*/h2_data;
-	h2_data->time_out	= 8;
-	#endif
 //
 	data->angle512		= (angle512);
 	data->speed256		= speed256;
 	data->add_speed256	= add_speed256;
-//
-	#if 1
-	data->hyouji		= h2;
-	#endif
-//	h2_data->sw 		= h->w;
-//	h2_data->sh 		= h->h;
-//	h2_data->type		= &h->type;
-//	h2_data->sx256p 	= &h->x256;
-//	h2_data->sy256p 	= &h->y256;
 }
-
-
 
 
 /*---------------------------------------------------------
 	種類別に爆発を追加する
 ---------------------------------------------------------*/
 
-void explosion_add_type(int x256, int y256, /*dou ble int delay_wait,*/ int type)
+void explosion_add_type(int x256, int y256, /*int delay_wait,*/ int type)
 {
 	SPRITE *ex = NULL;
 	EXPLOSION_DATA *data;
@@ -1803,7 +1710,7 @@ void explosion_add_type(int x256, int y256, /*dou ble int delay_wait,*/ int type
 //		/* 火炎爆発 */
 //	case 8: 	ex = spr ite_add_file 0("ex.png", 29, PRIORITY_04_ITEM, 0); 	data->anime_speed=3/*2*/;	break;
 	case 8: 	ex = sprite_add_res(BASE_BAKUHA_EX_PNG);	data->anime_speed=3/*2*/;	break;
-	default:	error(ERR_WARN,"explosion_add: unknown type: %d",type);
+	default:	error(ERR_WARN, "explosion_add: unknown type: %d",type);
 	}
 	data->anime_count	= 0;
 //	data->wait_count1	= delay_wait;
@@ -1836,7 +1743,8 @@ void explosion_add_circle(SPRITE *src, int mode)
 			src->x256+((cos512(j))*i),
 			src->y256+((sin512(j))*i),
 		//	ra_nd()&(64-1)/*%40*/,
-			EXPLOSION_ZAKO04/*EXPLOSION_FIRE08*/ | ((1==mode)?(ra_nd()&((64-1)<<8)):(0)));
+		//	EXPLOSION_ZAKO04/*EXPLOSION_FIRE08*/ | ((1==mode)?(ra_nd()&((64-1)<<8)):(0)));	/* pspは0レジスタがあるので0と比較したほうが速い */
+			EXPLOSION_ZAKO04/*EXPLOSION_FIRE08*/ | ((0!=mode)?(ra_nd()&((64-1)<<8)):(0)));	/* pspは0レジスタがあるので0と比較したほうが速い */
 	}
 }
 

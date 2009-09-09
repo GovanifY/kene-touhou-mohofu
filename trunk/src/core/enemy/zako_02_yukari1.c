@@ -1,21 +1,21 @@
 
-#include "enemy.h"
+#include "bullet_object.h"
 
 /*---------------------------------------------------------
-		"紫編隊1",		"MI NG",
+		"紫編隊1",		"MING",
 	-------------------------------------------------------
 	10機三角錐状に続がり、編隊飛行してくるザコ敵
-	mi ng
-	rw ingx_cu rverに似てる
+	ming
+	rwingx_curverに似てる
 	-------------------------------------------------------
 	バグあり？？？
 ---------------------------------------------------------*/
 
 typedef struct
 {
-	ENEMY_BASE b;
-	/*dou ble*/int angle512;
-	/*dou ble*/int speed256;
+	ENEMY_BASE base;
+	int angle512;
+	int speed256;
 	int state;
 	int level;
 //
@@ -31,15 +31,15 @@ static int destoroy;
 
 static void lose_yukari1(SPRITE *s)
 {
-	int put_item;	put_item=99;
+	int put_item;	put_item = 99;
 //	case SP_ZAKO_02_YUKARI1:
 	if (rand_percent(30))
 	{
-		if (rand_percent(50))	{	put_item=(SP_ITEM_00_P001&0xff);}
-		else					{	put_item=(SP_ITEM_06_TENSU&0xff);}
+		if (rand_percent(50))	{	put_item = (SP_ITEM_00_P001&0xff);}
+		else					{	put_item = (SP_ITEM_06_TENSU&0xff);}
 	}
 //
-	if (99!=put_item)
+	if (99 != put_item)
 	{
 		item_create(s, (put_item|SP_ITEM_00_P001), 1, (ITEM_MOVE_FLAG_01_COLLECT|ITEM_MOVE_FLAG_06_RAND_XY)/*(up_flags)*/ );
 	}
@@ -58,7 +58,7 @@ static void lose_yukari1(SPRITE *s)
 
 static void move_yukari1(SPRITE *s)
 {
-	YUKARI1_DATA *d=(YUKARI1_DATA *)s->data;
+	YUKARI1_DATA *d = (YUKARI1_DATA *)s->data;
 	switch (d->state)
 	{
 	case 0:
@@ -100,8 +100,10 @@ static void move_yukari1(SPRITE *s)
 		}
 		break;
 	case 2:
-		if ((s->x256<-((s->w128+s->w128)))||(s->x256 > t256(GAME_WIDTH))||
-			(s->y256<-((s->h128+s->h128)))||(s->y256 > t256(GAME_HEIGHT)))
+	//	if ((s->x256<-((s->w128+s->w128)))||(s->x256 > t256(GAME_WIDTH))||
+	//		(s->y256<-((s->h128+s->h128)))||(s->y256 > t256(GAME_HEIGHT)))
+		if ((s->x256<-(t256(16)))||(s->x256 > t256(GAME_WIDTH))||
+			(s->y256<-(t256(16)))||(s->y256 > t256(GAME_HEIGHT)))
 		{	s->flags	&= (~(SP_FLAG_VISIBLE));}
 		break;
 	}
@@ -111,7 +113,13 @@ static void move_yukari1(SPRITE *s)
 //	s->anim_frame=(deg_512_to_360(d->angle512+deg_360_to_512(270))/10)%36;
 //	s->anim_frame = ((((d->angle512/*+deg_360_to_512(270)*/)&(512-1))*(36/2))>>8);
 //	s->anim_frame = ((((d->angle512/*+deg_360_to_512(270)*/)&(512-1))*(32/2))>>8);
-	s->anim_frame = ((((d->angle512/*+deg_360_to_512(270)*/)&(512-1)))>>4);
+//	s->anim_frame = ((((d->angle512/*+deg_360_to_512(270)*/)&(512-1)))>>4);
+	s->yx_anim_frame = ( ((d->angle512>>3)&(0x30)) | ((d->angle512>>4)&(0x07)) );
+/* "yukari8x4.png"
+d->angle512       a bcde ----
+s->yx_anim_frame    yyyy xxxx
+s->yx_anim_frame    --ab -cde
+*/
 }
 
 /*---------------------------------------------------------
@@ -137,8 +145,8 @@ void add_zako_yukari1(STAGE_DATA *l)/*int lv*/
 		YUKARI1_DATA *data;
 		data				= mmalloc(sizeof(YUKARI1_DATA));
 		s->data 			= data;
-		data->b.score		= score(25*2);
-		data->b.health		= 1+(difficulty<<2);
+		data->base.score	= score(25*2);
+		data->base.health	= 1+(difficulty<<2);
 		data->angle512		= deg_360_to_512(90);
 		data->speed256		= t256(2)/*2+difficulty+lv/2*/;/*速すぎ*/
 		data->state 		= 0;

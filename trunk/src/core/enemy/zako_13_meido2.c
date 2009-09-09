@@ -1,5 +1,5 @@
 
-#include "enemy.h"
+#include "bullet_object.h"
 
 /*---------------------------------------------------------
 	"ƒƒCƒh2",		"ZATAK",
@@ -10,13 +10,13 @@
 
 typedef struct
 {
-	ENEMY_BASE b;
-	/*dou ble*/int angle512;
-	/*dou ble*/int speed256;
+	ENEMY_BASE base;
+	int angle512;
+	int speed256;
 	int state;
 //	int level;
 //
-	/*dou ble*/int wait;
+	int wait;
 } MEIDO2_DATA;
 
 static int data_level256;
@@ -37,7 +37,7 @@ static void lose_meido2(SPRITE *s)
 
 static void move_meido2(SPRITE *s)
 {
-	MEIDO2_DATA *d=(MEIDO2_DATA *)s->data;
+	MEIDO2_DATA *d = (MEIDO2_DATA *)s->data;
 	d->wait += 1/*fps_fa ctor*/;
 	switch (d->state)
 	{
@@ -67,7 +67,7 @@ static void move_meido2(SPRITE *s)
 				d->state=3;
 				if (data_level256/*d->level*/)
 				{
-					bullet_create_hari_dan180(s, HARIDAN_SPEED, ANGLE_JIKINERAI_DAN, t256(0), t256(0));
+					bullet_create_offset_dan_type(s, HARIDAN_SPEED, ANGLE_JIKINERAI_DAN, t256(0), t256(0), BULLET_HARI32_00_AOI);
 				}
 			}
 		}
@@ -80,7 +80,7 @@ static void move_meido2(SPRITE *s)
 				d->state=3;
 				if (data_level256/*d->level*/)
 				{
-					bullet_create_hari_dan180(s, HARIDAN_SPEED, ANGLE_JIKINERAI_DAN, t256(0), t256(0));
+					bullet_create_offset_dan_type(s, HARIDAN_SPEED, ANGLE_JIKINERAI_DAN, t256(0), t256(0), BULLET_HARI32_00_AOI);
 				}
 			}
 		}
@@ -143,11 +143,11 @@ void add_zako_meido2(STAGE_DATA *l)/*int lv*/
 		MEIDO2_DATA *data;
 		data				= mmalloc(sizeof(MEIDO2_DATA));
 		s->data 			= data;
-		data->b.score		= score(25*2);
-		data->b.health		= 1+(difficulty<<2);
+		data->base.score	= score(25*2);
+		data->base.health	= 1+(difficulty<<2);
 		data->state 		= 0;
 		data->wait			= 0;
-		data->speed256		= /*t256_to_dou ble*/((ra_nd()&((256*4)-1)))/*2.0*(((dou ble)ra_nd()/RAND_MAX)*2)*/;
+		data->speed256		= ((ra_nd()&((256*4)-1)));/*2.0*(((dou ble)ra_nd()/RAND_MAX)*2)*/
 		if (i<6)
 		{
 			data->angle512	= deg_360_to_512(10);

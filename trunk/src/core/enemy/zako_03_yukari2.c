@@ -1,26 +1,26 @@
 
-#include "enemy.h"
+#include "bullet_object.h"
 
 /*---------------------------------------------------------
-		"紫編隊2",		"GR EETER",
+		"紫編隊2",		"GREETER",
 	-------------------------------------------------------
 	バグあり？？？
 	-------------------------------------------------------
 	５機一列に続がり、編隊飛行してくるザコ敵
 	-------------------------------------------------------
-	mi ng_gr eeter
-	rw ingx_curver(mi ng)に似てる
+	ming_greeter
+	rwingx_curver(ming)に似てる
 ---------------------------------------------------------*/
 
 typedef struct
 {
-	ENEMY_BASE b;
-	/*dou ble*/int angle512;
-	/*dou ble*/int speed256;
+	ENEMY_BASE base;
+	int angle512;
+	int speed256;
 	int state;
 	int level;
 //
-	/*dou ble*/int max_y256;
+	int max_y256;
 } YUKARI2_DATA;
 static int destoroy;
 
@@ -51,7 +51,7 @@ static void lose_yukari2(SPRITE *s)
 
 static void move_yukari2(SPRITE *s)
 {
-	YUKARI2_DATA *d=(YUKARI2_DATA *)s->data;
+	YUKARI2_DATA *d = (YUKARI2_DATA *)s->data;
 	switch (d->state)
 	{
 	case 0: /* nach unten */
@@ -78,7 +78,8 @@ static void move_yukari2(SPRITE *s)
 		}
 		break;
 	case 1:
-		if (s->y256 < -((s->h128+s->h128)) )
+	//	if (s->y256 < -((s->h128+s->h128)) )
+		if (s->y256 < -(t256(16)) )
 		{
 			s->flags	&= (~(SP_FLAG_VISIBLE));
 		}
@@ -90,7 +91,13 @@ static void move_yukari2(SPRITE *s)
 //	s->anim_frame=(deg_512_to_360(d->angle512+deg_360_to_512(270))/10)%36;
 //	s->anim_frame = ((((d->angle512/*+deg_360_to_512(270)*/)&(512-1))*(36/2))>>8);
 //	s->anim_frame = ((((d->angle512/*+deg_360_to_512(270)*/)&(512-1))*(32/2))>>8);
-	s->anim_frame = ((((d->angle512/*+deg_360_to_512(270)*/)&(512-1)))>>4);
+//	s->anim_frame = ((((d->angle512/*+deg_360_to_512(270)*/)&(512-1)))>>4);
+	s->yx_anim_frame = ( ((d->angle512>>3)&(0x30)) | ((d->angle512>>4)&(0x07)) );
+/* "yukari8x4.png"
+d->angle512       a bcde ----
+s->yx_anim_frame    yyyy xxxx
+s->yx_anim_frame    --ab -cde
+*/
 }
 #if 0
 	case 0: 	/* 右へ移動中 */
@@ -161,8 +168,8 @@ void add_zako_yukari2(STAGE_DATA *l)/*int lv*/
 		data->max_y256		= (t256(GAME_HEIGHT)-((s->h128+s->h128))-t256(60));
 		data->speed256		= (t256(2.5/*3.0*/)+((difficulty)<<4) ) /*4*/;/*始めだけは速い*/
 		data->state 		= 0;
-		data->b.score		= score(5*2);
-		data->b.health		= 1+(difficulty<<2);
+		data->base.score	= score(5*2);
+		data->base.health	= 1+(difficulty<<2);
 		data->level 		= lv;
 	}
 }

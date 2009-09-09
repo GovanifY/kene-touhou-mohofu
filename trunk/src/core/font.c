@@ -3,7 +3,7 @@
 	フォント
 ---------------------------------------------------------*/
 
-#include "support.h"
+#include "game_main.h"
 
 /* ステータスパネル専用フォント、ボスメーター */
 #define FONT01NAME "fonts/font01.png"

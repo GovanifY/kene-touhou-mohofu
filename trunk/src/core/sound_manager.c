@@ -3,7 +3,7 @@
 	オーディオ マネージャー
 ---------------------------------------------------------*/
 
-#include "support.h"
+#include "game_main.h"
 
 /*---------------------------------------------------------
 
@@ -52,7 +52,7 @@ static int use_audio = 0;/*使用不可能*/
 
 //void pause_music(void)
 //{
-//	if ( !use_audio ) return;
+//	if ( 0==use_audio ) return;
 //	Mix_PauseMusic();
 //}
 
@@ -62,7 +62,7 @@ static int use_audio = 0;/*使用不可能*/
 
 //void resume_music(void)
 //{
-//	if ( !use_audio ) return;
+//	if ( 0==use_audio ) return;
 //	Mix_ResumeMusic();
 //}
 
@@ -72,7 +72,7 @@ static int use_audio = 0;/*使用不可能*/
 
 //void fadeout_music(void)
 //{
-//	if ( !use_audio ) return;
+//	if ( 0==use_audio ) return;
 //	Mix_FadeOutMusic(1280);
 //}
 
@@ -82,7 +82,7 @@ static int use_audio = 0;/*使用不可能*/
 
 void stop_music(void)
 {
-//	if ( !use_audio ) return;
+//	if ( 0==use_audio ) return;
 	if ( music_track != NULL )
 	{
 		//if ( Mix_PlayingMusic() )
@@ -98,7 +98,7 @@ void stop_music(void)
 
 void play_music(int num)
 {
-	if ( !use_audio ) return;
+	if ( 0==use_audio ) return;
 	/* 範囲チェック */
 //
 	static const char *music_file_name[USE_MUSIC_FILES] =
@@ -124,7 +124,7 @@ void play_music(int num)
 	//stop_music();
 	//void stop_music(void)
 	{
-	//	if ( !use_audio ) return;
+	//	if ( 0==use_audio ) return;
 		if ( music_track != NULL )
 		{
 			//if ( Mix_PlayingMusic() )
@@ -171,7 +171,7 @@ void play_music(int num)
 
 void exit_audio(void)
 {
-	if ( !use_audio ) return;
+	if ( 0==use_audio ) return;
 	/* 曲の解放 */
 	//if ( Mix_PlayingMusic() )
 	{	Mix_HaltMusic();	}
@@ -198,7 +198,7 @@ void exit_audio(void)
 #if 1
 void play_voice_auto_track(int req)
 {
-	if ( !use_audio ) return;
+	if ( 0==use_audio ) return;
 	#if (0==USE_VSYNC_SOUND)
 	//チャンネルが8までしか用意されていないので8以降はチャンネル自由
 	if (req>=8) Mix_PlayChannel(-1, voice_track[req], 0);
@@ -252,7 +252,7 @@ void play_voice_auto_track(int req)
 #if 0
 void voice_play(int req, int play_track )
 {
-	if ( !use_audio ) return;
+	if ( 0==use_audio ) return;
 	/* 範囲チェック */
 //
 	/* 効果音 予約 */
@@ -269,7 +269,7 @@ void voice_play(int req, int play_track )
 void voice_play_vbl(void)
 {
 	#if (1==USE_VSYNC_SOUND)
-	if ( !use_audio ) return;
+	if ( 0==use_audio ) return;
 	int i;
 	for (i=0; i<MAX_VOICE_TRACK; i++)
 	{
