@@ -34,9 +34,9 @@ static void callback_hit_youkai1(SPRITE *src/*敵自体*/, SPRITE *tama/*自弾*/)
 	/*data->base.*/src->base_health -= /*w->*/tama->base_weapon_strength;
 	if (/*data->base.*/src->base_health <= 0)
 	{
-		item_from_bullets(SP_ITEM_05_HOSI);
+		bullets_to_hosi();/* 弾全部、星アイテムにする */
 	//
-		item_create(src, SP_ITEM_05_HOSI/*SP_ITEM_06_TENSU*/, 7, ITEM_MOVE_FLAG_01_COLLECT);/*星点を出す*/
+		item_create(src, SP_ITEM_06_TENSU, 7, ITEM_MOVE_FLAG_06_RAND_XY/*ITEM_MOVE_FLAG_01_COLLECT*/);/*点数を出す*/	/* ちらばる */
 		player_add_score(/*data->base.*/src->base_score);
 //
 		bakuhatsu_add_circle(src, 0);
@@ -93,9 +93,9 @@ static void move_youkai1(SPRITE *src)
 				/* 3:  8 == 20-(3*4) */
 				data->wait2 = (20-((difficulty)<<2))/*8*/ /*10*/;
 				#if (0==USE_DESIGN_TRACK)
-				play_voice_auto_track(VOICE14_YOKAI1_E_SHOT01);
+				play_voice_auto_track(VOICE14_BOSS_KOUGEKI_01);
 				#else
-				voice_play(VOICE14_YOKAI1_E_SHOT01, TRACK04_TEKIDAN);/*テキトー*/
+				voice_play(VOICE14_BOSS_KOUGEKI_01, TRACK04_TEKIDAN);/*テキトー*/
 				#endif
 				bullet_create_n_way_dan_sa_type(src,
 					(t256(3.0)+((difficulty)<<6)),
@@ -118,9 +118,9 @@ static void move_youkai1(SPRITE *src)
 			{
 				data->wait2 = (20-((difficulty)<<2))/*8*/ /*10*/;
 				#if (0==USE_DESIGN_TRACK)
-				play_voice_auto_track(VOICE14_YOKAI1_E_SHOT01);
+				play_voice_auto_track(VOICE14_BOSS_KOUGEKI_01);
 				#else
-				voice_play(VOICE14_YOKAI1_E_SHOT01, TRACK04_TEKIDAN);/*テキトー*/
+				voice_play(VOICE14_BOSS_KOUGEKI_01, TRACK04_TEKIDAN);/*テキトー*/
 				#endif
 				bullet_create_n_way_dan_sa_type(src,
 					t256(3.25)+((difficulty)<<6),
@@ -141,7 +141,14 @@ static void move_youkai1(SPRITE *src)
 		}
 		break;
 	}
-	src->anim_frame 	= ((data->wait1&0x10)>>4);
+	if (SP_DELETE != src->type)
+	{
+	//	src->an im_frame 	= ((data->wait1&0x10)>>4);
+		src->type 			= TEKI_54_CHOU1+((data->wait1&0x10)>>4);
+	}
+//
+	data->s2->m_angleCCW512++;
+	mask512(data->s2->m_angleCCW512);
 }
 
 /*---------------------------------------------------------
@@ -151,38 +158,59 @@ static void move_youkai1(SPRITE *src)
 static SPRITE *create_usiro_no_mahojin(SPRITE *src) //魔方陣グラフィック生成
 {
 	SPRITE *s2; 		// 魔方陣グラフィックのスプライト
-//	s2					= sprite_add_res(BASE_MAHOUJIN_0_PNG);		//s2->anim_speed	= 0;/*"boss04-lo.png"*/
-	s2					= sprite_add_bullet(TAMA_TYPE_BULLET_JIPPOU32_PNG); 	//s2->anim_speed	= 0;/*"boss04-lo.png"*/
+//	s2					= sp rite_add_res(BASE_MAHOUJIN_0_PNG);		//s2->anim_speed	= 0;/*"boss04-lo.png"*/
+//	s2					= sprite_add_gu(TAMA_TYPE_BULLET_JIPPOU32_PNG); 	//s2->anim_speed	= 0;/*"boss04-lo.png"*/
+	s2					= sprite_add_gu(ZAKO_TYPE_ATARI16_PNG); 			//s2->anim_speed	= 0;/*"boss04-lo.png"*/
+	s2->type			= TEKI_51_MAHOJIN1/*SP_MUTEKI*/;
+//	s2->type			= MAHOU_JIN_00_aaa/*SP_MUTEKI*/;
 	s2->flags			|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK|SP_FLAG_TIME_OVER);
-	s2->anim_frame		= 0;
-	s2->type			= MAHOU_JIN_00_aaa/*SP_MUTEKI*/;
-	s2->color32 		= 0x7f7f7fff;		/* 赤っぽく */		/*	s2->alpha			= 0x00;*/
-	s2->x256			= src->x256+((src->w128-s2->w128));
-	s2->y256			= src->y256+((src->h128-s2->h128));
+//	s2->an im_frame		= 0;
+	s2->color32 		= 0xaa0000ff;		/* 赤っぽく */		/*	s2->alpha			= 0x00;*/
+	s2->x256			= src->x256/*+((src->w128-s2->w128))*/-t256(8);
+	s2->y256			= src->y256/*+((src->h128-s2->h128))*/-t256(8);
 	return (s2);
 }
 
 void add_chuu_youkai1(STAGE_DATA *l)/*int lv*/
 {
-	SPRITE *s;
-	s						= sprite_add_res(BASE_GREAT_FAIRY02_PNG);	//s->anim_speed = 3;
-	s->type 				= SP_CHUU/*SP_ZAKO_YOKAI1*/;
-	s->flags				|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK|SP_FLAG_TIME_OVER);
-	s->callback_mover		= move_youkai1;
-//	s->callback_loser		= lose_youkai1;
-	s->callback_hit_enemy	= callback_hit_youkai1; 	/* コールバック登録 */
-	s->y256 				= t256(-30);
-//	s->x256 				= (l->user_y)*t256(35)+t256(40);
-//	s->x256 				= ((l->user_y)*t256(32))+t256(48);
-	s->x256 				= ((l->user_y)<<(8+5))+t256(48);
-	YOKAI1_DATA *data;
-	data					= mmalloc(sizeof(YOKAI1_DATA));
-	s->data 				= data;
-	data->state 			= 0;
-	data->wait1 			= 30;
-	data->wait2 			= 10;/*0*/
-	/*data->base.*/s->base_score		= score(100)+score(100)*difficulty;
-	/*data->base.*/s->base_health		= 200+(difficulty<<4);	/* easyでも存在感を印象づける為に 200 は必要 */ 	// 50+150*difficulty;
-	data->nnn				= 0;
-	data->s2				= create_usiro_no_mahojin(s);
+/*
+
+ 64=1*16+48
+ 80=2*16+48
+112=4*16+48
+160=7*16+48
+
+*/
+	{
+		SPRITE *s1;
+		SPRITE *s2;
+	//	s->x256 				= (l->user_y)*t256(35)+t256(40);
+	//	s->x256 				= ((l->user_y)*t256(32))+t256(48);
+	//	dummy_obj->x256 		= ((l->user_y)<<(8+5))+t256(48);
+		dummy_obj->x256 		= ((l->user_x)<<(8));
+		dummy_obj->y256 		= t256(-30);
+	//
+		s2						= create_usiro_no_mahojin(dummy_obj);
+	//
+	//	s1						= sp rite_add_res(BASE_GREAT_FAIRY02_PNG);	//s->anim_speed = 3;
+		s1						= sprite_add_gu(ZAKO_TYPE_ATARI16_PNG);	//s->anim_speed = 3;
+		s1->type 				= /*SP_CHUU*/TEKI_54_CHOU1/*SP_ZAKO_YOKAI1*/;
+	//	s1->type 				= SP_CHUU/*SP_ZAKO_YOKAI1*/;
+		s1->flags				|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK|SP_FLAG_TIME_OVER);
+		s1->callback_mover		= move_youkai1;
+	//	s1->callback_loser		= lose_youkai1;
+		s1->callback_hit_enemy	= callback_hit_youkai1; 	/* コールバック登録 */
+		s1->x256 				= dummy_obj->x256;
+		s1->y256 				= dummy_obj->y256;
+		YOKAI1_DATA *data;
+		data					= mmalloc(sizeof(YOKAI1_DATA));
+		s1->data 				= data;
+		data->state 			= 0;
+		data->wait1 			= 30;
+		data->wait2 			= 10;/*0*/
+		/*data->base.*/s1->base_score		= score(100)+score(100)*difficulty;
+		/*data->base.*/s1->base_health		= 200+(difficulty<<4);	/* easyでも存在感を印象づける為に 200 は必要 */ 	// 50+150*difficulty;
+		data->nnn				= 0;
+		data->s2				= s2;
+	}
 }

@@ -4,7 +4,7 @@
 
 TARGET = kene
 
-PSP_EBOOT_TITLE = kene_r27
+PSP_EBOOT_TITLE = kene_r28
 
 #------------------------------------------------------------------------------
 # PSP setting
@@ -44,11 +44,32 @@ SIMPLE = 0
 CUSTOM_SDL = 1
 #CUSTOM_SDL = 0
 
+#------------------------------------------------------------------------------
+# Custom Lib option flag (カスタマイズ)
+#------------------------------------------------------------------------------
+# 注意: ここのカテゴリのオプションを変更した場合は、SDL_mixer のリコンパイルが必ず必要です。
+# (設定変更後、make rr↓してからmake↓推奨)
+#------------------------------------------------------------------------------
 
 # 実験中
 # 0 == CUSTOM_LIB
 CUSTOM_LIB = 1
 #CUSTOM_LIB = 0
+
+# 注意: MP3のon/off(LINK_MP3)は src/custom.mak 内にあります。
+
+# 1 == LINK_OGG:標準設定 [ oggの使用可否 ] (0:使用しない、1:使用する)
+# 注意: oggの使用可否を変更した場合は、SDL_mixer のリコンパイルが必ず必要です。
+LINK_OGG = 1
+#LINK_OGG = 0
+
+# 0 == LINK_LIBTREMOR_LOW_MEM: oggを使用する場合、どちらの libtremor を使うか選択します。
+# 0: libtremor_large  を使用する。
+# 1: libtremor_lowmem を使用する。
+# 0 == LINK_LIBTREMOR_LOW_MEM:標準設定 [ libtremor_lowmemの使用可否 ] (0:使用しない、1:使用する)
+# 注意: libtremor_lowmem の選択を変更した場合は、SDL_mixer のリコンパイルが必ず必要です。
+LINK_LIBTREMOR_LOW_MEM = 1
+#LINK_LIBTREMOR_LOW_MEM = 0
 
 #------------------------------------------------------------------------------
 # Configurate Rule
@@ -157,12 +178,25 @@ endif
 
 
 #------------------- ogg codec
-
-ifneq ($(CUSTOM_LIB),1)
-	# CUSTOM_LIB 以外の場合
-	LIBS += -lvorbisidec
+ifneq ($(LINK_OGG),1)
+	##not include	## oggを使わない場合
 else
-	LIBS += $(OBJ)/libtremor/libvorbisidec_test.a
+	##
+	ifneq ($(LINK_LIBTREMOR_LOW_MEM),1)
+		##only large
+		LIBTREMOR_DIR = libtremor_large
+	else
+		##only LINK_LIBTREMOR_LOW_MEM
+		LIBTREMOR_DIR = libtremor_lowmem
+	endif
+	##
+	ifneq ($(CUSTOM_LIB),1)
+		# CUSTOM_LIB 以外の場合
+		LIBS += -lvorbisidec
+	else
+		#LIBS += $(OBJ)/libtremor/libvorbisidec_test.a
+		LIBS += $(OBJ)/$(LIBTREMOR_DIR)/libvorbisidec_test.a
+	endif
 endif
 
 #------------------- 位置依存リンク
@@ -236,23 +270,31 @@ LIBS += -lz
 LIBS += -lm
 LIBS += -lc
 
+# smpeg は C++ ですが、libstdc++.a は使いません。
+#LIBS += -lstdc++
+
+#---------------------------
+
 ### SDL関連は先(位置依存がある。)
 
-#ifneq ($(CUSTOM_LIB),1)
-	# CUSTOM_LIB 以外の場合
-	ifneq ($(CUSTOM_SDL),1)
-		# GL使う場合(位置依存がある。)
-		# libSDL.a は libGL.aより必ず先にリンク
-	else
-		# GL使わない場合(位置依存がある。)
-		# 若干小さくなる 1228029 -> 1228013 -> 1227969 (???)
-#		LIBS += -lSDL
-	endif
-#endif
+##ifneq ($(CUSTOM_LIB),1)
+#	# CUSTOM_LIB 以外の場合
+#	ifneq ($(CUSTOM_SDL),1)
+#		# GL使う場合(位置依存がある。)
+#		# libSDL.a は libGL.aより必ず先にリンク
+#	else
+#		# GL使わない場合(位置依存がある。)
+#		# 若干小さくなる 1228029 -> 1228013 -> 1227969 (???)
+#	#	LIBS += -lSDL
+#	endif
+##endif
+
+#---------------------------
 
 #LIBS += $(shell $(SDL_CONFIG) --libs)
-# -lSDLmain はリンクしない。
+# -lSDLmain があると色々おかしな事になる。 -lSDLmain はリンクしない。
 
+#---------------------------
 
 ### PSPSDK関連は後(位置依存がある。)
 
@@ -263,24 +305,40 @@ LIBS += -lpsphprm
 LIBS += -lpspaudio
 LIBS += -lpsprtc
 
-ifneq ($(CUSTOM_LIB),1)
-	# CUSTOM_LIB 以外の場合
-	ifneq ($(CUSTOM_SDL),1)
-		# GL使う場合
-		#manager.o obj/core/bg.o -lSDL_mixer -lvorbisidec -lSDL_image -lpng -lz -ljpeg -l
-		#m -lc -lSDL -lGL -lpspvfpu -lpsppower -lpspgu -lpsphprm -lpspaudio -lpsprtc -lps
-		#pdebug -lpspdisplay -lpspge -lpspctrl -lpspsdk -lpsplibc -lpspnet -lpspnet_inet
-		#-lpspnet_apctl -lpspnet_resolver -lpsputility -lpspuser -lpspkernel -o kene.elf
-	else
-		# GL使わない場合
-		#manager.o obj/core/bg.o -lSDL_noGL -lSDL_mixer -lvorbisidec -lSDL_image -lpng -l
-		#z -ljpeg -lm -lc -lSDL -lpsppower -lpspgu -lpsphprm -lpspaudio -lpsprtc -lpspdeb
-		#ug -lpspdisplay -lpspge -lpspctrl -lpspsdk -lpsplibc -lpspnet -lpspnet_inet -lps
-		#pnet_apctl -lpspnet_resolver -lpsputility -lpspuser -lpspkernel -o kene.elf
-	endif
-endif
+#---------------------------
 
-# -lSDLmain があると色々おかしな事になる。 -lSDLmain はリンクしない。
+#LIBS += -lpspdebug
+#LIBS += -lpspdisplay
+#LIBS += -lpspge
+#LIBS += -lpspctrl
+#LIBS += -lpspsdk
+#LIBS += -lc
+#LIBS += -lpspnet
+#LIBS += -lpspnet_inet
+#LIBS += -lpspnet_apctl
+#LIBS += -lpspnet_resolver
+#LIBS += -lpsputility
+#LIBS += -lpspuser
+#LIBS += -lpspkernel
+
+#---------------------------
+
+#ifneq ($(CUSTOM_LIB),1)
+#	# CUSTOM_LIB 以外の場合
+#	ifneq ($(CUSTOM_SDL),1)
+#		# GL使う場合
+#		#manager.o obj/core/bg.o -lSDL_mixer -lvorbisidec -lSDL_image -lpng -lz -ljpeg -l
+#		#m -lc -lSDL -lGL -lpspvfpu -lpsppower -lpspgu -lpsphprm -lpspaudio -lpsprtc -lps
+#		#pdebug -lpspdisplay -lpspge -lpspctrl -lpspsdk -lpsplibc -lpspnet -lpspnet_inet
+#		#-lpspnet_apctl -lpspnet_resolver -lpsputility -lpspuser -lpspkernel -o kene.elf
+#	else
+#		# GL使わない場合
+#		#manager.o obj/core/bg.o -lSDL_noGL -lSDL_mixer -lvorbisidec -lSDL_image -lpng -l
+#		#z -ljpeg -lm -lc -lSDL -lpsppower -lpspgu -lpsphprm -lpspaudio -lpsprtc -lpspdeb
+#		#ug -lpspdisplay -lpspge -lpspctrl -lpspsdk -lpsplibc -lpspnet -lpspnet_inet -lps
+#		#pnet_apctl -lpspnet_resolver -lpsputility -lpspuser -lpspkernel -o kene.elf
+#	endif
+#endif
 
 #------------------------------------------------------------------------------
 # Object Directory
@@ -299,8 +357,9 @@ OBJDIRS += $(OBJ)/font
 
 #	particle.o
 
-
+OBJS += $(OBJ)/core/my_math.o
 OBJS += $(OBJ)/core/bullet_object.o
+OBJS += $(OBJ)/core/bullet_system.o
 OBJS += $(OBJ)/core/danmaku.o
 OBJS += $(OBJ)/core/spell_card.o
 OBJS += $(OBJ)/core/enemy/common.o
@@ -315,12 +374,14 @@ OBJS += $(OBJ)/core/enemy/boss_06_sakuya.o
 
 OBJS += $(OBJ)/core/enemy/chuu_01_youkai1.o
 OBJS += $(OBJ)/core/enemy/chuu_02_youkai2.o
+OBJS += $(OBJ)/core/enemy/chuu_03_rumia.o
 
-OBJS += $(OBJ)/core/enemy/zako_01_obake.o
+OBJS += $(OBJ)/core/enemy/zako_11_mahoujin.o
+OBJS += $(OBJ)/core/enemy/zako_01_obake1.o
+OBJS += $(OBJ)/core/enemy/zako_05_obake2.o
 OBJS += $(OBJ)/core/enemy/zako_02_yukari1.o
 OBJS += $(OBJ)/core/enemy/zako_03_yukari2.o
 OBJS += $(OBJ)/core/enemy/zako_04_aka_kedama.o
-OBJS += $(OBJ)/core/enemy/zako_05_niji_kedama.o
 OBJS += $(OBJ)/core/enemy/zako_06_midori_kedama1.o
 OBJS += $(OBJ)/core/enemy/zako_07_midori_kedama2.o
 OBJS += $(OBJ)/core/enemy/zako_08_kedama1.o
@@ -339,7 +400,6 @@ OBJS += $(OBJ)/core/enemy/zako_20_ao_yousei4.o
 
 OBJS += $(OBJ)/core/enemy/kanji_text.o
 OBJS += $(OBJ)/core/enemy/game_clear.o
-OBJS += $(OBJ)/core/enemy/tikei.o
 OBJS += $(OBJ)/core/enemy/clouds.o
 OBJS += $(OBJ)/core/enemy/bakuhatsu.o
 
@@ -370,20 +430,22 @@ OBJS += $(OBJ)/core/menu.o
 OBJS += $(OBJ)/core/game_over.o
 OBJS += $(OBJ)/core/name_entry.o
 
+OBJS += $(OBJ)/core/option_menu.o
 OBJS += $(OBJ)/core/key_config.o
+OBJS += $(OBJ)/core/music_room.o
 
 OBJS += $(OBJ)/core/ini_file.o
 
 #OBJS += $(OBJ)/core/fps.o
 
-
- OBJS += $(OBJ)/core/graphics00.o 
+OBJS += $(OBJ)/core/graphics00.o 
 
 OBJS += $(OBJ)/core/scenario_script.o
 OBJS += $(OBJ)/font/shinonome16p.o
 
 OBJS += $(OBJ)/core/boot_main.o
 OBJS += $(OBJ)/core/initialize.o
+
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
@@ -474,7 +536,8 @@ include $(PSPSDK)/lib/build.mak
 # Rules to make libraries
 #---------------------------------------------------------------------
 
-$(OBJ)/libtremor/libvorbisidec_test.a: $(TREMOR_OBJS)
+#$(OBJ)/libtremor/libvorbisidec_test.a: $(TREMOR_OBJS)
+$(OBJ)/$(LIBTREMOR_DIR)/libvorbisidec_test.a: $(TREMOR_OBJS)
 
 #---------------------------------------------------------------------
 # Rules to manage files
@@ -514,17 +577,26 @@ $(OBJ)/libtremor/libvorbisidec_test.a: $(TREMOR_OBJS)
 #rc/libtremor/misc.h(209) : warning: implicit declaration of function 'abs'
 #   で warnings
 
-# MP3の場合(c++ なのは、 smpeg だけ)
+# CPPゲームコアの場合c++(ライブラリとgnuプロファイラの扱いを変える)
+#$(OBJ)/core/%.o: $(SRC)/core/%.cpp
+#	psp-gcc -O3  $(CXXFLAGS) $(CORE_CFLAGS) -c $< -o $@
+
+# MP3ライブラリの場合(c++ なのは、 smpeg だけ)
 $(OBJ)/%.o: $(SRC)/%.cpp
 	psp-gcc -O3 $(CXXFLAGS) $(LIB_CFLAGS) -c $< -o $@
 
 # OGGの場合( alloca(); で warnings )
-$(OBJ)/libtremor/%.o: $(SRC)/libtremor/%.c
+#$(OBJ)/libtremor/%.o: $(SRC)/libtremor/%.c
+$(OBJ)/$(LIBTREMOR_DIR)/%.o: $(SRC)/$(LIBTREMOR_DIR)/%.c
 	psp-gcc -O3 $(CFLAGS) $(LIB_CFLAGS) -c $< -o $@
 
-# ゲームコアの場合(ライブラリとgnuプロファイラの扱いを変える)
+# Cゲームコアの場合(ライブラリとgnuプロファイラの扱いを変える)
 $(OBJ)/core/%.o: $(SRC)/core/%.c
 	psp-gcc -O3 -Werror $(CFLAGS) $(CORE_CFLAGS) -c $< -o $@
+
+# 旧pngの場合
+#$(OBJ)/png/%.o: $(SRC)/png/%.c
+#	psp-gcc -O2 -Werror $(CFLAGS) $(LIB_CFLAGS) -c $< -o $@
 
 # その他のライブラリの場合
 $(OBJ)/%.o: $(SRC)/%.c

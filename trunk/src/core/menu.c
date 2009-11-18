@@ -8,9 +8,11 @@
 //extern SDL_Surface *back_screen;
 
 static int volume/*=2*/; /* 0-3 */
+/*static*/ int zanki/*=2*/; /* 0-3 */
 
 int continue_stage;
 int practice_mode;
+int boss_bgm_mode;
 
 /*---------------------------------------------------------
 
@@ -34,14 +36,17 @@ typedef struct
 static int generic_menu_done_flag;	/* 共通メニュー使用中か否かのフラグ */
 
 static MENU start_menu;
+
 static MENU pause_menu;
 static MENU ask_continue_menu;
-static MENU option_menu;
-//#if (1==DEBUG_MODE)
+
 static MENU stage_select_menu;
-//#endif
-static MENU volume_menu;
 static MENU difficulty_menu;
+
+
+//static MENU option_menu;
+//static MENU volume_menu;
+//static MENU zanki_menu;
 //static MENU player_sl_menu;
 
 /*---------------------------------------------------------
@@ -72,8 +77,9 @@ enum
 	RES00_MAIN_MENU=0,
 	RES01_STAGE_SELECT,
 	RES02_DIFFICULTY,
-	RES03_OPTION,
-	RES04_VOLUME,
+//	RES03_OPTION,
+//	RES04_VOLUME,
+//	RES05_ZANKI,
 	RES08_ASK_CONTINUE_MENU,
 	RES09_PAUSE_MENU,
 	RES99_MAX
@@ -90,7 +96,11 @@ static MENU_RESOURCE my_111resource[RES99_MAX][/*8*/MAX_MENU_ITEMS/*10*/] =
 {
 	{	//	RES00_MAIN_MENU 	//		/*const*/ char *start_menu_options[] =/*(char *)*/start_menu_options
 		{	360,		"START",			},
-	//	{	330,		"EXTRA START",		},
+	//	#if (1==US E_ENDING_DEBUG)
+	//	{	250,		"ENDING DEBUG", 	},/* 330 */
+	//	#else
+		{	250,		"EXTRA START",		},/* 330 */
+	//	#endif //(1==US E_ENDING_DEBUG)
 		{	245,		"PRACTICE START",	},
 	//	{	400,		"REPLAY",			},
 		{	320,		"STORY",			},		//ちょっと変更
@@ -107,9 +117,9 @@ static MENU_RESOURCE my_111resource[RES99_MAX][/*8*/MAX_MENU_ITEMS/*10*/] =
 		{	330,		"4",			},	//stage4
 		{	320,		"5",			},	//stage5
 		{	310,		"6",			},	//stage6
-		#if (1==USE_ENDING_DEBUG)
-		{	275,		"ENDING",		},	//ending
-		#endif //(1==USE_ENDING_DEBUG)
+	//	#if (1==US E_ENDING_DEBUG)
+	//	{	275,		"ENDING",		},	//ending
+	//	#endif //(1==US E_ENDING_DEBUG)
 		{	0,NULL, 	},
 	},
 	{	//	RES02_DIFFICULTY		//			/*const*/ char *difficulty_menu_options[] = /*(char *)*/difficulty_menu_options
@@ -119,24 +129,32 @@ static MENU_RESOURCE my_111resource[RES99_MAX][/*8*/MAX_MENU_ITEMS/*10*/] =
 		{	185,		"LUNATIC",		},
 		{	0,NULL, 	},
 	},
-	{	//	RES03_OPTION			//	/*const*/ char *main_menu_options[] = /*(char *)*/main_menu_options
-	//	"DIFFICULTY",
-		{	200,		"KEY CONFIG",	},
-	//	#if (1==DEBUG_MODE)
-	//	"STAGE SELECT",
-	//	#endif
-		{	180,		"SOUND VOLUME", },
-	//	{	200,		"HIGH SCORE",	},		//変更
-		{	245,		"QUIT", 		},
-		{	200,NULL,		},
-	},
-	{	//	RES04_VOLUME	/*const*/ char *volume_menu_options[] =/*(char *)*/volume_menu_options
-		{	212,		"100",			},
-		{	220,		"75",			},
-		{	220,		"25",			},
-		{	227,		"0",			},
-		{	0,NULL, 	},
-	},
+//	{	//	RES03_OPTION			//	/*const*/ char *option_menu_options[] = /*(char *)*/main_menu_options
+//	//	"DIFFICULTY",
+//		{	200,		"KEY CONFIG",	},
+//	//	#if (1==DEBUG_MODE)
+//	//	"STAGE SELECT0",
+//	//	#endif
+//		{	180,		"SOUND VOLUME", },
+//	//	{	200,		"HIGH SCORE",	},		//変更
+//		{	200,		"PLAYER",		},		//変更
+//		{	245,		"QUIT", 		},
+//		{	200,NULL,		},
+//	},
+//	{	//	RES04_VOLUME	/*const*/ char *volume_menu_options[] =/*(char *)*/volume_menu_options
+//		{	212,		"100",			},
+//		{	220,		"75",			},
+//		{	220,		"25",			},
+//		{	227,		"0",			},
+//		{	0,NULL, 	},
+//	},
+//	{	//	RES05_ZANKI /*const*/ char *zanki_menu_options[] =/*(char *)*/zanki_menu_options
+//		{	227,		"2",			},
+//		{	227,		"3",			},
+//		{	227,		"4",			},
+//		{	227,		"5",			},
+//		{	0,NULL, 	},
+//	},
 	{	//	RES08_ASK_CONTINUE_MENU 	//	/*const*/ char *ask_continue_menu_options[] =/*(char *)*/ask_continue_menu_options
 		{	80, 		"CONTINUE YES", 	},
 		{	90, 		"CONTINUE NO",		},
@@ -173,6 +191,19 @@ typedef struct	// たぶん矩形データ用?
 	#define FPS_MENU_FACTOR8	(16)/* 8*FPS_MENU_FACTOR */
 	#define FPS_MENU_FACTOR15	(3/*2*/)
 #endif
+
+enum
+{
+	MAIN_MENU_START = 0,
+	MAIN_MENU_EXTRA_START,
+	MAIN_MENU_PRACTICE_START,
+//	MAIN_MENU_REPLAY,
+	MAIN_MENU_STORY,
+	MAIN_MENU_RESULT,
+//	MAIN_MENU_MUSIC_ROOM,
+	MAIN_MENU_OPTION,
+	MAIN_MENU_QUIT
+};
 
 /*---------------------------------------------------------
 
@@ -215,45 +246,75 @@ static void generic_menu_work(MENU *m)
 				if (my_pad_alter & (PSP_KEY_DOWN|PSP_KEY_UP|PSP_KEY_PAUSE|PSP_KEY_RIGHT))
 				{
 					#if (0==USE_DESIGN_TRACK)
-					play_voice_auto_track(VOICE02_ZAKO_HAKAI);
+					play_voice_auto_track(VOICE02_MENU_SELECT);
 					#else
-					voice_play(VOICE02_ZAKO_HAKAI, TRACK01_EXPLODE);
+					voice_play(VOICE02_MENU_SELECT, TRACK01_EXPLODE);
 					#endif
 				}
 				if (my_pad_alter & PSP_KEY_DOWN)
 				{
-//					play_voice_auto_track(VOICE02_ZAKO_HAKAI);
-					if (m->active_item==m->max_items-1)
-					{	m->active_item=0;}
+//					play_voice_auto_track(VOICE02_MENU_SELECT);
+					if (m->active_item == m->max_items-1)
+					{	m->active_item = 0;}
 					else
-					{	m->active_item++;}
+					{
+						if ((ST_WORK_MENU|ST_MENU_SUB_MAIN_MENU)==(psp_loop))
+						{
+							if ((MAIN_MENU_EXTRA_START-1)==m->active_item)
+							{
+								/* 0==						(					  1面までの練習は選べる) */
+								/* 1==		  2面まで到達	(					  2面までの練習は選べる) */
+								/* ... */
+								/* 5==最終面==6面まで到達	(EXTRA STAGE選べない、6面までの練習は選べる) */
+								/* 6==最終面==6面クリア 	(EXTRA STAGE選べる) */
+								/* 7==EXTRA面==EXTRA面クリア(EXTRA STAGE選べる) */
+								if (6>(option_config[OPTION_CONFIG_07_OPEN] & 0x07))
+								{
+									m->active_item++;
+								}
+							}
+						}
+						m->active_item++;
+					}
 				//	www=FPS_MENU_FACTOR10;
-					m->time_out=-1;
+					m->time_out = -1;
 				}
 				else if (my_pad_alter & PSP_KEY_UP)
 				{
-//					play_voice_auto_track(VOICE02_ZAKO_HAKAI);
-					if (!m->active_item)
-					{	m->active_item=m->max_items-1;}
+//					play_voice_auto_track(VOICE02_MENU_SELECT);
+					if (0 == m->active_item)
+					{	m->active_item = m->max_items-1;}
 					else
-					{	m->active_item--;}
+					{
+						if ((ST_WORK_MENU|ST_MENU_SUB_MAIN_MENU)==(psp_loop))
+						{
+							if ((MAIN_MENU_EXTRA_START+1)==m->active_item)
+							{
+								if(6>(option_config[OPTION_CONFIG_07_OPEN] & 0x07))
+								{
+									m->active_item--;
+								}
+							}
+						}
+						m->active_item--;
+					}
 				//	www=FPS_MENU_FACTOR10;
-					m->time_out=-1;
+					m->time_out = -1;
 				}
 				if ((ST_WORK_MENU|ST_MENU_SUB_PAUSE)==(psp_loop)/*state.substate==ST_MENU_SUB_PAUSE*/) // ポーズメニューの場合は
 				{
 					if (my_pad_alter & PSP_KEY_PAUSE)	// startボタンでポーズ解除
 					{
-//						play_voice_auto_track(VOICE02_ZAKO_HAKAI);
+//						play_voice_auto_track(VOICE02_MENU_SELECT);
 						pause_menu.active_item = 0;
 						m->menu_state = MENU_STATE_02_FADE_OUT;
 						m->time_out = -1;
 					}
 					/* ボスデバッグ用 */
-					#if 1/*(1==DEBUG_MODE)*/
+					#if 0/*(1==DEBUG_MODE)*/
 					if (my_pad_alter & PSP_KEY_RIGHT)
 					{
-//						play_voice_auto_track(VOICE02_ZAKO_HAKAI);
+//						play_voice_auto_track(VOICE02_MENU_SELECT);
 						now_max_continue = 90;/*test*/	/* ランキングにさせない */
 //						((PLAYER_DATA *)player->data)->my_score=9;/*test*/
 //						((PLAYER_DATA *)player->data)->zanki=9;/*test*/
@@ -290,7 +351,7 @@ static void generic_menu_work(MENU *m)
 					//SDL_FreeSurface(m->menu_item_surface[i]);
 				}
 			}
-			if (m->time_out==-2) { m->time_out=-3; }
+			if (-2 == m->time_out) { m->time_out = -3; }
 			/*m->*/generic_menu_done_flag = 1;
 		//	www=FPS_MENU_FACTOR10;
 			return;
@@ -342,9 +403,9 @@ static void generic_menu_work(MENU *m)
 			if (my_pad_alter & PSP_KEY_SHOT_OK)
 			{
 				#if (0==USE_DESIGN_TRACK)
-				play_voice_auto_track(VOICE02_ZAKO_HAKAI);
+				play_voice_auto_track(VOICE01_MENU_OK/*VOICE02_MENU_SELECT*/);
 				#else
-				voice_play(VOICE02_ZAKO_HAKAI, TRACK01_EXPLODE);
+				voice_play(VOICE01_MENU_OK/*VOICE02_MENU_SELECT*/, TRACK01_EXPLODE);
 				#endif
 				m->menu_state	= MENU_STATE_02_FADE_OUT;/* メニュー消去準備 */
 				m->time_out 	= -1;/*時間切れなし*/
@@ -390,8 +451,13 @@ static void generic_menu_init(int res_num/*char *options[]*/, MENU *m, int fade_
 		}
 	};
 //
-	while (/*options[m->max_items]*/my_111resource[res_num][m->max_items].str_name != NULL)
 	{
+loop:
+	if ((ST_INIT_MENU|ST_MENU_SUB_STAGE_SELECT)==(psp_loop))
+	{
+		if (m->max_items>(option_config[OPTION_CONFIG_07_OPEN]&0x07))	{	goto loop_quit;}
+	}
+	/*while*/if (NULL == /*options[m->max_items]*/my_111resource[res_num][m->max_items].str_name)	{	goto loop_quit;}
 	//	m->menu_item_surface[m->max_items] = font_render(options[m->max_items],FONT01);
 		m->menu_item_surface[m->max_items] = font_render(/*options[m->max_items]*/	(char *)my_111resource[res_num][m->max_items].str_name,FONT03);
 	//	for (j=0;j<5;j++)		//各スプライトに情報を与えてていく
@@ -405,7 +471,7 @@ static void generic_menu_init(int res_num/*char *options[]*/, MENU *m, int fade_
 			//	/*j+*/5, /* ????  PRIORITY_*/
 				SP_FLAG_NOT_CACHE/*1*/,
 		//	0	/*anime_speed*/
-			(IMAGE_RESOURCE *)my_resource
+				(IMAGE_RESOURCE *)my_resource
 			);
 			d												= mmalloc(sizeof(MENU_DATA));
 			m->menu_item_sprite[m->max_items]/*[j]*/->data	= d;
@@ -416,7 +482,9 @@ static void generic_menu_init(int res_num/*char *options[]*/, MENU *m, int fade_
 			m->menu_item_sprite[m->max_items]/*[j]*/->y256	= t256(0);
 		}
 		m->max_items++;
+		goto loop;
 	}
+loop_quit:
 	for (i=0; i<m->max_items; i++)
 	{
 	//	for (j=0;j<5;j++)
@@ -526,58 +594,62 @@ static void ask_continue_menu_work(void)
 
 ---------------------------------------------------------*/
 
-enum
-{
-//	OPT_MENU_DIFFICULTY = 0,
-	OPT_MENU_KEY_CONFIG = 0,
-//	#if (1==DEBUG_MODE)
-//	OPT_MENU_STAGE_SELECT,
-//	#endif
-	OPT_MENU_VOLUME,
-//	OPT_MENU_RESULT,
-	OPT_MENU_QUIT
-};
+//	enum
+//	{
+//	//	OPT_MENU_DIFFICULTY = 0,
+//		OPT_MENU_KEY_CONFIG = 0,
+//	//	#if (1==DEBUG_MODE)
+//	//	OPT_MENU_STAGE_SELECT,
+//	//	#endif
+//		OPT_MENU_VOLUME,
+//		OPT_MENU_ZANKI,
+//	//	OPT_MENU_RESULT,
+//		OPT_MENU_QUIT
+//	};
 
 /*---------------------------------------------------------
 
 ---------------------------------------------------------*/
 
-static void option_menu_init(void)
-{
-	generic_menu_init(RES03_OPTION,&option_menu,0,-1);
-}
+//static void option_menu_init(void)
+//{
+//	generic_menu_init(RES03_OPTION,&option_menu,0,-1);
+//}
 
 /*---------------------------------------------------------
 
 ---------------------------------------------------------*/
 
-static void option_menu_work(void)
-{
-	if (/*!option_menu.*/0==generic_menu_done_flag)
-	{
-		generic_menu_work(&option_menu);
-	}
-	else
-	{
-//		/*option_menu.*/generic_menu_done_flag=0;
-		switch (option_menu.active_item)
-		{
-		#if (0==USE_DESIGN_TRACK)
-		play_voice_auto_track(VOICE02_ZAKO_HAKAI);
-		#else
-		voice_play(VOICE02_ZAKO_HAKAI, TRACK01_EXPLODE);
-		#endif
-	//	case OPT_MENU_DIFFICULTY:	newsta te(ST_MENU,ST_MENU_SUB_RANK_SELECT,1);				break;	/* difficulty */
-		case OPT_MENU_KEY_CONFIG:	psp_loop=(ST_WORK_KEY_CONFIG/*ST_INIT_KEY_CONFIG*/|0);		break;	/* Key Config */				//	newsta te(ST_KEY_CONFIG,0,1);
+//static void option_menu_work(void)
+//{
+//	if (/*!option_menu.*/0==generic_menu_done_flag)
+//	{
+//		generic_menu_work(&option_menu);
+//	}
+//	else
+//	{
+//	//	/*option_menu.*/generic_menu_done_flag=0;
+//		switch (option_menu.active_item)
+//		{
+//#if (0)/*???*/
+//		#if (0==USE_DESIGN_TRACK)
+//		play_voice_auto_track(VOICE02_MENU_SELECT);
+//		#else
+//		voice_play(VOICE02_MENU_SELECT, TRACK01_EXPLODE);
+//		#endif
+//#endif
+//	//	case OPT_MENU_DIFFICULTY:	newsta te(ST_MENU,ST_MENU_SUB_RANK_SELECT,1);				break;	/* difficulty */
+//		case OPT_MENU_KEY_CONFIG:	psp_loop=(ST_WORK_KEY_CONFIG/*ST_INIT_KEY_CONFIG*/|0);		break;	/* Key Config */				//	newsta te(ST_KEY_CONFIG,0,1);
+//		case OPT_MENU_VOLUME:		psp_loop=(ST_INIT_MENU|ST_MENU_SUB_VOLUME); 				break;	/* change Sound-FX Volume */	//	newsta te(ST_MENU,ST_MENU_SUB_VOLUME,1);
+//		case OPT_MENU_ZANKI:		psp_loop=(ST_INIT_MENU|ST_MENU_SUB_ZANKI);					break;	/* change ZANKI */
+//	//	case OPT_MENU_RESULT:		newsta te(ST_RESULT,0,1);									break;	/* Hiscore */
+//		case OPT_MENU_QUIT: 		psp_loop=(ST_INIT_MENU|0/*ST_ME NU_SUB_MAIN_MENU*/);		break;	/* Back to Game */		/* メインメニューに戻る */	//	newsta te(ST_MENU,0/*ST_ME NU_SUB_MAIN_MENU*/,1);
+//		}
+//	}
+//}
 	//	#if (1==DEBUG_MODE)
 	//	case OPT_MENU_STAGE_SELECT: newsta te(ST_MENU,ST_MENU_SUB_STAGE_SELECT,1);				break;	/* stage select */
 	//	#endif
-		case OPT_MENU_VOLUME:		psp_loop=(ST_INIT_MENU|ST_MENU_SUB_VOLUME); 				break;	/* change Sound-FX Volume */	//	newsta te(ST_MENU,ST_MENU_SUB_VOLUME,1);
-	//	case OPT_MENU_RESULT:		newsta te(ST_RESULT,0,1);									break;	/* Hiscore */
-		case OPT_MENU_QUIT: 		psp_loop=(ST_INIT_MENU|0/*ST_ME NU_SUB_MAIN_MENU*/);		break;	/* Back to Game */		/* メインメニューに戻る */	//	newsta te(ST_MENU,0/*ST_ME NU_SUB_MAIN_MENU*/,1);
-		}
-	}
-}
 
 /*---------------------------------------------------------
 
@@ -587,7 +659,7 @@ static void option_menu_work(void)
 static void stage_select_menu_init(void)
 {
 	generic_menu_init(RES01_STAGE_SELECT,&stage_select_menu,0,-1);
-	stage_select_menu.active_item=continue_stage;
+	stage_select_menu.active_item = continue_stage;
 }
 
 /*---------------------------------------------------------
@@ -615,33 +687,65 @@ static void stage_select_menu_work(void)
 
 ---------------------------------------------------------*/
 
-static void volume_menu_init(void)
-{
-	generic_menu_init(RES04_VOLUME,&volume_menu,0,-1);
-	volume_menu.active_item=volume;
-}
+//static void volume_menu_init(void)
+//{
+//	generic_menu_init(RES04_VOLUME,&volume_menu,0,-1);
+//	volume_menu.active_item = volume;
+//}
 
 /*---------------------------------------------------------
 
 ---------------------------------------------------------*/
 
-static void volume_menu_work(void)
-{
-	if (/*!volume_menu.*/0==generic_menu_done_flag)
-	{
-		generic_menu_work(&volume_menu);
-	}
-	else
-	{
-//		/*volume_menu.*/generic_menu_done_flag=0;
-		volume=volume_menu.active_item;
-		//set_voice_volume(volume*40);
-		{const char vol[4] = {3*40,2*40,1*40,0*40};
-			set_voice_volume(vol[(volume&(4-1))]);
-		}
-		psp_loop=(ST_INIT_MENU|ST_MENU_SUB_OPTION); 	//newsta te(ST_MENU,ST_MENU_SUB_OPTION,1);
-	}
-}
+//static void volume_menu_work(void)
+//{
+//	if (/*!volume_menu.*/0==generic_menu_done_flag)
+//	{
+//		generic_menu_work(&volume_menu);
+//	}
+//	else
+//	{
+//	//	/*volume_menu.*/generic_menu_done_flag=0;
+//		volume = volume_menu.active_item;
+//		//set_voice_volume(volume*40);
+//		{const char vol[4] = {3*40,2*40,1*40,0*40};
+//			set_voice_volume(vol[(volume&(4-1))]);
+//		}
+//		psp_loop=(ST_INIT_MENU|ST_MENU_SUB_OPTION); 	//newsta te(ST_MENU,ST_MENU_SUB_OPTION,1);
+//	}
+//}
+
+/*---------------------------------------------------------
+
+---------------------------------------------------------*/
+
+//static void zanki_menu_init(void)
+//{
+//	generic_menu_init(RES05_ZANKI,&zanki_menu,0,-1);
+//	zanki_menu.active_item = zanki;
+//}
+
+/*---------------------------------------------------------
+
+---------------------------------------------------------*/
+
+//static void zanki_menu_work(void)
+//{
+//	if (/*!zanki_menu.*/0==generic_menu_done_flag)
+//	{
+//		generic_menu_work(&zanki_menu);
+//	}
+//	else
+//	{
+//	//	/*zanki_menu.*/generic_menu_done_flag=0;
+//		zanki=zanki_menu.active_item;
+//		//set_zanki(zanki*40);
+//	//	{const char vol[4] = {3*40,2*40,1*40,0*40};
+//	//		set_zanki(vol[(zanki&(4-1))]);
+//	//	}
+//		psp_loop=(ST_INIT_MENU|ST_MENU_SUB_OPTION); 	//newsta te(ST_MENU,ST_MENU_SUB_OPTION,1);
+//	}
+//}
 
 /*---------------------------------------------------------
 
@@ -650,7 +754,7 @@ static void volume_menu_work(void)
 static void difficulty_menu_init(void)
 {
 	generic_menu_init(RES02_DIFFICULTY,&difficulty_menu,0,-1);
-	difficulty_menu.active_item=difficulty;
+	difficulty_menu.active_item = difficulty;
 }
 
 /*---------------------------------------------------------
@@ -666,7 +770,7 @@ static void difficulty_menu_work(void)
 	else
 	{
 //		/*difficulty_menu.*/generic_menu_done_flag = 0;
-		difficulty=difficulty_menu.active_item;
+		difficulty = difficulty_menu.active_item;
 	//	newsta te(ST_MENU,ST_MENU_SUB_OPTION,1);
 	//	ini_save();
 		/* 通常／プラクティス、ゲーム開始 */
@@ -682,7 +786,7 @@ extern void (*callback_gu_draw_haikei)(void);//unsigned int dr aw_bg_screen;				
 static SDL_Surface *intropic/*=NULL*/;
 static void start_menu_init(void)
 {
-	callback_gu_draw_haikei = NULL;//dr aw_bg_screen = 0; 	/* 背景ウィンドウ表示off */
+	callback_gu_draw_haikei = NULL;//dr aw_bg_screen = 0;	/* 背景ウィンドウ表示off */
 	set_music_volume(128);/*とりあえず*/
 	{
 		if (NULL==intropic)
@@ -710,7 +814,7 @@ static void start_menu_work(void)
 	else
 	{
 		#if 0/*RESULTにしたから要らなくなったが、将来デモとか付けるならいる*/
-		if (start_menu.time_out==-3)
+		if (-3 == start_menu.time_out)
 		{
 			/* 時間切れで、強制的にデモ表示  / Timeout, go on and show HighScore List */
 			psp_loop = (ST_WORK_RESULT|0);//newsta te(ST_RESULT,0,1);
@@ -721,17 +825,19 @@ static void start_menu_work(void)
 //			/*start_menu.*/generic_menu_done_flag = 0;
 			switch (start_menu.active_item)
 			{
-			case 0: 	practice_mode=0;	continue_stage=0;
-						psp_loop=(ST_INIT_MENU|ST_MENU_SUB_RANK_SELECT);	break; /* Start */			//	newsta te(ST_MENU,ST_MENU_SUB_RANK_SELECT,1);	/*newsta te(ST_PLAYER_SELECT,0,1); */				//newsta te(ST_GAME_PLAY,0,1);
-		//	case 1: 														break; /* Extra Start */	//	newsta te(ST_PLAYER_SELECT,0,1);		//newsta te(ST_GAME_PLAY,0,1);
-			case 1: 	practice_mode=1;
-						psp_loop=(ST_INIT_MENU|ST_MENU_SUB_STAGE_SELECT);	break; /* Practice Start */ //	newsta te(ST_MENU,ST_MENU_SUB_STAGE_SELECT,1);*/ /* stage select */ //newsta te(ST_PLAYER_SELECT,0,1);	break;	//newsta te(ST_GAME_PLAY,0,1);
-		//	case 1: 														break; /* Replay */ 		//	newsta te(ST_MENU,ST_MENU_SUB_OPTION,1);
-			case 2: 	psp_loop=(ST_WORK_STORY|0); 						break; /* Story */			//	newsta te(ST_STORY,0,1);
-			case 3: 	psp_loop=(ST_WORK_RESULT|0);						break; /* Result */ 		//	newsta te(ST_RESULT,0,1); /* Hiscore */
-		//	case 3: 														break; /* Music Room */ 	//	newsta te(ST_MENU,ST_MENU_SUB_OPTION,1);
-			case 4: 	psp_loop=(ST_INIT_MENU|ST_MENU_SUB_OPTION); 		break; /* Option */ 		//	newsta te(ST_MENU,ST_MENU_SUB_OPTION,1);
-			case 5: 	psp_loop=ST_PSP_QUIT;								break; /* Quit */			//	newsta te(ST_PSP_QUIT,0,1);
+			case MAIN_MENU_START:			practice_mode=0;	continue_stage=0;
+											psp_loop=(ST_INIT_MENU|ST_MENU_SUB_RANK_SELECT);	break; /* Start */			//	newsta te(ST_MENU,ST_MENU_SUB_RANK_SELECT,1);	/*newsta te(ST_PLAYER_SELECT,0,1); */				//newsta te(ST_GAME_PLAY,0,1);
+			case MAIN_MENU_EXTRA_START: 	practice_mode=0;	continue_stage=(8-1)/*6*/;		/* STAGE8 == 7 == (8-1)*/
+											psp_loop=(ST_INIT_MENU|ST_MENU_SUB_RANK_SELECT);	break; /* Extra Start */	//	newsta te(ST_PLAYER_SELECT,0,1);		//newsta te(ST_GAME_PLAY,0,1);
+			case MAIN_MENU_PRACTICE_START:	practice_mode=1;
+											psp_loop=(ST_INIT_MENU|ST_MENU_SUB_STAGE_SELECT);	break; /* Practice Start */ //	newsta te(ST_MENU,ST_MENU_SUB_STAGE_SELECT,1);*/ /* stage select */ //newsta te(ST_PLAYER_SELECT,0,1);	break;	//newsta te(ST_GAME_PLAY,0,1);
+		//	case MAIN_MENU_REPLAY:																break; /* Replay */ 		//	newsta te(ST_MENU,ST_MENU_SUB_OPTION,1);
+			case MAIN_MENU_STORY:			psp_loop=(ST_WORK_STORY|0); 						break; /* Story */			//	newsta te(ST_STORY,0,1);
+			case MAIN_MENU_RESULT:			psp_loop=(ST_WORK_RESULT|0);						break; /* Result */ 		//	newsta te(ST_RESULT,0,1); /* Hiscore */
+		//	case MAIN_MENU_MUSIC_ROOM:															break; /* Music Room */ 	//	newsta te(ST_MENU,ST_MENU_SUB_OPTION,1);
+		//	case MAIN_MENU_OPTION:			psp_loop=(ST_INIT_MENU|ST_MENU_SUB_OPTION); 		break; /* Option */ 		//	newsta te(ST_MENU,ST_MENU_SUB_OPTION,1);
+			case MAIN_MENU_OPTION:			psp_loop=(ST_WORK_OPTION_MENU|0);					break; /* Option */ 		//	newsta te(ST_MENU,ST_MENU_SUB_OPTION,1);
+			case MAIN_MENU_QUIT:			psp_loop=ST_PSP_QUIT;								break; /* Quit */			//	newsta te(ST_PSP_QUIT,0,1);
 			}
 		}
 	}
@@ -748,11 +854,10 @@ void all_menu_init(void)
 	case ST_MENU_SUB_MAIN_MENU: 	start_menu_init();			break;
 	case ST_MENU_SUB_PAUSE: 		pause_menu_init();			break;
 	case ST_MENU_SUB_ASK_CONTINUE:	ask_continue_menu_init();	break;
-	case ST_MENU_SUB_OPTION:		option_menu_init(); 		break;
-	//#if (1==DEBUG_MODE)
+//	case ST_MENU_SUB_OPTION:		option_menu_init(); 		break;
 	case ST_MENU_SUB_STAGE_SELECT:	stage_select_menu_init();	break;
-	//#endif
-	case ST_MENU_SUB_VOLUME:		volume_menu_init(); 		break;
+//	case ST_MENU_SUB_VOLUME:		volume_menu_init(); 		break;
+//	case ST_MENU_SUB_ZANKI: 		zanki_menu_init();			break;
 	case ST_MENU_SUB_RANK_SELECT:	difficulty_menu_init(); 	break;
 	}
 	psp_loop += (0x0100);
@@ -766,15 +871,14 @@ void all_menu_work(void)
 {
 	switch ((Uint8)(psp_loop&0xff)/*state.substate*/)
 	{
-//	play_voice_auto_track(VOICE02_ZAKO_HAKAI);/*??*/
+//	play_voice_auto_track(VOICE02_MENU_SELECT);/*??*/
 	case ST_MENU_SUB_MAIN_MENU: 	start_menu_work();			break;
 	case ST_MENU_SUB_PAUSE: 		pause_menu_work();			break;
 	case ST_MENU_SUB_ASK_CONTINUE:	ask_continue_menu_work();	break;
-	case ST_MENU_SUB_OPTION:		option_menu_work(); 		break;
-	//#if (1==DEBUG_MODE)
+//	case ST_MENU_SUB_OPTION:		option_menu_work(); 		break;
 	case ST_MENU_SUB_STAGE_SELECT:	stage_select_menu_work();	break;
-	//#endif
-	case ST_MENU_SUB_VOLUME:		volume_menu_work(); 		break;
+//	case ST_MENU_SUB_VOLUME:		volume_menu_work(); 		break;
+//	case ST_MENU_SUB_ZANKI: 		zanki_menu_work();			break;
 	case ST_MENU_SUB_RANK_SELECT:	difficulty_menu_work(); 	break;
 	}
 }
@@ -788,16 +892,17 @@ void menusystem_init(void)
 	continue_stage					= 0;
 //	practice_mode					= 0;
 	volume							= 0;
+	zanki							= 2;
 //
 	start_menu.active_item			= 0;
 	pause_menu.active_item			= 0;
 	ask_continue_menu.active_item	= 0;
-	option_menu.active_item 		= 0;
-	//#if (1==DEBUG_MODE)
 	stage_select_menu.active_item	= 0/*continue_stage*/;
-	//#endif
-	volume_menu.active_item 		= 0/*volume*/;
 	difficulty_menu.active_item 	= 0;
+
+//	option_menu.active_item 		= 0;
+//	volume_menu.active_item 		= 0/*volume*/;
+//	zanki_menu.active_item			= 2/*zanki*/;
 //	player_sl_menu.active_item		= 0;
 }
 
@@ -816,14 +921,14 @@ extern void ini_save(void); 	// [***090115
 「冷やす」を意味する英語の動詞チル (chill) の過去分詞である。
 何で chillno じゃなくて cirno なんだろな？ */
 
-#define YUYUKO_PASSWORD  "TABERARENAINO9"
-#define CIRNO_PASSWORD	 "CIRNO9PASSWORD"
-#define REMILIA_PASSWORD "RUMIAISMYBRIDE"
-extern int tiny_strcmp(char *aaa, const char *bbb);
+//#define YUYUKO_PASSWORD  "TABERARENAINO9"
+//#define CIRNO_PASSWORD	 "CIRNO9PASSWORD"
+//#define REMILIA_PASSWORD "RUMIAISMYBRIDE"
 
-/*static*/ char str_pass_word[32/*20*/];		/* [***090222 */
+//	/*static*/ char str_pa ss_word[32/*20*/];		/* [***090222 */
 void game_clear_set_password(void)
 {
+#if 0
 	if (0 < difficulty)/* NORMAL 以上でクリアせよ */
 	{
 		/* [***090222	追加 */
@@ -845,10 +950,12 @@ void game_clear_set_password(void)
 		{
 			strcpy(str_pass_word, REMILIA_PASSWORD);	/* レミリア 開放 */
 		}
+	}
+#endif
+	{
 		ini_save();
 	}
 }
-
 
 #define SP_X 250
 
@@ -857,7 +964,7 @@ void game_clear_set_password(void)
 
 int select_player;
 
-#define MAX_PLAYER (5)/*4*/
+#define MAX_PLAYER (8/*5*/)/*4*/
 
 #define BASE_SP_BG_PNG		(MAX_PLAYER*0)
 #define BASE_SP_ST_PNG		(MAX_PLAYER*1)
@@ -869,34 +976,30 @@ int select_player;
 
 static /*const*/ char *player00_res[(BASE_SP_PNG_MAX)] =
 {
-	/*	0 REIMU */		"select/bg_re.jpg", 	// "select/sp_reimu_bg.jpg",
-	/*	1 MARISA */ 	"select/bg_ma.jpg", 	// "select/sp_marisa_bg.jpg",
-	/*	2 REMILIA */	"select/bg_oz.jpg", 	// "select/sp_remiria_bg.jpg",
-	/*	3 CIRNO */		"select/bg_ci.jpg", 	// "select/sp_cirno_bg.jpg",
-	/*	4 YUYUKO */ 	"select/bg_yu.jpg", 	// "select/sp_yuyuko_bg.jpg",
+	/*	0 REIMU */		"select/bg00.jpg",	//	"select/bg_re.jpg", 	// "select/sp_reimu_bg.jpg",
+	/*	1 REIMU */		"select/bg01.jpg",	//	"select/bg_re.jpg", 	// "select/sp_reimu_bg.jpg",
+	/*	2 MARISA */ 	"select/bg02.jpg",	//	"select/bg_ma.jpg", 	// "select/sp_marisa_bg.jpg",
+	/*	3 MARISA */ 	"select/bg03.jpg",	//	"select/bg_ma.jpg", 	// "select/sp_marisa_bg.jpg",
+	/*	4 REMILIA */	"select/bg04.jpg",	//	"select/bg_ma.jpg", 	// "select/sp_marisa_bg.jpg",
+	/*	5 YUYUKO */ 	"select/bg05.jpg",	//	"select/bg_oz.jpg", 	// "select/sp_remiria_bg.jpg",
+	/*	6 CIRNO */		"select/bg06.jpg",	//	"select/bg_ci.jpg", 	// "select/sp_cirno_bg.jpg",
+	/*	7 CIRNO */		"select/bg07.jpg",	//	"select/bg_yu.jpg", 	// "select/sp_yuyuko_bg.jpg",
 //
-	/*	5 REIMU */		"select/p_re.png",		// "select/sp_reimu_st.png",
-	/*	6 MARISA */ 	"select/p_ma.png",		// "select/sp_marisa_st.png",
-	/*	7 REMILIA */	"select/p_oz.png",		// "select/sp_remiria_st.png",
-	/*	8 CIRNO */		"select/p_ci.png",		// "select/sp_cirno_st.png",
-	/*	9 YUYUKO */ 	"select/p_yu.png",		// "select/sp_yuyuko_st.png",
+	/*	8 REIMU */		"select/pl00.png",	//	"select/p_re.png",		// "select/sp_reimu_st.png",
+	/*	9 REIMU */		"select/pl01.png",	//	"select/p_re.png",		// "select/sp_reimu_st.png",
+	/* 10 MARISA */ 	"select/pl02.png",	//	"select/p_ma.png",		// "select/sp_marisa_st.png",
+	/* 11 MARISA */ 	"select/pl03.png",	//	"select/p_ma.png",		// "select/sp_marisa_st.png",
+	/* 12 REMILIA */	"select/pl04.png",	//	"select/p_ma.png",		// "select/sp_marisa_st.png",
+	/* 13 YUYUKO */ 	"select/pl05.png",	//	"select/p_oz.png",		// "select/sp_remiria_st.png",
+	/* 14 CIRNO */		"select/pl06.png",	//	"select/p_ci.png",		// "select/sp_cirno_st.png",
+	/* 15 CIRNO */		"select/pl07.png",	//	"select/p_yu.png",		// "select/sp_yuyuko_st.png",
 };
 
 /*---------------------------------------------------------
 
 ---------------------------------------------------------*/
 
-static int can_select_player;		/* [***090222	追加 */
-//static int psp_loop;
-//void player_opt_init(void)
-//{
-//	psp_loop	= 0;
-//	psp_loop=(ST_WORK_PLAYER_SELECT|0); //newsta te();
-//}
 
-/*---------------------------------------------------------
-
----------------------------------------------------------*/
 static int sp_diff256;
 static void player_opt_img256(SDL_Surface *src, int scale256, int l_or_r)	//r=0, l=1
 {
@@ -909,13 +1012,13 @@ static void player_opt_img256(SDL_Surface *src, int scale256, int l_or_r)	//r=0,
 //	dr.w = ((src->w*scale256)>>8);
 	dr.w = (src->w);
 	dr.h = (src->h);
-//	if (l_or_r)		{	dr.x = SP_X;}
+//	if (l_or_r) 	{	dr.x = SP_X;}
 //	else			{	dr.x = SP_X+200-dr.w;}
 	{int aaa;
 	//	aaa=(((scale256))>>1);
 		aaa=(((sp_diff256))>>8)-16;
-	//	if (l_or_r)	{;}	else	{	aaa = -(aaa);}
-		if (l_or_r)	{	aaa = -(aaa);}
+	//	if (l_or_r) {;} else	{	aaa = -(aaa);}
+		if (l_or_r) {	aaa = -(aaa);}
 		dr.x = SP_X+(aaa);
 	}
 	dr.y = (50);
@@ -928,6 +1031,21 @@ static void player_opt_img256(SDL_Surface *src, int scale256, int l_or_r)	//r=0,
 /*---------------------------------------------------------
 
 ---------------------------------------------------------*/
+void menu_cancel_and_voice(void)
+{
+	#if (0==USE_DESIGN_TRACK)
+	play_voice_auto_track(VOICE04_SHIP_HAKAI);
+	#else
+	voice_play(VOICE04_SHIP_HAKAI, TRACK03_SHORT_MUSIC/*TRACK01_EXPLODE*/);/* 自機死に音は、なるべく重ねない */
+	#endif
+	/* メインメニューに戻る */
+	psp_loop=(ST_INIT_MENU|0/*ST_ME NU_SUB_MAIN_MENU*/);	//newsta te(ST_MENU/*ST_INTRO*/,0/*1*/,1);
+}
+
+/*---------------------------------------------------------
+
+---------------------------------------------------------*/
+static u8 can_player_bit ;	/* 霊夢 A / 魔理沙 A のみ */		/* [***090222	追加 */
 
 void player_opt_work(void)
 {
@@ -945,32 +1063,56 @@ void player_opt_work(void)
 //	psp_clear_screen();
 	switch (psp_loop&0x0f)
 	{
+// 0000 0001 霊夢 A
+// 0000 0010 霊夢 B
+// 0000 0100 魔理沙 A
+// 0000 1000 魔理沙 B
+
+// 0001 0000 魔理沙 C
+// 0010 0000 レミリア
+// 0100 0000 チルノ
+// 1000 0000 幽々子
+
+
+// 0000 0001 霊夢 A
+// 0000 0010 霊夢 B
+// 0000 0100 魔理沙 A
+// 0000 1000 魔理沙 B
+
+// 0001 0000 レミリア
+// 0010 0000 幽々子
+// 0100 0000 チルノ A
+// 1000 0000 チルノ Q
 	case 0://init
 	//	bg_alpha_bbb=0;
 		sp_scale256 = t256(1);sp_diff256=0;
 	//
+		#if 0
 		if (0==tiny_strcmp(str_pass_word, YUYUKO_PASSWORD)) 	/* [***090222	追加 */
 		{
-			can_select_player=MAX_PLAYER-1;
+			can_player_bit=0x7f/*MAX_PLAYER-1*/;	/* 幽々子 開放 */
 		}
 		else
 		if (0==tiny_strcmp(str_pass_word, CIRNO_PASSWORD))		/* [***090222	追加 */
 		{
-			can_select_player=MAX_PLAYER-2;
+			can_player_bit=0x5f/*MAX_PLAYER-2*/;	/* 魔理沙 B / チルノ A 開放 */
 		}
 		else
 		if (0==tiny_strcmp(str_pass_word, REMILIA_PASSWORD))	/* [***090222	追加 */
 		{
-			can_select_player=MAX_PLAYER-3;
+			can_player_bit=0x17/*MAX_PLAYER-3*/;	/* 霊夢 B / レミリア 開放 */
 		}
 		else
 		{
-			can_select_player=MAX_PLAYER-4;
+			can_player_bit=0x05/*MAX_PLAYER-4*/;	/* 霊夢 A / 魔理沙 A のみ */
 		}
-		if (select_player > can_select_player)
-		{
-			select_player	= 0;
-		}
+		#endif
+		can_player_bit=0xff;	/* テスト */
+	//	if (select_player > can_player_bit)
+	//	{
+	//		select_player	= 0;
+	//	}
+		select_player	&= 7;
 		player_select_bg0_surface			= loadbmp0( (char *)player00_res[BASE_SP_BG_PNG+select_player], 0, 0/*1*/);
 		player_select_fg0_surface			= loadbmp0( (char *)player00_res[BASE_SP_ST_PNG+select_player], 0, 0/*1*/);
 		SDL_SetColorKey(player_select_fg0_surface, SDL_SRCCOLORKEY, 0x00000000);
@@ -998,22 +1140,32 @@ void player_opt_work(void)
 			{
 				is_turn_right=(my_pad_alter & PSP_KEY_RIGHT)?1:0;/*右なら1, 左なら0 */
 				#if (0==USE_DESIGN_TRACK)
-				play_voice_auto_track(VOICE02_ZAKO_HAKAI);
+				play_voice_auto_track(VOICE02_MENU_SELECT);
 				#else
-				voice_play(VOICE02_ZAKO_HAKAI, TRACK01_EXPLODE);
+				voice_play(VOICE02_MENU_SELECT, TRACK01_EXPLODE);
 				#endif
 				player_select_bg2_surface=loadbmp0( (char *)player00_res[BASE_SP_BG_PNG+select_player] /*sp_bg_list[select_player]*/, 0, 0/*1*/);
 				player_select_fg2_surface=loadbmp0( (char *)player00_res[BASE_SP_ST_PNG+select_player] /*sp_st_list[select_player]*/, 0, 0/*1*/);
 				SDL_SetColorKey(player_select_fg2_surface, SDL_SRCCOLORKEY, 0x00000000);
 				if (0==is_turn_right)
 				{	/* [***090222	追加 */
-					if (0==select_player)	{	select_player=can_select_player;	}
-					else					{	select_player--;}
+				//	if (0==select_player)	{	select_player=can_player_bit;	}
+				//	else					{	select_player--;}
+					do
+					{
+						select_player--;
+						select_player &= 0x07;
+					} while (0==((u8)((1<<select_player))&can_player_bit));
 				}
 				else
 				{	/* [***090222	追加 */
-					if (select_player==can_select_player)	{	select_player=0;	}
-					else									{	select_player++;	}
+				//	if (select_player==can_player_bit)	{	select_player=0;	}
+				//	else								{	select_player++;	}
+					do
+					{
+						select_player++;
+						select_player &= 0x07;
+					} while (0==(((u8)(1<<select_player))&can_player_bit));
 				}
 				player_select_bg0_surface=loadbmp0( (char *)player00_res[BASE_SP_BG_PNG+select_player] /*sp_bg_list[select_player]*/, 0, 0/*1*/);
 				player_select_fg0_surface=loadbmp0( (char *)player00_res[BASE_SP_ST_PNG+select_player] /*sp_st_list[select_player]*/, 0, 0/*1*/);
@@ -1026,22 +1178,16 @@ void player_opt_work(void)
 			if (my_pad_alter & PSP_KEY_SHOT_OK)
 			{
 				#if (0==USE_DESIGN_TRACK)
-				play_voice_auto_track(VOICE01_HIT);
+				play_voice_auto_track(VOICE01_MENU_OK);
 				#else
-				voice_play(VOICE01_HIT, TRACK01_EXPLODE);/*テキトー*/
+				voice_play(VOICE01_MENU_OK, TRACK01_EXPLODE);/*テキトー*/
 				#endif
 				psp_loop=(ST_WORK_STAGE_FIRST/*ST_INIT_GAME_PLAY*/|0); //newsta te(ST_GAME_PLAY,0,1);
 			}
 			else
 			if (my_pad_alter & PSP_KEY_BOMB_CANCEL)
 			{
-				#if (0==USE_DESIGN_TRACK)
-				play_voice_auto_track(VOICE04_SHIP_HAKAI);
-				#else
-				voice_play(VOICE04_SHIP_HAKAI, TRACK03_SHORT_MUSIC/*TRACK01_EXPLODE*/);/* 自機死に音は、なるべく重ねない */
-				#endif
-				/* メインメニューに戻る */
-				psp_loop=(ST_INIT_MENU|0/*ST_ME NU_SUB_MAIN_MENU*/);	//newsta te(ST_MENU/*ST_INTRO*/,0/*1*/,1);
+				menu_cancel_and_voice();	/* メインメニューに戻る */
 			}
 		}
 		//else

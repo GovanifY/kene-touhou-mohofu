@@ -20,16 +20,16 @@ void gamecore_term(void)
 	last_score=((PLAYER_DATA *)player->data)->my_score;
 
 	bg2_destroy();		// [***090126		追加
-	//controller_remove_all();
+	//sprite_controller_remove_all();
 	sprite_remove_all000(SP_GROUP_ALL_GAME_OBJS);
 //	sprite_remove_all222(SP_GROUP_ALL_GAME_OBJS);/*弾幕用*/
 //	parsys_remove_all();
 //	score_cleanup();
 //
-//	//play_voice_auto_track(VOICE04_SHIP_HAKAI);	// [***090123		コメントアウト
+//	//play_voice_auto_track(VO ICE04_SHIP_HAKAI);	// [***090123		コメントアウト
 	//stop_music(); 	// [***090123		コメントアウト
 	set_music_volume(128);
-	play_music(BGM_00_menu1);
+	play_music_num(BGM_09_menu1);
 	player_now_stage = 0;		// [***090702		追加
 	pd_bomber_time = 0; 		// [***090903		追加
 	#if 1

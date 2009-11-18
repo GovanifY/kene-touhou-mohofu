@@ -36,52 +36,78 @@ typedef struct /*_boss06_data*/
 	int wait1;
 	int wait2_256;
 	int wait3;
-//	int level;
 	int move_angle512;
-	int length_s_p256;	/* 咲夜とプレイヤーとの距離 */
+//	int length_s_p256;	/* 咲夜とプレイヤーとの距離 */
 
 } BOSS06_DATA;
 //	int aaa_type;		/* 0: normal, 1: destroyed */
 #define move_vx256 move_angle512
 
 
+typedef struct /*_boss06_doll_data*/
+{
+	#if (1==USE_KEISYOU)
+	SPRITE *sakuya_obj; 		/* 継承 */
+	#endif
+	int state_d01;	/* 行動 */
+	int state_d02;	/* 形態 */
+	int nnn;
+	int hen_no_kazu;	/* 星型の辺の数をカウント(0辺から4辺までの計5辺==五角形) */
+	int wait;
+	int angle512;
+//
+	int sss;
+	int jjj;
+	int doll_vx;
+	int doll_vy;
+	int doll_point_x;			/* 目標座標 */
+	int doll_point_y;			/* 目標座標 */
+	int doll_point_angle512;
+	int star_remain_time;
+//
+//	int tx256;
+//	int ty256;
+} BOSS06_DOLL_DATA;
+
+
 #if 1
 /* 構造体の外にある必然性がある */
 	#define FLG_NO_DOLL 	(0)
 	#define FLG_ALL_CAST	(1)
-static int mahoujin_num;
+static int kodomo_num;
 //static SPRITE *dummy_obj; /*dummy_obj*/
 #endif
+
+
+//----[ZAKO]
+
+static SPRITE *obj_doll;		// 子供魔方陣のスプライト
+
+/*---------------------------------------------------------
+
+---------------------------------------------------------*/
+
 
 enum
 {
 //--- 星型以前
-	MH00 = 0,
-	MH01,
-	MH02,
-	MH03,
-//--- 星型準備
-	MH04,
-//--- 星型以降
-	MH05,
-	MH06,
-	MH07,
-	MH08,
-	MH09,
-	MH10,
-	MH11,
-	MH12,
-	MH13,
-	MH14,
-	MH15,
-	MH16,
-	MH17,
-	MH18,
-	MH19,
-	MH20,
-//
-	MH21,
+	DS00 = 0,
+	DS01,
+	DS02,
+	DS03,
 };
+enum
+{
+//--- 星型準備
+	DB00 = 0,
+//--- 星型以降
+	DB01,
+	DB02,
+	DB03,
+	DB04,
+	DB05,
+};
+
 
 enum
 {
@@ -92,7 +118,6 @@ enum
 	SA04,
 	SA05,
 	SA06,
-	SA06aaa,
 	SA07,
 	SA08,
 	SA09,
@@ -157,19 +182,19 @@ enum
 	SAKUYA_ANIME_00_LEFT = 0,
 	SAKUYA_ANIME_01_,
 	SAKUYA_ANIME_02_,
-	SAKUYA_ANIME_03_,
+//	SAKUYA_ANIME_03_,
 	SAKUYA_ANIME_04_CENTER_A,
 //
 	SAKUYA_ANIME_05_CENTER_B,
 	SAKUYA_ANIME_06_,
 	SAKUYA_ANIME_07_,
-	SAKUYA_ANIME_08_,
+//	SAKUYA_ANIME_08_,
 	SAKUYA_ANIME_09_RIGHT,
 //
 	SAKUYA_ANIME_09_ = 0x10,
-	SAKUYA_ANIME_10_,/*0x11*/
+//	SAKUYA_ANIME_10_,/*0x11*/
 	SAKUYA_ANIME_11_,/*0x12*/
-	SAKUYA_ANIME_12_,/*0x13*/
+//	SAKUYA_ANIME_12_,/*0x13*/
 	SAKUYA_ANIME_13_,/*0x14*/
 	SAKUYA_ANIME_14_,/*0x15*/
 //
@@ -179,48 +204,23 @@ enum
 	SAKUYA_ANIME_18_,/*0x19*/
 };
 
-
-/*--------------------------------------*/
-/*--------------------------------------*/
-/*--------------------------------------*/
-
-
 /*---------------------------------------------------------
-
+	子供魔方陣 移動
 ---------------------------------------------------------*/
 
-typedef struct /*_boss06_maho_data*/
-{
-	#if (1==USE_KEISYOU)
-	SPRITE *sakuya_obj; 		/* 継承 */
-	#endif
-	int state_m01;	/* 行動 */
-	int state_m02;	/* 形態 */
-	int nnn;
-	int mmm;
-	int wait;
-	int angle512;
-//
-	int sss;
-	int jjj;
-	int maho_vx;
-	int maho_vy;
-	int maho_point_x;			/* 目標座標 */
-	int maho_point_y;			/* 目標座標 */
-	int maho_point_angle512;
-//
-//	int tx256;
-//	int ty256;
-} BOSS06_MAHO_DATA;
+#define DOLL_WAIT50 		(16/*16*/)
+#define DOLL_SPEED10		(4/*8*/)
+#define DOLL_SET03			(1)
+#define DOLL_ADD05			(1)
 
+#define DOLL_POINT_CX00 	(t256(GAME_WIDTH/2))
+#define DOLL_POINT_CY00 	(t256(/*GAME_HEIGHT/4*/64))
+#define DOLL_RADIUS_SIZE	(/*t256*/(90))
 
-/*---------------------------------------------------------
-	魔方陣移動
----------------------------------------------------------*/
+#define DOLL_HEN_MAX		(5)
 
-/*static*/extern void enemy_sp2_bullet_create(SPRITE *src, int angle512, int gra256, int *sd_nnn);
-static void enemy_boss06_maho_move(SPRITE *src)
-{
+//------------------------------------------
+
 	/*
 	星型線1 190, 48
 	星型線2 248, 217
@@ -240,8 +240,180 @@ static void enemy_boss06_maho_move(SPRITE *src)
 		{t256(138), t256(217)},
 	};
 */
-	BOSS06_MAHO_DATA *data = (BOSS06_MAHO_DATA *)src->data;
-	if (data->state_m02 < MH05)
+
+/*static*/extern void enemy_sp2_bullet_create01(SPRITE *src, int angle512, int star_remain_time/**sd_nnn*/);
+static void move_doll02(SPRITE *src)
+{
+	BOSS06_DOLL_DATA *data = (BOSS06_DOLL_DATA *)src->data;
+	data->star_remain_time--;
+//
+	switch (data->state_d02)
+	{
+//------------------------------------------
+	case DB00:	/* 星型を描く準備 */
+		data->state_d02++/* = DB01*/;
+		data->doll_point_angle512=0;
+		data->doll_vx = t256(1.0);
+		data->doll_vy = t256(0.0);
+		#if (1==USE_KEISYOU)
+		src->x256 = (data->sakuya_obj->x256);		dummy_obj->x256 = src->x256;
+		src->y256 = (data->sakuya_obj->y256);		dummy_obj->y256 = src->y256;
+		#else
+		src->x256 = (((((PLAYER_DATA *)player->data)->boss))->x256);		dummy_obj->x256 = src->x256;
+		src->y256 = (((((PLAYER_DATA *)player->data)->boss))->y256);		dummy_obj->y256 = src->y256;
+		#endif
+		data->sss = 0;
+		break;
+//------------------------------------------
+	case DB01:	/* 準備完了まで待つ */
+		src->anim_frame = 0;
+//			if (2==data->nnn/*%(4-difficulty)*/)/* %2 == (5-3:Lunatic) */
+//			{	src->anim_frame = 1;}
+//			else
+//			{	src->anim_frame = 0;}
+		#if (1==USE_KEISYOU)
+		if (((BOSS06_DATA *)data->sakuya_obj->data)->state1==1)
+		#else
+		if (((BOSS06_DATA *)((((PLAYER_DATA *)player->data)->boss))->data)->state1==1)
+		#endif
+		{
+			data->state_d02++ /*= DB02*/;
+		}
+		break;
+//------------------------------------------
+	case DB02:
+		data->state_d02++ /*= DB03*/;
+		data->state_d01 		= 0x00;
+//		data->star_remain_time	= (64*5);
+		data->wait				= DOLL_WAIT50;
+		break;
+	case DB03:	/* 一時停止 */
+	//	hosi_wait(src); static void hosi_wait(SPRITE *src)
+		{
+		//	BOSS06_DOLL_DATA *data = (BOSS06_DOLL_DATA *)src->data;
+		//	if (data->wait<0)	{	data->state_d02++/* = DB04*/;}	else	{	data->wait--;}
+			data->wait--;	if (data->wait<0)	{	data->state_d02++/* = DB04*/;}
+		}
+		break;
+//------------------------------------------
+	case DB04:	/* 星型を描くよ */
+//		data->doll_point_x=DOLL_POINT_CX00+sin512((data->doll_point_angle512))*DOLL_RADIUS_SIZE;
+//		data->doll_point_y=DOLL_POINT_CY00+cos512((data->doll_point_angle512))*DOLL_RADIUS_SIZE;
+
+		/*	*/
+		dummy_obj->x256 += (data->doll_vx)/**fps_fa ctor*/;
+		dummy_obj->y256 += (data->doll_vy)/**fps_fa ctor*/;
+		data->sss++;
+		if (
+	//		(t256(32) > abs(data->doll_point_x-src->x256)) &&
+	//		(t256(32) > abs(data->doll_point_y-src->y256))
+				(16 < data->sss)
+		)
+		{
+			data->sss = 0;
+			data->doll_point_angle512 += (512*2/5);
+			mask512(data->doll_point_angle512);
+			{
+			/* CCWの場合 */
+		//	int d_angle512=atan_512(data->doll_point_y-src->y256-((src->h128)), data->doll_point_x-src->x256-((src->w128)));/*画面中心より上*/
+			data->doll_vx = ((sin512((data->doll_point_angle512/*d_angle512*/))*/*t256*/(/*3*/DOLL_SPEED10/*+difficulty*/))/*>>8*/)/**fps_fa ctor*/;
+			data->doll_vy = ((cos512((data->doll_point_angle512/*d_angle512*/))*/*t256*/(/*3*/DOLL_SPEED10/*+difficulty*/))/*>>8*/)/**fps_fa ctor*/;
+			}
+
+		//
+			data->state_d02++/* = DB05*/;
+		//
+			data->hen_no_kazu--;
+		//	if ((5-1) < data->hen_no_kazu)/* 5回==(5-1) */
+			if (0 == data->hen_no_kazu)/* 5回==(5-1) */
+			{
+				data->hen_no_kazu = (DOLL_HEN_MAX);
+			//	data->hen_no_kazu &= 1;
+				data->star_remain_time	= (64*5);
+				data->nnn++;	if (data->nnn>(/*4-0*/3/*difficulty*/) )	{data->nnn=0/*1*/ /*0*/;}
+				#if (1==USE_KEISYOU)
+				src->x256 = (data->sakuya_obj->x256);		dummy_obj->x256 = src->x256;
+				src->y256 = (data->sakuya_obj->y256);		dummy_obj->y256 = src->y256;
+				#else
+				src->x256 = (((((PLAYER_DATA *)player->data)->boss))->x256);		dummy_obj->x256 = src->x256;
+				src->y256 = (((((PLAYER_DATA *)player->data)->boss))->y256);		dummy_obj->y256 = src->y256;
+				#endif
+			//	data->tx256 = DOLL_POINT_CX00;
+			//	data->ty256 = DOLL_POINT_CY00;
+			//	dummy_obj->x256 = data->tx256;
+			//	dummy_obj->y256 = data->ty256;
+			}
+		}
+		else
+		{
+			data->state_d01+=/*5*/DOLL_ADD05/*3*/;
+			if (0/*1*/==data->nnn)
+			{
+				if (0==(data->state_d01&/*7*/DOLL_SET03/*%5*/))
+				{
+					/* CWの場合 */
+				//	enemy_sp2_bullet_create00(src, deg_360_to_512(3)+(( ((-data->state_d01*2/**data->hen_no_kazu*/)) +data->state_d01)>>3/*/5*/), t256(0.015), &(((BOSS06_DOLL_DATA *)src->data)->nnn) );
+/* CCWの場合 */
+					enemy_sp2_bullet_create01(dummy_obj,
+						data->doll_point_angle512,	//	-deg_360_to_512CCW(3)+(( ((-data->state_d01*2/**data->hen_no_kazu*/)) +data->state_d01)>>3/*/5*/),
+					//	t256(0.015),
+						data->star_remain_time//	&(((BOSS06_DOLL_DATA *)src->data)->nnn)
+					);
+				}
+			}
+		}
+		break;
+	case DB05:
+		data->jjj++;
+		if ((3-difficulty) < data->jjj)
+		{
+			data->jjj = 0;
+		//	bullet_create_360_knifes(src, t256(1.2) );
+			/*---------------------------------------------------------
+				360ナイフ
+				魔方陣用
+				全方向に青ナイフ弾を撃つ
+			---------------------------------------------------------*/
+
+			//static void bullet_create_360_knifes(SPRITE *src, int speed256)
+			{
+			//	int angle512;
+			//	for (angle512=0; angle512<512; angle512+=32/*29*/)
+			//	{
+			//		bullet_create_sakuya_knife(src, (speed256), (angle512), /*i*/(angle512)/*anime_pattern*/);
+			//	}
+			bullet_create_n_way_dan_sa_type(src,
+				(t256(1.2)/*(speed256)*/),
+				(0/*aaa_angle512*/),
+				(int)(512/(18)),		/* 角度([360/360]度を18分割) */
+				BULLET_KNIFE20_06_YUKARI/*BULLET_KNIFE20_04_AOI*/,
+				(18));/* [18wayピンクナイフ弾] */
+			}
+		}
+		data->state_d02 = DB02;
+		break;
+
+//------------------------------------------
+	}
+	#if 1
+	//if (data->c->type==SP_DELETE) 		/*これではうまくいかない場合がある*/
+	if (0/*FLG_NO_DOLL*/==common_boss_flags)	/* 輝夜を倒すと皆破壊される。 */
+	{
+		src->type = SP_DELETE;
+	}
+	#endif
+//
+	#if 0/*魔方陣デバッグ用*/
+	/* パネルのスコア欄にstate_d02を、グレイズ欄にstate_d01を表示させる。っていうか書き換えちゃう。 */
+	((PLAYER_DATA *)player->data)->my_score 	= data->state_d02;
+	((PLAYER_DATA *)player->data)->graze_point	= data->state_d01;
+	#endif
+}
+
+static void move_doll01(SPRITE *src)
+{
+	BOSS06_DOLL_DATA *data = (BOSS06_DOLL_DATA *)src->data;
+	//if (data->state_d02 < DB01)
 	{
 		#if (1==USE_KEISYOU)
 		src->x256 = data->sakuya_obj->x256+((data->sakuya_obj->w128-src->w128));
@@ -252,10 +424,10 @@ static void enemy_boss06_maho_move(SPRITE *src)
 		#endif
 	//
 		#if (1==USE_KEISYOU)
-	//	if (((BOSS06_DATA *)data->sakuya_obj->data)->move_type==SAKUYA_09_KEITAI/*4*/ /*星型を描いてもいいよ*/)
+	//	if (((BOSS06_DATA *)data->sakuya_obj->data)->move_type==SPELL_CARD_09_sakuya_iii/*4*/ /*星型を描いてもいいよ*/)
 		#else
-	//	if (((BOSS06_DATA *)((((PLAYER_DATA *)player->data)->boss))->data)->move_type==SAKUYA_09_KEITAI/*4*/ /*星型を描いてもいいよ*/)
-		if (spell_card_number==SAKUYA_09_KEITAI/*4*/ /*星型を描いてもいいよ*/)
+	//	if (((BOSS06_DATA *)((((PLAYER_DATA *)player->data)->boss))->data)->move_type==SPELL_CARD_09_sakuya_iii/*4*/ /*星型を描いてもいいよ*/)
+		if (spell_card_number==SPELL_CARD_09_sakuya_iii/*4*/ /*星型を描いてもいいよ*/)
 		#endif
 		{
 			static int hosi_gata_kakuze_counter;
@@ -263,56 +435,58 @@ static void enemy_boss06_maho_move(SPRITE *src)
 			if (hosi_gata_kakuze_counter < 0)	/*星型を描いてもいいよ*/
 			{
 				hosi_gata_kakuze_counter = (60*10);
-			//	data->state_m02 = MH05;/*星型を描くぜ*/
-				data->state_m02 = MH04;/*星型を描くぜ*/
+			//	data->state_d02 = DB01;/*星型を描くぜ*/
+			//	data->state_d02 = DB00;/*星型を描くぜ*/
+				data->state_d02 = DB00;/*星型を描くぜ*/
+				src->callback_mover = move_doll02;
 			}
 		}
 	}
-	switch (data->state_m02)
+	switch (data->state_d02)
 	{
 //------------------------------------------
-	case MH00:
+	case DS00:
 		src->color32 += 0x03000000; 		/*	src->alpha += 0x03;*/
 		if (0x96000000 < src->color32)		/*	(0x96 < src->alpha) */
 		{
 			src->color32		= 0x96ffffff;	/*	src->alpha		= 0x96;*/
-			data->state_m02++/* = MH01*/;
+			data->state_d02++/* = DS01*/;
 			data->wait		= 50;
 		}
 		break;
 
-	case MH01:
+	case DS01:
 		data->wait -= 1/*fps_fa ctor*/;
 		if (data->wait < 1)
 		{
-			data->state_m02++/* = MH02*/;
-			data->state_m01 = 0x100;
+			data->state_d02++/* = DS02*/;
+			data->state_d01 = 0x100;
 		}
 		break;
-	case MH02:
-		if (0==(data->state_m01&0x0f/*%10*/))
+	case DS02:
+		if (0==(data->state_d01&0x0f/*%10*/))
 		{
 #if 0
 /* CWの場合 */
-			bullet_create_tomari2_dan(src, (data->state_m01/*>>4*/<<3/*1/10*/)/**256*/, data->angle512, 					  t256(0.02), data->angle512+(data->state_m01)-deg_360_to_512((180	)));	//ra d2deg512((data->state_m01)>>7/*/100*/)
-			bullet_create_tomari2_dan(src, (data->state_m01/*>>4*/<<3/*1/10*/)/**256*/, data->angle512+deg_360_to_512((120)), t256(0.02), data->angle512+(data->state_m01)-deg_360_to_512((180+120)));	//ra d2deg512((data->state_m01)>>7/*/100*/)
-			bullet_create_tomari2_dan(src, (data->state_m01/*>>4*/<<3/*1/10*/)/**256*/, data->angle512-deg_360_to_512((120)), t256(0.02), data->angle512+(data->state_m01)-deg_360_to_512((180-120)));	//ra d2deg512((data->state_m01)>>7/*/100*/)
+			bullet_create_tomari2_dan(src, (data->state_d01/*>>4*/<<3/*1/10*/)/**256*/, data->angle512, 					  t256(0.02), data->angle512+(data->state_d01)-deg_360_to_512((180	)));	//ra d2deg512((data->state_d01)>>7/*/100*/)
+			bullet_create_tomari2_dan(src, (data->state_d01/*>>4*/<<3/*1/10*/)/**256*/, data->angle512+deg_360_to_512((120)), t256(0.02), data->angle512+(data->state_d01)-deg_360_to_512((180+120)));	//ra d2deg512((data->state_d01)>>7/*/100*/)
+			bullet_create_tomari2_dan(src, (data->state_d01/*>>4*/<<3/*1/10*/)/**256*/, data->angle512-deg_360_to_512((120)), t256(0.02), data->angle512+(data->state_d01)-deg_360_to_512((180-120)));	//ra d2deg512((data->state_d01)>>7/*/100*/)
 #else
 /* CCWの場合 */
-			bullet_create_tomari2_dan(src, (data->state_m01/*>>4*/<<3/*1/10*/)/**256*/, data->angle512, 						 t256(0.02), data->angle512+(data->state_m01)+deg_360_to_512CCW((180	)));	//ra d2deg512((data->state_m01)>>7/*/100*/)
-			bullet_create_tomari2_dan(src, (data->state_m01/*>>4*/<<3/*1/10*/)/**256*/, data->angle512-deg_360_to_512CCW((120)), t256(0.02), data->angle512+(data->state_m01)+deg_360_to_512CCW((180+120)));	//ra d2deg512((data->state_m01)>>7/*/100*/)
-			bullet_create_tomari2_dan(src, (data->state_m01/*>>4*/<<3/*1/10*/)/**256*/, data->angle512+deg_360_to_512CCW((120)), t256(0.02), data->angle512+(data->state_m01)+deg_360_to_512CCW((180-120)));	//ra d2deg512((data->state_m01)>>7/*/100*/)
+			bullet_create_tomari2_dan(src, (data->state_d01/*>>4*/<<3/*1/10*/)/**256*/, data->angle512, 						 t256(0.02), data->angle512+(data->state_d01)+deg_360_to_512CCW((180	)));	//ra d2deg512((data->state_d01)>>7/*/100*/)
+			bullet_create_tomari2_dan(src, (data->state_d01/*>>4*/<<3/*1/10*/)/**256*/, data->angle512-deg_360_to_512CCW((120)), t256(0.02), data->angle512+(data->state_d01)+deg_360_to_512CCW((180+120)));	//ra d2deg512((data->state_d01)>>7/*/100*/)
+			bullet_create_tomari2_dan(src, (data->state_d01/*>>4*/<<3/*1/10*/)/**256*/, data->angle512+deg_360_to_512CCW((120)), t256(0.02), data->angle512+(data->state_d01)+deg_360_to_512CCW((180-120)));	//ra d2deg512((data->state_d01)>>7/*/100*/)
 #endif
 		}
-		data->state_m01--;
-		if (data->state_m01 < 1)
+		data->state_d01--;
+		if (data->state_d01 < 1)
 		{
-			data->state_m02++/* = MH03*/;
+			data->state_d02++/* = DS03*/;
 			data->wait		= 15;
-			data->state_m01 = 0x10;
+			data->state_d01 = 0x10;
 		}
 		break;
-	case MH03:
+	case DS03:
 		data->wait -= 1/*fps_fa ctor*/;
 		if (data->wait < 1)
 		{
@@ -347,177 +521,14 @@ static void enemy_boss06_maho_move(SPRITE *src)
 /* CCWの場合 */
 			data->angle512 -= 12;
 #endif
-			data->state_m01--;
+			data->state_d01--;
 		}
-		if (data->state_m01<0x0)
+		if (data->state_d01<0x0)
 		{
-			data->state_m02--/* = MH02*/;
-			data->state_m01 = 0x50;
+			data->state_d02--/* = DS02*/;
+			data->state_d01 = 0x50;
 		}
 		break;
-
-//------------------------------------------
-
-	/*
-	星型線1 190, 48
-	星型線2 248, 217
-	星型線3 100, 113
-	星型線4 280, 113
-	星型線5 138, 217
-	*/
-#define MAHO_JIN_WAIT50 		(16/*16*/)
-#define MAHO_JIN_SPEED10		(4/*8*/)
-#define MAHO_JIN_SET03			(1)
-#define MAHO_JIN_ADD05			(1)
-
-#define MAHO_JIN_POINT_CX00 	(t256(GAME_WIDTH/2))
-#define MAHO_JIN_POINT_CY00 	(t256(/*GAME_HEIGHT/4*/64))
-#define MAHO_JIN_RADIUS_SIZE	(/*t256*/(90))
-
-//------------------------------------------
-
-	case MH04:	/* 星型を描く準備 */
-		data->state_m02++/* = MH05*/;
-		data->maho_point_angle512=0;
-		data->maho_vx = t256(1.0);
-		data->maho_vy = t256(0.0);
-		#if (1==USE_KEISYOU)
-		src->x256 = (data->sakuya_obj->x256);		dummy_obj->x256 = src->x256;
-		src->y256 = (data->sakuya_obj->y256);		dummy_obj->y256 = src->y256;
-		#else
-		src->x256 = (((((PLAYER_DATA *)player->data)->boss))->x256);		dummy_obj->x256 = src->x256;
-		src->y256 = (((((PLAYER_DATA *)player->data)->boss))->y256);		dummy_obj->y256 = src->y256;
-		#endif
-		data->sss = 0;
-		break;
-//------------------------------------------
-	case MH05:	/* 準備完了まで待つ */
-		src->anim_frame = 0;
-//			if (2==data->nnn/*%(4-difficulty)*/)/* %2 == (5-3:Lunatic) */
-//			{	src->anim_frame = 1;}
-//			else
-//			{	src->anim_frame = 0;}
-		#if (1==USE_KEISYOU)
-		if (((BOSS06_DATA *)data->sakuya_obj->data)->state1==1)
-		#else
-		if (((BOSS06_DATA *)((((PLAYER_DATA *)player->data)->boss))->data)->state1==1)
-		#endif
-		{
-			data->state_m02++/* = MH06*/;
-			data->state_m01 = 0x0;
-		}
-		break;
-//------------------------------------------
-	case MH06:	/* 星型を描くよ */
-//		data->maho_point_x=MAHO_JIN_POINT_CX00+sin512((data->maho_point_angle512))*MAHO_JIN_RADIUS_SIZE;
-//		data->maho_point_y=MAHO_JIN_POINT_CY00+cos512((data->maho_point_angle512))*MAHO_JIN_RADIUS_SIZE;
-
-		/*	*/
-		dummy_obj->x256 += (data->maho_vx)/**fps_fa ctor*/;
-		dummy_obj->y256 += (data->maho_vy)/**fps_fa ctor*/;
-		data->sss++;
-		if (
-	//		(t256(32) > abs(data->maho_point_x-src->x256)) &&
-	//		(t256(32) > abs(data->maho_point_y-src->y256))
-				(16 < data->sss)
-		)
-		{
-			data->sss = 0;
-			data->maho_point_angle512 += (512*2/5);
-			mask512(data->maho_point_angle512);
-			{
-			/* CCWの場合 */
-		//	int d_angle512=atan_512(data->maho_point_y-src->y256-((src->h128)), data->maho_point_x-src->x256-((src->w128)));/*画面中心より上*/
-			data->maho_vx = ((sin512((data->maho_point_angle512/*d_angle512*/))*/*t256*/(/*3*/MAHO_JIN_SPEED10/*+difficulty*/))/*>>8*/)/**fps_fa ctor*/;
-			data->maho_vy = ((cos512((data->maho_point_angle512/*d_angle512*/))*/*t256*/(/*3*/MAHO_JIN_SPEED10/*+difficulty*/))/*>>8*/)/**fps_fa ctor*/;
-			}
-
-		//
-			data->state_m02++/* = MH05*/;
-		//
-			data->mmm++;
-			if (5 < data->mmm)
-			{
-				data->mmm = 0;
-			//	data->mmm &= 1;
-				data->nnn++;	if (data->nnn>(/*4-0*/3/*difficulty*/) )	{data->nnn=0/*1*/ /*0*/;}
-				#if (1==USE_KEISYOU)
-				src->x256 = (data->sakuya_obj->x256);		dummy_obj->x256 = src->x256;
-				src->y256 = (data->sakuya_obj->y256);		dummy_obj->y256 = src->y256;
-				#else
-				src->x256 = (((((PLAYER_DATA *)player->data)->boss))->x256);		dummy_obj->x256 = src->x256;
-				src->y256 = (((((PLAYER_DATA *)player->data)->boss))->y256);		dummy_obj->y256 = src->y256;
-				#endif
-			//	data->tx256 = MAHO_JIN_POINT_CX00;
-			//	data->ty256 = MAHO_JIN_POINT_CY00;
-			//	dummy_obj->x256 = data->tx256;
-			//	dummy_obj->y256 = data->ty256;
-			}
-		//
-			data->wait		= MAHO_JIN_WAIT50;
-			data->state_m01 = 0x0;
-		}
-		else
-		{
-			data->state_m01+=/*5*/MAHO_JIN_ADD05/*3*/;
-			if (0/*1*/==data->nnn)
-			{
-				if (0==(data->state_m01&/*7*/MAHO_JIN_SET03/*%5*/))
-				{
-					/* CWの場合 */
-				//	enemy_sp2_bullet_create(src, deg_360_to_512(3)+(( ((-data->state_m01*2/**data->mmm*/)) +data->state_m01)>>3/*/5*/), t256(0.015), &(((BOSS06_MAHO_DATA *)src->data)->nnn) );
-/* CCWの場合 */
-					enemy_sp2_bullet_create(dummy_obj,
-						data->maho_point_angle512,	//	-deg_360_to_512CCW(3)+(( ((-data->state_m01*2/**data->mmm*/)) +data->state_m01)>>3/*/5*/),
-						t256(0.015),
-						&(((BOSS06_MAHO_DATA *)src->data)->nnn)
-					);
-				}
-			}
-		}
-		break;
-	case MH07:
-		data->jjj++;
-		if ((3-difficulty) < data->jjj)
-		{
-			data->jjj = 0;
-		//	bullet_create_360_knifes(src, t256(1.2) );
-			/*---------------------------------------------------------
-				360ナイフ
-				魔方陣用
-				全方向に青ナイフ弾を撃つ
-			---------------------------------------------------------*/
-
-			//static void bullet_create_360_knifes(SPRITE *src, int speed256)
-			{
-			//	int angle512;
-			//	for (angle512=0; angle512<512; angle512+=32/*29*/)
-			//	{
-			//		bullet_create_sakuya_knife(src, (speed256), (angle512), /*i*/(angle512)/*anime_pattern*/);
-			//	}
-			bullet_create_n_way_dan_sa_type(src,
-				(t256(1.2)/*(speed256)*/),
-				(0/*aaa_angle512*/),
-				(int)(512/(18)),		/* 角度([360/360]度を18分割) */
-				BULLET_KNIFE20_06_YUKARI/*BULLET_KNIFE20_04_AOI*/,
-				(18));/* [18wayピンクナイフ弾] */
-			}
-		}
-		data->state_m02++/* = MH08*/;
-		break;
-	case MH08:	/* 一時停止 */
-	//	hosi_wait(src); static void hosi_wait(SPRITE *src)
-		{
-		//	BOSS06_MAHO_DATA *data = (BOSS06_MAHO_DATA *)src->data;
-		//	if (data->wait<0)	{	data->state_m02++/* = MH09*/;}	else	{	data->wait--;}
-			data->wait--;	if (data->wait<0)	{	data->state_m02++/* = MH09*/;}
-		}
-		break;
-	case MH09:
-		data->state_m02 = MH06;
-		data->state_m01 = 0x00;
-		break;
-//------------------------------------------
 
 	}
 	#if 1
@@ -529,42 +540,22 @@ static void enemy_boss06_maho_move(SPRITE *src)
 	#endif
 //
 	#if 0/*魔方陣デバッグ用*/
-	/* パネルのスコア欄にstate_m02を、グレイズ欄にstate_m01を表示させる。っていうか書き換えちゃう。 */
-	((PLAYER_DATA *)player->data)->my_score 	= data->state_m02;
-	((PLAYER_DATA *)player->data)->graze_point	= data->state_m01;
+	/* パネルのスコア欄にstate_d02を、グレイズ欄にstate_d01を表示させる。っていうか書き換えちゃう。 */
+	((PLAYER_DATA *)player->data)->my_score 	= data->state_d02;
+	((PLAYER_DATA *)player->data)->graze_point	= data->state_d01;
 	#endif
 }
 
-
-/*---------------------------------------------------------
-	魔方陣生成		魔方陣グラフィック生成
----------------------------------------------------------*/
-
-static void create_mahoujin(SPRITE *sakuya)
+static void move_doll00(SPRITE *src)
 {
-	SPRITE *s2; 		// 魔方陣のスプライト
-	s2					= sprite_add_res(BASE_MAHOUJIN_0_PNG);	//s2->anim_speed	= 0;/*"boss04-lo.png"*/
-	s2->flags			|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK);
-	s2->anim_frame		= 0;
-	s2->type			= SP_MUTEKI;
-	BOSS06_MAHO_DATA *data;
-	data				= mmalloc(sizeof(BOSS06_MAHO_DATA));
-	s2->data			= data;
-	data->state_m02 	= 0;
-	data->state_m01 	= 0x00;
-	data->wait			= 0;
-	data->angle512		= (0);
-	#if (1==USE_KEISYOU)
-	data->sakuya_obj	= sakuya;	/* 継承させる */
-	#endif
-	data->nnn			= 0;
-	data->mmm			= 0;
-	s2->color32 		= 0x00ffffff;	/*	s2->alpha			= 0x00;*/
-	s2->callback_mover	= enemy_boss06_maho_move;
-	s2->x256			= sakuya->x256+((sakuya->w128-s2->w128));
-	s2->y256			= sakuya->y256+((sakuya->h128-s2->h128));
+//	if (sp ell_card_number==SPELL_CARD_09_sakuya_iii/*4*/ /*星型を描いてもいいよ*/)
+	if (0 != kodomo_num)
+	{
+	//	BOSS06_DOLL_DATA *data = (BOSS06_DOLL_DATA *)src->data;
+	//	data->state_d02 = DS00;
+		src->callback_mover = move_doll01;
+	}
 }
-
 
 /*--------------------------------------*/
 /*--------------------------------------*/
@@ -587,15 +578,12 @@ static void sakuya_put_items(SPRITE *src)
 	data->wait2_256 	= t256(-100);
 	data->wait3 		= 0;//???
 
-	#if (1)
-	draw_spell_card_name();
-	#endif
 }
 	#if (0)
-	spell_card_number++;
+	sp ell_card_number++;
 	#endif
 	#if (0)
-//	/*data->boss_base.boss_*/src->base_health	= (1024-1); 	/* life_point消費しゲージ補充 */
+//	src->base_health	= (1024-1); 	/* life_point消費しゲージ補充 */
 	{
 		u16 aaa_timer[10/*8*/] =
 		{
@@ -610,7 +598,7 @@ static void sakuya_put_items(SPRITE *src)
 			(40*64),
 			(40*64),
 		};
-		/*data->boss_base.*/spell_card_boss_timer		= aaa_timer[(data->boss_base.bo ss_life)];		/* 40*64==40[count] 	約40[秒(64/60)](単位は秒ではない) */
+		spell_card_boss_timer		= aaa_timer[(data->boss_base.bo ss_life)];		/* 40*64==40[count] 	約40[秒(64/60)](単位は秒ではない) */
 	}	/* ボスタイマー初期化 */
 	// 40 60 [秒] ???	4096/*2500*/	/*3000*/;//???
 	#endif
@@ -619,7 +607,6 @@ static void sakuya_put_items(SPRITE *src)
 
 ---------------------------------------------------------*/
 
-/*static*/extern void sakuya_sp1_bullet_create(SPRITE *src, int speed256, int angle512, int gra256, int r_or_l/*, int *sd_angle512*/);
 
 
 /*---------------------------------------------------------
@@ -789,12 +776,15 @@ static void enemy_boss06_knifes3(SPRITE *src)	/*,*/ /*dou ble speed,*/	/*int len
 	{
 		if (tmp888==ii)
 		{
-			/*data->boss_base.*/src->tmp_angleCCW512	= (ii<<6);
-			src->x256			= tmp1_256;
-			src->y256			= tmp2_256;
-			src->color32		= 0x00ffffff;			/*	src->alpha			= 0x00;*/
-//			src->anim_frame 	= SAKUYA_ANIME_18_;//?????
-			spell_card_number	= SAKUYA_10_KEITAI/*5*/;/*???*/
+			src->tmp_angleCCW512	= (ii<<6);
+			src->x256				= tmp1_256;
+			src->y256				= tmp2_256;
+			src->color32			= 0x00ffffff;			/*	src->alpha			= 0x00;*/
+//			src->anim_frame 		= SAKUYA_ANIME_18_;//?????
+#if 0/*???*/
+/* スペルカードシステムでは対応できない。 */
+			sp ell_card_number	= SPELL_CARD_10_sakuya_jjj/*5*/;/*???*/
+#endif
 			data->wait2_256 	= /*speed256*/t256(1)+(difficulty<<8);
 		}
 		else
@@ -896,46 +886,26 @@ static void sakuya_idou_sub(SPRITE *src, int speed256, int target_point_name)
 
 
 /*---------------------------------------------------------
-	SAKUYA_01_KEITAI	通常攻撃(禊弾幕、原作とはあえて若干違う)	第一形態: 左右に動いて小弾撃ち
+	SPELL_CARD_01_sakuya_aaa	通常攻撃(禊弾幕、原作とはあえて若干違う)	第一形態: 左右に動いて小弾撃ち
 ---------------------------------------------------------*/
 
-static void sakuya_01_keitai(SPRITE *src)
+/*static*/ void sakuya_01_keitai(SPRITE *src)
 {
 	BOSS06_DATA *data = (BOSS06_DATA *)src->data;
-	PLAYER_DATA *pd = (PLAYER_DATA *)player->data;
+//	PLAYER_DATA *pd = (PLAYER_DATA *)player->data;
 	static int my_yudo_point;
 
 /* 第一形態では使って無いみたいだから利用する */
 //#define _mode wait2_256
 	switch (data->state1)
 	{
-	case SA00:	/* 下がる */
-		src->y256 += t256(1)/*fps_fa ctor*/;
-		if (t256(16/*20*/) < src->y256) 	/* y が t256(20) まで来たら */
-		{
-		/* 登場時には弾を撃たない */
-		//	bullet_create_aka_lines(s);
-			src->anim_frame = SAKUYA_ANIME_04_CENTER_A/*0*/;
-		//	pd->bo ssmode=B05_BE FORE_LOAD;
-			pd->state_flag |= STATE_FLAG_10_IS_LOAD_SCRIPT;
-			data->state1++/*	= SA01*/;
-		}
+	case SA00:
+			data->state1	= SA12; 	/* SA01*/
 		break;
+
 	/*完全に姿を現す*/
-	case SA01:	/* */
-	//	if (pd->bo ssmode==B01_BA TTLE)
-	//	if ((STATE_FLAG_05_IS_BOSS|0) == (pd->state_flag&(STATE_FLAG_05_IS_BOSS|STATE_FLAG_06_IS_SCRIPT)))
-		if ( ((((PLAYER_DATA *)player->data)->state_flag) & STATE_FLAG_05_IS_BOSS) )
-		{
-			/* プレイヤー弾受け付け、コールバックを登録 */
-			src->callback_hit_enemy = callback_hit_boss;	/* コールバック登録 */
-		//	/*時間制限カウント有効化*/
-		//	data->state1++/*	= SA02*/;
-			data->state1	= SA12;
-		}
-		break;
 /*----------------*/
-	case SA02:	/* 左へ移動 */
+	case SA01:	/* 左へ移動 */
 		//if (pd->bo ssmode==B01_BA TTLE)
 	//	{
 		if (my_yudo_point < src->x256 )/*t256(50)*/
@@ -953,19 +923,19 @@ static void sakuya_01_keitai(SPRITE *src)
 		}
 		else	/* x が 50 以下になったら */
 		{
-			data->state1++/*	= SA03*/;
+			data->state1++/*	= SA02*/;
 	#if 1/* 可変弾幕 */
 			tmp_angle_jikinerai512(player, src);/* 自機ねらい角作成 */
 		#if 0
 		/*CW*/
-			/*data->boss_base.*/src->tmp_angleCCW512	-= 128;
+			src->tmp_angleCCW512	-= 128;
 		#else
 		/*CCW*/
-			/*data->boss_base.*/src->tmp_angleCCW512	+= (256-128);
+			src->tmp_angleCCW512	+= (256-128);
 		#endif
 	#else/* 固定弾幕 */
 		/*CCW*/
-			/*data->boss_base.*/src->tmp_angleCCW512	= deg_360_to_512CCW((90));/* 右側から撃ち始める (128)*/
+			src->tmp_angleCCW512	= deg_360_to_512CCW((90));/* 右側から撃ち始める (128)*/
 	#endif
 			data->boss_base.danmaku_type		= DANMAKU_01_sakuya;	/* 禊弾幕をセット */
 			data->boss_base.danmaku_time_out	= DANMAKU_01_SET_TIME;	/* 禊弾幕の発生時間 */
@@ -974,17 +944,17 @@ static void sakuya_01_keitai(SPRITE *src)
 		}
 	//	}
 		break;
-	case SA03:	/* 弾撃ちアニメ待機 */
+	case SA02:	/* 弾撃ちアニメ待機 */
 		sakuya_tama_anime_wait3_0(src);
 		break;
-	case SA04:	/* 禊弾幕が終わるまで待機 */
-		danmaku_state_check_holding(src/*, SA04*/ /*, SAKUYA_ANIME_04_CENTER_A*/);
+	case SA03:	/* 禊弾幕が終わるまで待機 */
+		danmaku_state_check_holding(src/*, SA03*/ /*, SAKUYA_ANIME_04_CENTER_A*/);
 		break;
-	case SA05:
+	case SA04:
 		src->anim_frame 		= SAKUYA_ANIME_04_CENTER_A;
-		data->state1++/*	= SA06*/;
+		data->state1++/*	= SA05*/;
 		break;
-	case SA06:	/* 真ん中に戻る */
+	case SA05:	/* 真ん中に戻る */
 		if (SAKUYA_POINT_X_MID > src->x256 )
 		{
 			src->x256 += t256(3.0/*3.0*/)/*fps_fa ctor*/;
@@ -1000,13 +970,13 @@ static void sakuya_01_keitai(SPRITE *src)
 		}
 		else	/* 真ん中まで来たら */
 		{
-			data->state1++/*	= SA05*/;
+			data->state1++/*	= SA04*/;
 		//	if (RANK_NORMAL<difficulty) 	{	bullet_create_aka_lines(s); 	}
 		}
 		break;
 /*----------------*/
-	case SA06aaa:/* 移動位置を決める */
-			data->state1++/*	= SA05*/;
+	case SA06:/* 移動位置を決める */
+			data->state1++/*	= SA04*/;
 		//	my_yudo_point = SAKUYA_POINT_X_RIGHT_MID;
 			my_yudo_point = SAKUYA_POINT_X_MID+(ra_nd()&((128*256)-1));
 		break;
@@ -1018,19 +988,19 @@ static void sakuya_01_keitai(SPRITE *src)
 		}
 		else
 		{
-			data->state1++/*	= SA06*/;
+			data->state1++/*	= SA05*/;
 	#if 1/* 可変弾幕 */
 			tmp_angle_jikinerai512(player, src);/* 自機ねらい角作成 */
 		#if 0
 		/*CW*/
-			/*data->boss_base.*/src->tmp_angleCCW512	-= 128;
+			src->tmp_angleCCW512	-= 128;
 		#else
 		/*CCW*/
-			/*data->boss_base.*/src->tmp_angleCCW512	+= (256-128);
+			src->tmp_angleCCW512	+= (256-128);
 		#endif
 	#else/* 固定弾幕 */
 		/*CCW*/
-			/*data->boss_base.*/src->tmp_angleCCW512	= deg_360_to_512CCW((90));/* 右側から撃ち始める (128)*/
+			src->tmp_angleCCW512	= deg_360_to_512CCW((90));/* 右側から撃ち始める (128)*/
 	#endif
 			data->boss_base.danmaku_type		= DANMAKU_01_sakuya;	/* 禊弾幕をセット */
 			data->boss_base.danmaku_time_out	= DANMAKU_01_SET_TIME;	/* 禊弾幕の発生時間 */
@@ -1046,7 +1016,7 @@ static void sakuya_01_keitai(SPRITE *src)
 		break;
 	case SA10:
 		src->anim_frame 		= SAKUYA_ANIME_04_CENTER_A;
-		data->state1++/*	= SA06*/;
+		data->state1++/*	= SA05*/;
 		break;
 	case SA11:	/* 真ん中に戻る */
 		if (SAKUYA_POINT_X_MID < src->x256 )
@@ -1064,25 +1034,27 @@ static void sakuya_01_keitai(SPRITE *src)
 		}
 		else	/* 真ん中に戻る */
 		{
-			data->state1++/* = SA02*/;
+			data->state1++/* = SA01*/;
 		//	if (RANK_NORMAL<difficulty) 	{	bullet_create_aka_lines(s); 	}
 		}
 		break;
 /*----------------*/
 	case SA12:/* 移動位置を決める */
-		data->state1	= SA02;
+		data->state1	= SA01;
 	//	my_yudo_point = SAKUYA_POINT_X_LEFT_MID;
 		my_yudo_point = SAKUYA_POINT_X_MID-(ra_nd()&((128*256)-1));
 		break;
+/*----------------*/
+
 	}
 }
 
 
 /*---------------------------------------------------------
-	SAKUYA_02_KEITAI	奇術「ミスディレクション」	第二形態: 全方位、豆まき
+	SPELL_CARD_02_sakuya_bbb	奇術「ミスディレクション」	第二形態: 全方位、豆まき
 ---------------------------------------------------------*/
 
-static void sakuya_02_keitai(SPRITE *src)
+/*static*/ void sakuya_02_keitai(SPRITE *src)
 {
 	BOSS06_DATA *data = (BOSS06_DATA *)src->data;
 
@@ -1197,10 +1169,10 @@ static void sakuya_02_keitai(SPRITE *src)
 
 
 /*---------------------------------------------------------
-	SAKUYA_03_KEITAI	時雨「バーティカルナイフ」		第三形態: 垂直ナイフが落ちてくるよ
+	SPELL_CARD_03_sakuya_ccc	時雨「バーティカルナイフ」		第三形態: 垂直ナイフが落ちてくるよ
 ---------------------------------------------------------*/
 
-static void sakuya_03_keitai(SPRITE *src)
+/*static*/ void sakuya_03_keitai(SPRITE *src)
 {
 	BOSS06_DATA *data = (BOSS06_DATA *)src->data;
 	switch (data->state1)
@@ -1475,7 +1447,7 @@ static void sakuya_03_keitai(SPRITE *src)
 	第四形態: 魔方陣生成
 ---------------------------------------------------------*/
 
-static void sakuya_04_keitai(SPRITE *src)
+/*static*/ void sakuya_04_keitai(SPRITE *src)
 {
 	BOSS06_DATA *data = (BOSS06_DATA *)src->data;
 	switch (data->state1)
@@ -1528,15 +1500,18 @@ static void sakuya_04_keitai(SPRITE *src)
 		break;
 	case SD02:
 		if (src->anim_frame==SAKUYA_ANIME_14_)
-		{
-			mahoujin_num++;
-			if (1==mahoujin_num)
-			{
-				create_mahoujin(src);		/* 魔方陣生成(2回生成しちゃうバグあり) */
-			}
-		//	data->state1++/*	= SE00*/;
-			data->state1		=	0/* = SE00*/;
-			spell_card_number++;		/* 次の形態へ */
+		{	/* 子供魔方陣生成(2回生成しちゃうバグあり) */
+		//	kodomo_num++;
+		//	if (1==kodomo_num)
+		//	{
+		//	}
+			kodomo_num=1;
+			data->state1++/*	= SE00*/;/*dummy*/
+		//	data->state1		=	0/* = SE00*/;
+#if 0/*???*/
+/* スペルカードシステムでは対応できない。 */
+			sp ell_card_number++;		/* 次の形態へ */
+#endif
 			data->wait2_256 	= t256(10);
 			data->wait1 		= 5;
 		}
@@ -1553,6 +1528,8 @@ static void sakuya_04_keitai(SPRITE *src)
 			}
 		}
 		break;
+//	case SD03:/*dummy*/
+//		break;
 	}
 }
 
@@ -1582,11 +1559,12 @@ static void enemy_boss06_knifes1(SPRITE *src, int speed256, int angle512, int he
 
 
 /*---------------------------------------------------------
-	SAKUYA_05_KEITAI_B	第五形態: (黄色マスカット弾)
-	SAKUYA_06_KEITAI_C	第六形態: (黄色マスカット弾)
+	SPELL_CARD_05_sakuya_eee	第五形態: (黄色マスカット弾)
+	SPELL_CARD_06_sakuya_fff	第六形態: (黄色マスカット弾)
 ---------------------------------------------------------*/
+/*static*/extern void sakuya_sp1_bullet_create_bbb(SPRITE *src);
 
-static void sakuya_06_keitai(SPRITE *src)
+/*static*/ void sakuya_06_keitai(SPRITE *src)
 {
 	BOSS06_DATA *data = (BOSS06_DATA *)src->data;
 	switch (data->state1)
@@ -1601,39 +1579,9 @@ static void sakuya_06_keitai(SPRITE *src)
 		//	s_data_angle512 = &(((BOSS06_DATA *)src->data)->boss_base.tmp_angleCCW512);
 //			s_data_angle512 = &(src->tmp_angleCCW512);
 			/* (黄色マスカット弾) */
-#if 0
-/* CWの場合 */
-			sakuya_sp1_bullet_create(src, (t256(0.70)), /*data->boss_base.*/src->tmp_angleCCW512-1*42/*deg_360_to_512(30)*/, (t256(0.030)),  1/* 1==R*/ /*, s_data_angle512*/ );/*0.72 == 1.2*0.6*/
-			sakuya_sp1_bullet_create(src, (t256(0.70)), /*data->boss_base.*/src->tmp_angleCCW512+1*42/*deg_360_to_512(30)*/, (t256(0.030)), -1/*-1==L*/ /*, s_data_angle512*/ );/*0.72 == 1.2*0.6*/
-			sakuya_sp1_bullet_create(src, (t256(0.85)), /*data->boss_base.*/src->tmp_angleCCW512-2*42/*deg_360_to_512(30)*/, (t256(0.033)),  1/* 1==R*/ /*, s_data_angle512*/ );/*0.9 == 1.5*0.6*/
-			sakuya_sp1_bullet_create(src, (t256(0.85)), /*data->boss_base.*/src->tmp_angleCCW512+2*42/*deg_360_to_512(30)*/, (t256(0.033)), -1/*-1==L*/ /*, s_data_angle512*/ );/*0.9 == 1.5*0.6*/
-			if (difficulty)
-			{
-				sakuya_sp1_bullet_create(src, (t256(1.0)), /*data->boss_base.*/src->tmp_angleCCW512-3*42/*deg_360_to_512(30)*/, (t256(0.036)),	1/* 1==R*/ /*, s_data_angle512*/ );/*1.08 == 1.8*0.6*/
-				sakuya_sp1_bullet_create(src, (t256(1.0)), /*data->boss_base.*/src->tmp_angleCCW512+3*42/*deg_360_to_512(30)*/, (t256(0.036)), -1/*-1==L*/ /*, s_data_angle512*/ );/*1.08 == 1.8*0.6*/
-				if (1<difficulty)
-				{
-					sakuya_sp1_bullet_create(src, (t256(1.15)), /*data->boss_base.*/src->tmp_angleCCW512-4*42/*deg_360_to_512(30)*/, (t256(0.04)),	1/* 1==R*/ /*, s_data_angle512*/ );/*1.26 == 2.1*0.6*/
-					sakuya_sp1_bullet_create(src, (t256(1.15)), /*data->boss_base.*/src->tmp_angleCCW512+4*42/*deg_360_to_512(30)*/, (t256(0.04)), -1/*-1==L*/ /*, s_data_angle512*/ );/*1.26 == 2.1*0.6*/
-				}
-			}
-#else
+
 /* CCWの場合 */
-			sakuya_sp1_bullet_create(src, (t256(0.70)), /*data->boss_base.*/src->tmp_angleCCW512+1*42/*deg_360_to_512(30)*/, (t256(0.030)),  1/* 1==R*/ /*, s_data_angle512*/ );/*0.72 == 1.2*0.6*/
-			sakuya_sp1_bullet_create(src, (t256(0.70)), /*data->boss_base.*/src->tmp_angleCCW512-1*42/*deg_360_to_512(30)*/, (t256(0.030)), -1/*-1==L*/ /*, s_data_angle512*/ );/*0.72 == 1.2*0.6*/
-			sakuya_sp1_bullet_create(src, (t256(0.85)), /*data->boss_base.*/src->tmp_angleCCW512+2*42/*deg_360_to_512(30)*/, (t256(0.033)),  1/* 1==R*/ /*, s_data_angle512*/ );/*0.9 == 1.5*0.6*/
-			sakuya_sp1_bullet_create(src, (t256(0.85)), /*data->boss_base.*/src->tmp_angleCCW512-2*42/*deg_360_to_512(30)*/, (t256(0.033)), -1/*-1==L*/ /*, s_data_angle512*/ );/*0.9 == 1.5*0.6*/
-			if (difficulty)
-			{
-				sakuya_sp1_bullet_create(src, (t256(1.0)), /*data->boss_base.*/src->tmp_angleCCW512+3*42/*deg_360_to_512(30)*/, (t256(0.036)),	1/* 1==R*/ /*, s_data_angle512*/ );/*1.08 == 1.8*0.6*/
-				sakuya_sp1_bullet_create(src, (t256(1.0)), /*data->boss_base.*/src->tmp_angleCCW512-3*42/*deg_360_to_512(30)*/, (t256(0.036)), -1/*-1==L*/ /*, s_data_angle512*/ );/*1.08 == 1.8*0.6*/
-				if (1<difficulty)
-				{
-					sakuya_sp1_bullet_create(src, (t256(1.15)), /*data->boss_base.*/src->tmp_angleCCW512+4*42/*deg_360_to_512(30)*/, (t256(0.04)),	1/* 1==R*/ /*, s_data_angle512*/ );/*1.26 == 2.1*0.6*/
-					sakuya_sp1_bullet_create(src, (t256(1.15)), /*data->boss_base.*/src->tmp_angleCCW512-4*42/*deg_360_to_512(30)*/, (t256(0.04)), -1/*-1==L*/ /*, s_data_angle512*/ );/*1.26 == 2.1*0.6*/
-				}
-			}
-#endif
+			sakuya_sp1_bullet_create_bbb(src);
 			//bullet_create_oodama0(src, t256(2), ANGLE_JIKINERAI_DAN, 40, 0, t256(src->w/2), t256(src->h/2));
 			data->wait1 -= 1/*fps_fa ctor*/;
 			if (data->wait1<0)	/* 3回撃ったら */
@@ -1706,15 +1654,35 @@ static void sakuya_06_keitai(SPRITE *src)
 
 
 /*---------------------------------------------------------
-	SAKUYA_06_KEITAI	第七形態: (分散魔方陣)追加計画中
-	SAKUYA_07_KEITAI	第八形態: (時止めナイフ)追加計画中
+	SPELL_CARD_07_sakuya_ggg	第七形態: (分散魔方陣)追加計画中
+	SPELL_CARD_08_sakuya_hhh	第八形態: (時止めナイフ)追加計画中
 ---------------------------------------------------------*/
 
 /*---------------------------------------------------------
-	SAKUYA_09_KEITAI	第九形態: 最終形態(その1)
+	SPELL_CARD_09_sakuya_iii	第九形態: 最終形態(その1)
 ---------------------------------------------------------*/
-
-static void sakuya_09_keitai(SPRITE *src)
+#if 0
+static int sakuya_kyori(SPRITE *src)
+{
+	int rrr256;
+	//	距離を求めるのに２乗してルートを取るのはルート演算が遅いので、工夫が必要かも。
+	//	予めテーブル化しておくか、代替演算(CODIC)で求めるか、共通関数にしてCPUのfloat変換命令を最小に留めるか、どれか。
+	//	data->length_s_p=sqrt((player->x-src->x)*(player->x-src->x)+(player->y-src->y)*(player->y-src->y));
+	{	/* sqrt()遅いので簡易版。というか距離には拘らない事にした */
+		int xxx256;
+		int yyy256;
+		xxx256=abs((int)player->x256-(int)src->x256);/*xxx256+=t256(10);*/ /* abs()は展開してくれるから大丈夫 */
+		yyy256=abs((int)player->y256-(int)src->y256);/*yyy256+=t256(10);*/
+		if (xxx256>yyy256)	{rrr256=(xxx256/*+(yyy256>>1)*/);}/*少し難しくする*/
+		else				{rrr256=(yyy256/*+(xxx256>>1)*/);}/*少し難しくする*/
+	}
+	if (t256(40) > rrr256)	{	rrr256=t256(40);}	/* 32 10 */
+	else
+	if (t256(128) < rrr256) {	rrr256=t256(128);}	/* 128 80 */
+	return (rrr256);
+}
+#endif
+/*static*/ void sakuya_09_keitai(SPRITE *src)
 {
 	BOSS06_DATA *data = (BOSS06_DATA *)src->data;
 	switch (data->state1)
@@ -1727,9 +1695,7 @@ static void sakuya_09_keitai(SPRITE *src)
 //++		pd->bo ssmode=B00_NONE/*B01_BA TTLE*/;
 			data->move_angle512=atan_512(t256(30)-(src->y256),t256(GAME_WIDTH/2)-((src->w128))-(src->x256));
 		}
-		else
-		{
-		}
+	//	else		{		}
 		break;
 	case SG01:
 		if ( (src->x256 < t256(GAME_WIDTH/2+30) ) &&
@@ -1743,29 +1709,14 @@ static void sakuya_09_keitai(SPRITE *src)
 		}
 		else
 		{
-#if 0
-/* CWの場合 */
-			src->x256 += ((cos512((data->move_angle512))*t256(3))>>8);/**fps_fa ctor*/
-			src->y256 += ((sin512((data->move_angle512))*t256(3))>>8);/**fps_fa ctor*/
-#else
-/* CCWの場合 */
+			/* CWの場合 */
+			/* CCWの場合 */
 			src->x256 += ((sin512((data->move_angle512))*t256(3))>>8);/**fps_fa ctor*/
 			src->y256 += ((cos512((data->move_angle512))*t256(3))>>8);/**fps_fa ctor*/
-#endif
 		}
 		break;
 	case SG02:
 		{
-			const Uint8 aaa_tbl[40/*(6*6)*/] =
-			{
-				SAKUYA_ANIME_14_,	SAKUYA_ANIME_14_,	SAKUYA_ANIME_14_,	SAKUYA_ANIME_14_,	SAKUYA_ANIME_14_,	SAKUYA_ANIME_14_,
-				SAKUYA_ANIME_13_,	SAKUYA_ANIME_13_,	SAKUYA_ANIME_13_,	SAKUYA_ANIME_13_,	SAKUYA_ANIME_13_,	SAKUYA_ANIME_13_,
-				SAKUYA_ANIME_12_,	SAKUYA_ANIME_12_,	SAKUYA_ANIME_12_,	SAKUYA_ANIME_12_,	SAKUYA_ANIME_12_,	SAKUYA_ANIME_12_,
-				SAKUYA_ANIME_11_,	SAKUYA_ANIME_11_,	SAKUYA_ANIME_11_,	SAKUYA_ANIME_11_,	SAKUYA_ANIME_11_,	SAKUYA_ANIME_11_,
-				SAKUYA_ANIME_10_,	SAKUYA_ANIME_10_,	SAKUYA_ANIME_10_,	SAKUYA_ANIME_10_,	SAKUYA_ANIME_10_,	SAKUYA_ANIME_10_,
-				SAKUYA_ANIME_09_,	SAKUYA_ANIME_09_,	SAKUYA_ANIME_09_,	SAKUYA_ANIME_09_,	SAKUYA_ANIME_09_,	SAKUYA_ANIME_09_,
-				0,0,0,0/* アライン用ダミーデーター。 dummy for align*/
-			};
 				data->wait1 -= 1/*fps_fa ctor*/;
 			if (data->wait1<0)			{	data->state1++/* = SG03*/;
 											src->anim_frame=SAKUYA_ANIME_15_HATUDAN;	}		/* 待機時間が終わったら */
@@ -1775,38 +1726,27 @@ static void sakuya_09_keitai(SPRITE *src)
 		//	else if (data->wait1<24)	{	src->anim_frame=SAKUYA_ANIME_11_;			}
 		//	else if (data->wait1<30)	{	src->anim_frame=SAKUYA_ANIME_10_;			}
 		//	else if (data->wait1<36)	{	src->anim_frame=SAKUYA_ANIME_09_;			}
-			else if (data->wait1<36)	{	src->anim_frame=aaa_tbl[data->wait1];		}
+//			else if (data->wait1<36)	{	src->anim_frame=aaa_tbl[data->wait1];		}
+	//		else if (data->wait1>56)	{	src->anim_frame=SAKUYA_ANIME_09_;		}
+			else if (data->wait1<32)	{	src->anim_frame=SAKUYA_ANIME_09_+((data->wait1&0x38)>>3);		}
 		}
 		break;
 	case SG03:
 		if (src->anim_frame==SAKUYA_ANIME_18_)
 		{
-		//	距離を求めるのに２乗してルートを取るのはルート演算が遅いので、工夫が必要かも。
-		//	予めテーブル化しておくか、代替演算(CODIC)で求めるか、共通関数にしてCPUのfloat変換命令を最小に留めるか、どれか。
-		//	data->length_s_p=sqrt((player->x-src->x)*(player->x-src->x)+(player->y-src->y)*(player->y-src->y));
-			{	/* sqrt()遅いので簡易版。というか距離には拘らない事にした */
-				int xxx256;
-				int yyy256;
-				xxx256=abs(player->x256-src->x256);xxx256+=256;/* abs()は展開してくれるから大丈夫 */
-				yyy256=abs(player->y256-src->y256);yyy256+=256;
-				if (xxx256>yyy256)	{data->length_s_p256=(xxx256/*+(yyy256>>1)*/);}/*少し難しくする*/
-				else				{data->length_s_p256=(yyy256/*+(xxx256>>1)*/);}/*少し難しくする*/
+			{
+			//	int rrr256;
+			//	/*data->length_s_p256*/rrr256 = sakuya_kyori(src);
+		//		bullet_create_sakuya_even_knife(src, t256(10), /*data->length_s_p256*/ /*rrr256,*/ 0/*0==右*/);
+		//		bullet_create_sakuya_even_knife(src, t256(10), /*data->length_s_p256*/ /*rrr256,*/ 1/*1==左*/);
+				bullet_create_sakuya_even_knife_bbb(src);
 			}
-#if 1
-			bullet_create_sakuya_even_knife(src, t256(10), data->length_s_p256, 0/*0==右*/);
-			#if 1
-			bullet_create_sakuya_even_knife(src, t256(10), data->length_s_p256, 1/*1==左*/);
-			#endif
-#endif
 			data->wait1=40;
 			if (src->y256 > t256(150))
-#if 0
-/* CWの場合 */
-			{	data->move_angle512=deg_360_to_512(210) + (((ra_nd()&(2048-1))*21)>>8) /*(ra_nd()%(deg_360_to_512(120)))*/;}
-#else
-/* CCWの場合 */
+			/* CWの場合 */
+		//	{	data->move_angle512=deg_360_to_512(210) + (((ra_nd()&(2048-1))*21)>>8) /*(ra_nd()%(deg_360_to_512(120)))*/;}
+			/* CCWの場合 */
 			{	data->move_angle512=deg_360_to_512CCW(360-210) + (((ra_nd()&(2048-1))*21)>>8) /*(ra_nd()%(deg_360_to_512(120)))*/;}
-#endif
 			else
 			{	data->move_angle512=/*deg512_2rad*/((ra_nd()&(512-1)))/*degtorad(ra_nd()%360)*/;}
 			#if 1
@@ -1835,15 +1775,9 @@ static void sakuya_09_keitai(SPRITE *src)
 		}
 		else
 		{
-#if 0
-/* CWの場合 */
-			src->x256 += ((cos512((data->move_angle512))*t256(3.5))>>8)/**fps_fa ctor*/;
-			src->y256 += ((sin512((data->move_angle512))*t256(3.5))>>8)/**fps_fa ctor*/;
-#else
-/* CCWの場合 */
+			/* CCWの場合 */
 			src->x256 += ((sin512((data->move_angle512))*t256(3.5))>>8)/**fps_fa ctor*/;
 			src->y256 += ((cos512((data->move_angle512))*t256(3.5))>>8)/**fps_fa ctor*/;
-#endif
 		}
 		break;
 	}
@@ -1853,37 +1787,52 @@ static void sakuya_09_keitai(SPRITE *src)
 	if (data->wait2_256 > t256(20)+(3-difficulty)*t256(30))
 	{
 		src->anim_frame=SAKUYA_ANIME_16_;/*16???*/
-	//	距離を求めるのに２乗してルートを取るのはルート演算が遅いので、工夫が必要かも。
-	//	予めテーブル化しておくか、代替演算(CODIC)で求めるか、共通関数にしてCPUのfloat変換命令を最小に留めるか、どれか。
-	//	data->length_s_p=sqrt((player->x-src->x)*(player->x-src->x)+(player->y-src->y)*(player->y-src->y));
-			{	/* sqrt()遅いので簡易版。というか距離には拘らない事にした */
-				int xxx256;
-				int yyy256;
-				xxx256=abs((int)player->x256-(int)src->x256);xxx256+=256;/* abs()は展開してくれるから大丈夫 */
-				yyy256=abs((int)player->y256-(int)src->y256);yyy256+=256;
-				if (xxx256>yyy256)	{data->length_s_p256=(xxx256/*+(yyy256>>1)*/);}/*少し難しくする*/
-				else				{data->length_s_p256=(yyy256/*+(xxx256>>1)*/);}/*少し難しくする*/
-			}
-		if (data->length_s_p256>t256(80))
-		{	data->length_s_p256=t256(80);}
+	//	data->length_s_p256 = sakuya_kyori(src);
 		enemy_boss06_knifes3(src/*,*/ /*1+difficulty,*/ /*(data->length_s_p256)*/ );
 	}
 	enemy_boss06_out(src);
 }
+		//	const Uint8 aaa_tbl[40/*(6*6)*/] =
+		//	{
+		//		SAKUYA_ANIME_14_,	SAKUYA_ANIME_14_,	SAKUYA_ANIME_14_,	SAKUYA_ANIME_14_,	SAKUYA_ANIME_14_,	SAKUYA_ANIME_14_,
+		//		SAKUYA_ANIME_13_,	SAKUYA_ANIME_13_,	SAKUYA_ANIME_13_,	SAKUYA_ANIME_13_,	SAKUYA_ANIME_13_,	SAKUYA_ANIME_13_,
+		//		SAKUYA_ANIME_12_,	SAKUYA_ANIME_12_,	SAKUYA_ANIME_12_,	SAKUYA_ANIME_12_,	SAKUYA_ANIME_12_,	SAKUYA_ANIME_12_,
+		//		SAKUYA_ANIME_11_,	SAKUYA_ANIME_11_,	SAKUYA_ANIME_11_,	SAKUYA_ANIME_11_,	SAKUYA_ANIME_11_,	SAKUYA_ANIME_11_,
+		//		SAKUYA_ANIME_10_,	SAKUYA_ANIME_10_,	SAKUYA_ANIME_10_,	SAKUYA_ANIME_10_,	SAKUYA_ANIME_10_,	SAKUYA_ANIME_10_,
+		//		SAKUYA_ANIME_09_,	SAKUYA_ANIME_09_,	SAKUYA_ANIME_09_,	SAKUYA_ANIME_09_,	SAKUYA_ANIME_09_,	SAKUYA_ANIME_09_,
+		//		0,0,0,0/* アライン用ダミーデーター。 dummy for align*/
+		//	};
+//			const Uint8 aaa_tbl[40/*(6*6)*/] =
+//			{
+//	SAKUYA_ANIME_14_,	SAKUYA_ANIME_14_,	SAKUYA_ANIME_14_,	SAKUYA_ANIME_14_,
+//	SAKUYA_ANIME_14_,	SAKUYA_ANIME_14_,	SAKUYA_ANIME_14_,	SAKUYA_ANIME_14_,
+//	SAKUYA_ANIME_13_,	SAKUYA_ANIME_13_,	SAKUYA_ANIME_13_,	SAKUYA_ANIME_13_,
+//	SAKUYA_ANIME_13_,	SAKUYA_ANIME_13_,	SAKUYA_ANIME_13_,	SAKUYA_ANIME_13_,
+//	SAKUYA_ANIME_11_,	SAKUYA_ANIME_11_,	SAKUYA_ANIME_11_,	SAKUYA_ANIME_11_,
+//	SAKUYA_ANIME_11_,	SAKUYA_ANIME_11_,	SAKUYA_ANIME_11_,	SAKUYA_ANIME_11_,
+//	SAKUYA_ANIME_09_,	SAKUYA_ANIME_09_,	SAKUYA_ANIME_09_,	SAKUYA_ANIME_09_,
+//	SAKUYA_ANIME_09_,	SAKUYA_ANIME_09_,	SAKUYA_ANIME_09_,	SAKUYA_ANIME_09_,//32
+//	SAKUYA_ANIME_09_,	SAKUYA_ANIME_09_,	SAKUYA_ANIME_09_,	SAKUYA_ANIME_09_,
+//	0,0,0,0/* アライン用ダミーデーター。 dummy for align*/
+//			};
 
 
 /*---------------------------------------------------------
-	SAKUYA_10_KEITAI	第10形態: 最終形態(その2)
+	SPELL_CARD_10_sakuya_jjj	第10形態: 最終形態(その2)
 ---------------------------------------------------------*/
 
-static void sakuya_10_keitai(SPRITE *src)
+/*static*/ void sakuya_10_keitai(SPRITE *src)
 {
 	BOSS06_DATA *data = (BOSS06_DATA *)src->data;
 	if (data->wait2_256 < t256(0) )
 	{
 		data->wait2_256 = t256(0);
 		data->wait1 	= 120;
-		spell_card_number = SAKUYA_09_KEITAI/*4*/;
+#if 0
+/* スペルカードシステムでは対応できない。 */
+		sp ell_card_number = SPELL_CARD_09_sakuya_iii/*4*/;
+#endif
+		spell_card_number++;
 		data->state1	= SG02;
 		src->anim_frame = SAKUYA_ANIME_04_CENTER_A;
 	}
@@ -1898,15 +1847,10 @@ static void sakuya_10_keitai(SPRITE *src)
 		{
 			src->color32 += 0x05000000; /*	src->alpha += 0x05;*/
 		}
-#if 0
-/* CWの場合 */
-		src->x256 += ((cos512((/*data->boss_base.*/src->tmp_angleCCW512))*(data->wait2_256))>>8)/**fps_fa ctor*/;
-		src->y256 += ((sin512((/*data->boss_base.*/src->tmp_angleCCW512))*(data->wait2_256))>>8)/**fps_fa ctor*/;
-#else
-/* CCWの場合 */
-		src->x256 += ((sin512((/*data->boss_base.*/src->tmp_angleCCW512))*(data->wait2_256))>>8)/**fps_fa ctor*/;
-		src->y256 += ((cos512((/*data->boss_base.*/src->tmp_angleCCW512))*(data->wait2_256))>>8)/**fps_fa ctor*/;
-#endif
+		/* CWの場合 */
+		/* CCWの場合 */
+		src->x256 += ((sin512((src->tmp_angleCCW512))*(data->wait2_256))>>8)/**fps_fa ctor*/;
+		src->y256 += ((cos512((src->tmp_angleCCW512))*(data->wait2_256))>>8)/**fps_fa ctor*/;
 	}
 	if (src->anim_frame>SAKUYA_ANIME_15_HATUDAN)
 	{
@@ -1920,68 +1864,13 @@ static void sakuya_10_keitai(SPRITE *src)
 	enemy_boss06_out(src);
 }
 
-
 /*---------------------------------------------------------
-	[スペカシステム内に移動予定]	スペカ登録
+	SPELL_CARD_11_sakuya_kkk	第10形態: 最終形態(その3)
 ---------------------------------------------------------*/
 
-static void regist_spell_card(SPRITE *src)
+/*static*/ void sakuya_11_keitai(SPRITE *src)
 {
-	spell_card_limit_health -= 1000/*500*/;
-	if (0 >= spell_card_limit_health)
-	{
-		spell_card_limit_health = 0;
-		spell_card_mode 		= 0/*off*/;
-	}
-	else
-	{
-	//	BOSS06_DATA *data = (BOSS06_DATA *)src->data;
-		spell_card_mode 		= 1/*on*/;
-		spell_card_number++;
-		if (SAKUYA_10_KEITAI < spell_card_number)
-		{
-			spell_card_number--;
-		}
-		sakuya_put_items(src/*,t*/);/**/
-	}
 }
-
-
-/*---------------------------------------------------------
-	[スペカシステム内に移動予定]	スペカ生成
----------------------------------------------------------*/
-
-static void spell_card_generator(SPRITE *src)
-{
-//	BOSS06_DATA *data = (BOSS06_DATA *)src->data;
-	switch (spell_card_number)
-	{
-	case SAKUYA_01_KEITAI/*0*/: 		sakuya_01_keitai(src);		break;	/* 第一形態: 左右に動いて小弾撃ち */
-	case SAKUYA_02_KEITAI/*1*/: 		sakuya_02_keitai(src);		break;	/* 第二形態: 全方位、豆まき */
-	case SAKUYA_03_KEITAI/*2*/: 		sakuya_03_keitai(src);		break;	/* 第三形態: 垂直ナイフが落ちてくるよ */
-	case SAKUYA_04_KEITAI_A/*3*/:		sakuya_04_keitai(src);		break;	/* 第四形態: 魔方陣生成 */
-//------------------------
-	//	あまりに短いので少し長くする	/* 魔方陣生成(2回生成しちゃうバグあり) */
-	case SAKUYA_05_KEITAI_B/*3*/:											/* 第五形態: (黄色マスカット弾) */
-	case SAKUYA_06_KEITAI_C/*4*/:		sakuya_06_keitai(src);		break;	/* 第六形態: (黄色マスカット弾) */
-	case SAKUYA_09_KEITAI/*5 4*/:		sakuya_09_keitai(src);		break;	/* 第九形態: 最終形態(その1) */
-	case SAKUYA_10_KEITAI/*6 5*/:		sakuya_10_keitai(src);		break;	/* 第10形態: 最終形態(その2) */
-	}
-	/*---------------------------------------------------------
-		スペカチェック
-	---------------------------------------------------------*/
-	{
-		if (0/*off*/==spell_card_mode)
-		{
-			if (0/*off*/==spell_card_boss_timer)
-			{
-				spell_card_limit_health = 0;
-				spell_card_mode 		= 1/*on*/;
-			}
-		}
-	}
-}
-
 
 /*---------------------------------------------------------
 	ボス行動
@@ -1993,20 +1882,23 @@ static void move_sakuya(SPRITE *src)
 	/* 魔方陣生成中はoff */
 	{
 	//	BOSS06_DATA *data = (BOSS06_DATA *)src->data;
-		if (SAKUYA_04_KEITAI_A != spell_card_number)	/* 第四形態: 魔方陣生成 */
+	//	if (SPELL_CARD_04_sakuya_ddd != spell_card_number)	/* 第四形態: 魔方陣生成 */
 		{
 			if (0/*off*/==spell_card_mode)
 			{
-				regist_spell_card(src);
+				regist_spell_card222(src);
 			}
 		}
 	}
-	spell_card_generator(src);	/* スペカ生成 */
+	spell_card_generator222(src);	/* スペカ生成 */
+	#if 1/* [スペカシステム内に移動予定] */
+	#endif
+	boss_effect(src);			/* 回エフェクト */
 	danmaku_generator(src); 	/* 弾幕生成 */
 //
 	#if 0/*十六夜本人デバッグ用*/
 	/* パネルのスコア欄にmove_typeを、グレイズ欄にstate1を表示させる。っていうか書き換えちゃう。 */
-	((PLAYER_DATA *)player->data)->my_score 	= spell_card_number;
+	((PLAYER_DATA *)player->data)->my_score 	= sp ell_card_number;
 	((PLAYER_DATA *)player->data)->graze_point	= data->state1;
 	#endif
 }
@@ -2018,73 +1910,98 @@ static void move_sakuya(SPRITE *src)
 
 void add_boss_sakuya(STAGE_DATA *l)/*int lv*/
 {
+	boss_bgm_mode		= (l->user_y);
+//
 //----[ZAKO]
 	common_boss_flags	= (FLG_ALL_CAST);
 //
-	mahoujin_num	= 0;
+	kodomo_num	= 0;
 
 //
-//	dummy_obj						= sprite_add_res(BASE_BOSS_SAKUYA_PNG);
-	dummy_obj->flags				&= (~(SP_FLAG_VISIBLE));
-	dummy_obj->anim_frame			= SAKUYA_ANIME_04_CENTER_A;
-	dummy_obj->type 				= SP_MUTEKI;
-//	dummy_obj->callback_mover		= dummy_move;
-	dummy_obj->x256 				= 0;
-	dummy_obj->y256 				= 0;
+//	dummy_obj								= sprite_add_res(BASE_BOSS_SAKUYA_PNG);
+	dummy_obj->flags						&= (~(SP_FLAG_VISIBLE));
+	dummy_obj->anim_frame					= SAKUYA_ANIME_04_CENTER_A;
+	dummy_obj->type 						= SP_MUTEKI;
+//	dummy_obj->callback_mover				= dummy_move;
+	dummy_obj->x256 						= 0;
+	dummy_obj->y256 						= 0;
 
 //
 //----[BOSS]
-	{
 		SPRITE *sakuya;
-	//	sakuya							= spr ite_add_file 0("boss/sakuya.png"/*"boss04.png"*/, 19, PRIORITY_03_ENEMY, 0); sakuya->anim_speed=0;
-		sakuya							= sprite_add_res(BASE_BOSS_SAKUYA_PNG);
-		sakuya->flags					|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK);
-		sakuya->anim_frame				= SAKUYA_ANIME_04_CENTER_A;
-		sakuya->type					= SP_BOSS/*SP_BOSS06*/;
-		sakuya->callback_mover			= move_sakuya;
-		sakuya->callback_loser			= lose_boss;
-		sakuya->callback_hit_enemy		= NULL; 	/* ダミーコールバック登録 */
-
-		sakuya->x256					= t256(GAME_WIDTH/2)/*(t256(GAME_WIDTH/2))-((sakuya->w128))*/;
-		sakuya->y256					= -((sakuya->h128+sakuya->h128));
-	//
+	//	sakuya								= spr ite_add_file 0("boss/sakuya.png"/*"boss04.png"*/, 19, PRIORITY_03_ENEMY, 0); sakuya->anim_speed=0;
+		sakuya								= sprite_add_res(BASE_BOSS_SAKUYA_PNG);
+		sakuya->flags						|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK);
+		sakuya->yx_anim_frame				= SAKUYA_ANIME_04_CENTER_A;
+		sakuya->type						= SP_BOSS/*SP_BOSS06*/;
+		sakuya->callback_mover				= move_sakuya;
+		sakuya->callback_loser				= sakuya_put_items;
+//
+		sakuya->base_health 				= ((1024)-1)*9;/*test*/
+		sakuya->base_score					= adjust_score_by_difficulty(score(5000000));	/* 500万 */
+	//------------ スペカ関連
+		spell_card_number					= SPELL_CARD_00_sakuya_000;
+		spell_card_max						= SPELL_CARD_11_sakuya_kkk;
+		spell_card_boss_init_regist(sakuya);
+	{
 		BOSS06_DATA *data;
-		data							= mmalloc(sizeof(BOSS06_DATA));
-		sakuya->data					= data;
-	//	/*data->boss_base.boss_*/sakuya->base_health	= ((/*5*/SAKUYA_10_KEITAI*1024)-1); 	/*5119==((5*1024)-1)*/
-//		/*data->boss_base.boss_*/sakuya->base_health	= ((1024)-1);
-		/*data->boss_base.boss_*/sakuya->base_health	= ((1024)-1)*9;/*test*/
-//		data->boss_base.bo ss_life		= ((/*5*/SAKUYA_10_KEITAI));		/*5119==((5*1024)-1)*/
-
-		/*score(5000)+score(4000)*difficulty*/
-		/*data->boss_base.*/sakuya->base_score			= adjust_score_by_difficulty(score(5000000));	/* 500万 */
-		spell_card_number				= SAKUYA_01_KEITAI/*0*/;
-		data->state1					= SA00;
-		data->wait1 					= 0;
-		data->wait2_256 				= t256(0);
-		data->wait3 					= 0;
-	//	data->aaa_type					= 0;
-	//	data->level 					= (l->user_y);	/*lv*/
-		data->move_angle512 			= (0);
-	//	/*data->boss_base.*/spell_card_boss_timer		= (20*64);		/*1000*/	// + 20 [秒] ???	/* 16.666[秒] 1000 ???*/
-	//	/*data->boss_base.*/spell_card_boss_timer		= (40*64);			/* 40*64==40[count] 	約40[秒(64/60)](単位は秒ではない) */
-	//	/*data->boss_base.*/spell_card_boss_timer		= ((99-24)*64); 	/* 75*64==75[count] 	約75[秒(64/60)](単位は秒ではない) */
-		/*data->boss_base.*/spell_card_boss_timer		= ((160)*64);		/* 75*64==75[count] 	約160[秒(64/60)](単位は秒ではない) */
-		// 60 [秒] ???
+		data								= mmalloc(sizeof(BOSS06_DATA));
+		sakuya->data						= data;
+		data->state1						= /*ST_00*/0/*SA00*/;
+		data->wait1 						= 0;
+		data->wait2_256 					= t256(0);
+		data->wait3 						= 0;
+	//	data->aaa_type						= 0;
+		data->move_angle512 				= (0);
 		#if 1
 	//------------ 弾幕関連
-		data->boss_base.danmaku_type				= 0;
-		data->boss_base.danmaku_time_out			= 0;
+		data->boss_base.danmaku_type		= 0;
+		data->boss_base.danmaku_time_out	= 0;
 		#endif
-	//------------ スペカ関連
-		#if 1
-		/* [スペカシステム内に移動予定] */
-		/* 初回の登録作ってないので手動 */
-		create_spell_card_init_dummy();
-		spell_card_mode 		= 1/*on*/;
-		spell_card_limit_health = (sakuya->base_health)-500/*1000*/;/* 通常攻撃(初回攻撃)の攻撃分(手動設定) */
-		#endif
-	//
-		((PLAYER_DATA *)player->data)->boss = sakuya;/*輝夜本人*/
 	}
+	//----[ZAKO]
+	//	create_doll(src);		/* 子供魔方陣生成(2回生成しちゃうバグあり) */
+
+	/*---------------------------------------------------------
+		子供魔方陣 生成 	子供魔方陣グラフィック生成
+	---------------------------------------------------------*/
+
+	//static void create_doll(SPRITE *sakuya)
+	{
+//		obj_doll							= sprite_add_res(BASE_MAHOUJIN_0_PNG);	//obj_doll->anim_speed	= 0;/*"boss04-lo.png"*/
+		obj_doll							= sprite_add_gu(ZAKO_TYPE_ATARI16_PNG); //obj_doll->anim_speed	= 0;/*"boss04-lo.png"*/
+		obj_doll->type						= TEKI_51_MAHOJIN1;
+//		obj_doll->type						= SP_MUTEKI;
+		obj_doll->base_health				= 999999;/* 倒せない */
+		obj_doll->flags 					|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK);
+		obj_doll->anim_frame				= 0;
+		obj_doll->color32					= 0x00ffffff;	/*	obj_doll->alpha 		= 0x00;*/
+		obj_doll->callback_mover			= move_doll00;
+		obj_doll->x256						= sakuya->x256+((sakuya->w128-obj_doll->w128));
+		obj_doll->y256						= sakuya->y256+((sakuya->h128-obj_doll->h128));
+
+		{
+			BOSS06_DOLL_DATA *data;
+			data							= mmalloc(sizeof(BOSS06_DOLL_DATA));
+			obj_doll->data					= data;
+			data->state_d02 				= 0;
+			data->state_d01 				= 0x00;
+			data->wait						= 0;
+			data->angle512					= (0);
+			#if (1==USE_KEISYOU)
+			data->sakuya_obj				= sakuya;	/* 継承させる */
+			#endif
+			data->nnn						= 0;
+			data->hen_no_kazu				= (DOLL_HEN_MAX);
+		}
+	}
+
 }
+//		spell_card_boss_timer				= (20*64);			/*1000*/	// + 20 [秒] ???	/* 16.666[秒] 1000 ???*/
+//		spell_card_boss_timer				= (40*64);			/* 40*64==40[count] 	約40[秒(64/60)](単位は秒ではない) */
+//		spell_card_boss_timer				= ((99-24)*64); 	/* 75*64==75[count] 	約75[秒(64/60)](単位は秒ではない) */
+	/*score(5000)+score(4000)*difficulty*/
+
+//		data->boss_base.bo ss_life			= ((/*5*/SPELL_CARD_10_sakuya_jjj));			/*5119==((5*1024)-1)*/
+//		sakuya->base_health 				= ((/*5*/SPELL_CARD_10_sakuya_jjj*1024)-1); 	/*5119==((5*1024)-1)*/
+//		sakuya->base_health 				= ((1024)-1);

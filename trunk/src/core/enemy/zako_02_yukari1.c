@@ -20,7 +20,7 @@ typedef struct
 //	ENEMY_BASE base;
 //	int angle512;
 	int time_out;
-	int enemy_rank;
+	int enemy_rank; 	/* Ý’èƒtƒ@ƒCƒ‹‚©‚ç‚Ì“G‚Ì‹­‚³ */
 } YUKARI1_DATA;
 static int destoroy;
 
@@ -63,8 +63,13 @@ static void move_yukari1(SPRITE *src)
 	data->time_out--;
 	if (0==((data->time_out)&0x3f))
 	{
-		if (data->enemy_rank>0)
-		{	bullet_create_aka_maru_jikinerai(src, t256(data->enemy_rank+2) );}
+		if (ENEMY_LAST_SHOT_LINE256 > src->y256)	/* ‚±‚Ìƒ‰ƒCƒ“‚æ‚è‰º‚©‚ç‚Í“G‚ªŒ‚‚½‚È‚¢ */
+		{
+			if (0 < data->enemy_rank)
+			{
+				bullet_create_aka_maru_jikinerai(src, t256(data->enemy_rank+2) );
+			}
+		}
 	}
 //
 	src->x256 += (src->vx256)/**fps_fa ctor*/;
@@ -74,18 +79,18 @@ static void move_yukari1(SPRITE *src)
 		src->type = SP_DELETE;	/* ‚¨‚µ‚Ü‚¢ */
 	}
 //
-	src->m_angleCCW512+=5;/*ƒOƒ‰‰ñ“]*/
+	src->m_angleCCW512 += 5;/*ƒOƒ‰‰ñ“]*/
 	mask512(src->m_angleCCW512);
-//	src->anim_frame=(deg_512_to_360(src->m_angleCCW512+deg_360_to_512(270))/10)%36;
-//	src->anim_frame = ((((src->m_angleCCW512/*+deg_360_to_512(270)*/)&(512-1))*(36/2))>>8);
-//	src->anim_frame = ((((src->m_angleCCW512/*+deg_360_to_512(270)*/)&(512-1))*(32/2))>>8);
-//	src->anim_frame = ((((src->m_angleCCW512/*+deg_360_to_512(270)*/)&(512-1)))>>4);
-	src->yx_anim_frame = ( ((src->m_angleCCW512>>3)&(0x30)) | ((src->m_angleCCW512>>4)&(0x07)) );
+//	src->an im_frame=(deg_512_to_360(src->m_angleCCW512+deg_360_to_512(270))/10)%36;
+//	src->an im_frame = ((((src->m_angleCCW512/*+deg_360_to_512(270)*/)&(512-1))*(36/2))>>8);
+//	src->an im_frame = ((((src->m_angleCCW512/*+deg_360_to_512(270)*/)&(512-1))*(32/2))>>8);
+//	src->an im_frame = ((((src->m_angleCCW512/*+deg_360_to_512(270)*/)&(512-1)))>>4);
+//	src->yx_an im_frame = ( ((src->m_angleCCW512>>3)&(0x30)) | ((src->m_angleCCW512>>4)&(0x07)) );
 
 /* "yukari8x4.png"
-src->m_angleCCW512		 a bcde ----
-src->yx_anim_frame	  yyyy xxxx
-src->yx_anim_frame	  --ab -cde
+src->m_angleCCW512	   a bcde ----
+src->yx_an im_frame	 	 yyyy xxxx
+src->yx_an im_frame	 	 --ab -cde
 */
 }
 
@@ -102,13 +107,15 @@ void add_zako_yukari1(STAGE_DATA *l)/*int lv*/
 	for (i=0; i<NUM_OF_ENEMIES; i++)
 	{
 		SPRITE *s;
-		s						= sprite_add_res(BASE_YUKARI32_PNG);	//s->anim_speed=0;/*36"mi ng.png"*/
-		s->type 				= SP_ZAKO/*_02_YUKARI1*/;
+//		s						= sp rite_add_res(BASE_YUKARI32_PNG);	//s->anim_speed=0;/*36"mi ng.png"*/
+		s						= sprite_add_gu(ZAKO_TYPE_ATARI16_PNG);	//s->anim_speed=0;/*36"mi ng.png"*/
+		s->type 				= /*SP_ZAKO*/TEKI_61_NIJI_HOSI/*_02_YUKARI1*/;
+//		s->type 				= SP_ZAKO/*_02_YUKARI1*/;
 		s->flags				|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK|SP_FLAG_TIME_OVER);
 		s->callback_mover		= move_yukari1;
 		s->callback_loser		= lose_yukari1;
 		s->callback_hit_enemy	= callback_hit_zako;
-		s->anim_frame			= 0;
+//		s->an im_frame			= 0;
 #if 1
 /* CCW‚Ìê‡ */
 		s->m_angleCCW512		= deg_360_to_512CCW(0);

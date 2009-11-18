@@ -16,7 +16,8 @@ enum
 //	[***20080110-20080115
 //	[***20090110
 //キーコンフィグ追加。
-//基本は絶対値指定(機能固定値)でsupport.cのkeypollの中のkeyconfigだけ配列指定番号に変数（keyconfig[key_xxx）を取る
+//基本は絶対値指定(機能固定値)でsupport.cのkeypollの中のpad_configだけ
+//配列指定番号に変数（pad_config[key_xxx）を取る
 //またkeypollに入る値は、0と1だけのままだとボタン設定上問題が出るのでビットで管理するようにした
 /*static*/ //void key_config_init()
 //{
@@ -43,6 +44,7 @@ enum
 	KEY_CONFIG_MENU_13_QUIT,
 	KEY_CONFIG_MENU_MAX,
 };
+
 /*---------------------------------------------------------
 	KINOU_07_SNAP_SHOT は ゲーム(即押し)にあまり関係ないので、
 	一般的にクリティカルな動作では使いづらいと思われるＬボタンに移動。
@@ -54,27 +56,27 @@ enum
 
 /*static*/ void set_default_key(int *key_setting_map, int key_setting_type)
 {
-	static const /*int*/Uint8 default_key_map[4][12] =
+	static const int default_key_map[4][KEY_NUM12_MAX] =
 	{
 		{	/* type 01 模倣風 標準 (スレ内の意見で決まった) */
-			KINOU_01_SELECT,	KINOU_02_PAUSE, 	KINOU_03_UP,			KINOU_04_RIGHT, /* KINOU_12_BOMB KINOU_00_NONE*/
-			KINOU_05_DOWN,		KINOU_06_LEFT,		KINOU_07_SNAP_SHOT, 	KINOU_09_SLOW,
-			KINOU_09_SLOW,		KINOU_10_OPTION,	KINOU_11_SHOT,			KINOU_12_BOMB,
+			PSP_KEY_SELECT, 		PSP_KEY_PAUSE,		PSP_KEY_UP, 			PSP_KEY_RIGHT, /* KINOU_12_BOMB KINOU_00_NONE*/
+			PSP_KEY_DOWN,			PSP_KEY_LEFT,		PSP_KEY_SNAP_SHOT,		PSP_KEY_SLOW,
+			PSP_KEY_SLOW,			PSP_KEY_OPTION, 	PSP_KEY_SHOT_OK,		PSP_KEY_BOMB_CANCEL,
 		},
 		{	/* type 02 toho DX 互換 */
-			KINOU_01_SELECT,	KINOU_02_PAUSE, 	KINOU_03_UP,			KINOU_04_RIGHT, /* KINOU_12_BOMB KINOU_00_NONE*/
-			KINOU_05_DOWN,		KINOU_06_LEFT,		KINOU_07_SNAP_SHOT, 	KINOU_09_SLOW,
-			KINOU_09_SLOW,		KINOU_10_OPTION,	KINOU_12_BOMB,			KINOU_11_SHOT,
+			PSP_KEY_SELECT, 		PSP_KEY_PAUSE,		PSP_KEY_UP, 			PSP_KEY_RIGHT, /* KINOU_12_BOMB KINOU_00_NONE*/
+			PSP_KEY_DOWN,			PSP_KEY_LEFT,		PSP_KEY_SNAP_SHOT,		PSP_KEY_SLOW,
+			PSP_KEY_SLOW,			PSP_KEY_OPTION, 	PSP_KEY_BOMB_CANCEL,	PSP_KEY_SHOT_OK,
 		},
 		{	/* type 03 psp-1000 (□ボタンがカスなので使えない場合) */
-			KINOU_01_SELECT,	KINOU_02_PAUSE, 	KINOU_03_UP,			KINOU_04_RIGHT, /* KINOU_12_BOMB KINOU_00_NONE*/
-			KINOU_05_DOWN,		KINOU_06_LEFT,		KINOU_07_SNAP_SHOT, 	KINOU_09_SLOW,
-			KINOU_09_SLOW,		KINOU_11_SHOT,		KINOU_12_BOMB,			KINOU_10_OPTION,
+			PSP_KEY_SELECT, 		PSP_KEY_PAUSE,		PSP_KEY_UP, 			PSP_KEY_RIGHT, /* KINOU_12_BOMB KINOU_00_NONE*/
+			PSP_KEY_DOWN,			PSP_KEY_LEFT,		PSP_KEY_SNAP_SHOT,		PSP_KEY_SLOW,
+			PSP_KEY_SLOW,			PSP_KEY_SHOT_OK,	PSP_KEY_BOMB_CANCEL,	PSP_KEY_OPTION,
 		},
 		{	/* type 04 psp-2000 (□ボタンがショットの場合) */
-			KINOU_01_SELECT,	KINOU_02_PAUSE, 	KINOU_03_UP,			KINOU_04_RIGHT, /* KINOU_12_BOMB KINOU_00_NONE*/
-			KINOU_05_DOWN,		KINOU_06_LEFT,		KINOU_07_SNAP_SHOT, 	KINOU_09_SLOW,
-			KINOU_12_BOMB,		KINOU_10_OPTION,	KINOU_09_SLOW,			KINOU_11_SHOT,
+			PSP_KEY_SELECT, 		PSP_KEY_PAUSE,		PSP_KEY_UP, 			PSP_KEY_RIGHT, /* KINOU_12_BOMB KINOU_00_NONE*/
+			PSP_KEY_DOWN,			PSP_KEY_LEFT,		PSP_KEY_SNAP_SHOT,		PSP_KEY_SLOW,
+			PSP_KEY_BOMB_CANCEL,	PSP_KEY_OPTION, 	PSP_KEY_SLOW,			PSP_KEY_SHOT_OK,
 		},
 	};
 	{
@@ -86,6 +88,24 @@ enum
 	}
 }
 
+enum /*_keynum_*/		//キーコンフィグ用
+{
+	KINOU_00_NONE = 0,
+	KINOU_01_SELECT,
+	KINOU_02_PAUSE,
+	KINOU_03_UP,
+	KINOU_04_RIGHT,
+	KINOU_05_DOWN,
+	KINOU_06_LEFT,
+	KINOU_07_SNAP_SHOT,
+	KINOU_08_SYSTEM,
+	KINOU_09_SLOW,
+	KINOU_10_OPTION,
+	KINOU_11_SHOT,
+	KINOU_12_BOMB,
+	KINOU_13_MAX	/* キーコンフィグ用の最大数 */
+};
+
 extern void ini_save(void); 	// [***090115
 /*static*/ void key_config_work(void)
 {
@@ -95,46 +115,33 @@ extern void ini_save(void); 	// [***090115
 #define MAX_MENU_02 			(2)
 #define MAX_DEFAULT_MAP_04		(4)
 
-#define MAX_KEY_SETTING_12 (1+12+1)
-	static int key_setting[MAX_KEY_SETTING_12]; 						// 数字=ボタン変数 並びは "bg/key_haikei_surface.png"
-	static const int const_key_setting[MAX_KEY_SETTING_12/*11*/] =		// 数字=機能定数 並びは "fonts/keylist.png"
+	static int key_setting[KEY_CONFIG_MENU_MAX]; 						// 数字=ボタン変数 並びは "bg/key_haikei_surface.png"
+	static const int const_pad_setting[KEY_CONFIG_MENU_MAX/*11*/] =		// 数字=機能定数 並びは "fonts/keylist.png"
 	{	// 数字 = 機能定数 並び。	[[ 選択する並び順序 ]]
-		KINOU_00_NONE,
-	#if 0
-		KINOU_11_SHOT,
-		KINOU_12_BOMB,
-		KINOU_09_SLOW,
-		KINOU_03_UP,
-		KINOU_05_DOWN,
-		KINOU_06_LEFT,
-		KINOU_04_RIGHT,
-		KINOU_02_PAUSE,
-		KINOU_10_OPTION,
-		KINOU_07_SNAP_SHOT,
-		KINOU_01_SELECT,
-		KINOU_08_SYSTEM,
-	#else
-		KINOU_01_SELECT,
-		KINOU_02_PAUSE,
-		KINOU_03_UP,
-		KINOU_04_RIGHT,
-		KINOU_05_DOWN,
-		KINOU_06_LEFT,
-		KINOU_07_SNAP_SHOT,
-		KINOU_08_SYSTEM,
-		KINOU_09_SLOW,
-		KINOU_10_OPTION,
-		KINOU_11_SHOT,
-		KINOU_12_BOMB,
-	#endif
-		0
+		PSP_KEY_NONE,			//	KINOU_00_NONE,
+		PSP_KEY_SELECT, 		//	KINOU_01_SELECT,
+		PSP_KEY_PAUSE,			//	KINOU_02_PAUSE,
+		PSP_KEY_UP, 			//	KINOU_03_UP,
+		PSP_KEY_RIGHT,			//	KINOU_04_RIGHT,
+		PSP_KEY_DOWN,			//	KINOU_05_DOWN,
+		PSP_KEY_LEFT,			//	KINOU_06_LEFT,
+		PSP_KEY_SYSTEM, 		//	KINOU_07_SNAP_SHOT,
+		PSP_KEY_SLOW,			//	KINOU_08_SYSTEM,
+		PSP_KEY_SNAP_SHOT,		//	KINOU_09_SLOW,
+		PSP_KEY_OPTION, 		//	KINOU_10_OPTION,
+		PSP_KEY_SHOT_OK,		//	KINOU_11_SHOT,
+		PSP_KEY_BOMB_CANCEL,	//	KINOU_12_BOMB,
+		0						//	0
 	};
+
+
+
 	#define X_LOCATE_OFFSET_01	(64)/*(80-16)*/
 	#define X_LOCATE_OFFSET_02	(80)
 	#define X_LOCATE_OFFSET_03	(200)
 	#define X_LOCATE_OFFSET_04	(250)
 	#define Y_LOCATE_OFFSET 	(40)
-	#define MAX_KEY_NAMES_12	(MAX_KEY_SETTING_12+MAX_BUTTON_12+MAX_MENU_02+MAX_DEFAULT_MAP_04)
+	#define MAX_KEY_NAMES_12	(KEY_CONFIG_MENU_MAX+MAX_BUTTON_12+MAX_MENU_02+MAX_DEFAULT_MAP_04)
 	static SDL_Surface *key_name_surface[MAX_KEY_NAMES_12]; 	// 文字の画像
 
 
@@ -146,7 +153,7 @@ extern void ini_save(void); 	// [***090115
 	switch (psp_loop/*key_config_state*/)
 	{
 	case (ST_WORK_KEY_CONFIG|KEY_CONFIG_STATE_00_INIT):
-		play_music(BGM_05_stage5);
+		play_music_num(BGM_05_stage5);
 		{
 			SDL_Surface *loadpic	= loadbmp0("bg/key_config.jpg", 0, 0);/*"bg/key_haikei_surface.png"*/
 			SDL_BlitSurface(loadpic, NULL, sdl_screen[SDL_01_BACK_SCREEN], NULL);
@@ -156,24 +163,24 @@ extern void ini_save(void); 	// [***090115
 
 		#if 0
 		//	システム(PSPのハードウェア)順
-		key_setting[ 0] = keyconfig[KEY_NUM00_SELECT];
-		key_setting[ 1] = keyconfig[KEY_NUM01_START];
-		key_setting[ 2] = keyconfig[KEY_NUM02_UP ];
-		key_setting[ 3] = keyconfig[KEY_NUM03_RIGHT ];
-		key_setting[ 4] = keyconfig[KEY_NUM04_DOWN ];
-		key_setting[ 5] = keyconfig[KEY_NUM05_LEFT ];
-		key_setting[ 6] = keyconfig[KEY_NUM06_L_TRIG];
-		key_setting[ 7] = keyconfig[KEY_NUM07_R_TRIG];
-		key_setting[ 8] = keyconfig[KEY_NUM08_TRIANGLE];
-		key_setting[ 9] = keyconfig[KEY_NUM09_CIRCLE];
-		key_setting[10] = keyconfig[KEY_NUM10_CROSS];
-		key_setting[11] = keyconfig[KEY_NUM11_SQUARE];
+		key_setting[ 0] = pad_config[KEY_NUM00_SELECT];
+		key_setting[ 1] = pad_config[KEY_NUM01_START];
+		key_setting[ 2] = pad_config[KEY_NUM02_UP ];
+		key_setting[ 3] = pad_config[KEY_NUM03_RIGHT ];
+		key_setting[ 4] = pad_config[KEY_NUM04_DOWN ];
+		key_setting[ 5] = pad_config[KEY_NUM05_LEFT ];
+		key_setting[ 6] = pad_config[KEY_NUM06_L_TRIG];
+		key_setting[ 7] = pad_config[KEY_NUM07_R_TRIG];
+		key_setting[ 8] = pad_config[KEY_NUM08_TRIANGLE];
+		key_setting[ 9] = pad_config[KEY_NUM09_CIRCLE];
+		key_setting[10] = pad_config[KEY_NUM10_CROSS];
+		key_setting[11] = pad_config[KEY_NUM11_SQUARE];
 		#else
 		{
 			int i;
-			for (i=0; i<12; i++)
+			for (i=0; i<KEY_NUM12_MAX; i++)
 			{
-				key_setting[i] = keyconfig[i];
+				key_setting[i] = pad_config[i];
 			}
 		}
 		#endif
@@ -182,29 +189,16 @@ extern void ini_save(void); 	// [***090115
 			{
 				//	[[ 選択する並び順序 ]]
 				"NONE",
-				#if 0
-				"SHOT / OK",
-				"BOMB / CANCEL",
-				"SLOW",
-				"UP",
-				"DOWN",
-				"LEFT",
-				"RIGHT",
-				"PAUSE",
-				"OPTION",
-				"SNAP SHOT",
-				"SELECT",
-				"SYSTEM",
-				#else
+				#if 1
 				"SELECT",
 				"PAUSE",
 				"UP",
 				"RIGHT",
 				"DOWN",
 				"LEFT",
-				"SNAP SHOT",
-				"SYSTEM",
-				"SLOW",
+				"SYSTEM",		//	"SNAP SHOT",
+				"SLOW", 		//	"SYSTEM",
+				"SNAP SHOT",	//	"SLOW",
 				"OPTION",
 				"SHOT / OK",
 				"BOMB / CANCEL",
@@ -285,9 +279,9 @@ extern void ini_save(void); 	// [***090115
 						key_setting_default_type--;
 						key_setting_default_type &= (4-1);
 						#if (0==USE_DESIGN_TRACK)
-						play_voice_auto_track(VOICE02_ZAKO_HAKAI);
+						play_voice_auto_track(VOICE02_MENU_SELECT);
 						#else
-						voice_play(VOICE02_ZAKO_HAKAI, TRACK01_EXPLODE);/*テキトー*/
+						voice_play(VOICE02_MENU_SELECT, TRACK01_EXPLODE);/*テキトー*/
 						#endif
 					}
 					else
@@ -296,9 +290,9 @@ extern void ini_save(void); 	// [***090115
 						key_setting_default_type++;
 						key_setting_default_type &= (4-1);
 						#if (0==USE_DESIGN_TRACK)
-						play_voice_auto_track(VOICE02_ZAKO_HAKAI);
+						play_voice_auto_track(VOICE02_MENU_SELECT);
 						#else
-						voice_play(VOICE02_ZAKO_HAKAI, TRACK01_EXPLODE);/*テキトー*/
+						voice_play(VOICE02_MENU_SELECT, TRACK01_EXPLODE);/*テキトー*/
 						#endif
 					}
 					else
@@ -328,52 +322,47 @@ extern void ini_save(void); 	// [***090115
 					else
 					if (my_pad_alter & PSP_KEY_SHOT_OK) 	// ショットボタン入力
 					{
-						#define FLAG_KEY_SHOT	(1<<0)
-						#define FLAG_KEY_UP 	(1<<1)
-						#define FLAG_KEY_DOWN	(1<<2)
 						int saiteigen_exsist;	// 存在確認用。0で存在しない。存在しないとメニューを抜けれない。
 						saiteigen_exsist = 0;
 						{
 							int i;
-							for (i=0; i<MAX_KEY_SETTING_12; i++)	// ショットボタン&↑&↓があるか確認
+							for (i=0; i<KEY_NUM12_MAX/*KEY_CONFIG_MENU_MAX*/; i++)
 							{
-								if (key_setting[i] == KINOU_11_SHOT)	{	saiteigen_exsist	|= FLAG_KEY_SHOT;	}
-								if (key_setting[i] == KINOU_03_UP)		{	saiteigen_exsist	|= FLAG_KEY_UP; 	}
-								if (key_setting[i] == KINOU_05_DOWN)	{	saiteigen_exsist	|= FLAG_KEY_DOWN;	}
+								saiteigen_exsist	|= key_setting[i];
 							}
 						}
-						if ((FLAG_KEY_SHOT|FLAG_KEY_DOWN|FLAG_KEY_UP)==saiteigen_exsist)
+						if (0!=(saiteigen_exsist&(PSP_KEY_SHOT_OK|PSP_KEY_DOWN|PSP_KEY_UP)))	// ショットボタン&↑&↓があるか確認
 						{
 							psp_loop++;//	key_config_state = (ST_WORK_KEY_CONFIG|KEY_CONFIG_STATE_06_FADE_INIT);
 							// 最終的に代入される物
 							#if 0
 							//	システム(PSPのハードウェア)順
-							keyconfig[KEY_NUM00_SELECT] 	= key_setting[ 0];
-							keyconfig[KEY_NUM01_START]		= key_setting[ 1];
-							keyconfig[KEY_NUM02_UP] 		= key_setting[ 2];
-							keyconfig[KEY_NUM03_RIGHT]		= key_setting[ 3];
-							keyconfig[KEY_NUM04_DOWN]		= key_setting[ 4];
-							keyconfig[KEY_NUM05_LEFT]		= key_setting[ 5];
-							keyconfig[KEY_NUM06_L_TRIG] 	= key_setting[ 6];
-							keyconfig[KEY_NUM07_R_TRIG] 	= key_setting[ 7];
-							keyconfig[KEY_NUM08_TRIANGLE]	= key_setting[ 8];
-							keyconfig[KEY_NUM09_CIRCLE] 	= key_setting[ 9];
-							keyconfig[KEY_NUM10_CROSS]		= key_setting[10];
-							keyconfig[KEY_NUM11_SQUARE] 	= key_setting[11];
+							pad_config[KEY_NUM00_SELECT]	= key_setting[ 0];
+							pad_config[KEY_NUM01_START] 	= key_setting[ 1];
+							pad_config[KEY_NUM02_UP]		= key_setting[ 2];
+							pad_config[KEY_NUM03_RIGHT] 	= key_setting[ 3];
+							pad_config[KEY_NUM04_DOWN]		= key_setting[ 4];
+							pad_config[KEY_NUM05_LEFT]		= key_setting[ 5];
+							pad_config[KEY_NUM06_L_TRIG]	= key_setting[ 6];
+							pad_config[KEY_NUM07_R_TRIG]	= key_setting[ 7];
+							pad_config[KEY_NUM08_TRIANGLE]	= key_setting[ 8];
+							pad_config[KEY_NUM09_CIRCLE]	= key_setting[ 9];
+							pad_config[KEY_NUM10_CROSS] 	= key_setting[10];
+							pad_config[KEY_NUM11_SQUARE]	= key_setting[11];
 							#else
 							{
 								int i;
-								for (i=0; i<12; i++)
+								for (i=0; i<KEY_NUM12_MAX; i++)
 								{
-									keyconfig[i] = key_setting[i];
+									pad_config[i] = key_setting[i];
 								}
 							}
 							#endif
 							ini_save();
 							#if (0==USE_DESIGN_TRACK)
-							play_voice_auto_track(VOICE02_ZAKO_HAKAI);
+							play_voice_auto_track(VOICE02_MENU_SELECT);
 							#else
-							voice_play(VOICE02_ZAKO_HAKAI, TRACK01_EXPLODE);/*テキトー*/
+							voice_play(VOICE02_MENU_SELECT, TRACK01_EXPLODE);/*テキトー*/
 							#endif
 						}
 						else
@@ -394,7 +383,7 @@ extern void ini_save(void); 	// [***090115
 						int menu_cursor2;
 						for (menu_cursor2=0; menu_cursor2<(KINOU_13_MAX-1)/*11 ???*/; menu_cursor2++)
 						{
-							if (const_key_setting[menu_cursor2] == key_setting[menu_cursor1])		// 選択した所に何が入っているのか調べる
+							if (const_pad_setting[menu_cursor2] == key_setting[menu_cursor1])		// 選択した所に何が入っているのか調べる
 							{
 								break;
 							}
@@ -411,12 +400,12 @@ extern void ini_save(void); 	// [***090115
 							menu_cursor2++;
 							if ((KINOU_13_MAX-1) < menu_cursor2)	{	menu_cursor2 = KINOU_00_NONE; }
 						}
-						key_setting[menu_cursor1] = const_key_setting[menu_cursor2];
+						key_setting[menu_cursor1] = const_pad_setting[menu_cursor2];
 						//
 						#if (0==USE_DESIGN_TRACK)
-						play_voice_auto_track(VOICE02_ZAKO_HAKAI);
+						play_voice_auto_track(VOICE02_MENU_SELECT);
 						#else
-						voice_play(VOICE02_ZAKO_HAKAI, TRACK01_EXPLODE);/*テキトー*/
+						voice_play(VOICE02_MENU_SELECT, TRACK01_EXPLODE);/*テキトー*/
 						#endif
 					}
 				}
@@ -429,7 +418,7 @@ extern void ini_save(void); 	// [***090115
 			int i;
 			int jj;
 			/* 機能番号の描画 */
-			for (i=0; i</*12*/(12)/*MAX_KEY_SETTING_12*/; i++)
+			for (i=0; i</*12*/(12)/*KEY_CONFIG_MENU_MAX*/; i++)
 			{
 				/* ボタン設定描画 */
 				//kp_search(key_setting[i], i);
@@ -438,7 +427,7 @@ extern void ini_save(void); 	// [***090115
 					int kinou_number;
 					for (kinou_number=0; kinou_number<(MAX_KEY_NAMES_12-1); kinou_number++)/* (11==kinou_number は NULL) */
 					{
-						if (const_key_setting[kinou_number] == /*btn*/key_setting[i])
+						if (const_pad_setting[kinou_number] == /*btn*/key_setting[i])
 						{
 							goto aaa_break/*break*/;
 						}
@@ -469,7 +458,7 @@ extern void ini_save(void); 	// [***090115
 				SDL_BlitSurface(key_name_surface[(MAX_KINOU_11+MAX_BUTTON_12+MAX_MENU_02)+key_setting_default_type], NULL,sdl_screen[SDL_00_SCREEN],&rect_locate_offset);
 			}
 			/* ボタン名称描画 */
-			for (i=0; i<(MAX_BUTTON_12+MAX_MENU_02)/*MAX_KEY_SETTING_12*/; i++)
+			for (i=0; i<(MAX_BUTTON_12+MAX_MENU_02)/*KEY_CONFIG_MENU_MAX*/; i++)
 			{
 				if (menu_cursor1==i)	{	jj= 2;	}
 				else					{	jj= 0;	}
@@ -491,7 +480,7 @@ extern void ini_save(void); 	// [***090115
 			}
 		}
 		#endif
-		play_music(BGM_00_menu1);
+		play_music_num(BGM_09_menu1);
 		{
 			//key_haikei_surface	= loadbmp("bg/title_bg.jpg");
 			SDL_Surface *loadpic	= loadbmp0("bg/title_bg.jpg", 0, 0);/*"bg/key_haikei_surface.png"*/

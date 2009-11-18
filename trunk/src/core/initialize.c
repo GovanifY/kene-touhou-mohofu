@@ -44,9 +44,9 @@ void game_system_init(void/*int argc, char *argv[]*/)
 	pspDebugScreenInit();
 	//#endif
 
+	ini_load();
 	sceCtrlSetSamplingCycle(0);
 	sceCtrlSetSamplingMode(PSP_CTRL_MODE_ANALOG);
-	ini_load();
 
 	/* ----- 初期化 */
 	psp_video_init();
@@ -86,7 +86,7 @@ void game_system_init(void/*int argc, char *argv[]*/)
 	bg2_system_init();
 	/* ゲームコア game_core_init(); */
 //
-	play_music(BGM_00_menu1);
+	play_music_num(BGM_09_menu1);
 	/* メインメニューに戻る */
 	psp_loop=(ST_INIT_MENU|0/*ST_ME NU_SUB_MAIN_MENU*/);//newsta te(/*ST_INTRO*/ST_MENU/*ST_START_INTRO*/,0,1);
 }

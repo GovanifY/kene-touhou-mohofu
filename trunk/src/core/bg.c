@@ -121,7 +121,8 @@ static void tile_work(void)
 		}
 		/* converted  */
 		u8 aaa =(current_bg_alpha/*>>1*/);
-		conv_bg_alpha = ((aaa<<24)|(aaa<<16)|(aaa<<8)|(aaa<<0));
+	//	conv_bg_alpha = ((aaa<<24)|(aaa<<16)|(aaa<<8)|(aaa<<0));
+		conv_bg_alpha = ((aaa&0xf0));
 	}
 
 //	if (current_bg_alpha < 250/*255*/ )
@@ -342,14 +343,13 @@ void bg2_destroy(void)
 /*---------------------------------------------------------
 	敵を追加する
 ---------------------------------------------------------*/
-extern int tiny_strcmp(char *aaa, const char *bbb);
 void add_enemy_load_bg(STAGE_DATA *l)
 {
 #if (1==USE_BG_LOAD)
 	char *text;
 	text=l->user_string;
 	//	if (NULL != (text) )
-	//if ( 0 == tiny_strcmp(text,"0") ) /* ファイル名が０の場合システムコマンド[拡張予定] */
+	//if ( 0 == ti ny_strcmp(text,"0") ) /* ファイル名が０の場合システムコマンド[拡張予定] */
 	if ( '0' == text[0] )	/* ファイル名の1字目が０の場合システムコマンド[拡張予定] */
 	{
 		;
@@ -441,7 +441,30 @@ void bg2_control(STAGE_DATA *l)
 	yyy = l->user_y;
 //	speed256 = l->scroll_speed256;
 	//
-	request_bg0_y_scroll_speed256 = l->scroll_speed256; 	/* bg0のスクロール、予約速度を設定 */
+		{
+			/* KETMは約20-30fps動作ですが、現在約60fps動作なのであまりに速すぎる為、速度値を半分に修正しました。 */
+			#if 1
+			{const unsigned short speed256_tbl[16] =
+			{
+				#if 0
+				/*ketm09互換*/
+				t256(0.5), t256(0.1), t256(0.2), t256(0.3),/* - - - - */
+				t256(0.4), t256(0.5), t256(0.6), t256(0.7),/* - 5 6 7 */
+				t256(0.8), t256(0.9), t256(0.5), t256(0.5),/* 8 9 - - */
+				t256(0.5), t256(0.5), t256(0.5), t256(0.5) /* - - - - */
+				#else
+				/*拡張*/
+				t256(0.0), t256(0.1), t256(0.2), t256(0.3),/* 0 1 2 3 */
+				t256(0.4), t256(0.5), t256(0.6), t256(0.7),/* 4 5 6 7 */
+				t256(0.8), t256(0.9), t256(1.0), t256(1.5),/* 8 9 J K */
+				t256(2.0), t256(2.5), t256(3.0), t256(4.0) /* L M N O */
+				#endif
+			};
+		//	new_entry->scroll_speed256/*ctype*/ = speed256_tbl[((new_entry->user_1_moji) & 0x0f)];
+			request_bg0_y_scroll_speed256 = speed256_tbl[((l->user_1_moji) & 0x0f)]; 	/* bg0のスクロール、予約速度を設定 */
+			}
+			#endif
+		}
 	switch (xxx)
 	{
 	case BG2_01_SET_SCROOL_OFFSET:	/* スクロール値を直接セット */

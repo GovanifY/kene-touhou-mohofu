@@ -60,9 +60,6 @@ enum
 	#define SDL_BUF_WIDTH512	PSP_WIDTH480
 #endif
 
-/* 難易度スコア補正 */
-extern int adjust_score_by_difficulty(int convert_score);
-
 enum /*_errlevel*/
 {
 	ERR_FATAL=0,
@@ -75,69 +72,62 @@ enum /*_errlevel*/
 #else
 	#define CHECKPOINT ;
 #endif
-
-enum /*_state*/
-{
-	ST_PSP_QUIT 			= 0x0000,
-	ST_INIT_GAME_PLAY_common		= 0x0100,
-	ST_WORK_GAME_PLAY		= 0x0200,
-	ST_INIT_MENU			= 0x0300,
-	ST_WORK_MENU			= 0x0400,
 //	ST_INIT_PLAYER_SELECT				吸収。なし
-	ST_WORK_PLAYER_SELECT	= 0x0500,
-	ST_INIT_NAME_ENTRY		= 0x0600,
-	ST_WORK_NAME_ENTRY		= 0x0700,
-//
-	ST_WORK_STAGE_FIRST 	= 0x0800,
-	ST_WORK_STAGE_CLEAR 	= 0x0900,
-//
 //	ST_INIT_GAME_OVER					吸収。なし
-	ST_WORK_GAME_OVER		= 0x0a00,
 //	ST_INIT_RESULT						吸収。なし
-	ST_WORK_RESULT			= 0x0b00,
 //	ST_INIT_KEY_CONFIG					吸収。なし
-	ST_WORK_KEY_CONFIG		= 0x0c00,
 //	ST_INIT_STORY						吸収。なし
-	ST_WORK_STORY			= 0x0d00,		/* [***20090223 追加  */
 //	ST_INTRO,
 //	ST_START_INTRO,
 //	ST_GAME_DEMO,
+
+enum /*_state*/
+{
+	ST_PSP_QUIT 				= 0x0000,
+	ST_INIT_GAME_PLAY_common	= 0x0100,
+	ST_WORK_GAME_PLAY			= 0x0200,
+	ST_INIT_MENU				= 0x0300,
+	ST_WORK_MENU				= 0x0400,
+	ST_WORK_PLAYER_SELECT		= 0x0500,
+	ST_INIT_NAME_ENTRY			= 0x0600,
+	ST_WORK_NAME_ENTRY			= 0x0700,
+//
+	ST_WORK_STAGE_FIRST 		= 0x0800,
+	ST_WORK_STAGE_CLEAR 		= 0x0900,
+//
+	ST_WORK_GAME_OVER			= 0x0a00,
+	ST_WORK_RESULT				= 0x0b00,
+
+	ST_WORK_STORY				= 0x0c00,		/* [***20090223 追加  */
+	ST_WORK_OPTION_MENU 		= 0x0d00,
+	ST_WORK_KEY_CONFIG			= 0x0e00,
+	ST_WORK_MUSIC_ROOM			= 0x0f00,
 };
 #if 0
-enum /*_keynum_*/		//キーコンフィグ用
+enum PspCtrlButtons
 {
-	KINOU_00_NONE = 0,
-	KINOU_11_SHOT,
-	KINOU_12_BOMB,
-	KINOU_09_SLOW,
-	KINOU_03_UP,
-	KINOU_05_DOWN,
-	KINOU_06_LEFT,
-	KINOU_04_RIGHT,
-	KINOU_02_PAUSE,
-	KINOU_10_OPTION,
-	KINOU_07_SNAP_SHOT,
-	KINOU_01_SELECT,
-	KINOU_08_SYSTEM,
-	KINOU_13_MAX	/* キーコンフィグ用の最大数 */
-};
-#else
-enum /*_keynum_*/		//キーコンフィグ用
-{
-	KINOU_00_NONE = 0,
-	KINOU_01_SELECT,
-	KINOU_02_PAUSE,
-	KINOU_03_UP,
-	KINOU_04_RIGHT,
-	KINOU_05_DOWN,
-	KINOU_06_LEFT,
-	KINOU_07_SNAP_SHOT,
-	KINOU_08_SYSTEM,
-	KINOU_09_SLOW,
-	KINOU_10_OPTION,
-	KINOU_11_SHOT,
-	KINOU_12_BOMB,
-	KINOU_13_MAX	/* キーコンフィグ用の最大数 */
+	PSP_CTRL_SELECT 	= 0x00000001,	/* Select button. */
+	PSP_CTRL_START		= 0x00000008,	/* Start button. */
+	PSP_CTRL_UP 		= 0x00000010,	/* Up D-Pad button. */
+	PSP_CTRL_RIGHT		= 0x00000020,	/* Right D-Pad button. */
+	PSP_CTRL_DOWN		= 0x00000040,	/* Down D-Pad button. */
+	PSP_CTRL_LEFT		= 0x00000080,	/* Left D-Pad button. */
+	PSP_CTRL_LTRIGGER	= 0x00000100,	/* Left trigger. */
+	PSP_CTRL_RTRIGGER	= 0x00000200,	/* Right trigger. */
+	PSP_CTRL_TRIANGLE	= 0x00001000,	/* Triangle button. */
+	PSP_CTRL_CIRCLE 	= 0x00002000,	/* Circle button. */
+	PSP_CTRL_CROSS		= 0x00004000,	/* Cross button. */
+	PSP_CTRL_SQUARE 	= 0x00008000,	/* Square button. */
+	PSP_CTRL_HOME		= 0x00010000,	/* Home button. In user mode this bit is set if the exit dialog is visible. */
+	PSP_CTRL_HOLD		= 0x00020000,	/* Hold button. */
+	PSP_CTRL_NOTE		= 0x00800000,	/* Music Note button. */
+	PSP_CTRL_SCREEN 	= 0x00400000,	/* Screen button. */
+	PSP_CTRL_VOLUP		= 0x00100000,	/* Volume up button. */
+	PSP_CTRL_VOLDOWN	= 0x00200000,	/* Volume down button. */
+	PSP_CTRL_WLAN_UP	= 0x00040000,	/* Wlan switch up. */
+	PSP_CTRL_REMOTE 	= 0x00080000,	/* Remote hold position. */
+	PSP_CTRL_DISC		= 0x01000000,	/* Disc present. */
+	PSP_CTRL_MS 		= 0x02000000,	/* Memory stick present. */
 };
 #endif
 
@@ -150,10 +140,27 @@ enum /*_keynum_*/		//キーコンフィグ用
 #define PSP_KEY_LEFT			PSP_CTRL_LEFT
 #define PSP_KEY_SYSTEM			PSP_CTRL_LTRIGGER
 #define PSP_KEY_SLOW			PSP_CTRL_RTRIGGER
-#define PSP_KEY_SC_SHOT 		PSP_CTRL_TRIANGLE
+#define PSP_KEY_SNAP_SHOT		PSP_CTRL_TRIANGLE
 #define PSP_KEY_OPTION			PSP_CTRL_CIRCLE
 #define PSP_KEY_SHOT_OK 		PSP_CTRL_CROSS
 #define PSP_KEY_BOMB_CANCEL 	PSP_CTRL_SQUARE
+
+enum
+{
+	KEY_NUM00_SELECT = 0,	/* SELECT */
+	KEY_NUM01_START,		/* START */
+	KEY_NUM02_UP,			/* 上 */
+	KEY_NUM03_RIGHT,		/* 右 */
+	KEY_NUM04_DOWN, 		/* 下 */
+	KEY_NUM05_LEFT, 		/* 左 */
+	KEY_NUM06_L_TRIG,		/* L */
+	KEY_NUM07_R_TRIG,		/* R */
+	KEY_NUM08_TRIANGLE, 	/* △ */
+	KEY_NUM09_CIRCLE,		/* ○ */
+	KEY_NUM10_CROSS,		/* × */
+	KEY_NUM11_SQUARE,		/* □ */
+	KEY_NUM12_MAX			/* 最大数 */
+};
 
 extern Uint32 my_pad;		/*今回入力*/
 extern Uint32 my_pad_alter; /*前回入力*/
@@ -173,24 +180,8 @@ enum /*_game_rank_*/
 
 extern int psp_loop;
 
-enum
-{
-	KEY_NUM00_SELECT = 0,	/* SELECT */
-	KEY_NUM01_START,		/* START */
-	KEY_NUM02_UP,			/* 上 */
-	KEY_NUM03_RIGHT,		/* 右 */
-	KEY_NUM04_DOWN, 		/* 下 */
-	KEY_NUM05_LEFT, 		/* 左 */
-	KEY_NUM06_L_TRIG,		/* L */
-	KEY_NUM07_R_TRIG,		/* R */
-	KEY_NUM08_TRIANGLE, 	/* △ */
-	KEY_NUM09_CIRCLE,		/* ○ */
-	KEY_NUM10_CROSS,		/* × */
-	KEY_NUM11_SQUARE,		/* □ */
-	KEY_NUM12_MAX			/* 最大数 */
-};
-
-extern int keyconfig[KEY_NUM12_MAX];
+extern int pad_config[KEY_NUM12_MAX];
+//extern int ke yconfig[KEY_NUM12_MAX];
 
 
 
@@ -199,6 +190,7 @@ extern int keyconfig[KEY_NUM12_MAX];
 extern SDL_Surface *sdl_screen[4];
 
 #include "sprite.h"
+#include "bullet_system.h"
 
 extern SPRITE *player;
 extern SPRITE *dummy_obj;
@@ -233,14 +225,33 @@ typedef struct
 #define DIRECTRY_NAME_LENGTH		(4)
 
 
+/* オプションメニューで設定する設定値 */
+
+enum /*_option_config_*/
+{
+	OPTION_CONFIG_00_PLAYER = 0,
+	OPTION_CONFIG_01_BOMB,
+	OPTION_CONFIG_02_BGM,
+	OPTION_CONFIG_03_SOUND,
+	OPTION_CONFIG_04_CURRENT_DIFFICULTY,
+	OPTION_CONFIG_05_CURRENT_PLAYER,
+	OPTION_CONFIG_06_ANALOG,
+	OPTION_CONFIG_07_OPEN,
+	OPTION_CONFIG_08_MAX	/* 最大数 */
+};
+
+extern int option_config[OPTION_CONFIG_08_MAX];		/* 8 */		// 数字=ボタン変数 並びは "bg/key_haikei_surface.png"
+
+
 /* Gu */
 #if 1
 extern void (*callback_gu_draw_haikei)(void);//unsigned int dr aw_bg_screen;				/* 背景ウィンドウ表示フラグ */
 extern int draw_side_panel;/* パネル表示on(0以外)/off(0) */
 
-extern int draw_boss_hp_value;/* ボスhp描画値 */
+extern int draw_boss_hp_value;	/* ボスhp描画値 */
+extern int boss_life_value; 	/* ボス魔方陣サイズ描画値 */
 #endif
-
+extern int boss_bgm_mode;
 
 //void toggle_fullscreen(void);
 extern void error(int errorlevel, char *msg, ...);
@@ -261,11 +272,12 @@ extern void putpixel(SDL_Surface *surface, int x, int y, Uint32 color);
 extern void blit_scaled(SDL_Surface *src, SDL_Rect *src_rct, SDL_Surface *dst, SDL_Rect *dst_rct);
 //extern void blit_calpha(SDL_Surface *src, SDL_Rect *src_rct, SDL_Surface *dst, SDL_Rect *dst_rct);
 
-
 //extern int keyboard_keypressed(void);
 //extern void newsta te(int m, int s, int n);
 extern void *mmalloc(size_t size);
 
+
+extern int tiny_strcmp(char *aaa, const char *bbb);/* MIPS R4000系にあわせて、最適化してみました。 */
 
 extern void display_vidinfo(void);
 
@@ -277,9 +289,16 @@ extern void psp_clear_screen(void);/* 仮想スクリーンを黒で消す */
 #define psp_pop_screen(aaa)  psp_move_screen( SDL_01_BACK_SCREEN, SDL_00_SCREEN )
 extern void psp_move_screen(int src_screen_number, int dst_screen_number );
 
-/* 0:使わない。1:使う。 1:エンディングデバッグ機能。0:この機能OFF */
-#define USE_ENDING_DEBUG (1)
-#define MAX_STAGE6_FOR_CHECK (6/*5*/)
+/* 0:しない。 1:する。 [メモリゼロクリアー機能]
+	1:なら、mmalloc()した際に 確保したメモリを0クリアーします。0ならしません。
+	大量に弾を出す場合どちらがいいか判りません(0:速いがバグる可能性、1:遅いが安定度は高い)が、
+	1:の方がいろんな意味でバグ抑制できます。 */
+//#define USE_MEM_CLEAR (0)
+#define USE_MEM_CLEAR (1)
+
+/*廃止*/	/* 0:使わない。1:使う。 1:エンディングデバッグ機能。0:この機能OFF */
+/*廃止*/	//#define US E_ENDING_DEBUG (1)
+/*廃止*/	//#define MA X_STAGE6_FOR_CHECK (6/*5*/)
 
 /* 0:使わない。1:使う。 1:キーコンフィグ使う。0:キーコンフィグ機能OFF */
 //#define USE_KEY_CONFIG (0)
@@ -291,7 +310,17 @@ extern void psp_move_screen(int src_screen_number, int dst_screen_number );
 /* 0:しない。 1:する。	コンティニューした場合、スコアランキング */
 #define USE_CONTINUED_RANKING (1)
 
-/* 0:しない。 1:する。 エクステンドチェック(作成中) */
-#define USE_EXTEND_CHECK (0)
+/* 0:しない。 1:する。 エクステンドチェック */
+//#define USE_EXTEND_CHECK (0)
+#define USE_EXTEND_CHECK (1)
+
+/* 0:しない。 1:する。 カンスト(スコアカウンター ストップ)チェック */
+//#define USE_MAX_SCORE_COUNTER_STOP_CHECK (0)
+#define USE_MAX_SCORE_COUNTER_STOP_CHECK (0)
+/*
+カンストは 99,9999,9990pts (99億点)ですが、チョットぐらいの調整じゃカンストしそうにない。
+(グレイズを10万の位まで稼いだり、いろいろ実験してみたけど...)
+アリス：カンストなんて無いわ！
+*/
 
 #endif /* _GAME_MAIN_H_ */

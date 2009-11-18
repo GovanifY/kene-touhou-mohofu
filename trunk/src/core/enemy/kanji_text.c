@@ -79,7 +79,7 @@ static void add_common(STAGE_DATA *l, SDL_Surface *tmp)
 	};
 //
 	SPRITE *s;
-	s					= sprite_add_res_list(
+	s					= sp rite_add_res_list(
 		tmp,
 //		1,
 //		1,
@@ -134,8 +134,12 @@ void add_enemy_kanji_string(STAGE_DATA *l)
 		add_common(l, tmp);
 	}
 	#endif
+	if (0==l->user_x)
+	{
+		script_message_window_clear();
+	}
 	msg_time = (60*5);
-	print_kanji(/*SDL_Surface *drawmap,*/ /*SDL_Rect *rect*/0, text, /*int color_type*/7, /*int wait*/0);
+	print_kanji000(/*SDL_Surface *drawmap,*/ /*SDL_Rect *rect*/ /*0,*/ text, /*int color_type*/7, /*int wait*/0);
 }
 
 /*---------------------------------------------------------

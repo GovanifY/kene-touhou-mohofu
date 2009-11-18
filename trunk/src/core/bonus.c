@@ -16,13 +16,14 @@ typedef struct
 //	#if 0
 //	int strength;/*union WEAPON_BASE*/		/* なんかアイテムに殺される(?)ので追加？？？ */
 //	#endif
+	int true_y256;		/* 本来のy座標 */
 	int y_sum256;		/* アイテム投げ出し用 y軸 積算値(y軸、上方がマイナス) */
 	int angle512;
 	int flags00;		/* 収集フラグ	[***090116	変更 */
 /*	自動収集 */
 	int flag_first; 	/* firstフラグ */
-	int x_sa256; 		/* 差分 x */
-	int y_sa256; 		/* 差分 y */
+	int x_sa256;		/* 差分 x */
+	int y_sa256;		/* 差分 y */
 } ITEM_DATA;
 
 static void move_items(SPRITE *src)
@@ -42,15 +43,15 @@ static void move_items(SPRITE *src)
 	if (0 == ((data->flags00)&ITEM_MOVE_FLAG_01_COLLECT))
 	{
 		/* [***090123 [***090220	変更5=>4=>3 t256(3.0) */
-		if (data->y_sum256 < t256(2.2) )	/* 最大アイテム落下速度の調整 */
+		if (data->y_sum256 < t256(1.5) )	/* t256(2.2) 最大アイテム落下速度の調整 */
 		/* t256(2.2) == コンティニュー復活時の[F]を画面の下隅(右下、左下)で死んだ場合で、
 			足が一番遅い、幽々子が(高速モードならば)余裕で取れる速度に調整する。
 			(低速モードでは取れなくても構わない) */
 		{
 			data->y_sum256 += data->angle512;		/* x1.5 */
 		}
-		src->y256 += (data->y_sum256)/**fps_fa ctor*/;
-		if (src->y256 > GAME_HEIGHT*256)
+		data->true_y256 += (data->y_sum256)/**fps_fa ctor*/;
+		if (data->true_y256 > GAME_HEIGHT*256)
 		{
 			/* ウェポンアイテム (小P) (中P) (F) のいずれか逃したら、チェイン破棄 */
 			switch (src->type)
@@ -78,7 +79,7 @@ static void move_items(SPRITE *src)
 			data->y_sum256 = t256(1.0); 	/* (2.5==5*0.5) */
 		}
 		data->x_sa256 = (src->x256 - player->x256);
-		data->y_sa256 = (src->y256 - player->y256);
+		data->y_sa256 = (data->true_y256 - player->y256);
 		/* 自分に集まる */
 		int aaa_x256;
 		int aaa_y256;
@@ -110,7 +111,21 @@ static void move_items(SPRITE *src)
 			}
 		}
 		src->x256 = player->x256 + (aaa_x256);	/**fps_fa ctor*/
-		src->y256 = player->y256 + (aaa_y256);	/**fps_fa ctor*/
+		data->true_y256 = player->y256 + (aaa_y256);	/**fps_fa ctor*/
+	}
+	if (SP_DELETE != src->type)
+	{
+		/* 画面内に変換 */
+		src->y256 = data->true_y256;
+		if (0 >= src->y256)
+		{
+			src->y256 = 0;
+			src->type |= 0x08;
+		}
+		else
+		{
+			src->type &= (~0x08);
+		}
 	}
 }
 /*
@@ -147,9 +162,10 @@ static SPRITE *item_mono_create(SPRITE *src/*int x, int y*/, int sel_type)
 //	アイテムの種類を選ぶ
 	SPRITE *s;
 //	s			= spr ite_add_file 0("bonus_items.png", 8, PRIORITY_04_ITEM, 0);	s->anim_speed=0;
-	s			= sprite_add_res(BASE_BONUS_ITEMS_PNG);
+//	s			= sprite_add_res(BASE_BONUS_ITEMS_PNG);
+	s			= sprite_add_gu(ZAKO_TYPE_ATARI16_PNG);
 	sel_type &= 0x07;
-	s->yx_anim_frame = ((/*SP_ITEM_FIRE_POWER-*/sel_type)/*&0x07*/);
+//	s->yx_anim_frame = ((/*SP_ITEM_FIRE_POWER-*/sel_type)/*&0x07*/);
 //	出現位置を決める
 	#define OFFSET_X64		(64*256)/* 64はずらし分 2のn乗の必要有り */
 	#define ITEM_WIDTH16	(16*256)/* 16はアイテム幅 */
@@ -220,11 +236,13 @@ void item_create(
 		ITEM_DATA *data;
 		data				= mmalloc(sizeof(ITEM_DATA));
 		s->data 			= data;
+		data->true_y256		= (src->y256);	/* 仮想 */
+
 		#if 000
-//		/*data->*/s->base_weapon_strength		= 0;		/*なんかアイテムに殺されるので追加？？？*/
+//		/*data->*/s->base_weapon_strength		= 0;		/* なんかアイテムに殺されるので追加？？？ */
 		#endif
 		/* 画面下方に居る程、投げ出し速度を速くする */
-	//	data->y_sum256		= t256(-5*0.5); 	//ちょっと変更
+	//	data->y_sum256		= t256(-5*0.5); 	/* ちょっと変更 */
 	//	data->y_sum256		= t256(-2*0.5); 	/* アイテム投げ出し初期値(y軸、上方がマイナス) */
 	//	data->y_sum256		= -(/*256*/((int)(src->y))<<1)-(ra_nd()&0xff);	/* アイテム投げ出し初期値(y軸、上方がマイナス) */
 		#if 0
@@ -234,8 +252,8 @@ void item_create(
 		#else
 		/* 画面外(上)に喰み出す(が、喰み出しマーカー作ってない) */
 		/* アイテムマーカーを作成する事が前提の動き */
-	//	data->y_sum256		= -(/*256*/((200*256)>>7))-(ra_nd()&0xff);	/* アイテム投げ出し初期値(y軸、上方がマイナス) */
-		data->y_sum256		= -(/*256*/((512)))-(ra_nd()&0xff);	/* アイテム投げ出し初期値(y軸、上方がマイナス) */
+	//	data->y_sum256		= -(/*256*/((200*256)>>7))-(ra_nd()&0xff);		/* アイテム投げ出し初期値(y軸、上方がマイナス) */
+		data->y_sum256		= -(/*256*/((512)))-(ra_nd()&0xff); 			/* アイテム投げ出し初期値(y軸、上方がマイナス) */
 		#endif
 		data->angle512		= 6;	/* 6.51898646904403967309077986986488 ra d2deg512(0.08);*/
 		data->flags00		= (up_flags&ITEM_MOVE_FLAG_01_COLLECT);
@@ -252,12 +270,12 @@ void item_create_for_boss(SPRITE *src, int item_create_mode)
 {
 	#define ITEM_03 	(4*0)
 	#define ITEM_02 	(4*1)
-	#define ITEM_01_1 	(4*2)
-	#define ITEM_01_2 	(4*3)
-	#define ITEM_01_3 	(4*4)
-	#define ITEM_01_4 	(4*5)
-	#define ITEM_01_5 	(4*6)
-	#define ITEM_01_6 	(4*7)
+	#define ITEM_01_1	(4*2)
+	#define ITEM_01_2	(4*3)
+	#define ITEM_01_3	(4*4)
+	#define ITEM_01_4	(4*5)
+	#define ITEM_01_5	(4*6)
+	#define ITEM_01_6	(4*7)
 	#define ITEM_MAX	(4*8)
 	const u8 u8_item_tbl[ITEM_MAX*2] =
 	{	/* easy, normal, hard, lunatic */
@@ -303,13 +321,13 @@ void item_create_for_boss(SPRITE *src, int item_create_mode)
 		(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_06_TENSU&7),	/*stage6*/
 	#endif
 	};
-//	item_create(src, item_tbl[ITEM_03+difficulty+item_create_mode]/*SP_ITEM_03_1UP  */, 1, ITEM_MOVE_FLAG_06_RAND_XY);
+//	item_create(src, item_tbl[ITEM_03+difficulty+item_create_mode]/*SP_ITEM_03_1UP	*/, 1, ITEM_MOVE_FLAG_06_RAND_XY);
 //	item_create(src, item_tbl[ITEM_02+difficulty+item_create_mode]/*SP_ITEM_04_P128 */, 1, ITEM_MOVE_FLAG_06_RAND_XY);
 //	item_create(src, item_tbl[ITEM_01+difficulty+item_create_mode]/*SP_ITEM_01_P008 */, player_now_stage/*5*/, ITEM_MOVE_FLAG_06_RAND_XY);
 	int i;
 	for (i=0; i<(player_now_stage+2); i++)
 	{
-		item_create(src, SP_GROUP_ITEMS+u8_item_tbl[difficulty+item_create_mode+i]/*SP_ITEM_03_1UP  */, 1, ITEM_MOVE_FLAG_06_RAND_XY);
+		item_create(src, SP_GROUP_ITEMS+u8_item_tbl[difficulty+item_create_mode+i]/*SP_ITEM_03_1UP	*/, 1, ITEM_MOVE_FLAG_06_RAND_XY);
 	}
 	item_create(src, SP_ITEM_05_HOSI, 16/*7*/, (ITEM_MOVE_FLAG_01_COLLECT|ITEM_MOVE_FLAG_06_RAND_XY) );/*星点を出す*/
 }
@@ -331,23 +349,6 @@ void item_create_for_boss(SPRITE *src, int item_create_mode)
 //
 //	item_create(sb01[i], SP_ITEM_COIN,7);
 
-/*---------------------------------------------------------
-	総ての敵弾を消して、指定アイテムに変える
----------------------------------------------------------*/
-extern SPRITE *sprite_list000_head;
-void item_from_bullets(int put_item_num)
-{
-	SPRITE *s = sprite_list000_head;/* スプライト リストの先頭 から探す */
-	while (NULL != s)/* スプライト リストの最後まで調べる */
-	{
-		if (SP_GROUP_BULLETS & s->type)
-		{
-			item_create(s, put_item_num/*SP_ITEM_05_HOSI*/, 1, (ITEM_MOVE_FLAG_01_COLLECT|ITEM_MOVE_FLAG_06_RAND_XY) );
-			s->type = SP_DELETE;
-		}
-		s = s->next;/*次*/
-	}
-}
 
 /*-------------------------------------------------------*/
 /*-------------------------------------------------------*/
@@ -487,7 +488,8 @@ f8(v,v,v,M,M,v,v,v),f8(v,v,v,v,v,v,v,v),f8(M,M,M,M,M,M,M,v),f8(M,M,M,M,M,M,M,v),
 
 static void regist_score(int number, int x256, int y256)
 {
-	if (t256((GAME_WIDTH)/*(380)*/) < x256)	{ return; }
+	if (t256((GAME_WIDTH-8)/*(380)*/) < x256)	{ return; } 	/* (8)? (あまり横なら描かない) */
+	if (t256((GAME_HEIGHT-8)/*(380)*/) < y256)	{ return; } 	/* (6)? (あまり下なら描かない) */
 //
 	static int index=0; 	/* 登録出来そうな位置 */
 //	int iii;
@@ -570,42 +572,74 @@ void bonus_info_score_nodel(SPRITE *src/*int x, int y*/, int score_type)
 	bonus_info_any_score_nodel(src, score_num);
 }
 
+
+/*---------------------------------------------------------
+	難易度スコア補正
+---------------------------------------------------------*/
+
+int adjust_score_by_difficulty(int convert_score)
+{
+	int mul_tbl256[4] = /* 難易度補正 */
+	{
+	/* easy */		t256(0.5),
+	/* normal */	t256(1.0),
+	/* hard */		t256(1.2),
+	/* lunatic */	t256(1.5),
+	};
+	return (((convert_score)*(mul_tbl256[difficulty]))>>8);
+}
+
+
 /*---------------------------------------------------------
 	スコア加算されると、必ずここが呼ばれる。
 	ここでエクステンドチェック(残機が得点で増えるチェック)を
 	する予定。(だけど、まだ作っていない)
 	-------------------------------------------------------
 	エクステンドチェックは実行時間が読めないのはマズい
-	1/60F 毎に必ずチェックにいく方式に改める予定。
+	約1秒毎に必ずチェックにいく方式。
 ---------------------------------------------------------*/
-#define PLAYER_MAX_SCORE (score( 9999999990))
+//#define PLAYER_MAX_SCORE	(score( 9999999990))
+#define PLAYER_MAX_SCORE	(	  ( 999999999 ))
 
 void player_add_score(int score_num)
 {
 	((PLAYER_DATA *)player->data)->my_score += score_num;
-	#if (1==USE_EXTEND_CHECK)
+	/* カンスト(スコアカウンター ストップ)チェックも約1秒(60flame)に1回で
+		内部的には問題ないんだけど、表示が変になると思うよ。 */
+	#if (1==USE_MAX_SCORE_COUNTER_STOP_CHECK)
 	/* カンスト(スコアカウンター ストップ)チェック */
 	if ( PLAYER_MAX_SCORE < ((PLAYER_DATA *)player->data)->my_score )	/* カンスト チェック */
 	{
 		((PLAYER_DATA *)player->data)->my_score = PLAYER_MAX_SCORE;
 	}
-	#endif /* (1==USE_EXTEND_CHECK) */
+	#endif /* (1==USE_MAX_SCORE_COUNTER_STOP_CHECK) */
 }
 
 #if (1==USE_EXTEND_CHECK)
 static int extend_check_score;
 static int extend_check_counter;
 #endif /* (1==USE_EXTEND_CHECK) */
-#if 0//(1==USE_EXTEND_CHECK)
-/* 1/60F 毎に必ずチェックにいく方式 */
+#if (1==USE_EXTEND_CHECK)
+/* score_panel.c: エクステンドチェックは約1秒(60flame)に1回で問題ないと思う。 */
 void player_check_extend_score(void)
 {
-	/* 1000万、2500万、5000万、10000万でエクステンド */
+	/* 1000万、2500万、5000万、10000万(1億)でエクステンド */
 	#if (1==USE_EXTEND_CHECK)
 	if ( extend_check_score < ((PLAYER_DATA *)player->data)->my_score ) 	/* エクステンド チェック */
 	{
-		(PLAYER_DATA *)player->data)->zanki++;	/* エクステンド */
-		play_voice_auto_track(VOICE06_EXTEND);	/* エクステンド音 */
+		((PLAYER_DATA *)player->data)->zanki++; 	/* エクステンド */
+		#if (0==USE_DESIGN_TRACK)
+		play_voice_auto_track(VOICE06_EXTEND);		/* エクステンド音 */
+		#else
+		/*
+			スコアによるエクステンド音は特殊なので、目立つべき。
+			(アイテムによるエクステンド音と違って、目で確認しない)
+			実際やってみたら２つ鳴らして、丁度良い。
+			特にうるさくはなかった。
+		*/
+		voice_play(VOICE06_EXTEND, TRACK03_SHORT_MUSIC/*TRACK02_ALEART_IVENT*/);
+		voice_play(VOICE06_EXTEND, TRACK01_EXPLODE);/*予備(必要)*/
+		#endif
 		{
 			static const unsigned int extend_score_tbl[4/*8*/] =
 			{
@@ -627,6 +661,10 @@ void player_check_extend_score(void)
 }
 #endif
 #if (1==USE_EXTEND_CHECK)
+
+/*---------------------------------------------------------
+	プレイヤー開始時／プレイヤーコンティニュー開始時に呼ばれる。
+---------------------------------------------------------*/
 void player_init_extend_score(void)
 {
 	extend_check_score		= score(   10000000);

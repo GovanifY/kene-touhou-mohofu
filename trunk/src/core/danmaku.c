@@ -20,20 +20,20 @@
 	#if 1
 		/* Gu‰»Š®—¹‚·‚é‚Ü‚ÅA‚Ç‚¤‚¹ƒYƒŒ‚é‚Ì‚ÅŠÈ—ª”Å */
 	//	data->boss_base.tmp_angleCCW512 =  (atan_512(p->y256-t->y256					  ,p->x256-t->x256				  ));						/* ŠÈ—ª”Å(’e‚Æ©•ª‚ª‘å‚«‚³‚ª“¯‚¶‚È‚ç‚¸‚ê‚È‚¢Aˆá‚¤‚Æ‚»‚Ì•ªŒë·‚É‚È‚é) */
-		/*data->boss_base.*/t->tmp_angleCCW512 =  (atan_512(p->y256-t->y256+(16*256)			  ,p->x256-t->x256+(16*256) 	  ));						/* ƒYƒ‹”Å(ƒeƒLƒg[AƒYƒŒ‚é) */
+		t->tmp_angleCCW512 =  (atan_512(p->y256-t->y256+(16*256)			  ,p->x256-t->x256+(16*256) 	  ));						/* ƒYƒ‹”Å(ƒeƒLƒg[AƒYƒŒ‚é) */
 	#else
 		/* Gu‰»Š®—¹‚µ‚½‚ç‚±‚Á‚¿ */
-		/*data->boss_base.*/t->tmp_angleCCW512 =  (atan_512(p->y256-t->y256+((p->h128-t->h128)), p->x256-t->x256+((p->w128-t->w128))));/**/ 			/* ‹ô”’e‚Ìê‡‚É©‹@‘_‚¢ */
+		t->tmp_angleCCW512 =  (atan_512(p->y256-t->y256+((p->h128-t->h128)), p->x256-t->x256+((p->w128-t->w128))));/**/ 			/* ‹ô”’e‚Ìê‡‚É©‹@‘_‚¢ */
 	#endif
 }
 	#if 0
-	//	/*data->boss_base.*/t->tmp_angleCCW512 =  (atan_512(p->y256-t->y256 				  ,p->x256-t->x256				  ));//2082417				/* ŠÈ—ª”Å(’e‚Æ©•ª‚ª‘å‚«‚³‚ª“¯‚¶‚È‚ç‚¸‚ê‚È‚¢Aˆá‚¤‚Æ‚»‚Ì•ªŒë·‚É‚È‚é) */
-	//	/*data->boss_base.*/t->tmp_angleCCW512 =  (atan_512(p->y256-t->y256+((p->h128-t->h128	)),p->x256-t->x256-((p->w128+t->w128))));/*???(original)*/	/* Šï”’e‚Ìê‡‚É©‹@‘_‚¢(?) ‚È‚ñ‚©¶‚É‚¸‚ê‚é */
-/// 	/*data->boss_base.*/t->tmp_angleCCW512 =  (atan_512(p->y256-t->y256+((p->h128			)),p->x256-t->x256-((p->w128	 ))));
-//		/*data->boss_base.*/t->tmp_angleCCW512 =  (atan_512(p->y256-t->y256+((p->h128-t->h128	)),p->x256-t->x256-((p->w128-t->w128))));/**/				/* Šï”’e‚Ìê‡‚É©‹@‘_‚¢ */
-		/*data->boss_base.*/t->tmp_angleCCW512 =  (atan_512(p->y256-t->y256+((p->h128-t->h128	)),p->x256-t->x256+((p->w128-t->w128))));/**/				/* ‹ô”’e‚Ìê‡‚É©‹@‘_‚¢ */
-	//	/*data->boss_base.*/t->tmp_angleCCW512 =  (atan_512(p->y256-t->y256+((p->h128			)),p->x256-t->x256-((p->w128	 ))));
-	//	/*data->boss_base.*/t->tmp_angleCCW512 =  (atan_512(p->y256-t->y256-((p->h128			)),p->x256-t->x256-((p->w128	 ))));
+	//	t->tmp_angleCCW512 =  (atan_512(p->y256-t->y256 				  ,p->x256-t->x256				  ));//2082417				/* ŠÈ—ª”Å(’e‚Æ©•ª‚ª‘å‚«‚³‚ª“¯‚¶‚È‚ç‚¸‚ê‚È‚¢Aˆá‚¤‚Æ‚»‚Ì•ªŒë·‚É‚È‚é) */
+	//	t->tmp_angleCCW512 =  (atan_512(p->y256-t->y256+((p->h128-t->h128	)),p->x256-t->x256-((p->w128+t->w128))));/*???(original)*/	/* Šï”’e‚Ìê‡‚É©‹@‘_‚¢(?) ‚È‚ñ‚©¶‚É‚¸‚ê‚é */
+/// 	t->tmp_angleCCW512 =  (atan_512(p->y256-t->y256+((p->h128			)),p->x256-t->x256-((p->w128	 ))));
+//		t->tmp_angleCCW512 =  (atan_512(p->y256-t->y256+((p->h128-t->h128	)),p->x256-t->x256-((p->w128-t->w128))));/**/				/* Šï”’e‚Ìê‡‚É©‹@‘_‚¢ */
+		t->tmp_angleCCW512 =  (atan_512(p->y256-t->y256+((p->h128-t->h128	)),p->x256-t->x256+((p->w128-t->w128))));/**/				/* ‹ô”’e‚Ìê‡‚É©‹@‘_‚¢ */
+	//	t->tmp_angleCCW512 =  (atan_512(p->y256-t->y256+((p->h128			)),p->x256-t->x256-((p->w128	 ))));
+	//	t->tmp_angleCCW512 =  (atan_512(p->y256-t->y256-((p->h128			)),p->x256-t->x256-((p->w128	 ))));
 	#endif
 
 /*---------------------------------------------------------
@@ -63,21 +63,21 @@ static void danmaku_create_01_sakuya_misogi(SPRITE *src/*, int nextstate*/ /*, i
 /*CW*/
 //		data->boss_base.tmp_angleCCW512 += (int)(128/5)+/*2*/(5)/*(difficulty<<2)*/; // 	/*3*/2+(difficulty);
 /*CCW*/
-		/*data->boss_base.*/src->tmp_angleCCW512 -= (int)(128/5)+/*2*/(5)/*(difficulty<<2)*/; //	/*3*/2+(difficulty);
-		mask512(/*data->boss_base.*/src->tmp_angleCCW512);
+		src->tmp_angleCCW512 -= (int)(128/5)+/*2*/(5)/*(difficulty<<2)*/; //	/*3*/2+(difficulty);
+		mask512(src->tmp_angleCCW512);
 	//	bullet_create_aka_lines(s);
 	//	bullet_create_aka_maru_jikinerai(src, t256(2.5));
 	//	bullet_create_aka_maru_jikinerai(src, t256(2.0));
 	//	bullet_create_aka_maru_jikinerai(src, t256(3.5));
 		bullet_create_n_way_dan_sa_type(src,
 			(t256(2.5)),							/* ’e‘¬ */
-			(/*data->boss_base.*/src->tmp_angleCCW512),
+			(src->tmp_angleCCW512),
 			(int)(128/5),
 			BULLET_KNIFE20_04_AOI,
 			(8));/* [—†ùó8wayÂƒiƒCƒt’e] */
 		if (0==((data->boss_base.danmaku_time_out)&0x1f))/* reset (1/32) */
 		{
-			aaa_angle512=(/*data->boss_base.*/src->tmp_angleCCW512)-(int)((512/2));
+			aaa_angle512=(src->tmp_angleCCW512)-(int)((512/2));
 		}
 	}
 	else
@@ -92,7 +92,7 @@ static void danmaku_create_01_sakuya_misogi(SPRITE *src/*, int nextstate*/ /*, i
 				(t256(2.0)),					/* ’e‘¬ */
 				(aaa_angle512),
 				(int)(difficulty+1/*3*/),		/* –§’…’e‚ÌŠp“x */
-				BULLET_KUNAI12_00_AKA,
+				BULLET_KUNAI12_01_AKA,
 				(4));/* [4way–§’…ÔƒNƒiƒC’e] */
 		}
 	}
@@ -112,21 +112,21 @@ static void danmaku_create_02_24nerai(SPRITE *src)
 	if (0==((data->boss_base.danmaku_time_out)&0x03))
 	{
 		#if (0==USE_DESIGN_TRACK)
-		play_voice_auto_track(VOICE11_SAKUYA_E_SHOT00);
+		play_voice_auto_track(VOICE14_BOSS_KOUGEKI_01);
 		#else
-	//	voice_play(VOICE11_SAKUYA_E_SHOT00, TRACK04_TEKIDAN);
-		bullet_play_04_auto(VOICE11_SAKUYA_E_SHOT00);
+	//	voice_play(VOICE14_BOSS_KOUGEKI_01, TRACK04_TEKIDAN);
+		bullet_play_04_auto(VOICE14_BOSS_KOUGEKI_01);
 		#endif
 	//
 	int aaa_angle512;
 			tmp_angle_jikinerai512(player, src);/*©‹@‚Ë‚ç‚¢Špì¬*/
-			aaa_angle512=(/*data->boss_base.*/src->tmp_angleCCW512);
+			aaa_angle512=(src->tmp_angleCCW512);
 		{
 			bullet_create_n_way_dan_sa_type(src,
 				(t256(2.0)+((data->boss_base.danmaku_time_out)<<2)),	/* ’e‘¬ */
 				(aaa_angle512/*+aa*/),
 				(int)(512/24),		/* Šp“x */
-				BULLET_KUNAI12_00_AKA,
+				BULLET_KUNAI12_01_AKA,
 				(24));/* [24wayÔƒNƒiƒC’e] */
 		}
 	}
@@ -146,15 +146,15 @@ static void danmaku_create_03_11nife(SPRITE *src)
 	if (0==((data->boss_base.danmaku_time_out)&0x07))
 	{
 		#if (0==USE_DESIGN_TRACK)
-		play_voice_auto_track(VOICE11_SAKUYA_E_SHOT00);
+		play_voice_auto_track(VOICE14_BOSS_KOUGEKI_01);
 		#else
-	//	voice_play(VOICE11_SAKUYA_E_SHOT00, TRACK04_TEKIDAN);
-		bullet_play_04_auto(VOICE11_SAKUYA_E_SHOT00);
+	//	voice_play(VOICE14_BOSS_KOUGEKI_01, TRACK04_TEKIDAN);
+		bullet_play_04_auto(VOICE14_BOSS_KOUGEKI_01);
 		#endif
 	//
 	int aaa_angle512;
 			tmp_angle_jikinerai512(player, src);/*©‹@‚Ë‚ç‚¢Špì¬*/
-			aaa_angle512=(/*data->boss_base.*/src->tmp_angleCCW512);
+			aaa_angle512=(src->tmp_angleCCW512);
 		{
 			bullet_create_n_way_dan_sa_type(src,
 				(t256(2.0)),			/* ’e‘¬ */
@@ -179,10 +179,10 @@ static void danmaku_create_04_pink_hearts(SPRITE *src)
 	if (0==((data->boss_base.danmaku_time_out)&0x0f))/* –{•¨‚Í 8 ’e(128==0x80==danmaku_time_out) */
 	{
 		#if (0==USE_DESIGN_TRACK)
-		play_voice_auto_track(VOICE11_SAKUYA_E_SHOT00);
+		play_voice_auto_track(VOICE14_BOSS_KOUGEKI_01);
 		#else
-	//	voice_play(VOICE11_SAKUYA_E_SHOT00, TRACK04_TEKIDAN);
-		bullet_play_04_auto(VOICE11_SAKUYA_E_SHOT00);
+	//	voice_play(VOICE14_BOSS_KOUGEKI_01, TRACK04_TEKIDAN);
+		bullet_play_04_auto(VOICE14_BOSS_KOUGEKI_01);
 		#endif
 	//
 		dummy_obj->w128 = src->w128;
@@ -223,10 +223,10 @@ static void danmaku_create_05_32way_dual(SPRITE *src)
 	if (0==((data->boss_base.danmaku_time_out)&0x3f))
 	{
 		#if (0==USE_DESIGN_TRACK)
-		play_voice_auto_track(VOICE11_SAKUYA_E_SHOT00);
+		play_voice_auto_track(VOICE14_BOSS_KOUGEKI_01);
 		#else
-	//	voice_play(VOICE11_SAKUYA_E_SHOT00, TRACK04_TEKIDAN);
-		bullet_play_04_auto(VOICE11_SAKUYA_E_SHOT00);
+	//	voice_play(VOICE14_BOSS_KOUGEKI_01, TRACK04_TEKIDAN);
+		bullet_play_04_auto(VOICE14_BOSS_KOUGEKI_01);
 		#endif
 	//
 		int i;
@@ -265,10 +265,10 @@ static void danmaku_create_06_luna_clock_32way(SPRITE *src)
 	if (0x40==((data->boss_base.danmaku_time_out)&0xcf))/* 4‰ñ */
 	{
 		#if (0==USE_DESIGN_TRACK)
-		play_voice_auto_track(VOICE11_SAKUYA_E_SHOT00);
+		play_voice_auto_track(VOICE14_BOSS_KOUGEKI_01);
 		#else
-	//	voice_play(VOICE11_SAKUYA_E_SHOT00, TRACK04_TEKIDAN);
-		bullet_play_04_auto(VOICE11_SAKUYA_E_SHOT00);
+	//	voice_play(VOICE14_BOSS_KOUGEKI_01, TRACK04_TEKIDAN);
+		bullet_play_04_auto(VOICE14_BOSS_KOUGEKI_01);
 		#endif
 	//
 		bullet_create_n_way_dan_sa_type(src,
@@ -300,10 +300,10 @@ static void danmaku_create_07_80way_dual_five(SPRITE *src)
 	if (0==((data->boss_base.danmaku_time_out)&0x3f))
 	{
 		#if (0==USE_DESIGN_TRACK)
-		play_voice_auto_track(VOICE11_SAKUYA_E_SHOT00);
+		play_voice_auto_track(VOICE14_BOSS_KOUGEKI_01);
 		#else
-	//	voice_play(VOICE11_SAKUYA_E_SHOT00, TRACK04_TEKIDAN);
-		bullet_play_04_auto(VOICE11_SAKUYA_E_SHOT00);
+	//	voice_play(VOICE14_BOSS_KOUGEKI_01, TRACK04_TEKIDAN);
+		bullet_play_04_auto(VOICE14_BOSS_KOUGEKI_01);
 		#endif
 	//
 		int ii; 	/* 1ü‚ğ65536•ªŠ„‚µ‚½Šp“x */
@@ -340,24 +340,24 @@ static void danmaku_create_08_sentakki(SPRITE *src)
 	if (0==((data->boss_base.danmaku_time_out)&0x03))
 	{
 		#if (0==USE_DESIGN_TRACK)
-		play_voice_auto_track(VOICE11_SAKUYA_E_SHOT00);
+		play_voice_auto_track(VOICE14_BOSS_KOUGEKI_01);
 		#else
-	//	voice_play(VOICE11_SAKUYA_E_SHOT00, TRACK04_TEKIDAN);
-		bullet_play_04_auto(VOICE11_SAKUYA_E_SHOT00);
+	//	voice_play(VOICE14_BOSS_KOUGEKI_01, TRACK04_TEKIDAN);
+		bullet_play_04_auto(VOICE14_BOSS_KOUGEKI_01);
 		#endif
 	//
-		/*data->boss_base.*/src->tmp_angleCCW512 -= (int)(512/24);
-		mask512(/*data->boss_base.*/src->tmp_angleCCW512);
+		src->tmp_angleCCW512 -= (int)(512/24);
+		mask512(src->tmp_angleCCW512);
 		{
 			bullet_create_n_way_dan_sa_type(src,
 				(t256(2.0)+((data->boss_base.danmaku_time_out)<<2)),	/* ’e‘¬ */
-				(/*data->boss_base.*/src->tmp_angleCCW512),
+				(src->tmp_angleCCW512),
 				(int)(512/24),		/* Šp“x */
 				BULLET_UROKO14_00_AOI,
 				(8));/* [8wayÂ—Ø’e] */
 			bullet_create_n_way_dan_sa_type(src,
 				(t256(2.0)+((data->boss_base.danmaku_time_out)<<2)),	/* ’e‘¬ */
-				((-/*data->boss_base.*/src->tmp_angleCCW512)&(512-1)),
+				((-src->tmp_angleCCW512)&(512-1)),
 				(int)(512/24),		/* Šp“x */
 				BULLET_UROKO14_04_MIZUIRO,
 				(8));/* [8way…—Ø’e] */
@@ -395,7 +395,7 @@ static void danmaku_create_09_cirno_misogi(SPRITE *src)
 		{
 			bullet_create_n_way_dan_sa_type(src,
 				(t256(2.5)),	/* ’e‘¬ */
-				(/*data->boss_base.*/src->tmp_angleCCW512),
+				(src->tmp_angleCCW512),
 				(int)(512/(64)),		/* Šp“x(512[360/360“x]‚ğ 64 •ªŠ„) */	/* 1ü‚ğn•ªŠ„‚µ‚½Šp“x */
 				BULLET_KOME_01_AOI, 	/* Â•Ä’e ‚É‚È‚Á‚Ä‚é‚Ì‚ÍŒ»İ •X’e ‚ÌƒOƒ‰‚ª–³‚¢‚©‚ç */
 				((/*16*/7-((data->boss_base.danmaku_time_out)>>3))&7)+1);/* [nwayÂ•Ä’e] */
@@ -457,10 +457,10 @@ static void danmaku_create_04_night_bird(SPRITE *src)
 	if (0x00==((data->boss_base.danmaku_time_out)&0x10))/* 16‰ñ */
 	{
 		#if (0==USE_DESIGN_TRACK)
-		play_voice_auto_track(VOICE13_SAKUYA_SHOT02/*VOICE11_SAKUYA_E_SHOT00*/);
+		play_voice_auto_track(VOICE13_SAKUYA_SHOT02/*VOICE14_BOSS_KOUGEKI_01*/);
 		#else
-	//	voice_play(VOICE11_SAKUYA_E_SHOT00, TRACK04_TEKIDAN);
-		bullet_play_04_auto(VOICE13_SAKUYA_SHOT02/*VOICE11_SAKUYA_E_SHOT00*/);
+	//	voice_play(VOICE14_BOSS_KOUGEKI_01, TRACK04_TEKIDAN);
+		bullet_play_04_auto(VOICE13_SAKUYA_SHOT02/*VOICE14_BOSS_KOUGEKI_01*/);
 		#endif
 		dummy_obj->w128 = src->w128;	/* ”­’eˆÊ’u‚Ì offset —p */
 		dummy_obj->h128 = src->h128;	/* ”­’eˆÊ’u‚Ì offset —p */
@@ -516,10 +516,10 @@ static void danmaku_create_10_tengu_shot(SPRITE *src)
 		{
 			data_wait2 = data_wait2_start;
 			#if (0==USE_DESIGN_TRACK)
-			play_voice_auto_track(VOICE13_SAKUYA_SHOT02/*VOICE11_SAKUYA_E_SHOT00*/);
+			play_voice_auto_track(VOICE13_SAKUYA_SHOT02/*VOICE14_BOSS_KOUGEKI_01*/);
 			#else
-		//	voice_play(VOICE11_SAKUYA_E_SHOT00, TRACK04_TEKIDAN);
-			bullet_play_04_auto(VOICE13_SAKUYA_SHOT02/*VOICE11_SAKUYA_E_SHOT00*/);
+		//	voice_play(VOICE14_BOSS_KOUGEKI_01, TRACK04_TEKIDAN);
+			bullet_play_04_auto(VOICE13_SAKUYA_SHOT02/*VOICE14_BOSS_KOUGEKI_01*/);
 			#endif
 			dummy_obj->w128 = src->w128;	/* ”­’eˆÊ’u‚Ì offset —p */
 			dummy_obj->h128 = src->h128;	/* ”­’eˆÊ’u‚Ì offset —p */
@@ -575,17 +575,17 @@ static void danmaku_create_10_tengu_shot(SPRITE *src)
 				danmaku_create_07_80way_dual_five,	/* 07 */	/* g5–Êƒ{ƒX ç–é u’ÊíUŒ‚3(1/2)v‚É‚¿‚å‚Á‚Æ‚¾‚¯—‚½’e–‹(—\’è) */
 			//													/* [ƒAƒŠƒX(‰¼)] */
 				danmaku_create_04_night_bird,		/* 08 */	/* g1–Êƒ{ƒX ƒ‹[ƒ~ƒA –é•„uƒiƒCƒgƒo[ƒhv‚É‚¿‚å‚Á‚Æ‚¾‚¯—‚½’e–‹(—\’è) */
-				danmaku_create_04_pink_hearts,		/* 09 */	/* ç–é ƒeƒXƒg */
-				danmaku_create_08_sentakki, 		/* 0a */	/* ô‘ó‹@’e–‹ */
-				danmaku_create_05_32way_dual,		/* 0b */	/* ç–é ƒeƒXƒg */
-				danmaku_create_08_sentakki, 		/* 0c */	/* ô‘ó‹@’e–‹ */
-				danmaku_create_06_luna_clock_32way, /* 0d */	/* ç–é ƒeƒXƒg */
-				danmaku_create_08_sentakki, 		/* 0e */	/* ô‘ó‹@’e–‹ */
-				danmaku_create_07_80way_dual_five,	/* 0f */	/* ç–é ƒeƒXƒg */
+				danmaku_create_08_sentakki, 		/* 09 */	/* ô‘ó‹@’e–‹ */
+				danmaku_create_99_mitei,			/* 0a */	/* –¢’è’e–‹ */
+				danmaku_create_99_mitei,			/* 0b */	/* –¢’è’e–‹ */
+				danmaku_create_99_mitei,			/* 0c */	/* –¢’è’e–‹ */
+				danmaku_create_99_mitei,			/* 0d */	/* –¢’è’e–‹ */
+				danmaku_create_99_mitei,			/* 0e */	/* –¢’è’e–‹ */
+				danmaku_create_99_mitei,			/* 0f */	/* –¢’è’e–‹ */
 			//													/* [ƒ`ƒ‹ƒm(‰¼)] */
 				danmaku_create_09_cirno_misogi, 	/* 10 */	/* ƒ`ƒ‹ƒmâS’e–‹ */
 				danmaku_create_10_tengu_shot,		/* 11 */	/* ·•ª‚Ì—d‰ö1(“V‹ç—l?)‚ªŒ‚‚Â’e–‹(—\’è) */
-				danmaku_create_99_mitei,			/* 12 */	/* –¢’è’e–‹ */
+				danmaku_create_99_mitei,			/* 12 */
 				danmaku_create_99_mitei,			/* 13 */	/* –¢’è’e–‹ */
 				danmaku_create_99_mitei,			/* 14 */	/* –¢’è’e–‹ */
 				danmaku_create_99_mitei,			/* 15 */	/* –¢’è’e–‹ */

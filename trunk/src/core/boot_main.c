@@ -58,8 +58,8 @@ static int exit_callback(int arg1, int arg2, void *common)
 	return (0); 	/* コールバック側の終了 */
 }
 	/* それ以外の事をしたらまずい(メイン側で同じ事をするので) */
-//	game_exit();/*←あるとまずい*/
-//	sceKernelExitGame();/*←あるとまずい*/
+//	game_exit();/* ←あるとまずい(game_exit()が２回になっちゃう) */
+//	sceKernelExitGame();/* ←あるとまずい(home終了した場合、ゲームセーブが出来ない、終了処理が出来ない) */
 
 
 /*---------------------------------------------------------
@@ -84,11 +84,11 @@ static /*int*/void regist_home_key(void)
 {
 	/* 新規にスレッドを作成 */
 	int thread_id = sceKernelCreateThread("update thread", callback_homekey_thread, 0x11, 0xFA0, 0, 0); /* スレッドの優先度等を設定 */
-	if (thread_id >= 0) 	/* スレッドが作成出来たら */
+	if (0 <= thread_id) 	/* スレッドが作成出来たら */
 	{
 		sceKernelStartThread(thread_id, 0, 0);	/* スレッド開始 */
 	}
-	//return thread_id;
+	//return (thread_id);
 }
 
 /*---------------------------------------------------------
@@ -116,11 +116,16 @@ extern void gameover_work(void);
 //tern void result_init(void);
 extern void result_work(void);
 
-//tern void key_config_init(void);
-extern void key_config_work(void);
-
 //tern void story_init(void);
 extern void story_work(void);
+
+extern void option_menu_work(void);
+extern void option_menu_init(void);
+
+//tern void key_config_init(void);
+extern void key_config_work(void);
+extern void music_room_work(void);
+
 
 extern void vbl_draw_screen(void);/*support.c*/
 
@@ -128,9 +133,10 @@ static void game_main(void)
 {
 	while (ST_PSP_QUIT != psp_loop)
 	{
-		switch ((Uint8)(psp_loop>>8))
+		#if 0
+		switch ((u8)(psp_loop>>8))
 		{
-		case (ST_INIT_GAME_PLAY_common>>8):	common_load_init(); 		break;
+		case (ST_INIT_GAME_PLAY_common>>8): common_load_init(); 		break;
 		case (ST_WORK_GAME_PLAY>>8):		shooting_game_core_work();	break;
 		case (ST_INIT_MENU>>8): 			all_menu_init();			break;
 		case (ST_WORK_MENU>>8): 			all_menu_work();			break;
@@ -155,6 +161,33 @@ static void game_main(void)
 	//	case (ST_START_INTRO>>8):			startintro_init();			break;
 	//	case (ST_START_INTRO>>8):			startintro_work();			break;
 		}
+		#else
+							/*const*/static void (*aaa_call_table[/*16*/(16)])(void) =
+					{
+						NULL,
+						common_load_init,
+						shooting_game_core_work,
+						all_menu_init,
+
+						all_menu_work,
+						player_opt_work,
+						name_entry_init,
+						name_entry_work,
+
+						stage_first_init,
+						stage_clear_work,
+						gameover_work,
+						result_work,
+
+						story_work,
+						option_menu_work,
+						key_config_work,
+						music_room_work,
+					};
+					{
+						(aaa_call_table[(((u8)(psp_loop>>8)))])();
+					}
+		#endif
 		vbl_draw_screen();	/* 画面描画とキー入力(本当は v-blanc タイミングで) */
 	}
 }
@@ -165,7 +198,7 @@ static void game_main(void)
 ---------------------------------------------------------*/
 
 #if (1==HACK_FPU)
-extern void disable_FPU_exeptions_in_main(void);	// FPU例外を無効にする。 disablefpu.S
+extern void disable_FPU_exeptions_in_main(void);	/* FPU例外を無効にする。 disablefpu.S */
 #endif
 
 extern void game_system_init(void/*int argc, char *argv[]*/);

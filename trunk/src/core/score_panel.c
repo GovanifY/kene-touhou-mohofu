@@ -200,6 +200,7 @@ static void draw_power_gauge(int weapon/*, int dx, int dy*/)
 
 extern int boss_x256;
 extern int boss_y256;
+
 static int draw_boss_hp_value_set;
 static void draw_boss_gauge(void/*int dx, int dy*/) 	// [***090305		変更
 {
@@ -209,27 +210,27 @@ static void draw_boss_gauge(void/*int dx, int dy*/) 	// [***090305		変更
 		return;/* ボスが無い場合は何もしない */
 	}
 //
-	int boss_hp_low_value=(/*((BOSS_BASE *)s->data)->boss_*/s->base_health);/*(???)141477*/
+	boss_life_value = (/*((BOSS_BASE *)s->data)->boss_*/s->base_health);/*(???)141477*/
 //	int bo ss_life_value=(((BOSS_BASE *)s->data)->bo ss_life);/*(???)141477*/
 
 	#if 0
-	if (0 > boss_hp_low_value)	return;/* 負数の場合は何もしない */
-	if (9*1024 < boss_hp_low_value) return;/* 範囲外の場合は何もしない */
+	if (0 > boss_life_value)	return;/* 負数の場合は何もしない */
+	if (9*1024 < boss_life_value) return;/* 範囲外の場合は何もしない */
 	#else
-//	if (0 != ((boss_hp_low_value)&(0xffffc000)) )	return;/* 範囲外の場合は何もしない */
-	if (0 > boss_hp_low_value)
+//	if (0 != ((boss_life_value)&(0xffffc000)) )	return;/* 範囲外の場合は何もしない */
+	if (0 > boss_life_value)
 	{
 	//	(((BOSS_BASE *)s->data)->boss_health) = 0;/* まずいかも */
-		boss_hp_low_value = 0;
+		boss_life_value = 0;
 	}
-	if (0==(boss_hp_low_value/*+bo ss_life_value*/))
+	if (0==(boss_life_value/*+bo ss_life_value*/))
 	{
 		return;/* 範囲外の場合は何もしない */
 	}
 	boss_x256 = (/*((BOSS_BASE *)s->data)->boss_*/s->x256);/*(???)141477*/
 	boss_y256 = (/*((BOSS_BASE *)s->data)->boss_*/s->y256);/*(???)141477*/
 
-	draw_boss_hp_value_set = ((boss_hp_low_value & 0x03ff)>>2);/* ボスhp描画値 */
+	draw_boss_hp_value_set = ((boss_life_value & 0x03ff)>>2);/* ボスhp描画値 */
 	if (draw_boss_hp_value < (draw_boss_hp_value_set))
 			{	draw_boss_hp_value++;	}
 	else	{	draw_boss_hp_value--;	}
@@ -243,7 +244,7 @@ static void draw_boss_gauge(void/*int dx, int dy*/) 	// [***090305		変更
 		if (0/*off*/!=spell_card_mode)/*on時のみ*/
 		{
 			/*((BOSS_BASE *)s->data)->*/spell_card_boss_timer -= 1/*fps_fa ctor*/;
-			if ((/*((BOSS_BASE *)s->data)->*/spell_card_boss_timer < 0/*1*/))
+			if (0 > (/*((BOSS_BASE *)s->data)->*/spell_card_boss_timer))	/*1*/
 			{
 				spell_card_boss_timer		= 0;
 				spell_card_mode 			= 0/*off*/;
@@ -324,10 +325,10 @@ static void draw_boss_gauge(void/*int dx, int dy*/) 	// [***090305		変更
 		}
 	#endif
 	//	残りライフ表示
-	//	sp rintf(buffer,"%d", (boss_hp_low_value>>10));/*(???)141477*/
-	//	sp rintf(buffer,"%d", (boss_hp_low_value>>10));/*(???)141477*/
+	//	sp rintf(buffer,"%d", (boss_life_value>>10));/*(???)141477*/
+	//	sp rintf(buffer,"%d", (boss_life_value>>10));/*(???)141477*/
 		strcpy(buffer, STR_ENEMY "0");
-		dec_display( /*(bo ss_life_value)*/(boss_hp_low_value>>10)/*(boss_hp_low_value>>10)*/, 1, (char *)&buffer[5]);
+		dec_display( /*(bo ss_life_value)*/(boss_life_value>>10)/*(boss_life_value>>10)*/, 1, (char *)&buffer[5]);
 		font_print_screen_xy(buffer, FONT01/*FONT06*/, HP_FONT_X_OFS, HP_FONT_Y_OFS);
 	}
 }
@@ -339,7 +340,7 @@ static void draw_boss_gauge(void/*int dx, int dy*/) 	// [***090305		変更
 	//	rect_src.x = 0;
 	//	rect_src.y = 0;
 	//	rect_src.h = 10;
-	//	rect_src.w = HPGAUGE_X_OFS+((boss_hp_low_value	& 0x03ff)>>2); /* 1023値 → 255ドット */
+	//	rect_src.w = HPGAUGE_X_OFS+((boss_life_value	& 0x03ff)>>2); /* 1023値 → 255ドット */
 	//	rect_dest.w = boss_gauge->w;
 	//	rect_dest.h = boss_gauge->h;
 	//	rect_dest.x = 10/*dx*/;
@@ -359,6 +360,10 @@ int debug_num2;
 static int top_score;
 //static unsigned int psp_get_fps60(void);
 
+#if (1==USE_EXTEND_CHECK)
+extern void player_check_extend_score(void);
+#endif
+
 /*---------------------------------------------------------
 	60フレームごとに一回呼ぶことにより、
 	実時間から算出したfpsを取得する。
@@ -368,6 +373,9 @@ static int top_score;
 	注意：60フレームごとに必ず呼ぶ事。
 	注意：複数ヵ所で呼ばれる事は考慮されてないので、必ず一ヶ所から呼ぶ事。
 	注意：前回から約72分以内に必ず呼ぶ事。(60フレームで72分以上って...どんな状況やねん)
+	そういや模倣風ってスリープ出来るんだね。
+	スリープして約72分以上たった場合は、始めのfpsが正確に出ない(本当より良く出る)
+	だけなので特に問題ないです。
 ---------------------------------------------------------*/
 
 /*static*/static unsigned int psp_get_fps60_00(void)
@@ -498,6 +506,10 @@ void score_display(void)
 			if (fps_draw_wait_counter < 1)
 			{
 				fps_draw_wait_counter = 60;
+				/* エクステンドチェックは1秒に1回(笑)で問題ないと思う。 */
+				#if (1==USE_EXTEND_CHECK)
+				player_check_extend_score();
+				#endif
 			//	[1/60sec]	0.016 666 [nsec] 6666666666666666666666666667
 			//	16666.66666 / x == 60.0,  16666.666666/60.0 == x, x== 277.7777777777777
 			//	16666.00(int) / 60.00(int) == 60.1660649819494584837545126353791 = 60.000 (int)
@@ -619,10 +631,41 @@ static void render_result(void/*int now_max_continue*/)
 	};
 	font_print_screen_xy( (char *)level_name[(difficulty/*&0x03*/)], FONT03, 0/*26*/, 160);
 }
+
+/*---------------------------------------------------------
+	クリア チェック
+---------------------------------------------------------*/
+
+static void player_stage_clear(void)
+{
+	#if 0/* ボス倒した場合の処理にいれた */
+	pd_bomber_time = 0;/*都合上*/
+	set_bg_alpha(255);/* 画面を明るくする */
+	#endif
+//
+	/* クリアボーナス チェック */
+	PLAYER_DATA *pd = (PLAYER_DATA *)player->data;
+			player_add_score(adjust_score_by_difficulty((
+			(player_now_stage * score(1000)) +	/* ステージ x 1000pts */
+			(pd->weapon_power * score(100)) +	/* パワー	x  100pts */
+			(pd->graze_point)					/* グレイズ x	10pts */
+		)));
+	//
+	pd->graze_point = 0;/* 清算して消える */
+//
+	/* PRACTICE 開放 チェック */
+	if ( (option_config[OPTION_CONFIG_07_OPEN] & (0x07)) < (player_now_stage&0x07) )
+	{
+		/* PRACTICE 開放 (進んだステージを練習可能にする) */
+		option_config[OPTION_CONFIG_07_OPEN] &= (~0x07);
+		option_config[OPTION_CONFIG_07_OPEN] |= (player_now_stage&0x07);
+	}
+}
 /*---------------------------------------------------------
 	RESULT表示(ゲーム各面クリアー時)
 ---------------------------------------------------------*/
-extern void player_stage_clear(void);
+//extern void player_stage_clear(void);
+extern void player_loop_quit(void);
 void stage_clear_work(void)
 {
 	#if (1==USE_RESULT_WAIT)
@@ -633,7 +676,7 @@ void stage_clear_work(void)
 	#endif
 		script_message_window_clear();
 		msg_time = (60*5);
-		print_kanji(/*SDL_Rect *rect_srct*/0, /*text*/"CHALLENGE NEXT STAGE!" "\n" "\n" "少女祈祷中...", /*int color_type*/7, /*int wait*/0);
+		print_kanji000(/*SDL_Rect *rect_srct*/ /*0,*/ /*text*/"CHALLENGE NEXT STAGE!" "\n" "\n" "少女祈祷中...", /*int color_type*/7, /*int wait*/0);
 		render_result();
 	#if (1==USE_RESULT_WAIT)
 		break;
@@ -642,10 +685,25 @@ void stage_clear_work(void)
 		{
 			result_time_wait = TIME_20_RESULT_WAIT;
 	#endif
+			if (/*extra_stage*/8==player_now_stage)/* エキストラモードの場合、終了する */
+			{
+			//	#if 1/* この２つのセットで自動的に終了(GAME OVER)する */
+			//	now_max_continue = 1; 	/* コンティニューさせない */
+			//	player_loop_quit();
+			//	#endif
+				player_now_stage--;/* 7までしか無いので */
+				psp_loop = (ST_WORK_GAME_OVER|0);
+//				if (0x7f==can_player_bit)
+//				{
+//					can_player_bit = 0xff;	/* チルノ Q 開放 */
+//				}
+			}
+			else
+			{
+				psp_loop = (ST_INIT_GAME_PLAY_common|0);
+			}
 			//PLAYER_DATA *pd = (PLAYER_DATA *)player->data;
 			player_stage_clear();
-		//
-			psp_loop = (ST_INIT_GAME_PLAY_common|0);
 		//	common_load_init();
 	#if (1==USE_RESULT_WAIT)
 		}

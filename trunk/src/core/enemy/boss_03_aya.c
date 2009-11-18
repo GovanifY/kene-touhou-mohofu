@@ -17,38 +17,17 @@ typedef struct /*_boss02_data*/
 {
 	BOSS_BASE boss_base;
 //------------ 移動関連
-	int danmaku_type;	/*	弾幕タイプ */
-	int move_type;		/*	移動タイプ */
-//
-	/*static*/ int aya_angle512/*angle_radian*/;/*radianで持つよりintで持って使う度に変換した方が速い*/
-//
-	int state1;
+	int state1; 		/* 形態ステート */	/* 弾幕ステート */
+	int aya_angle512;	/* 文の角度 */
+
 	int wait1;			/* 移動待ち */
-	int wait2;			/* モーション変更用 */
+	int animation_wait; 		/* アニメーション用 */
+
 	int n_wait3;
-//	int level;
 	int aya_speed;		/*	難度別速度 */
-	int ice_dan;		/*	ice_dan変更用 */
+	int ice_number; 	/*	ICE弾幕番号 */
 //
-//	int XP256;			/* 出現時x座標 */
 } BOSS02_DATA;
-
-/* 出現時x座標 */
-#define XP256	(t256(GAME_WIDTH/2)-(t256(32/2)))/*sakuya->w128*/
-
-/* 弾幕タイプ */
-enum
-{
-	DT00 = 0,
-	DT01,
-	DT02,
-	DT03,
-	DT04,
-	DT05,
-	DT06,
-	DT07,
-};
-
 
 /*---------------------------------------------------------
 	[スペカシステム内に移動予定]	スペカ撃破後アイテム出す
@@ -60,48 +39,22 @@ static void aya_put_items(SPRITE *src)
 //
 	bakuhatsu_add_circle(/*d*/src, 1);
 //
-	BOSS02_DATA *data=(BOSS02_DATA *)src->data;
-	data->danmaku_type++;
-//	if (DT02 < data->danmaku_type)	{	data->danmaku_type = DT02;	}
-	//
 	{
-		const unsigned char aaa_bbb[16] =
-		{
-			0,0,1,0, 1,0,1,1,
-			1,0,0,1, 0,1,0,0,
-		};
-		data->move_type 	= aaa_bbb[(data->danmaku_type&7)];
-		data->ice_dan		= aaa_bbb[(data->danmaku_type&7)+8];
-	}
-	#if 0/*対策済み*/
-	{
-		/* 下にきすぎちゃう場合があるので、とりあえず仮対策 */
-		#define MAX_AYA_LOW_Y256 (t256(200))
-		if (MAX_AYA_LOW_Y256 < s->y256)
-		{
-			s->y256 = MAX_AYA_LOW_Y256;/* ワープ */
-		}
-		#undef MAX_AYA_LOW_Y256
-	}
-	#endif
-	//
-	//if (0 != data->move_type)
-	{
-	//	data->danmaku_type	= DT02;
+		BOSS02_DATA *data=(BOSS02_DATA *)src->data;
+		data->ice_number++;
+	//	if (DT02 < data->ice_number)	{	data->ice_number = DT02;	}
 		data->state1	= 0;
 		data->wait1 	= 40;
 	//	player_add_score(data->boss_base.score);
 	}
 }
-	#if (0)
-//	/*data->boss_base.boss_*/src->base_health		= (1024-1); 	/* life_point消費しゲージ補充 */
-//	/*data->boss_base.*/spell_card_boss_timer		= (40*64);		/* 40*64==40[count] 	約40[秒(64/60)](単位は秒ではない) */		/* ボスタイマー初期化 */
-	/* ボスタイマー初期化 */
-	#endif
 
 /*---------------------------------------------------------
 
 ---------------------------------------------------------*/
+//#define AYA_ANIME_LEFT_00 (0)
+//#define AYA_ANIME_CENTER_04 (4)
+//#define AYA_ANIME_RIGHT_08	(8)
 
 static void sakuya_wait_state(SPRITE *src/*, int next_set_state*/)
 {
@@ -109,17 +62,17 @@ static void sakuya_wait_state(SPRITE *src/*, int next_set_state*/)
 	if (data->wait1 > 0)
 	{
 		data->wait1 -= 1/*fps_fa ctor*/;
-		data->wait2 += 1/*fps_fa ctor*/;
-		if (data->wait2 >= 3)
+		data->animation_wait += 1/*fps_fa ctor*/;
+		if (7 < data->animation_wait)
 		{
-			data->wait2 = 0;
-			if (src->anim_frame<4)
+			data->animation_wait = 0;
+		//	if (src->anim_frame<AYA_ANIME_CENTER_04)		{	src->anim_frame++;		}
+		//	else if (src->anim_frame>AYA_ANIME_CENTER_04)	{	src->anim_frame--;		}
+			u8 aaa = (src->anim_frame & 0x03);
+			if (0!=(aaa))
 			{
-				src->anim_frame++;
-			}
-			else if (src->anim_frame>4)
-			{
-				src->anim_frame--;
+				aaa--;
+				src->anim_frame = (src->anim_frame & 0xfc)|(aaa);
 			}
 		}
 	}
@@ -141,7 +94,46 @@ static void sakuya_wait_state(SPRITE *src/*, int next_set_state*/)
 		);
 	}
 }
+/*---------------------------------------------------------
 
+---------------------------------------------------------*/
+static void sakuya_anime08(SPRITE *src)
+{
+	BOSS02_DATA *data = (BOSS02_DATA *)src->data;
+			u8 aaa = (src->anim_frame & 0x03);
+		//	if (src->anim_frame<AYA_ANIME_RIGHT_08)
+			if (3!=aaa)
+			{
+				data->animation_wait += 1/*fps_fa ctor*/;
+				if (7 < data->animation_wait)
+				{
+					data->animation_wait=0;
+				//	src->anim_frame++;
+					aaa++;
+					src->anim_frame = /*(src->anim_frame & 0xfc)*/(0x00)|(aaa);
+				}
+			}
+}
+/*---------------------------------------------------------
+
+---------------------------------------------------------*/
+static void sakuya_anime00(SPRITE *src)
+{
+	BOSS02_DATA *data = (BOSS02_DATA *)src->data;
+			u8 aaa = (src->anim_frame & 0x03);
+		//	if (src->anim_frame>AYA_ANIME_LEFT_00)
+			if (3!=aaa)
+			{
+				data->animation_wait += 1/*fps_fa ctor*/;
+				if (7 < data->animation_wait)
+				{
+					data->animation_wait=0;
+				//	src->anim_frame--;
+					aaa++;
+					src->anim_frame = /*(src->anim_frame & 0xfc)*/(0x10)|(aaa);
+				}
+			}
+}
 /*---------------------------------------------------------
 
 ---------------------------------------------------------*/
@@ -160,9 +152,6 @@ enum
 	ST_10,
 	ST_11,
 	ST_12,
-	ST_13,
-	ST_14,
-
 };
 enum
 {
@@ -247,15 +236,21 @@ static int bullet_create_oodama3(SPRITE *src, /*仕様変更*/int speed256, int rans
 
 static void bullet_create_kougeki_01(SPRITE *src)
 {	BOSS02_DATA *data=(BOSS02_DATA *)src->data;
-//	if (DT00==data->danmaku_type)
-//	if (2 < ((data->danmaku_type+1) & 0x03/*DT00*/))
-	if (0!=data->ice_dan)
-	{	bullet_create_aya_ice(src);}
+//	if (DT00==data->ice_number)
+//	if (2 < ((data->ice_number+1) & 0x03/*DT00*/))
+	{
+		const unsigned char aaa_bbb[8] =
+		{
+			0,0,1,0, 0,1,0,1,
+		};
+		if (0 != aaa_bbb[(data->ice_number&7)/*+8*/])
+		{	bullet_create_aya_ice(src);}
+	}
 };
 static void bullet_create_kougeki_02(SPRITE *src)
 {	BOSS02_DATA *data=(BOSS02_DATA *)src->data;
-//	if (DT01==data->danmaku_type)
-	if (0!=(data->danmaku_type & 1/*DT01*/))
+//	if (DT01==data->ice_number)
+	if (0!=(data->ice_number & 1/*DT01*/))
 	{	bullet_create_aya_momiji(src);}
 };
 /*
@@ -268,11 +263,92 @@ static void bullet_create_kougeki_02(SPRITE *src)
 */
 
 /*---------------------------------------------------------
-2018577
+	何がなんだか解からなくなるので、名前をつけよう
+---------------------------------------------------------*/
+
+/* 咲夜さんの誘導ポイント座標 */
+
+#define SAKUYA_POINT_X_LEFT_OUT 	(t256(GAME_WIDTH*0/4))
+#define SAKUYA_POINT_X_LEFT_MID 	(t256(GAME_WIDTH*1/4))
+#define SAKUYA_POINT_X_MID			(t256(GAME_WIDTH*2/4))/*-src->w/2*/
+#define SAKUYA_POINT_X_RIGHT_MID	(t256(GAME_WIDTH*3/4))
+#define SAKUYA_POINT_X_RIGHT_OUT	(t256(GAME_WIDTH*4/4))/*-src->w  */
+#define SAKUYA_POINT_X_MARGIN		(t256(25/*16*/))
+
+
+#define SAKUYA_LIMIT_X_LEFT 		(SAKUYA_POINT_X_LEFT_OUT +SAKUYA_POINT_X_MARGIN)
+#define SAKUYA_LIMIT_X_MID_LEFT 	(SAKUYA_POINT_X_MID  +SAKUYA_POINT_X_MARGIN)
+#define SAKUYA_LIMIT_X_MID_RIGHT	(SAKUYA_POINT_X_MID  -SAKUYA_POINT_X_MARGIN)
+#define SAKUYA_LIMIT_X_RIGHT		(SAKUYA_POINT_X_RIGHT_OUT-SAKUYA_POINT_X_MARGIN)
+
+//(t256(GAME_WIDTH)-((src->w128+src->w128)))
+
+/*---------------------------------------------------------
+	移動パターン
+---------------------------------------------------------*/
+extern const u8 alice_danmaku_table[16];
+/*static*/ void aya_01_keitai(SPRITE *src)
+{
+	static int my_wait;
+	my_wait -= (1)/*fps_fa ctor*/;
+//
+	BOSS02_DATA *data = (BOSS02_DATA *)src->data;
+	{
+		if (my_wait <= 0)
+		{	/* 移動方向を決める */
+			data->state1++;
+			data->state1 &= (8-1);
+			{
+				enum
+				{
+					dummy_PPP_00_VX = 0,	/* x ベクトル移動量 */
+					PPP_01_VY,				/* y ベクトル移動量 */
+					PPP_02_WAIT_DIV_2,		/* ウェイトカウンタの半分量 */
+					PPP_03_IS_RESET_ANIME,	/* アニメーションリセット 0:しない 1:する 2:特別(弾幕撃ち) */
+				};
+				s8 ppp[8][4] =
+				{
+					{( 2),(-1),(100),( 1),},	/*右上へ*/
+					{( 0),( 0),( 50),( 2),},	/*wait*/
+					{( 2),( 1),(100),( 1),},	/*右下へ*/
+					{( 0),( 0),( 10),( 0),},	/*wait*/
+					{(-2),(-1),(100),( 1),},	/*左上へ*/
+					{( 0),( 0),( 50),( 2),},	/*wait*/
+					{(-2),( 1),(100),( 1),},	/*左下へ*/
+					{( 0),( 0),( 10),( 0),},	/*wait*/
+				};
+//				data->vx	= ppp[data->state1][PPP_00_VX];
+//				data->vy	= ppp[data->state1][PPP_01_VY];
+//				src->vx256	= (0);
+//				src->vy256	= ((ppp[data->state1][PPP_01_VY])<<4);
+				my_wait 	= ppp[data->state1][PPP_02_WAIT_DIV_2]; 	/* 50*4 60 移動量 */
+				my_wait 	+= my_wait;
+				if (0!=ppp[data->state1][PPP_03_IS_RESET_ANIME])
+				{
+					if (2==ppp[data->state1][PPP_03_IS_RESET_ANIME])	/* 攻撃アニメーション */
+					{
+//						alice_anime_count = 48;
+						data->boss_base.danmaku_test++;
+						data->boss_base.danmaku_test &= 0x07;
+						data->boss_base.danmaku_type		= alice_danmaku_table[data->boss_base.danmaku_test];	/*DANMAKU_01*/	/* 禊弾幕をセット */
+						data->boss_base.danmaku_time_out	= (DANMAKU_01_SET_TIME+DANMAKU_01_SET_TIME);	/* 禊弾幕の発生時間 x 2 */
+					}
+//					vvv256=1;
+				}
+			}
+		}
+	}
+//	src->vx256 = (data->vx)*vvv256;
+//	src->vy256 = (data->vy)*vvv256;
+}
+
+
+
+/*---------------------------------------------------------
 	移動パターン1(低速移動)
 ---------------------------------------------------------*/
 
-static void move01_aya(SPRITE *src)
+/*static*/ void aya_04_keitai(SPRITE *src)
 {
 	BOSS02_DATA *data = (BOSS02_DATA *)src->data;
 	switch (data->state1)
@@ -295,22 +371,14 @@ static void move01_aya(SPRITE *src)
 		if (src->x256 >= t256(0))
 		{
 			src->x256 -= t256(2)/**fps_fa ctor*/;
-			if (src->anim_frame>0)
-			{
-				data->wait2 += 1/*fps_fa ctor*/;
-				if (data->wait2>=3)
-				{
-					src->anim_frame--;
-					data->wait2=0;
-				}
-			}
+			sakuya_anime00(src);
 		}
 		else
 		{
 			data->state1++/* = ST_04*/;
 		}
 		break;
-	case ST_03: /*  */
+	case ST_03: /*	*/
 		{
 			data->state1++/* = ST_04*/;
 			data->wait1 = 20;
@@ -324,18 +392,10 @@ static void move01_aya(SPRITE *src)
 		break;
 
 	case ST_05: /* nach rechts bis zur mitte */
-		if (src->x256 < XP256)
+		if (src->x256 < BOSS_XP256)
 		{
 			src->x256 += t256(2)/**fps_fa ctor*/;
-			if (src->anim_frame<8)
-			{
-				data->wait2 += 1/*fps_fa ctor*/;
-				if (data->wait2>=3)
-				{
-					src->anim_frame++;
-					data->wait2=0;
-				}
-			}
+			sakuya_anime08(src);
 		}
 		else
 		{
@@ -366,15 +426,7 @@ static void move01_aya(SPRITE *src)
 		if (src->x256 < (t256(GAME_WIDTH)-((src->w128+src->w128))))
 		{
 			src->x256 += t256(2)/**fps_fa ctor*/;
-			if (src->anim_frame<8)
-			{
-				data->wait2 += 1/*fps_fa ctor*/;
-				if (data->wait2>=3)
-				{
-					src->anim_frame++;
-					data->wait2=0;
-				}
-			}
+			sakuya_anime08(src);
 		}
 		else
 		{
@@ -389,61 +441,26 @@ static void move01_aya(SPRITE *src)
 		break;
 
 	case ST_11: /* nach links bis zur mitte */
-		if (src->x256 > XP256)
+		if (src->x256 > BOSS_XP256)
 		{
 			src->x256 -= t256(2)/**fps_fa ctor*/;
-			if (src->anim_frame>0)
-			{
-				data->wait2 += 1/*fps_fa ctor*/;
-				if (data->wait2>=3)
-				{
-					src->anim_frame--;
-					data->wait2=0;
-				}
-			}
+			sakuya_anime00(src);
 		}
 		else
 		{	data->state1++/* = ST_00*/; }
 		break;
-	case ST_12: /*  */
+	case ST_12: /*	*/
 		{
 			data->state1 = ST_00;
 		}
 		break;
-
-	////////////////////////
-	case ST_13: 	/* 下がる */
-		src->y256 += t256(2) /**fps_fa ctor*/;
-		if (src->y256 >= t256(30))
-		{
-			data->state1++/* = ST_14*/;
-			data->wait1 = 0;
-		//	((PLAYER_DATA *)player->data)->bo ssmode=B05_BE FORE_LOAD;
-			((PLAYER_DATA *)player->data)->state_flag |= STATE_FLAG_10_IS_LOAD_SCRIPT;
-		}
-		break;
-	/*姿を現す*/
-	case ST_14:
-	//	if (((PLAYER_DATA *)player->data)->bo ssmode==B01_BA TTLE)
-	//	if ((STATE_FLAG_05_IS_BOSS|0) == (((PLAYER_DATA *)player->data)->state_flag&(STATE_FLAG_05_IS_BOSS|STATE_FLAG_06_IS_SCRIPT)))
-		if ( ((((PLAYER_DATA *)player->data)->state_flag) & STATE_FLAG_05_IS_BOSS) )
-		{
-			/* プレイヤー弾受け付け、コールバックを登録 */
-		//	data->wait1 += (1)/*fps_fa ctor*/;
-		//	if (data->wait1 >= 40)
-		//	{
-				data->state1 = ST_00;
-		//	}
-		}
-		break;
 	}
 }
-
 /*---------------------------------------------------------
 	移動攻撃パターン2(高速移動)
 ---------------------------------------------------------*/
 
-static void move02_aya(SPRITE *src)
+/*static*/ void aya_05_keitai(SPRITE *src)
 {
 	BOSS02_DATA *data = (BOSS02_DATA *)src->data;
 	switch (data->state1)
@@ -485,8 +502,8 @@ static void move02_aya(SPRITE *src)
 				if (n_wait3_tbl[data->n_wait3]&0x02)
 				{
 					/* 弾に毒塗ってある設定 */
-					bullet_create_n_way_dan_sa_type(src, t256(4), ANGLE_JIKI_NERAI_DAN, (int)(512/24), BULLET_KOME_01_AOI+(ra_nd()&0x0f)/*BULLET_KUNAI12_06_AOI*/, 11); /*なるべく共通化*/
-					bullet_create_n_way_dan_sa_type(src, t256(3), ANGLE_JIKI_NERAI_DAN, (int)(512/24), BULLET_KOME_01_AOI+(ra_nd()&0x0f)/*BULLET_KUNAI12_07_MIDORI*/, 11); /*なるべく共通化*/
+					bullet_create_n_way_dan_sa_type(src, t256(4), ANGLE_JIKI_NERAI_DAN, (int)(512/24), BULLET_KOME_01_AOI+(ra_nd()&0x0f)/*BULLET_KUNAI12_00_AOI*/, 11); /*なるべく共通化*/
+					bullet_create_n_way_dan_sa_type(src, t256(3), ANGLE_JIKI_NERAI_DAN, (int)(512/24), BULLET_KOME_01_AOI+(ra_nd()&0x0f)/*BULLET_KUNAI12_02_MIDORI*/, 11); /*なるべく共通化*/
 				}
 			}
 		}
@@ -529,15 +546,7 @@ static void move02_aya(SPRITE *src)
 		if (src->x256 >= 0)
 		{
 			src->x256 -= /*(t256(4)+(difficulty<<8))*/(data->aya_speed)/**fps_fa ctor*/;
-			if (src->anim_frame>0)
-			{
-				data->wait2 += 1/*fps_fa ctor*/;
-				if (data->wait2>=3)
-				{
-					src->anim_frame--;
-					data->wait2=0;
-				}
-			}
+			sakuya_anime00(src);
 		}
 		else
 		{
@@ -551,15 +560,7 @@ static void move02_aya(SPRITE *src)
 		if (src->x256 < (t256(GAME_WIDTH)-((src->w128+src->w128))))
 		{
 			src->x256 += /*(t256(4)+(difficulty<<8))*/(data->aya_speed)/**fps_fa ctor*/;
-			if (src->anim_frame<8)
-			{
-				data->wait2 += 1/*fps_fa ctor*/;
-				if (data->wait2>=3)
-				{
-					src->anim_frame++;
-					data->wait2=0;
-				}
-			}
+			sakuya_anime08(src);
 		}
 		else
 		{
@@ -668,73 +669,6 @@ static void move02_aya(SPRITE *src)
 
 
 /*---------------------------------------------------------
-	[スペカシステム内に移動予定]	スペカ登録
----------------------------------------------------------*/
-
-static void regist_spell_card(SPRITE *src)
-{
-	spell_card_limit_health -= 1000/*500*/;
-	if (0 >= spell_card_limit_health)
-	{
-		spell_card_limit_health = 0;
-		spell_card_mode 		= 0/*off*/;
-	}
-	else
-	{
-	//	BOSS02_DATA *data = (BOSS02_DATA *)src->data;
-	//	if (b_health_alter_low1024 < (data->boss_base.boss_health & (1024-1)))/* 形態変更したら */
-		spell_card_mode 		= 1/*on*/;
-//		if (0==/*data->boss_base.boss_*/src->base_health)
-		{
-//			if (0 != (data->boss_base.boss_life))/* 形態変更したら */
-			{
-//				data->boss_base.boss_life--;
-				aya_put_items(src);
-			}
-		}
-	}
-}
-
-
-/*---------------------------------------------------------
-	[スペカシステム内に移動予定]	スペカ生成
----------------------------------------------------------*/
-
-static void spell_card_generator(SPRITE *src)
-{
-//	BOSS06_DATA *data = (BOSS06_DATA *)src->data;
-//	switch (spell_card_number)
-	{
-		BOSS02_DATA *data = (BOSS02_DATA *)src->data;
-		if (0==data->move_type)
-				{	move01_aya(src);	}	/* 移動パターン1(低速移動) */
-		else	{	move02_aya(src);	}	/* 移動攻撃パターン2(高速移動) */
-	}
-	/*---------------------------------------------------------
-		パチェ移動処理
-	---------------------------------------------------------*/
-	//
-	//	enemy_boss04_setpos(src, xxx,yyy);
-	//
-	//boss_move96(src);
-
-	/*---------------------------------------------------------
-		スペカチェック
-	---------------------------------------------------------*/
-	{
-		if (0/*off*/==spell_card_mode)
-		{
-			if (0/*off*/==spell_card_boss_timer)
-			{
-				spell_card_limit_health = 0;
-				spell_card_mode 		= 1/*on*/;
-			}
-		}
-	}
-}
-
-
-/*---------------------------------------------------------
 	ボス行動
 ---------------------------------------------------------*/
 
@@ -743,11 +677,21 @@ static void move_aya(SPRITE *src)
 	/* スペカ登録 */
 			if (0/*off*/==spell_card_mode)
 			{
-				regist_spell_card(src);
+				regist_spell_card222(src);
 			}
-	spell_card_generator(src);	/* スペカ生成 */
+	spell_card_generator222(src);	/* スペカ生成 */
+	#if 1/* [スペカシステム内に移動予定] */
+	/*---------------------------------------------------------
+		パチェ移動処理
+	---------------------------------------------------------*/
+	//
+	//	enemy_boss04_setpos(src, xxx,yyy);
+	//
+	//boss_move96(src);
+	#endif
 //
-								/* 弾幕生成 */
+	boss_effect(src);			/* 回エフェクト */
+	danmaku_generator(src); 	/* 弾幕生成 */
 //
 }
 
@@ -755,59 +699,66 @@ static void move_aya(SPRITE *src)
 /*---------------------------------------------------------
 	敵を追加する
 ---------------------------------------------------------*/
+	//	sakuya								= spr ite_add_file 0("boss/aya.png"/*"boss02_v2.png"*/,9,PRIORITY_03_ENEMY, 0); s->anim_speed=0;
+	//	sakuya->base_health 				= (difficulty<<10/**1024*/)+3071+1024;
+	//	sakuya->base_health 				= (1024-1);
+	//	sakuya->base_health 				= (1024-1)*((difficulty)+3);
+	//	sakuya->base_score					= score(2000)+score(1500)*difficulty;
+	//	sakuya->base_health 				= ((1024)-1)*((difficulty)+3);/*test*/
 
 void add_boss_aya(STAGE_DATA *l)/*int lv*/
 {
+	boss_bgm_mode		= (l->user_y);
 //
-	{
+//----[BOSS]
 		SPRITE *sakuya;
-	//	sakuya							= spr ite_add_file 0("boss/aya.png"/*"boss02_v2.png"*/,9,PRIORITY_03_ENEMY, 0); s->anim_speed=0;
-		sakuya							= sprite_add_res(BASE_BOSS_AYA_PNG);
-		sakuya->flags					|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK);
-		sakuya->anim_frame				= 4;
-		sakuya->type					= SP_BOSS/*SP_BOSS02*/;
-		sakuya->callback_mover			= move_aya;
-		sakuya->callback_loser			= lose_boss;
-		sakuya->callback_hit_enemy		= callback_hit_boss; 	/* コールバック登録 */
+		sakuya								= sprite_add_res(BASE_BOSS_AYA_PNG);
+		sakuya->flags						|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK);
+		sakuya->yx_anim_frame				= 0x00/*AYA_ANIME_CENTER_04*/;
+		sakuya->type						= SP_BOSS/*SP_BOSS02*/;
+		sakuya->callback_mover				= move_aya;
+		sakuya->callback_loser				= aya_put_items;
 	//
+	//	sakuya->base_health 				= ((1024)-1)*4;/*test*/
+		sakuya->base_health 				= ((1024)-1)*6;/*test*/
+		sakuya->base_score					= adjust_score_by_difficulty(score(2000000));	/* 200万 */
+	//------------ スペカ関連
+		spell_card_number					= SPELL_CARD_00_aya_000;
+		spell_card_max						= SPELL_CARD_19_aya_jjj;
+		spell_card_boss_init_regist(sakuya);
+	{
 		BOSS02_DATA *data;
-		data							= mmalloc(sizeof(BOSS02_DATA));
-		sakuya->data					= data;
-	//	/*data->boss_base.boss_*/sakuya->base_health	= (difficulty<<10/**1024*/)+3071+1024;
-	//	/*data->boss_base.boss_*/sakuya->base_health	= (1024-1);
-	//	data->boss_base.boss_life						= ((difficulty)+3);
-		/*data->boss_base.boss_*/sakuya->base_health	= ((1024)-1)*((difficulty)+3);/*test*/
-
-	//	/*data->boss_base.*/sakuya->base_score			= score(2000)+score(1500)*difficulty;
-		/*data->boss_base.*/sakuya->base_score			= adjust_score_by_difficulty(score(2000000));	/* 200万 */
-		data->state1					= ST_13;/*0*/
-		data->wait1 					= 50;
-		data->wait2 					= 0;
-	//	data->level 					= (l->user_y);
-		data->n_wait3					= 0/*1*/;
-		data->aya_speed 				= t256(4)+(difficulty<<8);
-		data->danmaku_type				= DT00;
-		data->move_type 				= 0;
-		data->ice_dan					= 1;
-
-		sakuya->x256					= XP256/*t256(GAME_WIDTH/2)-(sakuya->w128)*/;
-		sakuya->y256					= -(sakuya->h128+sakuya->h128);
+		data								= mmalloc(sizeof(BOSS02_DATA));
+		sakuya->data						= data;
+		data->state1						= (0)/*ST_13*/;/*0*/
+		data->wait1 						= 50;
+		data->animation_wait				= 0;
+		data->n_wait3						= 0/*1*/;
+		data->aya_speed 					= t256(4)+(difficulty<<8);
+		data->ice_number					= (0);
 		//
-	//	/*data->boss_base.*/spell_card_boss_timer		= (40*64);			/* 40*64==40[count] 	約40[秒(64/60)](単位は秒ではない) */
-		/*data->boss_base.*/spell_card_boss_timer		= ((120)*64);		/* 75*64==75[count] 	約120[秒(64/60)](単位は秒ではない) */
-		// 60 [秒] ???
 		#if 1
 	//------------ 弾幕関連
+		data->boss_base.danmaku_type		= 0;
+		data->boss_base.danmaku_time_out	= 0;
+		data->boss_base.danmaku_test		= 0;	/*(DANMAKU_08_rumia-1)*/ /*0*/
 		#endif
-	//------------ スペカ関連
-		#if 1
-		/* [スペカシステム内に移動予定] */
-		/* 初回の登録作ってないので手動 */
-		create_spell_card_init_dummy();
-		spell_card_mode 		= 1/*on*/;
-		spell_card_limit_health = (sakuya->base_health)-500/*1000*/;/* 通常攻撃(初回攻撃)の攻撃分(手動設定) */
-		#endif
-//
-		((PLAYER_DATA *)player->data)->boss = sakuya;/*輝夜本人*/
 	}
+	//------------ 特殊初期化
+	#if 0
+	/*	common_boss_init(); より後の必要がある*/
+	{
+		/* boss_rect_init */
+		boss_clip_min.x256	= t256(0);
+		boss_clip_min.y256	= t256(0);
+		boss_clip_max.x256	= t256(GAME_WIDTH);
+		boss_clip_max.y256	= (t256(128)+(difficulty<<(8+5)));	/*t256(96)*/
+	}
+		/*
+		0	easy:	128(踏まれない)
+		1	normal: 160(踏まれない)
+		2	hard:	192(踏まれない)
+		3	luna:	224(踏まれる)
+		*/
+	#endif
 }

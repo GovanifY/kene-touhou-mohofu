@@ -167,13 +167,16 @@ static void result_font_render(void)
 		else
 		if (6==i)
 		{
-			/*const*/ char *score_name[5] =
+			/*const*/ char *score_name[8/*5*/] =
 			{
-			/* 0==*/	"REIMU",
-			/* 1==*/	"MARISA",
-			/* 2==*/	"REMILIA",
-			/* 3==*/	"CHIRNO",
-			/* 4==*/	"YUYUKO",
+			/* 0==*/	"REIMU_A",
+			/* 1==*/	"REIMU_B",
+			/* 2==*/	"MARISA_A",
+			/* 3==*/	"MARISA_B",
+			/* 5==*/	"REMILIA",
+			/* 7==*/	"YUYUKO",
+			/* 6==*/	"CHIRNO_A",
+			/* 4==*/	"CHIRNO_Q",
 			};
 			result_surfaces[6]				= font_render((char *)score_name[(show_player_num)], FONT03/*FONT06*/);
 		}
@@ -285,7 +288,8 @@ void result_work(void)
 			if (my_pad_alter & (PSP_KEY_SHOT_OK|PSP_KEY_RIGHT|PSP_KEY_LEFT))	/* さっきPSP_KEY_SHOT_OKが押されてた */
 			{
 				show_player_num++;								/* 次の人にする */
-				if (4<show_player_num) {show_player_num=0;} 	/* 最後まで見たら始めから見る */
+			//	if (/*4*/7<show_player_num) {show_player_num=0;} 	/* 最後まで見たら始めから見る */
+				show_player_num &= 7;								/* 最後まで見たら始めから見る */
 				more_show=1;	/* また見るよ */
 				psp_loop++;//newsta te(ST_RESULT,RESULT_04_SLIDE_OUT,0);
 			}

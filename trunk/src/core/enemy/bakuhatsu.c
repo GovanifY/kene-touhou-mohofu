@@ -70,9 +70,9 @@ void bakuhatsu_add_type_ddd(SPRITE *src/*int x256, int y256*/, /*int delay_wait,
 	}
 	{
 		SPRITE *s /*= NULL*/;
-	//	s					= sprite_add_res(BASE_TR_BLUE_PNG);
-		s					= sprite_add_bullet(TAMA_TYPE_BULLET_JIPPOU32_PNG);
-		s->base_time_out = 30;/*30 フレーム*/
+	//	s					= sp rite_add_res(BASE_TR_BLUE_PNG);
+		s					= sprite_add_gu(TAMA_TYPE_BULLET_JIPPOU32_PNG);
+		s->base_time_out 	= 30;/*30 フレーム*/
 
 		s->flags			|= (/*SP_FLAG_VISIBLE|*/SP_FLAG_TIME_OVER);
 		s->flags			&= (~(SP_FLAG_COLISION_CHECK)); 	/* あたり判定のOFF(無敵) */
@@ -114,22 +114,22 @@ void bakuhatsu_add_type_ddd(SPRITE *src/*int x256, int y256*/, /*int delay_wait,
 //	case 1: 	ex = spr ite_add_file 0("tr_blue.png",	6, PRIORITY_04_ITEM, 0);	data->anime_speed=1;	break;
 //	case 2: 	ex = spr ite_add_file 0("tr_red.png",	6, PRIORITY_04_ITEM, 0);	data->anime_speed=1;	break;
 //	case 3: 	ex = spr ite_add_file 0("tr_green.png", 6, PRIORITY_04_ITEM, 0);	data->anime_speed=1;	break;
-	case 1: 	ex = sprite_add_res(BASE_TR_BLUE_PNG);	/*	data->anime_speed=1;*/	break;
-	case 2: 	ex = sprite_add_res(BASE_TR_RED_PNG);	/*	data->anime_speed=1;*/	break;
-	case 3: 	ex = sprite_add_res(BASE_TR_GREEN_PNG); /*	data->anime_speed=1;*/	break;
+	case 1: 	ex = sp rite_add_res(BASE_TR_BLUE_PNG);	/*	data->anime_speed=1;*/	break;
+	case 2: 	ex = sp rite_add_res(BASE_TR_RED_PNG);	/*	data->anime_speed=1;*/	break;
+	case 3: 	ex = sp rite_add_res(BASE_TR_GREEN_PNG); /*	data->anime_speed=1;*/	break;
 //
 //	case 4: break;/* ザコ消滅爆発 */
 //	case 5: 	ex = spr ite_add_file 0("bakuha05.png", 5, PRIORITY_04_ITEM, 1);	data->anime_speed=/*8*/(3)/*1*/; ex->alpha = 150;	break;
 //	case 6: 	ex = spr ite_add_file 0("bakuha06.png", 5, PRIORITY_04_ITEM, 1);	data->anime_speed=/*8*/(3)/*1*/; ex->alpha = 150;	break;
 //	case 7: 	ex = spr ite_add_file 0("bakuha07.png", 5, PRIORITY_04_ITEM, 1);	data->anime_speed=/*8*/(3)/*1*/; ex->alpha = 150;	break;
-	case 5: 	ex = sprite_add_res(BASE_BAKUHA05_PNG); /*	data->anime_speed=/ *8* /(3)/ *1* /;*/	ex->alpha = 150;	break;
-	case 6: 	ex = sprite_add_res(BASE_BAKUHA06_PNG); /*	data->anime_speed=/ *8* /(3)/ *1* /;*/	ex->alpha = 150;	break;
-	case 7: 	ex = sprite_add_res(BASE_BAKUHA07_PNG); /*	data->anime_speed=/ *8* /(3)/ *1* /;*/	ex->alpha = 150;	break;
+	case 5: 	ex = sp rite_add_res(BASE_BAKUHA05_PNG); /*	data->anime_speed=/ *8* /(3)/ *1* /;*/	ex->alpha = 150;	break;
+	case 6: 	ex = sp rite_add_res(BASE_BAKUHA06_PNG); /*	data->anime_speed=/ *8* /(3)/ *1* /;*/	ex->alpha = 150;	break;
+	case 7: 	ex = sp rite_add_res(BASE_BAKUHA07_PNG); /*	data->anime_speed=/ *8* /(3)/ *1* /;*/	ex->alpha = 150;	break;
 //		/* 火炎爆発 */
 //	case 8: 	ex = spr ite_add_file 0("ex.png", 29, PRIORITY_04_ITEM, 0); 	data->anime_speed=3/*2*/;	break;
-	case 8: 	ex = sprite_add_res(BASE_BAKUHA_EX_PNG);/*	data->anime_speed=3/ *2* /;*/	break;
+	case 8: 	ex = sp rite_add_res(BASE_BAKUHA_EX_PNG);/*	data->anime_speed=3/ *2* /;*/	break;
 //		/*移動爆発*/
-	case 12: 	ex = sprite_add_res(BASE_TR_RED_PNG);	/*	data->anime_speed=1;*/	break;
+	case 12: 	ex = sp rite_add_res(BASE_TR_RED_PNG);	/*	data->anime_speed=1;*/	break;
 	default:	error(ERR_WARN, "bakuhatsu_add: unknown type: %d",type);
 	}
 	#else

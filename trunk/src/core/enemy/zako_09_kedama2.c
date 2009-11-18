@@ -14,6 +14,7 @@ typedef struct
 //	ENEMY_BASE base;
 	int state;
 	int time_out;
+	int kougeki_type;
 } KEDAMA1_DATA;
 
 
@@ -23,7 +24,7 @@ typedef struct
 //	int v y256;
 //	int speed256;
 
-//static int level;
+//static int enemy_rank;		/* Ý’èƒtƒ@ƒCƒ‹‚©‚ç‚Ì“G‚Ì‹­‚³ */
 
 #define NUM_OF_ENEMIES (6)
 
@@ -79,14 +80,35 @@ static void move_kedama2(SPRITE *src)
 		}
 		break;
 	case ST02:	/* UŒ‚ */
-		if (0==(data->time_out & 0x0f))
-		{
-			bullet_create_n_way_dan_sa_type(src,
-				(t256(2.5)+((difficulty)<<6)),/* [2.5 - 3.25] */			//	(t256(2.0)+((difficulty)<<6)),/* [2.0 - 2.75] */
-				ANGLE_JIKI_NERAI_DAN,
-				(int)(512/24),
-				BULLET_KOME_01_AOI+(src->x256&0x07),
-				(3/*+difficulty+difficulty*/));
+		{			enum
+			{
+				K00_KOUGEKI_KANKAKU_MASK = 0,
+				K01_SUKIMA_KAKUDO,
+				K02_TAMA_KAZU,
+				K99_MAX/* Å‘å” */
+			};
+			const u32 kougeki_tbl[(4*2)][K99_MAX] =
+			{
+				/* 0:g‚Á‚Û‚¢–Ñ‹Ê(‹·Šp“x Šï”’e) */
+				{0x3f, (u32)(512/12), (5/*+difficulty+difficulty*/)},	/* (u32)(512/12):LŠp‚È‚Ì‚ÅŠÈ’P */
+				{0x1f, (u32)(512/16), (3/*+difficulty+difficulty*/)},	/* 0x0f:•’Ê‚É”ð‚¯‚ê‚éŠÔŠu */
+				{0x0f, (u32)(512/20), (3/*+difficulty+difficulty*/)},	/* 0x0f:•’Ê‚É”ð‚¯‚ê‚éŠÔŠu */
+				{0x07, (u32)(512/24), (5/*+difficulty+difficulty*/)},	/* (u32)(512/24):•’Ê‚Ì‹·Šp */
+				/* 1:—d‚Á‚Û‚¢–Ñ‹Ê(90“x 4•ûŒü) (–³‘Ê’e‚È‚Ì‚Å“ïˆÕ“x‚Í’á‚¢”¤) */
+				{0x3f, (u32)(512/8),  (8)}, 	/* 8:Œ©‚¹’e(–³‘Ê’e‚È‚Ì‚Å“ïˆÕ“x‚Í’á‚¢”¤) */
+				{0x1f, (u32)(512/8),  (8)}, 	/* 0x1f:•’Ê‚É”ð‚¯‚ê‚éŠÔŠu */
+				{0x07, (u32)(512/4),  (4)},
+				{0x03, (u32)(512/4),  (4)}, 	/* 0x03:˜A‘±’e‚Á‚Û‚­ */
+			};
+			if (0==(data->time_out & kougeki_tbl[data->kougeki_type][K00_KOUGEKI_KANKAKU_MASK]))/*0x0f*/
+			{
+				bullet_create_n_way_dan_sa_type(src,
+					(t256(2.5)+((difficulty)<<6)),/* [2.5 - 3.25] */		//	(t256(2.0)+((difficulty)<<6)),/* [2.0 - 2.75] */
+					ANGLE_JIKI_NERAI_DAN,
+					kougeki_tbl[data->kougeki_type][K01_SUKIMA_KAKUDO], 	//	(int)(512/24),
+					BULLET_KOME_01_AOI+(src->x256&0x07),
+					kougeki_tbl[data->kougeki_type][K02_TAMA_KAZU]);		//	(3/*+difficulty+difficulty*/)
+			}
 		}
 		if (0 > data->time_out)
 		{
@@ -112,6 +134,9 @@ static void move_kedama2(SPRITE *src)
 	/* ˆÚ“®‚·‚é */
 	src->x256 += (src->vx256);
 	src->y256 += (src->vy256);
+//
+	src->m_angleCCW512 += 5;
+	mask512(src->m_angleCCW512);
 }
 
 /*---------------------------------------------------------
@@ -124,18 +149,21 @@ void add_zako_kedama2(STAGE_DATA *l)/*int lv*/
 	for (i=0; i<NUM_OF_ENEMIES; i++)
 	{
 		SPRITE *s;
-		s						= sprite_add_res(BASE_KEDAMA16_PNG);	//s->anim_speed=5; /*3*/ /*9"ba dguy.png"*/
-		s->anim_speed			= /*-*/3; /*‹t“]ƒAƒjƒ‹ÖŽ~‚É•ÏX*/
-		s->type 				= SP_ZAKO/*_08_KEDAMA1*/;
+//		s						= sp rite_add_res(BASE_KEDAMA16_PNG);	//s->anim_speed=5; /*3*/ /*9"ba dguy.png"*/
+		s						= sprite_add_gu(ZAKO_TYPE_ATARI16_PNG);	//s->anim_speed=5; /*3*/ /*9"ba dguy.png"*/
+		s->type 				= /*SP_ZAKO*/TEKI_59_HAI_KEDAMA/*_08_KEDAMA1*/;
+//		s->type 				= SP_ZAKO/*_08_KEDAMA1*/;
+//		s->anim_speed			= /*-*/3; /*‹t“]ƒAƒjƒ‹ÖŽ~‚É•ÏX*/
 		s->flags				|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK|SP_FLAG_TIME_OVER);
+		s->color32 				= 0xaaffffff;		/*”’‚Á‚Û‚­ */
 		s->callback_mover		= move_kedama2;
 		s->callback_loser		= lose_kedama2;
 		s->callback_hit_enemy	= callback_hit_zako;
-		s->anim_frame			= 0;
+//		s->an im_frame			= 0;
 		//
 		s->y256 				= ((l->user_y)<<8);
-		s->vx256			= ((l->user_x));
-		s->vy256			= (0);
+		s->vx256				= ((l->user_x));
+		s->vy256				= (0);
 		//
 		{
 			if (0 < (s->vx256))
@@ -166,10 +194,11 @@ void add_zako_kedama2(STAGE_DATA *l)/*int lv*/
 		KEDAMA1_DATA *data;
 		data					= mmalloc(sizeof(KEDAMA1_DATA));
 		s->data 				= data;
-		/*data->base.*/s->base_score		= score(/*50*/5*2*4)/**(level+1)*/;
+		/*data->base.*/s->base_score		= score(/*50*/5*2*4)/**(enemy_rank+1)*/;
 		/*data->base.*/s->base_health		= (8/**8*/)/*+(difficulty<<2)*/ /*(1+(difficulty<<2))*/;/*‚â‚í‚ç‚©‚·‚¬*/
 		data->state 			= ST00;
 		data->time_out			= 64+(i<<4);
+		data->kougeki_type		= (((l->user_1_moji)&1)<<2)|(difficulty/*&0x03*/);
 	}
 }
 #undef NUM_OF_ENEMIES
@@ -180,7 +209,7 @@ void add_zako_kedama2(STAGE_DATA *l)/*int lv*/
 	//	s->y256 				= ((ra_nd()&((32*256)-1))-t256(80));//	(ra_nd()%40-90);
 	//	s->vx256			= (0);
 	//	s->vy256			= (0);
-//	/*data->*/level 	= l->user_y;
+//	/*data->*/enemy_rank 	= l->user_y;
 
 //		data->anime_houkou	= 0x20;
 

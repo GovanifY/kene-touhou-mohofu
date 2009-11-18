@@ -27,8 +27,6 @@
 
 ---------------------------------------------------------*/
 
-/* ----- 曲の数(読み込みファイル数) */
-#define USE_MUSIC_FILES 15/*14*/ /**/
 
 /* ----- 効果音の数(読み込みファイル数) */
 //#define VOICE16_MAX_FILES 15 /*いくつか追加*/
@@ -61,6 +59,7 @@ static int use_audio = 0;/*使用不可能*/
 //	Mix_PauseMusic();
 //}
 
+
 /*---------------------------------------------------------
 	一時停止した曲の演奏再開
 ---------------------------------------------------------*/
@@ -70,6 +69,7 @@ static int use_audio = 0;/*使用不可能*/
 //	if ( 0==use_audio ) return;
 //	Mix_ResumeMusic();
 //}
+
 
 /*---------------------------------------------------------
 	曲のフェードアウト
@@ -81,50 +81,36 @@ static int use_audio = 0;/*使用不可能*/
 //	Mix_FadeOutMusic(1280);
 //}
 
+
 /*---------------------------------------------------------
-	それまでの曲の演奏停止
+	それまでの曲の演奏停止(廃止/統合)	play_music_num(BGM_00_stop)を使う
 ---------------------------------------------------------*/
 
-void stop_music(void)
-{
-//	if ( 0==use_audio ) return;
-	if ( music_track != NULL )
-	{
-		//if ( Mix_PlayingMusic() )
-		{	Mix_HaltMusic();	}
-		Mix_FreeMusic(music_track);
-		music_track = NULL;
-	}
-}
+//void stop_music(void)
+//{
+//	//if ( 0==use_audio ) return;
+//	if ( music_track != NULL )
+//	{
+//		//if ( Mix_PlayingMusic() )
+//		{	Mix_HaltMusic();	}
+//		Mix_FreeMusic(music_track);
+//		music_track = NULL;
+//	}
+//}
+
 
 /*---------------------------------------------------------
 	曲の演奏
+	-------------------------------------------------------
+	0==num	でそれまでの曲の演奏停止
+	1～ 	で曲の演奏
 ---------------------------------------------------------*/
 
-void play_music(int num)
+void play_music_num(int num)
 {
 	if ( 0==use_audio ) return;
 	/* 範囲チェック */
 //
-	static const char *music_file_name[USE_MUSIC_FILES] =
-	{
-		"menu1",	/*	0 */
-		"stage1",	/*	1 */
-		"stage2",	/*	2 */
-		"stage3",	/*	3 */
-		"stage4",	/*	4 */
-		"stage5",	/*	5 */
-		"stage6",	/*	6 */
-		"stage7",	/*	7 */
-		"menu2",	/*	8 */
-		"boss1",	/*	9 */
-		"boss2",	/* 10 */
-		"boss3",	/* 11 */
-		"boss4",	/* 12 */
-		"boss5",	/* 13 */
-		"boss6",	/* 14 */
-	//	"boss7",	/* 15 */
-	};		// いろいろ追加
 	/* ----- それまでの演奏停止 */
 	//stop_music();
 	//void stop_music(void)
@@ -138,12 +124,42 @@ void play_music(int num)
 			music_track = NULL;
 		}
 	}
+	/* ----- 設定で曲再生OFFなら再生しない	*/
+	if (0==option_config[OPTION_CONFIG_02_BGM])
+	{
+		return;
+	}
+	/* ----- BGM 演奏停止コマンド */
+	if ( 0==num ) return;
+	num--;
 	/* ----- BGM 演奏開始 */
 	char name[64/*72*/];
 	{
+		static const char *music_file_name[USE_MUSIC_FILES] =
+		{
+		/*	0 ----- BGM 演奏停止コマンド */
+		/*	1 */	"stage1",	/* 1面道中 */
+		/*	2 */	"stage2",	/* 2面道中 */
+		/*	3 */	"stage3",	/* 3面道中 */
+		/*	4 */	"stage4",	/* 4面道中 */
+		/*	5 */	"stage5",	/* 5面道中 */
+		/*	6 */	"stage6",	/* 6面道中 */
+		/*	7 */	"stage7",	/* エンディング(道中) */
+		/*	8 */	"stage8",	/* エキストラステージ道中 */
+		/*	9 */	"menu1",	/* タイトル画面 */
+		/* 10 */	"boss1",	/* 1面ボス */
+		/* 11 */	"boss2",	/* 2面ボス */
+		/* 12 */	"boss3",	/* 3面ボス */
+		/* 13 */	"boss4",	/* 4面ボス */
+		/* 14 */	"boss5",	/* 5面ボス */
+		/* 15 */	"boss6",	/* 6面ボス */
+		/* 16 */	"menu2",	/* エンディング(シナリオ) */
+		/* 17 */	"boss8",	/* エキストラステージボス */
+		};		// いろいろ追加
 		const char *name_extention[] =
 		{
-			NULL, ".mod", ".s3m", ".xm", ".it", ".mp3", ".wav", ".ogg",
+			NULL, ".mod", ".s3m", ".xm", ".it", ".mp3", ".wav", ".ogg", 	/* 正順 */
+//			NULL, ".ogg", ".wav", ".mp3", ".it", ".xm", ".s3m", ".mod", 	/* 逆順 */
 		};
 		int aaa;
 		aaa = 8;
@@ -170,31 +186,6 @@ void play_music(int num)
 	Mix_PlayMusic(music_track, -1);
 }
 
-/*---------------------------------------------------------
-	オーディオシステムの終了処理
----------------------------------------------------------*/
-
-void exit_audio(void)
-{
-	if ( 0==use_audio ) return;
-	/* 曲の解放 */
-	//if ( Mix_PlayingMusic() )
-	{	Mix_HaltMusic();	}
-	Mix_FreeMusic(music_track);
-	music_track = NULL;
-	/* 効果音の解放 */
-	{int i;
-		for (i=0; i<VOICE16_MAX_FILES; i++)
-		{
-			if ( voice_track[i] )
-			{
-				Mix_FreeChunk(voice_track[i]);
-			}
-		}
-	}
-	/* ミキサー(オーディオシステム)の解放 */
-	Mix_CloseAudio();
-}
 
 /*---------------------------------------------------------
 	効果音のリクエスト
@@ -292,9 +283,35 @@ void bullet_play_04_auto(int req)
 #if (1==USE_VSYNC_SOUND)
 void voice_play_vbl(void)
 {
-	#if (1==USE_VSYNC_SOUND)
 	if ( 0==use_audio ) return;
-		#if 0
+	/* ----- 設定で効果音再生OFFなら再生しない	*/
+	if (0==option_config[OPTION_CONFIG_03_SOUND])
+	{
+		return;
+	}
+	#if (1==USE_VSYNC_SOUND)
+		#if 1
+	/*
+		妖々夢の発弾音とか、
+		大体 0.025[sec] 位でループしてるみたい
+		0.025[sec]==40frame??
+		//
+		1flame	(0.0166[sec]==60frameでループさせても、本物とかけ離れたビームみたいな変な音になる。
+		実際はびしゃびしゃした雨みたいな音)
+		0.05[sec]マシンガンみたいな音(速過ぎる？)
+		6flame	0.10[sec]マシンガンみたいな音(遅すぎる！)
+
+		1flame	0.0166[sec]ビームみたいな変な音(速過ぎる！)
+		2flame	0.0333[sec]
+		3flame	0.0500[sec]
+		4flame	0.0666[sec]マシンガンみたいな音(これぐらい？)
+		5flame	0.0833[sec]マシンガンみたいな音(多分遅い)
+		6flame	0.1000[sec]マシンガンみたいな音(遅すぎる！)
+		//
+		仮に本物と同じ音を使ったとしても、同じ効果音を出すためには、
+		効果音の発音方法も同じじゃないと、同じ音は鳴らない。
+		本物の効果音の発音方法は、さっぱり解からない。
+	*/
 	int i;
 	for (i=0; i<MAX_VOICE_TRACK; i++)
 	{
@@ -306,6 +323,11 @@ void voice_play_vbl(void)
 		}
 	}
 		#else
+	/*
+	紅魔郷の場合、あんまり速く鳴らないように、
+	コントロールしてるようで、やっぱシステムじゃなくて
+	個別に(大体こんな感じで)制御してるのかも
+	*/
 	{
 		static int i=0;
 		i++;
@@ -328,7 +350,7 @@ void voice_play_vbl(void)
 /*---------------------------------------------------------
 	効果音のミキシング音量を変える
 ---------------------------------------------------------*/
-
+#if 0
 void set_voice_volume(int volume)
 {
 	#ifdef ENABLE_PSP
@@ -340,6 +362,7 @@ void set_voice_volume(int volume)
 	}
 	#endif
 }
+#endif
 
 /*---------------------------------------------------------
 	曲のミキシング音量を変える
@@ -349,6 +372,35 @@ void set_music_volume(int volume)
 {
 	Mix_VolumeMusic(volume);
 }
+
+
+/*---------------------------------------------------------
+	オーディオシステムの終了処理
+---------------------------------------------------------*/
+
+void exit_audio(void)
+{
+	if ( 0==use_audio ) return;
+	/* 曲の解放 */
+	//if ( Mix_PlayingMusic() )
+	{	Mix_HaltMusic();	}
+	Mix_FreeMusic(music_track);
+	music_track = NULL;
+	/* 効果音の解放 */
+	{
+		int i;
+		for (i=0; i<VOICE16_MAX_FILES; i++)
+		{
+			if ( voice_track[i] )
+			{
+				Mix_FreeChunk(voice_track[i]);
+			}
+		}
+	}
+	/* ミキサー(オーディオシステム)の解放 */
+	Mix_CloseAudio();
+}
+
 
 /*---------------------------------------------------------
 	効果音の初期化、読み込み処理
@@ -373,17 +425,18 @@ static void voice_load(void)
 		"se_l.wav", 	/* 11 */	//	"e_shot00.wav", /* 11 */
 		"se_m.wav", 	/* 12 */	//	"b2_shot.wav",	/* 12 */
 		"se_n.wav", 	/* 13 */	//	"_shot.wav",	/* 13 */
-		"se_o.wav", 	/* 14 */	//	"e_shot01.wav",	/* 14 */
+		"se_o.wav", 	/* 14 */	//	"e_shot01.wav", /* 14 */
 		"se_p.wav", 	/* 15 */	//	"hit.wav",		/* 15 */
 	};		//いろいろ追加
 	int i;
 	char name[64/*52*/];
-	for ( i=0; i<VOICE16_MAX_FILES; i++ )
+	for (i=0; i<VOICE16_MAX_FILES; i++)
 	{
 	//	strcpy(name, data_dir);
 		strcpy(name, DIRECTRY_NAME_DATA "/sounds/");
 		strcat(name, voice_file_name[i]);
-		if ( NULL == (voice_track[i] = Mix_LoadWAV(name)) )
+		voice_track[i] = Mix_LoadWAV(name);
+		if ( NULL == voice_track[i] )
 		{
 			//ps pDebugScreenPrintf("Couldn't load: %s\n", name);
 			use_audio = 0;/*使用不可能*/
@@ -391,6 +444,7 @@ static void voice_load(void)
 		}
 	}
 }
+
 
 /*---------------------------------------------------------
 	オーディオシステムの初期化処理
@@ -414,11 +468,11 @@ void init_audio(void)
 		//ps pDebugScreenPrintf( "Unable to initialize SDL_AUDIO: %s\n", SDL_GetError());
 		return;
 	}
-
+//
 	const int audio_rate		= 44100;	// 22050
 	const Uint16 audio_format	= AUDIO_S16;
 	const int audio_channels	= 2;
-	const int audio_buffers 	= 1024;
+	const int audio_buffers 	= 1024; 	//512
 	if (Mix_OpenAudio(audio_rate, audio_format, audio_channels, audio_buffers) < 0)
 	{
 		//ps pDebugScreenPrintf( "Couldn't open audio: %s\n", SDL_GetError());
@@ -434,3 +488,5 @@ void init_audio(void)
 	use_audio = 1;/*使用可能*/
 	voice_load();
 }
+
+

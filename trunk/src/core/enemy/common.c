@@ -7,38 +7,25 @@
 /*static*/ /*extern*/  unsigned int common_boss_flags;
 
 
+static SPRITE *obj_effect[8];	/* [Å†] */
+
 /*---------------------------------------------------------
 	É{ÉXå`ë‘ïœçXéûÇÃã§í ÉãÅ[É`Éì
 ---------------------------------------------------------*/
-
+extern void draw_spell_card_name(void);/* spell_card.c */
 void common_boss_put_items(SPRITE *src)
 {
+	#if (1)
+	draw_spell_card_name();
+	#endif
 	#if (0==USE_DESIGN_TRACK)
 	play_voice_auto_track(VOICE07_BOMB);
 	#else
 	voice_play(VOICE07_BOMB, TRACK02_ALEART_IVENT);/*ÉeÉLÉgÅ[*/
 	#endif
 //++	((PLAYER_DATA *)player->data)->bo ssmode=B04_CHANGE;
-	item_from_bullets(SP_ITEM_05_HOSI);
+	bullets_to_hosi();/* íeëSïîÅAêØÉAÉCÉeÉÄÇ…Ç∑ÇÈ */
 	item_create_for_boss(src, ITEM_CREATE_MODE_02);
-}
-
-
-/*---------------------------------------------------------
-	É{ÉXà⁄ìÆèàóùÇÃã§í ÉãÅ[É`Éì
-	-------------------------------------------------------
----------------------------------------------------------*/
-void boss_move96(SPRITE *src)
-{
-	{
-		src->x256 += (src->vx256);
-			 if (src->x256< t256(		  0)+t256(24) ) 	{	src->x256=t256( 		0)+t256(24);}
-		else if (src->x256> t256(GAME_WIDTH)-t256(24) ) 	{	src->x256=t256(GAME_WIDTH)-t256(24);}
-	//
-		src->y256 += (src->vy256);
-			 if (src->y256 < t256(0)	)	{	src->y256 = t256(0);	}
-		else if (src->y256 > t256(96)	)	{	src->y256 = t256(96);	}
-	}
 }
 
 
@@ -57,7 +44,7 @@ void callback_hit_zako(SPRITE *src/*ìGé©ëÃ*/, SPRITE *tama/*é©íe*/)
 	{
 	//	ENEMY_BASE *data	= (ENEMY_BASE *)s->data;
 	//	WEAPON_BASE *w		= (WEAPON_BASE *)tama->data;
-		/*data->*/src->base_health -= /*w->*/tama->base_weapon_strength; 	/* çUåÇÇµÇƒëÃóÕå∏ÇÁÇ∑(ã≠Ç≥ï™à¯Ç≠) */
+		/*data->*/src->base_health -= /*w->*/tama->base_weapon_strength;	/* çUåÇÇµÇƒëÃóÕå∏ÇÁÇ∑(ã≠Ç≥ï™à¯Ç≠) */
 		if (0 >= /*data->*/src->base_health)			/* ÇOÇ©ïâílÇ»ÇÁÅAì|ÇµÇΩÅB */
 		{
 			bakuhatsu_add_zako04(src);
@@ -66,7 +53,7 @@ void callback_hit_zako(SPRITE *src/*ìGé©ëÃ*/, SPRITE *tama/*é©íe*/)
 				(src->callback_loser)(src);
 				src->callback_loser = NULL;
 			}
-			bonus_info_any_score_nodel(src, ((/*data->*/src->base_score)*(/*pd->now_stage*/player_now_stage/*level*/)) );/*é©ìÆè¡ãéÇ÷édólïœçX*/src->type = SP_DELETE;
+			bonus_info_any_score_nodel(src, ((/*data->*/src->base_score)*(/*pd->now_stage*/player_now_stage/*le vel*/)) );/*é©ìÆè¡ãéÇ÷édólïœçX*/src->type = SP_DELETE;
 			#if (0==USE_DESIGN_TRACK)
 			play_voice_auto_track(VOICE08_DEATH);
 			#else
@@ -76,37 +63,6 @@ void callback_hit_zako(SPRITE *src/*ìGé©ëÃ*/, SPRITE *tama/*é©íe*/)
 	}
 }
 //	int up_flags = (t->type==(SP_GROUP_JIKI_GET_ITEM|SP_GROUP_SHOT_ZAKO))?(ITEM_MOVE_FLAG_01_COLLECT|ITEM_MOVE_FLAG_06_RAND_XY):(ITEM_MOVE_FLAG_06_RAND_XY);
-
-
-/*---------------------------------------------------------
-	É{ÉXéÄñSîªíË
-	-------------------------------------------------------
-	Åö çUåÇÇÃèÍçáÇÃéÄñSîªíË 		DESTROY_CHECK_00_WIN_BOSS
-	Åö éûä‘êÿÇÍÇÃèÍçáÇÃéÄñSîªíË 	DESTROY_CHECK_01_IS_TIME_OUT
----------------------------------------------------------*/
-
-/*static*/ void boss_destroy_check_type(SPRITE *src/*ìGé©ëÃ*/, int check_type)
-{
-	if (0 >= /*data->boss_base.boss*/src->base_health)			/* ÇOÇ©ïâílÇ»ÇÁÅAì|ÇµÇΩÅB */
-	{
-		/*data->boss_base.boss*/src->base_health = 0;
-		if (DESTROY_CHECK_00_WIN_BOSS == check_type)
-		{
-			PLAYER_DATA *pd 	= (PLAYER_DATA *)src->data;
-			pd->state_flag		|= STATE_FLAG_09_IS_WIN_BOSS;	/* çUåÇÇ≈ì|ÇµÇΩÉtÉâÉOon */
-		}
-		if (NULL != src->callback_loser)
-		{
-			(src->callback_loser)(src);
-			src->callback_loser = NULL;
-		}
-	//	#if (0==USE_DESIGN_TRACK)
-	//	play_voice_auto_track(VOICE08_DEATH);
-	//	#else
-	//	voice_play(VOICE08_DEATH, TRACK05_ZAKO_DEATH);
-	//	#endif
-	}
-}
 
 
 /*---------------------------------------------------------
@@ -135,6 +91,94 @@ void callback_hit_zako(SPRITE *src/*ìGé©ëÃ*/, SPRITE *tama/*é©íe*/)
 //	parsys_add(NULL,100,0,tama->x,tama->y,30,0,0,50,PIXELATE,NULL);
 //	parsys_add(NULL,100,0,src->x,src->y,30,0,0,50,PIXELATE,NULL);
 
+
+
+/*---------------------------------------------------------
+	É{ÉXéÄñSîªíË
+	-------------------------------------------------------
+	Åö çUåÇÇÃèÍçáÇÃéÄñSîªíË 		DESTROY_CHECK_00_WIN_BOSS
+	Åö éûä‘êÿÇÍÇÃèÍçáÇÃéÄñSîªíË 	DESTROY_CHECK_01_IS_TIME_OUT
+---------------------------------------------------------*/
+
+/*static*/ void boss_destroy_check_type(SPRITE *src/*ìGé©ëÃ*/, int check_type)
+{
+	if (0 >= /*data->boss_base.boss*/src->base_health)			/* ÇOÇ©ïâílÇ»ÇÁÅAì|ÇµÇΩÅB */
+	{
+		/*data->boss_base.boss*/src->base_health = 0;
+		if (DESTROY_CHECK_00_WIN_BOSS == check_type)
+		{
+			PLAYER_DATA *pd 	= (PLAYER_DATA *)src->data;
+			pd->state_flag		|= STATE_FLAG_09_IS_WIN_BOSS;	/* çUåÇÇ≈ì|ÇµÇΩÉtÉâÉOon */
+		}
+	//	#if 1
+		lose_boss(src);/* ã§í  */
+	//	#else
+	//	if (NULL != src->callback_loser)
+	//	{
+	//		(src->callback_loser)(src);
+	//		src->callback_loser = NULL;
+	//	}
+	//	#endif
+	//	#if (0==USE_DESIGN_TRACK)
+	//	play_voice_auto_track(VOICE08_DEATH);
+	//	#else
+	//	voice_play(VOICE08_DEATH, TRACK05_ZAKO_DEATH);
+	//	#endif
+	}
+}
+
+/*---------------------------------------------------------
+
+---------------------------------------------------------*/
+static int ee_angle512;
+static int ff_angle512;
+/*static*/ void boss_effect(SPRITE *src)
+{
+	ee_angle512 += 2;	/* 2 âÒì]ë¨ìx */
+	ff_angle512 += 1;	/* 1 ägëÂèkè¨ë¨ìx */
+	int ww_angle512;
+	ww_angle512 = ee_angle512;
+	int vv_angle512;
+	vv_angle512 = ff_angle512;
+	int radius;
+	int i;
+	for (i=0; i<5; i++)
+	{
+		ww_angle512 += 10;	/* 10 âÒì]ë¨ìx */
+		vv_angle512 += 100; /* 20 ägëÂèkè¨ë¨ìx */
+		radius = ((sin512(vv_angle512))>>2)+16; /* 80==16+64 */
+		obj_effect[i]->x256 			= src->x256 + ((sin512((ww_angle512))*radius));
+		obj_effect[i]->y256 			= src->y256 + ((cos512((ww_angle512))*radius));
+		obj_effect[i]->m_zoom_x256		= ( (1/*+255*/+(radius<<2)) );
+		#if 1
+		/* ï`âÊópäpìx(â∫Ç™0ìxÇ≈ç∂âÒÇË(îΩéûåvâÒÇË)) */
+		obj_effect[i]->m_angleCCW512	= -ww_angle512;
+		#endif
+	}
+}
+/*static*/ void boss_effect_init(void)
+{
+//----[EFFECT]
+	int i;
+	for (i=0; i<5; i++)
+	{
+		obj_effect[i]						= sprite_add_gu(JIKI_ATARI_ITEM_16);
+//		obj_effect[i]->anim_speed			= 0;
+	//	obj_effect[i]->type 				= SP_ZAKO/*SP_BOSS01*/;
+		obj_effect[i]->type 				= (SPELL_SQUERE_);
+	//	obj_effect[i]->flags				|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK);
+		obj_effect[i]->flags				|= (/*SP_FLAG_VISIBLE|*/SP_FLAG_TIME_OVER);
+		obj_effect[i]->flags				&= (~(SP_FLAG_VISIBLE));	/*îÒï\é¶*/
+	}
+}
+/*static*/ void boss_effect_term(void)
+{
+	int i;
+	for (i=0; i<5; i++)
+	{
+		obj_effect[i]->type 				= SP_DELETE;
+	}
+}
 
 /*---------------------------------------------------------
 	óUì±É~ÉTÉCÉãìG
@@ -191,6 +235,14 @@ static int angle_jikinerai512(SPRITE *p, SPRITE *t)
 /*---------------------------------------------------------
 	ìGÇÃóUì±ÉzÅ[É~ÉìÉOÉ{ÉÄ(òZäpå`Ç≈ûÚêFÇÃìz)
 ---------------------------------------------------------*/
+//	PLAYER_DATA *pd = (PLAYER_DATA *)player->data;
+//	if (pd->state_flag & STATE_FLAG_03_SCORE_AUTO_GET_ITEM)
+//	if (pd->state_flag & (STATE_FLAG_06_IS_SCRIPT|STATE_FLAG_05_IS_BOSS) )
+//	{	/* É{ÉXÇ…éùÇøçûÇﬁÇ∆çÇìæì_ */
+//	//	bonus_info_score(s,SCORE_1000);/*é©ìÆè¡ãéÇ÷édólïœçXsrc->type = SP_DELETE;*/
+//		item_create(src, S P_ITEM_05_HOSI, 1, (ITEM_MOVE_FLAG_01_COLLECT|ITEM_MOVE_FLAG_06_RAND_XY) );src->type = SP_DELETE;
+//	}
+//
 enum
 {
 	ST00 = 0,
@@ -198,18 +250,11 @@ enum
 //	ST02,
 	ST03,
 };
+
 static void enemy_homing_move(SPRITE *src)
 {
-	PLAYER_DATA *pd = (PLAYER_DATA *)player->data;
-//	if (pd->state_flag & STATE_FLAG_03_SCORE_AUTO_GET_ITEM)
-	if (pd->state_flag & (STATE_FLAG_06_IS_SCRIPT|STATE_FLAG_05_IS_BOSS) )
-	{	/* É{ÉXÇ…éùÇøçûÇﬁÇ∆çÇìæì_ */
-	//	bonus_info_score(s,SCORE_1000);/*é©ìÆè¡ãéÇ÷édólïœçXsrc->type = SP_DELETE;*/
-		item_create(src, SP_ITEM_05_HOSI, 1, (ITEM_MOVE_FLAG_01_COLLECT|ITEM_MOVE_FLAG_06_RAND_XY) );src->type = SP_DELETE;
-	}
-//
 	ENEMY_HOMING_DATA *data = (ENEMY_HOMING_DATA *)src->data;
-	data->time_out -= 1/*fps_fa ctor*/;	//data->delay -= 1/*fps_fa ctor*/; data->range-=1/*fps_fa ctor*/;
+	data->time_out -= 1/*fps_fa ctor*/; //data->delay -= 1/*fps_fa ctor*/; data->range-=1/*fps_fa ctor*/;
 	#if 1
 	/* ÉfÉoÉbÉO */
 	/* éûä‘êÿÇÍÇ≈èIÇÌÇË */
@@ -328,9 +373,9 @@ void bullet_create_enemy_homing(SPRITE *src)
 	{
 		SPRITE *r;
 	//	r					= sprite_add_res(BASE_HOMING16_PNG);	/*ëfçﬁïœçX*/ /*20"rotating_rocket.png"*/
-	//	r->type 			= SP_ZAKO;/*SP_ZAKO*/ /*SP_BULLET*/ /*SP_ENEMY_HOMING*/
-		r					= sprite_add_bullet(TAMA_TYPE_HOMING16_PNG);	/*ëfçﬁïœçX*/ /*20"rotating_rocket.png"*/
-		r->type 			= SP_ZAKO;/*SP_ZAKO*/ /*SP_BULLET*/ /*SP_ENEMY_HOMING*/
+	//	r->type 			= SP_ZAKO;/*SP_ZAKO*/ /*S P_BULLET*/ /*SP_ENEMY_HOMING*/
+		r					= sprite_add_gu(TAMA_TYPE_HOMING16_PNG);	/*ëfçﬁïœçX*/ /*20"rotating_rocket.png"*/
+		r->type 			= SP_ZAKO;/*SP_ZAKO*/ /*S P_BULLET*/ /*SP_ENEMY_HOMING*/
 		r->callback_mover	= enemy_homing_move;
 		r->flags			|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK|SP_FLAG_TIME_OVER);
 		r->x256 			= src->x256;

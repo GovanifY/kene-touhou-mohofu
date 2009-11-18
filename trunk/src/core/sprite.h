@@ -40,24 +40,41 @@ enum
 	JIKI_ATARI_ITEM_16,
 	JIKI_ATARI_ITEM_80,/* 扇本体 */
 //
-	BASE_BOMBER_ATARI_0a,/*4*/
-	BASE_BOMBER_ATARI_0b,/*16*/
-	BASE_BOMBER_ATARI_0c,/*16*/
-	BASE_BOMBER_ATARI_0d,/*32*/
-	BASE_BOMBER_ATARI_0e,/*4*/
+	BASE_BOMBER_ATARI_0a,/*4*/		/* 霊夢A */
+	BASE_BOMBER_ATARI_0b,/*4*/		/* 霊夢B */
+	BASE_BOMBER_ATARI_0c,/*16*/ 	/* 魔理沙A */
+	BASE_BOMBER_ATARI_0d,/*16*/ 	/* 魔理沙B */
+	BASE_BOMBER_ATARI_0e,/*16*/ 	/* 魔理沙C */
+	BASE_BOMBER_ATARI_0f,/*16*/ 	/* レミリア */
+	BASE_BOMBER_ATARI_0g,/*32*/ 	/* チルノ */
+	BASE_BOMBER_ATARI_0h,/*4*/		/* 幽々子 */
 //
-	BASE_SHOT_ATARI_0a,/*4*/
-	BASE_SHOT_ATARI_0b,/*4*/
-	BASE_SHOT_ATARI_0c,/*4*/
-	BASE_SHOT_ATARI_0d,/*6*/
-	BASE_SHOT_ATARI_0e,/*8*/
+	BASE_SHOT_ATARI_0a,/*4*/		/* 霊夢A */
+	BASE_SHOT_ATARI_0b,/*4*/		/* 霊夢B */
+	BASE_SHOT_ATARI_0c,/*4*/		/* 魔理沙A */
+	BASE_SHOT_ATARI_0d,/*4*/		/* 魔理沙B */
+	BASE_SHOT_ATARI_0e,/*4*/		/* 魔理沙C */
+	BASE_SHOT_ATARI_0f,/*4*/		/* レミリア */
+	BASE_SHOT_ATARI_0g,/*6*/		/* チルノ */
+	BASE_SHOT_ATARI_0h,/*8*/		/* 幽々子 */
 //
-	BASE_NEEDLE_ATARI_0a,/*6*/
-	BASE_NEEDLE_ATARI_0b,/*8*/
-	BASE_NEEDLE_ATARI_0c,/*12*/
-	BASE_NEEDLE_ATARI_0d,/*16*/
-	BASE_NEEDLE_ATARI_0e,/*8*/
+	BASE_NEEDLE_ATARI_0a,/*6*/		/* 霊夢A */
+	BASE_NEEDLE_ATARI_0b,/*6*/		/* 霊夢B */
+	BASE_NEEDLE_ATARI_0c,/*8*/		/* 魔理沙A */
+	BASE_NEEDLE_ATARI_0d,/*8*/		/* 魔理沙B */
+	BASE_NEEDLE_ATARI_0e,/*8*/		/* 魔理沙C */
+	BASE_NEEDLE_ATARI_0f,/*12*/ 	/* レミリア */
+	BASE_NEEDLE_ATARI_0g,/*16*/ 	/* チルノ */
+	BASE_NEEDLE_ATARI_0h,/*8*/		/* 幽々子 */
 //
+	BASE_CORE_ATARI_0a,/*6*/		/* 霊夢A */
+	BASE_CORE_ATARI_0b,/*6*/		/* 霊夢B */
+	BASE_CORE_ATARI_0c,/*8*/		/* 魔理沙A */
+	BASE_CORE_ATARI_0d,/*8*/		/* 魔理沙B */
+	BASE_CORE_ATARI_0e,/*8*/		/* 魔理沙C */
+	BASE_CORE_ATARI_0f,/*12*/ 		/* レミリア */
+	BASE_CORE_ATARI_0g,/*16*/ 		/* チルノ */
+	BASE_CORE_ATARI_0h,/*8*/		/* 幽々子 */
 };
 #if 0
 	#define TAMA_TYPE_BULLET_DUMMY TAMA_TYPE_BULLET_MARU16_PNG
@@ -70,20 +87,26 @@ enum
 	#define TAMA_TYPE_OODAMA_08_PNG 		TAMA_ATARI_04
 	#define TAMA_TYPE_BULLET_KNIFE01_PNG	TAMA_ATARI_02
 	#define TAMA_TYPE_BULLET_KNIFE18_PNG	TAMA_ATARI_02
+	#define ZAKO_TYPE_ATARI16_PNG			JIKI_ATARI_ITEM_16
 #endif
 
 enum
 {
+#if 0
+	/* 廃止 */
 	/* ☆ BG面エフェクト */
-	BASE_TIKEI_BGPANEL1_PNG = 0,
+	BASE_TIKEI_BGPANEL1_PNG,
 	BASE_TIKEI_BGPANEL2_PNG,
+
 //	/* ☆ SHOT面エフェクト */
 //
 //	BASE_BOMBER_SLOW_PNG,
-	BASE_MAHOUJIN_0_PNG,
+	BASE_MAHOUJIN_0_PNG = 0, 	/* 敵の後ろのアレ */
 //
-	BASE_TIKEI_GROUNDER08_PNG,
+#endif
+	BASE_TIKEI_GROUNDER08_PNG = 0,
 //	/* ☆ ザコ面エフェクト */
+	#if 000
 //	/* ザコ(ザコ面エフェクト) */
 	BASE_OBAKE08_PNG,
 	BASE_YUKARI32_PNG,
@@ -98,6 +121,8 @@ enum
 	BASE_GREAT_FAIRY02_PNG,
 	BASE_AKA_MEIDO08_PNG,
 	BASE_AO_YOUSEI24_PNG,
+	BASE_RUMIA08_PNG,
+	#endif
 //
 //	/* ボス(ザコ面エフェクト) */
 //	BASE_BOSS_ALICE_0_PNG,
@@ -121,6 +146,7 @@ enum
 //	BASE_BOSS_KAGUYA_5_PNG,
 //
 	BASE_BOSS_SAKUYA_PNG,
+	#if 000
 //
 	//BASE_KEY_ICON_PNG,
 //
@@ -138,7 +164,7 @@ enum
 	BASE_CORE_PNG_ci,
 	BASE_CORE_PNG_yu,
 //
-	#if 000
+
 //	/* 小爆発(フロント面エフェクト) */
 	BASE_TR_BLUE_PNG,
 	BASE_TR_RED_PNG,
@@ -245,9 +271,9 @@ enum /*_priority_*/
 #define SP_GROUP_SHOT_SPECIAL	(0x0080)/*0x0100*/
 //
 #define SP_GROUP_JIKI_GET_ITEM	(0x0100)/*0x0100*/		/* === Guプレイヤー面 === */
-#define SP_GROUP_PLAYER_CORE	(0x0200)/*0x0100*/
-#define SP_GROUP_ZAKO			(0x0400)/*0x0400*/
-#define SP_GROUP_BOSS			(0x0800)/*0x0400*/
+//#define dummy_SP_GROUP_PLAYER_CORE	(0x0200)/*0x0100*/
+#define SP_GROUP_ZAKO			(0x0400)/*0x0400*/		/* === Gu敵面 === */
+#define SP_GROUP_BOSS			(0x0800)/*0x0400*/		/* === Gu敵面 === */
 //#define SP_GROUP_TEKI 		(0x0400)/*0x0400*/
 //#define SP_GROUP_ZAKO 		(SP_GROUP_TEKI|0)
 //#define SP_GROUP_BOSS 		(SP_GROUP_TEKI|SP_GROUP_SHOT_SPECIAL)
@@ -269,7 +295,10 @@ enum /*_priority_*/
 //#define SP_GROUP_TEXTS			(SP_GROUP_PLAYER)/*0x2000 */
 
 /* SP_GROUP_ETC == SP_GROUP_FRONT */
+#define SP_GROUP_FRONT			(SP_GROUP_ETC)/* フロント面 */
 
+		//←ウェポンアイテム(中)	//ウェポンアイテム(強)→SP_ITEM_EXTRA_SHIELD,
+		//→これらは低速ボムに吸収された。SP_ITEM_EXTRA_HOMING, SP_ITEM_EXTRA_HLASER,
 enum /*sprite_type*/
 {
 /*	自分A */
@@ -278,7 +307,7 @@ enum /*sprite_type*/
 //	S P_SHOT_BOSS,/*プレイヤーのボスに有効弾*/					//	= /*0x0200*/SP_GROUP_SHOTS, 	/* Waffen des Helden */
 //	S P_SHOT_ZAKO,/*プレイヤーのボスに無効弾*/
 /*	自分B */
-	SP_PLAYER_CORE/*プレイヤーのコア(あたり判定が死亡判定)*/		= /*0x0100*/SP_GROUP_PLAYER_CORE,
+	//dummy_SP_PLAYER_CORE/*プレイヤーのコア(あたり判定が死亡判定)*/		= /*0x0100*/SP_GROUP_PLAYER_CORE,
 /* ------------- */
 /*	ザコ敵 (ボム中、体当たりでプレイヤー死なない)  */
 	SP_ZAKO 														= /*0x0400*/SP_GROUP_ZAKO,		/* Die Boesen */
@@ -288,16 +317,16 @@ enum /*sprite_type*/
 	SP_BOSS,
 /* ------------- */
 /*	敵弾 */
-	SP_BULLET														= /*0x0800*/SP_GROUP_BULLETS,	/* ... und ihre Waffen */
+	//dummy_SP_BULLET												= /*0x0800*/SP_GROUP_BULLETS,	/* ... und ihre Waffen */
 /* ------------- */
 /*	アイテム */
-	SP_ITEM_00_P001 												= /*0x1000*/SP_GROUP_ITEMS, 	/* Bonus items */
-	SP_ITEM_01_P008,	//←ウェポンアイテム(中)	//ウェポンアイテム(強)→SP_ITEM_EXTRA_SHIELD,
-	SP_ITEM_02_BOMB,	//→これらは低速ボムに吸収された。SP_ITEM_EXTRA_HOMING, SP_ITEM_EXTRA_HLASER,
-	SP_ITEM_03_1UP,
-	SP_ITEM_04_P128,
-	SP_ITEM_05_HOSI,
-	SP_ITEM_06_TENSU,
+	SP_ITEM_00_P001 	/* [p]小 */ 								= /*0x1000*/SP_GROUP_ITEMS, 	/* Bonus items */
+	SP_ITEM_01_P008,	/* [P]大 */
+	SP_ITEM_04_P128,	/* [F] */
+	SP_ITEM_03_1UP, 	/* [1up] */
+	SP_ITEM_02_BOMB, 	/* [B] */
+	SP_ITEM_06_TENSU, 	/* [点] */
+	SP_ITEM_05_HOSI,	/* [☆] */
 	SP_ITEM_07_SPECIAL,
 /* ------------- */
 /*	ポーズ中移動可能物 */
@@ -306,7 +335,81 @@ enum /*sprite_type*/
 	SP_MUTEKI														= /*0x4000*/SP_GROUP_ETC,		/* diverses */
 };
 
-
+/* === Gu敵面 === */		/* --- まだ作ってない --- */
+enum	/* ☆ 魔方陣面エフェクト */
+{
+	TEKI_00_BOSS11	= /*0x0400*/SP_GROUP_ZAKO,
+	TEKI_01_BOSS12,
+	TEKI_02_BOSS13,
+	TEKI_03_BOSS14,
+	TEKI_04_BOSS21,
+	TEKI_05_BOSS22,
+	TEKI_06_BOSS23,
+	TEKI_07_BOSS24,
+//
+	TEKI_08_BOSS31,
+	TEKI_09_BOSS32,
+	TEKI_10_BOSS33,
+	TEKI_11_BOSS34,
+	TEKI_12_OBAKE01,
+	TEKI_13_OBAKE02,
+	TEKI_14_OBAKE03,
+	TEKI_15_OBAKE04,
+//
+	TEKI_16_YOUSEI11,
+	TEKI_17_YOUSEI12,
+	TEKI_18_YOUSEI13,
+	TEKI_19_YOUSEI14,
+	TEKI_20_YOUSEI21,
+	TEKI_21_YOUSEI22,
+	TEKI_22_YOUSEI23,
+	TEKI_23_YOUSEI24,
+//
+	TEKI_24_YOUSEI31,
+	TEKI_25_YOUSEI32,
+	TEKI_26_YOUSEI33,
+	TEKI_27_YOUSEI34,
+	TEKI_28_YOUSEI41,
+	TEKI_29_YOUSEI42,
+	TEKI_30_YOUSEI43,
+	TEKI_31_YOUSEI44,
+//
+	TEKI_32_YOUSEI51,
+	TEKI_33_YOUSEI52,
+	TEKI_34_YOUSEI53,
+	TEKI_35_YOUSEI54,
+	TEKI_36_YOUSEI61,
+	TEKI_37_YOUSEI62,
+	TEKI_38_YOUSEI63,
+	TEKI_39_YOUSEI64,
+//
+	TEKI_40_CHUU_YOUSEI1,
+	TEKI_41_CHUU_YOUSEI2,
+	TEKI_42_CHUU_YOUSEI3,
+	TEKI_43_CHUU_YOUSEI4,
+	TEKI_44_CHUU_YOUSEI5,
+	TEKI_45_CHUU_YOUSEI6,
+	TEKI_46_CHUU_YOUSEI7,
+	TEKI_47_CHUU_YOUSEI8,
+//
+	TEKI_48_OBAKE1,
+	TEKI_49_OBAKE2,
+	TEKI_50_OBAKE3,
+	TEKI_51_MAHOJIN1,
+	TEKI_52_MAHOJIN2,
+	TEKI_53_INYOU_DAI,
+	TEKI_54_CHOU1,
+	TEKI_55_CHOU2,
+//
+	TEKI_56_CHEN,
+	TEKI_57_BLUE_BOOK,
+	TEKI_58_RED_BOOK,
+	TEKI_59_HAI_KEDAMA,
+	TEKI_60_AKA_KEDAMA,
+	TEKI_61_NIJI_HOSI,
+	TEKI_62_TATSUMAKI,
+	TEKI_63_HOMING_STUFF,
+};
 /* === Gu魔方陣面 === */		/* --- まだ作ってない --- */
 
 enum	/* ☆ 魔方陣面エフェクト */
@@ -325,14 +428,14 @@ enum	/* ☆ 魔方陣面エフェクト */
 
 enum	/* ☆ フロント面エフェクト */
 {	/* 自分のあたり判定位置表示用コア(フロント面エフェクト) */
-	JIKI_CORE_00_REIMU	= /*0x4000*/SP_GROUP_ETC,
-	JIKI_CORE_01_MARISA,
-	JIKI_CORE_02_,
-	JIKI_CORE_03_,
-	JIKI_CORE_04_,
-	JIKI_CORE_05_,
-	JIKI_CORE_06_,
-	JIKI_CORE_07_,
+	JIKI_CORE_00_REIMU_A	= /*0x4000*/SP_GROUP_ETC,
+	JIKI_CORE_01_REIMU_B,
+	JIKI_CORE_02_MARISA_A,
+	JIKI_CORE_03_MARISA_B,
+	JIKI_CORE_04_MARISA_C,
+	JIKI_CORE_05_REMILIA,
+	JIKI_CORE_06_CHIRNO,
+	JIKI_CORE_07_YUYUKO,
 //	/* 小爆発 / ザコ消滅爆発(フロント面エフェクト) */
 	BAKUHA00,	/* 小爆発(黄色?、現在ダミー) */
 	BAKUHA01,	/* 小爆発(青)BASE_TR_BLUE_PNG */
@@ -352,7 +455,10 @@ enum	/* ☆ フロント面エフェクト */
 	BAKUHA0e,	/* 火炎爆発 */
 	BAKUHA0f,	/* 火炎爆発 */
 //
-	SPELL_LOGO_,/* Border Power of Spiritual */
+	SPELL_SQUERE_,	/* [□] x 5 */
+	SP_GROUP_ETC_DUMMY_REMILIA,
+	SP_GROUP_ETC_DUMMY_SLOW_BOMB,
+//	SPELL_LOGO_,/* Border Power of Spiritual */
 	SPELL_TACHIE_,
 };
 /* Border Power of Spiritual. 霊歌で力を発揮する境界. 霊歌での力の境界 */
@@ -445,9 +551,28 @@ enum
 };
 
 /* === Gu弾幕面 === */
+/*haisi_BULLET_MINI8_00_AKA */
+//	haisi_BULLET_MINI8_03_AKA,
+//	haisi_BULLET_MINI8_04_KIIRO,
+//	haisi_BULLET_MINI8_05_AOI,
+//	haisi_BULLET_MINI8_06_AOI,
+//	haisi_BULLET_MINI8_07_YUKARI,
+//	haisi_BULLET_MINI8_01_AKA,
+//	haisi_BULLET_MINI8_02_KIIRO,
+
 enum
 {
-	BULLET_MARU8_00_AKA 				= SP_GROUP_BULLETS/*0x0800*/,
+//1
+	BULLET_00_HOSI_TEN			= SP_GROUP_BULLETS/*0x0800*/,
+	BULLET_KOME_01_AOI,
+	BULLET_KOME_02_AKA,
+	BULLET_KOME_03_YUKARI,
+	BULLET_KOME_04_MIDORI,
+	BULLET_KOME_05_KIIRO,
+	BULLET_KOME_06_dummy,
+	BULLET_KOME_07_dummy,
+//2
+	BULLET_MARU8_00_AKA,
 	BULLET_MARU8_01_YUKARI,
 	BULLET_MARU8_02_AOI,
 	BULLET_MARU8_03_MIDORI,
@@ -455,33 +580,24 @@ enum
 	BULLET_MARU8_05_MIDORI,
 	BULLET_MARU8_06_KIIRO,
 	BULLET_MARU8_07_AOI,
-//
-	BULLET_MINI8_00_AKA,
-	BULLET_MINI8_01_AKA,
-	BULLET_MINI8_02_KIIRO,
-	BULLET_MINI8_03_AKA,
-	BULLET_MINI8_04_KIIRO,
-	BULLET_MINI8_05_AOI,
-	BULLET_MINI8_06_AOI,
-	BULLET_MINI8_07_YUKARI,
-//
-	BULLET_MARU12_00_SIRO,	/*12*/
-	BULLET_MARU12_01_AKA,	/*12*/
-	BULLET_MARU12_02_MIDORI,/*12*/
-	BULLET_MARU12_03_AOI,	/*12*/
+//3
+	BULLET_MARU8_08_dummy,
+	BULLET_MARU8_09_dummy,
+	BULLET_MARU8_10_dummy,
+	BULLET_MARU8_11_dummy,
+	BULLET_MARU8_12_dummy,
+	BULLET_MARU8_13_dummy,
+	BULLET_CAP16_04_SIROI,
+	BULLET_CAP16_05_SIROI,
+//4
 	BULLET_MARU10_00_AOI,
 	BULLET_MARU10_01_MIDORI,
 	BULLET_MARU10_02_MIDORI,
 	BULLET_MARU10_03_MIDORI,
-//4
-	BULLET_HARI32_00_AOI,
-	BULLET_HARI32_01_AKA,
-	BULLET_HARI32_02_KIIRO,
-	BULLET_HARI32_03_DAIDAI,
-	BULLET_KNIFE20_04_AOI,
-	BULLET_KNIFE20_05_AKA,
-	BULLET_KNIFE20_06_YUKARI,
-	BULLET_KNIFE20_07_MIDORI,
+	BULLET_MARU12_00_SIRO,	/*12*/
+	BULLET_MARU12_01_AKA,	/*12*/
+	BULLET_MARU12_02_MIDORI,/*12*/
+	BULLET_MARU12_03_AOI,	/*12*/
 //5
 	BULLET_UROKO14_00_AOI,
 	BULLET_UROKO14_01_AKA,
@@ -489,36 +605,40 @@ enum
 	BULLET_UROKO14_03_MIDORI,
 	BULLET_UROKO14_04_MIZUIRO,
 	BULLET_UROKO14_05_KIIRO,
-	BULLET_CAP16_04_SIROI,
-	BULLET_CAP16_05_SIROI,
+	BULLET_UROKO14_06_dummy,
+	BULLET_UROKO14_07_dummy,
 //6
-	BULLET_KOME_01_AOI,
-	BULLET_KOME_02_AKA,
-	BULLET_KOME_03_YUKARI,
-	BULLET_KOME_04_MIDORI,
-	BULLET_KOME_05_KIIRO,
-	BULLET_KUNAI12_06_AOI,
-	BULLET_KUNAI12_00_AKA,
-	BULLET_KUNAI12_07_MIDORI,
-//7
+	BULLET_KUNAI12_00_AOI,
 	BULLET_KUNAI12_01_AKA,
 	BULLET_KUNAI12_02_MIDORI,
-	BULLET_KUNAI12_03_YUKARI,
-	BULLET_KUNAI12_04_AOI,
+	BULLET_KUNAI12_03_MIDORI,
+	BULLET_KUNAI12_04_YUKARI,
+	BULLET_KUNAI12_05_AOI,
+	BULLET_KUNAI12_06_KIN,
+	BULLET_KUNAI12_07_KIN,
+//7
 	BULLET_OFUDA12_00_AOI,
 	BULLET_OFUDA12_01_AKA,
 	BULLET_OFUDA12_02_YUKARI,
 	BULLET_OFUDA12_03_MIDORI,
+	BULLET_KNIFE20_04_AOI,
+	BULLET_KNIFE20_05_AKA,
+	BULLET_KNIFE20_06_YUKARI,
+	BULLET_KNIFE20_07_MIDORI,
 //8
+	BULLET_HARI32_00_AOI,
+	BULLET_HARI32_01_AKA,
+	BULLET_HARI32_02_KIIRO,
+	BULLET_HARI32_03_DAIDAI,
 	BULLET_OODAMA32_00_SIROI,
 	BULLET_OODAMA32_01_AOI,
 	BULLET_OODAMA32_02_AKA,
 	BULLET_OODAMA32_03_YUKARI,
-	BULLET_OODAMA32_04_MIDORI,
-	BULLET_OODAMA32_05_AOI,
-	BULLET_OODAMA32_06_KIIRO,
-	BULLET_OODAMA32_07_PINK,
 };
+//	BULLET_OODAMA32_04_MIDORI,
+//	BULLET_OODAMA32_05_AOI,
+//	BULLET_OODAMA32_06_KIIRO,
+//	BULLET_OODAMA32_07_PINK,
 
 
 /* 針弾とかあるから、現在図形判定しないと詐欺判定になる。 */
@@ -531,6 +651,7 @@ typedef struct /*_point256*/
 	int x256;	/*	union POINT */	/* x表示位置  (256固定小数点形式) / akt. Position */
 	int y256;	/*	union POINT */	/* y表示位置  (256固定小数点形式) / akt. Position */
 } POINT256;
+/* t256座標 */
 
 typedef struct /*_point_vector256*/
 {
@@ -539,6 +660,7 @@ typedef struct /*_point_vector256*/
 	int vx256;	/*	union POINT_VECTOR */	/* 共用regist_vector(); */	/*union BULLET_VECTOR_DATA*/
 	int vy256;	/*	union POINT_VECTOR */	/* 共用regist_vector(); */	/*union BULLET_VECTOR_DATA*/
 } POINT_VECTOR256;
+/* t256座標 + t256ベクトル */
 
 
 #if 1
@@ -549,6 +671,16 @@ typedef struct /*_point_vector256*/
 	#define base_score					user01
 	//#define base_state					user01
 #endif
+//
+/* スプライトの使い方
+
+分類		自機		自弾					敵					敵弾			爆発
+user00		--			base_weapon_strength	base_health			base_time_out	base_time_out
+			--			武器強さ				体力				時間			時間
+user01		--			--						base_score			--				--
+			--			--						スコア				--				--
+2018897 2018881
+*/
 //
 typedef struct _sprite
 {
@@ -586,8 +718,8 @@ typedef struct _sprite
 //
 	Uint8 yx_anim_frame;			/* / アニメパターンの番号(何コマ目か) */	 /*int*/			/* action. Frame */
 	Uint8 yx_frames;				/* / 表示パターン総数 / Anzahl Frames */
-	Uint8 anim_count;				/*int*/ 	// Sint8 anim_count;			/* intern: Zaehler f. anim_speed */
-	Uint8 anim_speed/* 256 */;		/*逆転アニメ禁止に変更*/		/* アニメーション速度 / Geschw. der Animation */	 /*Sint8*/ /*Uint8*/
+//	Uint8 anim_count;				/*int*/ 	// Sint8 anim_count;			/* intern: Zaehler f. anim_speed */
+//	Uint8 anim_speed/* 256 */;		/*逆転アニメ禁止に変更*/		/* アニメーション速度 / Geschw. der Animation */	 /*Sint8*/ /*Uint8*/
 //
 //[16]
 } SPRITE;
@@ -624,7 +756,7 @@ typedef struct
 	Uint8 y_divide_frames_m1;			/* (縦分割数-1) */
 //
 	Uint8 priority; 					/* 描画プライオリティー(表示優先度) */
-	Uint8 anime_speed;					/* アニメーション速度 */
+	Uint8 aaa_dummy_anime_speed;					/* 現在ダミー アニメーション速度 */
 	Uint8 atari_hankei; 				/* あたり判定円の半径(あたり判定の大きさ) */
 	Uint8 aaa_dummy_resurved;			/* 現在ダミー */
 } IMAGE_RESOURCE;
@@ -637,8 +769,10 @@ typedef struct
 //extern SPRITE *spr ite_add_file 0(char *filename, int frames, Uint8 priority, int use_alpha);
 //extern SPRITE *spr ite_add_file(char *filename, int frames, Uint8 priority);
 //extern SPRITE *spr ite_add_file2(char *filename, int frames, Uint8 priority);
-extern SPRITE *sprite_add_res(int image_resource_num);
-extern SPRITE *sprite_add_bullet(int bullet_type_num);
+
+extern SPRITE *sprite_add_res(			int image_resource_num);	/* SDL、汎用スプライト */
+extern SPRITE *sprite_add_gu(			int bullet_type_num);		/* gu移行中、汎用スプライト */
+extern SPRITE *sprite_add_only_bullet(	int bullet_type_num);		/* gu移行中、弾専用 */
 
 #if (0)
 extern SPRITE *spr ite_add_000xy00(
@@ -673,6 +807,8 @@ extern void sprite_work000(int type);/**/
 //extern void sprite_work222(int type);/*弾幕用*/
 
 extern SPRITE *sprite_collision_check(SPRITE *tocheck, int type);
+/* 弾幕リストは分割する予定 */
+extern SPRITE *sprite_collision_check_bullets(SPRITE *tocheck);
 
 
 #if 1
@@ -703,15 +839,19 @@ extern SPRITE *sprite_collision_check(SPRITE *tocheck, int type);
 typedef struct
 {
 	UINT8 used;
-	UINT8 dummy_alpha;
-	UINT8 texture_id;
-	UINT8 center;	/*dummy*/
+	UINT8 bullet_num;	/* 敵弾の番号 */			//	UINT8 dummy_alpha;
+	UINT8 harf_wide; 	/* (1/2)幅[ドット] */		//	UINT8 texture_id;
+	UINT8 harf_height; 	/* (1/2)高さ[ドット] */		//	UINT8 center;	/*dummy*/
+	int rotation_z;
+	int rotation_tmp;
+	u32 color8888;//	int color8888;
 //
 	/* - public */
 	int x256;
 	int y256;
 	int w;
 	int h;
+//
 	int tx;
 	int ty;
 	#if (1==USE_ZOOM_XY)
@@ -720,11 +860,10 @@ typedef struct
 	#else //(0==USE_ZOOM_XY)
 	int zoom_xy256;
 	#endif/* (1==USE_ZOOM_XY) */
-	int rotation_z;
 	#if (1==USE_ZBUFFER)
 	int priority;		/* 表示優先順位 */	/* unsigned short */
 	#endif/* (1==USE_ZBUFFER) */
-	u32 color8888;//	int color8888;
+	int aaa;
 //	Image *Texture;//
 	//SDL_Surface *Texture_ptr;
 } TGameSprite /*, *PTGameSprite*/;

@@ -20,7 +20,7 @@ typedef struct
 	int state;			/* ó‘Ô */
 	int kaiten_houkou;	/* ‰ñ“]•ûŒü */
 	int speed256;		/* ‘¬“x */
-	int level;
+//	int enemy_rank;		/* Ý’èƒtƒ@ƒCƒ‹‚©‚ç‚Ì“G‚Ì‹­‚³ */
 } TATSUMAKI1_DATA;
 static int destoroy;
 
@@ -112,6 +112,11 @@ static void move_tatsumaki1(SPRITE *src)
 		}
 		break;
 	}
+//
+	if (0 == data->kaiten_houkou)
+			{	src->m_angleCCW512 += 5;	}
+	else	{	src->m_angleCCW512 -= 5;	}
+	mask512(src->m_angleCCW512);
 }
 
 /*---------------------------------------------------------
@@ -120,23 +125,25 @@ static void move_tatsumaki1(SPRITE *src)
 
 void add_zako_tatsumaki1(STAGE_DATA *l)/*int lv*/
 {
-	int lv;
-	lv	= l->user_y;
+//	int enemy_rank;	enemy_rank	= l->user_y;
 //
 	destoroy = 0;
 	int i;
 	for (i=0; i<NUM_OF_ENEMIES; i++)
 	{
 		SPRITE *s;
-		s						= sprite_add_res(BASE_TATSUMAKI16_PNG); 	//s->anim_speed=2/*3*/;/*11"pr otectball.png"*/
-		s->type 				= SP_ZAKO/*_10_TATSUMAKI1*/;
+//		s						= sp rite_add_res(BASE_TATSUMAKI16_PNG); 	//s->anim_speed=2/*3*/;/*11"pr otectball.png"*/
+		s						= sprite_add_gu(ZAKO_TYPE_ATARI16_PNG); 	//s->anim_speed=2/*3*/;/*11"pr otectball.png"*/
+		s->type 				= /*SP_ZAKO*/TEKI_62_TATSUMAKI/*_10_TATSUMAKI1*/;
+//		s->type 				= SP_ZAKO/*_10_TATSUMAKI1*/;
 		s->flags				|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK|SP_FLAG_TIME_OVER);
 		s->callback_mover		= move_tatsumaki1;
 		s->callback_loser		= lose_tatsumaki1;
 		s->callback_hit_enemy	= callback_hit_zako;
-		s->anim_frame			= (i&(16-1));/*(i&(8-1)) (i%11)*/
+//		s->an im_frame			= (i&(16-1));/*(i&(8-1)) (i%11)*/
+		s->m_angleCCW512		= ((i&(16-1))<<5);
 		s->x256 				= t256(GAME_WIDTH/2)-((s->w128));
-		s->y256 				= -(((i+1)*(s->h128+s->h128)));
+		s->y256 				= -(((i+1)*(t256(24)/*s->h128+s->h128*/)));
 		TATSUMAKI1_DATA *data;
 		data					= mmalloc(sizeof(TATSUMAKI1_DATA));
 		s->data 				= data;
@@ -145,7 +152,7 @@ void add_zako_tatsumaki1(STAGE_DATA *l)/*int lv*/
 		data->state 			= 0;
 		data->speed256			= t256(2);/*‘¬‚·‚¬*/	/*3+difficulty+lv/3*/
 		data->kaiten_houkou 	= (i&1);/*(0==i%2)?(0):(1)*/
-		data->level 			= lv;
+//		data->enemy_rank 			= enemy_rank;
 	}
 }
 #undef NUM_OF_ENEMIES

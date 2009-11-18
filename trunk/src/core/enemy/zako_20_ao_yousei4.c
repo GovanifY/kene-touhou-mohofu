@@ -63,7 +63,7 @@ static void move_ao_yousei4(SPRITE *src)
 					(t256(2.0)+((difficulty)<<6)),
 					ANGLE_JIKI_NERAI_DAN,
 					(int)(512/24),
-					BULLET_KUNAI12_04_AOI+((ra_nd())&3),
+					BULLET_KUNAI12_04_YUKARI+((ra_nd())&7),
 					8);
 			}	/*‚È‚é‚×‚­‹¤’Ê‰»*/
 			break;	/*(t256(3.0)+((difficulty)<<6))*/	/*((difficulty<<(1+8)))*/
@@ -76,7 +76,7 @@ static void move_ao_yousei4(SPRITE *src)
 			if (difficulty) {	bullet_create_aka_maru_jikinerai(src, (512-data->time_out)+t256(difficulty));	}
 			break;
 		case 250:/* “|‚¹‚é‚æ‚¤‚É‚·‚é */
-			/*data->base.*/src->base_health	= (1+(difficulty)); 	/*(3+(difficulty))*/	/*1+(difficulty<<2)*/
+			/*data->base.*/src->base_health = (1+(difficulty)); 	/*(3+(difficulty))*/	/*1+(difficulty<<2)*/
 			break;
 		}
 		break;
@@ -97,14 +97,18 @@ static void move_ao_yousei4(SPRITE *src)
 /* CCW‚Ìê‡ */
 	src->x256+=((sin512((data->angleCCW512))*data->speed256)>>8)/**fps_fa ctor*/;
 	src->y256+=((cos512((data->angleCCW512))*data->speed256)>>8)/**fps_fa ctor*/;
-//
-//	src->yx_anim_frame = (8+((data->time_out>>2)&(8-1)));
-	src->yx_anim_frame = (0x20 | ((data->time_out)&(0x10)) | ((data->time_out>>2)&(4-1)));
+
+//	src->yx_an im_frame = (8+((data->time_out>>2)&(8-1)));
+//	src->yx_an im_frame = (0x20 | ((data->time_out)&(0x10)) | ((data->time_out>>2)&(4-1)));
 /*
-data->time_out 	  ---a bc--
-src->yx_anim_frame  yyyy xxxx
-src->yx_anim_frame  --1a --bc
+data->time_out		 ---a bc--
+src->yx_an im_frame  yyyy xxxx
+src->yx_an im_frame  --1a --bc
 */
+	if (SP_DELETE != src->type)
+	{
+		src->type				= (TEKI_16_YOUSEI11)+((data->time_out>>2)&(8-1));
+	}
 }
 
 /*---------------------------------------------------------
@@ -114,13 +118,14 @@ src->yx_anim_frame  --1a --bc
 void add_zako_ao_yousei4(STAGE_DATA *l)/*int lv*/
 {
 	SPRITE *s;
-	s						= sprite_add_res(BASE_AO_YOUSEI24_PNG);/*7"fairy.png"*/
-	s->type 				= SP_ZAKO/*_16_AO_YOUSEI1*/;
+//	s						= sp rite_add_res(BASE_AO_YOUSEI24_PNG);/*7"fairy.png"*/
+	s						= sprite_add_gu(ZAKO_TYPE_ATARI16_PNG);
+	s->type 				= /*SP_ZAKO*/TEKI_16_YOUSEI11/*_16_AO_YOUSEI1*/;
 	s->flags				|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK|SP_FLAG_TIME_OVER);
 	s->callback_mover		= move_ao_yousei4;
 	s->callback_loser		= lose_ao_yousei4;
 	s->callback_hit_enemy	= callback_hit_zako;
-	s->anim_speed			= 0/*4*/;
+//	s->anim_speed			= 0/*4*/;
 	AO_YOUSEI4_DATA *data;
 	data					= mmalloc(sizeof(AO_YOUSEI4_DATA));
 	s->data 				= data;

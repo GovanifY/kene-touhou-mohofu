@@ -72,7 +72,7 @@ static void move_ao_yousei3(SPRITE *src)
 			data->state++;
 			break;
 		case 250:/* 倒せるようにする */
-			/*data->base.*/src->base_health	= (1+(difficulty)); 	/*(3+(difficulty))*/	/*1+(difficulty<<2)*/
+			/*data->base.*/src->base_health = (1+(difficulty)); 	/*(3+(difficulty))*/	/*1+(difficulty<<2)*/
 			break;
 		}
 		/* 攻撃 */
@@ -84,10 +84,10 @@ static void move_ao_yousei3(SPRITE *src)
 					(t256(2.0)+((difficulty)<<6)),
 					ANGLE_JIKI_NERAI_DAN,
 					(int)(512/(8)),
-					BULLET_KUNAI12_04_AOI+((ra_nd())&3),
+					BULLET_KUNAI12_04_YUKARI+((ra_nd())&7),
 					8);
 			}	/*なるべく共通化*/
-		//	if (difficulty) {	bullet_create_aka_maru_jikinerai(s, (512-data->time_out)+t256(difficulty));	}
+		//	if (difficulty) {	bullet_create_aka_maru_jikinerai(s, (512-data->time_out)+t256(difficulty)); }
 					/*(t256(3.0)+((difficulty)<<6))*/	/*((difficulty<<(1+8)))*/
 					/*t256((difficulty<<2))*/ /*5*/ 	/*"kugel.png", 0*/
 					/*at an2(player->y-src->y+player->h/2,player->x-src->x-player->w/2)*/
@@ -114,13 +114,18 @@ static void move_ao_yousei3(SPRITE *src)
 	#if (1==USE_X_HOUKOU)
 	src->y256 += (src->vy256)/**fps_fa ctor*/;
 	#endif
-//	src->yx_anim_frame = (8+((data->time_out>>2)&(8-1)));
-	src->yx_anim_frame = (src->AO_YOUSEI3_anime_houkou | ((data->time_out>>2)&(4-1)));
+
+//	src->yx_an im_frame = (8+((data->time_out>>2)&(8-1)));
+//	src->yx_an im_frame = (src->AO_YOUSEI3_anime_houkou | ((data->time_out>>2)&(4-1)));
 /*
-data->time_out 	  ---a bc--
-src->yx_anim_frame  yyyy xxxx
-src->yx_anim_frame  --1a --bc
+data->time_out		 ---a bc--
+src->yx_an im_frame  yyyy xxxx
+src->yx_an im_frame  --1a --bc
 */
+	if (SP_DELETE != src->type)
+	{
+		src->type				= (TEKI_16_YOUSEI11)+(src->AO_YOUSEI3_anime_houkou | ((data->time_out>>2)&(4-1)));
+	}
 }
 //		data->speed256 += 2;
 	//	data->angleCCW512 += 2;
@@ -138,13 +143,14 @@ void add_zako_ao_yousei3(STAGE_DATA *l)/*int lv*/
 {
 	{
 		SPRITE *s;
-		s						= sprite_add_res(BASE_AO_YOUSEI24_PNG);/*7"fairy.png"*/
-		s->type 				= SP_ZAKO/*_16_AO_YOUSEI1*/;
+	//	s						= sp rite_add_res(BASE_AO_YOUSEI24_PNG);/*7"fairy.png"*/
+		s						= sprite_add_gu(ZAKO_TYPE_ATARI16_PNG);
+		s->type 				= /*SP_ZAKO*/TEKI_16_YOUSEI11/*_16_AO_YOUSEI1*/;
 		s->flags				|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK|SP_FLAG_TIME_OVER);
 		s->callback_mover		= move_ao_yousei3;
 		s->callback_loser		= lose_ao_yousei3;
 		s->callback_hit_enemy	= callback_hit_zako;
-		s->anim_speed			= 0/*4*/;
+//		s->anim_speed			= 0/*4*/;
 		//
 		s->y256 				= ((l->user_y)<<8);
 		s->vx256			= ((l->user_x));
@@ -156,12 +162,12 @@ void add_zako_ao_yousei3(STAGE_DATA *l)/*int lv*/
 			if (0 < (s->vx256))
 			{/* [引数 user_y が正方向の場合、右へ移動(→)] [引数yが負方向の場合、下へ移動(↓)] */
 				s->x256 			= t256(-30);
-				s->AO_YOUSEI3_anime_houkou	= 0x00;
+				s->AO_YOUSEI3_anime_houkou	= ((0x00)>>2);
 			}
 			else
 			{/* [引数 user_y が正方向の場合、左へ移動(←)] [引数yが負方向の場合、上へ移動(↑)] */
 				s->x256 			= t256(360);/* 360 > 352(x_max) > 272(y_max) */
-				s->AO_YOUSEI3_anime_houkou	= 0x50;
+				s->AO_YOUSEI3_anime_houkou	= ((0x50)>>2);
 			}
 		}
 		//
@@ -179,7 +185,7 @@ void add_zako_ao_yousei3(STAGE_DATA *l)/*int lv*/
 			}
 			s->vy256			= (s->vx256);
 			s->vx256			= (0);
-			s->AO_YOUSEI3_anime_houkou		= 0x20;
+			s->AO_YOUSEI3_anime_houkou		= ((0x20)>>2);
 		}
 		#endif
 		//

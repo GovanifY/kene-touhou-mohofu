@@ -34,49 +34,71 @@ static IMAGE_RESOURCE my_bullet_resource[] =
 	/* 86 */		{	/* "tama/knife.png"*/DUMMY_IMG, 			1,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0, 2, 0 },/* 垂直降下ナイフ(赤) */
 	/* 87 */		{	/* "tama/knife_core16.png"*/DUMMY_IMG,		1,	16,  iyx(16,   1), PRIORITY_05_BULLETS,   0, 2, 0 },/* 全方向ナイフ(青) */
 	#else
-	/*	0 */		{	/* "tama/bullet_beam16.png"*/DUMMY_IMG, 	0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0, (2), 0 },	/* 2 */
-	/*	1 */		{	/* "tama/bullet_beam16.png"*/DUMMY_IMG, 	0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0, (4), 0 },	/* 4 */
+	/*	0 */		{	/* "tama/bullet_beam16.png"*/DUMMY_IMG, 	0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0,  (2), 0 }, /* 2 */
+	/*	1 */		{	/* "tama/bullet_beam16.png"*/DUMMY_IMG, 	0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0,  (4), 0 }, /* 4 */
 	#endif
-	/* 103 */		{	"zako/homing16.png",						0,	16,  iyx(16,   1), PRIORITY_05_BULLETS,   0, (2), 0 },	/* ザコ 誘導弾 */
+	/* 103 */		{	"zako/homing16.png",						0,	16,  iyx(16,   1), PRIORITY_05_BULLETS,   0,  (2), 0 }, /* ザコ 誘導弾 */
 //
-	/*	3 */		{	/* "tama/bullet_beam16.png"*/DUMMY_IMG, 	0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0, (16), 0 }, /* 4 */
-	/*	4 */		{	/* "tama/bullet_beam16.png"*/DUMMY_IMG, 	0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0, (80), 0 }, /* 4 */
+	/*	3 */		{	/* "tama/bullet_beam16.png"*/DUMMY_IMG, 	0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0, (16), 0 }, /* 4 */ 		//	JIKI_ATARI_ITEM_16,
+	/*	4 */		{	/* "tama/bullet_beam16.png"*/DUMMY_IMG, 	0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0, (80), 0 }, /* 4 */ 		//	JIKI_ATARI_ITEM_80,/* 扇本体 */
 //
-	/*	5 */		{	/* "tama/bullet_beam16.png"*/DUMMY_IMG, 	0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0, (2/* 4*/), 0 }, /* re / */
-	/*	6 */		{	/* "tama/bullet_beam16.png"*/DUMMY_IMG, 	0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0, (16), 0 }, 	/* ma / */
-	/*	7 */		{	/* "tama/bullet_beam16.png"*/DUMMY_IMG, 	0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0, (16), 0 }, 	/* oz / */
-	/*	8 */		{	/* "tama/bullet_beam16.png"*/DUMMY_IMG, 	0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0, (32), 0 }, 	/* ci / */
-	/*	9 */		{	/* "tama/bullet_beam16.png"*/DUMMY_IMG, 	0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0, (4), 0 },		/* yu / */
+	/*	5 */		{	/* "tama/bullet_beam16.png"*/DUMMY_IMG, 	0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0,  (2), 0 }, 	/* re a */	//	BASE_BOMBER_ATARI_0a,/*4*/
+	/*	5 */		{	/* "tama/bullet_beam16.png"*/DUMMY_IMG, 	0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0,  (2), 0 }, 	/* re b */	//	BASE_BOMBER_ATARI_0a,/*4*/
+	/*	6 */		{	/* "tama/bullet_beam16.png"*/DUMMY_IMG, 	0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0, (16), 0 }, 	/* ma a */	//	BASE_BOMBER_ATARI_0b,/*16*/
+	/*	6 */		{	/* "tama/bullet_beam16.png"*/DUMMY_IMG, 	0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0, (16), 0 }, 	/* ma b */	//	BASE_BOMBER_ATARI_0b,/*16*/
+	/*	7 */		{	/* "tama/bullet_beam16.png"*/DUMMY_IMG, 	0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0, (16), 0 }, 	/* oz / */	//	BASE_BOMBER_ATARI_0c,/*16*/
+	/*	9 */		{	/* "tama/bullet_beam16.png"*/DUMMY_IMG, 	0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0,  (4), 0 }, 	/* yu / */	//	BASE_BOMBER_ATARI_0e,/*4*/
+	/*	8 */		{	/* "tama/bullet_beam16.png"*/DUMMY_IMG, 	0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0, (32), 0 }, 	/* ci a */	//	BASE_BOMBER_ATARI_0d,/*32*/
+	/*	6 */		{	/* "tama/bullet_beam16.png"*/DUMMY_IMG, 	0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0, (32), 0 }, 	/* ci q */	//	BASE_BOMBER_ATARI_0b,/*16*/
 //
-	/*	5 */		{	/* "tama/bullet_beam16.png"*/DUMMY_IMG, 	0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0, (4), 0 },	/* re / */
-	/*	6 */		{	/* "tama/bullet_beam16.png"*/DUMMY_IMG, 	0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0, (4), 0 },	/* ma / */
-	/*	7 */		{	/* "tama/bullet_beam16.png"*/DUMMY_IMG, 	0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0, (4), 0 },	/* oz / */
-	/*	8 */		{	/* "tama/bullet_beam16.png"*/DUMMY_IMG, 	0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0, (6), 0 },	/* ci / */
-	/*	9 */		{	/* "tama/bullet_beam16.png"*/DUMMY_IMG, 	0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0, (8), 0 },	/* yu / */
+	/*	5 */		{	/* "tama/bullet_beam16.png"*/DUMMY_IMG, 	0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0,  (4), 0 }, 	/* re a */	//	BASE_SHOT_ATARI_0a,/*4*/
+	/*	5 */		{	/* "tama/bullet_beam16.png"*/DUMMY_IMG, 	0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0,  (4), 0 }, 	/* re b */	//	BASE_SHOT_ATARI_0a,/*4*/
+	/*	6 */		{	/* "tama/bullet_beam16.png"*/DUMMY_IMG, 	0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0,  (4), 0 }, 	/* ma a */	//	BASE_SHOT_ATARI_0b,/*4*/
+	/*	6 */		{	/* "tama/bullet_beam16.png"*/DUMMY_IMG, 	0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0,  (4), 0 }, 	/* ma b */	//	BASE_SHOT_ATARI_0b,/*4*/
+	/*	7 */		{	/* "tama/bullet_beam16.png"*/DUMMY_IMG, 	0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0,  (4), 0 }, 	/* oz / */	//	BASE_SHOT_ATARI_0c,/*4*/
+	/*	9 */		{	/* "tama/bullet_beam16.png"*/DUMMY_IMG, 	0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0,  (8), 0 }, 	/* yu / */	//	BASE_SHOT_ATARI_0e,/*8*/
+	/*	8 */		{	/* "tama/bullet_beam16.png"*/DUMMY_IMG, 	0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0,  (6), 0 }, 	/* ci a */	//	BASE_SHOT_ATARI_0d,/*6*/
+	/*	6 */		{	/* "tama/bullet_beam16.png"*/DUMMY_IMG, 	0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0,  (6), 0 }, 	/* ci q */	//	BASE_SHOT_ATARI_0b,/*4*/
 //
-	/*	5 */		{	/* "tama/bullet_beam16.png"*/DUMMY_IMG, 	0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0, (6), 0 },	/* re / */
-	/*	6 */		{	/* "tama/bullet_beam16.png"*/DUMMY_IMG, 	0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0, (8), 0 },	/* ma / */
-	/*	7 */		{	/* "tama/bullet_beam16.png"*/DUMMY_IMG, 	0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0, (12), 0 }, /* oz / */
-	/*	8 */		{	/* "tama/bullet_beam16.png"*/DUMMY_IMG, 	0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0, (16), 0 }, /* ci / */
-	/*	9 */		{	/* "tama/bullet_beam16.png"*/DUMMY_IMG, 	0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0, (8), 0 },	/* yu / */
+	/*	5 */		{	/* "tama/bullet_beam16.png"*/DUMMY_IMG, 	0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0,  (6), 0 }, 	/* re a */	//	BASE_NEEDLE_ATARI_0a,/*6*/
+	/*	5 */		{	/* "tama/bullet_beam16.png"*/DUMMY_IMG, 	0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0,  (6), 0 }, 	/* re b */	//	BASE_NEEDLE_ATARI_0a,/*6*/
+	/*	6 */		{	/* "tama/bullet_beam16.png"*/DUMMY_IMG, 	0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0,  (8), 0 }, 	/* ma a */	//	BASE_NEEDLE_ATARI_0b,/*8*/
+	/*	6 */		{	/* "tama/bullet_beam16.png"*/DUMMY_IMG, 	0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0,  (8), 0 }, 	/* ma b */	//	BASE_NEEDLE_ATARI_0b,/*8*/
+	/*	7 */		{	/* "tama/bullet_beam16.png"*/DUMMY_IMG, 	0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0, (12), 0 }, 	/* oz / */	//	BASE_NEEDLE_ATARI_0c,/*12*/
+	/*	9 */		{	/* "tama/bullet_beam16.png"*/DUMMY_IMG, 	0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0,  (8), 0 }, 	/* yu / */	//	BASE_NEEDLE_ATARI_0e,/*8*/
+	/*	8 */		{	/* "tama/bullet_beam16.png"*/DUMMY_IMG, 	0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0, (16), 0 }, 	/* ci a */	//	BASE_NEEDLE_ATARI_0d,/*16*/
+	/*	6 */		{	/* "tama/bullet_beam16.png"*/DUMMY_IMG, 	0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0, (16), 0 }, 	/* ci q */	//	BASE_NEEDLE_ATARI_0b,/*8*/
 //
+	/*	5 */		{	/* "tama/bullet_beam16.png"*/DUMMY_IMG, 	0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0,  (1), 0 }, 	/* re a */	//	BASE_CORE_ATARI_0a,/*6*/
+	/*	5 */		{	/* "tama/bullet_beam16.png"*/DUMMY_IMG, 	0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0,  (1), 0 }, 	/* re b */	//	BASE_CORE_ATARI_0a,/*6*/
+	/*	6 */		{	/* "tama/bullet_beam16.png"*/DUMMY_IMG, 	0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0,  (2), 0 }, 	/* ma a */	//	BASE_CORE_ATARI_0b,/*8*/
+	/*	6 */		{	/* "tama/bullet_beam16.png"*/DUMMY_IMG, 	0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0,  (2), 0 }, 	/* ma b */	//	BASE_CORE_ATARI_0b,/*8*/
+	/*	7 */		{	/* "tama/bullet_beam16.png"*/DUMMY_IMG, 	0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0,  (2), 0 }, 	/* oz / */	//	BASE_CORE_ATARI_0c,/*12*/
+	/*	9 */		{	/* "tama/bullet_beam16.png"*/DUMMY_IMG, 	0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0,  (2), 0 }, 	/* yu / */	//	BASE_CORE_ATARI_0e,/*8*/
+	/*	8 */		{	/* "tama/bullet_beam16.png"*/DUMMY_IMG, 	0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0,  (1), 0 }, 	/* ci a */	//	BASE_CORE_ATARI_0d,/*16*/
+	/*	6 */		{	/* "tama/bullet_beam16.png"*/DUMMY_IMG, 	0,	 1,  iyx( 1,   1), PRIORITY_05_BULLETS,   0,  (1), 0 }, 	/* ci q */	//	BASE_CORE_ATARI_0b,/*8*/
 #endif
 };
 
 static IMAGE_RESOURCE my_resource[] =
 {
+#if 0
+	/* 廃止 */
 	/* ☆ BG面エフェクト */
 //
-	/* 89 */		{	"zako/tikei_bgpanel1.png",		0,	 1,  iyx( 1,   1), PRIORITY_01_SHOT/*PR IORITY_00_BG*/,	  0, (0), 0 },	/* 地形３連パネル */
-	/* 90 */		{	"zako/tikei_bgpanel2.png",		0,	 1,  iyx( 1,   1), PRIORITY_01_SHOT/*PR IORITY_00_BG*/,	  0, (0), 0 },	/* 地形パネル棒 */
+	/* 89 */		{	"zako/tikei_bgpanel1.png",		0,	 1,  iyx( 1,   1), PRIORITY_01_SHOT/*PR IORITY_00_BG*/,   0, (0), 0 },	/* 地形３連パネル */
+	/* 90 */		{	"zako/tikei_bgpanel2.png",		0,	 1,  iyx( 1,   1), PRIORITY_01_SHOT/*PR IORITY_00_BG*/,   0, (0), 0 },	/* 地形パネル棒 */
+
 	/* ☆ SHOT面エフェクト */
 //
 //	/* 75 */		{	"jiki/bomber_slow.png", 		1,	 4,  iyx( 4,   1), PRIORITY_01_SHOT,   0, (0), 0 },
-	/* 88 */		{	"zako/mahoujin_0.png",			1,	 2,  iyx( 2,   1), PRIORITY_01_SHOT,   0, (0), 0 },/* 0a */ /* 敵の後ろのアレ */
+	/* 88 */		{	"zako/mahoujin_0.png",			1,	 2,  iyx( 2,   1), PRIORITY_01_SHOT,   0, (0), 0 },/* 0a */ 	/* 敵の後ろのアレ */
 //
+#endif
 	/* ☆ 敵面エフェクト */
 	/* ザコ(敵面エフェクト) */
-	/* 91 */		{	"zako/tikei_grounder08.png",	0,	 8,  iyx( 8,   1), PRIORITY_03_ENEMY/*PRIORITY_01_SHOT*/,   2,(16), 0 }, /* マンホール */
+	/* 91 */		{	"zako/tikei_grounder08.png",	0,	 8,  iyx( 8,   1), PRIORITY_03_ENEMY/*PRIORITY_01_SHOT*/,	2,(16), 0 }, /* マンホール */
+	#if 000
 	/* 92 */		{	"zako/obake08.png", 			0,	 8,  iyx( 8,   1), PRIORITY_03_ENEMY,  0, (8), 0 }, /* ザコ */
 	/* 93 */		{	"zako/yukari8x4.png",			0,	32,  iyx( 8,   4), PRIORITY_03_ENEMY,  0, (2), 0 }, /* ザコ */
 	/* 94 */		{	"zako/aka_kedama08.png",		0,	 8,  iyx( 8,   1), PRIORITY_03_ENEMY,  4, (6), 0 }, /* ザコ 4 1 */
@@ -90,6 +112,8 @@ static IMAGE_RESOURCE my_resource[] =
 	/* 100 */		{	"zako/great_fairy02.png",		0,	 2,  iyx( 2,   1), PRIORITY_03_ENEMY,  0,(16), 0 }, /* ザコ(中ザコ) - */
 	/* 101 */		{	"zako/aka_meido08.png", 		0,	 8,  iyx( 8,   1), PRIORITY_03_ENEMY,  0,(24), 0 }, /* ザコ */
 	/* 102 */		{	"zako/ao_yousei4x6.png",		0,	24,  iyx( 4,   6), PRIORITY_03_ENEMY,  0,(12), 0 }, /* ザコ "zako/ao_yousei24.png" */
+	/* 102 */		{	"zako/rumia08.png", 			0,	 8,  iyx( 4,   2), PRIORITY_03_ENEMY,  0,(12), 0 }, /* ザコ  */
+	#endif
 	/* ボス(敵面エフェクト) */
 //	/* 111 */		{	"boss/boss01_0.png",			0,	 4,  iyx( 4,   1), PRIORITY_03_ENEMY,  8, (4), 0 },
 //	/* 112 */		{	"boss/boss01_1.png",			0,	 8,  iyx( 8,   1), PRIORITY_03_ENEMY,  0, (8), 0 },
@@ -102,7 +126,8 @@ static IMAGE_RESOURCE my_resource[] =
 	/* 111 */		{	"boss/pache.png",				0,	12,  iyx( 4,   3), PRIORITY_03_ENEMY,  8, (4), 0 }, /* パチェ */
 	/* 112 */		{	"boss/pache_dolls.png", 		0,	16,  iyx( 4,   4), PRIORITY_03_ENEMY,  0, (8), 0 }, /* パチェ人形 */
 //
-	/* 116 */		{	"boss/aya.png", 				0,	 9,  iyx( 9,   1), PRIORITY_03_ENEMY,  0, (8), 0 }, /* 文 */
+//	/* 116 */		{	"boss/aya.png", 				0,	 9,  iyx( 9,   1), PRIORITY_03_ENEMY,  0, (8), 0 }, /* 文 */
+	/* 116 */		{	"boss/aya.png", 				0,	12,  iyx( 4,   3), PRIORITY_03_ENEMY,  0, (8), 0 }, /* 文 */
 //
 	/* 117 */		{	"boss/kaguya.png",				0,	12,  iyx( 6,   2), PRIORITY_03_ENEMY,  0, (8), 0 }, /* 輝夜 */
 //	/* 117 */		{	"boss/boss04_0.png",			0,	 2,  iyx( 1,   1), PRIORITY_03_ENEMY,  0, (4), 0 },
@@ -112,14 +137,15 @@ static IMAGE_RESOURCE my_resource[] =
 //	/* 121 */		{	"boss/boss04_4.png",			0,	 2,  iyx( 1,   1), PRIORITY_03_ENEMY,  0, (4), 0 },
 //	/* 122 */		{	"boss/boss04_5.png",			0,	 2,  iyx( 1,   1), PRIORITY_03_ENEMY,  0, (4), 0 },
 //
-	/* 123 */		{	"boss/sakuya.png",				0,	20,  iyx(10,   2), PRIORITY_03_ENEMY,  0, (8), 0 }, /* 咲夜 */
+//	/* 123 */		{	"boss/sakuya.png",				0,	20,  iyx(10,   2), PRIORITY_03_ENEMY,  0, (8), 0 }, /* 咲夜 */
+	/* 123 */		{	"boss/sakuya.png",				0,	16,  iyx( 8,   2), PRIORITY_03_ENEMY,  0, (8), 0 }, /* 咲夜 */
 //
+	#if 000
 	/* 124 */	//	{	"panel/key_icon.png",			1,	12,  iyx(12,   1), PRIORITY_01_SHOT,   2, (2), 0 },
 //
 	/* ☆ アイテム面エフェクト */
 //	/* その他の自機素材(アイテム面エフェクト) */
 	/* 76 */		{	"panel/bonus_items.png",		0,	 8,  iyx( 8,   1), PRIORITY_04_ITEM,   0,(12), 0 },
-
 	/* ☆ 弾幕面エフェクト */
 
 	/* ☆ フロント面エフェクト */
@@ -128,9 +154,8 @@ static IMAGE_RESOURCE my_resource[] =
 	/* 20 REIMU */	{	"jiki/core_re.png", 			0,	 1,  iyx( 1,   1), PRIORITY_03_ENEMY,  0, (1)/* 2*/, 0 },	// "core.png",
 	/* 21 MARISA */ {	"jiki/core_ma.png", 			0,	 1,  iyx( 1,   1), PRIORITY_03_ENEMY,  0, (2)/* 4*/, 0 },	// "core-ma.png",
 	/* 22 REMILIA */{	"jiki/core_oz.png", 			0,	 1,  iyx( 1,   1), PRIORITY_03_ENEMY,  0, (2)/* 4*/, 0 },	// "core-oz.png",
-	/* 23 CIRNO */	{	"jiki/core_ci.png", 			0,	 1,  iyx( 1,   1), PRIORITY_03_ENEMY,  0, (1)/* 3*/, 0 },	// "core-ci.png",
 	/* 24 YUYUKO */ {	"jiki/core_yu.png", 			0,	 1,  iyx( 1,   1), PRIORITY_03_ENEMY,  0, (2)/* 4*/, 0 },
-	#if 000
+	/* 23 CIRNO */	{	"jiki/core_ci.png", 			0,	 1,  iyx( 1,   1), PRIORITY_03_ENEMY,  0, (1)/* 3*/, 0 },	// "core-ci.png",
 //	/* 小爆発(フロント面エフェクト) */
 	/* 104 */		{	"effect/tr_blue.png",			0,	 6,  iyx( 6,   1), PRIORITY_04_ITEM,   1, (0), 0 },
 	/* 105 */		{	"effect/tr_red.png",			0,	 6,  iyx( 6,   1), PRIORITY_04_ITEM,   1, (0), 0 },
@@ -207,6 +232,8 @@ static /* BOOL */int collision_hit( /* obj_t */SPRITE *obj1, /* obj_t */SPRITE *
 
 SPRITE *sprite_list000_head = NULL; 	/* スプライトのリスト構造 */
 
+//SPRITE sprite_pool[SPRITE_POOL_MAX];	/* スプライトのリスト構造 */
+
 SPRITE *sprite_collision_check(SPRITE *tocheck, int type)
 {
 	SPRITE *s = sprite_list000_head;/* スプライト リストの先頭 から探す */
@@ -241,6 +268,30 @@ SPRITE *sprite_collision_check(SPRITE *tocheck, int type)
 		s = s->next;/* 次 */
 	}
 	return (NULL);/* あたってない */	/* no hit collisioning. */
+}
+/* 弾幕リストは分割する予定 */
+SPRITE *sprite_collision_check_bullets(SPRITE *tocheck)
+{
+	return (sprite_collision_check(tocheck, SP_GROUP_BULLETS));/*とりあえず*/
+}
+
+/*---------------------------------------------------------
+	総ての敵弾を消して、指定アイテムに変える
+---------------------------------------------------------*/
+extern SPRITE *sprite_list000_head;
+//void item_from_bullets(int put_item_num)
+void bullets_to_hosi(void)
+{
+	SPRITE *s = sprite_list000_head;/* スプライト リストの先頭 から探す */
+	while (NULL != s)/* スプライト リストの最後まで調べる */
+	{
+		if (SP_GROUP_BULLETS & s->type)
+		{
+			item_create(s, /*put_item_num*/SP_ITEM_05_HOSI/*SP_ITEM_05_HOSI*/, 1, (ITEM_MOVE_FLAG_01_COLLECT|ITEM_MOVE_FLAG_06_RAND_XY) );
+			s->type = SP_DELETE;
+		}
+		s = s->next;/*次*/
+	}
 }
 
 /*---------------------------------------------------------
@@ -354,6 +405,7 @@ void sprite_work000(int type)
 			//s->ticks++;
 			if (s->type & type) /* typeが一致する場合のみ */
 			{
+				#if 0000/* アニメ廃止 */
 				/* 逆転アニメ禁止に変更 */
 			//	if (s->anim_speed != 0)
 				if (0 < s->anim_speed)
@@ -386,6 +438,7 @@ void sprite_work000(int type)
 					//	}
 					}
 				}
+				#endif
 				/* move */
 				if (NULL != s->callback_mover)
 				{
@@ -516,9 +569,10 @@ void sprite_display000(int type)
 				#if 1
 				if (0==(s->type & (
 					SP_GROUP_BULLETS |			/* 弾は描かない */
+					SP_GROUP_ITEMS |			/* アイテムは描かない */
 					SP_GROUP_JIKI_GET_ITEM |	/* jikiは描かない */
-					SP_GROUP_ETC |				/* フロント面 */
-					SP_GROUP_MAHOU_JIN			/* ☆ 魔方陣面エフェクト */
+					SP_GROUP_ETC |				/* フロント面は描かない */
+					SP_GROUP_MAHOU_JIN			/* ☆ 魔方陣面エフェクトは描かない */
 				)))
 				#endif
 				{
@@ -557,6 +611,7 @@ SPRITE *sprite_add_res_list(
 	SPRITE *s;
 	SPRITE *tail_obj/* =NULL */; /* 追加するリストの候補位置。切断する場合は切断位置。 */
 	obj 		= mmalloc(sizeof(SPRITE));
+//	memset(obj, 0, sizeof(SPRITE));
 	s			= sprite_list000_head;	/* スプライトリストの先頭。呼び出し */
 	tail_obj	= NULL;
 	/*---------------------------------------------------------
@@ -606,7 +661,7 @@ SPRITE *sprite_add_res_list(
 	obj->h128				= ((surface->h/(y_divide_frames_m1))<<7);
 //
 //	int total_frames;		total_frames	= image_resource_ptr->total_frames;
-	int anime_speed;		anime_speed 	= image_resource_ptr->anime_speed;
+//	int anime_speed;		anime_speed 	= image_resource_ptr->anime_speed;
 	int m_Hit256R;			m_Hit256R		= image_resource_ptr->atari_hankei;
 //
 
@@ -621,20 +676,26 @@ SPRITE *sprite_add_res_list(
 	obj->flags		= set_flags; /* 0;	if (nocache) s->flags |= SP_FLAG_NOT_CACHE; */
 	obj->color32	= 0xffffffff;		/*	obj->alpha		= 0xff;*/
 
+//	obj->anim_speed 	= anime_speed/* 0 */;
+
+	obj->m_zoom_x256			= 256;	/* 表示拡大率 256 == [ x 1.00 ] */
+	#if (0==USE_MEM_CLEAR)/* [メモリゼロクリアー機能]を使わない場合は、初期化が必要。 */
 	obj->yx_anim_frame	= 0x00;
-	obj->anim_speed 	= anime_speed/* 0 */;
-	obj->anim_count 	= 0;
+//	obj->anim_count 	= 0;
 	obj->m_angleCCW512	= 0;			/* 描画用角度(下が0度で左回り(反時計回り)) */	/* 0 == 傾かない。下が0度 */
 //
 	#if 000/* 自動的に消える機能 */
 	obj->timeover_ticks 		= 0;
 	#endif
-	obj->m_zoom_x256			= 256;	/* 表示拡大率 256 == [ x 1.00 ] */
+//
+	obj->vx256					= t256(0);
+	obj->vy256					= t256(0);
 //
 	obj->data					= NULL;
 	obj->callback_mover 		= NULL;
 	obj->callback_loser 		= NULL;
 	obj->callback_hit_enemy 	= NULL;
+	#endif	/* (0==USE_MEM_CLEAR) */
 	return (obj);
 }
 
@@ -654,13 +715,24 @@ SPRITE *sprite_add_res_list(
 	sp	= sprite_add_res_list( s, 0/* flags */, image_resource_ptr);
 	return (sp);
 }
+
+/*---------------------------------------------------------
+	SDL、汎用スプライト
+--------------------------------------------------------- */
+
+/*  */
 SPRITE *sprite_add_res(int image_resource_num)
 {
 	IMAGE_RESOURCE *image_resource_ptr;
 	image_resource_ptr = &my_resource[image_resource_num];
 	return (sprite_add_internal_res( image_resource_ptr ));
 }
-SPRITE *sprite_add_bullet(int image_resource_num)
+
+/*---------------------------------------------------------
+	gu移行中、汎用スプライト
+--------------------------------------------------------- */
+
+SPRITE *sprite_add_gu(int image_resource_num)
 {
 	//image_resource_num=BASE_YUKARI32_PNG;
 //
@@ -668,6 +740,30 @@ SPRITE *sprite_add_bullet(int image_resource_num)
 	image_resource_ptr = &my_bullet_resource[image_resource_num];
 	return (sprite_add_internal_res( image_resource_ptr ));
 }
+
+
+/*---------------------------------------------------------
+	gu移行中、弾専用
+--------------------------------------------------------- */
+extern int bullet_system_regist_object(int image_resource_num);
+SPRITE *sprite_add_only_bullet(int image_resource_num)
+{
+	//image_resource_num=BASE_YUKARI32_PNG;
+//
+	IMAGE_RESOURCE *image_resource_ptr;
+	image_resource_ptr = &my_bullet_resource[image_resource_num];
+	#if 1
+	if (0==bullet_system_regist_object(image_resource_num))
+	{
+		/* 弾登録出来なかった */
+//		return (NULL);
+	}
+	#endif
+	return (sprite_add_internal_res( image_resource_ptr ));
+}
+
+
+
 /*---------------------------------------------------------
 	画像キャッシュに載せる(ゲーム中に画像展開すると処理落ちが激しくて
 	ゲームにならない。そこで予めキャッシュに載せとく)

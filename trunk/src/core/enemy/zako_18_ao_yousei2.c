@@ -10,11 +10,11 @@
 typedef struct
 {
 //	ENEMY_BASE base;
-	int state;		/* —d¸‚Ìó‘Ô */
-	int level;		/* İ’èƒtƒ@ƒCƒ‹‚©‚ç‚Ì—d¸‚Ì‹­‚³ */
-	int time_out;	/* ó‘Ô‘JˆÚ—p‚ÌŠÔØ‚ê */
-	int ani_turn;	/* ƒAƒjƒ[ƒVƒ‡ƒ“•ûŒü(‰H‚Ìã‰º) */
-	int nnn;		/* ’e‚ğŒ‚‚Â‰ñ” */
+	int state;			/* —d¸‚Ìó‘Ô */
+	int enemy_rank; 	/* İ’èƒtƒ@ƒCƒ‹‚©‚ç‚Ì“G‚Ì‹­‚³ */
+	int time_out;		/* ó‘Ô‘JˆÚ—p‚ÌŠÔØ‚ê */
+	int ani_turn;		/* ƒAƒjƒ[ƒVƒ‡ƒ“•ûŒü(‰H‚Ìã‰º) */
+	int nnn;			/* ’e‚ğŒ‚‚Â‰ñ” */
 } AO_YOUSEI2_DATA;
 
 /*---------------------------------------------------------
@@ -60,9 +60,9 @@ static void move_ao_yousei2(SPRITE *src)
 		}
 		else
 		{	/* “oê‚Ì“®‚« */
-				 if (data->level<3)	{	src->x256 -= t256(2)/**fps_fa ctor*/; 	}
-			else if (data->level<7)	{	src->y256 += t256(2)/**fps_fa ctor*/; 	}
-			else					{	src->x256 += t256(2)/**fps_fa ctor*/; 	}
+				 if (data->enemy_rank<3)	{	src->x256 -= t256(2)/**fps_fa ctor*/;	}
+			else if (data->enemy_rank<7)	{	src->y256 += t256(2)/**fps_fa ctor*/;	}
+			else							{	src->x256 += t256(2)/**fps_fa ctor*/;	}
 		}
 		break;
 	case STATE_01:	/* ­‚µ‘Ò‚Â */
@@ -122,9 +122,9 @@ static void move_ao_yousei2(SPRITE *src)
 		if (data->nnn < 0)
 		{
 			/* ‘Şê€”õ */
-				 if (data->level<3)	{	src->yx_anim_frame=(src->yx_anim_frame&(4-1))+SSS00;}
-			else if (data->level<7)	{	src->yx_anim_frame=(src->yx_anim_frame&(4-1))+SSS08;}
-			else					{	src->yx_anim_frame=(src->yx_anim_frame&(4-1))+SSS00;}
+				 if (data->enemy_rank<3)	{	src->yx_anim_frame=(src->yx_anim_frame&(4-1))+SSS00;}
+			else if (data->enemy_rank<7)	{	src->yx_anim_frame=(src->yx_anim_frame&(4-1))+SSS08;}
+			else							{	src->yx_anim_frame=(src->yx_anim_frame&(4-1))+SSS00;}
 			data->state++;// = STATE_03;/*Ÿ‚Ö*/
 			data->time_out = 50;
 		}
@@ -140,9 +140,9 @@ static void move_ao_yousei2(SPRITE *src)
 		}
 		else
 		{	/* ‘Şê‚Ì“®‚« */
-				 if (data->level<3)	{	src->x256 += t256(2)/**fps_fa ctor*/;}
-			else if (data->level<7)	{	src->y256 -= t256(2)/**fps_fa ctor*/;}
-			else					{	src->x256 -= t256(2)/**fps_fa ctor*/;}
+				 if (data->enemy_rank<3)	{	src->x256 += t256(2)/**fps_fa ctor*/;}
+			else if (data->enemy_rank<7)	{	src->y256 -= t256(2)/**fps_fa ctor*/;}
+			else							{	src->x256 -= t256(2)/**fps_fa ctor*/;}
 		}
 		break;
 	}
@@ -171,13 +171,13 @@ static void move_ao_yousei2(SPRITE *src)
 
 void add_zako_ao_yousei2(STAGE_DATA *l)/*int lv*/
 {
-	int lv;
-	lv	= l->user_y;
+	int enemy_rank; 	enemy_rank	= l->user_y;
 //
-	if ( (lv)>9) {lv=9;}
+	if ( (enemy_rank)>9) {enemy_rank=9;}
 	SPRITE *s;
-	s						= sprite_add_res(BASE_AO_YOUSEI24_PNG); //s->anim_speed=0;/*20"sp lash.png"*/
-	s->type 				= SP_ZAKO/*_17_AO_YOUSEI2*/;
+//	s						= sp rite_add_res(BASE_AO_YOUSEI24_PNG); //s->anim_speed=0;/*20"sp lash.png"*/
+	s						= sprite_add_gu(ZAKO_TYPE_ATARI16_PNG);
+	s->type 				= /*SP_ZAKO*/TEKI_16_YOUSEI11/*_17_AO_YOUSEI2*/;
 	s->flags				|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK|SP_FLAG_TIME_OVER);
 	s->callback_mover		= move_ao_yousei2;
 	s->callback_loser		= lose_ao_yousei2;
@@ -187,19 +187,21 @@ void add_zako_ao_yousei2(STAGE_DATA *l)/*int lv*/
 {/* case 0: 	s->x=*/GAME_WIDTH+20,	1,/*-s->w;*/		/*s->y=*/100,		/*s->yx_anim_frame=*/SSS20},	//‰E‰º
 {/* case 1: 	s->x=*/GAME_WIDTH+40,	1,/*-s->w;*/		/*s->y=*/70,		/*s->yx_anim_frame=*/SSS20},	//‰E’†
 {/* case 2: 	s->x=*/GAME_WIDTH+60,	1,/*-s->w;*/		/*s->y=*/40,		/*s->yx_anim_frame=*/SSS20},	//‰Eã
+//
 {/* case 3: 	s->x=*/300, 			3,/*-s->w/2;*/		/*s->y=*/-30,		/*s->yx_anim_frame=*/SSS08},	//ã‰E‰E
 {/* case 4: 	s->x=*/220, 			3,/*-s->w/2;*/		/*s->y=*/-50,		/*s->yx_anim_frame=*/SSS08},	//ã‰E
 {/* case 5: 	s->x=*/160, 			3,/*-s->w/2;*/		/*s->y=*/-50,		/*s->yx_anim_frame=*/SSS08},	//ã¶
 {/* case 6: 	s->x=*/ 80, 			3,/*-s->w/2;*/		/*s->y=*/-30,		/*s->yx_anim_frame=*/SSS08},	//ã¶¶
+//
 {/* case 7: 	s->x=*/-20, 			0,/*		*/		/*s->y=*/40,		/*s->yx_anim_frame=*/SSS00},	//¶ã
 {/* case 8: 	s->x=*/-40, 			0,/*		*/		/*s->y=*/70,		/*s->yx_anim_frame=*/SSS00},	//¶’†
 {/* case 9: 	s->x=*/-60, 			0,/*		*/		/*s->y=*/100,		/*s->yx_anim_frame=*/SSS00},	//¶‰º
 	};
-	s->yx_anim_frame		=  spr_tbl[lv][3];
-	s->y256 				= (spr_tbl[lv][2]<<8);
-	s->x256 				= (spr_tbl[lv][0]<<8);
-		 if (1==spr_tbl[lv][1]) {s->x256 -= ((s->w128+s->w128));}
-	else if (3==spr_tbl[lv][1]) {s->x256 -= ((s->w128));}
+	s->yx_anim_frame		=  spr_tbl[enemy_rank][3];
+	s->y256 				= (spr_tbl[enemy_rank][2]<<8);
+	s->x256 				= (spr_tbl[enemy_rank][0]<<8);
+		 if (1==spr_tbl[enemy_rank][1]) {s->x256 -= ((s->w128+s->w128));}
+	else if (3==spr_tbl[enemy_rank][1]) {s->x256 -= ((s->w128));}
 
 	AO_YOUSEI2_DATA *data;
 	data					= mmalloc(sizeof(AO_YOUSEI2_DATA));
@@ -207,7 +209,7 @@ void add_zako_ao_yousei2(STAGE_DATA *l)/*int lv*/
 	/*data->base.*/s->base_score		= score(50*2);
 	/*data->base.*/s->base_health		= 20+(difficulty<<2);
 	data->state 			= STATE_00;
-	data->level 			= lv;
+	data->enemy_rank		= enemy_rank;
 	data->time_out			= 40;
 	data->ani_turn			= 0;
 	data->nnn				= 3;	/* 3‰ñŒ‚‚Â */

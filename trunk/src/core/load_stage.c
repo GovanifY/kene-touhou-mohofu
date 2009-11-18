@@ -6,32 +6,6 @@
 #include "game_main.h"
 #include "load_stage.h"
 
-
-#if 0
-/*---------------------------------------------------------
-	たぶん汎用性のまるでないstrcmp。子関数
-	-------------------------------------------------------
-	字数、大小判定はありません。asciiコード(とシフトJISコード)以外は対応していません。
-	文字列B側は必ずconst定数なので(0で終わると保証されているとみなして)エラーチェックを省いてます。
----------------------------------------------------------*/
-
-/*static*/ int tiny_strcmp(char *aaa, const char *bbb)
-{
-loop:
-	if ( (Uint8)(*aaa++) != (Uint8)(*bbb) ) {	goto not_equal; }
-	if (0x00 != (Uint8)(*bbb++) )			{	goto loop;	}
-	return (0);
-not_equal:
-	return (1);
-}
-#else
-extern int tiny_strcmp(char *aaa, const char *bbb);
-/* MIPS R4000系にあわせて、最適化してみました。 */
-#endif
-
-
-
-
 /*---------------------------------------------------------
 
 ---------------------------------------------------------*/
@@ -68,26 +42,31 @@ static void load_stage_free_entry(void)
 ---------------------------------------------------------*/
 extern void load_bg2_chache(char *filename, int use_alpha);
 /* Do set the entry. */
-static void load_stage_add_entry(Uint32 time10, char user_command, char *user_string, int user_x, int user_y)		// オブジェクトの生成
+static void load_stage_add_entry(Uint32 time60, char user_command, char *user_string, int user_x, int user_y)		// オブジェクトの生成
 {
 	STAGE_DATA *new_entry;
-	new_entry			= mmalloc(sizeof(STAGE_DATA));
-//	new_entry->v_time	= (time10*6/*100*1000*/);/* 読み込み後、PSPに都合の良い値に変換(1/10[sec]-> 1/1000000[sec] == 1[nsec] == nano seconds ) */
-	new_entry->v_time	= (time10*6/*100*1000*/);/* 読み込み後、PSPに都合の良い値に変換(1/10[sec]-> 1/60[sec] ) */
-	new_entry->user_command = user_command;
+	new_entry					= mmalloc(sizeof(STAGE_DATA));
+//	new_entry->v_time			= (time60*6/*100*1000*/);/* 読み込み後、PSPに都合の良い値に変換(1/10[sec]-> 1/1000000[sec] == 1[nsec] == nano seconds ) */
+//	new_entry->v_time			= (time60*6/*100*1000*/);/* 読み込み後、PSPに都合の良い値に変換(1/10[sec]-> 1/60[sec] ) */
+	new_entry->v_time			= (time60  /*100*1000*/);/* 読み込み後、PSPに都合の良い値に変換(1/10[sec]-> 1/60[sec] ) */
+	new_entry->user_x			= user_x;
+	new_entry->user_y			= user_y;
+	new_entry->done 			= 0;
+//
+	new_entry->user_1_moji		= user_command;
+	new_entry->user_i_code		= 0;
+
 	strncpy(new_entry->user_string, user_string, (MAX_PARA1_44-1)/*63*/);
-	new_entry->user_x	= user_x;
-	new_entry->user_y	= user_y;
-	new_entry->done 	= 0;
 
 /* ゲーム中は、中間コード形式のコマンドを扱い構文解析はしない。(構文解析はloadlv.cで行う) */
 
 //
-	const char *ctype_name[BTYPE_MAX/*CTYPE_MAX_23_*/] =
-	{	/* 現在 23 種類 */
+	const char *ctype_name[CTYPE_99_MAX] =	/* 現在 32 種類 */
+	{
 		NULL,/* [番兵区切り] */
 	//	その他
 		"QUIT", 	/* ゲーム 全ステージ クリアー */
+		"BG",		/*	"BG_CONTROL"*/		/* ←システムコマンドなので英語にした */
 	//	ボス
 		"アリス",	/*	"BOSS01",*/
 	//	"チルノ",	/*	"BOSS05",*/
@@ -96,54 +75,50 @@ static void load_stage_add_entry(Uint32 time10, char user_command, char *user_st
 		"輝夜", 	/*	"BOSS03",*/
 		"パチェ",	/*	"BOSS01",*/
 		"咲夜", 	/*	"BOSS04",*/ 	// [***090207		追加
-	//	特殊敵[中型敵]
+	/* 特殊敵[中型敵] */
+		"ルーミア",	/*	"GFAIRY",*/ 	//		追加
 		"妖怪1",	/*	"GFAIRY",*/ 	// [***090207		追加
 		"妖怪2",	/*	"GFAIRY",*/ 	//		追加
 //
-	//	その他ザコ
+	/* 魔方陣 */
+		"魔方陣1",	/*	"GROUNDER",*/
+		"魔方陣2",	/*	"MAGICF",*/
+	/* 竜巻 陰陽玉 */
+		"陰陽玉1",	/*	"PLASMABALL",*/
+		"竜巻1",	/*	"PROBALL",*/
+	/* 妖怪 */
+		"囲妖怪1",	/*	"CUBE",*/
+	/* その他ザコ */
 		"おばけ1",	/*	"DRAGER",*/
+		"おばけ2",	/*	"EYEFO",*/
 		"紫編隊1",	/*	"MING",*/
 		"紫編隊2",	/*	"GREETER",*/
-	//	毛玉
+	/* 毛玉 */
 		"赤毛玉1",	/*	"MINE",*/
-		"虹毛玉1",	/*	"EYEFO",*/
 		"緑毛玉1",	/*	"XEV",*/
 		"緑毛玉2",	/*	"CRUSHER",*/
 		"毛玉1",	/*	"BADGUY",*/
 		"毛玉2",	/*	"BADGUY",*/
-	//	竜巻 陰陽玉
-		"陰陽玉1",	/*	"PLASMABALL",*/
-		"竜巻1",	/*	"PROBALL",*/
-	//	妖怪
-		"囲妖怪1",	/*	"CUBE",*/
-	//	中妖精
+	/* 中妖精 */
 		"メイド1",	/*	"RWINGX",*/
 		"メイド2",	/*	"ZATAK",*/
 		"メイド3",	/*	"CURVER",*/
 		"メイド4",	/*	"CIR",*/
-	//	小妖精
+	/* 小妖精 */
 		"青妖精1",	/*	"FAIRY",*/		// [***090207		追加
 		"青妖精2",	/*	"SPLASH",*/ 	// [***090124		追加
 		"青妖精3",	/*	"SPLASH",*/ 	//		追加
 		"青妖精4",	/*	"SPLASH",*/ 	//		追加
-//	};
-	/* 現在 6 種類 */
-//	const char *btype_name[BTYPE_MAX] =
-//	{
-		NULL,/* [番兵区切り] */
-		"台",		/*	"BGPANEL",*/
-		"棒",		/*	"BGPANEL2",*/
-		"魔方陣1",	/*	"GROUNDER",*/
-		"魔方陣2",	/*	"MAGICF",*/
-		"BG",		/*	"BG_CONTROL"*/		/* ←システムコマンドなので英語にした */
 	};
 //
+
+
 	/* 読み込んだコマンドを中間コード形式に変換する */
-	switch (new_entry->user_command)
+	switch (new_entry->user_1_moji)
 	{
-	case 'T':	new_entry->user_command=ETYPE_01_ENGLISH_TEXT;		break;	/* english Text */
-	case 'B':	new_entry->user_command=ETYPE_02_LOAD_BG;
-	//	if ( 0 == tiny_strcmp(new_entry->user_string,"0") ) /* ファイル名が０の場合システムコマンド[拡張予定] */
+	case 'T':	new_entry->user_i_code=ETYPE_01_ENGLISH_TEXT;		break;	/* english Text */
+	case 'B':	new_entry->user_i_code=ETYPE_02_LOAD_BG;
+	//	if ( 0 == ti ny_strcmp(new_entry->user_string,"0") ) /* ファイル名が０の場合システムコマンド[拡張予定] */
 		if ( '0' == new_entry->user_string[0] ) /* ファイル名の1字目が０の場合システムコマンド[拡張予定] */
 		{
 			;
@@ -156,55 +131,16 @@ static void load_stage_add_entry(Uint32 time10, char user_command, char *user_st
 				つまり、ここの場所で展開してるんだから、ここの場所load_stage()で処理落ちが酷いという事だよ。 */
 		}
 		break;	/* Background */
-	/* ゲーム中処理落ちしないように予め画像キャッシュに詰める方式なので、Pコマンドをゲーム中処理落ちしないように作るのは難しい。
-	(各面開始前にそのステージで使うPコマンド画像を専用スタックに詰めれば出来ない事もない) */
-//	case 'P':	new_entry->user_command=ETYPE_03_PICTURE;	break;	/* Picture */
-	case 'E':	/* add enemy */
-		{
-			for (new_entry->user_command = /*CTYPE_00_unknown+*/(CTYPE_MAX_23_-1); /*0*/CTYPE_00_NONE/*CTYPE_00_unknown*/ < new_entry->user_command; new_entry->user_command--)
-			{
-				if (0==tiny_strcmp( new_entry->user_string, /*(char *)*/&ctype_name[(unsigned int)new_entry->user_command][0] ) )
-				{
-					break;
-				}
-			} // 0/*CTYPE_00_unknown*/ == aaa );
-		}
-		break;
 	default:	// add background tiles....
 		{
-			/* KETMは約20-30fps動作ですが、現在約60fps動作なのであまりに速すぎる為、速度値を半分に修正しました。 */
-			#if 1
-			{const unsigned short speed256_tbl[16] =
+			for (new_entry->user_i_code = /*CT YPE_00_unknown+*/(CTYPE_99_MAX-1); /*0*/CTYPE_00_NONE/*CT YPE_00_unknown*/ < new_entry->user_i_code; new_entry->user_i_code--)
 			{
-				#if 0
-				/*ketm09互換*/
-				t256(0.5), t256(0.1), t256(0.2), t256(0.3),/* - - - - */
-				t256(0.4), t256(0.5), t256(0.6), t256(0.7),/* - 5 6 7 */
-				t256(0.8), t256(0.9), t256(0.5), t256(0.5),/* 8 9 - - */
-				t256(0.5), t256(0.5), t256(0.5), t256(0.5) /* - - - - */
-				#else
-				/*拡張*/
-				t256(0.0), t256(0.1), t256(0.2), t256(0.3),/* 0 1 2 3 */
-				t256(0.4), t256(0.5), t256(0.6), t256(0.7),/* 4 5 6 7 */
-				t256(0.8), t256(0.9), t256(1.0), t256(1.5),/* 8 9 J K */
-				t256(2.0), t256(2.5), t256(3.0), t256(4.0) /* L M N O */
-				#endif
-			};
-			new_entry->scroll_speed256/*ctype*/ = speed256_tbl[((new_entry->user_command) & 0x0f)];
-			}
-			#endif
-		}
-		#if 1
-		{
-			for (new_entry->user_command = /*CTYPE_00_unknown+*/(BTYPE_MAX-1); /*0*/BTYPE_00_NONE/*CTYPE_00_unknown*/ < new_entry->user_command; new_entry->user_command--)
-			{
-				if (0==tiny_strcmp( new_entry->user_string, /*(char *)*/&/*btype_name*/ctype_name[(unsigned int)new_entry->user_command][0] ) )
+				if (0==tiny_strcmp( new_entry->user_string, /*(char *)*/&/*btype_name*/ctype_name[(unsigned int)new_entry->user_i_code][0] ) )
 				{
 					break;
 				}
-			} // 0/*CTYPE_00_unknown*/ == aaa );
+			} // 0/*CT YPE_00_unknown*/ == aaa );
 		}
-		#endif
 		break;
 	}
 //
@@ -216,48 +152,14 @@ static void load_stage_add_entry(Uint32 time10, char user_command, char *user_st
 	// nextにはdatファイル的には現在走査中の行の上の行が入っている。
 }
 
-/* メモ */
-
-	//	new_entry->user_x = new_entry->user_y/1000;
-	//	new_entry->user_y = new_entry->user_y%1000;
-
-			#if 0
-			/*const*/ short speed256 = (short)(t256(1.0));
-			switch (new_entry->user_command)
-			{
-			case '1':  speed256=(short)(t256(0.1)); break;
-			case '2':  speed256=(short)(t256(0.2)); break;
-			case '3':  speed256=(short)(t256(0.3)); break;
-			case '4':  speed256=(short)(t256(0.4)); break;
-			case '5':  speed256=(short)(t256(0.5)); break;
-			case '6':  speed256=(short)(t256(0.6)); break;
-			case '7':  speed256=(short)(t256(0.7)); break;
-			case '8':  speed256=(short)(t256(0.8)); break;
-			case '9':  speed256=(short)(t256(0.9)); break;
-			default:   speed256=(short)(t256(0.5));
-			}
-			new_entry->para3 = speed256;
-			#endif
-	//	const short xxx = new_entry->user_y/1000;
-	//	const short yyy = new_entry->user_y%1000;
-	//	new_entry->user_x = xxx;
-	//	new_entry->user_y = yyy;
-		#if 0
-			 if (0==tiny_strcmp(new_entry->user_string,"BGSPEED"))	{	new_entry->user_command=BTYPE_05_BG_SPEED;	}
-		else if (0==tiny_strcmp(new_entry->user_string,"MAGICF"))	{	new_entry->user_command=BTYPE_04_MAGIC_FORMATION;	}
-		else if (0==tiny_strcmp(new_entry->user_string,"GROUNDER")) {	new_entry->user_command=BTYPE_03_GROUNDER;			}
-		else if (0==tiny_strcmp(new_entry->user_string,"BGPANEL2")) {	new_entry->user_command=BTYPE_02_BGPANEL2;	}
-		else if (0==tiny_strcmp(new_entry->user_string,"BGPANEL"))	{	new_entry->user_command=BTYPE_01_BGPANEL1;	}
-		else														{	new_entry->user_command=BTYPE_00_NONE;
-				error(ERR_WARN, "unknown user_command '%c' in levelfile",new_entry->user_command);}
-		#endif
-
 /*---------------------------------------------------------
 	子関数
 	Get ascii strings.
+2009357
 ---------------------------------------------------------*/
-
-static char *load_stage_get_str(char *c, char *buffer)
+//extern char *load_stage_get_str(char *str, char *buffer, int *end_arg);
+		#if 0
+static char *load_stage_get_str(char *c, char *buffer, int *end_arg)
 {
 	int i = 0;
 	while ('|' != (*c))
@@ -272,7 +174,90 @@ static char *load_stage_get_str(char *c, char *buffer)
 ne111:
 	return ((char *) NULL);
 }
+			#endif
+/*---------------------------------------------------------
+	shift jisコード、全角1バイト目かどうか判定する子関数
+---------------------------------------------------------*/
 
+static int is_kanji_1st(/*unsigned char*/int/*int*/ high_byte)
+{
+	#if 1
+	high_byte &= 0xff;/**/
+	return (
+		((high_byte >= 0x81) && (high_byte <= 0x9f)) ||
+		((high_byte >= 0xe0) && (high_byte <= 0xfd))
+	);
+	#else
+	high_byte ^= 0x20;
+	high_byte += (0x100-0xa1);
+	high_byte &= 0xff;/**/
+	return (high_byte < 0x3du);
+	#endif
+}
+/*---------------------------------------------------------
+	スクリプトファイルの文字列部分の読み込み
+	-------------------------------------------------------
+	shift jis 漢字の2byte目が￥￥の場合や
+	エスケープシークエンス処理の2byte目が￥￥の場合でも
+	問題がない
+---------------------------------------------------------*/
+static char *load_stage_get_str(char *str, char *buffer, int *end_arg)
+{
+	int string_error_limiter;
+	string_error_limiter = 200;/* 200 文字以上はエラー */
+	/*unsigned char*/int high_byte;
+	{loop:;
+		high_byte = ((*str) & 0xff);
+		/* 空文字列の可能性があるから、始めに判定 */
+		if ('|'/*','*/ == high_byte)	/* ','区切りでおしまいの場合 */
+		{
+			goto kamma_end;
+		}
+		else
+		if (13 == high_byte)	/* '\n'==13(行末)でおしまいの場合 */
+		{
+	//	ret13_end:
+			*end_arg = 1;/* 行末です。 */
+		kamma_end:
+			*buffer = '\0'; 	/* EOS を追加 */
+			return (str);
+		}
+		else					/* 文字列を転送する必要のある場合 */
+		{
+			int flag;
+			flag=0;
+			if (is_kanji_1st(high_byte)) /* shift jis 漢字 */
+			{
+				;	//	*buffer++ = *str++;/* 1byte目 */
+			}
+			else
+			{
+				if ('\\' == high_byte)		/* エスケープシークエンス処理(escape sequence) */
+				{
+					;	//	*buffer++ = *str++;/* ￥￥ */
+				}
+				else					/* 半角文字 */
+				{
+					flag=1;
+				}
+			}
+			if (0==flag)	/* 半角文字以外(shift jis 漢字、エスケープシークエンス処理)は 2 byte転送 */
+			{
+				*buffer++ = *str++;
+			}
+			*buffer++ = *str++; 	/* 1 byteは必ず転送 */
+			/* エラーチェック */
+			{
+				string_error_limiter--;
+				if (0 >= string_error_limiter)
+				{
+					return ((char *)NULL);
+				}
+			}
+		}
+		goto loop;
+	}
+}
 /*---------------------------------------------------------
 	子関数
 	Get ascii a interger number.
@@ -319,7 +304,8 @@ static char *malloc_buf;
 static void *my_fopen(const char *file_name/*, const char *dummy*/)
 {
 	SceUID fd;
-	if (!(fd = sceIoOpen((char *)file_name, PSP_O_RDONLY, 0777)))
+	fd = sceIoOpen((char *)file_name, PSP_O_RDONLY, 0777);
+	if (0 == fd)
 	{
 		goto error111;
 	}
@@ -337,28 +323,6 @@ static void *my_fopen(const char *file_name/*, const char *dummy*/)
 	sceIoClose(fd);
 //	my_buf = malloc_buf;
 //
-	#if 0
-	char strbuf[128];
-	strbuf[25]='0';
-	{	int i;
-		for (i=0;i<20;i++){ strbuf[i]=my_buf[i];}
-	}
-	sp rintf(strbuf,
-	"%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c\n"
-	"%x %x %x %x %x %x %x %x %x %x \n"
-	"%x %x %x %x %x %x %x %x %x %x \n"
-	,my_buf[ 0] ,my_buf[ 1] ,my_buf[ 2] ,my_buf[ 3] ,my_buf[ 4] ,my_buf[ 5] ,my_buf[ 6] ,my_buf[ 7]
-	,my_buf[ 8] ,my_buf[ 9] ,my_buf[10] ,my_buf[11] ,my_buf[12] ,my_buf[13] ,my_buf[14] ,my_buf[15]
-	,my_buf[16] ,my_buf[17] ,my_buf[18] ,my_buf[19] ,my_buf[ 0] ,my_buf[ 1] ,my_buf[ 2] ,my_buf[ 3]
-	,my_buf[ 4] ,my_buf[ 5] ,my_buf[ 6] ,my_buf[ 7] ,my_buf[ 8] ,my_buf[ 9] ,my_buf[10] ,my_buf[11]
-	,my_buf[12] ,my_buf[13] ,my_buf[14] ,my_buf[15] ,my_buf[16] ,my_buf[17] ,my_buf[18] ,my_buf[19]
-	);
-	error(ERR_FATAL, "AAA %s\nno: %d (%s)",strbuf, errno, strerror(errno));
-// # kene -stage1
-// #
-// 23 20 6b ... 65 5f 31 0x0d 0x0a
-// 23 0x0d 0x0a
-	#endif
 	return (malloc_buf);
 error111:
 	return (NULL);
@@ -409,11 +373,11 @@ void load_stage(void/*int level*/)		/* 元々int */
 	bg2_start_stage();	// [***090209		追加
 	enemy_set_random_seed(/*set_seed*/);
 //
-	player_now_stage++; /*(*level)++*/;
 //	int level = player_now_stage;
 //
 	// change music soundtrack
-	play_music( /*level*/player_now_stage/*(*level)*/ );
+	player_now_stage++; /*(*level)++*/;
+	play_music_num( /*1+*/  /*level*/player_now_stage/*(*level)*/ );/* n面道中 */
 //
 	load_stage_free_entry();
 //
@@ -433,17 +397,17 @@ void load_stage(void/*int level*/)		/* 元々int */
 			/* ボムがなくてもクリアーすればボムが４つになる */
 		}
 		//
-		#if (1==USE_ENDING_DEBUG)
-		if (MAX_STAGE6_FOR_CHECK == player_now_stage/*continue_stage*/)
-		{
-		//	if (B07_AFTER_LOAD==pd->bo ssmode)
-			if ((STATE_FLAG_10_IS_LOAD_SCRIPT|STATE_FLAG_11_IS_BOSS_DESTROY)==(pd->state_flag&(STATE_FLAG_10_IS_LOAD_SCRIPT|STATE_FLAG_11_IS_BOSS_DESTROY)))
-			{
-				load_stage_number=9;/*エンディングデバッグ用*/
-			}
-		}
-		if (9!=load_stage_number)
-		#endif //(1==USE_ENDING_DEBUG)
+//		#if (1==US E_ENDING_DEBUG)
+//		if (MA X_STAGE6_FOR_CHECK == player_now_stage/*continue_stage*/)
+//		{
+//		//	if (B07_AFTER_LOAD==pd->bo ssmode)
+//			if ((STATE_FLAG_10_IS_LOAD_SCRIPT|ST ATE_FLAG_11_IS_BOSS_DESTROY)==(pd->state_flag&(STATE_FLAG_10_IS_LOAD_SCRIPT|ST ATE_FLAG_11_IS_BOSS_DESTROY)))
+//			{
+//				load_stage_number=9;/*エンディングデバッグ用*/
+//			}
+//		}
+//		if (9!=load_stage_number)
+//		#endif //(1==US E_ENDING_DEBUG)
 		{
 			pd->state_flag &= (~(STATE_FLAG_05_IS_BOSS));/*ボスoff*/
 		}
@@ -471,7 +435,8 @@ void load_stage(void/*int level*/)		/* 元々int */
 	{loop:;
 		if (/*NULL*/0 != my_fgets(/*buffer_text_1_line,128,fp*/))
 		{
-			int time10; 				/* 出現時間(1/10秒単位)  */
+			int end_arg/*=0*/;				/* [だみー]行末 == 引数の取得の中止 */
+			int time60; 				/* 出現時間(1/60秒単位)  */
 			char char_user_command; 	/* １文字コマンド(敵やメッセージ等の種別) */
 			char user_string[128];		/* 文字列(メッセージやファイル名) */
 			int user_x; 				/* 数字パラメーター１(出現Ｘ座標など) */
@@ -505,19 +470,19 @@ void load_stage(void/*int level*/)		/* 元々int */
 			#define GOTO_ERR_WARN goto loop
 		#endif
 			/* parth start */	/* Startzeitpunkt holen */
-			c = load_stage_get_int(c, &time10); 	if (NULL == c)		{	GOTO_ERR_WARN;/*continue;*/;	}	/* load int time10 */		/* 時間の取得 */
-													if ('|' != *c++)	{	GOTO_ERR_WARN;/*continue;*/;	}	/* load '|' */
-			char_user_command = *c++;																			/* load 1 char commnd */	/* １文字コマンド */	/* Befehl */
-													if (*c++ != '|')	{	GOTO_ERR_WARN;/*continue;*/;	}	/* load '|' */
-			c = load_stage_get_str(c, user_string); if (NULL == c)		{	GOTO_ERR_WARN;/*continue;*/;	}	/* load str user_string */
-													if (*c++ != '|')	{	GOTO_ERR_WARN;/*continue;*/;	}	/* load '|' */
-			c = load_stage_get_int(c, &user_x); 	if (NULL == c)		{	GOTO_ERR_WARN;/*continue;*/;	}	/* load int user_x */
-													if (*c++ != '|')	{	GOTO_ERR_WARN;/*continue;*/;	}	/* load '|' */
-			c = load_stage_get_int(c, &user_y); 	if (NULL == c)		{	GOTO_ERR_WARN;/*continue;*/;	}	/* load int user_y */
+			c = load_stage_get_int(c, &time60); 				if (NULL == c)		{	GOTO_ERR_WARN;/*continue;*/;	}	/* load int time60 */		/* 時間の取得 */
+																if ('|' != *c++)	{	GOTO_ERR_WARN;/*continue;*/;	}	/* load '|' */
+			char_user_command = *c++;																					/* load 1 char commnd */	/* １文字コマンド */	/* Befehl */
+																if (*c++ != '|')	{	GOTO_ERR_WARN;/*continue;*/;	}	/* load '|' */
+			c = load_stage_get_str(c, user_string, &end_arg); 	if (NULL == c)		{	GOTO_ERR_WARN;/*continue;*/;	}	/* load str user_string */
+																if (*c++ != '|')	{	GOTO_ERR_WARN;/*continue;*/;	}	/* load '|' */
+			c = load_stage_get_int(c, &user_x); 				if (NULL == c)		{	GOTO_ERR_WARN;/*continue;*/;	}	/* load int user_x */
+																if (*c++ != '|')	{	GOTO_ERR_WARN;/*continue;*/;	}	/* load '|' */
+			c = load_stage_get_int(c, &user_y); 				if (NULL == c)		{	GOTO_ERR_WARN;/*continue;*/;	}	/* load int user_y */
 			/* do set register entry. */
 			#define MUSIC_CONVERT_TIME (10)
 			/* 追加登録する */
-			load_stage_add_entry(MUSIC_CONVERT_TIME+time10, char_user_command, user_string, user_x, user_y);
+			load_stage_add_entry(MUSIC_CONVERT_TIME+time60, char_user_command, user_string, user_x, user_y);
 			entrys++;		/* 有効行数 */
 			goto loop;
 		#if (1==USE_PARTH_DEBUG)

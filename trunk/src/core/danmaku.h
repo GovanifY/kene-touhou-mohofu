@@ -20,7 +20,7 @@ enum
 	DANMAKU_07_sakuya,		/* 紅5面ボス 咲夜 「通常攻撃3(1/2)」にちょっとだけ似た弾幕(予定) */
 	/* [アリス(仮)] */
 	DANMAKU_08_rumia,		/* 紅1面ボス ルーミア 夜符「ナイトバード」にちょっとだけ似た弾幕(予定) */
-	DANMAKU_09_test,
+	DANMAKU_09_alice,
 	DANMAKU_0a_test,
 	DANMAKU_0b_test,
 //40[sec]
