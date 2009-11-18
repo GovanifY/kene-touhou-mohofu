@@ -8,9 +8,14 @@
 /*---------------------------------------------------------
 
 ---------------------------------------------------------*/
-/*大量のアイテム収集した場合に処理落ちが酷い*/
-#define USE_VSYNC_SOUND	(0)
-//#define USE_VSYNC_SOUND 	(1)
+
+#if (1==USE_DESIGN_TRACK)
+	/* 原理上 処理落ち は少なくなるが、きちんと効果音設計(トラック設定)しないとまともに鳴らない。 */
+	#define USE_VSYNC_SOUND 	(1)
+#else
+	/* 大量のアイテム収集した場合に処理落ちが酷い。 */
+	#define USE_VSYNC_SOUND 	(0)
+#endif
 
 /* --- 曲の管理最大数 (最大読み込みファイル数) */
 //#define MAX_MUSIC_FILES 8/*32*/
@@ -23,7 +28,7 @@
 ---------------------------------------------------------*/
 
 /* ----- 曲の数(読み込みファイル数) */
-#define USE_MUSIC_FILES 14 /**/
+#define USE_MUSIC_FILES 15/*14*/ /**/
 
 /* ----- 効果音の数(読み込みファイル数) */
 //#define VOICE16_MAX_FILES 15 /*いくつか追加*/
@@ -103,7 +108,7 @@ void play_music(int num)
 //
 	static const char *music_file_name[USE_MUSIC_FILES] =
 	{
-		"intro",	/*	0 */
+		"menu1",	/*	0 */
 		"stage1",	/*	1 */
 		"stage2",	/*	2 */
 		"stage3",	/*	3 */
@@ -117,7 +122,7 @@ void play_music(int num)
 		"boss3",	/* 11 */
 		"boss4",	/* 12 */
 		"boss5",	/* 13 */
-	//	"boss6",	/* 14 */
+		"boss6",	/* 14 */
 	//	"boss7",	/* 15 */
 	};		// いろいろ追加
 	/* ----- それまでの演奏停止 */
@@ -195,7 +200,7 @@ void exit_audio(void)
 	効果音のリクエスト
 	効果音を予約。トラックは適当に決める。
 ---------------------------------------------------------*/
-#if 1
+#if (0==USE_DESIGN_TRACK)
 void play_voice_auto_track(int req)
 {
 	if ( 0==use_audio ) return;
@@ -249,7 +254,7 @@ void play_voice_auto_track(int req)
 	トラック指定で効果音を予約しておく
 ---------------------------------------------------------*/
 
-#if 0
+#if (1==USE_DESIGN_TRACK)
 void voice_play(int req, int play_track )
 {
 	if ( 0==use_audio ) return;
@@ -257,6 +262,25 @@ void voice_play(int req, int play_track )
 //
 	/* 効果音 予約 */
 	request_voice[play_track] = req;
+}
+#endif
+
+/*---------------------------------------------------------
+	4-7 トラックを順番に発音
+---------------------------------------------------------*/
+
+#if (1==USE_DESIGN_TRACK)
+void bullet_play_04_auto(int req)
+{
+	if ( 0==use_audio ) return;
+	/* 範囲チェック */
+//
+	/* 効果音 予約 */
+	static u8 aaa_play_track;
+	aaa_play_track++;
+	aaa_play_track &= 0x03;
+	aaa_play_track |= 0x04;
+	request_voice[aaa_play_track] = req;
 }
 #endif
 
@@ -270,6 +294,7 @@ void voice_play_vbl(void)
 {
 	#if (1==USE_VSYNC_SOUND)
 	if ( 0==use_audio ) return;
+		#if 0
 	int i;
 	for (i=0; i<MAX_VOICE_TRACK; i++)
 	{
@@ -280,6 +305,22 @@ void voice_play_vbl(void)
 			request_voice[i] = NOT_USE_TRACK;/*未使用*/
 		}
 	}
+		#else
+	{
+		static int i=0;
+		i++;
+		i &= 7;
+	//	for (i=0; i<MAX_VOICE_TRACK; i++)
+		{
+			if (NOT_USE_TRACK != request_voice[i])/*使用中?*/
+			{
+				/* 効果音 発音 */
+				Mix_PlayChannel(i/*track*/, voice_track[request_voice[i/*track*/]], 0);
+				request_voice[i] = NOT_USE_TRACK;/*未使用*/
+			}
+		}
+	}
+		#endif
 	#endif
 }
 #endif
@@ -317,23 +358,23 @@ static void voice_load(void)
 {
 	static const char *voice_file_name[VOICE16_MAX_FILES] =
 	{
-		"shot.wav", 	/*	0 */
-		"hit.wav",		/*	1 */
-		"foedst.wav",	/*	2 */
-		"bossdst.wav",	/*	3 */
-		"shipdst.wav",	/*	4 */
-		"bonus.wav",	/*	5 */
-		"extend.wav",	/*	6 */
-		"bomb.wav", 	/*	7 */
+		"se_a.wav", 	/*	0 */	//	"shot.wav", 	/*	0 */
+		"se_b.wav", 	/*	1 */	//	"hit.wav",		/*	1 */
+		"se_c.wav", 	/*	2 */	//	"foedst.wav",	/*	2 */
+		"se_d.wav", 	/*	3 */	//	"bossdst.wav",	/*	3 */
+		"se_e.wav", 	/*	4 */	//	"shipdst.wav",	/*	4 */
+		"se_f.wav", 	/*	5 */	//	"bonus.wav",	/*	5 */
+		"se_g.wav", 	/*	6 */	//	"extend.wav",	/*	6 */
+		"se_h.wav", 	/*	7 */	//	"bomb.wav", 	/*	7 */
 	//
-		"death.wav",	/*	8 */
-		"graze.wav",	/*	9 */
-		"e_shot.wav",	/* 10 */
-		"e_shot00.wav", /* 11 */
-		"b2_shot.wav",	/* 12 */
-		"_shot.wav",	/* 13 */
-		"e_shot01.wav",	/* 14 */
-		"hit.wav",		/* 15 */
+		"se_i.wav", 	/*	8 */	//	"death.wav",	/*	8 */
+		"se_j.wav", 	/*	9 */	//	"graze.wav",	/*	9 */
+		"se_k.wav", 	/* 10 */	//	"e_shot.wav",	/* 10 */
+		"se_l.wav", 	/* 11 */	//	"e_shot00.wav", /* 11 */
+		"se_m.wav", 	/* 12 */	//	"b2_shot.wav",	/* 12 */
+		"se_n.wav", 	/* 13 */	//	"_shot.wav",	/* 13 */
+		"se_o.wav", 	/* 14 */	//	"e_shot01.wav",	/* 14 */
+		"se_p.wav", 	/* 15 */	//	"hit.wav",		/* 15 */
 	};		//いろいろ追加
 	int i;
 	char name[64/*52*/];

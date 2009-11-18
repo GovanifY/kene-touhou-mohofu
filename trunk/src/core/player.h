@@ -38,8 +38,10 @@ enum /*_select_pl_*/		// [***090203		追加
 		#endif/*0000*/
 
 /* on */
-//efine STATE_FLAG_IS_PANEL_WINDOW_SHIFT			(8)
-#define STATE_FLAG_09_IS_PANEL_WINDOW				(0x0100)
+//efine ST ATE_FLAG_IS_PANEL_WINDOW_SHIFT			(8)
+//efine ST ATE_FLAG_09_IS_PANEL_WINDOW				(0x0100)
+/* ボスを倒した場合にon(時間切れではOFF) */
+#define STATE_FLAG_09_IS_WIN_BOSS					(0x0100)
 /* on */
 #define STATE_FLAG_10_IS_LOAD_SCRIPT				(0x0200)
 /* on */
@@ -61,7 +63,7 @@ typedef struct
 	int state_flag; 		/* 設定フラグ */	// [***090116		追加
 	int weapon_power;		/*	0x00-0x7f  (0-127 の128段階==本家と同じ)   max==127==「128段階」*/
 	int chain_point;
-	int bomber_time;
+	int bomber_time_dummy;
 //
 	int my_score;			/* スコア得点 */
 	int graze_point;		/* グレイズ得点 */
@@ -70,13 +72,13 @@ typedef struct
 //
 	SPRITE *core;
 	SPRITE *boss;			// [***090305		追加
-	void (*callback_boss_hitbyweapon)(SPRITE *c, SPRITE *s);		// [***090325		追加
 } PLAYER_DATA;
+extern	int pd_bomber_time;
 
-typedef struct
-{
-	int strength;
-} WEAPON_BASE;
+//typedef struct
+//{
+//	int strength;
+//} WEAPON_BASE;
 
 //#define DEFAULT_MAX_CONTINUE	(3)
 #define DEFAULT_MAX_CONTINUE	(30)

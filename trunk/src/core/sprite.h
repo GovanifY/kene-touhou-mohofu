@@ -3,196 +3,16 @@
 
 #include "game_main.h"
 
+/*---------------------------------------------------------
+	スプライト マネージャ
+--------------------------------------------------------- */
+
 /* Sprites */
 //#define MAX_SPRITE 200
-#if 0
-//	/*自分 */
-	BASE_SHIP_MED_PNG,
-	BASE_SHIP_MED_PNG_ma,
-	BASE_SHIP_MED_PNG_oz,
-	BASE_SHIP_MED_PNG_ci,
-	BASE_SHIP_MED_PNG_yu,
-//
-	/*ショット */
-	BASE_PLAZMA_PNG,
-	BASE_PLAZMA_PNG_ma,
-	BASE_PLAZMA_PNG_oz,
-	BASE_PLAZMA_PNG_ci,
-	BASE_PLAZMA_PNG_yu,
-//
-	BASE_NEEDLE_PNG,
-	BASE_NEEDLE_PNG_ma,
-	BASE_NEEDLE_PNG_oz,
-	BASE_NEEDLE_PNG_ci,
-	BASE_NEEDLE_PNG_yu,
-//
-//	/* ボム用素材 */
-	BASE_BOMBER1_PNG,
-	BASE_BOMBER1_PNG_ma,
-	BASE_BOMBER1_PNG_oz,
-	BASE_BOMBER1_PNG_ci,
-	BASE_BOMBER1_PNG_yu,
-//
-	BASE_BOMBER2_PNG,
-	BASE_BOMBER2_PNG_ma,
-	BASE_BOMBER2_PNG_oz,
-	BASE_BOMBER2_PNG_ci,
-	BASE_BOMBER2_PNG_yu,
-//
-	BASE_BOMBER3_PNG,
-	BASE_BOMBER3_PNG_ma,
-	BASE_BOMBER3_PNG_oz,
-	BASE_BOMBER3_PNG_ci,
-	BASE_BOMBER3_PNG_yu,
-//
-	BASE_BOMBER4_PNG,
-	BASE_BOMBER4_PNG_ma,
-	BASE_BOMBER4_PNG_oz,
-	BASE_BOMBER4_PNG_ci,
-	BASE_BOMBER4_PNG_yu,
-//
-	BASE_BOMBER5_PNG,
-	BASE_BOMBER5_PNG_ma,
-	BASE_BOMBER5_PNG_oz,
-	BASE_BOMBER5_PNG_ci,
-	BASE_BOMBER5_PNG_yu,
-//
-	BASE_BOMBER6_PNG,
-	BASE_BOMBER6_PNG_ma,
-	BASE_BOMBER6_PNG_oz,
-	BASE_BOMBER6_PNG_ci,
-	BASE_BOMBER6_PNG_yu,
 
-//	/* 低速ボム */
-	BASE_TSHOOT_PNG,
-	BASE_TSHOOT_PNG_ma,
-	BASE_TSHOOT_PNG_oz,
-	BASE_TSHOOT_PNG_ci,
-	BASE_TSHOOT_PNG_yu,
-	#endif
-#if 0
-	//BASE_TAMA_KUGEL_PNG,
-	//BASE_TAMA_KUGEL_MINI2_PNG,
-	BASE_TAMA_BULLET_BEAM16_PNG,
-	BASE_TAMA_BULLET_MARU16_PNG,
-//
-	BASE_TAMA_BULLET_MING32_PNG,
-	BASE_TAMA_BULLET_JIPPOU32_PNG,
-//
-	/* 追加予定 */			/* クナイ弾 (敵弾) */
-//
-	BASE_TAMA_OODAMA_08_PNG,/* 大弾(黒青赤...)	黒玉(輪) PRIORITY_03_ENEMY は、あたり判定部分 */
-//	BASE_TAMA_OODAMA_00_PNG,/* 黒玉(輪)  あたり判定部分*/
-//	BASE_TAMA_OODAMA_01_PNG,/* 大弾(青) 表示部分 */
-//	BASE_TAMA_OODAMA_02_PNG,/* 大弾(赤) 表示部分*/
-//
-	BASE_TAMA_BULLET_KNIFE01_PNG,/* 垂直降下ナイフ(赤) */
-	BASE_TAMA_BULLET_KNIFE18_PNG,/* 全方向ナイフ(青) */
-
-	BASE_HOMING16_PNG,/* ザコ 誘導弾 */
-#endif
-
-enum
-{
-//	/* 自分のあたり判定位置表示用コア */
-	BASE_CORE_PNG = 0,
-	BASE_CORE_PNG_ma,
-	BASE_CORE_PNG_oz,
-	BASE_CORE_PNG_ci,
-	BASE_CORE_PNG_yu,
-//
-
-//
-//	/* オプション用素材 */
-	BASE_OPTION1_PNG,
-	BASE_OPTION1_PNG_ma,
-	BASE_OPTION1_PNG_oz,
-	BASE_OPTION1_PNG_ci,
-	BASE_OPTION1_PNG_yu,
-//
-	BASE_OPTION2_PNG,
-	BASE_OPTION2_PNG_ma,
-	BASE_OPTION2_PNG_oz,
-	BASE_OPTION2_PNG_ci,
-	BASE_OPTION2_PNG_yu,
-//
-	BASE_OPTION3_PNG,
-	BASE_OPTION3_PNG_ma,
-	BASE_OPTION3_PNG_oz,
-	BASE_OPTION3_PNG_ci,
-	BASE_OPTION3_PNG_yu,
-//
-	BASE_OPTION4_PNG,
-	BASE_OPTION4_PNG_ma,
-	BASE_OPTION4_PNG_oz,
-	BASE_OPTION4_PNG_ci,
-	BASE_OPTION4_PNG_yu,
-//
-//	/* その他の自機素材 */
-	BASE_BONUS_ITEMS_PNG,
-//
-	/* BG面エフェクト */
-//	BASE_BOMBER_SLOW_PNG,
-	BASE_MAHOUJIN_0_PNG,
-//
-	BASE_TIKEI_BGPANEL1_PNG,
-	BASE_TIKEI_BGPANEL2_PNG,
-	BASE_TIKEI_GROUNDER08_PNG,
-//	/* ザコ */
-	BASE_OBAKE08_PNG,
-	BASE_YUKARI32_PNG,
-	BASE_AKA_KEDAMA08_PNG,
-	BASE_NIJI_KEDAMA16_PNG,
-//
-	BASE_MIDOORI_KEDAMA16_PNG,
-	BASE_KEDAMA16_PNG,
-	BASE_INYOU1_16_PNG,
-	BASE_TATSUMAKI16_PNG,
-//
-	BASE_GREAT_FAIRY02_PNG,
-	BASE_AKA_MEIDO08_PNG,
-	BASE_AO_YOUSEI24_PNG,
-//
-//	/* ボス */
-//	BASE_BOSS_ALICE_0_PNG,
-//	BASE_BOSS_ALICE_1_PNG,
-//	BASE_BOSS_ALICE_2_PNG,
-//	BASE_BOSS_ALICE_3_PNG,
-//	BASE_BOSS_ALICE_4_PNG,
-	BASE_BOSS_ALICE_PNG,
-	BASE_BOSS_ALICE_DOLLS_PNG,
-//
-	BASE_BOSS_AYA_PNG,
-//
-	BASE_BOSS_KAGUYA_PNG,
-//	BASE_BOSS_KAGUYA_0_PNG,
-//	BASE_BOSS_KAGUYA_1_PNG,
-//	BASE_BOSS_KAGUYA_2_PNG,
-//	BASE_BOSS_KAGUYA_3_PNG,
-//	BASE_BOSS_KAGUYA_4_PNG,
-//	BASE_BOSS_KAGUYA_5_PNG,
-//
-	BASE_BOSS_SAKUYA_PNG,
-//
-	//BASE_KEY_ICON_PNG,
-//
-	/* フロント面エフェクト */
-
-//	/* 小爆発 */
-	BASE_TR_BLUE_PNG,
-	BASE_TR_RED_PNG,
-	BASE_TR_GREEN_PNG,
-//	/* ザコ消滅爆発 */
-	BASE_BAKUHA05_PNG,
-	BASE_BAKUHA06_PNG,
-	BASE_BAKUHA07_PNG,
-//	/* 火炎爆発 */
-	BASE_BAKUHA_EX_PNG,
-
-
-
-	FILE_RESOURCE_MAX/*最大数*/
-};
+/*---------------------------------------------------------
+	リソース resource
+--------------------------------------------------------- */
 enum
 {
 	#if 0
@@ -252,6 +72,91 @@ enum
 	#define TAMA_TYPE_BULLET_KNIFE18_PNG	TAMA_ATARI_02
 #endif
 
+enum
+{
+	/* ☆ BG面エフェクト */
+	BASE_TIKEI_BGPANEL1_PNG = 0,
+	BASE_TIKEI_BGPANEL2_PNG,
+//	/* ☆ SHOT面エフェクト */
+//
+//	BASE_BOMBER_SLOW_PNG,
+	BASE_MAHOUJIN_0_PNG,
+//
+	BASE_TIKEI_GROUNDER08_PNG,
+//	/* ☆ ザコ面エフェクト */
+//	/* ザコ(ザコ面エフェクト) */
+	BASE_OBAKE08_PNG,
+	BASE_YUKARI32_PNG,
+	BASE_AKA_KEDAMA08_PNG,
+	BASE_NIJI_KEDAMA16_PNG,
+//
+	BASE_MIDOORI_KEDAMA16_PNG,
+	BASE_KEDAMA16_PNG,
+	BASE_INYOU1_16_PNG,
+	BASE_TATSUMAKI16_PNG,
+//
+	BASE_GREAT_FAIRY02_PNG,
+	BASE_AKA_MEIDO08_PNG,
+	BASE_AO_YOUSEI24_PNG,
+//
+//	/* ボス(ザコ面エフェクト) */
+//	BASE_BOSS_ALICE_0_PNG,
+//	BASE_BOSS_ALICE_1_PNG,
+//	BASE_BOSS_ALICE_2_PNG,
+//	BASE_BOSS_ALICE_3_PNG,
+//	BASE_BOSS_ALICE_4_PNG,
+	BASE_BOSS_ALICE_PNG,
+	BASE_BOSS_ALICE_DOLLS_PNG,
+	BASE_BOSS_PACHE_PNG,
+	BASE_BOSS_PACHE_DOLLS_PNG,
+//
+	BASE_BOSS_AYA_PNG,
+//
+	BASE_BOSS_KAGUYA_PNG,
+//	BASE_BOSS_KAGUYA_0_PNG,
+//	BASE_BOSS_KAGUYA_1_PNG,
+//	BASE_BOSS_KAGUYA_2_PNG,
+//	BASE_BOSS_KAGUYA_3_PNG,
+//	BASE_BOSS_KAGUYA_4_PNG,
+//	BASE_BOSS_KAGUYA_5_PNG,
+//
+	BASE_BOSS_SAKUYA_PNG,
+//
+	//BASE_KEY_ICON_PNG,
+//
+	/* ☆ アイテム面エフェクト */
+//	/* その他の自機素材(アイテム面エフェクト) */
+	BASE_BONUS_ITEMS_PNG,
+//
+	/* ☆ 弾幕面エフェクト */
+//
+	/* ☆ フロント面エフェクト */
+//	/* 自分のあたり判定位置表示用コア(フロント面エフェクト) */
+	BASE_CORE_PNG,
+	BASE_CORE_PNG_ma,
+	BASE_CORE_PNG_oz,
+	BASE_CORE_PNG_ci,
+	BASE_CORE_PNG_yu,
+//
+	#if 000
+//	/* 小爆発(フロント面エフェクト) */
+	BASE_TR_BLUE_PNG,
+	BASE_TR_RED_PNG,
+	BASE_TR_GREEN_PNG,
+//	/* ザコ消滅爆発(フロント面エフェクト) */
+	BASE_BAKUHA05_PNG,
+	BASE_BAKUHA06_PNG,
+	BASE_BAKUHA07_PNG,
+//	/* 火炎爆発(フロント面エフェクト) */
+	BASE_BAKUHA_EX_PNG,
+	#endif //000
+	/* ボンバーテロップロゴ(フロント面エフェクト) */
+
+	/* /[コンティニュー文字(bank00)/メニュー文字(bank01)/メニュー文字(bank02)] */
+
+	FILE_RESOURCE_MAX/*最大数*/
+};
+
 // 弾幕について
 // 弾幕(敵弾のみ自弾は含まない)はGuで描く事を計画中(というか妄想中)。
 // その場合、SDL画面描画後にGuで描くので、
@@ -291,16 +196,18 @@ enum
 enum /*_priority_*/
 {
 // [背景関連]
-	PRIORITY_00_BG = 0, 	//	P R_BACK0 = 0,
-	PRIORITY_01_SHOT,		//	P RIORITY_01_GROUNDER,		/*自弾/地上ザコ敵/魔方陣*/
+//	PR IORITY_00_,			/*Gu化まだ*/	//	P R_BACK0 = 0,			/* 演出用浮遊物 */	/* 地形３連パネル */	/* 地形パネル棒 */
+	PRIORITY_01_SHOT = 0,	/*Gu化まだ?*/	//	PRIORITY_01_SHOTBG	P RIORITY_01_GROUNDER,		/*自弾/地上ザコ敵/魔方陣*/
 // [自機関連]
-	PRIORITY_02_PLAYER, 	/* 自機 */
+	PRIORITY_02_PLAYER, 	/*Gu化途中*/	/* 自機 */
 // [敵関連]
-	PRIORITY_03_ENEMY,		/* ボス/ザコ敵 */
+	PRIORITY_03_ENEMY,		/*Gu化まだ*/	/* ボス/ザコ敵 */
 // [アイテム関連]
-	PRIORITY_04_ITEM,		/* アイテム/漢字スコア */	//P R_PLAYER2,			/*当たり表示*/
+	PRIORITY_04_ITEM,		/*Gu化まだ*/	/* アイテム/漢字スコア */	//P R_PLAYER2,			/*当たり表示*/
 // [敵弾関連]
-	PRIORITY_05_BULLETS/*PRIORITY_03_ENEMY_WEAPON*/,		/*敵弾*/
+	PRIORITY_05_BULLETS,	/*Gu化途中*/	/*敵弾*/	/*PRIORITY_03_ENEMY_WEAPON*/
+// [Guフロント面(Guで半透明は最前面に無いと描画できないので新設した)]
+/*	PRIORITY_06_FRONT,*/	/*Gu化途中*/	/* Guのみ(SDL側では元々無し) */
 };
 // プライオリティは Gu に移行した場合に、
 // 半透明がある場合はハードウェアー処理できないので
@@ -335,31 +242,38 @@ enum /*_priority_*/
 	ここは種類別ではなくて、機能別に分類してください。
 */
 #define SP_GROUP_SHOT_ZAKO		(0x0000)/*0x0100*/
-#define SP_GROUP_SHOT_BOSS		(0x0080)/*0x0100*/
+#define SP_GROUP_SHOT_SPECIAL	(0x0080)/*0x0100*/
 //
-#define SP_GROUP_JIKI_GET_ITEM	(0x0100)/*0x0100*/
+#define SP_GROUP_JIKI_GET_ITEM	(0x0100)/*0x0100*/		/* === Guプレイヤー面 === */
 #define SP_GROUP_PLAYER_CORE	(0x0200)/*0x0100*/
 #define SP_GROUP_ZAKO			(0x0400)/*0x0400*/
 #define SP_GROUP_BOSS			(0x0800)/*0x0400*/
-#define SP_GROUP_BULLETS		(0x1000)/*0x0800*/
+//#define SP_GROUP_TEKI 		(0x0400)/*0x0400*/
+//#define SP_GROUP_ZAKO 		(SP_GROUP_TEKI|0)
+//#define SP_GROUP_BOSS 		(SP_GROUP_TEKI|SP_GROUP_SHOT_SPECIAL)
+#define SP_GROUP_BULLETS		(0x1000)/*0x0800*/		/* === Gu弾幕面 === */
 #define SP_GROUP_ITEMS			(0x2000)/*0x1000*/
 #define SP_GROUP_PAUSE_OBJS 	(0x4000)/*0x2000*/
-#define SP_GROUP_ETC			(0x8000)
-#define SP_GROUP_ALL_TYPE		(0xff00)
+#define SP_GROUP_ETC			(0x8000)				/* === Guフロント面 === */
+#define SP_GROUP_ALL_SDL_TYPE	(0xff00)
 #define SP_GROUP_SUB_TYPE_256	(0x00ff)
 #define SP_GROUP_SUB_TYPE_128	(0x007f)
+/* 以下あたり判定なし */
+#define SP_GROUP_MAHOU_JIN			(0x00010000)			/* === Gu魔方陣面 === */
+#define SP_GROUP_PANEL				(0x00020000)			/* === Guパネル面 === */
+#define SP_GROUP_ALL_GAME_OBJS		(0x00ffff00)			/* ゲームコア終了時にかたづけるobj */
 //#define SP_GROUP_SHOTS		0x0200
 //#define SP_GROUP_ETC			0x4000
 //#define SP_GROUP_ENEMYS		0x0200/*0x0400 */
 /* 共用 */
 //#define SP_GROUP_TEXTS			(SP_GROUP_PLAYER)/*0x2000 */
 
-
+/* SP_GROUP_ETC == SP_GROUP_FRONT */
 
 enum /*sprite_type*/
 {
 /*	自分A */
-//	S P_PLAYER_ITEM/*プレイヤーの本体(あたり判定がアイテム取得)*/	= /*0x0100*/SP_GROUP_JIKI_GET_ITEM,	/* Unser Held */
+//	S P_PLAYER_ITEM/*プレイヤーの本体(あたり判定がアイテム取得)*/	= /*0x0100*/SP_GROUP_JIKI_GET_ITEM, /* Unser Held */
 /*	自弾 */
 //	S P_SHOT_BOSS,/*プレイヤーのボスに有効弾*/					//	= /*0x0200*/SP_GROUP_SHOTS, 	/* Waffen des Helden */
 //	S P_SHOT_ZAKO,/*プレイヤーのボスに無効弾*/
@@ -391,6 +305,67 @@ enum /*sprite_type*/
 /*	その他 */
 	SP_MUTEKI														= /*0x4000*/SP_GROUP_ETC,		/* diverses */
 };
+
+
+/* === Gu魔方陣面 === */		/* --- まだ作ってない --- */
+
+enum	/* ☆ 魔方陣面エフェクト */
+{
+	MAHOU_JIN_00_aaa	= /*0x00010000*/SP_GROUP_MAHOU_JIN,
+	MAHOU_JIN_01_bbb,
+	MAHOU_JIN_02_,
+	MAHOU_JIN_03_,
+	MAHOU_JIN_04_,
+	MAHOU_JIN_05_,
+	MAHOU_JIN_06_,
+	MAHOU_JIN_07_,
+};
+
+/* === Guフロント面 === */		/* --- まだ作ってない --- */
+
+enum	/* ☆ フロント面エフェクト */
+{	/* 自分のあたり判定位置表示用コア(フロント面エフェクト) */
+	JIKI_CORE_00_REIMU	= /*0x4000*/SP_GROUP_ETC,
+	JIKI_CORE_01_MARISA,
+	JIKI_CORE_02_,
+	JIKI_CORE_03_,
+	JIKI_CORE_04_,
+	JIKI_CORE_05_,
+	JIKI_CORE_06_,
+	JIKI_CORE_07_,
+//	/* 小爆発 / ザコ消滅爆発(フロント面エフェクト) */
+	BAKUHA00,	/* 小爆発(黄色?、現在ダミー) */
+	BAKUHA01,	/* 小爆発(青)BASE_TR_BLUE_PNG */
+	BAKUHA02,	/* 小爆発(赤)BASE_TR_RED_PNG */
+	BAKUHA03,	/* 小爆発(緑)BASE_TR_GREEN_PNG */
+	BAKUHA04,	/* ザコ消滅爆発(黄色、現在ダミー) */
+	BAKUHA05,	/* ザコ消滅爆発(青)BASE_BAKUHA05_PNG */
+	BAKUHA06,	/* ザコ消滅爆発(赤)BASE_BAKUHA06_PNG */
+	BAKUHA07,	/* ザコ消滅爆発(緑)BASE_BAKUHA07_PNG */
+//	/* 火炎爆発(フロント面エフェクト) */
+	BAKUHA08,	/* 火炎爆発 */
+	BAKUHA09,	/* 火炎爆発 */
+	BAKUHA0a,	/* 火炎爆発 */
+	BAKUHA0b,	/* 火炎爆発 */
+	BAKUHA0c,	/* 火炎爆発 */
+	BAKUHA0d,	/* 火炎爆発 */
+	BAKUHA0e,	/* 火炎爆発 */
+	BAKUHA0f,	/* 火炎爆発 */
+//
+	SPELL_LOGO_,/* Border Power of Spiritual */
+	SPELL_TACHIE_,
+};
+/* Border Power of Spiritual. 霊歌で力を発揮する境界. 霊歌での力の境界 */
+/* Border Power of Spiritus.  酒精で力を発揮する境界. 酒精での力の境界 */
+/*
+Spiritus  酒精
+Spiritual 霊歌
+霊歌の境界力
+Border Power of Spiritual. 霊歌のパワーに接してください。
+Border Power of Spiritus. 酒精のパワーに接してください。
+*/
+
+/* === Guプレイヤー面 === */
 enum
 {
 //	プレイヤーアニメーション
@@ -468,6 +443,8 @@ enum
 	JIKI_OPTION_03_06,
 	JIKI_OPTION_03_07,
 };
+
+/* === Gu弾幕面 === */
 enum
 {
 	BULLET_MARU8_00_AKA 				= SP_GROUP_BULLETS/*0x0800*/,
@@ -544,107 +521,79 @@ enum
 };
 
 
-
-//#define SP_LASER			SP_BULLET
-//#define SP_BOSS02ICE		SP_BULLET
-//#define SP_BIGBULLET	SP_BULLET
-
-//	SP_ZAKO //	SP_ENEMY_HOMING,/*特殊敵[敵側のホーミング弾]*/
-//	SP_ZAKO //	SP_TIKEI,	//SP_GROUNDER,SP_BGPANEL,
-
-//	SP_BOSS01,
-//	SP_BOSS02,
-//	SP_BOSS03,
-//	SP_BOSS04,
-
-//	SP_LASER,
-//	SP_BOSS02ICE,
-//	SP_BIGBULLET,
-//	SP_BIGBULLET_DUMMY == SP_MUTEKI,
-
-//	SP_PL_FIREBALL,
-//	SP_PL_KILLRAY,
-//	SP_PL_BOMB,
-//	SP_PL_HOMING,
-//	SP_PL_HLASER,
-	#if 0
-	/* この辺分ける必要が無いかも (注意；ここの順序は中間コード形式と同じに合わせる予定) */
-	//	その他
-	SP_ZAKO_01_OBAKE	= /*0x0400*/SP_GROUP_ENEMYS, /* Die Boesen */
-	SP_ZAKO_02_YUKARI1,
-	SP_ZAKO_03_YUKARI2,
-	//	毛玉
-	SP_ZAKO_04_AKA_KEDAMA1,
-	SP_ZAKO_05_NIJI_KEDAMA1,
-	SP_ZAKO_06_MIDORI_KEDAMA1,
-	SP_ZAKO_07_MIDORI_KEDAMA2,
-	SP_ZAKO_08_KEDAMA1,
-	//	竜巻 陰陽玉
-	SP_ZAKO_09_INYOU1,
-	SP_ZAKO_10_TATSUMAKI1,
-	//	妖怪
-	SP_ZAKO_11_KAKOMI1,
-	//	中妖精
-	SP_ZAKO_12_MEIDO1,
-	SP_ZAKO_13_MEIDO2,
-	SP_ZAKO_14_MEIDO3,
-	SP_ZAKO_15_MEIDO4,
-	//	小妖精
-	SP_ZAKO_16_AO_YOUSEI1,
-	SP_ZAKO_17_AO_YOUSEI2,
-	/* この辺分ける必要が無いかも (注意；ここの順序は中間コード形式と同じに合わせる予定) */
-	#endif
-
-
-
-typedef struct _colision_map_cache
-{
-	SDL_Surface *src;	/* Zeiger auf Quell-Src in Pixmap cache (nur fuer Index, *NO* free!) */
-	int frames; 		/* Anzahl eintraege in dyn.Array **col */
-	int refcount;		/* Wieviele Sprites nutzen diese Colision map? */
-	Uint8 **col;		/* Dyn.Array mit Zeiger auf Colision maps */
-	struct _colision_map_cache *next;
-} COLISION_MAP_CACHE;
-
 /* 針弾とかあるから、現在図形判定しないと詐欺判定になる。 */
 /* あたり判定無くしても速度は変わらないがメモリが節約できるので将来的にはこの辺も改良したい。 */
 //#define USE_ZUKEI_ATARI_HANTEI (1)
-#define USE_ZUKEI_ATARI_HANTEI (0)
+//#define USE_ZUKEI_ATARI_HANTEI (0)
 
+typedef struct /*_point256*/
+{
+	int x256;	/*	union POINT */	/* x表示位置  (256固定小数点形式) / akt. Position */
+	int y256;	/*	union POINT */	/* y表示位置  (256固定小数点形式) / akt. Position */
+} POINT256;
+
+typedef struct /*_point_vector256*/
+{
+	int x256;	/*	union POINT */	/* x表示位置  (256固定小数点形式) / akt. Position */
+	int y256;	/*	union POINT */	/* y表示位置  (256固定小数点形式) / akt. Position */
+	int vx256;	/*	union POINT_VECTOR */	/* 共用regist_vector(); */	/*union BULLET_VECTOR_DATA*/
+	int vy256;	/*	union POINT_VECTOR */	/* 共用regist_vector(); */	/*union BULLET_VECTOR_DATA*/
+} POINT_VECTOR256;
+
+
+#if 1
+// union 共用
+	#define base_health 				user00
+	#define base_weapon_strength		user00
+	#define base_time_out				user00/*bakuhatsu*/
+	#define base_score					user01
+	//#define base_state					user01
+#endif
+//
 typedef struct _sprite
 {
-	int type;						/* 種類及び使用可否 / Sprite-Type, (siehe enum SPRITE_TYPE), 0 = remove */
-	SDL_Surface *sprite_bmp;				/* 画像 / Images */
-	#if (1==USE_ZUKEI_ATARI_HANTEI)
-	COLISION_MAP_CACHE *colision_bmp;		/* あたり判定用画像 / Zeiger auf Col-Map-Cache entry */
-	#endif /* (1==USE_ZUKEI_ATARI_HANTEI) */
-	int m_Hit256R;					/* あたり判定用 */
-	int m_angleCCW512; 				/* 描画用角度(下が0度で左回り(反時計回り)) */
-	int m_zoom_x256; 				/* 表示拡大率 */
-//
-	//int timeover_ticks; 			/* 作成してからの経過時間 (現在KETM自体にバグがある為、一定時間経過すると強制消去する) / number of ticks since creation */
+	int x256;			/*	union POINT */			/* x表示位置  (256固定小数点形式) / akt. Position */
+	int y256;			/*	union POINT */			/* y表示位置  (256固定小数点形式) / akt. Position */
+	int vx256;			/*	union POINT_VECTOR */	/* 共用regist_vector(); */	/*union BULLET_VECTOR_DATA*/
+	int vy256;			/*	union POINT_VECTOR */	/* 共用regist_vector(); */	/*union BULLET_VECTOR_DATA*/
 //[4]
-	int x256;						/* x表示位置  (256固定小数点形式) / akt. Position */
-	int y256;						/* y表示位置  (256固定小数点形式) / akt. Position */
 	int w128;						/* 横幅の半分 (256固定小数点形式) / Breite, He */
 	int h128;						/* 高さの半分 (256固定小数点形式) / Breite, He */
-//[8]
-	void *data; 					/* Zeiger auf Strukur mit zus舩zlichen Daten */
-	void (*callback_mover)(struct _sprite *s);/* Custom-Move-Routine */
-	void (*callback_loser)(struct _sprite *s);/* Custom-loser-Routine (やられた後にボーナスを出すとか、違う爆発するとか) */
-	struct _sprite *next;
-//[12]
-	Uint8 flags;					/* フラグセット / siehe unten (SP_FLAG...) */
-	Uint8 priority; 				/* 表示優先順位 / Prioritaet (0: unten, 9 oben) */
-	Uint8 alpha;					/* 透明度	 / 255: opak, -  0: durchsichtig */
-	Uint8 alpha_chache; 			/* 前回のアルファ値 */
 //
-	Uint8 yx_anim_frame;			/* / アニメパターンの番号(何コマ目か) */	 /*int*/			/* akt. Frame */
+	int m_angleCCW512;				/* 描画用角度(下が0度で左回り(反時計回り)) */
+	int tmp_angleCCW512;			/* 保持用角度(下が0度で左回り(反時計回り)) */
+//[8]
+	int type;						/* 種類及び使用可否 / Sprite-Type, (siehe enum SPRITE_TYPE), 0 = remove. */
+	SDL_Surface *sprite_bmp;		/* 画像 / Images */
+	int m_Hit256R;					/* あたり判定用 */
+	int m_zoom_x256;				/* 表示拡大率 */
+//[12]
+	int user00; 		/* user00 ENEMY_BASE base; */	//int health;	int time_out;		/* user03 */
+	int user01; 		/* user01 ENEMY_BASE base; */	//int score;	int state;			/* user02 */
+	//int timeover_ticks;			/* 作成してからの経過時間 (現在KETM自体にバグがある為、一定時間経過すると強制消去する) / number of ticks since creation */
+//
+	u32 color32;					/* Gu color AGBR8888 */
+//
+	struct _sprite *next;
+//[16]
+	void *data; 					/* Zeiger auf Strukur mit zus舩zlichen Data. */
+	void (*callback_loser)(struct _sprite *src);/* Custom-loser-Routine (やられた後にボーナスを出すとか、違う爆発するとか) */
+	void (*callback_mover)(struct _sprite *src);/* Custom-Move-Routine */
+	void (*callback_hit_enemy)(struct _sprite *c, struct _sprite *src); 	// [***090325		追加
+//[20]
+	Uint8 flags;					/* フラグセット / siehe unten (SP_FLAG...) */
+	Uint8 priority; 				/* 表示優先順位 / Priority for drawing. (0: unten, 9 oben) */
+//
+	Uint8 yx_anim_frame;			/* / アニメパターンの番号(何コマ目か) */	 /*int*/			/* action. Frame */
 	Uint8 yx_frames;				/* / 表示パターン総数 / Anzahl Frames */
 	Uint8 anim_count;				/*int*/ 	// Sint8 anim_count;			/* intern: Zaehler f. anim_speed */
-	Uint8 anim_speed/* 256 */;		/*逆転アニメ禁止に変更*/		/* アニメーション速度 / Geschw. der Animation (negative Werte: Anim l舫ft r�ckw舐ts */	 /*Sint8*/ /*Uint8*/
+	Uint8 anim_speed/* 256 */;		/*逆転アニメ禁止に変更*/		/* アニメーション速度 / Geschw. der Animation */	 /*Sint8*/ /*Uint8*/
+//
 //[16]
 } SPRITE;
+//	Uint8 dummy_alpha;					/* 透明度	 / 255: opak, -  0: durchsichtig */
+//	Uint8 dummy_alpha_chache;			/* 前回のアルファ値 */
+
 #define YX_FRAME_LOW_X	(0x0f)
 #define YX_FRAME_HIGH_Y (0xf0)
 #define anim_frame yx_anim_frame
@@ -716,12 +665,12 @@ extern SPRITE *sprite_add_res_list(
 #endif
 
 extern void sprite_remove_all000(int type);
-extern void sprite_remove_all222(int type);/*弾幕用*/
+//extern void sprite_remove_all222(int type);/*弾幕用*/
 
 extern void sprite_display000(int type);/**/
-extern void sprite_display222(int type);/*弾幕用*/
+//extern void sprite_display222(int type);/*弾幕用*/
 extern void sprite_work000(int type);/**/
-extern void sprite_work222(int type);/*弾幕用*/
+//extern void sprite_work222(int type);/*弾幕用*/
 
 extern SPRITE *sprite_collision_check(SPRITE *tocheck, int type);
 
@@ -747,14 +696,14 @@ extern SPRITE *sprite_collision_check(SPRITE *tocheck, int type);
 //#define GRP_SCREEN_H
 /*	@since		Jul.27.2005 GRP_SCREEN_H		画面表示管理 */
 /* --- 管理する最大スプライト数 */
-//#define SPRITEMAX	1024
+//#define SPRITEMAX 1024
 //#define SPRITEMAX 256
 #define SPRITEMAX	512
 
 typedef struct
 {
 	UINT8 used;
-	UINT8 alpha;
+	UINT8 dummy_alpha;
 	UINT8 texture_id;
 	UINT8 center;	/*dummy*/
 //
@@ -775,7 +724,7 @@ typedef struct
 	#if (1==USE_ZBUFFER)
 	int priority;		/* 表示優先順位 */	/* unsigned short */
 	#endif/* (1==USE_ZBUFFER) */
-
+	u32 color8888;//	int color8888;
 //	Image *Texture;//
 	//SDL_Surface *Texture_ptr;
 } TGameSprite /*, *PTGameSprite*/;

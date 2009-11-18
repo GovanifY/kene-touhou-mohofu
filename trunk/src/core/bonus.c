@@ -6,7 +6,6 @@
 #include "game_main.h"
 #include "bonus.h"
 
-
 /*---------------------------------------------------------
 	アイテムの移動
 ---------------------------------------------------------*/
@@ -14,18 +13,18 @@
 /* 個々のアイテムのステータスデーター */
 typedef struct
 {
-	#if 1
-	int strength;/*union WEAPON_BASE*/		/* なんかアイテムに殺される(?)ので追加？？？ */
-	#endif
-	int y_sum256;	/* アイテム投げ出し用 y軸 積算値(y軸、上方がマイナス) */
+//	#if 0
+//	int strength;/*union WEAPON_BASE*/		/* なんかアイテムに殺される(?)ので追加？？？ */
+//	#endif
+	int y_sum256;		/* アイテム投げ出し用 y軸 積算値(y軸、上方がマイナス) */
 	int angle512;
-	int flags00;				/* 収集フラグ	[***090116	変更 */
+	int flags00;		/* 収集フラグ	[***090116	変更 */
 /*	自動収集 */
-	int flag_first; 			/* firstフラグ */
-	int x_sa256; 	/* 差分 x */
-	int y_sa256; 	/* 差分 y */
+	int flag_first; 	/* firstフラグ */
+	int x_sa256; 		/* 差分 x */
+	int y_sa256; 		/* 差分 y */
 } ITEM_DATA;
-extern int effect_sound_hosi;
+
 static void move_items(SPRITE *src)
 {
 	ITEM_DATA *data = (ITEM_DATA *)src->data;
@@ -42,7 +41,11 @@ static void move_items(SPRITE *src)
 	/* 自動収集でなければ、単純に放物線を描いて落ちる */
 	if (0 == ((data->flags00)&ITEM_MOVE_FLAG_01_COLLECT))
 	{
-		if (data->y_sum256 < t256(3.0) )			/* [***090123 [***090220	変更5=>4=>3 */
+		/* [***090123 [***090220	変更5=>4=>3 t256(3.0) */
+		if (data->y_sum256 < t256(2.2) )	/* 最大アイテム落下速度の調整 */
+		/* t256(2.2) == コンティニュー復活時の[F]を画面の下隅(右下、左下)で死んだ場合で、
+			足が一番遅い、幽々子が(高速モードならば)余裕で取れる速度に調整する。
+			(低速モードでは取れなくても構わない) */
 		{
 			data->y_sum256 += data->angle512;		/* x1.5 */
 		}
@@ -86,20 +89,55 @@ static void move_items(SPRITE *src)
 			if (
 				//	(/*10*/64/*16*/ > data->y_sum256) ||
 				(
+					#if 1
+					/* [矩形判定] プレイヤを中心として、縦横15x15の領域(左右7[dot], 上下7[dot]) */
 					(t256(8) > abs(aaa_x256)) &&
 					(t256(8) > abs(aaa_y256))
+					#else
+					/* [菱形判定] プレイヤを中心として、半径(?)10[dot]の菱形領域<>21x21 */
+					(t256(11) > (abs(aaa_x256)+abs(aaa_y256)))
+					#endif
 				)
 			)
 			{
 				src->type = SP_DELETE;/* 星点のみ特別処理 */				/* おしまい */
-				/*effect_sound_number=*/ effect_sound_hosi=1;/*play_voice_auto_track(VOICE05_BONUS);*/
+//
+				#if (0==USE_DESIGN_TRACK)
+				play_voice_auto_track(VOICE05_BONUS);
+				#else
+				voice_play(VOICE05_BONUS, TRACK07_GRAZE);/*テキトー*/
+				#endif
 			}
 		}
 		src->x256 = player->x256 + (aaa_x256);	/**fps_fa ctor*/
 		src->y256 = player->y256 + (aaa_y256);	/**fps_fa ctor*/
 	}
 }
-
+/*
+[矩形判定] ○ + ● + ◎ の領域でアイテム回収
+[菱形判定] ■ + ● + ◎ の領域でアイテム回収
+□□□□□□□□□□■□□□□□□□□□□
+□□□□□□□□□■■■□□□□□□□□□
+□□□□□□□□■■■■■□□□□□□□□
+□□□○○○○●●●●●●●○○○○□□□
+□□□○○○●●●●●●●●●○○○□□□
+□□□○○●●●●●●●●●●●○○□□□
+□□□○●●●●●●●●●●●●●○□□□
+□□□●●●●●●●●●●●●●●●□□□
+□□■●●●●●●●●●●●●●●●■□□
+□■■●●●●●●●●●●●●●●●■■□
+■■■●●●●●●●◎●●●●●●●■■■
+□■■●●●●●●●●●●●●●●●■■□
+□□■●●●●●●●●●●●●●●●■□□
+□□□●●●●●●●●●●●●●●●□□□
+□□□○●●●●●●●●●●●●●○□□□
+□□□○○●●●●●●●●●●●○○□□□
+□□□○○○●●●●●●●●●○○○□□□
+□□□○○○○●●●●●●●○○○○□□□
+□□□□□□□□■■■■■□□□□□□□□
+□□□□□□□□□■■■□□□□□□□□□
+□□□□□□□□□□■□□□□□□□□□□
+*/
 /*---------------------------------------------------------
 	アイテム出現させる子関数
 ---------------------------------------------------------*/
@@ -113,7 +151,7 @@ static SPRITE *item_mono_create(SPRITE *src/*int x, int y*/, int sel_type)
 	sel_type &= 0x07;
 	s->yx_anim_frame = ((/*SP_ITEM_FIRE_POWER-*/sel_type)/*&0x07*/);
 //	出現位置を決める
-	#define OFFSET_X64		(32*256)/* 64はずらし分 2のn乗の必要有り */
+	#define OFFSET_X64		(64*256)/* 64はずらし分 2のn乗の必要有り */
 	#define ITEM_WIDTH16	(16*256)/* 16はアイテム幅 */
 	#define ITEM_X_LIMIT	(GAME_WIDTH*256+OFFSET_X64-ITEM_WIDTH16)
 	int x256;
@@ -138,7 +176,8 @@ static SPRITE *item_mono_create(SPRITE *src/*int x, int y*/, int sel_type)
 	if ( SP_ITEM_05_HOSI == sel_type )	/* 星点のみ特別処理 */
 	{
 		/* 紅は、こうらしい */
-		if ( USER_BOMOUT_WAIT > ((PLAYER_DATA *)player->data)->bomber_time )
+	//	if ( USER_BOMOUT_WAIT > ((PLAYER_DATA *)player->data)->bomber_time )
+		if ( USER_BOMOUT_WAIT > pd_bomber_time )
 		{	/* ボム中(設定無敵時間中)は100pts.(稼げない) */
 			bonus_info_score_nodel(s, SCORE_100);/*自動消去へ仕様変更s->type = SP_DELETE;*/
 		}
@@ -164,7 +203,12 @@ static SPRITE *item_mono_create(SPRITE *src/*int x, int y*/, int sel_type)
 ---------------------------------------------------------*/
 
 /* [***090125	追加: up_flags の ITEM_MOVE_FLAG_01_COLLECT ビットがオンでプレイヤーに集まります。 */
-void item_create(SPRITE *src/*int x, int y*/, int item_type, int num_of_creates, int up_flags)
+void item_create(
+	SPRITE *src/*int x, int y*/,
+	int item_type,
+	int num_of_creates,
+	int up_flags
+)
 {
 	int i;
 	for (i=0; i<num_of_creates; i++)
@@ -176,12 +220,23 @@ void item_create(SPRITE *src/*int x, int y*/, int item_type, int num_of_creates,
 		ITEM_DATA *data;
 		data				= mmalloc(sizeof(ITEM_DATA));
 		s->data 			= data;
-		data->strength		= 0;		/*なんかアイテムに殺されるので追加？？？*/
+		#if 000
+//		/*data->*/s->base_weapon_strength		= 0;		/*なんかアイテムに殺されるので追加？？？*/
+		#endif
 		/* 画面下方に居る程、投げ出し速度を速くする */
 	//	data->y_sum256		= t256(-5*0.5); 	//ちょっと変更
 	//	data->y_sum256		= t256(-2*0.5); 	/* アイテム投げ出し初期値(y軸、上方がマイナス) */
 	//	data->y_sum256		= -(/*256*/((int)(src->y))<<1)-(ra_nd()&0xff);	/* アイテム投げ出し初期値(y軸、上方がマイナス) */
+		#if 0
+		/* 基本的に画面外(上)にあまり喰み出さない(旧タイプ) */
+		/* アイテムマーカーを作成しない事が前提の動き */
 		data->y_sum256		= -(/*256*/((src->y256)>>7))-(ra_nd()&0xff);	/* アイテム投げ出し初期値(y軸、上方がマイナス) */
+		#else
+		/* 画面外(上)に喰み出す(が、喰み出しマーカー作ってない) */
+		/* アイテムマーカーを作成する事が前提の動き */
+	//	data->y_sum256		= -(/*256*/((200*256)>>7))-(ra_nd()&0xff);	/* アイテム投げ出し初期値(y軸、上方がマイナス) */
+		data->y_sum256		= -(/*256*/((512)))-(ra_nd()&0xff);	/* アイテム投げ出し初期値(y軸、上方がマイナス) */
+		#endif
 		data->angle512		= 6;	/* 6.51898646904403967309077986986488 ra d2deg512(0.08);*/
 		data->flags00		= (up_flags&ITEM_MOVE_FLAG_01_COLLECT);
 		data->flag_first	= 0;
@@ -195,24 +250,67 @@ void item_create(SPRITE *src/*int x, int y*/, int item_type, int num_of_creates,
 //	#define ITEM_CREATE_MODE_02 	(12*1)
 void item_create_for_boss(SPRITE *src, int item_create_mode)
 {
-	#define ITEM_01 	(4*0)
+	#define ITEM_03 	(4*0)
 	#define ITEM_02 	(4*1)
-	#define ITEM_03 	(4*2)
-	#define ITEM_MAX	(4*3)
-	const signed short item_tbl[ITEM_MAX*2] =
+	#define ITEM_01_1 	(4*2)
+	#define ITEM_01_2 	(4*3)
+	#define ITEM_01_3 	(4*4)
+	#define ITEM_01_4 	(4*5)
+	#define ITEM_01_5 	(4*6)
+	#define ITEM_01_6 	(4*7)
+	#define ITEM_MAX	(4*8)
+	const u8 u8_item_tbl[ITEM_MAX*2] =
 	{	/* easy, normal, hard, lunatic */
+	#if 0
+	/* 旧 */
 	/*mode 0: 撃破後 */
-		SP_ITEM_00_P001,	SP_ITEM_02_BOMB,	SP_ITEM_01_P008,	SP_ITEM_06_TENSU,
-		SP_ITEM_04_P128,	SP_ITEM_01_P008,	SP_ITEM_02_BOMB,	SP_ITEM_01_P008,
-		SP_ITEM_03_1UP, 	SP_ITEM_00_P001,	SP_ITEM_02_BOMB,	SP_ITEM_02_BOMB,
+		(SP_ITEM_03_1UP&7), 	(SP_ITEM_00_P001&7),	(SP_ITEM_02_BOMB&7),	(SP_ITEM_02_BOMB&7),
+		(SP_ITEM_04_P128&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_02_BOMB&7),	(SP_ITEM_01_P008&7),
+		(SP_ITEM_00_P001&7),	(SP_ITEM_02_BOMB&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_06_TENSU&7),	/*stage1*/
+		(SP_ITEM_00_P001&7),	(SP_ITEM_02_BOMB&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_06_TENSU&7),	/*stage2*/
+		(SP_ITEM_00_P001&7),	(SP_ITEM_02_BOMB&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_06_TENSU&7),	/*stage3*/
+		(SP_ITEM_00_P001&7),	(SP_ITEM_02_BOMB&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_06_TENSU&7),	/*stage4*/
+		(SP_ITEM_00_P001&7),	(SP_ITEM_02_BOMB&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_06_TENSU&7),	/*stage5*/
+		(SP_ITEM_00_P001&7),	(SP_ITEM_02_BOMB&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_06_TENSU&7),	/*stage6*/
 	/*mode 1: 撃破中 */
-		SP_ITEM_01_P008,	SP_ITEM_01_P008,	SP_ITEM_01_P008,	SP_ITEM_06_TENSU,
-		SP_ITEM_00_P001,	SP_ITEM_00_P001,	SP_ITEM_00_P001,	SP_ITEM_01_P008,
-		SP_ITEM_02_BOMB,	SP_ITEM_00_P001,	SP_ITEM_00_P001,	SP_ITEM_00_P001,
+		(SP_ITEM_02_BOMB&7),	(SP_ITEM_00_P001&7),	(SP_ITEM_00_P001&7),	(SP_ITEM_00_P001&7),
+		(SP_ITEM_00_P001&7),	(SP_ITEM_00_P001&7),	(SP_ITEM_00_P001&7),	(SP_ITEM_01_P008&7),
+		(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_06_TENSU&7),	/*stage1*/
+		(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_06_TENSU&7),	/*stage2*/
+		(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_06_TENSU&7),	/*stage3*/
+		(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_06_TENSU&7),	/*stage4*/
+		(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_06_TENSU&7),	/*stage5*/
+		(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_06_TENSU&7),	/*stage6*/
+	#else
+	/* 新(テスト中) */
+	/*mode 0: 撃破後 */ 	/* easy, normal, hard, lunatic */
+		(SP_ITEM_03_1UP&7), 	(SP_ITEM_03_1UP&7), 	(SP_ITEM_02_BOMB&7),	(SP_ITEM_02_BOMB&7),	/* (もしstage7まで作るとしたらstage7クリアー後(クリアー後なのでゲーム的には意味無い)もここを共用する) */
+		(SP_ITEM_03_1UP&7), 	(SP_ITEM_02_BOMB&7),	(SP_ITEM_02_BOMB&7),	(SP_ITEM_01_P008&7),
+		(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_06_TENSU&7),	/*stage1*/	/*alice*/
+		(SP_ITEM_00_P001&7),	(SP_ITEM_02_BOMB&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_06_TENSU&7),	/*stage2*/	/*aya*/
+		(SP_ITEM_00_P001&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_02_BOMB&7),	(SP_ITEM_01_P008&7),	/*stage3*/	/*mitei*/
+		(SP_ITEM_00_P001&7),	(SP_ITEM_02_BOMB&7),	(SP_ITEM_02_BOMB&7),	(SP_ITEM_01_P008&7),	/*stage4*/	/*kaguya*/
+		(SP_ITEM_00_P001&7),	(SP_ITEM_02_BOMB&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_06_TENSU&7),	/*stage5*/	/*pache*/
+		(SP_ITEM_00_P001&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_06_TENSU&7),	/*stage6*/	/*sakuya*/		/*---- sakuya撃破後はゲーム的には意味無い */
+	/*mode 1: 撃破中 */
+		(SP_ITEM_02_BOMB&7),	(SP_ITEM_00_P001&7),	(SP_ITEM_00_P001&7),	(SP_ITEM_00_P001&7),
+		(SP_ITEM_00_P001&7),	(SP_ITEM_00_P001&7),	(SP_ITEM_00_P001&7),	(SP_ITEM_01_P008&7),
+		(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_06_TENSU&7),	/*stage1*/
+		(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_06_TENSU&7),	/*stage2*/
+		(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_06_TENSU&7),	/*stage3*/
+		(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_06_TENSU&7),	/*stage4*/
+		(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_06_TENSU&7),	/*stage5*/
+		(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_06_TENSU&7),	/*stage6*/
+	#endif
 	};
-	item_create(src, item_tbl[		   difficulty+item_create_mode]/*SP_ITEM_01_P008 */, player_now_stage/*5*/, ITEM_MOVE_FLAG_06_RAND_XY);
-	item_create(src, item_tbl[ ITEM_02+difficulty+item_create_mode]/*SP_ITEM_04_P128 */, 1, ITEM_MOVE_FLAG_06_RAND_XY);
-	item_create(src, item_tbl[ ITEM_03+difficulty+item_create_mode]/*SP_ITEM_03_1UP  */, 1, ITEM_MOVE_FLAG_06_RAND_XY);
+//	item_create(src, item_tbl[ITEM_03+difficulty+item_create_mode]/*SP_ITEM_03_1UP  */, 1, ITEM_MOVE_FLAG_06_RAND_XY);
+//	item_create(src, item_tbl[ITEM_02+difficulty+item_create_mode]/*SP_ITEM_04_P128 */, 1, ITEM_MOVE_FLAG_06_RAND_XY);
+//	item_create(src, item_tbl[ITEM_01+difficulty+item_create_mode]/*SP_ITEM_01_P008 */, player_now_stage/*5*/, ITEM_MOVE_FLAG_06_RAND_XY);
+	int i;
+	for (i=0; i<(player_now_stage+2); i++)
+	{
+		item_create(src, SP_GROUP_ITEMS+u8_item_tbl[difficulty+item_create_mode+i]/*SP_ITEM_03_1UP  */, 1, ITEM_MOVE_FLAG_06_RAND_XY);
+	}
 	item_create(src, SP_ITEM_05_HOSI, 16/*7*/, (ITEM_MOVE_FLAG_01_COLLECT|ITEM_MOVE_FLAG_06_RAND_XY) );/*星点を出す*/
 }
 //	item_create(sb03[i], SP_ITEM_05_HOSI, 16/*7*/, (ITEM_MOVE_FLAG_01_COLLECT|ITEM_MOVE_FLAG_06_RAND_XY) );/*星点を出す*/
@@ -476,14 +574,12 @@ void bonus_info_score_nodel(SPRITE *src/*int x, int y*/, int score_type)
 	スコア加算されると、必ずここが呼ばれる。
 	ここでエクステンドチェック(残機が得点で増えるチェック)を
 	する予定。(だけど、まだ作っていない)
+	-------------------------------------------------------
+	エクステンドチェックは実行時間が読めないのはマズい
+	1/60F 毎に必ずチェックにいく方式に改める予定。
 ---------------------------------------------------------*/
 #define PLAYER_MAX_SCORE (score( 9999999990))
 
-
-#if (1==USE_EXTEND_CHECK)
-static int extend_check_score;
-static int extend_check_counter;
-#endif
 void player_add_score(int score_num)
 {
 	((PLAYER_DATA *)player->data)->my_score += score_num;
@@ -493,7 +589,17 @@ void player_add_score(int score_num)
 	{
 		((PLAYER_DATA *)player->data)->my_score = PLAYER_MAX_SCORE;
 	}
-	#endif
+	#endif /* (1==USE_EXTEND_CHECK) */
+}
+
+#if (1==USE_EXTEND_CHECK)
+static int extend_check_score;
+static int extend_check_counter;
+#endif /* (1==USE_EXTEND_CHECK) */
+#if 0//(1==USE_EXTEND_CHECK)
+/* 1/60F 毎に必ずチェックにいく方式 */
+void player_check_extend_score(void)
+{
 	/* 1000万、2500万、5000万、10000万でエクステンド */
 	#if (1==USE_EXTEND_CHECK)
 	if ( extend_check_score < ((PLAYER_DATA *)player->data)->my_score ) 	/* エクステンド チェック */
@@ -517,12 +623,13 @@ void player_add_score(int score_num)
 			extend_check_score = extend_score_tbl[extend_check_counter];
 		}
 	}
-	#endif
+	#endif /* (1==USE_EXTEND_CHECK) */
 }
+#endif
 #if (1==USE_EXTEND_CHECK)
 void player_init_extend_score(void)
 {
 	extend_check_score		= score(   10000000);
 	extend_check_counter	= 0;
 }
-#endif
+#endif /* (1==USE_EXTEND_CHECK) */

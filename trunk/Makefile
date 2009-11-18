@@ -4,7 +4,7 @@
 
 TARGET = kene
 
-PSP_EBOOT_TITLE = kene_r26
+PSP_EBOOT_TITLE = kene_r27
 
 #------------------------------------------------------------------------------
 # PSP setting
@@ -257,6 +257,7 @@ LIBS += -lc
 ### PSPSDKä÷òAÇÕå„(à íuàÀë∂Ç™Ç†ÇÈÅB)
 
 LIBS += -lpsppower
+#LIBS += -lpspgum
 LIBS += -lpspgu
 LIBS += -lpsphprm
 LIBS += -lpspaudio
@@ -288,6 +289,7 @@ endif
 OBJDIRS += $(OBJ)
 OBJDIRS += $(OBJ)/core
 OBJDIRS += $(OBJ)/core/enemy
+OBJDIRS += $(OBJ)/font
 
 # add after the others, in custom.mak
 
@@ -300,14 +302,19 @@ OBJDIRS += $(OBJ)/core/enemy
 
 OBJS += $(OBJ)/core/bullet_object.o
 OBJS += $(OBJ)/core/danmaku.o
+OBJS += $(OBJ)/core/spell_card.o
+OBJS += $(OBJ)/core/enemy/common.o
 
 OBJS += $(OBJ)/core/enemy/boss_01_alice.o
 OBJS += $(OBJ)/core/enemy/boss_02_cirno.o
 OBJS += $(OBJ)/core/enemy/boss_03_aya.o
+OBJS += $(OBJ)/core/enemy/boss_03_mitei.o
 OBJS += $(OBJ)/core/enemy/boss_04_kaguya.o
-OBJS += $(OBJ)/core/enemy/boss_05_sakuya.o
+OBJS += $(OBJ)/core/enemy/boss_05_pache.o
+OBJS += $(OBJ)/core/enemy/boss_06_sakuya.o
 
 OBJS += $(OBJ)/core/enemy/chuu_01_youkai1.o
+OBJS += $(OBJ)/core/enemy/chuu_02_youkai2.o
 
 OBJS += $(OBJ)/core/enemy/zako_01_obake.o
 OBJS += $(OBJ)/core/enemy/zako_02_yukari1.o
@@ -317,21 +324,26 @@ OBJS += $(OBJ)/core/enemy/zako_05_niji_kedama.o
 OBJS += $(OBJ)/core/enemy/zako_06_midori_kedama1.o
 OBJS += $(OBJ)/core/enemy/zako_07_midori_kedama2.o
 OBJS += $(OBJ)/core/enemy/zako_08_kedama1.o
-OBJS += $(OBJ)/core/enemy/zako_09_inyou1.o
-OBJS += $(OBJ)/core/enemy/zako_10_tatsumaki1.o
-OBJS += $(OBJ)/core/enemy/zako_11_kakomi1.o
-OBJS += $(OBJ)/core/enemy/zako_12_meido1.o
-OBJS += $(OBJ)/core/enemy/zako_13_meido2.o
-OBJS += $(OBJ)/core/enemy/zako_14_meido3.o
-OBJS += $(OBJ)/core/enemy/zako_15_meido4.o
-OBJS += $(OBJ)/core/enemy/zako_16_ao_yousei1.o
-OBJS += $(OBJ)/core/enemy/zako_17_ao_yousei2.o
+OBJS += $(OBJ)/core/enemy/zako_09_kedama2.o
+OBJS += $(OBJ)/core/enemy/zako_10_inyou1.o
+OBJS += $(OBJ)/core/enemy/zako_11_tatsumaki1.o
+OBJS += $(OBJ)/core/enemy/zako_12_kakomi1.o
+OBJS += $(OBJ)/core/enemy/zako_13_meido1.o
+OBJS += $(OBJ)/core/enemy/zako_14_meido2.o
+OBJS += $(OBJ)/core/enemy/zako_15_meido3.o
+OBJS += $(OBJ)/core/enemy/zako_16_meido4.o
+OBJS += $(OBJ)/core/enemy/zako_17_ao_yousei1.o
+OBJS += $(OBJ)/core/enemy/zako_18_ao_yousei2.o
+OBJS += $(OBJ)/core/enemy/zako_19_ao_yousei3.o
+OBJS += $(OBJ)/core/enemy/zako_20_ao_yousei4.o
 
-OBJS += $(OBJ)/core/enemy/eigo_text.o
+OBJS += $(OBJ)/core/enemy/kanji_text.o
 OBJS += $(OBJ)/core/enemy/game_clear.o
 OBJS += $(OBJ)/core/enemy/tikei.o
 OBJS += $(OBJ)/core/enemy/clouds.o
+OBJS += $(OBJ)/core/enemy/bakuhatsu.o
 
+OBJS += $(OBJ)/core/stage_clear.o
 OBJS += $(OBJ)/core/game_core.o
 OBJS += $(OBJ)/core/player.o
 
@@ -344,7 +356,7 @@ OBJS += $(OBJ)/core/bg.o
 OBJS += $(OBJ)/core/font.o
 #---
 
-OBJS += $(OBJ)/core/sound_manager.o
+OBJS += $(OBJ)/core/audio.o
 
 #---
 OBJS += $(OBJ)/core/score_panel.o
@@ -365,15 +377,14 @@ OBJS += $(OBJ)/core/ini_file.o
 #OBJS += $(OBJ)/core/fps.o
 
 
-#2019669
-
  OBJS += $(OBJ)/core/graphics00.o 
 
 OBJS += $(OBJ)/core/scenario_script.o
-OBJS += $(OBJ)/core/shinonomefont.o
+OBJS += $(OBJ)/font/shinonome16p.o
 
 OBJS += $(OBJ)/core/boot_main.o
 OBJS += $(OBJ)/core/initialize.o
+#------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
 ifneq ($(USE_FPU_HACK),1)
@@ -553,6 +564,10 @@ core:
 	@echo Remove shooting core files.
 	@$(RM) -f $(OBJ)/core/*.o
 	@$(RM) -f $(OBJ)/core/enemy/*.o
+
+font:
+	@echo Remove custom font files.
+	@$(RM) -f $(OBJ)/font/*.o
 
 rr:
 	@echo Remove all temporaly files.

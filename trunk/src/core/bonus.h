@@ -52,8 +52,8 @@ enum
 #define ITEM_MOVE_FLAG_04_RAND_Y		0x04
 #define ITEM_MOVE_FLAG_06_RAND_XY		(ITEM_MOVE_FLAG_02_RAND_X|ITEM_MOVE_FLAG_04_RAND_Y)
 
-#define ITEM_CREATE_MODE_01 	(12*0)
-#define ITEM_CREATE_MODE_02 	(12*1)
+#define ITEM_CREATE_MODE_01 	((4*8/*ITEM_MAX*/)*0)
+#define ITEM_CREATE_MODE_02 	((4*8/*ITEM_MAX*/)*1)
 
 extern void item_create(SPRITE *src/*int x, int y*/, int type, int num, int up_flags);
 extern void item_create_for_boss(SPRITE *src, int item_create_mode);
@@ -62,9 +62,11 @@ extern void bonus_info_score_nodel(SPRITE *src/*int x, int y*/, int score_type);
 extern void bonus_info_any_score_nodel(SPRITE *src/*int x, int y*/, int score_num);
 extern void item_from_bullets(int put_item_num);
 
-/* エクステンドチェックがあるので、必ずここを使う */
+/* スコア加算する場合は、カンスト チェックがあるので、必ずここを使う */
 extern void player_add_score(int score_num);
-
+#if (1==USE_EXTEND_CHECK)
+extern void player_check_extend_score(void);/* エクステンドチェック */
+#endif /* (1==USE_EXTEND_CHECK) */
 
 //extern void bonus_add(SPRITE *src/*int x, int y*/, int type, int num, int up_flags);/*廃止*/
 //extern void bonus_info_text(int x, int y, char *text, int font);/*廃止*/

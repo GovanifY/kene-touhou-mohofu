@@ -11,22 +11,22 @@
 #define USE_PSP_5551	0
 //#define USE_PSP_5551	1
 #if (1==USE_PSP_5551)
-	#define SDL_GU_PSM_0000 	GU_PSM_5551
+	#define SDL_GU_PSM_0000 		GU_PSM_5551
 	/*(PSPSDKの場合5-5-5-1)*/
 	/*(pspのSDLでは特殊な操作しない限り5-5-5-0) */
 	/* 5-5-5-1*/
-	#define PSP_DEPTH16 	(16)
-	#define SDL_5551_15 	(15)
+	#define PSP_DEPTH16 			(16)
+	#define SDL_5551_15 			(15)
 	#define PSP_SCREEN_FORMAT_RMASK (0x001f)
 	#define PSP_SCREEN_FORMAT_GMASK (0x03e0)
 	#define PSP_SCREEN_FORMAT_BMASK (0x7c00)
 	#define PSP_SCREEN_FORMAT_AMASK (0x8000)
 	#define PSP_SCREEN_FORMAT_LMASK (0x7bde)
 #else
-	#define SDL_GU_PSM_0000 	GU_PSM_5650
+	#define SDL_GU_PSM_0000 		GU_PSM_5650
 	/* 5-6-5-0 */
-	#define PSP_DEPTH16 	(16)
-	#define SDL_5551_15 	(16)
+	#define PSP_DEPTH16 			(16)
+	#define SDL_5551_15 			(16)
 	#define PSP_SCREEN_FORMAT_RMASK (0x001f)
 	#define PSP_SCREEN_FORMAT_GMASK (0x07e0)
 	#define PSP_SCREEN_FORMAT_BMASK (0xf800)
@@ -36,7 +36,7 @@
 
 enum
 {
-	SDL_00_SCREEN=0,
+	SDL_00_SCREEN		= 0,
 	SDL_01_BACK_SCREEN,
 	SDL_02_TEX_SCREEN,
 	SDL_03_000_SCREEN,
@@ -79,7 +79,7 @@ enum /*_errlevel*/
 enum /*_state*/
 {
 	ST_PSP_QUIT 			= 0x0000,
-	ST_INIT_GAME_PLAY		= 0x0100,
+	ST_INIT_GAME_PLAY_common		= 0x0100,
 	ST_WORK_GAME_PLAY		= 0x0200,
 	ST_INIT_MENU			= 0x0300,
 	ST_WORK_MENU			= 0x0400,
@@ -88,16 +88,17 @@ enum /*_state*/
 	ST_INIT_NAME_ENTRY		= 0x0600,
 	ST_WORK_NAME_ENTRY		= 0x0700,
 //
-	ST_WORK_STAGE_CLEAR 	= 0x0800,
+	ST_WORK_STAGE_FIRST 	= 0x0800,
+	ST_WORK_STAGE_CLEAR 	= 0x0900,
 //
 //	ST_INIT_GAME_OVER					吸収。なし
-	ST_WORK_GAME_OVER		= 0x0900,
+	ST_WORK_GAME_OVER		= 0x0a00,
 //	ST_INIT_RESULT						吸収。なし
-	ST_WORK_RESULT			= 0x0a00,
+	ST_WORK_RESULT			= 0x0b00,
 //	ST_INIT_KEY_CONFIG					吸収。なし
-	ST_WORK_KEY_CONFIG		= 0x0b00,
+	ST_WORK_KEY_CONFIG		= 0x0c00,
 //	ST_INIT_STORY						吸収。なし
-	ST_WORK_STORY			= 0x0c00,		/* [***20090223 追加  */
+	ST_WORK_STORY			= 0x0d00,		/* [***20090223 追加  */
 //	ST_INTRO,
 //	ST_START_INTRO,
 //	ST_GAME_DEMO,
@@ -164,32 +165,32 @@ extern Uint32 my_pad_alter; /*前回入力*/
 enum /*_game_rank_*/
 {
 	RANK_EASY = 0,
-	RANK_NORMAL/*=1*/,
-	RANK_HARD/*=2*/,
-	RANK_LUNATIC/*=3*/,
-	RANK_MAX	/* ランクの最大数==(最高ランク+1) */
+	RANK_NORMAL,	/*=1*/
+	RANK_HARD,		/*=2*/
+	RANK_LUNATIC,	/*=3*/
+	RANK_MAX		/* ランクの最大数==(最高ランク+1) */
 };
 
 extern int psp_loop;
 
 enum
 {
-	key_00_sl = 0,	//SELECT
-	key_01_st,		//START
-	key_02_u,	//上
-	key_03_r,	//右
-	key_04_d,	//下
-	key_05_l,	//左
-	key_06_lt,	//L,
-	key_07_rt,	//R,
-	key_08_sa,	//△,
-	key_09_ma,	//○,
-	key_10_ba,	//×,
-	key_11_si,	//□,
-	key_MAX 	/* 最大数 */
+	KEY_NUM00_SELECT = 0,	/* SELECT */
+	KEY_NUM01_START,		/* START */
+	KEY_NUM02_UP,			/* 上 */
+	KEY_NUM03_RIGHT,		/* 右 */
+	KEY_NUM04_DOWN, 		/* 下 */
+	KEY_NUM05_LEFT, 		/* 左 */
+	KEY_NUM06_L_TRIG,		/* L */
+	KEY_NUM07_R_TRIG,		/* R */
+	KEY_NUM08_TRIANGLE, 	/* △ */
+	KEY_NUM09_CIRCLE,		/* ○ */
+	KEY_NUM10_CROSS,		/* × */
+	KEY_NUM11_SQUARE,		/* □ */
+	KEY_NUM12_MAX			/* 最大数 */
 };
 
-extern int keyconfig[key_MAX];
+extern int keyconfig[KEY_NUM12_MAX];
 
 
 
@@ -200,17 +201,19 @@ extern SDL_Surface *sdl_screen[4];
 #include "sprite.h"
 
 extern SPRITE *player;
+extern SPRITE *dummy_obj;
 
 extern int player_now_stage;
 
 extern int difficulty;
 
+extern int msg_time;/* メッセージ(仮対応)表示時間 */
 
 #include "font.h"
 #include "menu.h"
 #include "player.h"
 //#include "fps.h"
-#include "sound_manager.h"
+#include "audio.h"//#include "so und_manager.h"
 
 //#include "sta rtint ro.h"
 //#include "particle.h"
@@ -230,11 +233,13 @@ typedef struct
 #define DIRECTRY_NAME_LENGTH		(4)
 
 
+/* Gu */
+#if 1
+extern void (*callback_gu_draw_haikei)(void);//unsigned int dr aw_bg_screen;				/* 背景ウィンドウ表示フラグ */
+extern int draw_side_panel;/* パネル表示on(0以外)/off(0) */
 
-
-
-
-
+extern int draw_boss_hp_value;/* ボスhp描画値 */
+#endif
 
 
 //void toggle_fullscreen(void);
@@ -274,6 +279,7 @@ extern void psp_move_screen(int src_screen_number, int dst_screen_number );
 
 /* 0:使わない。1:使う。 1:エンディングデバッグ機能。0:この機能OFF */
 #define USE_ENDING_DEBUG (1)
+#define MAX_STAGE6_FOR_CHECK (6/*5*/)
 
 /* 0:使わない。1:使う。 1:キーコンフィグ使う。0:キーコンフィグ機能OFF */
 //#define USE_KEY_CONFIG (0)
@@ -282,7 +288,7 @@ extern void psp_move_screen(int src_screen_number, int dst_screen_number );
 /* 0:使わない。1:使う。  [1:キーコンフィグ使う場合で] 1:方向キーのキーコンフィグを使う。0:方向キーのキーコンフィグ機能OFF */
 #define USE_KEY_CONFIG_ALLOW (0)
 
-/* 0:しない。 1:する。  コンティニューした場合、スコアランキング */
+/* 0:しない。 1:する。	コンティニューした場合、スコアランキング */
 #define USE_CONTINUED_RANKING (1)
 
 /* 0:しない。 1:する。 エクステンドチェック(作成中) */

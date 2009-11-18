@@ -2,7 +2,8 @@
 #include "bullet_object.h"
 
 /*---------------------------------------------------------
-	アリス・マーガトロイド
+	パチュリー・ノーレッジ
+	パチェ(予定)	(r27から新規追加)
 	-------------------------------------------------------
 	ToDo:
 	ボスタイマー対応中
@@ -66,8 +67,8 @@ static SPRITE *obj_doll[8]; 	/* 人形達 */
 #define FLG_DOLL6 0x40/* 旧右前の人形 */
 #define FLG_DOLL7 0x80/* 旧右前の人形 */
 
-#define FLG_MINI_DOLL	(FLG_DOLL2|FLG_DOLL3|FLG_DOLL4|FLG_DOLL5|FLG_DOLL6|FLG_DOLL7)
-#define FLG_FIRE_DOLL	(FLG_DOLL0|FLG_DOLL1)
+#define FLG_MINI_DOLL	(FLG_DOLL4|FLG_DOLL5|FLG_DOLL6|FLG_DOLL7)
+#define FLG_FIRE_DOLL	(FLG_DOLL0|FLG_DOLL1|FLG_DOLL2|FLG_DOLL3)
 #define FLG_ALL_CAST	(FLG_FIRE_DOLL|FLG_MINI_DOLL)/*全員*/
 
 /*---------------------------------------------------------
@@ -76,10 +77,10 @@ static SPRITE *obj_doll[8]; 	/* 人形達 */
 
 enum
 {
-/*0*/	ALICE_01_KEITAI = 0,	/* 第一形態: アリス登場 */
+/*0*/	ALICE_01_KEITAI = 0,	/* 第一形態: パチェ登場 */
 /*0*/	ALICE_02_KEITAI,		/* 第二形態: 全員で攻撃 */
 /*1*/	ALICE_03_KEITAI,		/* 第三形態: フォーメション2 */
-/*2*/	ALICE_04_KEITAI,		/* 第四形態: アリス単体 */
+/*2*/	ALICE_04_KEITAI,		/* 第四形態: パチェ単体 */
 };
 enum
 {
@@ -98,7 +99,6 @@ enum
 	ST_12,
 	ST_13,
 };
-
 
 /*---------------------------------------------------------
 	敵やられ
@@ -162,7 +162,7 @@ static void move_doll01(SPRITE *src)
 		if (0==(ra_nd()&(0xff)))
 		{
 			/* ショット */
-		//	b01_fire_flags &= (~(doll_data->identity_bit));/* off */
+		//	b05_fire_flags &= (~(doll_data->identity_bit));/* off */
 			bullet_create_n_way_dan_sa_type(src,
 				(t256(1.5)+(difficulty<<6)),
 				ANGLE_JIKI_NERAI_DAN,
@@ -173,7 +173,7 @@ static void move_doll01(SPRITE *src)
 	}
 	#endif
 	#if 1
-	/* アリスを倒すと皆破壊される。 */
+	/* パチェを倒すと皆破壊される。 */
 	if (0==common_boss_flags)
 	{
 		src->type = SP_DELETE;
@@ -243,7 +243,7 @@ static void move_doll02(SPRITE *src)
 		break;
 	}
 	#if 1
-	/* アリスを倒すと皆破壊される。 */
+	/* パチェを倒すと皆破壊される。 */
 	if (0==common_boss_flags)
 	{
 		src->type = SP_DELETE;
@@ -353,49 +353,35 @@ static void move_alice(SPRITE *src)
 			data->state8++;
 			data->state8 &= (8-1);
 			{
-				enum
-				{
-					PPP_00_VX = 0,			/* x ベクトル移動量 */
-					PPP_01_VY,				/* y ベクトル移動量 */
-					PPP_02_WAIT_DIV_2,		/* ウェイトカウンタの半分量 */
-					PPP_03_IS_RESET_ANIME,	/* アニメーションリセット 0:しない 1:する 2:特別(弾幕撃ち) */
-				};
-				s8 ppp[8][4] =
-				{
-					{( 2),(-1),(100),( 1),},	/*右上へ*/
-					{( 0),( 0),( 50),( 2),},	/*wait*/
-					{( 2),( 1),(100),( 1),},	/*右下へ*/
-					{( 0),( 0),( 10),( 0),},	/*wait*/
-					{(-2),(-1),(100),( 1),},	/*左上へ*/
-					{( 0),( 0),( 50),( 2),},	/*wait*/
-					{(-2),( 1),(100),( 1),},	/*左下へ*/
-					{( 0),( 0),( 10),( 0),},	/*wait*/
-				};
-				data->vx	= ppp[data->state8][PPP_00_VX];
-				data->vy	= ppp[data->state8][PPP_01_VY];
-				my_wait 	= ppp[data->state8][PPP_02_WAIT_DIV_2]; 	/* 50*4 60 移動量 */
-				my_wait 	+= my_wait;
-				if (0!=ppp[data->state8][PPP_03_IS_RESET_ANIME])
-				{
-					if (2==ppp[data->state8][PPP_03_IS_RESET_ANIME])	/* 攻撃アニメーション */
+				{	u16 my_rand;
+					my_rand = ra_nd();
+					data->vx	= ((my_rand&0x02)-1)/*ppp[data->state8][PPP_00_VX]*/;
+					data->vy	= (((my_rand>>8)&0x03)-2)/*ppp[data->state8][PPP_01_VY]*/;
+						 if (src->x256< t256(		  0)+t256(48) ) 	{	data->vx =  (2);}
+					else if (src->x256> t256(GAME_WIDTH)-t256(48) ) 	{	data->vx = -(2);}
+				//	my_wait 	= ppp[data->state8]/*[PPP_02_WAIT_DIV_2]*/; 	/* 50*4 60 移動量 */
+					my_wait 	= (my_rand & 0xff); 	/* 50*4 60 移動量 */	/*[PPP_02_WAIT_DIV_2]*/
+				//	my_wait 	+= my_wait;
+				//	if (0!=ppp[data->state8][PPP_03_IS_RESET_ANIME])
 					{
-						alice_anime_count = 48;
-						data->boss_base.danmaku_test++;
-						if ( DANMAKU_MAX <= data->boss_base.danmaku_test)
+					//	if (2==ppp[data->state8][PPP_03_IS_RESET_ANIME])	/* 攻撃アニメーション */
+						if (0==(my_rand&0x04))
 						{
-							data->boss_base.danmaku_test = DANMAKU_01_sakuya;
+							alice_anime_count = 48;
+							data->boss_base.danmaku_test++;
+							data->boss_base.danmaku_test &= 0x0f; 		/*test*/
+							data->boss_base.danmaku_type		= data->boss_base.danmaku_test/*DANMAKU_01*/;	/* 禊弾幕をセット */
+							data->boss_base.danmaku_time_out	= (DANMAKU_01_SET_TIME+DANMAKU_01_SET_TIME);	/* 禊弾幕の発生時間 x 2 */
 						}
-						data->boss_base.danmaku_type		= data->boss_base.danmaku_test/*DANMAKU_01*/;	/* 禊弾幕をセット */
-						data->boss_base.danmaku_time_out	= (DANMAKU_01_SET_TIME+DANMAKU_01_SET_TIME);	/* 禊弾幕の発生時間 x 2 */
+						vvv256=1;
 					}
-					vvv256=1;
 				}
 			}
 		}
 		break;
 	}
 	/*---------------------------------------------------------
-		アリス移動処理
+		パチェ移動処理
 	---------------------------------------------------------*/
 	src->vx256 = (data->vx)*vvv256;
 	src->vy256 = (data->vy)*vvv256;
@@ -403,7 +389,7 @@ static void move_alice(SPRITE *src)
 	boss_move96(src);
 //	move_all_doll(src);
 //
-	danmaku_generator(src); /* 弾幕生成 */
+	danmaku_generator(src); 	/* 弾幕生成 */
 //
 }
 
@@ -411,48 +397,48 @@ static void move_alice(SPRITE *src)
 	敵を追加する
 ---------------------------------------------------------*/
 
-void add_boss_alice(STAGE_DATA *l)/*int lv*/
+void add_boss_pache(STAGE_DATA *l)/*int lv*/
 {
 //	int lv;	lv	= l->user_y;
-//
 //	b01level			= lv+1;
 	alice_anime_count	= 0;
 //
 
 //----[ZAKO]
 //	bb_angle512 	= 128-43/*CCW*/ /*CW 43*/;/*512/12==42.66*/
-	bb_angle512 	= 128/*CCW*/ /*CW 43*/;/*512/12==42.66*/
+	bb_angle512 	= 0;/*128*/ /*CCW*/ /*CW 43*/ /*512/12==42.66*/
 
 	common_boss_flags	= (FLG_ALL_CAST);
 
 //----[BOSS]
 	SPRITE *sakuya;
-	sakuya									= sprite_add_res(BASE_BOSS_ALICE_PNG); /*"boss01-mo.png"60x42, offset*/
+	sakuya									= sprite_add_res(BASE_BOSS_PACHE_PNG); /*"boss05-mo.png"60x42, offset*/
 	sakuya->flags							|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK);
 	sakuya->anim_frame						= 0;
 	sakuya->type							= SP_BOSS/*SP_BOSS01*/;
 	sakuya->callback_mover					= move_alice;
 	sakuya->callback_loser					= lose_boss;
-//	sakuya->callback_hit_enemy				= callback_hit_boss; 	/* コールバック登録 */
-	sakuya->callback_hit_enemy				= NULL; /* ダミーコールバック登録 */
+//	sakuya->callback_hit_enemy				= callback_hit_boss;
+	sakuya->callback_hit_enemy				= NULL; 	/* ダミーコールバック登録 */
 //
 	{
 		BOSS01_DATA *data;
 		data								= mmalloc(sizeof(BOSS01_DATA));
 		sakuya->data						= data;
 		//
-		/*data->boss_base.boss_*/sakuya->base_health	= (1023);	// アリス本体のHP。もう少し高くてもいいかも。// [***090305	変更
+		/*data->boss_base.boss_*/sakuya->base_health		= ((1024-1)*3);	// パチェ本体のHP。もう少し高くてもいいかも。// [***090305	変更
 //		data->boss_base.boss_life			= (0);
-		/*data->boss_base.*/sakuya->base_score			= adjust_score_by_difficulty(score( 100000));	/*	10万 x 1人 (計100万==(1人x10万)+(6人x5万)+(2人x30万)) */
-//		/*data->boss_base.*/sakuya->base_score			= score(1000)*(difficulty+1);
+		/*data->boss_base.*/sakuya->base_score				= adjust_score_by_difficulty(score( 100000));	/*	10万 x 1人 (計100万==(1人x10万)+(6人x5万)+(2人x30万)) */
+//		/*data->boss_base.*/sakuya->base_score				= score(1000)*(difficulty+1);
 		data->state1						= ST_00;
 		data->state8						= 0;
 //		data->move_type 					= ALICE_01_KEITAI;
 		data->vx = ( 0);
 		data->vy = ( 0);
 
-//		/*data->boss_base.*/spell_card_boss_timer		= (40*64);			/* 40*64==40[count] 	約40[秒(64/60)](単位は秒ではない) */
-		/*data->boss_base.*/spell_card_boss_timer		= ((99-24)*64);		/* 75*64==75[count] 	約75[秒(64/60)](単位は秒ではない) */
+	//	/*data->boss_base.*/spell_card_boss_timer		= (40*64);			/* 40*64==40[count] 	約40[秒(64/60)](単位は秒ではない) */
+	//	/*data->boss_base.*/spell_card_boss_timer		= ((99-24)*64);		/* 75*64==75[count] 	約75[秒(64/60)](単位は秒ではない) */
+		/*data->boss_base.*/spell_card_boss_timer		= ((120)*64);		/* 75*64==75[count] 	約120[秒(64/60)](単位は秒ではない) */
 		//
 		#if 1
 	//------------ 弾幕関連
@@ -473,15 +459,16 @@ void add_boss_alice(STAGE_DATA *l)/*int lv*/
 
 //----[ZAKO]
 	/* 85.33==512/6 170.66== 512/3 */	/*171*/
-	#define AA_OFS85 (85)
+//	#define AA_OFS85 (85)
+	#define AA_OFS85 (100)
 	int jj_angle512;
 	jj_angle512= -(int)(AA_OFS85/2);	/*0*/
 	int i;
 	for (i=0; i<8; i++)
 	{
-		obj_doll[i] 						= sprite_add_res(BASE_BOSS_ALICE_DOLLS_PNG/*doll_res_num[i]*/);
+		obj_doll[i] 						= sprite_add_res(BASE_BOSS_PACHE_DOLLS_PNG/*doll_res_num[i]*/);
 //		obj_doll[i]->anim_speed 			= 0;
-		obj_doll[i]->type					= SP_ZAKO/*SP_BOSS01*/;
+		obj_doll[i]->type					= SP_ZAKO/*SP_BOSS05*/;
 		obj_doll[i]->flags					|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK);
 //
 		obj_doll[i]->callback_loser 		= lose_doll;
@@ -500,19 +487,20 @@ void add_boss_alice(STAGE_DATA *l)/*int lv*/
 	//	br2_angle512						= deg_360_to_512(0);
 //		data->br_angle512					= deg_360_to_512(0);/*CW*/
 		data->br_angle512					= (0);/*CCW*/
-		/*data->base.*/obj_doll[i]->base_health 				= (1024-1)/*(200)*/ /*((2==i)?(b01_04[difficulty]):(b01_health[i]))*/;
 	//	/*data->base.*/obj_doll[i]->base_score					= score( 500)*(difficulty+1);
-		if (1<i)
+		if (3/*1*/<i)
 		{
 			obj_doll[i]->callback_mover 	= move_doll01;
 			obj_doll[i]->anim_frame 		= 0x20+((i&1)<<4);		/* ミニ人形 / 紅い娘の人形 */
-			/*data->base.*/obj_doll[i]->base_score				= adjust_score_by_difficulty(score(  50000));	/*	 5万 x 6人 */
+			/*data->base.*/obj_doll[i]->base_score				= adjust_score_by_difficulty(score(  50000));	/*	 5万 x 4人 */
+			/*data->base.*/obj_doll[i]->base_health 			= ((128-1));/*すぐ死ぬ*/
 		}
 		else
 		{
 			obj_doll[i]->callback_mover 	= move_doll02;
 			obj_doll[i]->anim_frame 		= (i<<4);				/*	0:藍い娘の人形(旧左上) / 1:碧の娘の人形(旧右上) */
-			/*data->base.*/obj_doll[i]->base_score				= adjust_score_by_difficulty(score( 300000));	/*	30万 x 2人 */
+			/*data->base.*/obj_doll[i]->base_score				= adjust_score_by_difficulty(score( 300000));	/*	30万 x 4人 */
+			/*data->base.*/obj_doll[i]->base_health 			= ((1024-1)*5);/*硬い(がちゃんと壊せる)*/
 		}
 		data->fix_angle512					= jj_angle512;
 		jj_angle512 += (AA_OFS85);

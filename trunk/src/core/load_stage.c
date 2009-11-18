@@ -62,11 +62,6 @@ static void load_stage_free_entry(void)
 	子関数
 ---------------------------------------------------------*/
 
-/* Load parth error. */
-static void load_stage_set_error(char *load_filename, int error_line_number)
-{
-	error(ERR_WARN, "syntax error in stage data '%s', line no: %d", load_filename, error_line_number);
-}
 
 /*---------------------------------------------------------
 	子関数
@@ -95,12 +90,15 @@ static void load_stage_add_entry(Uint32 time10, char user_command, char *user_st
 		"QUIT", 	/* ゲーム 全ステージ クリアー */
 	//	ボス
 		"アリス",	/*	"BOSS01",*/
-		"チルノ",	/*	"BOSS05",*/
+	//	"チルノ",	/*	"BOSS05",*/
 		"文",		/*	"BOSS02",*/
+		"未定", 	/*	"BOSS03",*/ 		/* 3面はどうするか未定 */
 		"輝夜", 	/*	"BOSS03",*/
+		"パチェ",	/*	"BOSS01",*/
 		"咲夜", 	/*	"BOSS04",*/ 	// [***090207		追加
 	//	特殊敵[中型敵]
 		"妖怪1",	/*	"GFAIRY",*/ 	// [***090207		追加
+		"妖怪2",	/*	"GFAIRY",*/ 	//		追加
 //
 	//	その他ザコ
 		"おばけ1",	/*	"DRAGER",*/
@@ -112,6 +110,7 @@ static void load_stage_add_entry(Uint32 time10, char user_command, char *user_st
 		"緑毛玉1",	/*	"XEV",*/
 		"緑毛玉2",	/*	"CRUSHER",*/
 		"毛玉1",	/*	"BADGUY",*/
+		"毛玉2",	/*	"BADGUY",*/
 	//	竜巻 陰陽玉
 		"陰陽玉1",	/*	"PLASMABALL",*/
 		"竜巻1",	/*	"PROBALL",*/
@@ -125,6 +124,8 @@ static void load_stage_add_entry(Uint32 time10, char user_command, char *user_st
 	//	小妖精
 		"青妖精1",	/*	"FAIRY",*/		// [***090207		追加
 		"青妖精2",	/*	"SPLASH",*/ 	// [***090124		追加
+		"青妖精3",	/*	"SPLASH",*/ 	//		追加
+		"青妖精4",	/*	"SPLASH",*/ 	//		追加
 //	};
 	/* 現在 6 種類 */
 //	const char *btype_name[BTYPE_MAX] =
@@ -155,7 +156,9 @@ static void load_stage_add_entry(Uint32 time10, char user_command, char *user_st
 				つまり、ここの場所で展開してるんだから、ここの場所load_stage()で処理落ちが酷いという事だよ。 */
 		}
 		break;	/* Background */
-	case 'P':	new_entry->user_command=ETYPE_03_PICTURE;	break;	/* Picture */
+	/* ゲーム中処理落ちしないように予め画像キャッシュに詰める方式なので、Pコマンドをゲーム中処理落ちしないように作るのは難しい。
+	(各面開始前にそのステージで使うPコマンド画像を専用スタックに詰めれば出来ない事もない) */
+//	case 'P':	new_entry->user_command=ETYPE_03_PICTURE;	break;	/* Picture */
 	case 'E':	/* add enemy */
 		{
 			for (new_entry->user_command = /*CTYPE_00_unknown+*/(CTYPE_MAX_23_-1); /*0*/CTYPE_00_NONE/*CTYPE_00_unknown*/ < new_entry->user_command; new_entry->user_command--)
@@ -257,7 +260,7 @@ static void load_stage_add_entry(Uint32 time10, char user_command, char *user_st
 static char *load_stage_get_str(char *c, char *buffer)
 {
 	int i = 0;
-	while (*c != '|')
+	while ('|' != (*c))
 	{
 		i++;
 		if (i >= 128)
@@ -275,21 +278,23 @@ ne111:
 	Get ascii a interger number.
 ---------------------------------------------------------*/
 
-static char *load_stage_get_int(char *c, int *nr)
+static char *load_stage_get_int(char *ccc, int *number)
 {
 	char buffer[32/*128*/];
-	char *d = buffer;
+	char *ddd = buffer;
 	int i = 0;
-	while (isdigit(*c)) 	/* isdigit : 数字かどうかの判定 */
+//	while (isdigit(*c)) 			/* isdigit : 数字かどうかの判定 */
+	while ((isdigit(*ccc))||('-'==(*ccc)))		/* 負数にも対応 / isdigit : 数字かどうかの判定 */
 	{
 		i++;
 		if (i >= 32/*128*/)
 		{	goto ne222;}
-		*d++ = *c++;
+		*ddd++ = *ccc++;
 	}
-	*d = 0;
-	*nr = atoi(buffer);
-	return (c);
+	*ddd = 0;
+	*number = atoi(buffer);
+	return (ccc);
+/*error*/
 ne222:
 	return ((char *) NULL);
 }
@@ -429,7 +434,7 @@ void load_stage(void/*int level*/)		/* 元々int */
 		}
 		//
 		#if (1==USE_ENDING_DEBUG)
-		if (5==player_now_stage/*continue_stage*/)
+		if (MAX_STAGE6_FOR_CHECK == player_now_stage/*continue_stage*/)
 		{
 		//	if (B07_AFTER_LOAD==pd->bo ssmode)
 			if ((STATE_FLAG_10_IS_LOAD_SCRIPT|STATE_FLAG_11_IS_BOSS_DESTROY)==(pd->state_flag&(STATE_FLAG_10_IS_LOAD_SCRIPT|STATE_FLAG_11_IS_BOSS_DESTROY)))
@@ -442,7 +447,7 @@ void load_stage(void/*int level*/)		/* 元々int */
 		{
 			pd->state_flag &= (~(STATE_FLAG_05_IS_BOSS));/*ボスoff*/
 		}
-		pd->state_flag |= STATE_FLAG_09_IS_PANEL_WINDOW;/*パネル表示on*/
+		draw_side_panel=1/*pd->state_flag |= ST ATE_FLAG_09_IS_PANEL_WINDOW*/;/* パネル表示on */
 	}
 //
 	stage_bg_load_surface();
@@ -476,26 +481,56 @@ void load_stage(void/*int level*/)		/* 元々int */
 			c = buffer_text_1_line;
 //
 			/* skiped lines. */
+			#if 0
+			/* '\n'が悪いのか巧くいかない(???) */
 			if (*c=='\n')		{	goto loop;/*continue;*/ }	/* skiped null line. */ 	/* Leerzeilen ueberspringen */
 			while (isspace(*c)) {	c++;					}	/* dust left space.  */ 	/* fuehrende leerzeichen uebergehen */
+			#else
+			{my_isspace:;
+				if (*c<=' ')
+				{
+					c++;
+					if (*c==0x0a)
+					{	goto loop;/*continue;*/ }	/* skiped null line. */
+					else
+					{	goto my_isspace;	}
+				}
+			}
+			#endif
 			if (*c=='#')		{	goto loop;/*continue;*/ }	/* skiped comment line. */	/* Kommentarzeile ? */
 //
+		#if (1==USE_PARTH_DEBUG)
+			#define GOTO_ERR_WARN goto err_warn
+		#else
+			#define GOTO_ERR_WARN goto loop
+		#endif
 			/* parth start */	/* Startzeitpunkt holen */
-			if (NULL==(c = load_stage_get_int(c, &time10))) 	{	load_stage_set_error(filename, line_num);	goto loop;/*continue;*/;	}	/* load int time10 */		/* 時間の取得 */
-			if (*c++ != '|')									{	load_stage_set_error(filename, line_num);	goto loop;/*continue;*/;	}	/* load '|' */
-			char_user_command = *c++;																											/* load 1 char commnd */	/* １文字コマンド */	/* Befehl */
-			if (*c++ != '|')									{	load_stage_set_error(filename, line_num);	goto loop;/*continue;*/;	}	/* load '|' */
-			if (NULL==(c = load_stage_get_str(c, user_string))) {	load_stage_set_error(filename, line_num);	goto loop;/*continue;*/;	}	/* load str user_string */
-			if (*c++ != '|')									{	load_stage_set_error(filename, line_num);	goto loop;/*continue;*/;	}	/* load '|' */
-			if (NULL==(c = load_stage_get_int(c, &user_x))) 	{	load_stage_set_error(filename, line_num);	goto loop;/*continue;*/;	}	/* load int user_x */
-			if (*c++ != '|')									{	load_stage_set_error(filename, line_num);	goto loop;/*continue;*/;	}	/* load '|' */
-			if (NULL==(c = load_stage_get_int(c, &user_y))) 	{	load_stage_set_error(filename, line_num);	goto loop;/*continue;*/;	}	/* load int user_y */
+			c = load_stage_get_int(c, &time10); 	if (NULL == c)		{	GOTO_ERR_WARN;/*continue;*/;	}	/* load int time10 */		/* 時間の取得 */
+													if ('|' != *c++)	{	GOTO_ERR_WARN;/*continue;*/;	}	/* load '|' */
+			char_user_command = *c++;																			/* load 1 char commnd */	/* １文字コマンド */	/* Befehl */
+													if (*c++ != '|')	{	GOTO_ERR_WARN;/*continue;*/;	}	/* load '|' */
+			c = load_stage_get_str(c, user_string); if (NULL == c)		{	GOTO_ERR_WARN;/*continue;*/;	}	/* load str user_string */
+													if (*c++ != '|')	{	GOTO_ERR_WARN;/*continue;*/;	}	/* load '|' */
+			c = load_stage_get_int(c, &user_x); 	if (NULL == c)		{	GOTO_ERR_WARN;/*continue;*/;	}	/* load int user_x */
+													if (*c++ != '|')	{	GOTO_ERR_WARN;/*continue;*/;	}	/* load '|' */
+			c = load_stage_get_int(c, &user_y); 	if (NULL == c)		{	GOTO_ERR_WARN;/*continue;*/;	}	/* load int user_y */
 			/* do set register entry. */
 			#define MUSIC_CONVERT_TIME (10)
 			/* 追加登録する */
 			load_stage_add_entry(MUSIC_CONVERT_TIME+time10, char_user_command, user_string, user_x, user_y);
 			entrys++;		/* 有効行数 */
 			goto loop;
+		#if (1==USE_PARTH_DEBUG)
+		err_warn:
+			/* Load parth error. */
+		//	static void load_stage_set_error(char *load_filename, int error_line_number)
+		//	{
+		//		error(ERR_WARN, "syntax error in stage data '%s', line no: %d", load_filename, error_line_number);
+		//	}
+		//	load_stage_set_error(filename, line_num);
+			error(ERR_WARN, "syntax error in stage data '%s', line no: %d", filename, line_num);
+			goto loop;
+		#endif
 		}
 	}
 	my_fclose (/*fp*/);

@@ -2,7 +2,7 @@
 #include "bullet_object.h"
 
 /*---------------------------------------------------------
-		"—d‰ö2",(—\’è)		"GFAIRY",	(r27‚©‚çV‹K’Ç‰Á)
+		"—d‰ö2",		"GFAIRY",
 	-------------------------------------------------------
 
 ---------------------------------------------------------*/
@@ -10,12 +10,15 @@
 typedef struct
 {
 //	ENEMY_BASE base;
-	int state;
-	int wait1;	/* s“®wait */
-	int wait2;	/* UŒ‚wait */
-	int nnn;
+	BOSS_BASE boss_base;
+//------------ ˆÚ“®ŠÖ˜A
+	int state1;
+	int time_out;	/* s“®wait */
+	int repeat; 	/* ŒJ‚è•Ô‚µ‰ñ” */
+	int start_danmaku;
 	SPRITE *s2;
 } YOKAI1_DATA;
+//	int wait2;	/* UŒ‚wait */
 
 
 /*---------------------------------------------------------
@@ -59,31 +62,37 @@ static void callback_hit_youkai1(SPRITE *src/*“GŽ©‘Ì*/, SPRITE *tama/*Ž©’e*/)
 
 
 /*---------------------------------------------------------
+	’e–‹‚ªI‚í‚é‚Ü‚Å‘Ò‚ÂB
+	-------------------------------------------------------
 
 ---------------------------------------------------------*/
 
-static void move_youkai1(SPRITE *src)
+static void danmaku_state_check_holding(SPRITE *src)/*, int nextstate*/ /*, int anim_frame*/
 {
-	YOKAI1_DATA *data=(YOKAI1_DATA *)src->data;
-		data->wait1--;
-	switch (data->state)
+	YOKAI1_DATA *data = (YOKAI1_DATA *)src->data;
+	if (DANMAKU_00 == data->boss_base.danmaku_type)
 	{
-	case 0:/* ã‚©‚ç“oê */
-		data->s2->y256	+= t256(2); 	/**fps_fa ctor*/
-		src->y256		+= t256(2); 	/**fps_fa ctor*/
-		if (t256(50) < src->y256)	{					data->state=1;	}
-		break;
-	case 1:
-		if (1 > data->wait1)
-		{
-			if (2 != data->nnn) {	data->wait1=150;	data->state=2;	}
-			else				{						data->state=5;	}
-		}
-		break;
-	case 2:
-		if (1 > data->wait1)	{	data->wait1=30; 	data->state=3;	/*data->wait2=8 10*/;	}
-		else
-		{
+		data->state1++/* = nextstate*/;
+	}
+}
+
+/*---------------------------------------------------------
+
+---------------------------------------------------------*/
+enum
+{
+	SS00 = 0,
+	SS01,
+	SS02,
+	SS03,
+	SS04,
+};
+//	ST02,
+//	ST02bbb,
+//	ST03,
+
+#if 0
+			;/* 8‹ô”’e */
 			data->wait2--;
 			if (1 > data->wait2)
 			{
@@ -104,15 +113,10 @@ static void move_youkai1(SPRITE *src)
 					BULLET_UROKO14_03_MIDORI,
 					8);
 			}
-		}
-		break;
-	case 3:
-		if (1 > data->wait1)	{	data->wait1=100;	data->state=4;	}
-		break;
-	case 4:
-		if (1 > data->wait1)	{	data->wait1=30; 	data->state=1;	/*data->wait2=8 10*/;	data->nnn++;	}
-		else
-		{
+#endif
+
+#if 0
+			;/* 7Šï”’e */
 			data->wait2--;
 			if (1 > data->wait2)
 			{
@@ -129,11 +133,44 @@ static void move_youkai1(SPRITE *src)
 					BULLET_UROKO14_04_MIZUIRO,
 					7);
 			}
+#endif
+static void move_youkai1(SPRITE *src)
+{
+	YOKAI1_DATA *data=(YOKAI1_DATA *)src->data;
+	data->time_out--;
+	switch (data->state1)
+	{
+	case SS00:	/* ã‚©‚ç“oê */
+		data->s2->y256	+= t256(2); 	/**fps_fa ctor*/
+		src->y256		+= t256(2); 	/**fps_fa ctor*/
+		if (t256(50) < src->y256)	{	data->time_out=30;	data->state1 = SS03; }
+		break;
+//---------
+	case SS01:	/* ’e–‹ƒZƒbƒg */
+			/*data->wait2=8 10*/
+			data->state1++;/* = SS02;*/
+			;/* 8‹ô”’e */
+			;/* 7Šï”’e */
+			data->boss_base.danmaku_type		= data->start_danmaku/*DANMAKU_01*/;			/* âS’e–‹‚ðƒZƒbƒg */
+			data->boss_base.danmaku_time_out	= DANMAKU_01_SET_TIME;	/* âS’e–‹‚Ì”­¶ŽžŠÔ */
+		break;
+	case SS02:	/* âS’e–‹‚ªI‚í‚é‚Ü‚Å‘Ò‹@ */
+		danmaku_state_check_holding(src);	/*, SA07*/ /*, SAKUYA_ANIME_04_CENTER_A*/
+		break;
+	case SS03:	/* ‚µ‚Î‚µ‘Ò‚Â */
+		if (1 > data->time_out)
+		{
+			data->time_out=100/*150*/;
+			/* ‹K’è‚ÌŒJ‚è•Ô‚µ‰ñ”‚±‚È‚µ‚½‚ç‘Þê */
+			data->repeat--;
+			if ((0) != data->repeat)	{	data->state1	= SS01; 		}/* ŒJ‚è•Ô‚µ */
+			else						{	data->state1++/* = SS04*/;		}/* ã‚Ö‘Þê */
 		}
 		break;
-	case 5:/* ã‚Ö‘Þê */
-		data->s2->y256 -= t256(2);		/**fps_fa ctor*/
-		src->y256 -= t256(2)/**fps_fa ctor*/;
+//---------
+	case SS04:	/* ã‚Ö‘Þê */
+		data->s2->y256	-= t256(2); 	/**fps_fa ctor*/
+		src->y256		-= t256(2); 	/**fps_fa ctor*/
 		if ( -((src->h128+src->h128)) > src->y256)
 		{
 			src->type = SP_DELETE;
@@ -141,7 +178,9 @@ static void move_youkai1(SPRITE *src)
 		}
 		break;
 	}
-	src->anim_frame 	= ((data->wait1&0x10)>>4);
+	src->anim_frame 	= ((data->time_out&0x10)>>4);
+//
+	danmaku_generator(src); /* ’e–‹¶¬ */
 }
 
 /*---------------------------------------------------------
@@ -162,27 +201,39 @@ static SPRITE *create_usiro_no_mahojin(SPRITE *src) //–‚•ûwƒOƒ‰ƒtƒBƒbƒN¶¬
 	return (s2);
 }
 
-void add_chuu_youkai1(STAGE_DATA *l)/*int lv*/
+void add_chuu_youkai2(STAGE_DATA *l)/*int lv*/
 {
-	SPRITE *s;
-	s						= sprite_add_res(BASE_GREAT_FAIRY02_PNG);	//s->anim_speed = 3;
-	s->type 				= SP_CHUU/*SP_ZAKO_YOKAI1*/;
-	s->flags				|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK|SP_FLAG_TIME_OVER);
-	s->callback_mover		= move_youkai1;
-//	s->callback_loser		= lose_youkai1;
-	s->callback_hit_enemy	= callback_hit_youkai1; 	/* ƒR[ƒ‹ƒoƒbƒN“o˜^ */
-	s->y256 				= t256(-30);
-//	s->x256 				= (l->user_y)*t256(35)+t256(40);
-//	s->x256 				= ((l->user_y)*t256(32))+t256(48);
-	s->x256 				= ((l->user_y)<<(8+5))+t256(48);
-	YOKAI1_DATA *data;
-	data					= mmalloc(sizeof(YOKAI1_DATA));
-	s->data 				= data;
-	data->state 			= 0;
-	data->wait1 			= 30;
-	data->wait2 			= 10;/*0*/
-	/*data->base.*/s->base_score		= score(100)+score(100)*difficulty;
-	/*data->base.*/s->base_health		= 200+(difficulty<<4);	/* easy‚Å‚à‘¶ÝŠ´‚ðˆóÛ‚Ã‚¯‚éˆ×‚É 200 ‚Í•K—v */ 	// 50+150*difficulty;
-	data->nnn				= 0;
-	data->s2				= create_usiro_no_mahojin(s);
+	{
+		SPRITE *sakuya;
+		sakuya						= sprite_add_res(BASE_GREAT_FAIRY02_PNG);	//s->anim_speed = 3;
+		sakuya->flags				|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK|SP_FLAG_TIME_OVER);
+		sakuya->type				= SP_CHUU/*SP_ZAKO_YOKAI1*/;
+		sakuya->callback_mover		= move_youkai1;
+	//	sakuya->callback_loser		= lose_youkai1;
+		sakuya->callback_hit_enemy	= callback_hit_youkai1; 	/* ƒR[ƒ‹ƒoƒbƒN“o˜^ */
+		sakuya->y256				= t256(-30);
+	//	sakuya->x256				= (l->user_y)*t256(35)+t256(40);
+	//	sakuya->x256				= ((l->user_y)*t256(32))+t256(48);
+	//	sakuya->x256				= ((l->user_y)<<(8+5))+t256(48);
+		sakuya->x256				= ((l->user_y)<<(8));
+//
+		/*data->base.*/sakuya->base_health		= 200+(difficulty<<4);	/* easy‚Å‚à‘¶ÝŠ´‚ðˆóÛ‚Ã‚¯‚éˆ×‚É 200 ‚Í•K—v */ 	// 50+150*difficulty;
+		/*data->base.*/sakuya->base_score		= score(100)+score(100)*difficulty;
+//
+		YOKAI1_DATA *data;
+		data								= mmalloc(sizeof(YOKAI1_DATA));
+		sakuya->data						= data;
+		data->state1						= SS00;
+//		data->time_out						= 30;
+//		data->wait2 						= 10;/*0*/
+		data->repeat						= (2+2+1);
+		data->s2							= create_usiro_no_mahojin(sakuya);
+		#if 1
+	//------------ ’e–‹ŠÖ˜A
+		data->start_danmaku 				= ((l->user_x)&0x1f);
+		data->boss_base.danmaku_type		= 0;
+		data->boss_base.danmaku_time_out	= 0;
+		data->boss_base.danmaku_test		= (DANMAKU_08_rumia-1)/*0*/;
+		#endif
+	}
 }

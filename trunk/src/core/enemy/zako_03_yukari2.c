@@ -14,7 +14,7 @@
 
 typedef struct
 {
-	ENEMY_BASE base;
+//	ENEMY_BASE base;
 	int angle512;
 	int speed256;
 	int state;
@@ -30,9 +30,9 @@ static int destoroy;
 	敵やられ
 ---------------------------------------------------------*/
 
-static void lose_yukari2(SPRITE *s)
+static void lose_yukari2(SPRITE *src)
 {
-	item_create(s, enemy_get_random_item(), 1, (ITEM_MOVE_FLAG_01_COLLECT|ITEM_MOVE_FLAG_06_RAND_XY)/*(up_flags)*/ );
+	item_create(src, enemy_get_random_item(), 1, (ITEM_MOVE_FLAG_01_COLLECT|ITEM_MOVE_FLAG_06_RAND_XY)/*(up_flags)*/ );
 //
 	destoroy++;
 	if ( (NUM_OF_ENEMIES-1) < destoroy/*all_destoroy*/)
@@ -40,7 +40,7 @@ static void lose_yukari2(SPRITE *s)
 		destoroy = 0;
 		if (rand_percent(30))
 		{
-			item_create(/*zzz*/ s, SP_ITEM_00_P001, 1, ITEM_MOVE_FLAG_06_RAND_XY);
+			item_create(/*zzz*/ src, SP_ITEM_00_P001, 1, ITEM_MOVE_FLAG_06_RAND_XY);
 		}
 	}
 }
@@ -49,90 +49,91 @@ static void lose_yukari2(SPRITE *s)
 	敵移動
 ---------------------------------------------------------*/
 
-static void move_yukari2(SPRITE *s)
+static void move_yukari2(SPRITE *src)
 {
-	YUKARI2_DATA *d = (YUKARI2_DATA *)s->data;
-	switch (d->state)
+	YUKARI2_DATA *data = (YUKARI2_DATA *)src->data;
+	switch (data->state)
 	{
 	case 0: /* nach unten */
-		if (s->y256 >= d->max_y256)
+		if (src->y256 >= data->max_y256)
 		{
-			d->state=1;
-			d->angle512 = atan_512(t256(0)-s->y256,t256(GAME_WIDTH/2)-s->x256); 			//ウィンドウ幅の変更
-			if (t256(1.5/*2.0*/) < d->speed256)
+			data->state=1;
+			data->angle512 = atan_512(t256(0)-src->y256,t256(GAME_WIDTH/2)-src->x256); 			//ウィンドウ幅の変更
+			if (t256(1.5/*2.0*/) < data->speed256)
 			{	/*減速*/
-				d->speed256 -= t256(0.2);
-			//	d->speed256 = t256(2)/*3+difficulty*/;								// [***090201		変更
+				data->speed256 -= t256(0.2);
+			//	data->speed256 = t256(2)/*3+difficulty*/;								// [***090201		変更
 			}
 		}
-		if (d->level)
+		if (data->level)
 		{
-		//	if (0==(ra_nd()%(105-(d->level-2+difficulty)*10)))	// [***090126		若干変更
-		//	if (0==(ra_nd()%(11-(d->level-2+difficulty) ))) 	// [***090126		若干変更
-		//	if (0==(ra_nd()%(16-(d->level-2+difficulty) ))) 	// [***090126		若干変更
-		//	if ((d->level-2+difficulty) >= (ra_nd()&(16-1)))	// [***090126		若干変更
-			if ((d->level-2+difficulty) >= (ra_nd()&(64-1)))	// [***090126		若干変更
+		//	if (0==(ra_nd()%(105-(data->level-2+difficulty)*10)))	// [***090126		若干変更
+		//	if (0==(ra_nd()%(11-(data->level-2+difficulty) ))) 	// [***090126		若干変更
+		//	if (0==(ra_nd()%(16-(data->level-2+difficulty) ))) 	// [***090126		若干変更
+		//	if ((data->level-2+difficulty) >= (ra_nd()&(16-1)))	// [***090126		若干変更
+			if ((data->level-2+difficulty) >= (ra_nd()&(64-1)))	// [***090126		若干変更
 			{
-				bullet_create_aka_maru_jikinerai(s, t256(1)+t256(difficulty)+(d->level<<6)/*t256(d->level/3)*/ );
+				bullet_create_aka_maru_jikinerai(src, t256(1)+t256(difficulty)+(data->level<<6)/*t256(data->level/3)*/ );
 			}
 		}
 		break;
 	case 1:
-	//	if (s->y256 < -((s->h128+s->h128)) )
-		if (s->y256 < -(t256(16)) )
+	//	if (src->y256 < -((src->h128+src->h128)) )
+		if (src->y256 < -(t256(16)) )
 		{
-			s->flags	&= (~(SP_FLAG_VISIBLE));
+		//	src->flags	&= (~(SP_FLAG_VISIBLE));
+			src->type = SP_DELETE;	/* おしまい */
 		}
 		break;
 	}
 	/*似てるがちょっと違う--以下rwingx.cと同じ*/
 /* CCWの場合 */
-	s->x256+=((sin512((d->angle512))*d->speed256)>>8)/**fps_fa ctor*/;
-	s->y256+=((cos512((d->angle512))*d->speed256)>>8)/**fps_fa ctor*/;
-//	s->anim_frame=(deg_512_to_360(d->angle512+deg_360_to_512(270))/10)%36;
-//	s->anim_frame = ((((d->angle512/*+deg_360_to_512(270)*/)&(512-1))*(36/2))>>8);
-//	s->anim_frame = ((((d->angle512/*+deg_360_to_512(270)*/)&(512-1))*(32/2))>>8);
-//	s->anim_frame = ((((d->angle512/*+deg_360_to_512(270)*/)&(512-1)))>>4);
-	s->yx_anim_frame = ( ((d->angle512>>3)&(0x30)) | ((d->angle512>>4)&(0x07)) );
+	src->x256+=((sin512((data->angle512))*data->speed256)>>8)/**fps_fa ctor*/;
+	src->y256+=((cos512((data->angle512))*data->speed256)>>8)/**fps_fa ctor*/;
+//	src->anim_frame=(deg_512_to_360(data->angle512+deg_360_to_512(270))/10)%36;
+//	src->anim_frame = ((((data->angle512/*+deg_360_to_512(270)*/)&(512-1))*(36/2))>>8);
+//	src->anim_frame = ((((data->angle512/*+deg_360_to_512(270)*/)&(512-1))*(32/2))>>8);
+//	src->anim_frame = ((((data->angle512/*+deg_360_to_512(270)*/)&(512-1)))>>4);
+	src->yx_anim_frame = ( ((data->angle512>>3)&(0x30)) | ((data->angle512>>4)&(0x07)) );
 /* "yukari8x4.png"
-d->angle512       a bcde ----
-s->yx_anim_frame    yyyy xxxx
-s->yx_anim_frame    --ab -cde
+data->angle512       a bcde ----
+src->yx_anim_frame    yyyy xxxx
+src->yx_anim_frame    --ab -cde
 */
 }
 #if 0
 	case 0: 	/* 右へ移動中 */
-		if (s->x >= d->clip_right)
-		{	d->state=1;}
+		if (src->x >= data->clip_right)
+		{	data->state=1;}
 		break;
 	case 1: 	/* 右周りで回転中 */
-		d->angle512 -= d->turnspeed512/**fps_fa ctor*/;/*簡略化の仕様上少し位置がずれる(※１)*/
-		if (d->angle512 <= deg_360_to_512(180))
+		data->angle512 -= data->turnspeed512/**fps_fa ctor*/;/*簡略化の仕様上少し位置がずれる(※１)*/
+		if (data->angle512 <= deg_360_to_512(180))
 		{
-			d->angle512 = deg_360_to_512(180);
-			d->state=2;
-			if (d->level>0)
-			{	bullet_create_aka_maru_jikinerai(s, t256(3)+(d->level<<7) );}
+			data->angle512 = deg_360_to_512(180);
+			data->state=2;
+			if (data->level>0)
+			{	bullet_create_aka_maru_jikinerai(s, t256(3)+(data->level<<7) );}
 		}
 		break;
 	case 2: 	/* 左へ移動中 */
-		if (s->x <= d->clip_left)
-		{	d->state=3;}
+		if (src->x <= data->clip_left)
+		{	data->state=3;}
 		break;
 	case 3: 	/* 左周りで回転中 */
-		d->angle512 += d->turnspeed512/**fps_fa ctor*/;/*簡略化の仕様上少し位置がずれる(※１)*/
-		if (d->angle512 >= deg_360_to_512(360) )
+		data->angle512 += data->turnspeed512/**fps_fa ctor*/;/*簡略化の仕様上少し位置がずれる(※１)*/
+		if (data->angle512 >= deg_360_to_512(360) )
 		{
-			d->angle512 = deg_360_to_512(0);
-			d->state=0/*4*/;
-			if (d->level>0)
-			{	bullet_create_aka_maru_jikinerai(s, t256(3)+(d->level<<7) );}
+			data->angle512 = deg_360_to_512(0);
+			data->state=0/*4*/;
+			if (data->level>0)
+			{	bullet_create_aka_maru_jikinerai(s, t256(3)+(data->level<<7) );}
 		}
 		break;
 
 	case 8: 	/* 右へ移動中 */
-		if (s->x > GAME_WIDTH)		//ウィンドウ幅の変更
-		{	s->flags &= (~(SP_FLAG_VISIBLE));}
+		if (src->x > GAME_WIDTH)		//ウィンドウ幅の変更
+		{	src->flags &= (~(SP_FLAG_VISIBLE));}
 		break;
 #endif
 
@@ -154,24 +155,25 @@ void add_zako_yukari2(STAGE_DATA *l)/*int lv*/
 	for (i=0; i<NUM_OF_ENEMIES; i++)
 	{
 		SPRITE *s;
-		s					= sprite_add_res(BASE_YUKARI32_PNG);	//s->anim_speed=0;/*36"mi ng.png"*/
-		s->type 			= SP_ZAKO/*_03_YUKARI2*/;
-		s->flags			|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK|SP_FLAG_TIME_OVER);
-		s->callback_mover	= move_yukari2;
-		s->callback_loser	= lose_yukari2;
+		s						= sprite_add_res(BASE_YUKARI32_PNG);	//s->anim_speed=0;/*36"mi ng.png"*/
+		s->type 				= SP_ZAKO/*_03_YUKARI2*/;
+		s->flags				|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK|SP_FLAG_TIME_OVER);
+		s->callback_mover		= move_yukari2;
+		s->callback_loser		= lose_yukari2;
+		s->callback_hit_enemy	= callback_hit_zako;
 		if (0==static_last) {	s->x256=t256(0);								}	//右上から登場
 		else				{	s->x256=t256(GAME_WIDTH)-(s->w128+s->w128); 	}	//左上から登場
-		s->y256 			= -i*(s->h128+s->h128);
+		s->y256 				= -i*(s->h128+s->h128);
 		YUKARI2_DATA *data;
-		data				= mmalloc(sizeof(YUKARI2_DATA));
-		s->data 			= data;
-		data->angle512		= atan_512((t256(GAME_HEIGHT)-((s->h128+s->h128))-t256(60))-s->y256,t256(GAME_WIDTH/2)-s->x256);	//ウィンドウ幅の変更
-		data->max_y256		= (t256(GAME_HEIGHT)-((s->h128+s->h128))-t256(60));
-		data->speed256		= (t256(2.5/*3.0*/)+((difficulty)<<4) ) /*4*/;/*始めだけは速い*/
-		data->state 		= 0;
-		data->base.score	= score(5*2);
-		data->base.health	= 1+(difficulty<<2);
-		data->level 		= lv;
+		data					= mmalloc(sizeof(YUKARI2_DATA));
+		s->data 				= data;
+		data->angle512			= atan_512((t256(GAME_HEIGHT)-((s->h128+s->h128))-t256(60))-s->y256,t256(GAME_WIDTH/2)-s->x256);	//ウィンドウ幅の変更
+		data->max_y256			= (t256(GAME_HEIGHT)-((s->h128+s->h128))-t256(60));
+		data->speed256			= (t256(2.5/*3.0*/)+((difficulty)<<4) ) /*4*/;/*始めだけは速い*/
+		data->state 			= 0;
+		/*data->base.*/s->base_score		= score(5*2);
+		/*data->base.*/s->base_health		= 1+(difficulty<<2);
+		data->level 			= lv;
 	}
 }
 #undef NUM_OF_ENEMIES

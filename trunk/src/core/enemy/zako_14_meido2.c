@@ -12,7 +12,7 @@
 
 typedef struct
 {
-	ENEMY_BASE base;
+//	ENEMY_BASE base;
 	int angleCCW512;
 	int speed256;
 	int state;
@@ -28,18 +28,18 @@ static int data_level256;
 	ìGÇ‚ÇÁÇÍ
 ---------------------------------------------------------*/
 
-static void lose_meido2(SPRITE *s)
+static void lose_meido2(SPRITE *src)
 {
-	item_create(s, (enemy_get_random_item()), 1, ITEM_MOVE_FLAG_06_RAND_XY);
+	item_create(src, (enemy_get_random_item()), 1, ITEM_MOVE_FLAG_06_RAND_XY);
 }
 
 /*---------------------------------------------------------
 	ìGà⁄ìÆ
 ---------------------------------------------------------*/
 
-static void move_meido2(SPRITE *s)
+static void move_meido2(SPRITE *src)
 {
-	MEIDO2_DATA *data = (MEIDO2_DATA *)s->data;
+	MEIDO2_DATA *data = (MEIDO2_DATA *)src->data;
 	data->wait += 1/*fps_fa ctor*/;
 	switch (data->state)
 	{
@@ -105,14 +105,14 @@ static void move_meido2(SPRITE *s)
 				data->angle512 = deg_360_to_512(90);
 				if (data_level256/*data->level*/)
 				{
-					bullet_create_offset_dan_type(s, HARIDAN_SPEED, ANGLE_JIKI_NERAI_DAN, t256(0), t256(0), BULLET_HARI32_00_AOI);
+					bullet_create_offset_dan_type000(src, HARIDAN_SPEED, ANGLE_JIKI_NERAI_DAN/*, t256(0), t256(0)*/, BULLET_HARI32_00_AOI);
 				}
 #else
 /* CCWÇÃèÍçá */
 				data->angleCCW512 = deg_360_to_512CCW(0);
 				if (data_level256/*data->level*/)
 				{
-					bullet_create_offset_dan_type(s, HARIDAN_SPEED, ANGLE_JIKI_NERAI_DAN, t256(0), t256(0), BULLET_HARI32_00_AOI);
+					bullet_create_offset_dan_type000(src, HARIDAN_SPEED, ANGLE_JIKI_NERAI_DAN/*, t256(0), t256(0)*/, BULLET_HARI32_00_AOI);
 				}
 #endif
 				data->state++/* = 4*/;
@@ -136,32 +136,32 @@ static void move_meido2(SPRITE *s)
 			}
 		}
 #endif
-	//	if (s->y256 < 0)
-		if (s->y256 > t256(GAME_HEIGHT))
+	//	if (src->y256 < 0)
+		if (src->y256 > t256(GAME_HEIGHT))
 		{
-			s->type = SP_DELETE;
+			src->type = SP_DELETE;	/* Ç®ÇµÇ‹Ç¢ */
 		}
 		break;
 	}
 	/*à»â∫rwingx.cÇ∆ìØÇ∂*/
 /* CCWÇÃèÍçá */
-	s->x256+=((sin512((data->angleCCW512))*data->speed256)>>8)/**fps_fa ctor*/;
-	s->y256+=((cos512((data->angleCCW512))*data->speed256)>>8)/**fps_fa ctor*/;
-//	s->anim_frame=(deg_512_to_360(data->angle512+deg_360_to_512(270))/10)%36;
-//	s->anim_frame = ((((data->angle512+deg_360_to_512(270))&(512-1))*(36/2))>>8);
+	src->x256+=((sin512((data->angleCCW512))*data->speed256)>>8)/**fps_fa ctor*/;
+	src->y256+=((cos512((data->angleCCW512))*data->speed256)>>8)/**fps_fa ctor*/;
+//	src->anim_frame=(deg_512_to_360(data->angle512+deg_360_to_512(270))/10)%36;
+//	src->anim_frame = ((((data->angle512+deg_360_to_512(270))&(512-1))*(36/2))>>8);
 #if 1
 /* [CCWÇÃèÍçá(êV)] CWÇÃèÍçá */
-	s->anim_frame = ((((data->angleCCW512)&(512-1)))>>6);/*"rw ingx8.png"*/
+	src->anim_frame = ((((data->angleCCW512)&(512-1)))>>6);/*"rw ingx8.png"*/
 	/* ãå */
 #else
 /* CCWÇÃèÍçá */
 	/* êV(Ç‹ÇæçÏÇ¡ÇƒÇ»Ç¢) */
-	//s->anim_frame = ((((data->angleCCW512)&(512-1)))>>6);/*"rw ingx8.png"*/
+	//src->anim_frame = ((((data->angleCCW512)&(512-1)))>>6);/*"rw ingx8.png"*/
 	/*ñ≥óùñÓóùãåå›ä∑*/
 	{int aaa512;
 		aaa512 = 128+ 512 - data->angleCCW512;
 		mask512(aaa512);
-		s->yx_anim_frame = (((aaa512))>>(6));
+		src->yx_anim_frame = (((aaa512))>>(6));
 	}
 #endif
 }
@@ -180,48 +180,49 @@ void add_zako_meido2(STAGE_DATA *l)/*int lv*/
 	int lv;
 	lv	= l->user_y;
 //
-	data_level256=(lv<<7);	//	data->level=lv;
+	data_level256 = (lv<<7);	//	data->level=lv;
 	int i;
 	for (i=0; i<NUM_OF_ENEMIES; i++)
 	{
 		SPRITE *s;
-		s					= sprite_add_res(BASE_AKA_MEIDO08_PNG); 	//s->anim_speed=0;/*37"rw ingx8.png""rw ingx.png"*/
-		s->type 			= SP_ZAKO/*_13_MEIDO2*/;
-		s->flags			|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK|SP_FLAG_TIME_OVER);
-		s->callback_mover	= move_meido2;
-		s->callback_loser	= lose_meido2;
-//		s->anim_frame		= 0;
+		s						= sprite_add_res(BASE_AKA_MEIDO08_PNG); 	//s->anim_speed=0;/*37"rw ingx8.png""rw ingx.png"*/
+		s->type 				= SP_ZAKO/*_13_MEIDO2*/;
+		s->flags				|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK|SP_FLAG_TIME_OVER);
+		s->callback_mover		= move_meido2;
+		s->callback_loser		= lose_meido2;
+		s->callback_hit_enemy	= callback_hit_zako;
+//		s->anim_frame			= 0;
 		MEIDO2_DATA *data;
-		data				= mmalloc(sizeof(MEIDO2_DATA));
-		s->data 			= data;
-		data->base.score	= score(25*2);
-		data->base.health	= 1+(difficulty<<2);
-		data->state 		= 0;
-		data->wait			= 0;
-		data->speed256		= ((ra_nd()&((256*4)-1)));/*2.0*(((dou ble)ra_nd()/RAND_MAX)*2)*/
+		data					= mmalloc(sizeof(MEIDO2_DATA));
+		s->data 				= data;
+		/*data->base.*/s->base_score		= score(25*2);
+		/*data->base.*/s->base_health		= 1+(difficulty<<2);
+		data->state 			= 0;
+		data->wait				= 0;
+		data->speed256			= ((ra_nd()&((256*4)-1)));/*2.0*(((dou ble)ra_nd()/RAND_MAX)*2)*/
 #if 0
 /* CWÇÃèÍçá */
 		if (i<6)
 		{
-			data->angle512	= deg_360_to_512(10);
-			s->x256 		= -((s->w128+s->w128));
+			data->angle512		= deg_360_to_512(10);
+			s->x256 			= -((s->w128+s->w128));
 		}
 		else
 		{
-			data->angle512	= deg_360_to_512(180-10/*170*/);
-			s->x256 		= t256(GAME_WIDTH);
+			data->angle512		= deg_360_to_512(180-10/*170*/);
+			s->x256 			= t256(GAME_WIDTH);
 		}
 #else
 /* CCWÇÃèÍçá */
 		if (i<6)
 		{
 			data->angleCCW512	= deg_360_to_512CCW(90-10/*360-10*/);
-			s->x256 		= -t256(32)/*-((s->w128+s->w128))*/;
+			s->x256 			= -t256(32)/*-((s->w128+s->w128))*/;
 		}
 		else
 		{
 			data->angleCCW512	= deg_360_to_512CCW(180+90+10/*360-170*/);
-			s->x256 		= t256(GAME_WIDTH);
+			s->x256 			= t256(GAME_WIDTH);
 		}
 #endif
 		s->y256 = t256(50);

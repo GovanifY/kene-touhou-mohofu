@@ -17,7 +17,7 @@
 #include "game_main.h"
 #include "name_entry.h"/**/
 
-//#define FILE_NAME_SETTING_TXT	"setting.ini"
+//#define FILE_NAME_SETTING_TXT "setting.ini"
 #define FILE_NAME_SETTING_TXT	DIRECTRY_NAME_DATA"/setting.txt"
 
 /*---------------------------------------------------------
@@ -98,38 +98,39 @@ static int ini_load_local(void)
 	int_result = 0;/* 異常 */
 	int ng1;
 	ng1 = 0;/*fopen()成功*/
-	if ( NULL == (fp = fopen(fn, "r"))) 	{	ng1 = 1;/*fopen()失敗*/ goto error00;/* return (-1); */ 	}
+	fp = fopen(fn, "r");
+	if ( NULL == fp)	{	ng1 = 1;/*fopen()失敗*/ goto error00;/* return (-1); */ 	}
 //
 //	if (ini_load_item(fp, "moddir", moddir)==-1)	{	goto error00/*return -1*/;	}
 //	fscanf(fp, "moddir=%s",moddir);
 	#define CONFIG_LOAD_ITEM(aaa,bbb) {tmp=ini_load_item(fp, aaa, NULL);	if (-1 != tmp)	{	bbb=tmp;	}	else	{	goto error00/*return -1*/;	}}
 
 	#if 0
-	CONFIG_LOAD_ITEM("UP",			keyconfig[key_02_u ]);
-	CONFIG_LOAD_ITEM("DOWN",		keyconfig[key_04_d ]);
-	CONFIG_LOAD_ITEM("LEFT",		keyconfig[key_05_l ]);
-	CONFIG_LOAD_ITEM("RIGHT",		keyconfig[key_03_r ]);
-	CONFIG_LOAD_ITEM("CROSS",		keyconfig[key_10_ba]);
-	CONFIG_LOAD_ITEM("CIRCLE",		keyconfig[key_09_ma]);
-	CONFIG_LOAD_ITEM("TRIANGLE",	keyconfig[key_08_sa]);
-	CONFIG_LOAD_ITEM("SQUARE",		keyconfig[key_11_si]);
-	CONFIG_LOAD_ITEM("R_T", 		keyconfig[key_07_rt]);
-	CONFIG_LOAD_ITEM("L_T", 		keyconfig[key_06_lt]);
-	CONFIG_LOAD_ITEM("SELECT",		keyconfig[key_00_sl]);
-	CONFIG_LOAD_ITEM("START",		keyconfig[key_01_st]);
+	CONFIG_LOAD_ITEM("UP",			keyconfig[KEY_NUM02_UP ]);
+	CONFIG_LOAD_ITEM("DOWN",		keyconfig[KEY_NUM04_DOWN ]);
+	CONFIG_LOAD_ITEM("LEFT",		keyconfig[KEY_NUM05_LEFT ]);
+	CONFIG_LOAD_ITEM("RIGHT",		keyconfig[KEY_NUM03_RIGHT ]);
+	CONFIG_LOAD_ITEM("CROSS",		keyconfig[KEY_NUM10_CROSS]);
+	CONFIG_LOAD_ITEM("CIRCLE",		keyconfig[KEY_NUM09_CIRCLE]);
+	CONFIG_LOAD_ITEM("TRIANGLE",	keyconfig[KEY_NUM08_TRIANGLE]);
+	CONFIG_LOAD_ITEM("SQUARE",		keyconfig[KEY_NUM11_SQUARE]);
+	CONFIG_LOAD_ITEM("R_T", 		keyconfig[KEY_NUM07_R_TRIG]);
+	CONFIG_LOAD_ITEM("L_T", 		keyconfig[KEY_NUM06_L_TRIG]);
+	CONFIG_LOAD_ITEM("SELECT",		keyconfig[KEY_NUM00_SELECT]);
+	CONFIG_LOAD_ITEM("START",		keyconfig[KEY_NUM01_START]);
 	#else
-	CONFIG_LOAD_ITEM("SELECT",		keyconfig[key_00_sl]);
-	CONFIG_LOAD_ITEM("START",		keyconfig[key_01_st]);
-	CONFIG_LOAD_ITEM("UP",			keyconfig[key_02_u ]);
-	CONFIG_LOAD_ITEM("RIGHT",		keyconfig[key_03_r ]);
-	CONFIG_LOAD_ITEM("DOWN",		keyconfig[key_04_d ]);
-	CONFIG_LOAD_ITEM("LEFT",		keyconfig[key_05_l ]);
-	CONFIG_LOAD_ITEM("L_T", 		keyconfig[key_06_lt]);
-	CONFIG_LOAD_ITEM("R_T", 		keyconfig[key_07_rt]);
-	CONFIG_LOAD_ITEM("TRIANGLE",	keyconfig[key_08_sa]);
-	CONFIG_LOAD_ITEM("CIRCLE",		keyconfig[key_09_ma]);
-	CONFIG_LOAD_ITEM("CROSS",		keyconfig[key_10_ba]);
-	CONFIG_LOAD_ITEM("SQUARE",		keyconfig[key_11_si]);
+	CONFIG_LOAD_ITEM("SELECT",		keyconfig[KEY_NUM00_SELECT]);
+	CONFIG_LOAD_ITEM("START",		keyconfig[KEY_NUM01_START]);
+	CONFIG_LOAD_ITEM("UP",			keyconfig[KEY_NUM02_UP ]);
+	CONFIG_LOAD_ITEM("RIGHT",		keyconfig[KEY_NUM03_RIGHT ]);
+	CONFIG_LOAD_ITEM("DOWN",		keyconfig[KEY_NUM04_DOWN ]);
+	CONFIG_LOAD_ITEM("LEFT",		keyconfig[KEY_NUM05_LEFT ]);
+	CONFIG_LOAD_ITEM("L_T", 		keyconfig[KEY_NUM06_L_TRIG]);
+	CONFIG_LOAD_ITEM("R_T", 		keyconfig[KEY_NUM07_R_TRIG]);
+	CONFIG_LOAD_ITEM("TRIANGLE",	keyconfig[KEY_NUM08_TRIANGLE]);
+	CONFIG_LOAD_ITEM("CIRCLE",		keyconfig[KEY_NUM09_CIRCLE]);
+	CONFIG_LOAD_ITEM("CROSS",		keyconfig[KEY_NUM10_CROSS]);
+	CONFIG_LOAD_ITEM("SQUARE",		keyconfig[KEY_NUM11_SQUARE]);
 	#endif
 	CONFIG_LOAD_ITEM("difficulty",	difficulty		);
 	CONFIG_LOAD_ITEM("player",		select_player	);
@@ -169,7 +170,7 @@ error00:
 						ng2=1;
 					}
 				}
-			//	if (1==ng2)	/* pspは0レジスタがあるので0と比較したほうが速い */
+			//	if (1==ng2) /* pspは0レジスタがあるので0と比較したほうが速い */
 				if (0!=ng2)
 				{
 					static const int init_score_tbl[5]=
@@ -201,18 +202,18 @@ void ini_load(void)
 		#if 1
 		set_default_key(keyconfig, 0/*0==type 01 模倣風 標準*/);
 		#else
-	//	keyconfig[key_00_sl]	= KINOU_01_SELECT;		// SELECT
-	//	keyconfig[key_01_st]	= KINOU_02_PAUSE;		// START
-	//	keyconfig[key_02_u] 	= KINOU_03_UP;			// ↑
-	//	keyconfig[key_03_r] 	= KINOU_04_RIGHT;		// →
-	//	keyconfig[key_04_d] 	= KINOU_05_DOWN;		// ↓
-	//	keyconfig[key_05_l] 	= KINOU_06_LEFT;		// ←
-	//	keyconfig[key_06_lt]	= KINOU_07_SNAP_SHOT;	// L
-	//	keyconfig[key_07_rt]	= KINOU_09_SLOW;		// R
-	//	keyconfig[key_08_sa]	= KINOU_09_SLOW;		// △
-	//	keyconfig[key_09_ma]	= KINOU_10_OPTION;		// ○
-	//	keyconfig[key_10_ba]	= KINOU_11_SHOT;		// ×
-	//	keyconfig[key_11_si]	= KINOU_12_BOMB;		// □
+	//	keyconfig[KEY_NUM00_SELECT] = KINOU_01_SELECT;		// SELECT
+	//	keyconfig[KEY_NUM01_START]	= KINOU_02_PAUSE;		// START
+	//	keyconfig[KEY_NUM02_UP] 	= KINOU_03_UP;			// ↑
+	//	keyconfig[KEY_NUM03_RIGHT]	= KINOU_04_RIGHT;		// →
+	//	keyconfig[KEY_NUM04_DOWN]	= KINOU_05_DOWN;		// ↓
+	//	keyconfig[KEY_NUM05_LEFT]	= KINOU_06_LEFT;		// ←
+	//	keyconfig[KEY_NUM06_L_TRIG] = KINOU_07_SNAP_SHOT;	// L
+	//	keyconfig[KEY_NUM07_R_TRIG] = KINOU_09_SLOW;		// R
+	//	keyconfig[KEY_NUM08_TRIANGLE]	= KINOU_09_SLOW;		// △
+	//	keyconfig[KEY_NUM09_CIRCLE] = KINOU_10_OPTION;		// ○
+	//	keyconfig[KEY_NUM10_CROSS]	= KINOU_11_SHOT;		// ×
+	//	keyconfig[KEY_NUM11_SQUARE] = KINOU_12_BOMB;		// □
 		#endif
 	}
 //	範囲外の場合は修正
@@ -220,52 +221,78 @@ void ini_load(void)
 	{	difficulty = 2;}
 }
 
+//2017385 2018189
+static void write_buf(/*FILE *fp*/SceUID fd, char *str_buf)
+{
+//	const char k = 13;
+//	fprintf(fp, "%s%c\n", str_buf,	k);
+	char *str_buf_head;
+	str_buf_head = str_buf;
+	int len;
+	len=0;
+	while (0!=(*str_buf))
+	{
+		len++;
+		str_buf++;
+	};
+	/* 差分氏模倣風のファイル形式が[CR+LF]だったので互換を取る。 */
+	*str_buf=0x0d;	len++;	str_buf++;/*[CR]*/
+	*str_buf=0x0a;	len++;	str_buf++;/*[LF]*/
+//	fprintf(fp, "%s\n", str_buf);
+	sceIoWrite(fd, str_buf_head, len/*sizeof(int)*/ /**save_data_size*/ /*, 1, fp*/);
+}
 void ini_save(void)
 {
-	FILE *fp;
+//	FILE *fp;
 	char fn[64/*50*/];
 	strcpy(fn, "./" FILE_NAME_SETTING_TXT);
-	if ( NULL == (fp = fopen(fn,"w")))	{	return; 	}
+//	fp = fopen(fn, "w");
+	SceUID fd = sceIoOpen(fn, PSP_O_WRONLY | PSP_O_CREAT | PSP_O_TRUNC, 0777);
+//	if (fd < 0)
+//	{
+//		/*"セーブデータがない。"*/
+//	}
+//	if ( NULL == fp)	{	return; 	}
 //
-	const char k = 13;
-//	fprintf(fp, "moddir=%s%c\n", 	moddir, 		k);
+	char buf[64/*50*/];
+//	fprintf(fp, "moddir=%s",	moddir);
 	#if 0
-	fprintf(fp, "UP=%d%c\n", 		keyconfig[key_02_u],	k);
-	fprintf(fp, "DOWN=%d%c\n",		keyconfig[key_04_d],	k);
-	fprintf(fp, "LEFT=%d%c\n",		keyconfig[key_05_l],	k);
-	fprintf(fp, "RIGHT=%d%c\n",		keyconfig[key_03_r],	k);
-	fprintf(fp, "CROSS=%d%c\n",		keyconfig[key_10_ba],	k);
-	fprintf(fp, "CIRCLE=%d%c\n", 	keyconfig[key_09_ma],	k);
-	fprintf(fp, "TRIANGLE=%d%c\n",	keyconfig[key_08_sa],	k);
-	fprintf(fp, "SQUARE=%d%c\n", 	keyconfig[key_11_si],	k);
-	fprintf(fp, "R_T=%d%c\n",		keyconfig[key_07_rt],	k);
-	fprintf(fp, "L_T=%d%c\n",		keyconfig[key_06_lt],	k);
-	fprintf(fp, "SELECT=%d%c\n", 	keyconfig[key_00_sl],	k);
-	fprintf(fp, "START=%d%c\n",		keyconfig[key_01_st],	k);
+	sprintf(buf, "UP=%d",			keyconfig[KEY_NUM02_UP]);		write_buf(/*fp,*/fd, buf);
+	sprintf(buf, "DOWN=%d", 		keyconfig[KEY_NUM04_DOWN]); 	write_buf(/*fp,*/fd, buf);
+	sprintf(buf, "LEFT=%d", 		keyconfig[KEY_NUM05_LEFT]); 	write_buf(/*fp,*/fd, buf);
+	sprintf(buf, "RIGHT=%d",		keyconfig[KEY_NUM03_RIGHT]);	write_buf(/*fp,*/fd, buf);
+	sprintf(buf, "CROSS=%d",		keyconfig[KEY_NUM10_CROSS]);			write_buf(/*fp,*/fd, buf);
+	sprintf(buf, "CIRCLE=%d",		keyconfig[KEY_NUM09_CIRCLE]);			write_buf(/*fp,*/fd, buf);
+	sprintf(buf, "TRIANGLE=%d", 	keyconfig[KEY_NUM08_TRIANGLE]); 		write_buf(/*fp,*/fd, buf);
+	sprintf(buf, "SQUARE=%d",		keyconfig[KEY_NUM11_SQUARE]);			write_buf(/*fp,*/fd, buf);
+	sprintf(buf, "R_T=%d",			keyconfig[KEY_NUM07_R_TRIG]);	write_buf(/*fp,*/fd, buf);
+	sprintf(buf, "L_T=%d",			keyconfig[KEY_NUM06_L_TRIG]);	write_buf(/*fp,*/fd, buf);
+	sprintf(buf, "SELECT=%d",		keyconfig[KEY_NUM00_SELECT]);	write_buf(/*fp,*/fd, buf);
+	sprintf(buf, "START=%d",		keyconfig[KEY_NUM01_START]);	write_buf(/*fp,*/fd, buf);
 	#else
-	fprintf(fp, "SELECT=%d%c\n", 	keyconfig[key_00_sl],	k);
-	fprintf(fp, "START=%d%c\n",		keyconfig[key_01_st],	k);
-	fprintf(fp, "UP=%d%c\n", 		keyconfig[key_02_u],	k);
-	fprintf(fp, "RIGHT=%d%c\n",		keyconfig[key_03_r],	k);
-	fprintf(fp, "DOWN=%d%c\n",		keyconfig[key_04_d],	k);
-	fprintf(fp, "LEFT=%d%c\n",		keyconfig[key_05_l],	k);
-	fprintf(fp, "L_T=%d%c\n",		keyconfig[key_06_lt],	k);
-	fprintf(fp, "R_T=%d%c\n",		keyconfig[key_07_rt],	k);
-	fprintf(fp, "TRIANGLE=%d%c\n",	keyconfig[key_08_sa],	k);
-	fprintf(fp, "CIRCLE=%d%c\n", 	keyconfig[key_09_ma],	k);
-	fprintf(fp, "CROSS=%d%c\n",		keyconfig[key_10_ba],	k);
-	fprintf(fp, "SQUARE=%d%c\n", 	keyconfig[key_11_si],	k);
+	sprintf(buf, "SELECT=%d",		keyconfig[KEY_NUM00_SELECT]);	write_buf(/*fp,*/fd, buf);
+	sprintf(buf, "START=%d",		keyconfig[KEY_NUM01_START]);	write_buf(/*fp,*/fd, buf);
+	sprintf(buf, "UP=%d",			keyconfig[KEY_NUM02_UP]);		write_buf(/*fp,*/fd, buf);
+	sprintf(buf, "RIGHT=%d",		keyconfig[KEY_NUM03_RIGHT]);	write_buf(/*fp,*/fd, buf);
+	sprintf(buf, "DOWN=%d", 		keyconfig[KEY_NUM04_DOWN]); 	write_buf(/*fp,*/fd, buf);
+	sprintf(buf, "LEFT=%d", 		keyconfig[KEY_NUM05_LEFT]); 	write_buf(/*fp,*/fd, buf);
+	sprintf(buf, "L_T=%d",			keyconfig[KEY_NUM06_L_TRIG]);	write_buf(/*fp,*/fd, buf);
+	sprintf(buf, "R_T=%d",			keyconfig[KEY_NUM07_R_TRIG]);	write_buf(/*fp,*/fd, buf);
+	sprintf(buf, "TRIANGLE=%d", 	keyconfig[KEY_NUM08_TRIANGLE]); write_buf(/*fp,*/fd, buf);
+	sprintf(buf, "CIRCLE=%d",		keyconfig[KEY_NUM09_CIRCLE]);	write_buf(/*fp,*/fd, buf);
+	sprintf(buf, "CROSS=%d",		keyconfig[KEY_NUM10_CROSS]);	write_buf(/*fp,*/fd, buf);
+	sprintf(buf, "SQUARE=%d",		keyconfig[KEY_NUM11_SQUARE]);	write_buf(/*fp,*/fd, buf);
 	#endif
-	fprintf(fp, "difficulty=%d%c\n", 	difficulty, 		k);
-	fprintf(fp, "player=%d%c\n", 		select_player,  	k);
-	fprintf(fp, "password=%s%c\n",		str_pass_word,		k);
+	sprintf(buf, "difficulty=%d",	difficulty);		write_buf(/*fp,*/fd, buf);
+	sprintf(buf, "player=%d",		select_player); 	write_buf(/*fp,*/fd, buf);
+	sprintf(buf, "password=%s", 	str_pass_word); 	write_buf(/*fp,*/fd, buf);
 	/* high_score save */
 	{int j;
 		for (j=0; j<MAX_8_SAVE_PLAYERS; j++)
 		{	int i;
 			for (i=0; i<5; i++)
 			{
-				fprintf(fp,
+				sprintf(buf,
 					"SCORE" 		/* == dummy */
 					"%c"			/* player number */
 					"%c"			/* rank number */
@@ -273,7 +300,7 @@ void ini_save(void)
 					"0" 			/* final stage */
 					"=" 			/* == dummy */
 					"%3s"			/* name */
-					"%09d0\n",		/* score */
+					"%09d0",		/* score */
 				//
 					(j+'0'),		/* player number */
 					(i+'0'),		/* rank number */
@@ -281,16 +308,17 @@ void ini_save(void)
 									/* final stage */
 					high_score_table[j][i].name,
 					high_score_table[j][i].score
-				);
+				);	write_buf(/*fp,*/fd, buf);
 			}
 		}
 	}
-	fclose(fp);
+	sceIoClose(fd);/*	fclose(fp);*/
 }
 
 /*---------------------------------------------------------
 	画面保存機能
 ---------------------------------------------------------*/
+extern void gu_save_screen(void);
 void save_screen_shot(void)
 {
 	static int screen_num = 0;
@@ -300,5 +328,6 @@ void save_screen_shot(void)
 	screen_num++;
 	screen_num &= 0x1f;
 	screen_buf[22]= ((9+1)<screen_num)?(('A'-(9+1)-1)+screen_num):(('0'-1)+screen_num);
+	gu_save_screen();
 	SDL_SaveBMP(sdl_screen[SDL_00_SCREEN], screen_buf);
 }

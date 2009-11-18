@@ -94,8 +94,8 @@ static /*int*/void regist_home_key(void)
 /*---------------------------------------------------------
 	game_main()
 ---------------------------------------------------------*/
-
-extern void shooting_game_core_init(void);
+extern void common_load_init(void);
+extern void stage_first_init(void);
 extern void shooting_game_core_work(void);
 
 extern void all_menu_init(void);
@@ -107,7 +107,7 @@ extern void player_opt_work(void);
 extern void name_entry_init(void);
 extern void name_entry_work(void);
 //
-extern void stage_clear_work(void);
+extern void stage_clear_work(void);/*stage_clear.c*/
 //
 
 //tern void gameover_init(void);
@@ -130,7 +130,7 @@ static void game_main(void)
 	{
 		switch ((Uint8)(psp_loop>>8))
 		{
-		case (ST_INIT_GAME_PLAY>>8):		shooting_game_core_init();	break;
+		case (ST_INIT_GAME_PLAY_common>>8):	common_load_init(); 		break;
 		case (ST_WORK_GAME_PLAY>>8):		shooting_game_core_work();	break;
 		case (ST_INIT_MENU>>8): 			all_menu_init();			break;
 		case (ST_WORK_MENU>>8): 			all_menu_work();			break;
@@ -139,6 +139,7 @@ static void game_main(void)
 		case (ST_INIT_NAME_ENTRY>>8):		name_entry_init();			break;
 		case (ST_WORK_NAME_ENTRY>>8):		name_entry_work();			break;
 //
+		case (ST_WORK_STAGE_FIRST>>8):		stage_first_init(); 		break;
 		case (ST_WORK_STAGE_CLEAR>>8):		stage_clear_work(); 		break;
 //
 	//	case (ST_INIT_GAME_OVER>>8):		gameover_init();			break;‹zûB‚È‚µ

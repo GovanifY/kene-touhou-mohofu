@@ -10,7 +10,13 @@ extern int script_init(char *filename, char *bg_name,int width);
 extern void script_system_init(void);/* 組み込み */
 extern void script_system_exit(void);/* 外す */
 
-/* 今の所必要ないけど、外部から描くなら。 */
+
+
+/* 外部からメッセージウィンドウに漢字を描画する場合のリセット */
+extern void script_message_window_clear(void);
+
+/* 外部からメッセージウィンドウに漢字を描く。 */
 //static extern int print_kanji(SDL_Surface *drawmap, SDL_Rect *rect, const char *str, int color_type, int wait);
+extern /*static*/ int print_kanji(/*SDL_Surface *drawmap,*/ SDL_Rect *rect, const char *str, int color_type, int wait);
 
 #endif /* _SCENARIO_H_ */

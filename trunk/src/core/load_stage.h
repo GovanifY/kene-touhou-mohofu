@@ -32,54 +32,54 @@ enum
 			//	ÇªÇÃëº
 /*0x01*/		CTYPE_01_ALL_CLEAR,
 			//	É{ÉX
-/*0x13*/		CTYPE_19_BOSS_ALICE,
-/*0x14*/		CTYPE_20_BOSS_CIRNO,
-/*0x15*/		CTYPE_21_BOSS_FUMI,
-/*0x16*/		CTYPE_22_BOSS_KAGUYA,
-/*0x17*/		CTYPE_23_BOSS_SAKUYA,	// [***090207		í«â¡
+/*0x02*/		CTYPE_19_BOSS_ALICE,
+/*0x03*/	//	CTYPE_20_BOSS_CIRNO,
+/*0x04*/		CTYPE_21_BOSS_FUMI,
+/*0x05*/		CTYPE_22_BOSS_MITEI,		/* 3ñ ÇÕÇ«Ç§Ç∑ÇÈÇ©ñ¢íË */
+/*0x05*/		CTYPE_22_BOSS_KAGUYA,
+/*0x06*/		CTYPE_22_BOSS_PACHE,
+/*0x07*/		CTYPE_23_BOSS_SAKUYA,	// [***090207		í«â¡
 			//	ì¡éÍìG[íÜå^ìG]
-/*0x12*/		CTYPE_18_YOKAI1,		// [***090207		í«â¡
+/*0x08*/		CTYPE_18_YOKAI1,		// [***090207		í«â¡
+/*0x09*/		CTYPE_18_YOKAI2,		//		í«â¡
 			//	ÇªÇÃëºÉUÉR
-/*0x01*/		CTYPE_01_OBAKE,
-/*0x02*/		CTYPE_02_YUKARI1,
-/*0x03*/		CTYPE_03_YUKARI2,
+/*0x0a*/		CTYPE_01_OBAKE,
+/*0x0b*/		CTYPE_02_YUKARI1,
+/*0x0c*/		CTYPE_03_YUKARI2,
 			//	ñ—ã 
-/*0x04*/		CTYPE_04_AKA_KEDAMA1,
-/*0x05*/		CTYPE_05_NIJI_KEDAMA1,
-/*0x06*/		CTYPE_06_MIDORI_KEDAMA1,
-/*0x07*/		CTYPE_07_MIDORI_KEDAMA2,
-/*0x08*/		CTYPE_08_KEDAMA1,
+/*0x0d*/		CTYPE_04_AKA_KEDAMA1,
+/*0x0e*/		CTYPE_05_NIJI_KEDAMA1,
+/*0x0f*/		CTYPE_06_MIDORI_KEDAMA1,
+/*0x10*/		CTYPE_07_MIDORI_KEDAMA2,
+/*0x11*/		CTYPE_08_KEDAMA1,
+/*0x12*/		CTYPE_08_KEDAMA2,
 			//	ó≥ä™ âAózã 
-/*0x09*/		CTYPE_09_INYOU1,
-/*0x0a*/		CTYPE_10_TATSUMAKI1,
+/*0x13*/		CTYPE_09_INYOU1,
+/*0x14*/		CTYPE_10_TATSUMAKI1,
 			//	ódâˆ
-/*0x0b*/		CTYPE_11_KAKOMI1,
+/*0x15*/		CTYPE_11_KAKOMI1,
 			//	íÜódê∏
-/*0x0c*/		CTYPE_12_MEIDO1,
-/*0x0d*/		CTYPE_13_MEIDO2,
-/*0x0e*/		CTYPE_14_MEIDO3,
-/*0x0f*/		CTYPE_15_MEIDO4,
+/*0x16*/		CTYPE_12_MEIDO1,
+/*0x17*/		CTYPE_13_MEIDO2,
+/*0x18*/		CTYPE_14_MEIDO3,
+/*0x19*/		CTYPE_15_MEIDO4,
 			//	è¨ódê∏
-/*0x10*/		CTYPE_16_AO_YOUSEI1,	// [***090124		í«â¡
-/*0x11*/		CTYPE_17_AO_YOUSEI2,	// [***090207		í«â¡
+/*0x1a*/		CTYPE_16_AO_YOUSEI1,	// [***090124		í«â¡
+/*0x1b*/		CTYPE_17_AO_YOUSEI2,	// [***090207		í«â¡
+/*0x1c*/		CTYPE_17_AO_YOUSEI3,	//		í«â¡
+/*0x1d*/		CTYPE_17_AO_YOUSEI4,	//		í«â¡
 				//
-/*0x18*/		BTYPE_00_NONE,/* [î‘ï∫ãÊêÿÇË] */	/*error*/
-/*0x19*/		BTYPE_01_BGPANEL1,
-/*0x1a*/		BTYPE_02_BGPANEL2,
-/*0x1b*/		BTYPE_03_GROUNDER,
-/*0x1c*/		BTYPE_04_MAGIC_FORMATION,
-/*0x1d*/		BTYPE_05_BG_CONTROL,
+/*0x1e*/		BTYPE_00_NONE,/* [î‘ï∫ãÊêÿÇË] */	/*error*/
+/*0x1f*/		BTYPE_01_BGPANEL1,
+/*0x20*/		BTYPE_02_BGPANEL2,
+/*0x21*/		BTYPE_03_GROUNDER,
+/*0x22*/		BTYPE_04_MAGIC_FORMATION,
+/*0x23*/		BTYPE_05_BG_CONTROL,
 				//
-/*0x1e*/		ETYPE_01_ENGLISH_TEXT,
-/*0x1f*/		ETYPE_02_LOAD_BG,
-/*0x20*/		ETYPE_03_PICTURE,
+/*0x24*/		ETYPE_01_ENGLISH_TEXT,
+/*0x25*/		ETYPE_02_LOAD_BG,
+/*0x26*/	//	ETYPE_03_PICTURE,	/* Ç±ÇÃï˚éÆÇÕèàóùóéÇøâè¡ÇµÇ…Ç≠Ç¢ÇÃÇ≈ìsçáÇ…ÇÊÇËîpé~ */
 				//
-/*0x21*/		/*ägí£â¬î\*/
-/*0x22*/		/*ägí£â¬î\*/
-/*0x23*/		/*ägí£â¬î\*/
-/*0x24*/		/*ägí£â¬î\*/
-/*0x25*/		/*ägí£â¬î\*/
-/*0x26*/		/*ägí£â¬î\*/
 /*0x27*/		/*ägí£â¬î\*/
 /*0x28*/		/*ägí£â¬î\*/
 /*0x29*/		/*ägí£â¬î\*/

@@ -156,18 +156,18 @@ extern void ini_save(void); 	// [***090115
 
 		#if 0
 		//	システム(PSPのハードウェア)順
-		key_setting[ 0] = keyconfig[key_00_sl];
-		key_setting[ 1] = keyconfig[key_01_st];
-		key_setting[ 2] = keyconfig[key_02_u ];
-		key_setting[ 3] = keyconfig[key_03_r ];
-		key_setting[ 4] = keyconfig[key_04_d ];
-		key_setting[ 5] = keyconfig[key_05_l ];
-		key_setting[ 6] = keyconfig[key_06_lt];
-		key_setting[ 7] = keyconfig[key_07_rt];
-		key_setting[ 8] = keyconfig[key_08_sa];
-		key_setting[ 9] = keyconfig[key_09_ma];
-		key_setting[10] = keyconfig[key_10_ba];
-		key_setting[11] = keyconfig[key_11_si];
+		key_setting[ 0] = keyconfig[KEY_NUM00_SELECT];
+		key_setting[ 1] = keyconfig[KEY_NUM01_START];
+		key_setting[ 2] = keyconfig[KEY_NUM02_UP ];
+		key_setting[ 3] = keyconfig[KEY_NUM03_RIGHT ];
+		key_setting[ 4] = keyconfig[KEY_NUM04_DOWN ];
+		key_setting[ 5] = keyconfig[KEY_NUM05_LEFT ];
+		key_setting[ 6] = keyconfig[KEY_NUM06_L_TRIG];
+		key_setting[ 7] = keyconfig[KEY_NUM07_R_TRIG];
+		key_setting[ 8] = keyconfig[KEY_NUM08_TRIANGLE];
+		key_setting[ 9] = keyconfig[KEY_NUM09_CIRCLE];
+		key_setting[10] = keyconfig[KEY_NUM10_CROSS];
+		key_setting[11] = keyconfig[KEY_NUM11_SQUARE];
 		#else
 		{
 			int i;
@@ -284,19 +284,31 @@ extern void ini_save(void); 	// [***090115
 					{
 						key_setting_default_type--;
 						key_setting_default_type &= (4-1);
+						#if (0==USE_DESIGN_TRACK)
 						play_voice_auto_track(VOICE02_ZAKO_HAKAI);
+						#else
+						voice_play(VOICE02_ZAKO_HAKAI, TRACK01_EXPLODE);/*テキトー*/
+						#endif
 					}
 					else
 					if (my_pad_alter & PSP_KEY_RIGHT)	// 右ボタン入力
 					{
 						key_setting_default_type++;
 						key_setting_default_type &= (4-1);
+						#if (0==USE_DESIGN_TRACK)
 						play_voice_auto_track(VOICE02_ZAKO_HAKAI);
+						#else
+						voice_play(VOICE02_ZAKO_HAKAI, TRACK01_EXPLODE);/*テキトー*/
+						#endif
 					}
 					else
 					if (my_pad_alter & PSP_KEY_SHOT_OK) // ショットボタン入力
 					{
+						#if (0==USE_DESIGN_TRACK)
 						play_voice_auto_track(VOICE07_BOMB);
+						#else
+						voice_play(VOICE07_BOMB, TRACK01_EXPLODE);/*テキトー*/
+						#endif
 						set_default_key(key_setting, key_setting_default_type);
 						menu_cursor1 = KEY_CONFIG_MENU_13_QUIT;
 					}
@@ -306,11 +318,12 @@ extern void ini_save(void); 	// [***090115
 				{
 					if (my_pad_alter & PSP_KEY_BOMB_CANCEL) 	// キャンセルボタン入力
 					{
+						#if (0==USE_DESIGN_TRACK)
 						play_voice_auto_track(VOICE04_SHIP_HAKAI);
+						#else
+						voice_play(VOICE04_SHIP_HAKAI, TRACK03_SHORT_MUSIC/*TRACK01_EXPLODE*/);/* 自機死に音は、なるべく重ねない */
+						#endif
 						psp_loop++;//	key_config_state = (ST_WORK_KEY_CONFIG|KEY_CONFIG_STATE_06_FADE_INIT);
-						//key_haikei_surface = loadbmp("bg/title_bg.jpg");
-//						bg_alpha_aaa = 255;
-//						play_music(BGM_00_intro);
 					}
 					else
 					if (my_pad_alter & PSP_KEY_SHOT_OK) 	// ショットボタン入力
@@ -332,24 +345,21 @@ extern void ini_save(void); 	// [***090115
 						if ((FLAG_KEY_SHOT|FLAG_KEY_DOWN|FLAG_KEY_UP)==saiteigen_exsist)
 						{
 							psp_loop++;//	key_config_state = (ST_WORK_KEY_CONFIG|KEY_CONFIG_STATE_06_FADE_INIT);
-							//key_haikei_surface = loadbmp("bg/title_bg.jpg");
-//							bg_alpha_aaa = 255;
-//							play_music(BGM_00_intro);
 							// 最終的に代入される物
 							#if 0
 							//	システム(PSPのハードウェア)順
-							keyconfig[key_00_sl] = key_setting[ 0];
-							keyconfig[key_01_st] = key_setting[ 1];
-							keyconfig[key_02_u]  = key_setting[ 2];
-							keyconfig[key_03_r]  = key_setting[ 3];
-							keyconfig[key_04_d]  = key_setting[ 4];
-							keyconfig[key_05_l]  = key_setting[ 5];
-							keyconfig[key_06_lt] = key_setting[ 6];
-							keyconfig[key_07_rt] = key_setting[ 7];
-							keyconfig[key_08_sa] = key_setting[ 8];
-							keyconfig[key_09_ma] = key_setting[ 9];
-							keyconfig[key_10_ba] = key_setting[10];
-							keyconfig[key_11_si] = key_setting[11];
+							keyconfig[KEY_NUM00_SELECT] 	= key_setting[ 0];
+							keyconfig[KEY_NUM01_START]		= key_setting[ 1];
+							keyconfig[KEY_NUM02_UP] 		= key_setting[ 2];
+							keyconfig[KEY_NUM03_RIGHT]		= key_setting[ 3];
+							keyconfig[KEY_NUM04_DOWN]		= key_setting[ 4];
+							keyconfig[KEY_NUM05_LEFT]		= key_setting[ 5];
+							keyconfig[KEY_NUM06_L_TRIG] 	= key_setting[ 6];
+							keyconfig[KEY_NUM07_R_TRIG] 	= key_setting[ 7];
+							keyconfig[KEY_NUM08_TRIANGLE]	= key_setting[ 8];
+							keyconfig[KEY_NUM09_CIRCLE] 	= key_setting[ 9];
+							keyconfig[KEY_NUM10_CROSS]		= key_setting[10];
+							keyconfig[KEY_NUM11_SQUARE] 	= key_setting[11];
 							#else
 							{
 								int i;
@@ -360,12 +370,20 @@ extern void ini_save(void); 	// [***090115
 							}
 							#endif
 							ini_save();
+							#if (0==USE_DESIGN_TRACK)
 							play_voice_auto_track(VOICE02_ZAKO_HAKAI);
+							#else
+							voice_play(VOICE02_ZAKO_HAKAI, TRACK01_EXPLODE);/*テキトー*/
+							#endif
 						}
 						else
 						{
 						//	"dame dayo"
+							#if (0==USE_DESIGN_TRACK)
 							play_voice_auto_track(VOICE09_GRAZE);
+							#else
+							voice_play(VOICE09_GRAZE, TRACK01_EXPLODE);/*テキトー*/
+							#endif
 						}
 					}
 				}
@@ -395,7 +413,11 @@ extern void ini_save(void); 	// [***090115
 						}
 						key_setting[menu_cursor1] = const_key_setting[menu_cursor2];
 						//
+						#if (0==USE_DESIGN_TRACK)
 						play_voice_auto_track(VOICE02_ZAKO_HAKAI);
+						#else
+						voice_play(VOICE02_ZAKO_HAKAI, TRACK01_EXPLODE);/*テキトー*/
+						#endif
 					}
 				}
 			}
@@ -469,13 +491,15 @@ extern void ini_save(void); 	// [***090115
 			}
 		}
 		#endif
-		play_music(BGM_00_intro);
+		play_music(BGM_00_menu1);
 		{
+			//key_haikei_surface	= loadbmp("bg/title_bg.jpg");
 			SDL_Surface *loadpic	= loadbmp0("bg/title_bg.jpg", 0, 0);/*"bg/key_haikei_surface.png"*/
 			SDL_BlitSurface(loadpic, NULL, sdl_screen[SDL_01_BACK_SCREEN], NULL);
 			unloadbmp_by_surface(loadpic);
 			//unloadbmp_by_surface(key_haikei_surface);
 		}
+//		bg_alpha_aaa		= 255;
 		bg_alpha_aaa		= 0;
 		psp_loop++;//	key_config_state = (ST_WORK_KEY_CONFIG|KEY_CONFIG_STATE_07_FADE_OUT);
 		break;

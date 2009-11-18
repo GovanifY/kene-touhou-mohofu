@@ -7,12 +7,43 @@
 #include "bullet_object.h"
 
 static SDL_Surface *panel_base; 	// パネルベース
-static SDL_Surface *power_gauge;	// パワーゲージ。俺の環境だとloadbmp2で作ると普通に表示されるようになった。
-static SDL_Surface *boss_gauge; 	// [***090305		追加:ボスHPゲージ
+static SDL_Surface *star_gauge;
+//static SDL_Surface *power_gauge;	// パワーゲージ。俺の環境だとloadbmp2で作ると普通に表示されるようになった。
+//static SDL_Surface *boss_gauge; 	// [***090305		追加:ボスHPゲージ
 
 /* サイドパネルの横表示位置 pannel x offset */
 //#define PPP (380)
 #define PPP (GAME_WIDTH)
+#if 0
+	#define STR_MAX 		"MAX"
+	#define STR_MISSILE 	"MISSILE"
+	#define STR_WEAPON_UP	"WEAPON_UP"
+	#define STR_LASER		"LASER"
+	#define STR_BOMB		"BOMB"
+	#define STR_TIME_		"TIME :"
+	#define STR_EXTRA_		"EXTRA  :"
+#else
+	//#define STR_MAX		"ABCD"			/*4つ*/
+	//#define STR_MISSILE	"EFGHIJ"		/*6つ*/
+	//#define STR_WEAPON_UP "KLMNOPQR"		/*8つ*/
+	//#define STR_LASER 	"STUVW" 		/*5つ*/
+	//#define STR_BOMB		"XYZab" 		/*5つ*/
+	//#define STR_TIME_ 	"cdefg" 		/*5つ*/
+	//#define STR_EXTRA_	"hijkl" 		/*5つ*/
+//
+	#define STR_MAX 		"ABCD"			/*4つ*/
+	#define STR_EASY		"EFGH" "  " 	/*4つ*/
+	#define STR_NORMAL		"IJKLM" " " 	/*5つ*/
+	#define STR_HARD		"NOPQ" "  " 	/*4つ*/
+	#define STR_LUNATIC 	"RSTUVW"		/*6つ*/
+	#define STR_EXTRA		"XYZab" 		/*5つ*/
+	#define STR_TIME_		"cdef"			/*4つ*/
+//	#define STR_RANK_		"hijkl" 		/*5つ*/
+	#define STR_FPS_		"hij"			/*3つ*/
+	#define CHR_PIRIOD_ 	'g' 			/*1つ*/
+	#define STR_ENEMY		"klmno" 		/*5つ*/
+#endif
+
 
 /*---------------------------------------------------------
  * 10進数表示を行う。
@@ -109,33 +140,31 @@ static void dec_display(
 
 enum
 {
-	R_00_mizu_hosi_png = 0,
-	R_01_aka_hosi_png,
+	R_00_aka_hosi_png = 0,
+	R_01_mizu_hosi_png = 10,
 };
 
-static void draw_stars_status( int g_num, int num, int y_suf)
+static void draw_stars_status(int img_num, int value, int y_offset)
 {
-	SDL_Surface *star;
-	/*const*/ char *img_name[2] =
-	{
-		"panel/mizu_hosi.png",
-		"panel/aka_hosi.png",
-	};
-	SDL_Rect recAll,rec;
-	star = loadbmp0((char *)img_name[g_num], 0, 1);
-	SDL_SetColorKey(star,SDL_SRCCOLORKEY|SDL_RLEACCEL,0x00000000);
-	if (num<1)	{	num=0;}
-
-	rec.x = 0;
-	rec.y = 0;
-	rec.w = (10*num);
-	rec.h = 10;
-
-	recAll.x = PSP_WIDTH480+3-7-(10*num);
-	recAll.y = y_suf;
-	recAll.w = 100;
-	recAll.h = 11;
-	SDL_BlitSurface(star, &rec, sdl_screen[SDL_00_SCREEN], &recAll);
+//	/*const*/ char *img_name[2] =
+//	{
+//		"panel/aka_hosi.png",
+//		"panel/mizu_hosi.png",
+//	};
+	SDL_Rect rect_dest;
+	SDL_Rect rect_src;
+	if (value<1)	{	value=0;}
+//
+	rect_src.x = (0);
+	rect_src.y = (img_num)/*(0)*/;
+	rect_src.w = (10*value);
+	rect_src.h = (10);
+//
+	rect_dest.x = PSP_WIDTH480-4-(10*value);
+	rect_dest.y = y_offset;
+	rect_dest.w = 100;
+	rect_dest.h = 11;
+	SDL_BlitSurface(star_gauge, &rect_src, sdl_screen[SDL_00_SCREEN], &rect_dest);
 }
 
 /*---------------------------------------------------------
@@ -145,34 +174,43 @@ static void draw_stars_status( int g_num, int num, int y_suf)
 // ketmに差分を上書きすると何故か普通に表示される。
 static void draw_power_gauge(int weapon/*, int dx, int dy*/)
 {
-	#define WP_GAUGE_X_OFS (PPP+7+9+3*8)
-	#define WP_GAUGE_Y_OFS (124-2)
-	SDL_Rect srec, drec;
-	srec.x = 0;
-	srec.y = 0;
-	srec.h = 13;
+	#define WP_GAUGE_X_OFS (PPP+48-2)
+	#define WP_GAUGE_Y_OFS (128+8+4)
+	SDL_Rect rect_dest;
+	SDL_Rect rect_src;
+	rect_src.x = (0);
+	rect_src.y = 20/*(0)*/;
+	rect_src.h = 13;
 	#if 0
-//	srec.w = (int)((dou ble)weapon / 127/*128*/ * (dou ble)power_gauge->w); 	// [***090123		変更
+//	rect_src.w = (int)((dou ble)weapon / 127/*128*/ * (dou ble)power_gauge->w); 	// [***090123		変更
 	#else
 	/* 1 dot ぐらい誤差あるかもしれないけど簡略化(高速化) */
-	srec.w = ((int)(weapon * power_gauge->w)>>7);	// [***090123		変更
+	rect_src.w = ((int)(weapon * 80/*power_gauge->w*/)>>7);	// [***090123		変更
 	#endif
-	drec.w = power_gauge->w;
-	drec.h = power_gauge->h;
-	drec.x = WP_GAUGE_X_OFS/*dx*/;
-	drec.y = WP_GAUGE_Y_OFS/*dy*/;
-	SDL_BlitSurface(power_gauge, &srec, sdl_screen[SDL_00_SCREEN], &drec);
+	rect_dest.w = 80/*power_gauge->w*/;
+	rect_dest.h = 13/*power_gauge->h*/;
+	rect_dest.x = WP_GAUGE_X_OFS/*dx*/;
+	rect_dest.y = WP_GAUGE_Y_OFS/*dy*/;
+	SDL_BlitSurface(star_gauge/*power_gauge*/, &rect_src, sdl_screen[SDL_00_SCREEN], &rect_dest);
 }
 
 /*---------------------------------------------------------
 	ボスの HP 表示の子関数
 ---------------------------------------------------------*/
 
+extern int boss_x256;
+extern int boss_y256;
+static int draw_boss_hp_value_set;
 static void draw_boss_gauge(void/*int dx, int dy*/) 	// [***090305		変更
 {
 	SPRITE *s = ((PLAYER_DATA *)player->data)->boss;
-	int boss_hp_low_value=(((BOSS_BASE *)s->data)->boss_health);/*(???)141477*/
-	int boss_life_value=(((BOSS_BASE *)s->data)->boss_life);/*(???)141477*/
+	if (NULL == s)
+	{
+		return;/* ボスが無い場合は何もしない */
+	}
+//
+	int boss_hp_low_value=(/*((BOSS_BASE *)s->data)->boss_*/s->base_health);/*(???)141477*/
+//	int bo ss_life_value=(((BOSS_BASE *)s->data)->bo ss_life);/*(???)141477*/
 
 	#if 0
 	if (0 > boss_hp_low_value)	return;/* 負数の場合は何もしない */
@@ -181,27 +219,45 @@ static void draw_boss_gauge(void/*int dx, int dy*/) 	// [***090305		変更
 //	if (0 != ((boss_hp_low_value)&(0xffffc000)) )	return;/* 範囲外の場合は何もしない */
 	if (0 > boss_hp_low_value)
 	{
-		(((BOSS_BASE *)s->data)->boss_health) = 0;
+	//	(((BOSS_BASE *)s->data)->boss_health) = 0;/* まずいかも */
+		boss_hp_low_value = 0;
 	}
-	if (0==(boss_hp_low_value+boss_life_value))
+	if (0==(boss_hp_low_value/*+bo ss_life_value*/))
 	{
 		return;/* 範囲外の場合は何もしない */
 	}
+	boss_x256 = (/*((BOSS_BASE *)s->data)->boss_*/s->x256);/*(???)141477*/
+	boss_y256 = (/*((BOSS_BASE *)s->data)->boss_*/s->y256);/*(???)141477*/
+
+	draw_boss_hp_value_set = ((boss_hp_low_value & 0x03ff)>>2);/* ボスhp描画値 */
+	if (draw_boss_hp_value < (draw_boss_hp_value_set))
+			{	draw_boss_hp_value++;	}
+	else	{	draw_boss_hp_value--;	}
 	#endif
 //
 	#if 1/*ボス時間経過*/
 //	if ()
 //	if ((STATE_FLAG_05_IS_BOSS|0) == (pd->state_flag&(STATE_FLAG_05_IS_BOSS|STATE_FLAG_06_IS_SCRIPT)))
 	{
-		((BOSS_BASE *)s->data)->boss_timer -= 1/*fps_fa ctor*/;
-		if ((((BOSS_BASE *)s->data)->boss_timer < 1))
+		/* (とりあえず)スペカモード時のみ時間経過 */
+		if (0/*off*/!=spell_card_mode)/*on時のみ*/
 		{
-			((BOSS_BASE *)s->data)->boss_timer	= (60*64);
-			((BOSS_BASE *)s->data)->boss_health = 0;
+			/*((BOSS_BASE *)s->data)->*/spell_card_boss_timer -= 1/*fps_fa ctor*/;
+			if ((/*((BOSS_BASE *)s->data)->*/spell_card_boss_timer < 0/*1*/))
+			{
+				spell_card_boss_timer		= 0;
+				spell_card_mode 			= 0/*off*/;
+				/*((BOSS_BASE *)s->data)->boss_*/s->base_health 	= spell_card_limit_health;		/* (とりあえず) */
+				boss_destroy_check_type(s/*敵自体*/, DESTROY_CHECK_01_IS_TIME_OUT);/*	★ 攻撃の場合の死亡判定 	★ 時間切れの場合の死亡判定 */
+				#if 000
+				/*((BOSS_BASE *)s->data)->*/spell_card_boss_timer	= (60*64);		/* (とりあえず) */
+				/*((BOSS_BASE *)s->data)->boss_*/s->base_health 	= 0;			/* (とりあえず) */
+				#endif
+			}
 		}
 	}
-	unsigned char boss_timer_low	= ((((BOSS_BASE *)s->data)->boss_timer)&0x3f);/* */
-	unsigned int boss_timer_value	= ((((BOSS_BASE *)s->data)->boss_timer)>>6);/* */
+	unsigned char boss_timer_low	= ((/*((BOSS_BASE *)s->data)->*/spell_card_boss_timer)&0x3f);/* */
+	unsigned int boss_timer_value	= ((/*((BOSS_BASE *)s->data)->*/spell_card_boss_timer)>>6);/* */
 	#endif
 	//	99 以上は 99 表示
 	if (99<boss_timer_value)
@@ -235,23 +291,26 @@ static void draw_boss_gauge(void/*int dx, int dy*/) 	// [***090305		変更
 	//	if ((10  )>boss_timer_value)	/* (10	)==設定値 10 で、カウント 8 から音が鳴るように聞こえる． */
 		if ((10+1)>boss_timer_value)	/* (10+1)==設定値 11 で、カウント 9 から音が鳴るように聞こえる． */
 		{
+			#if (0==USE_DESIGN_TRACK)
 			play_voice_auto_track(VOICE15_COUNT_TIMER);
+			#else
+			voice_play(VOICE15_COUNT_TIMER, TRACK03_SHORT_MUSIC);/*テキトー*/
+			#endif
 		}
 	}
 
 
 	/* boss hp 画像の文字幅分 / gauge stringth x width */
-	#define HPGAUGE_X_OFS (50)
-	#define HPGAUGE_Y_OFS (6)
-	#define HP_FONT_X_OFS (50)/*(37+10) dx*/
-	#define HP_FONT_Y_OFS (6)/*(0+0) dy*/
+//	#define HPGAUGE_X_OFS (50)
+//	#define HPGAUGE_Y_OFS (6)
+	#define HP_FONT_X_OFS (4)	/*(50-(8*5)-3)*/	/*(37+10) dx*/
+	#define HP_FONT_Y_OFS (1)/*(0+0) dy*/
 	//
-	#define BOSS_TIMER_X_OFS (PPP-24)/* dx*/
-	#define BOSS_TIMER_Y_OFS (6)/*(0+0) dy*/
+	#define BOSS_TIMER_X_OFS (PPP-16-4)/* dx*/
+	#define BOSS_TIMER_Y_OFS (1)/*(0+0) dy*/
 	/* 1024以上の値は数字で表示 */
-	{	char buffer[4/*3*/];
+	{	char buffer[8/* 4 3*/];
 	#if 1
-
 		//	スペル残り時間表示
 		if (
 			//	(9<boss_timer_value) || 	/* 10以上は無条件で表示 */		/* カウント 8 から点滅してるように見える． */
@@ -267,53 +326,26 @@ static void draw_boss_gauge(void/*int dx, int dy*/) 	// [***090305		変更
 	//	残りライフ表示
 	//	sp rintf(buffer,"%d", (boss_hp_low_value>>10));/*(???)141477*/
 	//	sp rintf(buffer,"%d", (boss_hp_low_value>>10));/*(???)141477*/
-		strcpy(buffer,"0");
-		dec_display( (boss_life_value)/*(boss_hp_low_value>>10)*/, 1, (char *)buffer);
+		strcpy(buffer, STR_ENEMY "0");
+		dec_display( /*(bo ss_life_value)*/(boss_hp_low_value>>10)/*(boss_hp_low_value>>10)*/, 1, (char *)&buffer[5]);
 		font_print_screen_xy(buffer, FONT01/*FONT06*/, HP_FONT_X_OFS, HP_FONT_Y_OFS);
 	}
-	/* 1024未満の細かい値はグラフ表示 */
-	{SDL_Rect srec, drec;
-		srec.x = 0;
-		srec.y = 0;
-		srec.h = 10;
-		srec.w = HPGAUGE_X_OFS+((boss_hp_low_value	& 0x03ff)>>2); /* 1023値 → 255ドット */
-		drec.w = boss_gauge->w;
-		drec.h = boss_gauge->h;
-		drec.x = 10/*dx*/;
-		drec.y =  0/*dy*/+HPGAUGE_Y_OFS;
-		SDL_BlitSurface(boss_gauge, &srec, sdl_screen[SDL_00_SCREEN], &drec);
-	}
 }
-#if 0
-	#define STR_MAX 		"MAX"
-	#define STR_MISSILE 	"MISSILE"
-	#define STR_WEAPON_UP	"WEAPON_UP"
-	#define STR_LASER		"LASER"
-	#define STR_BOMB		"BOMB"
-	#define STR_TIME_		"TIME :"
-	#define STR_EXTRA_		"EXTRA  :"
-#else
-	//#define STR_MAX		"ABCD"			/*4つ*/
-	//#define STR_MISSILE	"EFGHIJ"		/*6つ*/
-	//#define STR_WEAPON_UP "KLMNOPQR"		/*8つ*/
-	//#define STR_LASER 	"STUVW" 		/*5つ*/
-	//#define STR_BOMB		"XYZab" 		/*5つ*/
-	//#define STR_TIME_ 	"cdefg" 		/*5つ*/
-	//#define STR_EXTRA_	"hijkl" 		/*5つ*/
-//
-	#define STR_MAX 		"ABCD"			/*4つ*/
-	#define STR_EASY		"EFGH" "  " 	/*4つ*/
-	#define STR_NORMAL		"IJKLM" " " 	/*5つ*/
-	#define STR_HARD		"NOPQ" "  " 	/*4つ*/
-	#define STR_LUNATIC 	"RSTUVW"		/*6つ*/
-	#define STR_EXTRA		"XYZab" 		/*5つ*/
-	#define STR_TIME_		"cdef"			/*4つ*/
-//	#define STR_RANK_		"hijkl" 		/*5つ*/
-	#define STR_FPS_		"hij"			/*3つ*/
-	#define CHR_PIRIOD_ 	'g' 			/*1つ*/
-#endif
 
-
+	/* 1024未満の細かい値はグラフ表示 */
+//	{
+	//	SDL_Rect rect_src;
+	//	SDL_Rect rect_dest;
+	//	rect_src.x = 0;
+	//	rect_src.y = 0;
+	//	rect_src.h = 10;
+	//	rect_src.w = HPGAUGE_X_OFS+((boss_hp_low_value	& 0x03ff)>>2); /* 1023値 → 255ドット */
+	//	rect_dest.w = boss_gauge->w;
+	//	rect_dest.h = boss_gauge->h;
+	//	rect_dest.x = 10/*dx*/;
+	//	rect_dest.y =  0/*dy*/+HPGAUGE_Y_OFS;
+//		SDL_BlitSurface(boss_gauge, NULL/*&rect_src*/, sdl_screen[SDL_00_SCREEN], NULL/*&rect_dest*/);
+//	}
 
 /*---------------------------------------------------------
 	スコアパネルのステータス表示
@@ -365,7 +397,7 @@ void score_display(void)
 {
 	/* [ パネルベースを表示 ] */
 	{
-		SDL_Rect panel_base_r={GAME_WIDTH, 0, 0, 0};	// データウィンドウ用rect->w,h,x,y
+		SDL_Rect panel_base_r = {GAME_WIDTH, 0, 0, 0};	// データウィンドウ用rect_srct->w,h,x,y
 		SDL_BlitSurface(panel_base, NULL, sdl_screen[SDL_00_SCREEN], &panel_base_r);
 	}
 //
@@ -379,10 +411,10 @@ void score_display(void)
 	}
 //
 	/* [ プレイヤー数表示 ] */
-	draw_stars_status( R_00_mizu_hosi_png, (pd->zanki), 69+2);
+	draw_stars_status( R_00_aka_hosi_png,  (pd->zanki), 10*8+4);	/*R_01_mizu_hosi_png*/
 //
 	/* [ ボム数表示 ] */
-	draw_stars_status( R_01_aka_hosi_png, (pd->bombs), 94+1);
+	draw_stars_status( R_01_mizu_hosi_png, (pd->bombs), 14*8+1);	/*R_00_aka_hosi_png*/
 //
 	#if (1==USE_DEBUG)/* 各優先順位ごとどれくらいあるか調べてみる */
 	/* パネルのスコア欄にdebug_num1を、グレイズ欄にdebug_num2を表示させる。っていうか書き換えちゃう。 */
@@ -397,12 +429,12 @@ void score_display(void)
 		{	top_score = pd->my_score;}
 	//	sp rintf(buffer,"%09d0", top_score);
 		strcpy(buffer,"0000000000");
-		dec_display(top_score,		9/*8*/, (char *)buffer);		font_print_screen_xy(buffer,FONT01,PPP+1*8+3+5+3*8,15+2);
+		dec_display(top_score,		9/*8*/, (char *)buffer);		font_print_screen_xy(buffer,FONT01,PPP+5*8+4,3*8+2);
 	//
 		/* [ スコア表示 ] */
 	//	sp rintf(buffer,"%09d0", pd->my_score);
 		strcpy(buffer,"0000000000");
-		dec_display(pd->my_score,	9/*8*/, (char *)buffer);		font_print_screen_xy(buffer,FONT01,PPP+1*8+3+5+3*8,40+2);
+		dec_display(pd->my_score,	9/*8*/, (char *)buffer);		font_print_screen_xy(buffer,FONT01,PPP+5*8+4,6*8+7);
 	//
 		/* [ パワーゲージ表示 ] */
 		draw_power_gauge(pd->weapon_power /*,PPP+7,124*/);
@@ -419,19 +451,19 @@ void score_display(void)
 			dec_display( (((int)(pd->weapon_power) * 200) >>8), 2, (char *)&buffer[1]);
 			#endif
 		}
-		font_print_screen_xy(buffer,FONT01,PPP+7*8+3+3*8,125-2);
+		font_print_screen_xy(buffer,FONT01,PPP+10*8+7,17*8+5);
 		//font_print_screen_xy(buffer,FONT01,PPP+8*8+3,125/*+1*/-2);
 	//
 		/* [ ボム有効時間表示 ] */
 		//if (p->ex tra_type!=PLX_NONE)
-		if (0 != pd->bomber_time)
+		if (0 != pd_bomber_time)
 		{
-		//	sp rintf(buffer, STR_TIME_"%3d",(int)(((int)pd->bomber_time)/10));
+		//	sp rintf(buffer, STR_TIME_"%3d",(int)(((int)pd_bomber_time)/10));
 		//	font_print_screen_xy(buffer,FONT01,PPP+3*8-6,160);
 			strcpy(buffer, STR_TIME_"   ");
-			dec_display( (int)(((int)pd->bomber_time) ), 3, (char *)&buffer[5]);
+			dec_display( (int)(((int)pd_bomber_time) ), 3, (char *)&buffer[5]);
 			buffer[7] = 0/*' '*/;/* 1桁目は表示しない */
-			font_print_screen_xy(buffer,FONT01,PPP+4*8-6+3*8,160);
+			font_print_screen_xy(buffer,FONT01,PPP+8*8+4,22*8);
 		}
 	//
 		/* [ グレイズスコア表示 ] */
@@ -439,7 +471,7 @@ void score_display(void)
 			strcpy(buffer,"   0");
 			dec_display( pd->graze_point, 4, (char *)&buffer[0]);
 		//	font_print_screen_xy(buffer,FONT01,PPP+7*8+3,140);/*3桁(足りない)*/
-			font_print_screen_xy(buffer,FONT01,PPP+6*8+3+3*8,140);/*4桁(稼げる)*/
+			font_print_screen_xy(buffer,FONT01,PPP+11*8+4,20*8);/*4桁(稼げる)*/
 	//
 		/* [ 難易度表示 ] */
 		{
@@ -452,7 +484,7 @@ void score_display(void)
 		//	/* 4==PLX_BOMB:*/		STR_EXTRA,
 			//	/*default:*/		"UNKNOWN ???",
 			};
-			font_print_screen_xy( (char *)rank_name[(difficulty)&(4-1)], FONT01,PPP+/*7*/1*8-4+4,256);
+			font_print_screen_xy( (char *)rank_name[(difficulty)&(4-1)], FONT01,PPP+/*7*/1*8,256);
 		}
 	//
 		#if 1
@@ -475,24 +507,24 @@ void score_display(void)
 			/*"60fps"*/
 	//	//	sp rintf(buffer, STR_TIME_"%3d",(int)(((int)ttt)));
 	//		strcpy(buffer, STR_TIME_"00");
-	//	//	dec_display(ttt,	3, (char *)&buffer[5]);
-	//		dec_display(ttt,	2, (char *)&buffer[5]);
-	//		font_print_screen_xy(buffer,FONT01,PPP/*+8*4*/,240);
+	//	//	dec_display(ttt,	3, (char *)&buffer[0/*5*/]);
+	//		dec_display(ttt,	2, (char *)&buffer[0/*5*/]);
+	//		font_print_screen_xy(buffer,FONT01,PPP,256);
 //
 	//		/*"60.0fps"*/
 	//		strcpy(buffer, STR_TIME_"0000");
-	//		dec_display(ttt,	3, (char *)&buffer[5]);
-	//		buffer[8] = buffer[7];
-	//		buffer[7] = ' ';/*'.'*/
-	//		font_print_screen_xy(buffer,FONT01,PPP/*+8*4*/,240);
+	//		dec_display(ttt,	3, (char *)&buffer[0/*5*/]);
+	//		buffer[8-5] = buffer[7-5];
+	//		buffer[7-5] = CHR_PIRIOD_;/*' ' '.'*/
+	//		font_print_screen_xy(buffer,FONT01,PPP,256);
 //
 			/*"60.00fps"*/
 			strcpy(buffer, /*STR_TIME_*/"00000"STR_FPS_);
 			dec_display(ttt,	4, (char *)&buffer[0/*5*/]);
 			buffer[9-5] = buffer[8-5];
 			buffer[8-5] = buffer[7-5];
-			buffer[7-5] = /*' '*/CHR_PIRIOD_;/*'.'*/
-			font_print_screen_xy(buffer,FONT01,PPP/*+8*4*/+8*8+2,256/*240*/);
+			buffer[7-5] = CHR_PIRIOD_;/*' ' '.'*/
+			font_print_screen_xy(buffer,FONT01,PPP+8*8+2,256);
 		}
 		#endif
 	//}
@@ -505,11 +537,13 @@ void score_display(void)
 extern int select_player;
 void score_panel_init(void)
 {
-	top_score = high_score_table[select_player][0].score;	// 常に表示するハイコアの取得=>score.cで利用
+	top_score			= high_score_table[select_player][0].score; 	// 常に表示するハイコアの取得=>score.cで利用
 	panel_base			= loadbmp0("panel/panel_base.png", 0, 1);
-	power_gauge 		= loadbmp0("panel/power_gauge.png", 0, 1);
-	SDL_SetColorKey(power_gauge,SDL_SRCCOLORKEY|SDL_RLEACCEL,0x00000000);
-	boss_gauge			= loadbmp0("panel/boss_gauge.png", 1, 1);/*2*/
+	star_gauge			= loadbmp0("panel/hosi_gauge.png", 0, 1);		/*(char *)img_name[img_num]*/
+	SDL_SetColorKey(star_gauge,SDL_SRCCOLORKEY|SDL_RLEACCEL,0x00000000);
+//	power_gauge 		= loadbmp0("panel/power_gauge.png", 0, 1);
+//	SDL_SetColorKey(power_gauge,SDL_SRCCOLORKEY|SDL_RLEACCEL,0x00000000);
+//	boss_gauge			= loadbmp0("panel/boss_gauge.png", 1, 1);/*2*/
 }
 
 /*---------------------------------------------------------
@@ -524,7 +558,7 @@ void render_continue(void/*int now_max_continue*/)
 	strcpy(buffer,	"TRY CHANCE STILL AT  0");
 	dec_display( now_max_continue, 2, (char *)&buffer[20]);
 //
-	font_print_screen_xy(buffer, FONT03, 0/*10*/, 50);
+	font_print_screen_xy(buffer, FONT03, 0/*10*/, 16/*50*/);
 	#if (0==USE_CONTINUED_RANKING)
 //	/* コンティニューした場合、スコアランキングされません */
 	font_print_screen_xy("IF YOU GOT CONTINUED,", FONT05, 0/*10*/, 200);
@@ -534,6 +568,93 @@ void render_continue(void/*int now_max_continue*/)
 		意味が違わない範囲で適当に省略 */
 	#endif
 }
+
+
+
+
+/*---------------------------------------------------------
+	以下RESULT表示(stage_clear.c)
+	-------------------------------------------------------
+	現在都合により score_panel.c 内にある。
+	Gu化が進めば独立する予定。
+---------------------------------------------------------*/
+
+#include "game_main.h"
+#include "scenario_script.h"
+
+	#if (1==USE_RESULT_WAIT)
+#define TIME_20_RESULT_WAIT /*20*/(60*5)/*2*/
+static int result_time_wait;
+//static int result_state;
+	#endif
+void player_result_init(void)
+{
+	#if (1==USE_RESULT_WAIT)
+	result_time_wait = TIME_20_RESULT_WAIT;
+//	result_state = 0;
+	#endif
+}
+
+
+
+
+/*---------------------------------------------------------
+	RESULT表示
+---------------------------------------------------------*/
+
+static void render_result(void/*int now_max_continue*/)
+{
+	PLAYER_DATA *pd = (PLAYER_DATA *)player->data;
+	char buffer[64/*100*/];
+	strcpy(buffer,	"RESULT" ); 																			font_print_screen_xy(buffer, FONT03, 0,  32);
+	strcpy(buffer,	"STAGE   0 X 1000 PTS.");	dec_display( player_now_stage, 1, (char *)&buffer[ 8]); 	font_print_screen_xy(buffer, FONT05, 8, 100);
+	strcpy(buffer,	"POWER 000 X  100 PTS.");	dec_display( pd->weapon_power, 3, (char *)&buffer[ 6]); 	font_print_screen_xy(buffer, FONT05, 8, 120);
+	strcpy(buffer,	"GRAZE 000 X   10 PTS.");	dec_display( pd->graze_point,  3, (char *)&buffer[ 6]); 	font_print_screen_xy(buffer, FONT05, 8, 140);
+	/*const*/ char *level_name[4] =
+	{
+					"EASY      X 0.5",
+					"NORMAL    X 1.0",
+					"HARD      X 1.2",
+					"LUNATIC   X 1.5",
+	};
+	font_print_screen_xy( (char *)level_name[(difficulty/*&0x03*/)], FONT03, 0/*26*/, 160);
+}
+/*---------------------------------------------------------
+	RESULT表示(ゲーム各面クリアー時)
+---------------------------------------------------------*/
+extern void player_stage_clear(void);
+void stage_clear_work(void)
+{
+	#if (1==USE_RESULT_WAIT)
+	result_time_wait--;
+	switch (result_time_wait)
+	{
+	case (TIME_20_RESULT_WAIT-1):
+	#endif
+		script_message_window_clear();
+		msg_time = (60*5);
+		print_kanji(/*SDL_Rect *rect_srct*/0, /*text*/"CHALLENGE NEXT STAGE!" "\n" "\n" "少女祈祷中...", /*int color_type*/7, /*int wait*/0);
+		render_result();
+	#if (1==USE_RESULT_WAIT)
+		break;
+	case 0:
+	//	if (0==result_time_wait)
+		{
+			result_time_wait = TIME_20_RESULT_WAIT;
+	#endif
+			//PLAYER_DATA *pd = (PLAYER_DATA *)player->data;
+			player_stage_clear();
+		//
+			psp_loop = (ST_INIT_GAME_PLAY_common|0);
+		//	common_load_init();
+	#if (1==USE_RESULT_WAIT)
+		}
+		break;
+	}
+	#endif
+}
+
+
 /*---------------------------------------------------------
 	以下メモ(フォントの形式が変わったので表示できない等)
 ---------------------------------------------------------*/

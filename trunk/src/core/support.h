@@ -8,6 +8,7 @@
 #include <pspctrl.h>
 #include <pspdisplay.h>
 #include <pspgu.h>
+//#include <pspgum.h>/* gumはguより後にインクルード */
 #include <pspiofilemgr.h>
 #include <pspkernel.h>
 #include <psppower.h>
@@ -191,8 +192,9 @@ R8G8B8A8フォーマットで色を設定する事になりますが、PSPはリトルエンディアンのCPUを
 
 /* シューティングGAME部分の表示画面領域 */
 //#define GAME_WIDTH		(380)
-#define GAME_WIDTH		(PSP_WIDTH480-128)
-#define GAME_HEIGHT 	(272)
+#define PANEL_WIDTH 	(128)
+#define GAME_WIDTH		(PSP_WIDTH480-PANEL_WIDTH)
+#define GAME_HEIGHT 	(PSP_HEIGHT272)
 
 #if 1
 	/* 単純拡大 */

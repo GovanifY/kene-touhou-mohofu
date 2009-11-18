@@ -14,7 +14,7 @@ extern SDL_Surface *back_screen;
 
 extern void init_imglist(void);
 extern void init_math(void);
-extern void keyboard_clear(void);
+//extern void keyboard_clear(void);
 extern void ini_load(void); 	// [***090110
 extern void ini_save(void); 	// [***090115
 extern void bg2_system_init(void);
@@ -53,9 +53,8 @@ void game_system_init(void/*int argc, char *argv[]*/)
 
 	/* ----- ゲーム本体初期化 */
 	init_audio();/*ini_load();より後(data_dirがわからないと効果音が読めないので)*/
-	init_math();
+	init_math();/*	keyboard_clear();*/
 	init_imglist();
-	keyboard_clear();
 //
 	script_system_init();/* 組み込み */
 //
@@ -69,6 +68,10 @@ void game_system_init(void/*int argc, char *argv[]*/)
 	psp_pop_screen();
 	#endif
 //
+	#if (1)/*Guで描く前に必要な初期化*/
+	pd_bomber_time=0;
+	#endif
+//
 	#if (1==USE_GU)
 	#else
 	SDL_Flip(sdl_screen[SDL_00_SCREEN]);
@@ -79,10 +82,11 @@ void game_system_init(void/*int argc, char *argv[]*/)
 	font_init();
 	menusystem_init();
 	//fps_init();
+	dummy_obj 		= mmalloc(sizeof(SPRITE));/* 引数受け渡し用 */
 	bg2_system_init();
 	/* ゲームコア game_core_init(); */
 //
-	play_music(BGM_00_intro);
+	play_music(BGM_00_menu1);
 	/* メインメニューに戻る */
 	psp_loop=(ST_INIT_MENU|0/*ST_ME NU_SUB_MAIN_MENU*/);//newsta te(/*ST_INTRO*/ST_MENU/*ST_START_INTRO*/,0,1);
 }

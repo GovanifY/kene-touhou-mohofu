@@ -10,7 +10,7 @@
 #if 0
 typedef struct
 {
-	ENEMY_BASE b;
+//	ENEMY_BASE base;
 	int speed256;
 //	int state;
 //	int tx256;
@@ -20,7 +20,7 @@ typedef struct
 
 typedef struct
 {
-	ENEMY_BASE b;
+//	ENEMY_BASE base;
 	int speed256;
 	int state;
 	int wait1;		// [***090124		追加
@@ -34,7 +34,7 @@ typedef struct
 typedef struct
 {
 #if 1
-	ENEMY_BASE b;		// [***090410		???追加???
+//	ENEMY_BASE base;		// [***090410		???追加???
 #endif
 	int speed256;
 	int state;
@@ -47,7 +47,7 @@ typedef struct
 #define BGPANEL_DATA  MAGICF_DATA
 
 /*---------------------------------------------------------
-	消える魔方陣(おｋのやつ)
+	消える魔方陣(おｋのやつ) "魔方陣2"
 ---------------------------------------------------------*/
 enum
 {
@@ -56,25 +56,25 @@ enum
 	SS02,
 	SS03,
 };
-static void move_magic_formation(SPRITE *s)
+static void move_magic_formation(SPRITE *src)
 {
-	MAGICF_DATA *data = (MAGICF_DATA *)s->data;
+	MAGICF_DATA *data = (MAGICF_DATA *)src->data;
 	switch (data->state)
 	{
 	case SS00:
 		data->wait1 -= 1/*fps_fa ctor*/;
-		if (data->wait1 < 1/*0*/)
+		if (data->wait1 <= 0)
 		{
 		//	data->wait1=8/*5*/;
-		//	s->alpha	= 0;
+		//	src->alpha	= 0;
 			data->state++;/* = SS01;*/
 		}
 		break;
 	case SS01:		/* 出現 */
-		s->alpha += 3/*4*/ /**fps_fa ctor*/;
-		if (180 < (unsigned int)(s->alpha))
+		src->color32 += 0x03000000;			/*	src->alpha += 0x03;*/ /*4*/ /**fps_fa ctor*/
+		if (0xb4000000 < (src->color32) ) 	/* (0xb4 < (unsigned int)(src->alpha)) */
 		{
-			s->alpha = 180;
+			src->color32 = 0xb4ffffff;		/*	src->alpha = 0xb4;*/
 			data->state++;/* = SS02;*/
 		}
 		break;
@@ -82,15 +82,19 @@ static void move_magic_formation(SPRITE *s)
 		if (0 < data->wait2)		// [***090128		変更
 		{
 			data->wait1--;
-			if (data->wait1 < 1/*0*/)
+			if (data->wait1 <= 0)
 			{
 				data->wait1=8/*5*/;/*プログラムが速くなってる分遅くする*/
 				data->wait2--;
+				#if (0==USE_DESIGN_TRACK)
 				play_voice_auto_track(VOICE10_MAGICF_E_SHOT);
+				#else
+				voice_play(VOICE10_MAGICF_E_SHOT, TRACK06_ALEART_IVENT_02);/*テキトー*/
+				#endif
 				/* 速度は 1.0-3.0までの無段階乱数に変更 */
 				{	int angle512;
 					angle512=(ra_nd()&(512-1))/*%360*/;
-					bullet_create_tomari2_dan(s,
+					bullet_create_tomari2_dan(src,
 						/*t256(sp)*/((ra_nd()&(512-1))+256)/*speed256*/,
 						/*degtorad*/(angle512),
 						t256(0.04),
@@ -104,11 +108,11 @@ static void move_magic_formation(SPRITE *s)
 		}
 		break;
 	case SS03:		/* 消える */
-		s->alpha -= 1/*2*/ /**fps_fa ctor*/;
-		if ( 4/*0*/ > (unsigned int)(s->alpha))
+		src->color32 -= 0x01000000;			/*	src->alpha -= 1;*/	/*2*/ /**fps_fa ctor*/
+		if ( 0x04000000 > (src->color32) )	/*	if ( 0x04 0x00 > (unsigned int)(src->alpha))*/
 		{
-			s->alpha = 0;
-			s->type = SP_DELETE;
+			src->color32 = 0x00ffffff;		/*	src->alpha = 0x00;*/
+			src->type = SP_DELETE;
 		}
 		break;
 	}
@@ -143,15 +147,15 @@ static void move_magic_formation(SPRITE *s)
 #endif
 
 /*---------------------------------------------------------
-	ばらまき攻撃魔方陣
+	ばらまき攻撃魔方陣 "魔方陣1"
 ---------------------------------------------------------*/
 
-static void lose_grounder(SPRITE *s)
+static void lose_grounder(SPRITE *src)
 {
 //	case SP_GROUNDER:
-	if (rand_percent(30))	{	item_create(s,					  SP_ITEM_00_P001,	1, (ITEM_MOVE_FLAG_01_COLLECT|ITEM_MOVE_FLAG_06_RAND_XY)/*(up_flags)*/ );}
-	if (rand_percent(30))	{	item_create(s,/*->x+10, c->y-5,*/ SP_ITEM_00_P001,	1, (ITEM_MOVE_FLAG_01_COLLECT|ITEM_MOVE_FLAG_06_RAND_XY)/*(up_flags)*/ );}
-	if (rand_percent(30))	{	item_create(s,/*->x+ 5, c->y+5,*/ SP_ITEM_06_TENSU, 1, (ITEM_MOVE_FLAG_01_COLLECT|ITEM_MOVE_FLAG_06_RAND_XY)/*(up_flags)*/ );}
+	if (rand_percent(30))	{	item_create(src,					  SP_ITEM_00_P001,	1, (ITEM_MOVE_FLAG_01_COLLECT|ITEM_MOVE_FLAG_06_RAND_XY)/*(up_flags)*/ );}
+	if (rand_percent(30))	{	item_create(src,/*->x+10, c->y-5,*/ SP_ITEM_00_P001,	1, (ITEM_MOVE_FLAG_01_COLLECT|ITEM_MOVE_FLAG_06_RAND_XY)/*(up_flags)*/ );}
+	if (rand_percent(30))	{	item_create(src,/*->x+ 5, c->y+5,*/ SP_ITEM_06_TENSU, 1, (ITEM_MOVE_FLAG_01_COLLECT|ITEM_MOVE_FLAG_06_RAND_XY)/*(up_flags)*/ );}
 }
 
 /*---------------------------------------------------------
@@ -164,41 +168,45 @@ enum
 	ST02,
 	ST03,
 };
-static void move_grounder(SPRITE *s)	// [***090124 攻撃パターンを変える */
+static void move_grounder(SPRITE *src)	// [***090124 攻撃パターンを変える */
 {
-	GROUNDER_DATA *data = (GROUNDER_DATA *)s->data;
+	GROUNDER_DATA *data = (GROUNDER_DATA *)src->data;
 	switch (data->state)
 	{
 	case ST00:
-		if ((s->y256 >= player->y256) ||
-			(s->y256 > t256(100)) )
+		if ((src->y256 >= player->y256) ||
+			(src->y256 > t256(100)) )
 		{
 			data->state++;/* = ST01;*/
-			bullet_create_aka_maru_jikinerai(s, t256(1) );
+			bullet_create_aka_maru_jikinerai(src, t256(1) );
 		}
 		break;/*??? [***090210 追加 */
 	case ST01:
-		if (s->y256 > t256(GAME_HEIGHT+16+2))/* GAME_HEIGHT+16+2==290 */
+		if (src->y256 > t256(GAME_HEIGHT+16+2))/* GAME_HEIGHT+16+2==290 */
 		{
-			s->type = SP_DELETE;
+			src->type = SP_DELETE;
 		}
 	}
 	if (data->wait2<(difficulty*7)+10) // [***090128 変更 */
 	{
 		data->wait1--;
-		if (data->wait1 < 1/*0*/)
+		if (data->wait1 <= 0)
 		{
 			data->wait1=25-(difficulty*5);
+			#if (0==USE_DESIGN_TRACK)
 			play_voice_auto_track(VOICE10_MAGICF_E_SHOT);
+			#else
+			voice_play(VOICE10_MAGICF_E_SHOT, TRACK06_ALEART_IVENT_02);/*テキトー*/
+			#endif
 			/* 速度は 1.0-4.0までの乱数(ただし上方域に偏差)に変更 */
-			bullet_create_tomari2_dan(s,
+			bullet_create_tomari2_dan(src,
 				((ra_nd()&(1024-1))|(0x100))/*t256(sp)*/,
 				/*deg512_2rad*/((ra_nd()&(512-1)))/*de gtorad(ra_nd()%360)*/,
 				t256(0.03),
 				ANGLE_NO_SHOT_DAN);
 		}
 	}
-	s->y256 += data->speed256/**fps_fa ctor*/;
+	src->y256 += data->speed256/**fps_fa ctor*/;
 }
 #if 0
 			int sp;
@@ -236,14 +244,14 @@ static void move_grounder(SPRITE *s)	// [***090124 攻撃パターンを変える */
 	ベースパネル
 ---------------------------------------------------------*/
 
-static void move_bg_panel(SPRITE *s)
+static void move_bg_panel(SPRITE *src)
 {
-	BGPANEL_DATA *data = (BGPANEL_DATA *)s->data;
-	if (s->y256 > t256(GAME_HEIGHT+2)) /* 272+2 == 274 */
+	BGPANEL_DATA *data = (BGPANEL_DATA *)src->data;
+	if (src->y256 > t256(GAME_HEIGHT+2)) /* 272+2 == 274 */
 	{
-		s->type = SP_DELETE;
+		src->type = SP_DELETE;
 	}
-	s->y256 += data->speed256/**fps_fa ctor*/;
+	src->y256 += data->speed256/**fps_fa ctor*/;
 }
 
 /*---------------------------------------------------------
@@ -308,17 +316,16 @@ type = /*type*/l->user_command/*1-1*/;
 		/*goto BTYPE_BGPANEL;*/
 		/*not_break;*/
 	BTYPE_BGPANEL:
-	//
-		s->type 			= SP_ZAKO/*SP_TIKEI*/ /*SP_BGPANEL*/;
-	//	s->flags			|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK|SP_FLAG_TIME_OVER);
-		s->flags			|= (SP_FLAG_VISIBLE|SP_FLAG_TIME_OVER);
-		s->callback_mover	= move_bg_panel;
-/**/	//s->alpha			= 255;
-		s->anim_speed		= 0/*6*/;
-		s->data 			= data;
-		data->b.score		= score(10*2);
-		data->b.health		= 2;/*???*/
-		data->speed256		= (speed256);
+		s->type 				= SP_ZAKO/*SP_TIKEI*/ /*SP_BGPANEL*/;
+	//	s->flags				|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK|SP_FLAG_TIME_OVER);
+		s->flags				|= (SP_FLAG_VISIBLE|SP_FLAG_TIME_OVER);
+		s->callback_mover		= move_bg_panel;
+	//	s->alpha				= 255;
+		s->anim_speed			= 0/*6*/;
+		s->data 				= data;
+		/*data->base.*/s->base_score			= score(10*2);
+		/*data->base.*/s->base_health			= 2;/*???*/
+		data->speed256			= (speed256);
 		break;
 
 	case BTYPE_03_GROUNDER: 		/* ばらまき攻撃魔方陣 */	//	"魔方陣1",	/*	"GROUNDER",*/
@@ -326,38 +333,40 @@ type = /*type*/l->user_command/*1-1*/;
 		anim_speed: 1 速い
 		anim_speed: 3 遅すぎ
 		*/
-		s					= sprite_add_res(BASE_TIKEI_GROUNDER08_PNG);	//s->anim_speed =  2/*3*/ /*(5-difficulty)*/ /*1*/;/*9"grounder.png"*/
-		s->type 			= SP_ZAKO/*SP_TIKEI*/ /*SP_GROUNDER*/;
-		s->flags			|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK|SP_FLAG_TIME_OVER);
-		s->callback_mover	= move_grounder;
-		s->callback_loser	= lose_grounder;
-/**/	//s->alpha			= 255;
-		s->data 			= data;
-		data->b.score		= score(200*2);
-		data->b.health		= 25+(difficulty<<3/*4*/);//+(difficulty*15);
-		data->wait1 		= 100;	// [***090124		追加
-		data->wait2 		= 0;
-		data->speed256		= (speed256);
+		s						= sprite_add_res(BASE_TIKEI_GROUNDER08_PNG);	//s->anim_speed =  2/*3*/ /*(5-difficulty)*/ /*1*/;/*9"grounder.png"*/
+		s->type 				= SP_ZAKO/*SP_TIKEI*/ /*SP_GROUNDER*/;
+		s->flags				|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK|SP_FLAG_TIME_OVER);
+		s->callback_mover		= move_grounder;
+		s->callback_hit_enemy	= callback_hit_zako;
+		s->callback_loser		= lose_grounder;
+	//	s->alpha				= 255;
+		s->data 				= data;
+		/*data->base.*/s->base_score			= score(200*2);
+		/*data->base.*/s->base_health			= 25+(difficulty<<3/*4*/);//+(difficulty*15);
+		data->wait1 			= 100;	// [***090124		追加
+		data->wait2 			= 0;
+		data->speed256			= (speed256);
 		break;
 	case BTYPE_04_MAGIC_FORMATION:		/* 消える魔方陣 */	//	"魔方陣2",	/*	"MAGICF",*/
-		s					= sprite_add_res(BASE_TIKEI_GROUNDER08_PNG);	s->anim_speed	=  3 /*(5-difficulty)*/ /*2*/;/*9"grounder.png"*/
-		s->type 			= SP_MUTEKI;
-		s->flags			|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK|SP_FLAG_TIME_OVER);
-		s->callback_mover	= move_magic_formation;
-		s->alpha			= 2/*0*/;
-		s->data 			= data;
+		s						= sprite_add_res(BASE_TIKEI_GROUNDER08_PNG);	s->anim_speed	=  3 /*(5-difficulty)*/ /*2*/;/*9"grounder.png"*/
+		s->type 				= SP_MUTEKI;
+		s->flags				|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK|SP_FLAG_TIME_OVER);
+		s->callback_mover		= move_magic_formation;
+	//	s->callback_hit_enemy	= callback_hit_zako;
+		s->color32				= 0x02ffffff;	/*	s->alpha				= 0x02 0x00;*/
+		s->data 				= data;
 	#if 1
-		data->b.score		= score(200*2); 		// [***090410		???追加???
-		data->b.health		= 25+(difficulty<<2);	// [***090410		???追加???
+		/*data->base.*/s->base_score			= score(200*2); 		// [***090410		???追加???
+		/*data->base.*/s->base_health			= 25+(difficulty<<2);	// [***090410		???追加???
 	#endif
-		data->wait1 		= 10/*+90*/;/* */
-		data->wait2 		= 16+(difficulty<<3)/*10+(7*difficulty)*/;
-		yy2 = -yyy; 		/* KETMの相対座標指定から、MAGICF形式の絶対座標指定に変換する */
+		data->wait1 			= 10/*+90*/;/* */
+		data->wait2 			= 5/*16+(difficulty<<3)*/ /*10+(7*difficulty)*/;
+		yy2 = -yyy; 			/* KETMの相対座標指定から、MAGICF形式の絶対座標指定に変換する */
 		break;
 	}
 //
-		s->anim_frame		= 0;
-		s->x256 			=  ((xxx)<<8);
-	//	s->y256 			=  ((yyy)<<8)-((s->h128+s->h128));
-		s->y256 			= -((yy2)<<8)-((s->h128+s->h128));
+		s->anim_frame			= 0;
+		s->x256 				=  ((xxx)<<8);
+	//	s->y256 				=  ((yyy)<<8)-((s->h128+s->h128));
+		s->y256 				= -((yy2)<<8)-((s->h128+s->h128));
 }
