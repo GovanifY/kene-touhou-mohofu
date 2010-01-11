@@ -11,24 +11,21 @@
 ---------------------------------------------------------*/
 
 /* 個々のアイテムのステータスデーター */
-typedef struct
-{
-//	#if 0
-//	int strength;/*union WEAPON_BASE*/		/* なんかアイテムに殺される(?)ので追加？？？ */
-//	#endif
-	int true_y256;		/* 本来のy座標 */
-	int y_sum256;		/* アイテム投げ出し用 y軸 積算値(y軸、上方がマイナス) */
-	int angle512;
-	int flags00;		/* 収集フラグ	[***090116	変更 */
+//typedef struct
+//{
+#define ITEM_DATA_true_y256 	user_data00 	/* 本来のy座標 */
+#define ITEM_DATA_y_sum256		user_data01 	/* アイテム投げ出し用 y軸 積算値(y軸、上方がマイナス) */
+#define ITEM_DATA_angle512		user_data02
+#define ITEM_DATA_flags00		user_data03 	/* 収集フラグ	[***090116	変更 */
 /*	自動収集 */
-	int flag_first; 	/* firstフラグ */
-	int x_sa256;		/* 差分 x */
-	int y_sa256;		/* 差分 y */
-} ITEM_DATA;
+#define ITEM_DATA_flag_first	user_data04 	/* firstフラグ */
+#define ITEM_DATA_x_sa256		user_data05 	/* 差分 x */
+#define ITEM_DATA_y_sa256		user_data06 	/* 差分 y */
+//} ITEM_DATA;
 
 static void move_items(SPRITE *src)
 {
-	ITEM_DATA *data = (ITEM_DATA *)src->data;
+//	ITEM_DATA *data = (ITEM_DATA *)src->data;
 	/* 自動収集モードのどれかが作動してたら、 */
 	if (0 != (
 		(((PLAYER_DATA *)player->data)->state_flag) &
@@ -37,28 +34,29 @@ static void move_items(SPRITE *src)
 		 STATE_FLAG_03_SCORE_AUTO_GET_ITEM				/* ボス撃破時の一時回収 */
 		) ))
 	{
-		data->flags00 |= ITEM_MOVE_FLAG_01_COLLECT/*1*/;	/* そのアイテムは自動収集にする */
+		src->ITEM_DATA_flags00 |= ITEM_MOVE_FLAG_01_COLLECT/*1*/;	/* そのアイテムは自動収集にする */
 	}
 	/* 自動収集でなければ、単純に放物線を描いて落ちる */
-	if (0 == ((data->flags00)&ITEM_MOVE_FLAG_01_COLLECT))
+	if (0 == ((src->ITEM_DATA_flags00)&ITEM_MOVE_FLAG_01_COLLECT))
 	{
 		/* [***090123 [***090220	変更5=>4=>3 t256(3.0) */
-		if (data->y_sum256 < t256(1.5) )	/* t256(2.2) 最大アイテム落下速度の調整 */
+	//	if (src->ITEM_DATA_y_sum256 < t256(1.5) )	/* t256(2.2) アイテム落下、最大速度の調整 */
+		if (src->ITEM_DATA_y_sum256 < t256(2.0) )	/* t256(2.2) アイテム落下、最大速度の調整 */
 		/* t256(2.2) == コンティニュー復活時の[F]を画面の下隅(右下、左下)で死んだ場合で、
 			足が一番遅い、幽々子が(高速モードならば)余裕で取れる速度に調整する。
 			(低速モードでは取れなくても構わない) */
 		{
-			data->y_sum256 += data->angle512;		/* x1.5 */
+			src->ITEM_DATA_y_sum256 += src->ITEM_DATA_angle512; 	/* x1.5 */
 		}
-		data->true_y256 += (data->y_sum256)/**fps_fa ctor*/;
-		if (data->true_y256 > GAME_HEIGHT*256)
+		src->ITEM_DATA_true_y256 += (src->ITEM_DATA_y_sum256)/**fps_fa ctor*/;
+		if (src->ITEM_DATA_true_y256 > GAME_HEIGHT*256)
 		{
 			/* ウェポンアイテム (小P) (中P) (F) のいずれか逃したら、チェイン破棄 */
 			switch (src->type)
 			{
 			case SP_ITEM_00_P001:	/* ウェポンアイテム(小P) */
 			case SP_ITEM_01_P008:	/* ウェポンアイテム(中P) */
-			case SP_ITEM_04_P128:	/* ウェポンアイテム(F) */
+			case SP_ITEM_02_P128:	/* ウェポンアイテム(F) */
 				((PLAYER_DATA *)player->data)->chain_point = 0;
 				break;
 			/* [点][星][B][1UP]等逃しても、チェイン維持。 */
@@ -68,24 +66,24 @@ static void move_items(SPRITE *src)
 	}
 	else	/* 自動収集ならば、自分に集まる */
 	{
-		data->y_sum256--;
-		if (1 > data->y_sum256)
+		src->ITEM_DATA_y_sum256--;
+		if (1 > src->ITEM_DATA_y_sum256)
 		{
-			data->y_sum256 = 0;
+			src->ITEM_DATA_y_sum256 = 0;
 		}
-		if (0 == data->flag_first)
+		if (0 == src->ITEM_DATA_flag_first)
 		{
-			data->flag_first = 1;
-			data->y_sum256 = t256(1.0); 	/* (2.5==5*0.5) */
+			src->ITEM_DATA_flag_first = 1;
+			src->ITEM_DATA_y_sum256 = t256(4.0/*1.0*/); 	/* pspは解像度が低いので細工(x4) */ 	/* (2.5==5*0.5) */
 		}
-		data->x_sa256 = (src->x256 - player->x256);
-		data->y_sa256 = (data->true_y256 - player->y256);
+		src->ITEM_DATA_x_sa256 = (src->x256 - player->x256);
+		src->ITEM_DATA_y_sa256 = (src->ITEM_DATA_true_y256 - player->y256);
 		/* 自分に集まる */
 		int aaa_x256;
 		int aaa_y256;
-		aaa_x256 = ((data->x_sa256 * data->y_sum256)>>8);	/**fps_fa ctor*/
-		aaa_y256 = ((data->y_sa256 * data->y_sum256)>>8);	/**fps_fa ctor*/
-		if ( (SP_ITEM_05_HOSI) == (src->type))	/* 星点のみ特別処理 */
+		aaa_x256 = ((src->ITEM_DATA_x_sa256 * src->ITEM_DATA_y_sum256)>>10/*8*/); /**fps_fa ctor*/	/* pspは解像度が低いので細工(/4) */
+		aaa_y256 = ((src->ITEM_DATA_y_sa256 * src->ITEM_DATA_y_sum256)>>10/*8*/); /**fps_fa ctor*/	/* pspは解像度が低いので細工(/4) */
+		if ( (SP_ITEM_06_HOSI) == (src->type))	/* 星点のみ特別処理 */
 		{
 			if (
 				//	(/*10*/64/*16*/ > data->y_sum256) ||
@@ -111,12 +109,12 @@ static void move_items(SPRITE *src)
 			}
 		}
 		src->x256 = player->x256 + (aaa_x256);	/**fps_fa ctor*/
-		data->true_y256 = player->y256 + (aaa_y256);	/**fps_fa ctor*/
+		src->ITEM_DATA_true_y256 = player->y256 + (aaa_y256);	/**fps_fa ctor*/
 	}
 	if (SP_DELETE != src->type)
 	{
 		/* 画面内に変換 */
-		src->y256 = data->true_y256;
+		src->y256 = src->ITEM_DATA_true_y256;
 		if (0 >= src->y256)
 		{
 			src->y256 = 0;
@@ -153,6 +151,8 @@ static void move_items(SPRITE *src)
 □□□□□□□□□■■■□□□□□□□□□
 □□□□□□□□□□■□□□□□□□□□□
 */
+
+
 /*---------------------------------------------------------
 	アイテム出現させる子関数
 ---------------------------------------------------------*/
@@ -165,7 +165,7 @@ static SPRITE *item_mono_create(SPRITE *src/*int x, int y*/, int sel_type)
 //	s			= sprite_add_res(BASE_BONUS_ITEMS_PNG);
 	s			= sprite_add_gu(ZAKO_TYPE_ATARI16_PNG);
 	sel_type &= 0x07;
-//	s->yx_anim_frame = ((/*SP_ITEM_FIRE_POWER-*/sel_type)/*&0x07*/);
+//	s->yx_an im_frame = ((/*SP_ITEM_FIRE_POWER-*/sel_type)/*&0x07*/);
 //	出現位置を決める
 	#define OFFSET_X64		(64*256)/* 64はずらし分 2のn乗の必要有り */
 	#define ITEM_WIDTH16	(16*256)/* 16はアイテム幅 */
@@ -189,7 +189,7 @@ static SPRITE *item_mono_create(SPRITE *src/*int x, int y*/, int sel_type)
 	sel_type |= SP_ITEM_00_P001;
 	s->type 			= sel_type;
 	s->callback_mover	= move_items;
-	if ( SP_ITEM_05_HOSI == sel_type )	/* 星点のみ特別処理 */
+	if ( SP_ITEM_06_HOSI == sel_type )	/* 星点のみ特別処理 */
 	{
 		/* 紅は、こうらしい */
 	//	if ( USER_BOMOUT_WAIT > ((PLAYER_DATA *)player->data)->bomber_time )
@@ -214,6 +214,95 @@ static SPRITE *item_mono_create(SPRITE *src/*int x, int y*/, int sel_type)
 	#undef ITEM_X_LIMIT
 }
 
+
+/*---------------------------------------------------------
+	アイテムを登録して出現させる
+---------------------------------------------------------*/
+
+/* [***090125	追加: up_flags の ITEM_MOVE_FLAG_01_COLLECT ビットがオンでプレイヤーに集まります。 */
+void item_convert_hosi(
+	SPRITE */*src*/h/*int x, int y*/  //,
+//	int item_type,
+//	int num_of_creates,
+//	int up_flags
+)
+{
+//	int i;
+//	for (i=0; i<num_of_creates; i++)
+//	{
+//		SPRITE *h;
+//		h			= item_mono_create(src, item_type);
+//		if (NULL==h) return;
+//
+{
+//	アイテムの種類を選ぶ
+//	SPRITE *s;
+//	s			= spr ite_add_file 0("bonus_items.png", 8, PRIORITY_04_ITEM, 0);	s->anim_speed=0;
+//	s			= sprite_add_res(BASE_BONUS_ITEMS_PNG);
+//	s			= sprite_add_gu(ZAKO_TYPE_ATARI16_PNG);
+//	sel_type &= 0x07;
+//	s->yx_an im_frame = ((/*SP_ITEM_FIRE_POWER-*/sel_type)/*&0x07*/);
+//	出現位置を決める
+	#define OFFSET_X64		(64*256)/* 64はずらし分 2のn乗の必要有り */
+	#define ITEM_WIDTH16	(16*256)/* 16はアイテム幅 */
+	#define ITEM_X_LIMIT	(GAME_WIDTH*256+OFFSET_X64-ITEM_WIDTH16)
+	int x256;
+	x256 = /*src*/h->x256;
+	x256 += ((ra_nd()&((OFFSET_X64+OFFSET_X64)-1)));
+	if (x256 < OFFSET_X64)
+	{
+		x256 = OFFSET_X64;
+	}
+	else
+	if (x256 > (ITEM_X_LIMIT))
+	{
+		x256 = (ITEM_X_LIMIT);
+	}
+//	登録する
+	h->x256 			= (x256)-(OFFSET_X64);
+	h->y256 			= /*src*/h->y256;
+//	sel_type &= 0x07;
+//	sel_type |= SP_ITEM_00_P001;
+//	h->type 			= sel_type;
+	h->callback_mover	= move_items;
+//	if ( SP_ITEM_06_HOSI == sel_type )	/* 星点のみ特別処理 */
+	{
+		/* 紅は、こうらしい */
+	//	if ( USER_BOMOUT_WAIT > ((PLAYER_DATA *)player->data)->bomber_time )
+		if ( USER_BOMOUT_WAIT > pd_bomber_time )
+		{	/* ボム中(設定無敵時間中)は100pts.(稼げない) */
+			bonus_info_score_nodel(h, SCORE_100);/*自動消去へ仕様変更s->type = SP_DELETE;*/
+		}
+		else/* 星点 */
+		{	/* ボム後の実質無敵期間中はこちら(稼げる) */
+			/* ((graze/3)*10)+(500) pts */
+			bonus_info_any_score_nodel(h, (score(500)+(((((PLAYER_DATA *)player->data)->graze_point*86)>>8)/*(pd->graze_point/3)*/)) );/*自動消去へ仕様変更c->type = SP_DELETE;*/
+		}
+		h->flags			|= (SP_FLAG_VISIBLE|SP_FLAG_TIME_OVER);/*当たり判定なし*/
+	}
+//	else
+//	{
+//		h->flags			|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK|SP_FLAG_TIME_OVER);
+//	}
+//	return (h);
+	#undef OFFSET_X64
+	#undef ITEM_WIDTH16
+	#undef ITEM_X_LIMIT
+}
+	//	ITEM_DATA *data;
+	//	data				= mmal loc(sizeof(ITEM_DATA));
+	//	h->data 			= data;
+		h->type = SP_ITEM_06_HOSI;
+		h->ITEM_DATA_true_y256		= (/*src*/h->y256); /* 仮想 */
+
+//		h->ITEM_DATA_angle512		= 6;	/* 6.51898646904403967309077986986488 ra d2deg512(0.08);*/
+		h->ITEM_DATA_flags00		= ((ITEM_MOVE_FLAG_01_COLLECT|ITEM_MOVE_FLAG_06_RAND_XY)&ITEM_MOVE_FLAG_01_COLLECT);
+		h->ITEM_DATA_flag_first = 0;
+//	}
+	h->m_angleCCW512	= 0;			/* 描画用角度(下が0度で左回り(反時計回り)) */	/* 0 == 傾かない。下が0度 */
+}
+
+
 /*---------------------------------------------------------
 	アイテムを登録して出現させる
 ---------------------------------------------------------*/
@@ -229,35 +318,28 @@ void item_create(
 	int i;
 	for (i=0; i<num_of_creates; i++)
 	{
-		SPRITE *s;
-		s			= item_mono_create(src, item_type);
-		if (NULL==s) return;
+		SPRITE *h;
+		h			= item_mono_create(src, item_type);
+		if (NULL==h) return;
 //
-		ITEM_DATA *data;
-		data				= mmalloc(sizeof(ITEM_DATA));
-		s->data 			= data;
-		data->true_y256		= (src->y256);	/* 仮想 */
+	//	ITEM_DATA *data;
+	//	data				= mmal loc(sizeof(ITEM_DATA));
+	//	h->data 			= data;
+		h->ITEM_DATA_true_y256		= (src->y256);	/* 仮想 */
 
-		#if 000
-//		/*data->*/s->base_weapon_strength		= 0;		/* なんかアイテムに殺されるので追加？？？ */
-		#endif
-		/* 画面下方に居る程、投げ出し速度を速くする */
-	//	data->y_sum256		= t256(-5*0.5); 	/* ちょっと変更 */
-	//	data->y_sum256		= t256(-2*0.5); 	/* アイテム投げ出し初期値(y軸、上方がマイナス) */
-	//	data->y_sum256		= -(/*256*/((int)(src->y))<<1)-(ra_nd()&0xff);	/* アイテム投げ出し初期値(y軸、上方がマイナス) */
 		#if 0
 		/* 基本的に画面外(上)にあまり喰み出さない(旧タイプ) */
 		/* アイテムマーカーを作成しない事が前提の動き */
-		data->y_sum256		= -(/*256*/((src->y256)>>7))-(ra_nd()&0xff);	/* アイテム投げ出し初期値(y軸、上方がマイナス) */
+		h->ITEM_DATA_y_sum256		= -(/*256*/((src->y256)>>7))-(ra_nd()&0xff);	/* アイテム投げ出し初期値(y軸、上方がマイナス) */
 		#else
 		/* 画面外(上)に喰み出す(が、喰み出しマーカー作ってない) */
 		/* アイテムマーカーを作成する事が前提の動き */
-	//	data->y_sum256		= -(/*256*/((200*256)>>7))-(ra_nd()&0xff);		/* アイテム投げ出し初期値(y軸、上方がマイナス) */
-		data->y_sum256		= -(/*256*/((512)))-(ra_nd()&0xff); 			/* アイテム投げ出し初期値(y軸、上方がマイナス) */
+	//	h->ITEM_DATA_y_sum256		= -(/*256*/((200*256)>>7))-(ra_nd()&0xff);		/* アイテム投げ出し初期値(y軸、上方がマイナス) */
+		h->ITEM_DATA_y_sum256		= -(/*256*/((512)))-(ra_nd()&0xff); 			/* アイテム投げ出し初期値(y軸、上方がマイナス) */
 		#endif
-		data->angle512		= 6;	/* 6.51898646904403967309077986986488 ra d2deg512(0.08);*/
-		data->flags00		= (up_flags&ITEM_MOVE_FLAG_01_COLLECT);
-		data->flag_first	= 0;
+		h->ITEM_DATA_angle512		= 6;	/* 6.51898646904403967309077986986488 ra d2deg512(0.08);*/
+		h->ITEM_DATA_flags00		= (up_flags&ITEM_MOVE_FLAG_01_COLLECT);
+		h->ITEM_DATA_flag_first = 0;
 	}
 }
 
@@ -282,72 +364,55 @@ void item_create_for_boss(SPRITE *src, int item_create_mode)
 	#if 0
 	/* 旧 */
 	/*mode 0: 撃破後 */
-		(SP_ITEM_03_1UP&7), 	(SP_ITEM_00_P001&7),	(SP_ITEM_02_BOMB&7),	(SP_ITEM_02_BOMB&7),
-		(SP_ITEM_04_P128&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_02_BOMB&7),	(SP_ITEM_01_P008&7),
-		(SP_ITEM_00_P001&7),	(SP_ITEM_02_BOMB&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_06_TENSU&7),	/*stage1*/
-		(SP_ITEM_00_P001&7),	(SP_ITEM_02_BOMB&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_06_TENSU&7),	/*stage2*/
-		(SP_ITEM_00_P001&7),	(SP_ITEM_02_BOMB&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_06_TENSU&7),	/*stage3*/
-		(SP_ITEM_00_P001&7),	(SP_ITEM_02_BOMB&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_06_TENSU&7),	/*stage4*/
-		(SP_ITEM_00_P001&7),	(SP_ITEM_02_BOMB&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_06_TENSU&7),	/*stage5*/
-		(SP_ITEM_00_P001&7),	(SP_ITEM_02_BOMB&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_06_TENSU&7),	/*stage6*/
+		(SP_ITEM_03_1UP&7), 	(SP_ITEM_00_P001&7),	(SP_ITEM_04_BOMB&7),	(SP_ITEM_04_BOMB&7),
+		(SP_ITEM_02_P128&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_04_BOMB&7),	(SP_ITEM_01_P008&7),
+		(SP_ITEM_00_P001&7),	(SP_ITEM_04_BOMB&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_05_TENSU&7),	/*stage1*/
+		(SP_ITEM_00_P001&7),	(SP_ITEM_04_BOMB&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_05_TENSU&7),	/*stage2*/
+		(SP_ITEM_00_P001&7),	(SP_ITEM_04_BOMB&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_05_TENSU&7),	/*stage3*/
+		(SP_ITEM_00_P001&7),	(SP_ITEM_04_BOMB&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_05_TENSU&7),	/*stage4*/
+		(SP_ITEM_00_P001&7),	(SP_ITEM_04_BOMB&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_05_TENSU&7),	/*stage5*/
+		(SP_ITEM_00_P001&7),	(SP_ITEM_04_BOMB&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_05_TENSU&7),	/*stage6*/
 	/*mode 1: 撃破中 */
-		(SP_ITEM_02_BOMB&7),	(SP_ITEM_00_P001&7),	(SP_ITEM_00_P001&7),	(SP_ITEM_00_P001&7),
+		(SP_ITEM_04_BOMB&7),	(SP_ITEM_00_P001&7),	(SP_ITEM_00_P001&7),	(SP_ITEM_00_P001&7),
 		(SP_ITEM_00_P001&7),	(SP_ITEM_00_P001&7),	(SP_ITEM_00_P001&7),	(SP_ITEM_01_P008&7),
-		(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_06_TENSU&7),	/*stage1*/
-		(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_06_TENSU&7),	/*stage2*/
-		(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_06_TENSU&7),	/*stage3*/
-		(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_06_TENSU&7),	/*stage4*/
-		(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_06_TENSU&7),	/*stage5*/
-		(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_06_TENSU&7),	/*stage6*/
+		(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_05_TENSU&7),	/*stage1*/
+		(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_05_TENSU&7),	/*stage2*/
+		(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_05_TENSU&7),	/*stage3*/
+		(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_05_TENSU&7),	/*stage4*/
+		(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_05_TENSU&7),	/*stage5*/
+		(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_05_TENSU&7),	/*stage6*/
 	#else
 	/* 新(テスト中) */
 	/*mode 0: 撃破後 */ 	/* easy, normal, hard, lunatic */
-		(SP_ITEM_03_1UP&7), 	(SP_ITEM_03_1UP&7), 	(SP_ITEM_02_BOMB&7),	(SP_ITEM_02_BOMB&7),	/* (もしstage7まで作るとしたらstage7クリアー後(クリアー後なのでゲーム的には意味無い)もここを共用する) */
-		(SP_ITEM_03_1UP&7), 	(SP_ITEM_02_BOMB&7),	(SP_ITEM_02_BOMB&7),	(SP_ITEM_01_P008&7),
-		(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_06_TENSU&7),	/*stage1*/	/*alice*/
-		(SP_ITEM_00_P001&7),	(SP_ITEM_02_BOMB&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_06_TENSU&7),	/*stage2*/	/*aya*/
-		(SP_ITEM_00_P001&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_02_BOMB&7),	(SP_ITEM_01_P008&7),	/*stage3*/	/*mitei*/
-		(SP_ITEM_00_P001&7),	(SP_ITEM_02_BOMB&7),	(SP_ITEM_02_BOMB&7),	(SP_ITEM_01_P008&7),	/*stage4*/	/*kaguya*/
-		(SP_ITEM_00_P001&7),	(SP_ITEM_02_BOMB&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_06_TENSU&7),	/*stage5*/	/*pache*/
-		(SP_ITEM_00_P001&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_06_TENSU&7),	/*stage6*/	/*sakuya*/		/*---- sakuya撃破後はゲーム的には意味無い */
+		(SP_ITEM_03_1UP&7), 	(SP_ITEM_03_1UP&7), 	(SP_ITEM_04_BOMB&7),	(SP_ITEM_04_BOMB&7),	/* (もしstage7まで作るとしたらstage7クリアー後(クリアー後なのでゲーム的には意味無い)もここを共用する) */
+		(SP_ITEM_03_1UP&7), 	(SP_ITEM_04_BOMB&7),	(SP_ITEM_04_BOMB&7),	(SP_ITEM_01_P008&7),
+		(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_05_TENSU&7),	/*stage1*/	/*alice*/
+		(SP_ITEM_00_P001&7),	(SP_ITEM_04_BOMB&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_05_TENSU&7),	/*stage2*/	/*aya*/
+		(SP_ITEM_00_P001&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_04_BOMB&7),	(SP_ITEM_01_P008&7),	/*stage3*/	/*mitei*/
+		(SP_ITEM_00_P001&7),	(SP_ITEM_04_BOMB&7),	(SP_ITEM_04_BOMB&7),	(SP_ITEM_01_P008&7),	/*stage4*/	/*kaguya*/
+		(SP_ITEM_00_P001&7),	(SP_ITEM_04_BOMB&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_05_TENSU&7),	/*stage5*/	/*pache*/
+		(SP_ITEM_00_P001&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_05_TENSU&7),	/*stage6*/	/*sakuya*/		/*---- sakuya撃破後はゲーム的には意味無い */
 	/*mode 1: 撃破中 */
-		(SP_ITEM_02_BOMB&7),	(SP_ITEM_00_P001&7),	(SP_ITEM_00_P001&7),	(SP_ITEM_00_P001&7),
+		(SP_ITEM_04_BOMB&7),	(SP_ITEM_00_P001&7),	(SP_ITEM_00_P001&7),	(SP_ITEM_00_P001&7),
 		(SP_ITEM_00_P001&7),	(SP_ITEM_00_P001&7),	(SP_ITEM_00_P001&7),	(SP_ITEM_01_P008&7),
-		(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_06_TENSU&7),	/*stage1*/
-		(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_06_TENSU&7),	/*stage2*/
-		(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_06_TENSU&7),	/*stage3*/
-		(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_06_TENSU&7),	/*stage4*/
-		(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_06_TENSU&7),	/*stage5*/
-		(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_06_TENSU&7),	/*stage6*/
+		(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_05_TENSU&7),	/*stage1*/
+		(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_05_TENSU&7),	/*stage2*/
+		(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_05_TENSU&7),	/*stage3*/
+		(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_05_TENSU&7),	/*stage4*/
+		(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_05_TENSU&7),	/*stage5*/
+		(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_05_TENSU&7),	/*stage6*/
 	#endif
 	};
 //	item_create(src, item_tbl[ITEM_03+difficulty+item_create_mode]/*SP_ITEM_03_1UP	*/, 1, ITEM_MOVE_FLAG_06_RAND_XY);
-//	item_create(src, item_tbl[ITEM_02+difficulty+item_create_mode]/*SP_ITEM_04_P128 */, 1, ITEM_MOVE_FLAG_06_RAND_XY);
+//	item_create(src, item_tbl[ITEM_02+difficulty+item_create_mode]/*SP_ITEM_02_P128 */, 1, ITEM_MOVE_FLAG_06_RAND_XY);
 //	item_create(src, item_tbl[ITEM_01+difficulty+item_create_mode]/*SP_ITEM_01_P008 */, player_now_stage/*5*/, ITEM_MOVE_FLAG_06_RAND_XY);
 	int i;
 	for (i=0; i<(player_now_stage+2); i++)
 	{
 		item_create(src, SP_GROUP_ITEMS+u8_item_tbl[difficulty+item_create_mode+i]/*SP_ITEM_03_1UP	*/, 1, ITEM_MOVE_FLAG_06_RAND_XY);
 	}
-	item_create(src, SP_ITEM_05_HOSI, 16/*7*/, (ITEM_MOVE_FLAG_01_COLLECT|ITEM_MOVE_FLAG_06_RAND_XY) );/*星点を出す*/
+	item_create(src, SP_ITEM_05_TENSU/*SP_IT EM_06_HOSI*/, 16/*7*/, (ITEM_MOVE_FLAG_01_COLLECT|ITEM_MOVE_FLAG_06_RAND_XY) );/*星点を出す*/
 }
-//	item_create(sb03[i], SP_ITEM_05_HOSI, 16/*7*/, (ITEM_MOVE_FLAG_01_COLLECT|ITEM_MOVE_FLAG_06_RAND_XY) );/*星点を出す*/
-//	item_create(sb01[i], SP_ITEM_05_HOSI, 16/*7*/, (ITEM_MOVE_FLAG_01_COLLECT|ITEM_MOVE_FLAG_06_RAND_XY) );/*星点を出す*/
-//
-//	item_create(s, SP_ITEM_05_HOSI, 16/*7*/, (ITEM_MOVE_FLAG_01_COLLECT|ITEM_MOVE_FLAG_06_RAND_XY) );/*星点を出す*/
-//	item_create(s, SP_ITEM_00_P001, 5, ITEM_MOVE_FLAG_06_RAND_XY);/*3*/
-//	item_create(s, SP_ITEM_01_P008, 1, ITEM_MOVE_FLAG_06_RAND_XY);
-//
-//	item_create(s, SP_ITEM_05_HOSI, 5, ITEM_MOVE_FLAG_01_COLLECT);/*星点を出す*/
-//	item_create(s, SP_ITEM_00_P001, 5, ITEM_MOVE_FLAG_06_RAND_XY);
-//	item_create(s, SP_ITEM_01_P008, 1, ITEM_MOVE_FLAG_06_RAND_XY);
-//
-//	/* むしろ難しいのでFと残機出すべき */
-//	item_create(s, SP_ITEM_01_P008, 	5, ITEM_MOVE_FLAG_06_RAND_XY);
-//	item_create(s, SP_ITEM_04_P128, 	1, ITEM_MOVE_FLAG_06_RAND_XY);
-//	item_create(s, SP_ITEM_03_1UP,		1, ITEM_MOVE_FLAG_06_RAND_XY);
-//
-//	item_create(sb01[i], SP_ITEM_COIN,7);
 
 
 /*-------------------------------------------------------*/
@@ -376,6 +441,7 @@ typedef struct
 
 static SCORE_CHACHE_DATA score_number_chache[MAX_SCORE_CHACHE];
 
+
 /*---------------------------------------------------------
 	スコアキャッシュすべて消す
 ---------------------------------------------------------*/
@@ -388,6 +454,7 @@ void clear_score_chache(void)
 		score_number_chache[i].time_out = SCORE_DELETE;
 	}
 }
+
 
 /*---------------------------------------------------------
 	sdl_screen[SDL_00_SCREEN]サーフェイスに、スコアをレンダリング
@@ -482,6 +549,7 @@ f8(v,v,v,M,M,v,v,v),f8(v,v,v,v,v,v,v,v),f8(M,M,M,M,M,M,M,v),f8(M,M,M,M,M,M,M,v),
 	if (SDL_MUSTLOCK(sdl_screen[SDL_00_SCREEN]))	{	SDL_UnlockSurface(sdl_screen[SDL_00_SCREEN]);	}/*ロック解除*/
 }
 
+
 /*---------------------------------------------------------
 	一桁の数字を、キャッシュに登録する
 ---------------------------------------------------------*/
@@ -517,6 +585,7 @@ static void regist_score(int number, int x256, int y256)
 //	} while (MAX_SCORE_CHACHE > iii);	/* 全部探した？ */
 }
 
+
 /*---------------------------------------------------------
 	スコアを一桁の数字に分解し、キャッシュに登録する
 ---------------------------------------------------------*/
@@ -540,6 +609,7 @@ static void bonus_info_shered_add_score10_value(SPRITE *src, int score_value)
 	regist_score(0, x256, y256);/* "0" スコアの末尾は必ず０ */
 }
 
+
 /*---------------------------------------------------------
 	取ったアイテムの得点を説明表示(任意得点の場合)
 ---------------------------------------------------------*/
@@ -549,6 +619,7 @@ void bonus_info_any_score_nodel(SPRITE *src/*int x, int y*/, int score_num)
 	player_add_score(score_num);
 	bonus_info_shered_add_score10_value(src, score_num);
 }
+
 
 /*---------------------------------------------------------
 	取ったアイテムの得点を説明表示(固定得点の場合)
@@ -661,6 +732,7 @@ void player_check_extend_score(void)
 }
 #endif
 #if (1==USE_EXTEND_CHECK)
+
 
 /*---------------------------------------------------------
 	プレイヤー開始時／プレイヤーコンティニュー開始時に呼ばれる。

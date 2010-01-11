@@ -59,12 +59,20 @@ static void move_ao_yousei4(SPRITE *src)
 		case 50:
 			if (difficulty)
 			{
-				bullet_create_n_way_dan_sa_type(src,
-					(t256(2.0)+((difficulty)<<6)),
-					ANGLE_JIKI_NERAI_DAN,
-					(int)(512/24),
-					BULLET_KUNAI12_04_YUKARI+((ra_nd())&7),
-					8);
+			send1_obj->x256 = src->x256;
+			send1_obj->y256 = src->y256;
+			#if 1
+			/* ‚ ‚Æ‚Å—v‚é */
+	//		send1_obj->h128 = src->h128;
+	//		send1_obj->w128 = src->w128;
+			#endif
+			//	bullet_create_n_way_dan_sa_type(src,
+				send1_obj->BULLET_REGIST_speed256			=		(t256(2.0)+((difficulty)<<6));
+				send1_obj->BULLET_REGIST_angle512			=		ANGLE_JIKI_NERAI_DAN;
+				send1_obj->BULLET_REGIST_div_angle512		=		(int)(512/24);
+				send1_obj->BULLET_REGIST_bullet_obj_type	=		BULLET_KUNAI12_04_YUKARI+((ra_nd())&7);
+				send1_obj->BULLET_REGIST_n_way				=		(8);
+				bullet_regist_basic();
 			}	/*‚È‚é‚×‚­‹¤’Ê‰»*/
 			break;	/*(t256(3.0)+((difficulty)<<6))*/	/*((difficulty<<(1+8)))*/
 					/*t256((difficulty<<2))*/ /*5*/ 	/*"kugel.png", 0*/

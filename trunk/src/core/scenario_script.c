@@ -20,29 +20,12 @@
 #include "game_main.h"
 #include "scenario_script.h"
 
+#include "my_file.h"
+
+
 
 #define FONT_WIDTH			(8)
 #define FONT_HEIGHT 		(16)
-
-/*---------------------------------------------------------
-	shift jisコード、全角1バイト目かどうか判定する子関数
----------------------------------------------------------*/
-
-static int is_kanji_1st(/*unsigned char*/int/*int*/ high_byte)
-{
-	#if 1
-	high_byte &= 0xff;/**/
-	return (
-		((high_byte >= 0x81) && (high_byte <= 0x9f)) ||
-		((high_byte >= 0xe0) && (high_byte <= 0xfd))
-	);
-	#else
-	high_byte ^= 0x20;
-	high_byte += (0x100-0xa1);
-	high_byte &= 0xff;/**/
-	return (high_byte < 0x3du);
-	#endif
-}
 
 
 /*
@@ -123,7 +106,12 @@ static void putpixel16(/*SDL_Surface *surface,*/ int x, int y, Uint32 pixel)
 	*(Uint16 *)p=pixel;
 }
 
-static void draw_shinonome_moji(/*SDL_Surface *drawmap,*/ SDL_Surface *backmap, int x, int y, int code_offset, int hidari_gawa)
+static void draw_shinonome_moji(/*SDL_Surface *drawmap,*/
+	SDL_Surface *backmap,
+	int x,
+	int y,
+	int code_offset,
+	int hidari_gawa)
 {
 //	if (1==hidari_gawa) 	/* pspは0レジスタがあるので0と比較したほうが速い */
 	if (0!=hidari_gawa)
@@ -166,7 +154,7 @@ static void draw_shinonome_moji(/*SDL_Surface *drawmap,*/ SDL_Surface *backmap, 
 			if (bit & bitcnt)
 			{
 				Uint32 dot;
-				dot=getpixel16(backmap, (dx+haikei_offset), dy);	/*font_color_bitmap*/
+				dot = getpixel16(backmap, (dx+haikei_offset), dy);	/*font_color_bitmap*/
 				putpixel16(/*drawmap,*/ dx+x, dy+y, dot);
 			}
 		}
@@ -286,7 +274,7 @@ static void home_cursor(void)
 static SDL_Surface *msg_window/*=NULL*/;		/* メッセージウィンドウ */
 static void msg_window_clear(void)
 {
-	SDL_FillRect(msg_window,NULL,SDL_MapRGB(msg_window->format,0,0,0));
+	SDL_FillRect(msg_window, NULL, 0/*SD L_MapRGB(msg_window->format,0,0,0)*/);
 }
 //static void msg_window_init(void)
 //{
@@ -477,7 +465,7 @@ static SDL_Surface *font_bg_bitmap/*=NULL*/;
 
 ---------------------------------------------------------*/
 
-extern int errno;
+//extern int errno;
 
 // _script_command
 
@@ -586,8 +574,8 @@ typedef struct /*_sc_sprite*/
 	int x256;						/* 精度確保用(256固定小数点形式) */
 	int y256;						/* 精度確保用(256固定小数点形式) */
 //[4]
-	int w;							/* 幅 */			//	int cw; 	/* 中心座標(幅)だよ */
-	int h;							/* 高さ */			//	int ch; 	/* 中心座標(高さ)だよ */
+	int w;							/* 幅 */			//	int cw; 	/* 中心座標(幅) */
+	int h;							/* 高さ */			//	int ch; 	/* 中心座標(高さ) */
 //
 	int target_x;					/* 目標座標 */
 	int target_y;					/* 目標座標 */
@@ -598,7 +586,7 @@ typedef struct /*_sc_sprite*/
 	SDL_Surface *img;				/* Images */
 //
 //	Uint8 alpha255;					/* alpha値 */
-//	Uint8 flags;					/* 0:非表示, 1:表示, 2:tachie_window(2nd screen)に表示	ここでは表示させるかどうかだけだよ */
+//	Uint8 flags;					/* 0:非表示, 1:表示, 2:tachie_window(2nd screen)に表示	ここでは表示させるかどうかだけ */
 } SC_SPRITE;
 
 /*---------------------------------------------------------
@@ -983,126 +971,9 @@ static char *load_command(char *c, char *buffer, int *end_arg)
 	return (c);
 }
 
-/*---------------------------------------------------------
-	スクリプトファイルの文字列部分の読み込み
-	-------------------------------------------------------
-	shift jis 漢字の2byte目が￥￥の場合や
-	エスケープシークエンス処理の2byte目が￥￥の場合でも
-	問題がない
----------------------------------------------------------*/
-static char *load_script_get_str(char *str, char *buffer, int *end_arg)
-{
-	int string_error_limiter;
-	string_error_limiter = 200;/* 200 文字以上はエラー */
-	/*unsigned char*/int high_byte;
-	{loop:;
-		high_byte = ((*str) & 0xff);
-		/* 空文字列の可能性があるから、始めに判定 */
-		if (',' == high_byte)	/* ','区切りでおしまいの場合 */
-		{
-			goto kamma_end;
-		}
-		else
-		if (13 == high_byte)	/* '\n'==13(行末)でおしまいの場合 */
-		{
-	//	ret13_end:
-			*end_arg = 1;/* 行末です。 */
-		kamma_end:
-			*buffer = '\0'; 	/* EOS を追加 */
-			return (str);
-		}
-		else					/* 文字列を転送する必要のある場合 */
-		{
-			int flag;
-			flag=0;
-			if (is_kanji_1st(high_byte)) /* shift jis 漢字 */
-			{
-				;	//	*buffer++ = *str++;/* 1byte目 */
-			}
-			else
-			{
-				if ('\\' == high_byte)		/* エスケープシークエンス処理(escape sequence) */
-				{
-					;	//	*buffer++ = *str++;/* ￥￥ */
-				}
-				else					/* 半角文字 */
-				{
-					flag=1;
-				}
-			}
-			if (0==flag)	/* 半角文字以外(shift jis 漢字、エスケープシークエンス処理)は 2 byte転送 */
-			{
-				*buffer++ = *str++;
-			}
-			*buffer++ = *str++; 	/* 1 byteは必ず転送 */
-			/* エラーチェック */
-			{
-				string_error_limiter--;
-				if (0 >= string_error_limiter)
-				{
-					return ((char *)NULL);
-				}
-			}
-		}
-		goto loop;
-	}
-}
-#if 0
-/*---------------------------------------------------------
-	よくわかんない
-	-------------------------------------------------------
-	このままだとsjisの2byte目が'\'の場合対応できないよ
----------------------------------------------------------*/
-static char *load_script_get_str(char *c, char *buffer, int *end_arg)
-{
-	int i = 0;
-	int is_escape_sequence_mode;		/* エスケープ */
-	is_escape_sequence_mode = 0;		/* エスケープ */
-//
-loop:;
-	/*while*/
-	if (
-		(
-			((',' == *c) && (1==is_escape_sequence_mode)) || (',' != *c)
-		) &&
-		(*c != 13)
-	)
-	{	;	}
-	else
-	{	goto loop_end;}
-//
-	{
-		if (0 == is_escape_sequence_mode)
-		{
-			if ('\\' == *c)
-			{
-				if (',' == *(c+1))
-				{
-					is_escape_sequence_mode = 1;
-					c++;
-				}
-			}
-		}
-		else
-		if (is_escape_sequence_mode)
-		{
-			is_escape_sequence_mode = 0;
-		}
-		i++;
-		if (i >= 200)	{	return ((char *)NULL);}
-		*buffer++ = *c++;
-	}
-	goto loop;
-//
-loop_end:;
-	if (*c == 13)
-	{
-		*end_arg = 1;
-	}
-	*buffer = 0;		//NULL
-	return (c);
-}
-#endif
+
+
+
 /*---------------------------------------------------------
 
 ---------------------------------------------------------*/
@@ -1230,76 +1101,8 @@ static void regist_script(
 	{	sscript 			= entry_script; 	}
 }
 
-/*---------------------------------------------------------
-	汎用性のまるでない読み込み関連。子関数
-	-------------------------------------------------------
-	標準入出力はpspでは遅すぎるのでsceの関数を使う。(ゲーム中の処理落ち軽減策)
-	エラーチェックとか全然無いので注意の事
----------------------------------------------------------*/
 
-//atic char buffer_text_1_line[128];	/* parth text, 1 line buffer */ 	/* 走査する行の取得 */
-static char buffer_text_1_line[256];	/* parth text, 1 line buffer */ 	/* 走査する行の取得 */
 
-#if 1
-static unsigned long file_size;
-static unsigned long file_seek;
-//static char *my_buf;
-//static void *malloc_buf;
-static char *malloc_buf;
-
-static void *my_fopen(const char *file_name/*, const char *dummy*/)
-{
-	SceUID fd;
-	fd = sceIoOpen((char *)file_name, PSP_O_RDONLY, 0777);
-	if (0 == fd)
-	{
-		goto error111;
-	}
-	file_size = sceIoLseek32(fd, 0, PSP_SEEK_END);
-	file_seek = 0;
-
-	malloc_buf = malloc(file_size);
-	if (NULL == malloc_buf)
-	{
-		sceIoClose(fd);
-		goto error111;
-	}
-	sceIoLseek32(fd, 0, PSP_SEEK_SET);
-	sceIoRead( fd, malloc_buf, file_size);
-	sceIoClose(fd);
-//	my_buf = malloc_buf;
-//
-	return (malloc_buf);
-error111:
-	return (NULL);
-}
-static int my_fgets(void/*char *buffer_name, int num, char *wfp*/)
-{
-	int ii;
-ii=0;
-	char aaa;
-//	char bbb;
-//bbb=0;
-	fgets_loop:;
-	aaa = /*buffer_name*/buffer_text_1_line[ii] = /*my_buf*/malloc_buf[file_seek]/*(*my_buf)*/;
-//	my_buf++;
-	ii++;
-	file_seek++;
-	if (0x0a==aaa)	return (1);
-	if (file_size < file_seek)	return (0)/*NULL*/;
-	goto fgets_loop;
-//	error(ERR_FATAL, "TEST %s\nno: %d (%s)",buffer_name,errno,strerror(errno));
-//	return (NULL);
-}
-static void my_fclose(void/*void *wfp*/)
-{
-	free(malloc_buf);
-}
-#else
-	#define my_fopen	fopen
-	#define my_fgets	fgets
-	#define my_fclose	fclose
-#endif
 /*---------------------------------------------------------
 	スクリプト読み込み
 	-------------------------------------------------------
@@ -1314,14 +1117,14 @@ static int load_scenario(char *src_filename)
 	基本形
 	command para0,para1,para2,para3
 */
-	char filename[128];
-//	sp rintf(filename, "%s/text/%s.txt", data_dir, src_filename);
-	strcpy(filename, DIRECTRY_NAME_DATA "/text/");
-	strcat(filename, src_filename);
-	strcat(filename, ".txt");
+//	char my_fopen_file_name[128];
+//	sp rintf(my_fopen_file_name, "%s/text/%s.txt", data_dir, src_filename);
+	strcpy(my_fopen_file_name, DIRECTRY_NAME_DATA "/text/");
+	strcat(my_fopen_file_name, src_filename);
+	strcat(my_fopen_file_name, ".txt");
 
 //	FILE *fp;
-	if (NULL == (/*fp =*/my_fopen(filename/*,"r"*/)))		/* 開けなかったとき */
+	if (NULL == (/*fp =*/my_fopen(/*my_fopen_file_name*/ /*,"r"*/)))		/* 開けなかったとき */
 	{
 		return (0);
 	}
@@ -1380,7 +1183,7 @@ static int load_scenario(char *src_filename)
 		if (!end_arg)/* 行末 */
 		{
 			if (*c++ != ' ')								{	GOTO_ERR_WARN;	}	/* 区切り */
-			c = load_script_get_str(c, c_p0, &end_arg); 							/* 文字列コマンド(オペランド)読み込み  */
+			c = load_my_file_get_str(c, c_p0, &end_arg/*, ','*/); 							/* 文字列コマンド(オペランド)読み込み  */
 			if (NULL==c)									{	GOTO_ERR_WARN;	}	/* 読めなければエラー */
 		}
 		{
@@ -1401,7 +1204,7 @@ static int load_scenario(char *src_filename)
 		continue;
 	#if (1==USE_PARTH_DEBUG)
 	err_warn:
-		error(ERR_WARN, "syntax error in scriptfile '%s', line no: %d", filename, line_num);
+		error(ERR_WARN, "syntax error in scriptfile '%s', line no: %d", my_fopen_file_name, line_num);
 		continue;
 	#endif
 	}
@@ -1410,10 +1213,10 @@ static int load_scenario(char *src_filename)
 	if (0 == opecode_entrys)
 	{
 		#if 0
-		//ps pDebugScreenPrintf("can't entrys from this file %s",filename);
+		//ps pDebugScreenPrintf("can't entrys from this file %s", my_fopen_file_name);
 		//sc eKernelDelayThread(3000000);
 		#endif
-		error(ERR_WARN, "can't entrys from this file %s",filename);
+		error(ERR_WARN, "can't entrys from this file %s", my_fopen_file_name);
 		return (0);
 	}
 	return (1);

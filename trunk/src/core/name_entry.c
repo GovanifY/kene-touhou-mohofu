@@ -143,9 +143,9 @@ static void result_font_render(void)
 			NULL,/*dummy*/
 			0,/*dummy*/
 			1,
-			iyx(1,1),
+		//	iyx(1,1),/*”pŽ~*/
 			PRIORITY_01_SHOT,
-			0, 0, 0
+			0/*dummy*/	/* ‚ ‚½‚è”»’è‰~‚Ì”¼Œa(‚ ‚½‚è”»’è‚Ì‘å‚«‚³) */
 		}
 	};
 //
@@ -334,8 +334,8 @@ void result_work(void)
 		}
 		break;
 	}
-	sprite_work000(SP_GROUP_PAUSE_OBJS/*SP_GROUP_ETC*/);
-	sprite_display000(SP_GROUP_PAUSE_OBJS/*SP_GROUP_ETC*/);
+	sprite_work000(SP_GROUP_PAUSE_SP_MENU_TEXT);/*SP_GROUP_ETC*/
+	pause_sprite_display();/*SP_GROUP_ETC*/
 }
 
 

@@ -2,13 +2,21 @@
 #include "game_main.h"
 
 /*---------------------------------------------------------
-
+	共通メニュー
+	-------------------------------------------------------
+	実際、現在の共通メニューは使いにくいし、
+	戻れないという致命的な欠陥もありますが、
+	それでも使ってるのは、「作るのがめんどくさい」＆「先に他にやる事がたくさんある」
+	からです。
+	そのうち、全廃して改良する予定です。
+	順序からいって、Gu化完了してからの方がやり易いです。
+	というかSDLで作っても２度手間(作り直し)になる。
 ---------------------------------------------------------*/
 
 //extern SDL_Surface *back_screen;
 
-static int volume/*=2*/; /* 0-3 */
-/*static*/ int zanki/*=2*/; /* 0-3 */
+//	static int volume/*=2*/; /* 0-3 */
+//	/*static*/ int zanki/*=2*/; /* 0-3 */
 
 int continue_stage;
 int practice_mode;
@@ -22,17 +30,19 @@ int boss_bgm_mode;
 //	SDL_Surface 	*bg;
 typedef struct
 {
-	SPRITE			*menu_item_sprite[MAX_MENU_ITEMS/*20*/]/*[5]*/; 	// 項目、アニメーション(残像)レイヤー
-	SDL_Surface 	*menu_item_surface[MAX_MENU_ITEMS/*20*/];			// 画像化した各項目???
+	SPRITE			*menu_item_sprite[MAX_MENU_ITEMS/*20*/]/*[5]*/; 	/* オブジェクト */
+	SDL_Surface 	*menu_item_surface[MAX_MENU_ITEMS/*20*/];			/* 文字の画像 */
 	int active_item;	/* 現在メニュー上で選択されている項目番号 */
-	int max_items;		// オプションの項目数
+	int max_items;		/* オプションの項目数 */
 //
-	int alpha;
-	int menu_state; 	// 各項目のα値の状態。フェードin or out or done???
-	int fade_out;
-	int time_out;
-//
+	int menu_brite; 	/* メニューの明るさ(α値) */
+	int menu_state; 	/* メニューの状態。 MENU_STATE */
+	int fade_out_flag;
+	int time_out_flag;	/* -3==,  -2==, -1==時間切れなし, 0==時間切れ, 時間カウント中=1... */
 } MENU;
+#define M1_NOT_TIME_OUT 	(-1)/* 時間切れなしに設定(時間切れなしモード) */
+//#define M2_STATE_TIME_OVER	(-2)/* 時間切れありモードで時間切れになった状態 */
+
 static int generic_menu_done_flag;	/* 共通メニュー使用中か否かのフラグ */
 
 static MENU start_menu;
@@ -61,6 +71,7 @@ enum
 	GENERIC_MENU_STATE_99_MAX
 };
 
+/* メニューの状態。 MENU_STATE */
 enum
 {
 	MENU_STATE_00_INIT_MENU = 0,
@@ -68,8 +79,8 @@ enum
 	MENU_STATE_01_WORK_MENU,
 	MENU_STATE_02_FADE_OUT,
 	MENU_STATE_03_FININSH,
-	MENU_STATE_04_BRANCH,
-	MENU_STATE_99_MAX
+//	MENU_STATE_04_BRANCH,
+	MENU_STATE_04_MAX
 };
 
 enum
@@ -103,7 +114,7 @@ static MENU_RESOURCE my_111resource[RES99_MAX][/*8*/MAX_MENU_ITEMS/*10*/] =
 	//	#endif //(1==US E_ENDING_DEBUG)
 		{	245,		"PRACTICE START",	},
 	//	{	400,		"REPLAY",			},
-		{	320,		"STORY",			},		//ちょっと変更
+		{	320,		"STORY",			},		// ちょっと変更 */
 		{	285,		"RESULT",			},
 	//	{	310,		"MUSIC ROOM",		},
 		{	335,		"OPTION",			},
@@ -111,14 +122,14 @@ static MENU_RESOURCE my_111resource[RES99_MAX][/*8*/MAX_MENU_ITEMS/*10*/] =
 		{	0,			NULL,				},
 	},
 	{	//	RES01_STAGE_SELECT	/*const*/ char *stage_select_menu_options[] =/*(char *)*/stage_select_menu_options
-		{	360,		"1",			},	//stage1
-		{	350,		"2",			},	//stage2
-		{	340,		"3",			},	//stage3
-		{	330,		"4",			},	//stage4
-		{	320,		"5",			},	//stage5
-		{	310,		"6",			},	//stage6
+		{	360,		"1",			},	// stage1 */
+		{	350,		"2",			},	// stage2 */
+		{	340,		"3",			},	// stage3 */
+		{	330,		"4",			},	// stage4 */
+		{	320,		"5",			},	// stage5 */
+		{	310,		"6",			},	// stage6 */
 	//	#if (1==US E_ENDING_DEBUG)
-	//	{	275,		"ENDING",		},	//ending
+	//	{	275,		"ENDING",		},	// ending */
 	//	#endif //(1==US E_ENDING_DEBUG)
 		{	0,NULL, 	},
 	},
@@ -136,8 +147,8 @@ static MENU_RESOURCE my_111resource[RES99_MAX][/*8*/MAX_MENU_ITEMS/*10*/] =
 //	//	"STAGE SELECT0",
 //	//	#endif
 //		{	180,		"SOUND VOLUME", },
-//	//	{	200,		"HIGH SCORE",	},		//変更
-//		{	200,		"PLAYER",		},		//変更
+//	//	{	200,		"HIGH SCORE",	},		// 変更 */
+//		{	200,		"PLAYER",		},		// 変更 */
 //		{	245,		"QUIT", 		},
 //		{	200,NULL,		},
 //	},
@@ -171,12 +182,12 @@ static MENU_RESOURCE my_111resource[RES99_MAX][/*8*/MAX_MENU_ITEMS/*10*/] =
 
 ---------------------------------------------------------*/
 
-typedef struct	// たぶん矩形データ用?
+typedef struct	// たぶん矩形データ用? */
 {
-	int i0; 	// 表示用 x オフセット
-	int i1; 	// 表示用 y オフセット
-	int i2; 	// スプライト用(メニュー選択時、横 x の揺れ幅)
-	int i3; 	// スプライト用(揺れ幅が徐々に戻る用)
+	int i0; 	// 表示用 x オフセット */
+	int i1; 	// 表示用 y オフセット */
+	int i2; 	// スプライト用(メニュー選択時、横 x の揺れ幅) */
+	int i3; 	// スプライト用(揺れ幅が徐々に戻る用) */
 } MENU_DATA;
 
 #if 0
@@ -213,15 +224,10 @@ static void generic_menu_work(MENU *m)
 {
 //	if (/*!m->*/0==generic_menu_done_flag)
 	{
-		if (m->time_out>0)
-		{
-			m->time_out -= FPS_MENU_FACTOR;
-			// m->time_out-=1;
-		}
-		if (m->fade_out)
+		if (m->fade_out_flag)
 		{
 			psp_clear_screen();
-			SDL_SetAlpha(sdl_screen[SDL_01_BACK_SCREEN],SDL_SRCALPHA,255-(m->alpha/2));
+			SDL_SetAlpha(sdl_screen[SDL_01_BACK_SCREEN],SDL_SRCALPHA, 255-((m->menu_brite)>>1) );
 		}
 		psp_pop_screen();	//SDL_BlitSurface(sdl_screen[SDL_01_BACK_SCREEN],NULL,screen,NULL);
 
@@ -230,12 +236,12 @@ static void generic_menu_work(MENU *m)
 
 		switch (m->menu_state)
 		{
-		case MENU_STATE_00_FADE_IN_MENU: /* Increasing alpha, fade menu in */
-			m->alpha += FPS_MENU_FACTOR8;
-			if (m->alpha>=255)
+		case MENU_STATE_00_FADE_IN_MENU: /* Increasing menu_brite, fade menu in */
+			m->menu_brite += FPS_MENU_FACTOR8;
+			if (255 <= (m->menu_brite) )
 			{
 				m->menu_state = MENU_STATE_01_WORK_MENU;
-				m->alpha=255;
+				m->menu_brite = 255;
 			}
 			break;
 		case MENU_STATE_01_WORK_MENU: /* fadein complete */
@@ -268,7 +274,7 @@ static void generic_menu_work(MENU *m)
 								/* 5==最終面==6面まで到達	(EXTRA STAGE選べない、6面までの練習は選べる) */
 								/* 6==最終面==6面クリア 	(EXTRA STAGE選べる) */
 								/* 7==EXTRA面==EXTRA面クリア(EXTRA STAGE選べる) */
-								if (6>(option_config[OPTION_CONFIG_07_OPEN] & 0x07))
+								if (6 > (option_config[OPTION_CONFIG_07_OPEN] & 0x07))
 								{
 									m->active_item++;
 								}
@@ -277,7 +283,7 @@ static void generic_menu_work(MENU *m)
 						m->active_item++;
 					}
 				//	www=FPS_MENU_FACTOR10;
-					m->time_out = -1;
+					m->time_out_flag = M1_NOT_TIME_OUT;/* 時間切れなし */
 				}
 				else if (my_pad_alter & PSP_KEY_UP)
 				{
@@ -290,7 +296,7 @@ static void generic_menu_work(MENU *m)
 						{
 							if ((MAIN_MENU_EXTRA_START+1)==m->active_item)
 							{
-								if(6>(option_config[OPTION_CONFIG_07_OPEN] & 0x07))
+								if (6 > (option_config[OPTION_CONFIG_07_OPEN] & 0x07))
 								{
 									m->active_item--;
 								}
@@ -299,16 +305,16 @@ static void generic_menu_work(MENU *m)
 						m->active_item--;
 					}
 				//	www=FPS_MENU_FACTOR10;
-					m->time_out = -1;
+					m->time_out_flag = M1_NOT_TIME_OUT;/* 時間切れなし */
 				}
-				if ((ST_WORK_MENU|ST_MENU_SUB_PAUSE)==(psp_loop)/*state.substate==ST_MENU_SUB_PAUSE*/) // ポーズメニューの場合は
+				if ((ST_WORK_MENU|ST_MENU_SUB_PAUSE)==(psp_loop)/*state.substate==ST_MENU_SUB_PAUSE*/) // ポーズメニューの場合は */
 				{
-					if (my_pad_alter & PSP_KEY_PAUSE)	// startボタンでポーズ解除
+					if (my_pad_alter & PSP_KEY_PAUSE)	// startボタンでポーズ解除 */
 					{
 //						play_voice_auto_track(VOICE02_MENU_SELECT);
 						pause_menu.active_item = 0;
 						m->menu_state = MENU_STATE_02_FADE_OUT;
-						m->time_out = -1;
+						m->time_out_flag = M1_NOT_TIME_OUT;/* 時間切れなし */
 					}
 					/* ボスデバッグ用 */
 					#if 0/*(1==DEBUG_MODE)*/
@@ -329,12 +335,12 @@ static void generic_menu_work(MENU *m)
 			}
 		}
 			break;
-		case MENU_STATE_02_FADE_OUT:	/* selection done, decreasing alpha, fade menu out */
-			m->alpha -= FPS_MENU_FACTOR8;
-			if (m->alpha<=0)
+		case MENU_STATE_02_FADE_OUT:	/* selection done, decreasing menu_brite, fade menu out */
+			m->menu_brite -= FPS_MENU_FACTOR8;
+			if (0 >= (m->menu_brite) )
 			{
 				m->menu_state	= MENU_STATE_03_FININSH;
-				m->alpha		= 0;
+				m->menu_brite	= 0;
 			}
 			break;
 		case MENU_STATE_03_FININSH: 	/* fadout fininshed, menu done */
@@ -351,7 +357,12 @@ static void generic_menu_work(MENU *m)
 					//SDL_FreeSurface(m->menu_item_surface[i]);
 				}
 			}
-			if (-2 == m->time_out) { m->time_out = -3; }
+			#if 0
+//			if ((-2) == m->time_out_flag)/*(???)*/
+//			{
+//				m->time_out_flag = (-3);	/*(???)*/
+//			}
+			#endif
 			/*m->*/generic_menu_done_flag = 1;
 		//	www=FPS_MENU_FACTOR10;
 			return;
@@ -362,13 +373,13 @@ static void generic_menu_work(MENU *m)
 			angle512 += FPS_MENU_FACTOR15;
 			mask512(angle512);//if (angle>=360) {	angle-=360;}		// angle%=360;
 			int i;
-			for (i=0;i<m->max_items;i++)
+			for (i=0; i<m->max_items; i++)
 			{
 				MENU_DATA *data;
 				data=(MENU_DATA *)m->menu_item_sprite[i]/*[0]*/->data;
 				if (i==m->active_item)	/* 選択された */
 				{
-					data->i2 = 12; /* ゆれ幅を１２にする */
+					data->i2 = 12;	/* ゆれ幅を 12 にする */
 				}
 				else	/* 選択されてない */
 				{
@@ -386,8 +397,8 @@ static void generic_menu_work(MENU *m)
 			//	int j;
 			//	for (j=4;j>0;j--)
 			//	{
-			//		m->menu_item_sprite[i]/*[j]*/->alpha		= m->alpha;
-					m->menu_item_sprite[i]/*[j]*/->color32		= (((m->alpha)<<24)|(0x00ffffff));
+			//		m->menu_item_sprite[i]/*[j]*/->menu_brite	= m->menu_brite;
+					m->menu_item_sprite[i]/*[j]*/->color32		= (((m->menu_brite)<<24)|(0x00ffffff));
 			//		m->menu_item_sprite[i][j]->x256 = m->menu_item_sprite[i][j-1]->x256;
 			//		m->menu_item_sprite[i][j]->y256 = m->menu_item_sprite[i][j-1]->y256;
 			//		if ((m->menu_item_sprite[i][j]->x256 > 0)&&
@@ -396,8 +407,8 @@ static void generic_menu_work(MENU *m)
 			//	}
 			}
 		}
-		sprite_work000(SP_GROUP_PAUSE_OBJS/*SP_GROUP_TEXTS*/);
-		sprite_display000(SP_GROUP_PAUSE_OBJS/*SP_GROUP_TEXTS*/);
+		sprite_work000(SP_GROUP_PAUSE_SP_MENU_TEXT);/*SP_GROUP_TEXTS*/
+		pause_sprite_display();/*SP_GROUP_TEXTS*/
 		if (0==my_pad)
 		{
 			if (my_pad_alter & PSP_KEY_SHOT_OK)
@@ -407,24 +418,36 @@ static void generic_menu_work(MENU *m)
 				#else
 				voice_play(VOICE01_MENU_OK/*VOICE02_MENU_SELECT*/, TRACK01_EXPLODE);
 				#endif
-				m->menu_state	= MENU_STATE_02_FADE_OUT;/* メニュー消去準備 */
-				m->time_out 	= -1;/*時間切れなし*/
+				m->menu_state		= MENU_STATE_02_FADE_OUT;/* メニュー消去準備 */
+				m->time_out_flag	= M1_NOT_TIME_OUT;/* 時間切れなし */
 			}
 		}
-		if (0==m->time_out)/*時間切れ*/
+	}
+	/* 時間切れありモード用、時間経過 */
+	if (0 < (m->time_out_flag) )
+	{
+		m->time_out_flag--;// -= FPS_MENU_FACTOR;
+		//	m->time_out -= (1);
+		if ((0) == m->time_out_flag)/* 時間切れ */
 		{
-			m->menu_state	= MENU_STATE_02_FADE_OUT;/* メニュー消去準備 */
-			m->time_out 	= -2;/*時間切れあり*/
+			/* 時間切れありモードで時間切れになった */
+			m->menu_state		= MENU_STATE_02_FADE_OUT;/* メニュー消去準備 */
+		//	m->time_out_flag	= M2_STATE_TIME_OVER/*(-2)*/;/* 時間切れあり */
 		}
 	}
-	//parsys_display();
+	//	parsys_display();
 }
 
 /*---------------------------------------------------------
 
 ---------------------------------------------------------*/
 
-static void generic_menu_init(int res_num/*char *options[]*/, MENU *m, int fade_out, int time_out)
+static void generic_menu_init(
+	int res_num,
+	MENU *m,
+	int set_fade_out_flag,
+	int set_time_out_flag
+)/*char *options[]*/
 {
 	int i;
 //	int j;
@@ -437,7 +460,7 @@ static void generic_menu_init(int res_num/*char *options[]*/, MENU *m, int fade_
 	}
 //	sdl_screen[SDL_01_BACK_SCREEN] = NULL;
 	m->max_items		= 0;
-	/*m->*/generic_menu_done_flag	= 0;	//ここまでMENUの初期化
+	/*m->*/generic_menu_done_flag	= 0;	// ここまでMENUの初期化 */
 //
 	static IMAGE_RESOURCE my_resource[1] =
 	{
@@ -445,9 +468,9 @@ static void generic_menu_init(int res_num/*char *options[]*/, MENU *m, int fade_
 			NULL,/*dummy*/
 			0,/*dummy*/
 			1,
-			iyx(1,1),
+		//	iyx(1,1),/*廃止*/
 			PRIORITY_04_ITEM,/*???*/	//	/*j+*/5, /* ????  PRIORITY_*/
-			0, 0, 0
+			0/*dummy*/	/* あたり判定円の半径(あたり判定の大きさ) */
 		}
 	};
 //
@@ -460,7 +483,7 @@ loop:
 	/*while*/if (NULL == /*options[m->max_items]*/my_111resource[res_num][m->max_items].str_name)	{	goto loop_quit;}
 	//	m->menu_item_surface[m->max_items] = font_render(options[m->max_items],FONT01);
 		m->menu_item_surface[m->max_items] = font_render(/*options[m->max_items]*/	(char *)my_111resource[res_num][m->max_items].str_name,FONT03);
-	//	for (j=0;j<5;j++)		//各スプライトに情報を与えてていく
+	//	for (j=0;j<5;j++)		// 各スプライトに情報を与えてていく */
 		{
 			m->menu_item_sprite[m->max_items]/*[j]*/		=
 			sprite_add_res_list(
@@ -506,10 +529,10 @@ loop_quit:
 //		screen->format->Amask);
 	psp_push_screen();	//SDL_BlitSurface(screen,NULL,sdl_screen[SDL_01_BACK_SCREEN],NULL);
 
-	m->alpha		= 0;
-	m->menu_state	= MENU_STATE_00_FADE_IN_MENU;
-	m->fade_out 	= fade_out;
-	m->time_out 	= time_out;
+	m->menu_brite		= (0);
+	m->menu_state		= MENU_STATE_00_FADE_IN_MENU;
+	m->fade_out_flag	= set_fade_out_flag;
+	m->time_out_flag	= set_time_out_flag;
 	//keybo ard_clear();
 }
 
@@ -521,7 +544,7 @@ loop_quit:
 
 static void pause_menu_init(void)
 {
-	generic_menu_init(RES09_PAUSE_MENU,&pause_menu,1,-1);
+	generic_menu_init(RES09_PAUSE_MENU, &pause_menu, 1, M1_NOT_TIME_OUT/*時間切れなし*/);
 //	pause_start_time	= psp_get_uint32_ticks();
 }
 
@@ -559,7 +582,7 @@ void render_continue(void/*int now_max_continue*/);
 static void ask_continue_menu_init(void)
 {
 	render_continue(/*now_max_continue*/);
-	generic_menu_init(RES08_ASK_CONTINUE_MENU,&ask_continue_menu,1,-1);
+	generic_menu_init(RES08_ASK_CONTINUE_MENU, &ask_continue_menu, 1, M1_NOT_TIME_OUT/*時間切れなし*/);
 //	pause_start_time	= psp_get_uint32_ticks();
 }
 
@@ -613,7 +636,7 @@ static void ask_continue_menu_work(void)
 
 //static void option_menu_init(void)
 //{
-//	generic_menu_init(RES03_OPTION,&option_menu,0,-1);
+//	generic_menu_init(RES03_OPTION, &option_menu, 0, M1_NOT_TIME_OUT/*時間切れなし*/);
 //}
 
 /*---------------------------------------------------------
@@ -658,7 +681,16 @@ static void ask_continue_menu_work(void)
 //#if (1==DEBUG_MODE)
 static void stage_select_menu_init(void)
 {
-	generic_menu_init(RES01_STAGE_SELECT,&stage_select_menu,0,-1);
+	generic_menu_init(RES01_STAGE_SELECT, &stage_select_menu, 0, M1_NOT_TIME_OUT/*時間切れなし*/);
+	#if 1
+	/*
+		エキストラステージをプレイした後で、
+		「エキストラステージ、プラクティス」と
+		「エンディング、スタッフロール、プラクティス」が
+		選べるバグがあるので、修正する。
+	*/
+	if ( (6-1) < continue_stage)	{continue_stage = (6-1);	/* (6-1) */}
+	#endif
 	stage_select_menu.active_item = continue_stage;
 }
 
@@ -689,7 +721,7 @@ static void stage_select_menu_work(void)
 
 //static void volume_menu_init(void)
 //{
-//	generic_menu_init(RES04_VOLUME,&volume_menu,0,-1);
+//	generic_menu_init(RES04_VOLUME, &volume_menu, 0, M1_NOT_TIME_OUT/*時間切れなし*/);
 //	volume_menu.active_item = volume;
 //}
 
@@ -721,7 +753,7 @@ static void stage_select_menu_work(void)
 
 //static void zanki_menu_init(void)
 //{
-//	generic_menu_init(RES05_ZANKI,&zanki_menu,0,-1);
+//	generic_menu_init(RES05_ZANKI, &zanki_menu, 0, M1_NOT_TIME_OUT/*時間切れなし*/);
 //	zanki_menu.active_item = zanki;
 //}
 
@@ -753,7 +785,7 @@ static void stage_select_menu_work(void)
 
 static void difficulty_menu_init(void)
 {
-	generic_menu_init(RES02_DIFFICULTY,&difficulty_menu,0,-1);
+	generic_menu_init(RES02_DIFFICULTY, &difficulty_menu, 0, M1_NOT_TIME_OUT/*時間切れなし*/);
 	difficulty_menu.active_item = difficulty;
 }
 
@@ -798,7 +830,8 @@ static void start_menu_init(void)
 		SDL_BlitSurface(intropic, NULL, /*sdl_screen[SDL_01_BACK_SCREEN]*/sdl_screen[SDL_00_SCREEN], NULL);
 		unloadbmp_by_surface(intropic); 	intropic = NULL;/*unload_bmp_by_name("bg/title_bg.jpg");*/
 	}
-	generic_menu_init(RES00_MAIN_MENU,&start_menu,0,/*6000*/-1/*500*/);/*RESULTにしたから要らなくなったが、将来デモとか付けるならいる*/
+	generic_menu_init(RES00_MAIN_MENU, &start_menu, 0, M1_NOT_TIME_OUT/*時間切れなし*/);
+	/* 時間切れ == 500 6000 RESULTにしたから要らなくなったが、将来デモとか付けるならいる */
 }
 
 /*---------------------------------------------------------
@@ -825,9 +858,9 @@ static void start_menu_work(void)
 //			/*start_menu.*/generic_menu_done_flag = 0;
 			switch (start_menu.active_item)
 			{
-			case MAIN_MENU_START:			practice_mode=0;	continue_stage=0;
+			case MAIN_MENU_START:			practice_mode=0;	continue_stage = (1-1); 	/*(0)*/ 		/* STAGE1 == 0 == (1-1)*/
 											psp_loop=(ST_INIT_MENU|ST_MENU_SUB_RANK_SELECT);	break; /* Start */			//	newsta te(ST_MENU,ST_MENU_SUB_RANK_SELECT,1);	/*newsta te(ST_PLAYER_SELECT,0,1); */				//newsta te(ST_GAME_PLAY,0,1);
-			case MAIN_MENU_EXTRA_START: 	practice_mode=0;	continue_stage=(8-1)/*6*/;		/* STAGE8 == 7 == (8-1)*/
+			case MAIN_MENU_EXTRA_START: 	practice_mode=0;	continue_stage = (8-1); 	/*(6)*/ 	/* STAGE8 == 7 == (8-1)*/
 											psp_loop=(ST_INIT_MENU|ST_MENU_SUB_RANK_SELECT);	break; /* Extra Start */	//	newsta te(ST_PLAYER_SELECT,0,1);		//newsta te(ST_GAME_PLAY,0,1);
 			case MAIN_MENU_PRACTICE_START:	practice_mode=1;
 											psp_loop=(ST_INIT_MENU|ST_MENU_SUB_STAGE_SELECT);	break; /* Practice Start */ //	newsta te(ST_MENU,ST_MENU_SUB_STAGE_SELECT,1);*/ /* stage select */ //newsta te(ST_PLAYER_SELECT,0,1);	break;	//newsta te(ST_GAME_PLAY,0,1);
@@ -889,16 +922,16 @@ void all_menu_work(void)
 
 void menusystem_init(void)
 {
-	continue_stage					= 0;
+	continue_stage					= (1-1);	/* (0) */
 //	practice_mode					= 0;
-	volume							= 0;
-	zanki							= 2;
+//	volume							= 0;
+//	zanki							= 2;
 //
 	start_menu.active_item			= 0;
 	pause_menu.active_item			= 0;
 	ask_continue_menu.active_item	= 0;
-	stage_select_menu.active_item	= 0/*continue_stage*/;
-	difficulty_menu.active_item 	= 0;
+	stage_select_menu.active_item	= (1-1);	/* (0) */ /*continue_stage*/;
+	difficulty_menu.active_item 	= 0;/*(初期値はeasy)*/
 
 //	option_menu.active_item 		= 0;
 //	volume_menu.active_item 		= 0/*volume*/;
@@ -995,13 +1028,13 @@ static /*const*/ char *player00_res[(BASE_SP_PNG_MAX)] =
 	/* 15 CIRNO */		"select/pl07.png",	//	"select/p_yu.png",		// "select/sp_yuyuko_st.png",
 };
 
+
 /*---------------------------------------------------------
 
 ---------------------------------------------------------*/
 
-
 static int sp_diff256;
-static void player_opt_img256(SDL_Surface *src, int scale256, int l_or_r)	//r=0, l=1
+static void player_opt_img256(SDL_Surface *src, int scale256, int l_or_r)	/* 0==r, 1==l, */
 {
 	SDL_Rect sr;
 	SDL_Rect dr;
@@ -1024,13 +1057,15 @@ static void player_opt_img256(SDL_Surface *src, int scale256, int l_or_r)	//r=0,
 	dr.y = (50);
 //	blit_scaled(src, &sr, sdl_screen[SDL_00_SCREEN], &dr);
 //	SDL_SetColorKey(src, SDL_SRCCOLORKEY, 0x00000000);
-	SDL_SetAlpha(src, SDL_SRCALPHA, (t256(1)-scale256));
+	SDL_SetAlpha(src, SDL_SRCALPHA, (t256(1.0)-scale256));
 	SDL_BlitSurface(src, &sr, sdl_screen[SDL_00_SCREEN], &dr);
 }
+
 
 /*---------------------------------------------------------
 
 ---------------------------------------------------------*/
+
 void menu_cancel_and_voice(void)
 {
 	#if (0==USE_DESIGN_TRACK)
@@ -1045,35 +1080,7 @@ void menu_cancel_and_voice(void)
 /*---------------------------------------------------------
 
 ---------------------------------------------------------*/
-static u8 can_player_bit ;	/* 霊夢 A / 魔理沙 A のみ */		/* [***090222	追加 */
-
-void player_opt_work(void)
-{
-	static SDL_Surface *player_select_bg0_surface;
-	static SDL_Surface *player_select_bg2_surface;
-	static SDL_Surface *player_select_fg0_surface;
-	static SDL_Surface *player_select_fg2_surface;
-	static int sp_scale256;
-	static int is_turn_right = 0;
-//	static int sp_wait = 0;
-	static int bg_alpha_bbb;
-	SDL_Rect sr;
-	sr.x = SP_X;
-	sr.y = 50;
-//	psp_clear_screen();
-	switch (psp_loop&0x0f)
-	{
-// 0000 0001 霊夢 A
-// 0000 0010 霊夢 B
-// 0000 0100 魔理沙 A
-// 0000 1000 魔理沙 B
-
-// 0001 0000 魔理沙 C
-// 0010 0000 レミリア
-// 0100 0000 チルノ
-// 1000 0000 幽々子
-
-
+		#if 0
 // 0000 0001 霊夢 A
 // 0000 0010 霊夢 B
 // 0000 0100 魔理沙 A
@@ -1083,11 +1090,6 @@ void player_opt_work(void)
 // 0010 0000 幽々子
 // 0100 0000 チルノ A
 // 1000 0000 チルノ Q
-	case 0://init
-	//	bg_alpha_bbb=0;
-		sp_scale256 = t256(1);sp_diff256=0;
-	//
-		#if 0
 		if (0==tiny_strcmp(str_pass_word, YUYUKO_PASSWORD)) 	/* [***090222	追加 */
 		{
 			can_player_bit=0x7f/*MAX_PLAYER-1*/;	/* 幽々子 開放 */
@@ -1107,7 +1109,34 @@ void player_opt_work(void)
 			can_player_bit=0x05/*MAX_PLAYER-4*/;	/* 霊夢 A / 魔理沙 A のみ */
 		}
 		#endif
-		can_player_bit=0xff;	/* テスト */
+
+//static u8 can_player_bit ;	/* 霊夢 A / 魔理沙 A のみ */		/* [***090222	追加 */
+enum
+{
+	PLAYER_SELECT_00_INIT = 0,
+	PLAYER_SELECT_01_SELECT,
+	PLAYER_SELECT_02_DRAW,
+};
+
+
+void player_opt_work(void)
+{
+	static SDL_Surface *player_select_bg0_surface;
+	static SDL_Surface *player_select_bg2_surface;
+	static SDL_Surface *player_select_fg0_surface;
+	static SDL_Surface *player_select_fg2_surface;
+	static int sp_scale256;
+	static int is_turn_right = 0;
+//	static int sp_wait = 0;
+	static int bg_alpha_bbb;
+//	psp_clear_screen();
+	switch (psp_loop/*&0x0f*/)
+	{
+	case (ST_WORK_PLAYER_SELECT|PLAYER_SELECT_00_INIT)://init */
+	//	bg_alpha_bbb=0;
+		sp_scale256 = t256(1.0);sp_diff256 = (0);
+	//
+//		can_player_bit=0xff;	/* テスト */
 	//	if (select_player > can_player_bit)
 	//	{
 	//		select_player	= 0;
@@ -1116,19 +1145,24 @@ void player_opt_work(void)
 		player_select_bg0_surface			= loadbmp0( (char *)player00_res[BASE_SP_BG_PNG+select_player], 0, 0/*1*/);
 		player_select_fg0_surface			= loadbmp0( (char *)player00_res[BASE_SP_ST_PNG+select_player], 0, 0/*1*/);
 		SDL_SetColorKey(player_select_fg0_surface, SDL_SRCCOLORKEY, 0x00000000);
+//		SDL_BlitSurface(player_select_bg0_surface,NULL,sdl_screen[SDL_00_SCREEN],NULL);
+//		{
+//			SDL_Rect sr;
+//			sr.x	= SP_X;
+//			sr.y	= 50;
+//			SDL_BlitSurface(player_select_fg0_surface,NULL,sdl_screen[SDL_00_SCREEN],&sr);
+//		}
+		psp_loop++;//	= (ST_WORK_PLAYER_SELECT|PLAYER_SELECT_01_SELECT)/*4*/;
+		break;
+	case (ST_WORK_PLAYER_SELECT|PLAYER_SELECT_01_SELECT)://選択 */
+	//case 4://選択 */
 		SDL_BlitSurface(player_select_bg0_surface,NULL,sdl_screen[SDL_00_SCREEN],NULL);
 		{
 			SDL_Rect sr;
-			sr.x			= SP_X;
-			sr.y			= 50;
+			sr.x	= SP_X;
+			sr.y	= 50;
 			SDL_BlitSurface(player_select_fg0_surface,NULL,sdl_screen[SDL_00_SCREEN],&sr);
 		}
-		psp_loop	= (ST_WORK_PLAYER_SELECT|1)/*4*/;
-		break;
-	case 1://選択
-	//case 4://選択
-		SDL_BlitSurface(player_select_bg0_surface,NULL,sdl_screen[SDL_00_SCREEN],NULL);
-		SDL_BlitSurface(player_select_fg0_surface,NULL,sdl_screen[SDL_00_SCREEN],&sr);
 		if (0==my_pad)//(sp_wait<0) /*	*/
 		{
 			if (my_pad_alter & (PSP_KEY_LEFT|PSP_KEY_RIGHT|PSP_KEY_SHOT_OK|PSP_KEY_BOMB_CANCEL)/*左か右かショット」かキャンセルのいづれか*/  ) //左右
@@ -1136,9 +1170,9 @@ void player_opt_work(void)
 				unloadbmp_by_surface(player_select_bg0_surface);	player_select_bg0_surface = NULL;
 				unloadbmp_by_surface(player_select_fg0_surface);	player_select_fg0_surface = NULL;
 			}
-			if (my_pad_alter & (PSP_KEY_LEFT|PSP_KEY_RIGHT)/*左か右の両方*/  ) //左右ボタン入力
+			if (my_pad_alter & (PSP_KEY_LEFT|PSP_KEY_RIGHT)/*左か右の両方*/  ) //左右ボタン入力 */
 			{
-				is_turn_right=(my_pad_alter & PSP_KEY_RIGHT)?1:0;/*右なら1, 左なら0 */
+				is_turn_right=(my_pad_alter & PSP_KEY_RIGHT)?1:0;/* 右なら1, 左なら0 */
 				#if (0==USE_DESIGN_TRACK)
 				play_voice_auto_track(VOICE02_MENU_SELECT);
 				#else
@@ -1151,28 +1185,28 @@ void player_opt_work(void)
 				{	/* [***090222	追加 */
 				//	if (0==select_player)	{	select_player=can_player_bit;	}
 				//	else					{	select_player--;}
-					do
+					//do
 					{
 						select_player--;
 						select_player &= 0x07;
-					} while (0==((u8)((1<<select_player))&can_player_bit));
+					} //while (0==((u8)((1<<select_player))&can_player_bit));
 				}
 				else
 				{	/* [***090222	追加 */
 				//	if (select_player==can_player_bit)	{	select_player=0;	}
 				//	else								{	select_player++;	}
-					do
+					//do
 					{
 						select_player++;
 						select_player &= 0x07;
-					} while (0==(((u8)(1<<select_player))&can_player_bit));
+					} //while (0==(((u8)(1<<select_player))&can_player_bit));
 				}
 				player_select_bg0_surface=loadbmp0( (char *)player00_res[BASE_SP_BG_PNG+select_player] /*sp_bg_list[select_player]*/, 0, 0/*1*/);
 				player_select_fg0_surface=loadbmp0( (char *)player00_res[BASE_SP_ST_PNG+select_player] /*sp_st_list[select_player]*/, 0, 0/*1*/);
 				SDL_SetColorKey(player_select_fg0_surface, SDL_SRCCOLORKEY, 0x00000000);
-				psp_loop=(ST_WORK_PLAYER_SELECT|2)/*0*/ /*(旧仕様は、右なら5, 左なら6)*/;
+				psp_loop++;//=(ST_WORK_PLAYER_SELECT|PLAYER_SELECT_02_DRAW)/*0*/ /*(旧仕様は、右なら5, 左なら6)*/;
 			//	sp_wait=10;
-				sp_scale256 = t256(1);sp_diff256=0;
+				sp_scale256 = t256(1.0);sp_diff256 = (0);
 				bg_alpha_bbb=0;
 			}
 			if (my_pad_alter & PSP_KEY_SHOT_OK)
@@ -1180,7 +1214,7 @@ void player_opt_work(void)
 				#if (0==USE_DESIGN_TRACK)
 				play_voice_auto_track(VOICE01_MENU_OK);
 				#else
-				voice_play(VOICE01_MENU_OK, TRACK01_EXPLODE);/*テキトー*/
+				voice_play(VOICE01_MENU_OK, TRACK01_EXPLODE);/* テキトー */
 				#endif
 				psp_loop=(ST_WORK_STAGE_FIRST/*ST_INIT_GAME_PLAY*/|0); //newsta te(ST_GAME_PLAY,0,1);
 			}
@@ -1195,14 +1229,14 @@ void player_opt_work(void)
 		//	sp_wait-=1/**fps_fa ctor*/;
 		//}
 		break;
-//	case 5: //右
-//			player_opt_img256(player_select_fg0_surface, t256(1)-sp_scale256, 0);	// 5右0 6左1
-//			player_opt_img256(player_select_fg2_surface,		 sp_scale256, 1);	// 5右1 6左0
-//	case 6: //左
-//			player_opt_img256(player_select_fg0_surface, t256(1)-sp_scale256, 1);
-//			player_opt_img256(player_select_fg2_surface,		 sp_scale256, 0);
-//	case 5: //右
-	case 2:
+//	case 5: // 右 */
+//			player_opt_img256(player_select_fg0_surface, t256(1.0)-sp_scale256, 0); 	// 5右0 6左1 */
+//			player_opt_img256(player_select_fg2_surface,		   sp_scale256, 1); 	// 5右1 6左0 */
+//	case 6: // 左 */
+//			player_opt_img256(player_select_fg0_surface, t256(1.0)-sp_scale256, 1);
+//			player_opt_img256(player_select_fg2_surface,		   sp_scale256, 0);
+//	case 5: // 右 */
+	case (ST_WORK_PLAYER_SELECT|PLAYER_SELECT_02_DRAW):
 		sp_scale256 -= t256(0.07);sp_diff256+=(sp_scale256+sp_scale256);
 		bg_alpha_bbb += 15;
 		if (bg_alpha_bbb < 255)
@@ -1223,17 +1257,17 @@ void player_opt_work(void)
 
 		if (sp_scale256 < t256(0) )
 		{
-			psp_loop=(ST_WORK_PLAYER_SELECT|1)/*4*/;
+			psp_loop--;//=(ST_WORK_PLAYER_SELECT|PLAYER_SELECT_01_SELECT)/*4*/;
 			unloadbmp_by_surface(player_select_bg2_surface);	player_select_bg2_surface = NULL;
 			unloadbmp_by_surface(player_select_fg2_surface);	player_select_fg2_surface = NULL;
 			SDL_SetAlpha(player_select_bg0_surface, SDL_SRCALPHA, 255);
 		}
 		else
 		{
-		//	player_opt_img256(player_select_fg0_surface, t256(1)-sp_scale256, (1-is_turn_right)/*0*/);	// 5右0 6左1
-		//	player_opt_img256(player_select_fg2_surface,		 sp_scale256, (  is_turn_right)/*1*/);	// 5右1 6左0
-			player_opt_img256(player_select_fg0_surface,		 sp_scale256, (1-is_turn_right)/*0*/);	// 5右0 6左1
-			player_opt_img256(player_select_fg2_surface, t256(1)-sp_scale256, (  is_turn_right)/*1*/);	// 5右1 6左0
+		//	player_opt_img256(player_select_fg0_surface, t256(1.0)-sp_scale256, (1-is_turn_right)/*0*/);	// 5右0 6左1 */
+		//	player_opt_img256(player_select_fg2_surface,		   sp_scale256, (  is_turn_right)/*1*/);	// 5右1 6左0 */
+			player_opt_img256(player_select_fg0_surface,		   sp_scale256, (1-is_turn_right)/*0*/);	// 5右0 6左1 */
+			player_opt_img256(player_select_fg2_surface, t256(1.0)-sp_scale256, (  is_turn_right)/*1*/);	// 5右1 6左0 */
 		}
 		break;
 	}

@@ -50,7 +50,7 @@ static void move_obake1(SPRITE *src)
 	}
 	if (SP_DELETE != src->type)
 	{
-		src->type 			= TEKI_12_OBAKE01+(((src->y256>>8)&0x03));
+		src->type			= TEKI_12_OBAKE01+(((src->y256>>8)&0x03));
 	}
 }
 
@@ -64,7 +64,7 @@ void add_zako_obake1(STAGE_DATA *l)/*int lv*/
 	for (i=0; i<NUM_OF_ENEMIES; i++)
 	{
 		SPRITE *s;
-//		s						= sp rite_add_res(BASE_OBAKE08_PNG); //	s->anim_speed=0;/*11"ir is.png"*/
+//		s						= sp rite_add_res(BASE_OBAKE08_PNG); // s->anim_speed=0;/*11"ir is.png"*/
 		s						= sprite_add_gu(ZAKO_TYPE_ATARI16_PNG); //	s->anim_speed=0;/*11"ir is.png"*/
 		s->type 				= /*SP_ZAKO*/TEKI_12_OBAKE01/*_01_OBAKE*/;
 //		s->type 				= SP_ZAKO/*_01_OBAKE*/;

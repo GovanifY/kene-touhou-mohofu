@@ -3,8 +3,9 @@
 
 /*---------------------------------------------------------
 	パチュリー・ノーレッジ
-	パチェ(予定)	(r27から新規追加)
+	Patchouli Knowledge.
 	-------------------------------------------------------
+	パチェ(予定)	(r27から新規追加)
 	ToDo:
 	ボスタイマー対応中
 ---------------------------------------------------------*/
@@ -46,7 +47,6 @@ static unsigned int alice_anime_count;
 
 static int bb_angle512;
 
-static SPRITE *obj_doll[8]; 	/* 人形達 */
 
 // FLG_FIRE1 弾フラグ。紅い娘の人形が壊れていて、かつ指定位置に着いた時。onになる。
 #define FLG_FIRE1 0x01/* 藍い娘の人形(旧左上)が指定位置に付いたか */
@@ -73,9 +73,9 @@ static SPRITE *obj_doll[8]; 	/* 人形達 */
 
 static void lose_doll(SPRITE *src)
 {
-	dummy_obj->x256 = src->x256+((src->w128));
-	dummy_obj->y256 = src->y256+((src->h128));
-	bakuhatsu_add_type_ddd(dummy_obj/*src->x256+((src->w128)),src->y256+((src->h128))*/,/*0,*/BAKUHATSU_FIRE08);
+	send1_obj->x256 = src->x256+((src->w128));
+	send1_obj->y256 = src->y256+((src->h128));
+	bakuhatsu_add_type_ddd(send1_obj/*src->x256+((src->w128)),src->y256+((src->h128))*/,/*0,*/BAKUHATSU_FIRE08);
 //
 	item_create_for_boss(src, ITEM_CREATE_MODE_02);
 //
@@ -111,12 +111,12 @@ static void move_doll01(SPRITE *src)
 			}
 		#if (1==USE_KEISYOU)
 		/*CCW*/
-			/*obj_doll[jj]*/src->x256 = data->sakuya_obj->x256 + ((sin512((aa_angle512))*radius));
-			/*obj_doll[jj]*/src->y256 = data->sakuya_obj->y256 + ((cos512((aa_angle512))*radius));
+			src->x256 = data->sakuya_obj->x256 + (((sin512((aa_angle512))*radius)));
+			src->y256 = data->sakuya_obj->y256 + (((cos512((aa_angle512))*radius)));
 		#else
 		/*CCW*/
-			/*obj_doll[jj]*/src->x256 = (((PLAYER_DATA *)player->data)->boss)->x256 + ((sin512((aa_angle512))*radius));
-			/*obj_doll[jj]*/src->y256 = (((PLAYER_DATA *)player->data)->boss)->y256 + ((cos512((aa_angle512))*radius));
+			src->x256 = (((PLAYER_DATA *)player->data)->boss)->x256 + (/*(short)*/((sin512((aa_angle512))*radius)));
+			src->y256 = (((PLAYER_DATA *)player->data)->boss)->y256 + (/*(short)*/((cos512((aa_angle512))*radius)));
 		#endif
 		}
 	}
@@ -126,12 +126,20 @@ static void move_doll01(SPRITE *src)
 		{
 			/* ショット */
 		//	b05_fire_flags &= (~(doll_data->identity_bit));/* off */
-			bullet_create_n_way_dan_sa_type(src,
-				(t256(1.5)+(difficulty<<6)),
-				ANGLE_JIKI_NERAI_DAN,
-				(int)(512/64),
-				BULLET_CAP16_04_SIROI,
-				(4+difficulty)/*(4-difficulty)*/);
+			send1_obj->x256 = src->x256;
+			send1_obj->y256 = src->y256;
+			#if 1
+			/* あとで要る */
+	//		send1_obj->h128 = src->h128;
+	//		send1_obj->w128 = src->w128;
+			#endif
+		//	bullet_create_n_way_dan_sa_type(src,
+			send1_obj->BULLET_REGIST_speed256			=	(t256(1.5)+(difficulty<<6));
+			send1_obj->BULLET_REGIST_angle512			=	ANGLE_JIKI_NERAI_DAN;
+			send1_obj->BULLET_REGIST_div_angle512		=	(int)(512/64);
+			send1_obj->BULLET_REGIST_bullet_obj_type	=	BULLET_CAP16_04_SIROI;
+			send1_obj->BULLET_REGIST_n_way				=	(4+difficulty)/*(4-difficulty)*/ ;
+			bullet_regist_basic();
 		}
 	}
 	#endif
@@ -156,11 +164,11 @@ static void move_doll02(SPRITE *src)
 	{
 	case 0:
 		#if (1==USE_KEISYOU)
-		/*obj_doll[jj]*/src->x256 = data->sakuya_obj->x256 + (((data->fix_angle512))<<7);
-		/*obj_doll[jj]*/src->y256 = data->sakuya_obj->y256 - t256(16);
+		src->x256 = data->sakuya_obj->x256 + (((data->fix_angle512))<<7);
+		src->y256 = data->sakuya_obj->y256 - t256(16);
 		#else
-		/*obj_doll[jj]*/src->x256 = (((PLAYER_DATA *)player->data)->boss)->x256 + (((data->fix_angle512))<<7);
-		/*obj_doll[jj]*/src->y256 = (((PLAYER_DATA *)player->data)->boss)->y256 - t256(16);
+		src->x256 = (((PLAYER_DATA *)player->data)->boss)->x256 + (((data->fix_angle512))<<7);
+		src->y256 = (((PLAYER_DATA *)player->data)->boss)->y256 - t256(16);
 		#endif
 		if (0==(common_boss_flags & FLG_MINI_DOLL))
 		{
@@ -228,23 +236,23 @@ static int vvv256;
 static void alice_animation(SPRITE *src)
 {
 	vvv256++/*vvv256+=vvv256*/;
-	if (vvv256> t256(1) )
-	{	vvv256= t256(1);}
+	if (vvv256> t256(1.0) )
+	{	vvv256= t256(1.0);}
 //
 	if (alice_anime_count)	/* 攻撃アニメーション */
 	{
 		alice_anime_count--;
-		if ((32)>alice_anime_count) 	{	src->anim_frame = 0x23;}
+		if ((32)>alice_anime_count) 	{	src->type = BOSS_09_BOSS32;/*src->an im_frame = 0x23;*/}
 		else
-		if ((40)>alice_anime_count) 	{	src->anim_frame = 0x22;}
+		if ((40)>alice_anime_count) 	{	src->type = BOSS_10_BOSS33;/*src->an im_frame = 0x22;*/}
 		else
-										{	src->anim_frame = 0x21;}
+										{	src->type = BOSS_09_BOSS32;/*src->an im_frame = 0x21;*/}
 	}
 	else	/* 移動アニメーション */
 	{
 		BOSS01_DATA *data=(BOSS01_DATA *)src->data;
 		int aaa;
-		aaa = (data->vx>0)?(0x00):(0x10);	/*左右*/
+		aaa = (data->vx>0)?(BOSS_00_BOSS11/*0x00*/):(BOSS_04_BOSS21/*0x10*/);	/*左右*/
 		if ((16)>vvv256)		{	aaa+=2;}	/* 25.6==t256(0.1)*/
 		else
 		if ((200)>vvv256)		{	aaa+=3;}	/* 76.8==t256(0.3)*/
@@ -252,8 +260,8 @@ static void alice_animation(SPRITE *src)
 		if ((224)>vvv256)		{	aaa+=2;}	/*128.0==t256(0.5)*/
 		else
 		if ((240)>vvv256)		{	aaa+=1;}	/*179.2==t256(0.7)*/
-	//	else						{	aaa+=0;}
-		src->anim_frame = aaa;
+	//	else					{	aaa+=0;}
+		/*src->an im_frame*/src->type = aaa;
 	}
 }
 
@@ -268,7 +276,7 @@ static void alice_animation(SPRITE *src)
 	DANMAKU_04_sakuya,
 	DANMAKU_09_alice,
 	DANMAKU_05_sakuya,
-	DANMAKU_09_alice,
+	DANMAKU_0a_houka_kenran/*DANMAKU_09_alice*/,
 	DANMAKU_06_sakuya,
 	DANMAKU_09_alice,
 //
@@ -424,10 +432,11 @@ void add_boss_pache(STAGE_DATA *l)/*int lv*/
 
 //----[BOSS]
 		SPRITE *sakuya;
-		sakuya								= sprite_add_res(BASE_BOSS_PACHE_PNG); /*"boss05-mo.png"60x42, offset*/
+	//	sakuya								= sprite_add_res(BASE_BOSS_PACHE_PNG); /*"boss05-mo.png"60x42, offset*/
+		sakuya								= sprite_add_gu(ZAKO_TYPE_ATARI16_PNG);
 		sakuya->flags						|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK);
-		sakuya->anim_frame					= 0;
-		sakuya->type						= SP_BOSS/*SP_BOSS01*/;
+//		sakuya->an im_frame 				= 0;
+		sakuya->type						= BOSS_00_BOSS11;	/*SP_BOSS*/ 	/*SP_BOSS01*/
 		sakuya->callback_mover				= move_alice;
 		sakuya->callback_loser				= common_boss_put_items;
 //	life	[2] + [bar]
@@ -465,20 +474,22 @@ void add_boss_pache(STAGE_DATA *l)/*int lv*/
 	int i;
 	for (i=0; i<8; i++)
 	{
-		obj_doll[i] 						= sprite_add_res(BASE_BOSS_PACHE_DOLLS_PNG/*doll_res_num[i]*/);
-//		obj_doll[i]->anim_speed 			= 0;
-		obj_doll[i]->type					= SP_ZAKO/*SP_BOSS05*/;
-		obj_doll[i]->flags					|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK);
+		/*static*/ SPRITE *obj_doll;	/* 人形達 */
+	//	obj_doll						= sprite_add_res(BASE_BOSS_PACHE_DOLLS_PNG/*doll_res_num[i]*/);
+		obj_doll						= sprite_add_gu(ZAKO_TYPE_ATARI16_PNG);
+//		obj_doll->anim_speed			= 0;
+		obj_doll->type					= BOSS_16_YOUSEI11; 	/*SP_ZAKO*/ 	/*SP_BOSS05*/
+		obj_doll->flags 				|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK);
 //
-		obj_doll[i]->callback_loser 		= lose_doll;
-		obj_doll[i]->callback_hit_enemy 	= callback_hit_zako;
+		obj_doll->callback_loser		= lose_doll;
+		obj_doll->callback_hit_enemy	= callback_hit_zako;
 //
 		DOLL_DATA *data;
 		data								= mmalloc(sizeof(DOLL_DATA));
 		#if (1==USE_KEISYOU)
 		data->sakuya_obj					= sakuya;	/* 継承させる */
 		#endif
-		obj_doll[i]->data					= data;
+		obj_doll->data					= data;
 		data->identity_bit					= (FLG_DOLL0<<i);		/* 固有ビット番号 */
 //		data->health_flag					= 0;
 		data->bwait 						= 0;
@@ -486,20 +497,20 @@ void add_boss_pache(STAGE_DATA *l)/*int lv*/
 	//	br2_angle512						= deg_360_to_512(0);
 //		data->br_angle512					= deg_360_to_512(0);/*CW*/
 		data->br_angle512					= (0);/*CCW*/
-	//	obj_doll[i]->base_score 			= score( 500)*(difficulty+1);
+	//	obj_doll->base_score			= score( 500)*(difficulty+1);
 		if (3/*1*/<i)
 		{
-			obj_doll[i]->callback_mover 	= move_doll01;
-			obj_doll[i]->anim_frame 		= 0x20+((i&1)<<4);		/* ミニ人形 / 紅い娘の人形 */
-			obj_doll[i]->base_score 		= adjust_score_by_difficulty(score(  50000));	/*	 5万 x 4人 */
-			obj_doll[i]->base_health		= ((128-1));/*すぐ死ぬ*/
+			obj_doll->callback_mover	= move_doll01;
+			obj_doll->type/*an im_frame*/		= /*0x20*/8+BOSS_16_YOUSEI11+((i&1)<<2/*4*/);		/* ミニ人形 / 紅い娘の人形 */
+			obj_doll->base_score		= adjust_score_by_difficulty(score(  50000));	/*	 5万 x 4人 */
+			obj_doll->base_health		= ((128-1));/*すぐ死ぬ*/
 		}
 		else
 		{
-			obj_doll[i]->callback_mover 	= move_doll02;
-			obj_doll[i]->anim_frame 		= (i<<4);				/*	0:藍い娘の人形(旧左上) / 1:碧の娘の人形(旧右上) */
-			obj_doll[i]->base_score 		= adjust_score_by_difficulty(score( 300000));	/*	30万 x 4人 */
-			obj_doll[i]->base_health		= ((1024-1)*5);/*硬い(がちゃんと壊せる)*/
+			obj_doll->callback_mover	= move_doll02;
+			obj_doll->type/*an im_frame*/		= BOSS_16_YOUSEI11+(i<<2/*4*/); 			/*	0:藍い娘の人形(旧左上) / 1:碧の娘の人形(旧右上) */
+			obj_doll->base_score		= adjust_score_by_difficulty(score( 300000));	/*	30万 x 4人 */
+			obj_doll->base_health		= ((1024-1)*5);/*硬い(がちゃんと壊せる)*/
 		}
 		data->fix_angle512					= jj_angle512;
 		jj_angle512 += (AA_OFS85);

@@ -63,13 +63,20 @@ static void shot_meido3(SPRITE *src)
 {
 	if (0 < /*data->*/enemy_rank)
 	{
-		bullet_create_n_way_dan_sa_type(src,
-			/*speed256*/t256(2),
-			ANGLE_JIKI_NERAI_DAN/*angle512*/,
-			(int)(512/24),
-			BULLET_UROKO14_01_AKA,
-			/*n*/(difficulty<<1)
-		);
+		send1_obj->x256 = src->x256;
+		send1_obj->y256 = src->y256;
+		#if 1
+		/* あとで要る */
+//		send1_obj->h128 = src->h128;
+//		send1_obj->w128 = src->w128;
+		#endif
+	//	bullet_create_n_way_dan_sa_type(src,
+		send1_obj->BULLET_REGIST_speed256			=	/*speed256*/t256(2.0);
+		send1_obj->BULLET_REGIST_angle512			=	ANGLE_JIKI_NERAI_DAN/*angle512*/;
+		send1_obj->BULLET_REGIST_div_angle512		=	(int)(512/24);
+		send1_obj->BULLET_REGIST_bullet_obj_type	=	BULLET_UROKO14_01_AKA;
+		send1_obj->BULLET_REGIST_n_way				=	/*n*/(difficulty<<1);
+		bullet_regist_basic();
 	}	/* easy以外は狙い弾を撃つ */
 }
 			/*bullet_create_aka_maru_jikinerai(src, t256(3+(data->enemy_rank>>1)));*/
@@ -212,7 +219,8 @@ void add_zako_meido3(STAGE_DATA *l)/*int lv*/
 		/*data->base.*/s->base_score		= score(/*25*/50*2);
 	//	/*data->base.*/s->base_health		= (12*8)+(difficulty<<3/*4*/)/*5+(difficulty<<2)*/;/*よわすぎ*/
 	//	/*data->base.*/s->base_health		= (12*8)+(difficulty<<2/*4*/)/*5+(difficulty<<2)*/;/*他が強いので弱くする*/
-		/*data->base.*/s->base_health		= (10*8)+(difficulty<<2/*4*/)/*5+(difficulty<<2)*/;/*他が強いので弱くする*/
+	//	/*data->base.*/s->base_health		= (10*8)+(difficulty<<2/*4*/)/*5+(difficulty<<2)*/;/*他が強いので弱くする*/
+		/*data->base.*/s->base_health		= ( 8*8)+(difficulty<<2/*4*/)/*5+(difficulty<<2)*/;/*他が強いので弱くする*/
 		s->tmp_angleCCW512		= (256+128/*0*/)/*256+16*/ /*deg_360_to_512(270)*/;
 		data->speed256			= t256(1.5) /*3+difficulty*/;/*はやすぎ*/
 		data->turnspeed512		= (7) /*deg_360_to_512*/ /*(4+difficulty)*/;/*簡略化(360度→512度)*/

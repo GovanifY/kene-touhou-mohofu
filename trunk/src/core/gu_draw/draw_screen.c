@@ -67,7 +67,8 @@
 			#define TEXTURE_FLAGS		(									GU_VERTEX_16BIT | GU_TRANSFORM_2D)
 	#endif
 
-
+//2005609
+//#2005357
 // /* Vertex Declarations Begin */
 //#define GU_TEXTURE_SHIFT(n)	((n)<<0)
 //#define GU_TEXTURE_8BIT		GU_TEXTURE_SHIFT(1) 	0x01
@@ -90,6 +91,48 @@
 //#define GU_COLOR_8888 	GU_COLOR_SHIFT(7)	0x1c
 //#define GU_COLOR_BITS 	GU_COLOR_SHIFT(7)	0x1c
 
+
+/* 管理するオブジェクト */
+enum
+{
+	OBJ_BANK_00_TAMA = 0,
+	OBJ_BANK_01_ITEM,
+	OBJ_BANK_02_FRONT_BANK0,
+//	OBJ_BANK_07_FRONT_BANK1,
+//	OBJ_BANK_07_FRONT_BANK2,
+	OBJ_BANK_03_PANEL_dummy,	/*[予定]*/
+//	OBJ_BANK_09_EFFECT, 		/*[予定]*/
+//
+	OBJ_BANK_01_REIMU_A,
+	OBJ_BANK_02_REIMU_B,
+	OBJ_BANK_03_MARISA_A,
+	OBJ_BANK_04_MARISA_B,
+	OBJ_BANK_05_REMILIA,
+	OBJ_BANK_06_YUYUKO,
+	OBJ_BANK_07_CIRNO_A,
+	OBJ_BANK_08_CIRNO_Q,
+//
+	OBJ_BANK_21_BOSS_STAGE1,
+	OBJ_BANK_22_BOSS_STAGE2,
+	OBJ_BANK_23_BOSS_STAGE3,
+	OBJ_BANK_24_BOSS_STAGE4,
+	OBJ_BANK_25_BOSS_STAGE5,
+	OBJ_BANK_26_BOSS_STAGE6,
+	OBJ_BANK_11_ZAKO_STAGE1,//OBJ_BANK_27_BOSS_STAGE7_dummy,
+	OBJ_BANK_28_BOSS_STAGE8,
+//
+//	OBJ_BANK_11_ZAKO_STAGE1,
+//	OBJ_BANK_12_ZAKO_STAGE2,
+//	OBJ_BANK_13_ZAKO_STAGE3,
+//	OBJ_BANK_14_ZAKO_STAGE4,
+//	OBJ_BANK_15_ZAKO_STAGE5,
+//	OBJ_BANK_16_ZAKO_STAGE6,
+//	OBJ_BANK_17_ZAKO_STAGE7_dummy,
+//	OBJ_BANK_18_ZAKO_STAGE8,
+//
+	OBJ_BANK_MAX
+};
+#define 	OBJ_BANK_SIZE (8*8)
 
 /* 管理するテクスチャー */
 enum
@@ -208,38 +251,51 @@ static	unsigned int __attribute__((aligned(16))) gulist[PACKET_SIZE];
 
 static	TGameSprite  ggg_Sprites[SPRITEMAX];
 
+/* テクスチャをスプライトとして使う場合の管理テーブル書式 */
 typedef struct
 {
-	MY_DIB_SURFACE *my_texture; 		/* テクスチャ画像 */
-	int 			texture_width;		/* テクスチャ幅 */
-	int 			texture_height; 	/* テクスチャ高さ */
-	int 			buffer_width;		/* 512 固定？ */
+	unsigned char	u;	/* xテクスチャ位置、座標 */
+	unsigned char	v;	/* yテクスチャ位置、座標 */
 //
-	int 			color_format;		/* 変換済み画像形式 */
+	unsigned char	w;	/* width 幅 */
+	unsigned char	h;	/* height 高さ */
+} VIRTUAL_OBJ_STATE;	/* スプライト一つ分(の大きさを管理) */
+
+/* テクスチャごとに管理 */
+typedef struct
+{
+	MY_DIB_SURFACE		*my_texture;		/* テクスチャ画像 */
+	int 				texture_width;		/* テクスチャ幅 */
+	int 				texture_height; 	/* テクスチャ高さ */
+	int 				buffer_width;		/* 512 固定？ */
+//
+	int 				color_format;		/* 変換済み画像形式 */
 	/*	読み込み時にARGB8888から画像変換を行うが、
 		どういう形式に画像変換するか指定する。
 		16bit形式でも ABGR0565 とか ABGR1555 とか ABGR4444 がある。
 	 */
-	int 			hh;/*予備*/
-	int 			jj;/*予備*/
-	char			*file_name;/* ファイル名 */
+	int 				hh;/*予備*/
+	VIRTUAL_OBJ_STATE	*object_table_head; 	/* スプライト管理テーブルの先頭 */
+	char				*file_name;/* ファイル名 */
 } MY_TEXTURE_RESOURCE;
+
+static VIRTUAL_OBJ_STATE obj_status_table[(OBJ_BANK_MAX*OBJ_BANK_SIZE)/*(6*8*8)*/];
 
 //static	MY_DIB_SURFACE *my_texture[TEXTURE_MAX];
 static	MY_TEXTURE_RESOURCE 	my_resource[TEXTURE_MAX];
 /*static*/	const MY_TEXTURE_RESOURCE	initial_resource[TEXTURE_MAX] =
 {
-	{NULL,256,256,256,	0,0,0,DIRECTRY_NAME_DATA "/bg/back0_256.png"},			//		TEX_00_BACK_GROUND = 0, 	/* 3D背景1 */
-//	{NULL,256,256,512,	0,0,0,DIRECTRY_NAME_DATA "/bg/back0_256.png"},			//	//	TEX_01_BACK_TEXTURE,		/* 背景障害物 */
-	{NULL,128,128,128,	0,0,0,DIRECTRY_NAME_DATA "/effect/mahoujin128.png"},	//		TEX_02_MAHOUJIN,			/* 魔方陣 */
-	{NULL,256,256,256,	0,0,0,DIRECTRY_NAME_DATA "/jiki/jiki00.png"},			//		TEX_03_JIKI,				/* 自弾/自機 */
-	{NULL,256,256,256,	0,0,0,DIRECTRY_NAME_DATA "/zako/teki0_256.png"},		//	//	TEX_04_TEKI,				/* ボス/ザコ敵 */
-//	{NULL,256,256,512,	0,0,0,DIRECTRY_NAME_DATA "/bg/back0_256.png"},			//	//	TEX_05_ITEM,				/* アイテム/漢字スコア */
-	{NULL,128,128,128,	0,0,0,DIRECTRY_NAME_DATA "/tama/bullet.png"},			//		TEX_06_BULLET,				/* 敵弾 */
-	{NULL,256,256,256,	0,0,0,DIRECTRY_NAME_DATA "/effect/front256.png"},		//		TEX_07_FRONT,				/* 自機当たり表示/爆発/[コンティニュー文字(bank00)/メニュー文字(bank01)/メニュー文字(bank02)] */
-//	{NULL,256,256,512,	0,0,0,DIRECTRY_NAME_DATA "/bg/back0_256.png"},			//	//	TEX_08_SCORE_PANEL, 		/* スコアパネル/スコアフォント文字 */
-//	{NULL,256,256,512,	0,0,0,DIRECTRY_NAME_DATA "/bg/back0_256.png"},			//	//	TEX_09_TACHIE,				/* 立ち絵 */
-//	{NULL,256,256,512,	0,0,0,DIRECTRY_NAME_DATA "/bg/back0_256.png"},			//	//	TEX_10_MESSAGE, 			/* メッセージ固定文字 */
+	{NULL, 256, 256, 256,	0, 0, &obj_status_table[0], DIRECTRY_NAME_DATA "/bg/back0_256.png"},			//		TEX_00_BACK_GROUND = 0, 	/* 3D背景1 */
+//	{NULL, 256, 256, 512,	0, 0, &obj_status_table[0], DIRECTRY_NAME_DATA "/bg/back0_256.png"},			//	//	TEX_01_BACK_TEXTURE,		/* 背景障害物 */
+	{NULL, 128, 128, 128,	0, 0, &obj_status_table[0], DIRECTRY_NAME_DATA "/teki/mahoujin128.png"},	//		TEX_02_MAHOUJIN,			/* 魔方陣 */
+	{NULL, 256, 256, 256,	0, 0, &obj_status_table[0], DIRECTRY_NAME_DATA "/jiki/jiki00.png"},			//		TEX_03_JIKI,				/* 自弾/自機 */
+	{NULL, 256, 256, 256,	0, 0, &obj_status_table[0], DIRECTRY_NAME_DATA "/teki/teki10_256.png"},		//	//	TEX_04_TEKI,				/* ボス/ザコ敵 */
+//	{NULL, 256, 256, 512,	0, 0, &obj_status_table[0], DIRECTRY_NAME_DATA "/bg/back0_256.png"},			//	//	TEX_05_ITEM,				/* アイテム/漢字スコア */
+	{NULL, 128, 128, 128,	0, 0, &obj_status_table[0], DIRECTRY_NAME_DATA "/teki/bullet0.png"},			//		TEX_06_BULLET,				/* 敵弾 */
+	{NULL, 256, 256, 256,	0, 0, &obj_status_table[0], DIRECTRY_NAME_DATA "/teki/front256.png"},		//		TEX_07_FRONT,				/* 自機当たり表示/爆発/[コンティニュー文字(bank00)/メニュー文字(bank01)/メニュー文字(bank02)] */
+//	{NULL, 256, 256, 512,	0, 0, &obj_status_table[0], DIRECTRY_NAME_DATA "/bg/back0_256.png"},			//	//	TEX_08_SCORE_PANEL, 		/* スコアパネル/スコアフォント文字 */
+//	{NULL, 256, 256, 512,	0, 0, &obj_status_table[0], DIRECTRY_NAME_DATA "/bg/back0_256.png"},			//	//	TEX_09_TACHIE,				/* 立ち絵 */
+//	{NULL, 256, 256, 512,	0, 0, &obj_status_table[0], DIRECTRY_NAME_DATA "/bg/back0_256.png"},			//	//	TEX_10_MESSAGE, 			/* メッセージ固定文字 */
 };
 
 void (*callback_gu_draw_haikei)(void);//unsigned int dr aw_bg_screen;
@@ -256,7 +312,7 @@ unsigned int conv_bg_alpha;
 void psp_clear_screen(void)
 {
 	/* 将来Guで描いた場合。ハードウェアー機能で、置き換えられるので今のうちにまとめとく */
-	SDL_FillRect(sdl_screen[SDL_00_SCREEN],NULL,SDL_MapRGB(sdl_screen[SDL_00_SCREEN]->format,0,0,0));
+	SDL_FillRect(sdl_screen[SDL_00_SCREEN], NULL, 0/*SD L_MapRGB(sdl_screen[SDL_00_SCREEN]->format,0,0,0)*/);
 }
 //void psp_move_screen(SDL_Surface *src_screen, SDL_Surface *dst_screen )
 void psp_move_screen(int src_screen_number, int dst_screen_number )
@@ -325,13 +381,27 @@ void select_jiki_load_surface(void)
 static void gu_draw_bg_fake3D(void);
 static void gu_draw_bg_2D(void);
 static void gu_draw_bg_eientei(void);
-void stage_bg_load_surface(void)
+static void gu_draw_bg_3D_test01(void);
+void stage_bg_load_texture(void)
 {
 //	strcpy(filename, DIRECTRY_NAME_DATA "/bg/backZ_256.png");
 	my_resource[TEX_00_BACK_GROUND].file_name[8+DIRECTRY_NAME_LENGTH] = ('0'+player_now_stage);
 	TGameTexture_Load_Surface( TEX_00_BACK_GROUND );
-	void (*aaa[8])(void)  =
+//
+//	{NULL, 256, 256, 256,	0, 0, &obj_status_table[0], DIRECTRY_NAME_DATA "/bg/back0_256.png"},			//		TEX_00_BACK_GROUND = 0, 	/* 3D背景1 */
+//	{NULL, 256, 256, 256,	0, 0, &obj_status_table[0], DIRECTRY_NAME_DATA "/teki/teki10_256.png"},		//	//	TEX_04_TEKI,				/* ボス/ザコ敵 */
+//	{NULL, 256, 256, 256,	0, 0, &obj_status_table[0], DIRECTRY_NAME_DATA "/teki/boss00_256.png"},		//	//	TEX_04_TEKI,				/* ボス/ザコ敵 */
+//
+//	my_resource[TEX_04_TEKI].file_name[10+DIRECTRY_NAME_LENGTH] = ('0'+0/*player_now_stage*/);
+	my_resource[TEX_04_TEKI].file_name[10+DIRECTRY_NAME_LENGTH] = ('0'+player_now_stage);
+	my_resource[TEX_04_TEKI].file_name[11+DIRECTRY_NAME_LENGTH] = ('0');
+	TGameTexture_Load_Surface( TEX_04_TEKI );
+//
+	my_resource[TEX_04_TEKI].object_table_head = (obj_status_table+(OBJ_BANK_11_ZAKO_STAGE1*OBJ_BANK_SIZE));
+//
+	void (*aaa[16/*8*/])(void)	=
 	{
+		#if 1
 		gu_draw_bg_2D,		/*loading*/
 		gu_draw_bg_fake3D,	/*1面"魔法の森"*/
 		gu_draw_bg_2D,		/*2面"秋めく滝"*/
@@ -339,13 +409,62 @@ void stage_bg_load_surface(void)
 		gu_draw_bg_eientei, /*4面"永遠亭 廊下"*/
 		gu_draw_bg_fake3D,	/*5面"紅魔館 書斎"*/
 		gu_draw_bg_fake3D,	/*6面"紅魔館 大廊下"*/
-		gu_draw_bg_fake3D,	/*ending*/
+		gu_draw_bg_3D_test01/*gu_draw_bg_fake3D*/,	/*ending*/
+//
+		gu_draw_bg_3D_test01,		/*extra*/
+		gu_draw_bg_3D_test01,		/*extra*/
+		gu_draw_bg_3D_test01,		/*extra*/
+		gu_draw_bg_3D_test01,		/*extra*/
+		gu_draw_bg_2D,				/*extra*/
+		gu_draw_bg_2D,				/*extra*/
+		gu_draw_bg_2D,				/*extra*/
+		gu_draw_bg_2D,				/*extra*/
+		#else
+		/*test*/
+		gu_draw_bg_3D_test01,		/*extra*/
+		gu_draw_bg_3D_test01,		/*extra*/
+		gu_draw_bg_3D_test01,		/*extra*/
+		gu_draw_bg_3D_test01,		/*extra*/
+
+		gu_draw_bg_3D_test01,		/*extra*/
+		gu_draw_bg_3D_test01,		/*extra*/
+		gu_draw_bg_3D_test01,		/*extra*/
+		gu_draw_bg_3D_test01,		/*extra*/
+
+		gu_draw_bg_3D_test01,		/*extra*/
+		gu_draw_bg_3D_test01,		/*extra*/
+		gu_draw_bg_3D_test01,		/*extra*/
+		gu_draw_bg_3D_test01,		/*extra*/
+
+		gu_draw_bg_3D_test01,		/*extra*/
+		gu_draw_bg_eientei, 		/*extra*/
+		gu_draw_bg_fake3D,			/*extra*/
+		gu_draw_bg_2D,				/*extra*/
+		#endif
 	};
-	callback_gu_draw_haikei = aaa[player_now_stage&0x07];// 	dr aw_bg_screen = 1;
+	callback_gu_draw_haikei = aaa[player_now_stage&0x0f];// 	dr aw_bg_screen = 1;
+//	callback_gu_draw_haikei = aaa[player_now_stage&0x07];// 	dr aw_bg_screen = 1;
 //	callback_gu_draw_haikei = callback_gu_draw_haikei_all;//	dr aw_bg_screen = 1;
 }
+void stage_boss_load_texture(void)
+{
+//	strcpy(filename, DIRECTRY_NAME_DATA "/bg/backZ_256.png");
+//	my_resource[TEX_00_BACK_GROUND].file_name[8+DIRECTRY_NAME_LENGTH] = ('0'+player_now_stage);
+//	TGameTexture_Load_Surface( TEX_00_BACK_GROUND );
+//
+//	{NULL, 256, 256, 256,	0, 0, &obj_status_table[0], DIRECTRY_NAME_DATA "/bg/back0_256.png"},			//		TEX_00_BACK_GROUND = 0, 	/* 3D背景1 */
+//	{NULL, 256, 256, 256,	0, 0, &obj_status_table[0], DIRECTRY_NAME_DATA "/teki/teki10_256.png"},		//	//	TEX_04_TEKI,				/* ボス/ザコ敵 */
+//	{NULL, 256, 256, 256,	0, 0, &obj_status_table[0], DIRECTRY_NAME_DATA "/teki/boss00_256.png"},		//	//	TEX_04_TEKI,				/* ボス/ザコ敵 */
+//
+	my_resource[TEX_04_TEKI].file_name[10+DIRECTRY_NAME_LENGTH] = ('0'+player_now_stage);
+	my_resource[TEX_04_TEKI].file_name[11+DIRECTRY_NAME_LENGTH] = ('1');
+	TGameTexture_Load_Surface( TEX_04_TEKI );
+//
+//	my_resource[TEX_04_TEKI].object_table_head = (obj_status_table+(OBJ_BANK_21_BOSS_STAGE1*OBJ_BANK_SIZE));
+	my_resource[TEX_04_TEKI].object_table_head = (obj_status_table+((OBJ_BANK_21_BOSS_STAGE1-1)*OBJ_BANK_SIZE)+(player_now_stage<<6));
+}
 
-
+static void gu_init_vfpu(void);
 void draw_loading_screen_test(void);
 extern void sendCommandi(int cmd, int argument);
 void psp_video_init(void)
@@ -593,12 +712,20 @@ void psp_video_init(void)
 //	sceDisplayWaitVblankStart();/*vsync*/
 	sceGuDisplay(GU_TRUE/*1*/);/*画面ON*/
 	/* ここまで初期設定 */
+	gu_init_vfpu();
+	/* ここまで初期設定 */
+
 
 //	sceDisplayWaitVblankStart();/*vsync*/
 
 	/* --- 入力装置の初期設定 */
 	sceCtrlSetSamplingCycle(0); 	/*???*/
 	sceCtrlSetSamplingMode(PSP_CTRL_MODE_ANALOG);	/* アナログキー有効(標準ではデジタルのみ) */
+	/*
+	pad初期化には時間がかかる模様。
+	ここで初期化しておく。
+	(初期化してすぐに読もうとしても一番始めの入力が読めない、少し時間が経てば読める)
+	*/
 
 	//static TGameTexture *TGameTexture_Create(void)
 	{
@@ -621,15 +748,15 @@ void psp_video_init(void)
 		for (i=0; i<TEXTURE_MAX; i++)
 		{
 		//	my_resource[i].my_texture = NULL;
-			my_resource[i].my_texture		= initial_resource[i].my_texture;
-			my_resource[i].texture_width	= initial_resource[i].texture_width;
-			my_resource[i].texture_height	= initial_resource[i].texture_height;
-			my_resource[i].buffer_width 	= initial_resource[i].buffer_width;
+			my_resource[i].my_texture			= initial_resource[i].my_texture;
+			my_resource[i].texture_width		= initial_resource[i].texture_width;
+			my_resource[i].texture_height		= initial_resource[i].texture_height;
+			my_resource[i].buffer_width 		= initial_resource[i].buffer_width;
 		//
-			my_resource[i].color_format 	= initial_resource[i].color_format;
-			my_resource[i].hh				= initial_resource[i].hh;/*予備*/
-			my_resource[i].jj				= initial_resource[i].jj;/*予備*/
-			my_resource[i].file_name		= initial_resource[i].file_name;
+			my_resource[i].color_format 		= initial_resource[i].color_format;
+			my_resource[i].hh					= initial_resource[i].hh;/*予備*/
+			my_resource[i].object_table_head	= initial_resource[i].object_table_head;
+			my_resource[i].file_name			= initial_resource[i].file_name;
 			/* --- テクスチャの初期化 */
 			{
 			#if (0)
@@ -655,7 +782,7 @@ void psp_video_init(void)
 
 	/* --- ローディング画面 */
 	player_now_stage		= 0;
-	stage_bg_load_surface();
+	stage_bg_load_texture();
 	draw_loading_screen_test();
 }
 /*-------------*/
@@ -1319,47 +1446,21 @@ void TGameScreen_ClearSprite(void/*TGameScreen *pclass*/)
 ---------------------------------------------------------*/
 extern SPRITE *sprite_list000_head;
 
-enum
-{
-	OBJ_BANK_00_TAMA = 0,
-	OBJ_BANK_01_REIMU_A,
-	OBJ_BANK_02_REIMU_B,
-	OBJ_BANK_03_MARISA_A,
-	OBJ_BANK_04_MARISA_B,
-	OBJ_BANK_05_REMILIA,
-	OBJ_BANK_06_YUYUKO,
-	OBJ_BANK_07_CIRNO_A,
-	OBJ_BANK_08_CIRNO_Q,
-	OBJ_BANK_06_ITEM,
-	OBJ_BANK_07_FRONT_BANK0,
-//	OBJ_BANK_07_FRONT_BANK1,
-//	OBJ_BANK_07_FRONT_BANK2,
-//	OBJ_BANK_08_PANEL,
-//	OBJ_BANK_09_EFFECT, /*[予定]*/
-	OBJ_BANK_0a_TEKI_STAGE1,
-//	OBJ_BANK_0b_TEKI_STAGE2,
-//	OBJ_BANK_0c_TEKI_STAGE3,
-//	OBJ_BANK_0d_TEKI_STAGE4,
-//	OBJ_BANK_0e_TEKI_STAGE5,
-//	OBJ_BANK_0f_TEKI_STAGE6,
-//	OBJ_BANK_10_TEKI_STAGE7_dummy,
-//	OBJ_BANK_11_TEKI_STAGE8,
-	OBJ_BANK_MAX
-};
-#define 	OBJ_BANK_SIZE (8*8)
-
-typedef struct
-{
-	unsigned char	u;
-	unsigned char	v;
-//
-	unsigned char	w;
-	unsigned char	h;
-} VIRTUAL_OBJ_STATE;
-
 #include "obj_table.h"
-void common_transfer_objects(int num, int obj_group, VIRTUAL_OBJ_STATE *head_obj_status_table)
+
+/* ヘッドストック */
+//enum
+//{
+//	ST00_TEX_03_JIKI =0,
+//	MAX_HEAD_STOCK
+//};
+//static VIRTUAL_OBJ_STATE *my_head_stock[MAX_HEAD_STOCK];
+
+static void common_transfer_objects(int num, int obj_group)//, VIRTUAL_OBJ_STATE *head_obj_status_table)
 {
+	VIRTUAL_OBJ_STATE *head_obj_status_table;
+	head_obj_status_table = my_resource[num].object_table_head;
+//
 	TGameSprite *obj;
 	SPRITE *sss = sprite_list000_head;/* リスト式スプライトで、リストの先頭 から探す */
 	while (NULL != sss)/* リスト式スプライトで、リストの最後まで調べる */
@@ -1528,7 +1629,8 @@ static void gu_blit_haikei_maho_jiki(void)
 		{	TGameScreen_ClearSprite();
 		//	common_transfer_objects(TEX_03_JIKI, SP_GROUP_JIKI_GET_ITEM, obj_status_table+(2*4*8*8));
 		//	common_transfer_objects(TEX_03_JIKI, SP_GROUP_JIKI_GET_ITEM, obj_status_table+(8*8)+(select_player<<6) );
-			common_transfer_objects(TEX_03_JIKI, SP_GROUP_JIKI_GET_ITEM, obj_status_table+(OBJ_BANK_01_REIMU_A*OBJ_BANK_SIZE)+(select_player<<6) );
+			my_resource[TEX_03_JIKI].object_table_head = (obj_status_table+(OBJ_BANK_01_REIMU_A*OBJ_BANK_SIZE)+(select_player<<6));
+			common_transfer_objects(TEX_03_JIKI, SP_GROUP_JIKI_GET_ITEM );
 		}
 		blit_all_objects(ggg_Sprites);/*PRIORITY_02_PLAYER*/
 	}
@@ -1581,12 +1683,12 @@ void vbl_draw_screen(void)
 		const unsigned int bg_color_list[8] =
 		{	/*AABBGGRR*/
 			0xff000000,/*(黒)*/
-			0xff106010,/*1面(緑)*/
-			0xff802010,/*2面(青)*/	//	0xff102080,/*2面*/
-			0xff104010,/*3面(緑)*/
-			0xff402020,/*4面(青)*/
-			0xff601030,/*5面(青)*/
-			0xff601030,/*6面(青)*/
+			0xff106010,/*1面(緑、)*/
+			0xff804010,/*2面(水、滝)*/		//	0xff802010,/*2面(青)*/		0xff102080,/*2面*/
+			0xff401010,/*3面(青、竹林)*/	//	0xff104010,/*3面(緑)*/
+			0xff402020,/*4面(青、永遠亭)*/
+			0xff601030,/*5面(青、図書館)*/
+			0xff301060,/*6面(赤、紅魔館)*/	//	0xff601030,/*6面(青)*/
 			0xff000000,/*ending(黒)*/
 		//	0xff601010,/**/
 		};
@@ -1687,7 +1789,10 @@ void vbl_draw_screen(void)
 		{
 			TGameScreen_ClearSprite();
 		//	common_transfer_objects(TEX_04_TEKI, S P_GROUP_BULLETS, obj_status_table+0);
-			common_transfer_objects(TEX_04_TEKI, (SP_GROUP_ZAKO/*|SP_GROUP_BOSS*/), obj_status_table+(OBJ_BANK_0a_TEKI_STAGE1*OBJ_BANK_SIZE));
+			#if 0000/* 別で設定 */
+			my_resource[TEX_04_TEKI].object_table_head = (obj_status_table+(OBJ_BANK_11_ZAKO_STAGE1*OBJ_BANK_SIZE));
+			#endif
+			common_transfer_objects(TEX_04_TEKI, (SP_GROUP_TEKI/*|SP_GROUP_BOSS*/) );
 		}
 		blit_all_objects(&ggg_Sprites[0]);/*PRIORITY_05_BULLETS*/
 		#else
@@ -1706,7 +1811,8 @@ void vbl_draw_screen(void)
 		{
 			TGameScreen_ClearSprite();
 		//	common_transfer_objects(TEX_06_BULLET, S P_GROUP_BULLETS, obj_status_table+0);
-			common_transfer_objects(TEX_06_BULLET, SP_GROUP_ITEMS, obj_status_table+(OBJ_BANK_06_ITEM*OBJ_BANK_SIZE));
+			my_resource[TEX_06_BULLET].object_table_head = (obj_status_table+(OBJ_BANK_01_ITEM*OBJ_BANK_SIZE));
+			common_transfer_objects(TEX_06_BULLET, SP_GROUP_ITEMS );
 		}
 		blit_all_objects(&ggg_Sprites[0]);/*PRIORITY_05_BULLETS*/
 		#else
@@ -1726,7 +1832,8 @@ void vbl_draw_screen(void)
 		{
 			TGameScreen_ClearSprite();
 		//	common_transfer_objects(TEX_06_BULLET, S P_GROUP_BULLETS, obj_status_table+0);
-			common_transfer_objects(TEX_06_BULLET, SP_GROUP_BULLETS, obj_status_table+(OBJ_BANK_00_TAMA*OBJ_BANK_SIZE));
+			my_resource[TEX_06_BULLET].object_table_head = (obj_status_table+(OBJ_BANK_00_TAMA*OBJ_BANK_SIZE));
+			common_transfer_objects(TEX_06_BULLET, SP_GROUP_BULLETS );
 		}
 		blit_all_objects(&ggg_Sprites[0]);/*PRIORITY_05_BULLETS*/
 		#else
@@ -1749,7 +1856,8 @@ void vbl_draw_screen(void)
 		{
 			TGameScreen_ClearSprite();
 		//	common_transfer_objects(TEX_07_FRONT, SP_GROUP_FRONT, obj_status_table+0);
-			common_transfer_objects(TEX_07_FRONT, SP_GROUP_FRONT, obj_status_table+(OBJ_BANK_07_FRONT_BANK0*OBJ_BANK_SIZE));
+			my_resource[TEX_07_FRONT].object_table_head = (obj_status_table+(OBJ_BANK_02_FRONT_BANK0*OBJ_BANK_SIZE));
+			common_transfer_objects(TEX_07_FRONT, SP_GROUP_FRONT );
 		}
 		blit_all_objects(ggg_Sprites);/*PRIORITY_06_FRONT*/
 	}

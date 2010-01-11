@@ -52,9 +52,9 @@
 
 #ifdef ENABLE_PSP
 	//# /* カスタムライブラリを使う */
-	#include "SDL.h"
+	#include <SDL/SDL.h>//#include "SDL.h"
 	#include "SDL_image.h"
-	#include "SDL_mixer.h"
+	#include <SDL/SDL_mixer.h>//#include "SDL_mixer.h"
 #else
 	//# /* 標準ライブラリを使う */
 	#include <SDL/SDL.h>
@@ -197,11 +197,19 @@ R8G8B8A8フォーマットで色を設定する事になりますが、PSPはリトルエンディアンのCPUを
 #define GAME_HEIGHT 	(PSP_HEIGHT272)
 
 #if 1
+	/* ソフトウェアーで Zソート */
+	#define USE_ZBUFFER 	(0)
+#else
+	/* ハードウェアーでソート */
+	#define USE_ZBUFFER 	(1)
+#endif
+
+#if 1
 	/* 単純拡大 */
-	#define USE_ZOOM_XY 	0
+	#define USE_ZOOM_XY 	(0)
 #else
 	/* 縦横拡大 */
-	#define USE_ZOOM_XY 	1
+	#define USE_ZOOM_XY 	(1)
 #endif
 
 /* C:/cygwin/pspdev/psp/include/math.h で宣言されているので要らない */

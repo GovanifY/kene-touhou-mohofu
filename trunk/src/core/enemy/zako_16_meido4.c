@@ -28,7 +28,7 @@ typedef struct
 
 static void lose_meido4(SPRITE *src)
 {
-	item_create(src, SP_ITEM_06_TENSU, 1, ITEM_MOVE_FLAG_06_RAND_XY);
+	item_create(src, SP_ITEM_05_TENSU, 1, ITEM_MOVE_FLAG_06_RAND_XY);
 }
 
 /*---------------------------------------------------------

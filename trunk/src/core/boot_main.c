@@ -27,15 +27,57 @@
 /*---------------------------------------------------------
 	PSP module info section
 ---------------------------------------------------------*/
+#if 0
+PSP_THREAD_ATTR_VFPU VFPUの利用を有効にします
+PSP_THREAD_ATTR_USER ユーザモードでスレッドを起動します。親スレッドがユーザモードの場合は、特に指定しなくともユーザモードで起動されます。
+SP_THREAD_ATTR_USBWLAN USB/WlanAPIで使われています。通常、指定することはありません
+PSP_THREAD_ATTR_VSH VSHAPIで使われています。通常、指定することはありません。
+PSP_THREAD_ATTR_SCRATCH_SRAM スクラッチパッドの利用を許可します。FW1.0では使われておらず、特に指定しなくとも自由に利用が可能です。
+PSP_THREAD_ATTR_NO_FILLSTACK スレッド起動時にスタックを0xFFで埋めないように指定します。
+PSP_THREAD_ATTR_CLEAR_STACK スレッド終了時にスタックをゼロクリアします。
+THREAD_ATTR_USER PSP_THREAD_ATTR_USERの別名です
+THREAD_ATTR_VFPU PSP_THREAD_ATTR_VFPUの別名です
+enum PspThreadAttributes
+{
+	/** Enable VFPU access for the thread. */
+	PSP_THREAD_ATTR_VFPU =			0x00004000,
+	/** Allow using scratchpad memory for a thread, NOT USABLE ON V1.0 */
+	PSP_THREAD_ATTR_SCRATCH_SRAM =	0x00008000,
+//
+	/** Disables filling the stack with 0xFF on creation */
+	PSP_THREAD_ATTR_NO_FILLSTACK =	0x00100000,
+	/** Clear the stack when the thread is deleted */
+	PSP_THREAD_ATTR_CLEAR_STACK =	0x00200000,
+//
+	/** Start the thread in user mode (done automatically
+	  if the thread creating it is in user mode). */
+	PSP_THREAD_ATTR_USER =			0x80000000,
+	/** Thread is part of the USB/WLAN API. */
+	PSP_THREAD_ATTR_USBWLAN =		0xa0000000,
+	/** Thread is part of the VSH API. */
+	PSP_THREAD_ATTR_VSH =			0xc0000000,
+};
+#endif
 
+//PSP_MODULE_INFO("Cube Sample", 0x0000, 1, 1);
 PSP_MODULE_INFO("KENE", 0x0000, 0, 4);	/* PSPのOSに教えてあげる名前。ユーザーモードで起動する。 */
-PSP_MAIN_THREAD_ATTR(THREAD_ATTR_USER|PSP_THREAD_ATTR_CLEAR_STACK); /* このプログラムが使うOS資源。*/
-/* ユーザーモードで動作する(範囲しか使わない)よ。(kernel系コールを使わない。) */
-/* VFPU とか USB/WLAN とか SCRATCH_SRAM とか使わないよ。 */
-/* 終了時にこのプログラムが使ったスタック(変数領域)をOSに消してもらうよ。 */
-PSP_MAIN_THREAD_STACK_SIZE_KB(32);		/* (プログラムが使用する変数の)スタック領域のサイズだよ */
-										/* ここが大きいとmallocできる量がその分減るよ */
-/* 2008年ぐらいの古い PSPSDK は -1(自動) に対応していないので -1 にするとハングアップするよ */
+PSP_MAIN_THREAD_ATTR(			/* このプログラムが使うOS資源。*/
+	PSP_THREAD_ATTR_VFPU |			/* VFPUを使う */
+//	PSP_THREAD_ATTR_SCRATCH_SRAM |	/* SCRATCH_SRAM 使う(指定しないほうが望ましい) */
+	/*	SCRATCH_SRAM は指定しなくてもデフォルトで使用可能である。
+		FW ver 1.00には無いので互換性を考慮するなら無くて構わない */
+//	PSP_THREAD_ATTR_NO_FILLSTACK |	/* 開始時にスタックを 0xFF で埋めつくさない。 */
+	/* 0xffで埋めてくれた方が、バグ出しには都合が良いのでこのオプションは指定しない。 */
+	PSP_THREAD_ATTR_CLEAR_STACK |
+	/* 終了時にこのプログラムが使ったスタック(変数領域)をOSに消してもらう。 */
+	THREAD_ATTR_USER |			/* ユーザーモードで起動する。(kernel系コールを使わない。) */
+//	PSP_THREAD_ATTR_USBWLAN |	/* USB WLAN API使わない */
+//	PSP_THREAD_ATTR_VSH |		/* VSH API使わない(dark-alex氏でないので VSH使いませんが、何か) */
+	0);
+
+PSP_MAIN_THREAD_STACK_SIZE_KB(32);		/* (プログラムが使用する変数の)スタック領域のサイズ */
+										/* ここが大きいとmallocできる量がその分減る */
+/* 2008年ぐらいの古い PSPSDK は -1(自動) に対応していないので -1 にするとハングアップする */
 #endif
 
 //extern int psp_loop;
@@ -162,31 +204,32 @@ static void game_main(void)
 	//	case (ST_START_INTRO>>8):			startintro_work();			break;
 		}
 		#else
-							/*const*/static void (*aaa_call_table[/*16*/(16)])(void) =
-					{
-						NULL,
-						common_load_init,
-						shooting_game_core_work,
-						all_menu_init,
+		/*const*/static void (*aaa_call_table[/*16*/(16)])(void) =
+		{
+			NULL,	/* psp終了 */
+			common_load_init,
+			shooting_game_core_work,
+			all_menu_init,
 
-						all_menu_work,
-						player_opt_work,
-						name_entry_init,
-						name_entry_work,
+			all_menu_work,
+			player_opt_work,
+			name_entry_init,
+			name_entry_work,
 
-						stage_first_init,
-						stage_clear_work,
-						gameover_work,
-						result_work,
+			stage_first_init,
+			stage_clear_work,
+			gameover_work,
+			result_work,
 
-						story_work,
-						option_menu_work,
-						key_config_work,
-						music_room_work,
-					};
-					{
-						(aaa_call_table[(((u8)(psp_loop>>8)))])();
-					}
+			story_work,
+			option_menu_work,
+			key_config_work,
+			music_room_work,
+		};
+		/* 実行 */
+		{
+			(aaa_call_table[(((u8)(psp_loop>>8)))])();
+		}
 		#endif
 		vbl_draw_screen();	/* 画面描画とキー入力(本当は v-blanc タイミングで) */
 	}

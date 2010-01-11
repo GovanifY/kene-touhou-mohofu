@@ -20,8 +20,9 @@ enum
 	MOJI_04,	MOJI_05,	MOJI_06,	MOJI_07,
 	MOJI_08,	MOJI_09,	MOJI_10,	MOJI_11,
 	MOJI_12,	MOJI_13,	MOJI_14,	MOJI_15,
-	MOJI_16,	MOJI_17,//	MOJI_18,	MOJI_19,
-	MOJI_17_MAX 	/* 最大数 */
+	MOJI_16,	MOJI_17,	MOJI_18,	MOJI_19,
+	MOJI_20,//	MOJI_21,	MOJI_22,	MOJI_23,
+	MOJI_21_MAX 	/* 最大数 */
 };
 
 enum
@@ -35,11 +36,11 @@ enum
 #define X_LOCATE_OFFSET_02	(64)
 #define X_LOCATE_OFFSET_04	(224)
 #define Y_LOCATE_OFFSET 	(100)
-#define MAX_KEY_NAMES_20	(MOJI_17_MAX+MUSIC_ROOM_03_MAX)
+#define MAX_KEY_NAMES_20	(MOJI_21_MAX+MUSIC_ROOM_03_MAX)
 static void music_room_draw_message(int cursor1, int cursor2)
 {
 	script_message_window_clear();
-	static const char *const_kaisetu_str[(2)][(1+17)] =
+	static const char *const_kaisetu_str[(2)][(1+20/*17*/)] =
 	{
 		{	/*"BGM 解説"*/
 "曲を止めます",
@@ -47,27 +48,30 @@ static void music_room_draw_message(int cursor1, int cursor2)
 "No.2 フォールオブフォール　～ 秋めく滝\\n" "2面のテーマです。",
 "No.3 ヴォヤージュ1969\\n"					"3面のテーマです。",
 "No.4 広有射怪鳥事 ～ Till When?\\n"		"4面のテーマです。\\n"						"ボス曲ではないのです。",
-"No.5 無何有の郷　～ Deep Mountain\\n"		"5面のテーマです。",
+"No.5 ヴワル魔法図書館\\n"					"5面のテーマです。\\n"						"ロードに時間がかかるのは仕様です(^^;",
 "No.6 亡き王女の為のセプテット\\n"			"6面のテーマです。" 						"ボス曲ではないので、\\nずいぶんまったりしてます。",
 "No.7 曲\\n"								"スタッフロールのテーマです。",
-"No.8 遠野幻想物語\\n"						"エキストラステージのテーマです。\\n"		"2年前、時事ネタの偽ユーロ風",
-"No.9 紅より儚い永遠\\n"					"タイトル画面のテーマです。",
+"No.8 ルーネイトエルフ\\n"					"ファンタズムステージのテーマです。",
+"No.9 遠野幻想物語\\n"						"エキストラステージのテーマです。\\n"		"偽ユーロ風です。",
 "No.10 人形裁判　～ 人の形弄びし少女\\n"	"アリスのテーマです。"						"ハンドベルを入れてみました。人形が一つづつ持ってる？",
 "No.11 風神少女　～ Full Version\\n"		"射命丸 文のテーマです。\\n"				"1ループ5分以上あるので、長いです。",
-"No.12 まだ作ってません\\n" 				"っていうか3ボス誰にしようか。\\n"			"うさぎにしたい気もします。",
+"No.12 まだ作ってません\\n" 				"3ボスまだ未定です。",
 "No.13 竹取飛翔　～ Lunatic Princess\\n"	"蓬莱山 輝夜のテーマです。\\n"				"月人にならわかるかも。",
 "No.14 ラクトガール　～ 少女密室\\n"		"パチュリー・ノーレッジのテーマです。\\n"	"この曲の元ネタにも忠実に。",
 "No.15 月時計　～ ルナ・ダイアル\\n"		"十\六夜 咲夜のテーマです。\\n" 			"趣味でプログレ風にしてみました。",
 "No.16 プレイヤーズスコア\\n"				"エンディングのテーマです。"				"満身創痍",
 "No.17 おてんば恋娘\\n" 					"チルノのテーマです。\\n"					"この曲は演歌なんですよね、一応。",
+"No.18 Grimoire of Alice\\n"				"アリスのテーマです。",
+"No.19 無何有の郷　～ Deep Mountain\\n" 	"キーコンフィグのテーマです。",
+"No.20 紅より儚い永遠\\n"					"タイトル画面のテーマです。",
 		},
 		{	/*"SOUND 解説"*/
 "ショット", 		"メニュー決定", 	"メニュー選択", 	"ボス退場",
 "ピチューン",		"アイテム取得", 	"増えた",			"自分スペカ",
 "ザコ倒した",		"グレイズ", 		"ボスショット1",	"キラリン☆",
 "ボスショット2",	"ボスショット3",	"ボスショット4",	"時間制限",
-"16音",
-"17音",
+"16音", 			"17音", 			"18音", 			"19音",
+"20音",
 		},
 	};
 	print_kanji000((char *)const_kaisetu_str[cursor1][cursor2], /*int color_type*/7, /*int wait*/0);
@@ -92,8 +96,8 @@ static void music_room_draw_message(int cursor1, int cursor2)
 		}
 		music_room_setting[0] = 0;
 		music_room_setting[1] = 0;
-		music_room_setting[2] = (USE_MUSIC_FILES/*MOJI_17_MAX*/-1);
-		music_room_setting[3] = (VOICE16_MAX_FILES/*MOJI_17_MAX*/-1);
+		music_room_setting[2] = (USE_MUSIC_FILES/*MOJI_21_MAX*/-1);
+		music_room_setting[3] = (VOICE16_MAX_FILES/*MOJI_21_MAX*/-1);
 		{
 			static const char *const_menu_str[(MAX_KEY_NAMES_20)] =
 			{
@@ -102,7 +106,8 @@ static void music_room_draw_message(int cursor1, int cursor2)
 				" 4",	" 5",	" 6",	" 7",
 				" 8",	" 9",	"10",	"11",
 				"12",	"13",	"14",	"15",
-				"16",	"17",// "18",	"19",
+				"16",	"17",	"18",	"19",
+				"20",// "21",	"22",	"23",
 				// [[ メニュー ]]
 				"BGM",
 				"SOUND",
@@ -177,7 +182,7 @@ static void music_room_draw_message(int cursor1, int cursor2)
 							}
 						}
 						#endif
-						play_music_num(BGM_09_menu1);
+						play_music_num(BGM_20_menu1);
 						{
 							//key_haikei_surface	= loadbmp("bg/title_bg.jpg");
 							SDL_Surface *loadpic	= loadbmp0("bg/title_bg.jpg", 0, 0);/*"bg/key_haikei_surface.png"*/
@@ -271,8 +276,8 @@ static void music_room_draw_message(int cursor1, int cursor2)
 				else					{	jj= 0;	}
 				rect_locate_offset.x = (X_LOCATE_OFFSET_02)-(jj);
 				rect_locate_offset.y = (Y_LOCATE_OFFSET)+(/*num*/kk)-(jj);
-				SDL_SetAlpha(	music_room_name_surface[i+(MOJI_17_MAX)], SDL_SRCALPHA, /*bg_alpha_aaa*/(127+(jj<<6)));
-				SDL_BlitSurface(music_room_name_surface[i+(MOJI_17_MAX)], NULL,sdl_screen[SDL_00_SCREEN],&rect_locate_offset);
+				SDL_SetAlpha(	music_room_name_surface[i+(MOJI_21_MAX)], SDL_SRCALPHA, /*bg_alpha_aaa*/(127+(jj<<6)));
+				SDL_BlitSurface(music_room_name_surface[i+(MOJI_21_MAX)], NULL,sdl_screen[SDL_00_SCREEN],&rect_locate_offset);
 				kk += 20;
 			}
 		}

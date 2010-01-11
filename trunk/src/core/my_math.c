@@ -4,7 +4,7 @@
 ---------------------------------------------------------*/
 
 #include "game_main.h"
-
+#include "psp_vfpu.h"
 
 /*---------------------------------------------------------
 	math.h
@@ -14,24 +14,10 @@
 /*extern*/ int sin_tbl512[SINTABLE_SIZE];
 
 
-#if 0
-/* CWの場合 */
-#else
-/* CCWの場合 */
-	/*とりあえず*/
-	#define rad2deg512(x)		( (int)((x)*((512.0)/(T_GU_M_PI*2))/*+512*/)&(512-1) )
-#endif
 /* この関数はCPU内蔵の命令キャッシュに乗るよ(てい。というか乗ってるはず)。 */
-int atan_512( int y, int x )
-{
-	#if 0
-/* CWの場合 */
-//	return (rad2deg512(atan2(y,x)));	/* 右CWの場合。  一般的な右CW の場合。 */
-	#else
-/* CCWの場合 */
-	return (rad2deg512(atan2(x,y)));	/* 下CCWの場合。 (x y を入れ替えて対処してあります。) */
-	#endif
-}
+
+extern int atan_512( int y, int x );
+
 
 /*
 psp では、 atan2(), sin(), sqrt() 等の超越関数系命令は、
@@ -79,7 +65,14 @@ void init_math(void)
 	for (i=0; i<SINTABLE_SIZE; i++)
 	{
 	//	sin_tbl512[i] = (int)(sinf( (i*(GU_PI*2) / SINTABLE_SIZE) )*256/**65536.0*/ );
-		sin_tbl512[i] = (int)(sin( (i*(GU_PI*2) / SINTABLE_SIZE) )*256/**65536.0*/ );
+	//	sin_tbl512[i] = (int)(sin( (i*(GU_PI*2) / SINTABLE_SIZE) )*256/**65536.0*/ );
+	//	sin_tbl512[i] = (int)(vfpu_sinf( (i*(GU_PI*2) / SINTABLE_SIZE) )*256/**65536.0*/ );
+
+	//	sin_tbl512[i] = (int)(vfpu_sini( (i*(GU_PI*2)*2 / (GU_PI)*SINTABLE_SIZE) )*256/**65536.0*/ );
+	//	sin_tbl512[i] = (int)(vfpu_sini( (i*(2*2) / SINTABLE_SIZE) )*256/**65536.0*/ );
+
+	//	sin_tbl512[i] = (int)(vfpu_sin1024( (i*(2)  ) )*256/**65536.0*/ );
+		sin_tbl512[i] = (int)(int256_sin1024( (i+i) ) );
 	}
 }
 
@@ -92,38 +85,80 @@ void init_math(void)
 
 
 extern void save_screen_shot(void);
-/*global*/Uint32 my_pad;		/*今回入力*/
-/*global*/Uint32 my_pad_alter;	/*前回入力*/
-/*global*/short my_analog_x;	/* アナログ量、補正済み */
-/*global*/short my_analog_y;	/* アナログ量、補正済み */
+/*global*/u32	my_pad; 		/*今回入力*/
+/*global*/u32	my_pad_alter;	/*前回入力*/
+/*global*/s16	my_analog_x;	/* アナログ量、補正済み */
+/*global*/s16	my_analog_y;	/* アナログ量、補正済み */
+static	int 	use_analog; 	/* アナログ使用フラグ(0:使用しない、1:使用する) */
+
+/*global*/ void psp_pad_init(void)
+{
+	#if (0)
+	/*
+	初期化には時間がかかる模様。
+	このタイミングでは動作しない。
+	(初期化してすぐに読もうとしても一番始めの入力が読めない、少し時間が経てば読める)
+	*/
+	/* --- 入力装置の初期設定 */
+//	sceCtrlSetSamplingCycle(0);/*うまくいかない*/
+//	sceCtrlSetSamplingMode(PSP_CTRL_MODE_ANALOG);/*うまくいかない*/
+	#endif
+	/* boot_check_analog */
+	use_analog=1;/* アナログ使用フラグ(0:使用しない、1:使用する) */
+	{
+		SceCtrlData pad;
+		sceCtrlReadBufferPositive(&pad, 1);
+		/* 起動時にアナログ入力があった場合、故障していると判断しアナログ入力無効。 */
+		if (pad.Lx < 64/*70*/)			{	use_analog=0;		}
+		else if (pad.Lx > 192/*185*/)	{	use_analog=0;		}
+		//
+		if (pad.Ly < 64/*70*/)			{	use_analog=0;		}
+		else if (pad.Ly > 192/*185*/)	{	use_analog=0;		}
+		#if (0)
+		if (0 == use_analog)
+		{
+			error(ERR_FATAL, "fail analog pad (%d,%d)", pad.Lx, pad.Ly );
+		}
+		#endif
+	}
+}
 
 /*static*/ void do_input_vbl(void)
 {
+	my_pad_alter = my_pad;
+//
 	SceCtrlData pad;
 	sceCtrlReadBufferPositive(&pad, 1);
 	#if (1==USE_KEY_CONFIG)
-		int
+		/* キーコンフィグありの場合、「PSPのデジタル入力」と「ゲーム動作用のデジタル入力」は扱いが異なる */
+		int pad_data;
 	#else
-		my_pad_alter = my_pad;
+		/* キーコンフィグなしの場合、「PSPのデジタル入力」を「ゲーム動作用のデジタル入力」にそのまま使う */
 		#define pad_data my_pad
 	#endif /* (1==USE_KEY_CONFIG) */
 	pad_data = pad.Buttons;
-	my_analog_x = 0;
-	my_analog_y = 0;
-	/* 標準アナログキー機能 */
-//	if (1==use_analog)
 	{
-		/* PSPのアナログ入力はデジタル入力へ変換、アナログ量は中心を削除し256固定小数点形式へ補正 */
-		if (pad.Lx < 64/*70*/)			{	pad_data |= PSP_CTRL_LEFT;		my_analog_x = ((64-pad.Lx)<<2); 	}
-		else if (pad.Lx > 192/*185*/)	{	pad_data |= PSP_CTRL_RIGHT; 	my_analog_x = ((pad.Lx-192)<<2);	}
-		//
-		if (pad.Ly < 64/*70*/)			{	pad_data |= PSP_CTRL_UP;		my_analog_y = ((64-pad.Ly)<<2); 	}
-		else if (pad.Ly > 192/*185*/)	{	pad_data |= PSP_CTRL_DOWN;		my_analog_y = ((pad.Ly-192)<<2);	}
+		my_analog_x = 0;
+		my_analog_y = 0;
+		/* 標準アナログキー機能 */
+	//	if (1==use_analog)
+		if (0 != use_analog)
+		{
+			/* PSPのアナログ入力はデジタル入力へ変換、アナログ量は中心を削除し256固定小数点形式へ補正 */
+			if (pad.Lx < 64/*70*/)			{	pad_data |= PSP_CTRL_LEFT;		my_analog_x = ((64-pad.Lx)<<2); 	}
+			else if (pad.Lx > 192/*185*/)	{	pad_data |= PSP_CTRL_RIGHT; 	my_analog_x = ((pad.Lx-192)<<2);	}
+			//
+			if (pad.Ly < 64/*70*/)			{	pad_data |= PSP_CTRL_UP;		my_analog_y = ((64-pad.Ly)<<2); 	}
+			else if (pad.Ly > 192/*185*/)	{	pad_data |= PSP_CTRL_DOWN;		my_analog_y = ((pad.Ly-192)<<2);	}
+		}
 	}
 	#if (1==USE_KEY_CONFIG)
-	my_pad_alter = my_pad;
-	my_pad = 0;
-	/* PSPのデジタル入力をキーコンフィグの形式に変換 */
+	/* 上下左右のキーコンフィグは現在無効というか設定値を無視。(アナログ入力の都合) */
+	/* キーコンフィグありの場合でも、上下左右は(アナログ入力の)都合によりPSPのデジタル入力をそのまま使う */
+//	my_pad = 0;
+//	my_pad |= (pad_data & (PSP_CTRL_UP|PSP_CTRL_RIGHT|PSP_KEY_DOWN|PSP_CTRL_LEFT));
+	my_pad  = (pad_data & (PSP_CTRL_UP|PSP_CTRL_RIGHT|PSP_KEY_DOWN|PSP_CTRL_LEFT));/* 上下左右は都合によりキーコンフィグなし */
+	/* PSPのデジタル入力からキーコンフィグを考慮して入力値を決める */
 	if (pad_data & PSP_CTRL_SELECT) 	{	my_pad |= pad_config[KEY_NUM00_SELECT]; 	}	//	if (keyboard[KINOU_01_SELECT])		{my_pad |= (PSP_KEY_SELECT);}
 	if (pad_data & PSP_CTRL_START)		{	my_pad |= pad_config[KEY_NUM01_START];		}	//	if (keyboard[KINOU_02_PAUSE])		{my_pad |= (PSP_KEY_PAUSE);}
 //
@@ -133,11 +168,6 @@ extern void save_screen_shot(void);
 	if (pad_data & PSP_CTRL_CIRCLE) 	{	my_pad |= pad_config[KEY_NUM09_CIRCLE]; 	}	//	if (keyboard[KINOU_10_OPTION])		{my_pad |= (PSP_KEY_OPTION);}
 	if (pad_data & PSP_CTRL_CROSS)		{	my_pad |= pad_config[KEY_NUM10_CROSS];		}	//	if (keyboard[KINOU_11_SHOT])		{my_pad |= (PSP_KEY_SHOT_OK);}
 	if (pad_data & PSP_CTRL_SQUARE) 	{	my_pad |= pad_config[KEY_NUM11_SQUARE]; 	}	//	if (keyboard[KINOU_12_BOMB])		{my_pad |= (PSP_KEY_BOMB_CANCEL);}
-
-	/* キーコンフィグの形式では、ゲーム中速度的に無理なので、PSPのデジタル入力に似た方式に再び変換 */
-
-	my_pad |= (pad_data & (PSP_CTRL_UP|PSP_CTRL_RIGHT|PSP_KEY_DOWN|PSP_CTRL_LEFT));
-
 	#endif /* (1==USE_KEY_CONFIG) */
 	/* スクリーンショット機能。 */
 	// keypollに入れると何故かうまくいかなかったのでこっちに場所を変更。
@@ -167,16 +197,6 @@ extern void save_screen_shot(void);
 //	else if (keyboard[KINOU_04_RIGHT])	{my_pad |= PSP_CTRL_RIGHT;	/*direction=1;*/		}
 //		 if (keyboard[KINOU_03_UP]) 	{my_pad |= PSP_CTRL_UP; 	}
 //	else if (keyboard[KINOU_05_DOWN])	{my_pad |= PSP_CTRL_DOWN;	}
-
-//int keyboard_keypressed()
-//{
-//	int i;
-//	for (i=0;i<15;i++)
-//	{
-//		if (keyboard[i]) return (1);
-//	}
-//	return (0);
-//}
 
 /*---------------------------------------------------------
 	キー入力関連の処理(本来デバッグ用)

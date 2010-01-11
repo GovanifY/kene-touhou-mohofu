@@ -2,7 +2,8 @@
 #include "bullet_object.h"
 
 /*---------------------------------------------------------
-	3面 未定(元、輝夜、かぐや)
+	3面 未定 永琳? (元、輝夜、かぐや)
+	Mitei Madakimattenai.
 	-------------------------------------------------------
 	ToDo:
 	ボスタイマー対応中
@@ -59,8 +60,6 @@ typedef struct /*_boss04_data*/
 
 static int bb_angle512;
 
-static SPRITE *obj_doll[8]; 	/* 人形達 */
-
 /*---------------------------------------------------------
 人員の配置メモ
 [1][0][2]
@@ -73,9 +72,9 @@ static SPRITE *obj_doll[8]; 	/* 人形達 */
 
 static void lose_doll(SPRITE *src)
 {
-	dummy_obj->x256 = src->x256+((src->w128));
-	dummy_obj->y256 = src->y256+((src->h128));
-	bakuhatsu_add_type_ddd(dummy_obj/*src->x256+((src->w128)),src->y256+((src->h128))*/,/*0,*/BAKUHATSU_FIRE08);
+	send1_obj->x256 = src->x256+((src->w128));
+	send1_obj->y256 = src->y256+((src->h128));
+	bakuhatsu_add_type_ddd(send1_obj/*src->x256+((src->w128)),src->y256+((src->h128))*/,/*0,*/BAKUHATSU_FIRE08);
 //
 	item_create_for_boss(src, ITEM_CREATE_MODE_02);
 //
@@ -92,6 +91,30 @@ static void lose_doll(SPRITE *src)
 	player_add_score(data->base.score);/*輝夜以外の小物のスコア*/
 	#endif
 
+/*---------------------------------------------------------
+	3面専用
+---------------------------------------------------------*/
+#if (1)
+static void enemy_boss04_LR_dole_fire(SPRITE *src)
+{
+//	if (0!=(common_boss_flags&FLG_DOLL1)/*obj_doll [3]->flags&SP_FLAG_VISIBLE*/) /*LEFT 0*/
+//	{
+//	//identity_bit
+//			bullet_create_aka_maru_jikinerai(/*obj_doll [1]*/src, t256(difficulty+1)/*5*/);
+//		//	bullet_create_n_way_dan_sa_type(obj_doll [1], t256(difficulty+1)/*5*/, ANGLE_JIKI_NERAI_DAN, (int)(512/24), BULLET_MARU8_00_AKA, 1);
+//	}
+	DOLL_DATA *data = (DOLL_DATA *)src->data;
+	/* 生きている場合に撃つ */
+	if (0 != (common_boss_flags & (data->identity_bit)/*FLG_DOLL2*/)/*obj_doll [5]->flags&SP_FLAG_VISIBLE*/) /*RIGHT 1*/
+	{
+	//	if (data->identity_bit)
+		{
+			bullet_create_aka_maru_jikinerai(/*obj_doll [2]*/src, t256(difficulty+1)/*5*/);
+		//	bullet_create_n_way_dan_sa_type(obj_doll [2], t256(difficulty+1)/*5*/, ANGLE_JIKI_NERAI_DAN, (int)(512/24), BULLET_MARU8_00_AKA, 1);
+		}
+	}
+}
+#endif
 /*---------------------------------------------------------
 	敵移動
 ---------------------------------------------------------*/
@@ -112,6 +135,37 @@ static void move_doll01(SPRITE *src)
 			src->y256 = (((PLAYER_DATA *)player->data)->boss)->y256 + ((cos512((aa_angle512))*45));
 		}
 	}
+//
+	#if (1)
+	//	左右ショット
+		if (SPELL_CARD_00_mitei_000 < spell_card_number)
+		{
+		static int firewait1=45;
+			firewait1-=1;
+			if (firewait1<=0)
+			{
+				firewait1=45;
+				static unsigned int firewait2=0;
+				firewait2--;
+				firewait2 &= (4-1);
+				if (0==firewait2)
+				{
+				//	enemy_boss01_nway_fire(src);/*enemy_boss04_fire(2);*/
+				}
+				else
+				{
+					/* 3面の場合左右が撃つ */
+//	#if (0)
+//					if (0!=rd4_zero/*0!=data->en emy_rank*/)
+//	#endif
+					{
+						enemy_boss04_LR_dole_fire(src);/*enemy_boss04_fire(0);enemy_boss04_fire(1);*/
+					}
+				}
+			}
+		}
+	#endif
+//
 	#if 1
 	/* 輝夜を倒すと皆破壊される。 */
 	if (0==common_boss_flags)
@@ -174,31 +228,13 @@ static void enemy_boss01_nway_fire(SPRITE *src)
 		)
 	{
 		bullet_create_offset_dan_type000(
-			src,//(((PLAYER_DATA *)player->data)->boss)/*obj_doll[4]*/,
+			src,//(((PLAYER_DATA *)player->data)->boss)/*obj_doll [4]*/,
 			(int)(/*6*/ (0x100)+(ra_nd()&0x2ff)/*t256(2.5)*/),
 			angle512,
 		//	/*offsx*/t256(0)/*(src->w/2)*/,
 		//	/*offsy*/t256(0)/*(src->h/2)*/,
 			hari_no_iro
 		);
-	}
-}
-
-/*---------------------------------------------------------
-	3面専用
----------------------------------------------------------*/
-
-static void enemy_boss04_LR_dole_fire(void)
-{
-	if (0!=(common_boss_flags&FLG_DOLL1)/*obj_doll[3]->flags&SP_FLAG_VISIBLE*/) /*LEFT 0*/
-	{
-		bullet_create_aka_maru_jikinerai(obj_doll[1], t256(difficulty+1)/*5*/);
-	//	bullet_create_n_way_dan_sa_type(obj_doll[1], t256(difficulty+1)/*5*/, ANGLE_JIKI_NERAI_DAN, (int)(512/24), BULLET_MARU8_00_AKA, 1);
-	}
-	if (0!=(common_boss_flags&FLG_DOLL2)/*obj_doll[5]->flags&SP_FLAG_VISIBLE*/) /*RIGHT 1*/
-	{
-		bullet_create_aka_maru_jikinerai(obj_doll[2], t256(difficulty+1)/*5*/);
-	//	bullet_create_n_way_dan_sa_type(obj_doll[2], t256(difficulty+1)/*5*/, ANGLE_JIKI_NERAI_DAN, (int)(512/24), BULLET_MARU8_00_AKA, 1);
 	}
 }
 
@@ -222,16 +258,6 @@ static void kaguya_sayuu_shot(SPRITE *src)
 			{
 				enemy_boss01_nway_fire(src);/*enemy_boss04_fire(2);*/
 			}
-			else
-			{
-				/* 3面の場合左右が撃つ */
-#if (0)
-				if (0!=rd4_zero/*0!=data->en emy_rank*/)
-#endif
-				{
-					enemy_boss04_LR_dole_fire();/*enemy_boss04_fire(0);enemy_boss04_fire(1);*/
-				}
-			}
 		}
 	}
 }
@@ -243,6 +269,12 @@ static void kaguya_sayuu_shot(SPRITE *src)
 
 /*static*/ void mitei_01_keitai(SPRITE *src)
 {
+	/* kene 変身 */
+	if (BOSS_00_BOSS11==src->type)
+	{
+		src->type						= BOSS_00_BOSS11+4;
+	}
+//
 	static int my_wait;
 	my_wait -= (1)/*fps_fa ctor*/;
 //
@@ -346,11 +378,12 @@ void add_boss_mitei(STAGE_DATA *l)/*int lv*/
 
 //----[BOSS]
 		SPRITE *sakuya;
-		sakuya								= sprite_add_res(BASE_BOSS_KAGUYA_PNG);
+	//	sakuya								= sprite_add_res(BASE_BOSS_KAGUYA_PNG);
+		sakuya								= sprite_add_gu(ZAKO_TYPE_ATARI16_PNG);
 		sakuya->flags						|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK);
 	//	sakuya->anim_speed					= 0;
-		sakuya->yx_anim_frame				= 0/*0*/+(1/*rd4_zero*/<<4);
-		sakuya->type						= SP_BOSS/*SP_BOSS03*/;
+	//	sakuya->yx_an im_frame				= 0/*0*/+(1/*rd4_zero*/<<4);
+		sakuya->type						= BOSS_00_BOSS11; 	/*SP_BOSS*/ 	/*SP_BOSS03*/
 		sakuya->callback_mover				= move_mitei;
 		sakuya->callback_loser				= common_boss_put_items;
 //
@@ -386,47 +419,33 @@ void add_boss_mitei(STAGE_DATA *l)/*int lv*/
 	int i;
 	for (i=1/*0*/; i<6; i++)
 	{
-		obj_doll[i] 						= sprite_add_res(BASE_BOSS_KAGUYA_PNG);
-//		obj_doll[i]->anim_speed 			= 0;
-		obj_doll[i]->type					= SP_BOSS/*SP_BOSS03*/;
-		obj_doll[i]->flags					|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK);
+		/*static*/ SPRITE *obj_doll; 	/* 人形達 */
+	//	obj_doll 						= sprite_add_res(BASE_BOSS_KAGUYA_PNG);
+		obj_doll 						= sprite_add_gu(ZAKO_TYPE_ATARI16_PNG);
+//		obj_doll->anim_speed 			= 0;
+		obj_doll->type					= BOSS_16_YOUSEI11;		/*SP_ZAKO*/	 	/*SP_BOSS03*/
+		obj_doll->flags					|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK);
 //
-		obj_doll[i]->callback_loser 		= lose_doll;
-		obj_doll[i]->callback_hit_enemy 	= callback_hit_zako;
-
-		obj_doll[i]->yx_anim_frame			= i/*0*/+(1/*rd4_zero*/<<4);
+		obj_doll->callback_loser 		= lose_doll;
+		obj_doll->callback_hit_enemy 	= callback_hit_zako;
 //
 		DOLL_DATA *data;
-		data								= mmalloc(sizeof(BOSS04_DATA));
+		data							= mmalloc(sizeof(BOSS04_DATA));
 		#if (1==USE_KEISYOU)
-		data->sakuya_obj					= sakuya;	/* 継承させる */
+		data->sakuya_obj				= sakuya;	/* 継承させる */
 		#endif
-		obj_doll[i]->data					= data;
-		data->identity_bit					= (FLG_DOLL0<<i);		/* 固有ビット番号 */
-//		data->health_flag					= (0);
-		obj_doll[i]->base_health			= (1024-1);
+		obj_doll->data					= data;
+		data->identity_bit				= (FLG_DOLL0<<i);		/* 固有ビット番号 */
+//		data->health_flag				= (0);
+		obj_doll->base_health			= (1024-1);
 //
-		obj_doll[i]->callback_mover 		= move_doll01;
-#if (0)
-		/* 4面の場合---- */
-		if (0==rd4_zero)		// [***090114		追加
-		{
-		//	data->base.health				= (difficulty<<8/*[x256]*/)+ 200+1024;
-//			data->base.life 				= (((difficulty<<8/*[x256]*/)+ 200+1024)>>10);
-		//	data->base.score				= score(600)*(difficulty+1);
-			obj_doll[i]->base_score 		= adjust_score_by_difficulty(score( 400000));	/* 40万 */
-		}
-		else/* 全部一緒 */
-#endif
-		/* 3面の場合---- */ 	/* 全部一緒 */
-		{
-		//	data->base.health				= (difficulty<<6/*[x64]*/)+ 200+1024;
-//			data->base.life 				= (((difficulty<<6/*[x64]*/)+ 200+1024)>>10);
-		//	obj_doll[i]->base_score 		= score(500)*(difficulty+1);
-			obj_doll[i]->base_score 		= adjust_score_by_difficulty(score( 500000));	/* 50万 (計300万==6x50万) */
-		}
-		data->fix_angle512					= jj_angle512;
+		obj_doll->callback_mover 		= move_doll01;
+		data->fix_angle512				= jj_angle512;
 		jj_angle512 += (AA_OFS85);
-	//
+	//		/* 3面の場合 */ 		/* 全部一緒 */
+		//	data->base.health			= (difficulty<<6/*[x64]*/)+ 200+1024;
+//			data->base.life 			= (((difficulty<<6/*[x64]*/)+ 200+1024)>>10);
+		//	data->base.score 			= score(500)*(difficulty+1);
+			obj_doll->base_score 		= adjust_score_by_difficulty(score( 500000));	/* 50万 (計300万==6x50万) */
 	}
 }

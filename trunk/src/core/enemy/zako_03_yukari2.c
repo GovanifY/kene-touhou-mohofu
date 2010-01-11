@@ -2,7 +2,7 @@
 #include "bullet_object.h"
 
 /*---------------------------------------------------------
-		"Ž‡•Ò‘à2",		"GREETER",
+	"Ž‡•Ò‘à2",		"GREETER",
 	-------------------------------------------------------
 	ƒoƒO‚ ‚èHHH
 	-------------------------------------------------------
@@ -105,8 +105,8 @@ static void move_yukari2(SPRITE *src)
 //	src->yx_an im_frame = ( ((src->tmp_angleCCW512>>3)&(0x30)) | ((src->tmp_angleCCW512>>4)&(0x07)) );
 /* "yukari8x4.png"
 src->tmp_angleCCW512	 a bcde ----
-src->yx_an im_frame		  yyyy xxxx
-src->yx_an im_frame		  --ab -cde
+src->yx_an im_frame 	  yyyy xxxx
+src->yx_an im_frame 	  --ab -cde
 */
 }
 
@@ -165,7 +165,7 @@ void add_zako_yukari2(STAGE_DATA *l)/*int lv*/
 	{
 		SPRITE *s;
 //		s						= sp rite_add_res(BASE_YUKARI32_PNG);	//s->anim_speed=0;/*36"mi ng.png"*/
-		s						= sprite_add_gu(ZAKO_TYPE_ATARI16_PNG);	//s->anim_speed=0;/*36"mi ng.png"*/
+		s						= sprite_add_gu(ZAKO_TYPE_ATARI16_PNG); //s->anim_speed=0;/*36"mi ng.png"*/
 		s->type 				= /*SP_ZAKO*/TEKI_61_NIJI_HOSI/*_03_YUKARI2*/;
 //		s->type 				= SP_ZAKO/*_03_YUKARI2*/;
 		s->flags				|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK|SP_FLAG_TIME_OVER);
@@ -173,7 +173,7 @@ void add_zako_yukari2(STAGE_DATA *l)/*int lv*/
 		s->callback_loser		= lose_yukari2;
 		s->callback_hit_enemy	= callback_hit_zako;
 		if (0==static_last) {	s->x256 = t256(0);								}	//‰Eã‚©‚ç“oê
-		else				{	s->x256 = t256(GAME_WIDTH)-(t256(24)/*s->w128+s->w128*/); 	}	//¶ã‚©‚ç“oê
+		else				{	s->x256 = t256(GAME_WIDTH)-(t256(24)/*s->w128+s->w128*/);	}	//¶ã‚©‚ç“oê
 		s->y256 				= -i*(t256(24)/*s->h128+s->h128*/);
 		YUKARI2_DATA *data;
 		data					= mmalloc(sizeof(YUKARI2_DATA));

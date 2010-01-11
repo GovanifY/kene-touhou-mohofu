@@ -20,8 +20,8 @@ enum
 	DANMAKU_07_sakuya,		/* 紅5面ボス 咲夜 「通常攻撃3(1/2)」にちょっとだけ似た弾幕(予定) */
 	/* [アリス(仮)] */
 	DANMAKU_08_rumia,		/* 紅1面ボス ルーミア 夜符「ナイトバード」にちょっとだけ似た弾幕(予定) */
-	DANMAKU_09_alice,
-	DANMAKU_0a_test,
+	DANMAKU_09_alice,		/* アリスっぽい？テキトー弾幕 */
+	DANMAKU_0a_houka_kenran,/* 紅美鈴 華符「芳華絢爛」にちょっとだけ似た弾幕(予定) */
 	DANMAKU_0b_test,
 //40[sec]
 	DANMAKU_0c_test,
@@ -31,7 +31,7 @@ enum
 	/* [チルノ(仮)] */
 	DANMAKU_10_cirno,			/* チルノ禊弾幕 */
 	DANMAKU_11_tengu,/*???*/
-	DANMAKU_12,
+	DANMAKU_12_aya_merin_test,	/* 文に美鈴っぽい弾幕撃たせてみるテスト */
 	DANMAKU_13,
 //
 	DANMAKU_14,
@@ -87,8 +87,8 @@ enum
 	DESTROY_CHECK_01_IS_TIME_OUT,
 };
 /*static*/extern  void boss_destroy_check_type(SPRITE *src/*敵自体*/, int check_type);/*	★ 攻撃の場合の死亡判定 	★ 時間切れの場合の死亡判定 */
-/*static*/extern  void callback_hit_boss_dummy(SPRITE *src, SPRITE *tama/*, int angle*/);
-/*static*/extern  void callback_hit_boss(SPRITE *src, SPRITE *tama/*, int angle*/);
+/*static*/extern  void callback_hit_boss_dummy(SPRITE *src, SPRITE *tama /*, int angle*/);
+/*static*/extern  void callback_hit_boss(SPRITE *src, SPRITE *tama /*, int angle*/);
 
 /*static*/extern  void common_boss_put_items(SPRITE *src);
 

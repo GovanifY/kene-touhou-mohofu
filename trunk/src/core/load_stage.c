@@ -1,6 +1,6 @@
 
 /*---------------------------------------------------------
-
+	ステージ敵データー(dat)の読み込み
 ---------------------------------------------------------*/
 
 #include "game_main.h"
@@ -10,18 +10,19 @@
 
 ---------------------------------------------------------*/
 
-extern int errno;
+//extern int errno;
 
-STAGE_DATA *leveltab = NULL;
+STAGE_DATA *stage_data_table = NULL;
 
 /*---------------------------------------------------------
 	子関数
+	前回まで確保したメモリがあれば開放する。
 	Initial task, "free"ed the altenative entris.
 ---------------------------------------------------------*/
 
 static void load_stage_free_entry(void)
 {
-	STAGE_DATA *l = leveltab;
+	STAGE_DATA *l = stage_data_table;
 	STAGE_DATA *n;
 	while (NULL != l)
 	{
@@ -29,7 +30,7 @@ static void load_stage_free_entry(void)
 		free (l);
 		l = n;
 	}
-	leveltab = (STAGE_DATA *)NULL;/* head to set NULL */
+	stage_data_table = (STAGE_DATA *)NULL;/* head to set NULL */
 }
 
 /*---------------------------------------------------------
@@ -51,14 +52,14 @@ static void load_stage_add_entry(Uint32 time60, char user_command, char *user_st
 	new_entry->v_time			= (time60  /*100*1000*/);/* 読み込み後、PSPに都合の良い値に変換(1/10[sec]-> 1/60[sec] ) */
 	new_entry->user_x			= user_x;
 	new_entry->user_y			= user_y;
-	new_entry->done 			= 0;
+//	new_entry->done 			= 0;
 //
 	new_entry->user_1_moji		= user_command;
 	new_entry->user_i_code		= 0;
 
 	strncpy(new_entry->user_string, user_string, (MAX_PARA1_44-1)/*63*/);
 
-/* ゲーム中は、中間コード形式のコマンドを扱い構文解析はしない。(構文解析はloadlv.cで行う) */
+/* ゲーム中は、中間コード形式のコマンドを扱い構文解析はしない。(構文解析はload_stage.cで行う) */
 
 //
 	const char *ctype_name[CTYPE_99_MAX] =	/* 現在 32 種類 */
@@ -68,17 +69,24 @@ static void load_stage_add_entry(Uint32 time60, char user_command, char *user_st
 		"QUIT", 	/* ゲーム 全ステージ クリアー */
 		"BG",		/*	"BG_CONTROL"*/		/* ←システムコマンドなので英語にした */
 	//	ボス
-		"アリス",	/*	"BOSS01",*/
-	//	"チルノ",	/*	"BOSS05",*/
-		"文",		/*	"BOSS02",*/
-		"未定", 	/*	"BOSS03",*/ 		/* 3面はどうするか未定 */
-		"輝夜", 	/*	"BOSS03",*/
-		"パチェ",	/*	"BOSS01",*/
-		"咲夜", 	/*	"BOSS04",*/ 	// [***090207		追加
+		"慧音", 	/*	extra 2 	"BOSS05",*/
+		"チルノ",	/*	extra 1 	"BOSS05",*/
+		"咲夜", 	/*	stage 6 	"BOSS04",*/ 	// [***090207		追加
+		"パチェ",	/*	stage 5 	"BOSS01",*/
+		"輝夜", 	/*	stage 4 	"BOSS03",*/
+		"未定", 	/*	stage 3 	"BOSS03",*/ 	/* 3面はどうするか未定(永琳? 慧音?) */
+		"文",		/*	stage 2 	"BOSS02",*/
+		"アリス",	/*	stage 1 	"BOSS01",*/
 	/* 特殊敵[中型敵] */
-		"ルーミア",	/*	"GFAIRY",*/ 	//		追加
-		"妖怪1",	/*	"GFAIRY",*/ 	// [***090207		追加
+		"中ボス6",
+		"小悪魔",	/*	"GFAIRY",*/ 	//		追加
+		"鈴仙",
+		"てゐ",
+		"中ボス2",
+		"ルーミア", /*	"GFAIRY",*/ 	//		追加
+//		廃止?
 		"妖怪2",	/*	"GFAIRY",*/ 	//		追加
+		"妖怪1",	/*	"GFAIRY",*/ 	// [***090207		追加
 //
 	/* 魔方陣 */
 		"魔方陣1",	/*	"GROUNDER",*/
@@ -116,8 +124,9 @@ static void load_stage_add_entry(Uint32 time60, char user_command, char *user_st
 	/* 読み込んだコマンドを中間コード形式に変換する */
 	switch (new_entry->user_1_moji)
 	{
-	case 'T':	new_entry->user_i_code=ETYPE_01_ENGLISH_TEXT;		break;	/* english Text */
+	case 'T':	new_entry->user_i_code=ETYPE_01_SJIS_TEXT;		break;	/* english Text */
 	case 'B':	new_entry->user_i_code=ETYPE_02_LOAD_BG;
+		#if 000
 	//	if ( 0 == ti ny_strcmp(new_entry->user_string,"0") ) /* ファイル名が０の場合システムコマンド[拡張予定] */
 		if ( '0' == new_entry->user_string[0] ) /* ファイル名の1字目が０の場合システムコマンド[拡張予定] */
 		{
@@ -130,6 +139,7 @@ static void load_stage_add_entry(Uint32 time60, char user_command, char *user_st
 				(画像展開ライブラリ(libpngとかlibjpeg)にCPUに負荷がかからないように、別スレッドでゆっくり展開させる機能が無い)
 				つまり、ここの場所で展開してるんだから、ここの場所load_stage()で処理落ちが酷いという事だよ。 */
 		}
+		#endif
 		break;	/* Background */
 	default:	// add background tiles....
 		{
@@ -144,120 +154,15 @@ static void load_stage_add_entry(Uint32 time60, char user_command, char *user_st
 		break;
 	}
 //
-	if (NULL==leveltab) 	// 最初の解析行か？
+	if (NULL==stage_data_table) 	// 最初の解析行か？
 	{	new_entry->next = (STAGE_DATA *)NULL;}
 	else
-	{	new_entry->next = leveltab; 	}	// leveltabは前回のデータ
-	leveltab = new_entry;		// leveltabに今生成したデータのアドレスを代入。
+	{	new_entry->next = stage_data_table; 	}	// stage_data_tableは前回のデータ
+	stage_data_table = new_entry;		// stage_data_tableに今生成したデータのアドレスを代入。
 	// nextにはdatファイル的には現在走査中の行の上の行が入っている。
 }
 
-/*---------------------------------------------------------
-	子関数
-	Get ascii strings.
-2009357
----------------------------------------------------------*/
-//extern char *load_stage_get_str(char *str, char *buffer, int *end_arg);
-		#if 0
-static char *load_stage_get_str(char *c, char *buffer, int *end_arg)
-{
-	int i = 0;
-	while ('|' != (*c))
-	{
-		i++;
-		if (i >= 128)
-		{	goto ne111;}
-		*buffer++ = *c++;
-	}
-	*buffer = 0;
-	return (c);
-ne111:
-	return ((char *) NULL);
-}
-			#endif
-/*---------------------------------------------------------
-	shift jisコード、全角1バイト目かどうか判定する子関数
----------------------------------------------------------*/
 
-static int is_kanji_1st(/*unsigned char*/int/*int*/ high_byte)
-{
-	#if 1
-	high_byte &= 0xff;/**/
-	return (
-		((high_byte >= 0x81) && (high_byte <= 0x9f)) ||
-		((high_byte >= 0xe0) && (high_byte <= 0xfd))
-	);
-	#else
-	high_byte ^= 0x20;
-	high_byte += (0x100-0xa1);
-	high_byte &= 0xff;/**/
-	return (high_byte < 0x3du);
-	#endif
-}
-/*---------------------------------------------------------
-	スクリプトファイルの文字列部分の読み込み
-	-------------------------------------------------------
-	shift jis 漢字の2byte目が￥￥の場合や
-	エスケープシークエンス処理の2byte目が￥￥の場合でも
-	問題がない
----------------------------------------------------------*/
-static char *load_stage_get_str(char *str, char *buffer, int *end_arg)
-{
-	int string_error_limiter;
-	string_error_limiter = 200;/* 200 文字以上はエラー */
-	/*unsigned char*/int high_byte;
-	{loop:;
-		high_byte = ((*str) & 0xff);
-		/* 空文字列の可能性があるから、始めに判定 */
-		if ('|'/*','*/ == high_byte)	/* ','区切りでおしまいの場合 */
-		{
-			goto kamma_end;
-		}
-		else
-		if (13 == high_byte)	/* '\n'==13(行末)でおしまいの場合 */
-		{
-	//	ret13_end:
-			*end_arg = 1;/* 行末です。 */
-		kamma_end:
-			*buffer = '\0'; 	/* EOS を追加 */
-			return (str);
-		}
-		else					/* 文字列を転送する必要のある場合 */
-		{
-			int flag;
-			flag=0;
-			if (is_kanji_1st(high_byte)) /* shift jis 漢字 */
-			{
-				;	//	*buffer++ = *str++;/* 1byte目 */
-			}
-			else
-			{
-				if ('\\' == high_byte)		/* エスケープシークエンス処理(escape sequence) */
-				{
-					;	//	*buffer++ = *str++;/* ￥￥ */
-				}
-				else					/* 半角文字 */
-				{
-					flag=1;
-				}
-			}
-			if (0==flag)	/* 半角文字以外(shift jis 漢字、エスケープシークエンス処理)は 2 byte転送 */
-			{
-				*buffer++ = *str++;
-			}
-			*buffer++ = *str++; 	/* 1 byteは必ず転送 */
-			/* エラーチェック */
-			{
-				string_error_limiter--;
-				if (0 >= string_error_limiter)
-				{
-					return ((char *)NULL);
-				}
-			}
-		}
-		goto loop;
-	}
-}
 /*---------------------------------------------------------
 	子関数
 	Get ascii a interger number.
@@ -283,77 +188,8 @@ static char *load_stage_get_int(char *ccc, int *number)
 ne222:
 	return ((char *) NULL);
 }
+#include "my_file.h"
 
-/*---------------------------------------------------------
-	汎用性のまるでない読み込み関連。子関数
-	-------------------------------------------------------
-	標準入出力はpspでは遅すぎるのでsceの関数を使う。(ゲーム中の処理落ち軽減策)
-	エラーチェックとか全然無いので注意の事
----------------------------------------------------------*/
-
-//atic char buffer_text_1_line[128];	/* parth text, 1 line buffer */ 	/* 走査する行の取得 */
-static char buffer_text_1_line[256];	/* parth text, 1 line buffer */ 	/* 走査する行の取得 */
-
-#if 1
-static unsigned long file_size;
-static unsigned long file_seek;
-//static char *my_buf;
-//static void *malloc_buf;
-static char *malloc_buf;
-
-static void *my_fopen(const char *file_name/*, const char *dummy*/)
-{
-	SceUID fd;
-	fd = sceIoOpen((char *)file_name, PSP_O_RDONLY, 0777);
-	if (0 == fd)
-	{
-		goto error111;
-	}
-	file_size = sceIoLseek32(fd, 0, PSP_SEEK_END);
-	file_seek = 0;
-
-	malloc_buf = malloc(file_size);
-	if (NULL == malloc_buf)
-	{
-		sceIoClose(fd);
-		goto error111;
-	}
-	sceIoLseek32(fd, 0, PSP_SEEK_SET);
-	sceIoRead( fd, malloc_buf, file_size);
-	sceIoClose(fd);
-//	my_buf = malloc_buf;
-//
-	return (malloc_buf);
-error111:
-	return (NULL);
-}
-static int my_fgets(void/*char *buffer_name, int num, char *wfp*/)
-{
-	int ii;
-ii=0;
-	char aaa;
-//	char bbb;
-//bbb=0;
-	fgets_loop:;
-	aaa = /*buffer_name*/buffer_text_1_line[ii] = /*my_buf*/malloc_buf[file_seek]/*(*my_buf)*/;
-//	my_buf++;
-	ii++;
-	file_seek++;
-	if (0x0a==aaa)	return (1);
-	if (file_size < file_seek)	return (0)/*NULL*/;
-	goto fgets_loop;
-//	error(ERR_FATAL, "TEST %s\nno: %d (%s)",buffer_name,errno,strerror(errno));
-//	return (NULL);
-}
-static void my_fclose(void/*void *wfp*/)
-{
-	free(malloc_buf);
-}
-#else
-	#define my_fopen	fopen
-	#define my_fgets	fgets
-	#define my_fclose	fclose
-#endif
 /*---------------------------------------------------------
 	ステージ読み込み
 	-------------------------------------------------------
@@ -365,37 +201,6 @@ static void my_fclose(void/*void *wfp*/)
 	後の対応が悪いと、後まで処理落ちするので、
 	後の対策が必須です。（無駄な時間待ち等）
 ---------------------------------------------------------*/
-extern int select_player;
-extern void bg2_start_stage(void); // [***090209		追加
-extern void stage_bg_load_surface(void);
-void load_stage(void/*int level*/)		/* 元々int */
-{
-	bg2_start_stage();	// [***090209		追加
-	enemy_set_random_seed(/*set_seed*/);
-//
-//	int level = player_now_stage;
-//
-	// change music soundtrack
-	player_now_stage++; /*(*level)++*/;
-	play_music_num( /*1+*/  /*level*/player_now_stage/*(*level)*/ );/* n面道中 */
-//
-	load_stage_free_entry();
-//
-	int load_stage_number = player_now_stage;
-	{	PLAYER_DATA *pd = (PLAYER_DATA *)player->data;
-		/* 幽々子 特殊能力：ステージクリア時にボムが増える */
-		if (YUYUKO==select_player)	/* 幽々子の場合 */
-		{
-			#if 1/*原作風*/
-			if (3 > pd->bombs)	/* クリアー時にボムが３つ未満なら */
-			{	pd->bombs = 3;	}	/* ３つに増やす */
-			#endif
-			#if 1/*模倣風*/
-			if (9 > pd->bombs)	/* クリアー時にボムが９つ未満なら */
-			{	pd->bombs++;	}	/* １つ増やす */
-			#endif
-			/* ボムがなくてもクリアーすればボムが４つになる */
-		}
 		//
 //		#if (1==US E_ENDING_DEBUG)
 //		if (MA X_STAGE6_FOR_CHECK == player_now_stage/*continue_stage*/)
@@ -408,34 +213,52 @@ void load_stage(void/*int level*/)		/* 元々int */
 //		}
 //		if (9!=load_stage_number)
 //		#endif //(1==US E_ENDING_DEBUG)
+
+extern int select_player;
+extern void bg2_start_stage(void); // [***090209		追加
+extern void stage_bg_load_texture(void);
+void load_stage(void)	/*int level*/	/* 元々int */
+{
+	bg2_start_stage();	// [***090209		追加
+	enemy_set_random_seed(/*set_seed*/);	/* リプレイ対応出来るように、乱数系列の初期化。 */
+//	int level = player_now_stage;
+	player_now_stage++; /*(*level)++*/;
+	// change music soundtrack
+	play_music_num( /*1+*/	/*level*/player_now_stage/*(*level)*/ );/* n面道中 */
+//
+//	int load_stage_number = player_now_stage;
+	{	PLAYER_DATA *pd = (PLAYER_DATA *)player->data;
 		{
 			pd->state_flag &= (~(STATE_FLAG_05_IS_BOSS));/*ボスoff*/
 		}
 		draw_side_panel=1/*pd->state_flag |= ST ATE_FLAG_09_IS_PANEL_WINDOW*/;/* パネル表示on */
 	}
 //
-	stage_bg_load_surface();
+	stage_bg_load_texture();
 //
-	char filename[128];
-//	sp rintf(filename,"%s/dat/level%02d.dat", data_dir, /*level*/player_now_stage);
-//	sp rintf(filename,"%s/dat/stage%01d.txt", data_dir, /*level*/player_now_stage);
-//	sp rintf(filename, "%s/dat/stage%c.txt", data_dir, ('0'+/*level*/load_stage_number/*player_now_stage*/) );
-//	sp rintf(filename, DIRECTRY_NAME_DATA "/dat/stage%c.txt", ('0'+/*level*/load_stage_number/*player_now_stage*/) );
-	strcpy(filename, DIRECTRY_NAME_DATA "/dat/stageZ.txt");
-	filename[10+DIRECTRY_NAME_LENGTH] = ('0'+/*level*/load_stage_number/*player_now_stage*/);
+//
+//	char my_fopen_file_name[128];
+//	sp rintf(my_fopen_file_name,"%s/dat/level%02d.dat", data_dir, /*level*/player_now_stage);
+//	sp rintf(my_fopen_file_name,"%s/dat/stage%01d.txt", data_dir, /*level*/player_now_stage);
+//	sp rintf(my_fopen_file_name, "%s/dat/stage%c.txt", data_dir, ('0'+/*level*/load_stage_number/*player_now_stage*/) );
+//	sp rintf(my_fopen_file_name, DIRECTRY_NAME_DATA "/dat/stage%c.txt", ('0'+/*level*/load_stage_number/*player_now_stage*/) );
+	strcpy(my_fopen_file_name, DIRECTRY_NAME_DATA "/dat/stageZ.txt");
+	my_fopen_file_name[10+DIRECTRY_NAME_LENGTH] = ('0'+player_now_stage);/*level*/ /*load_stage_number*/ /*player_now_stage*/
 
 //	/*FILE*/char *fp;
-	if (NULL==(/*fp=*/my_fopen(filename/*,"r"*/)))
+	if (NULL==(/*fp=*/my_fopen(/*my_fopen_file_name*/ /*,"r"*/)))
 	{
-		error(ERR_FATAL, "can't read stage data %s\nerrno: %d (%s)",filename,errno,strerror(errno));
+	//	error(ERR_FATAL, "can't read stage data %s\nerrno: %d (%s)",my_fopen_file_name,errno,strerror(errno));
+		error(ERR_FATAL, "can't read stage %d data %s\n", /*load_stage_number*/player_now_stage, my_fopen_file_name );
 	}
 //
+	load_stage_free_entry();	/* 前回まで確保したメモリがあれば、先に開放する。 */
 	int entrys		= 0;		/* 有効行数の調査 */
 	int line_num	= 0;		/* ファイルの実行数 */
 	{loop:;
 		if (/*NULL*/0 != my_fgets(/*buffer_text_1_line,128,fp*/))
 		{
-			int end_arg/*=0*/;				/* [だみー]行末 == 引数の取得の中止 */
+			int end_arg/*=0*/;			/* [だみー]行末 == 引数の取得の中止 */
 			int time60; 				/* 出現時間(1/60秒単位)  */
 			char char_user_command; 	/* １文字コマンド(敵やメッセージ等の種別) */
 			char user_string[128];		/* 文字列(メッセージやファイル名) */
@@ -470,15 +293,16 @@ void load_stage(void/*int level*/)		/* 元々int */
 			#define GOTO_ERR_WARN goto loop
 		#endif
 			/* parth start */	/* Startzeitpunkt holen */
-			c = load_stage_get_int(c, &time60); 				if (NULL == c)		{	GOTO_ERR_WARN;/*continue;*/;	}	/* load int time60 */		/* 時間の取得 */
-																if ('|' != *c++)	{	GOTO_ERR_WARN;/*continue;*/;	}	/* load '|' */
-			char_user_command = *c++;																					/* load 1 char commnd */	/* １文字コマンド */	/* Befehl */
-																if (*c++ != '|')	{	GOTO_ERR_WARN;/*continue;*/;	}	/* load '|' */
-			c = load_stage_get_str(c, user_string, &end_arg); 	if (NULL == c)		{	GOTO_ERR_WARN;/*continue;*/;	}	/* load str user_string */
-																if (*c++ != '|')	{	GOTO_ERR_WARN;/*continue;*/;	}	/* load '|' */
-			c = load_stage_get_int(c, &user_x); 				if (NULL == c)		{	GOTO_ERR_WARN;/*continue;*/;	}	/* load int user_x */
-																if (*c++ != '|')	{	GOTO_ERR_WARN;/*continue;*/;	}	/* load '|' */
-			c = load_stage_get_int(c, &user_y); 				if (NULL == c)		{	GOTO_ERR_WARN;/*continue;*/;	}	/* load int user_y */
+			c = load_stage_get_int(c, &time60); 	if (NULL == c)			{	GOTO_ERR_WARN;/*continue;*/;	}	/* load int time60 */		/* 時間の取得 */
+													if (','/*'|'*/ != *c++) {	GOTO_ERR_WARN;/*continue;*/;	}	/* load '|' */
+			char_user_command = *c++;																				/* load 1 char commnd */	/* １文字コマンド */	/* Befehl */
+													if (','/*'|'*/ != *c++) {	GOTO_ERR_WARN;/*continue;*/;	}	/* load '|' */
+			c = load_my_file_get_str(c, user_string, &end_arg/*, '|'*/);
+													if (NULL == c)			{	GOTO_ERR_WARN;/*continue;*/;	}	/* load str user_string */
+													if (','/*'|'*/ != *c++) {	GOTO_ERR_WARN;/*continue;*/;	}	/* load '|' */
+			c = load_stage_get_int(c, &user_x); 	if (NULL == c)			{	GOTO_ERR_WARN;/*continue;*/;	}	/* load int user_x */
+													if (','/*'|'*/ != *c++) {	GOTO_ERR_WARN;/*continue;*/;	}	/* load '|' */
+			c = load_stage_get_int(c, &user_y); 	if (NULL == c)			{	GOTO_ERR_WARN;/*continue;*/;	}	/* load int user_y */
 			/* do set register entry. */
 			#define MUSIC_CONVERT_TIME (10)
 			/* 追加登録する */
@@ -493,7 +317,7 @@ void load_stage(void/*int level*/)		/* 元々int */
 		//		error(ERR_WARN, "syntax error in stage data '%s', line no: %d", load_filename, error_line_number);
 		//	}
 		//	load_stage_set_error(filename, line_num);
-			error(ERR_WARN, "syntax error in stage data '%s', line no: %d", filename, line_num);
+			error(/*ERR_WARN*/ERR_FATAL, "syntax error in stage data '%s', line no: %d", filename, line_num);
 			goto loop;
 		#endif
 		}
@@ -502,7 +326,7 @@ void load_stage(void/*int level*/)		/* 元々int */
 	//return (entrys);
 	if (0==entrys)		/* 有効行数がなければエラー */
 	{
-		error(ERR_WARN, "no entrys for STAGE%d.TXT",/*level*/player_now_stage);
+		error(/*ERR_WARN*/ERR_FATAL, "no entrys for STAGE%d.TXT",player_now_stage);	/*level*/ /*load_stage_number*/
 	}
 	//fps_init();/* ??? auto fps初期化 */
 }

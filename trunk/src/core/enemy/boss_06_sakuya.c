@@ -3,8 +3,9 @@
 
 /*---------------------------------------------------------
 	十六夜 咲夜
-	PAD
+	Izayoi Sakuya.
 	-------------------------------------------------------
+	PAD
 	ToDo:
 	移動と弾幕を分離しよう。でないと訳わからん。
 	ボスタイマー対応中
@@ -37,7 +38,9 @@ typedef struct /*_boss06_data*/
 	int wait2_256;
 	int wait3;
 	int move_angle512;
+
 //	int length_s_p256;	/* 咲夜とプレイヤーとの距離 */
+	int anime_frame;
 
 } BOSS06_DATA;
 //	int aaa_type;		/* 0: normal, 1: destroyed */
@@ -75,13 +78,12 @@ typedef struct /*_boss06_doll_data*/
 	#define FLG_NO_DOLL 	(0)
 	#define FLG_ALL_CAST	(1)
 static int kodomo_num;
-//static SPRITE *dummy_obj; /*dummy_obj*/
+//static SPRITE *send1_obj; /*send1_obj*/
 #endif
 
 
 //----[ZAKO]
 
-static SPRITE *obj_doll;		// 子供魔方陣のスプライト
 
 /*---------------------------------------------------------
 
@@ -145,6 +147,7 @@ enum
 enum
 {
 	SC00 = 0,
+	SC0_0b,
 	SC01,
 	SC02,
 	SC03,
@@ -157,6 +160,7 @@ enum
 enum
 {
 	SD00 = 0,
+	SD0_0b,
 	SD01,
 	SD02,
 };
@@ -176,32 +180,33 @@ enum
 };
 
 
-
+/*
+	SAKUYA_ANIME_xx_dummy
+	は中抜きパターンなので、
+	プログラムで指定しない。
+	(指定すると意味が判らなくなるから指定しない。)
+*/
 enum
 {
 	SAKUYA_ANIME_00_LEFT = 0,
-	SAKUYA_ANIME_01_,
-	SAKUYA_ANIME_02_,
-//	SAKUYA_ANIME_03_,
-	SAKUYA_ANIME_04_CENTER_A,
+	SAKUYA_ANIME_01_dummy,
+	SAKUYA_ANIME_02_dummy,							//	SAKUYA_ANIME_03_,
+	SAKUYA_ANIME_03_CENTER_A,
 //
-	SAKUYA_ANIME_05_CENTER_B,
-	SAKUYA_ANIME_06_,
-	SAKUYA_ANIME_07_,
-//	SAKUYA_ANIME_08_,
-	SAKUYA_ANIME_09_RIGHT,
+	SAKUYA_ANIME_04_CENTER_B,
+	SAKUYA_ANIME_05_dummy,
+	SAKUYA_ANIME_06_dummy,							//	SAKUYA_ANIME_08_,
+	SAKUYA_ANIME_07_RIGHT,
 //
-	SAKUYA_ANIME_09_ = 0x10,
-//	SAKUYA_ANIME_10_,/*0x11*/
-	SAKUYA_ANIME_11_,/*0x12*/
-//	SAKUYA_ANIME_12_,/*0x13*/
-	SAKUYA_ANIME_13_,/*0x14*/
-	SAKUYA_ANIME_14_,/*0x15*/
+	SAKUYA_ANIME_08_HIKARU_START,	/*= 0x10*/		//	SAKUYA_ANIME_10_,/*0x11*/
+	SAKUYA_ANIME_09_dummy,			/*0x12*/		//	SAKUYA_ANIME_12_,/*0x13*/
+	SAKUYA_ANIME_10_dummy,			/*0x14*/
+	SAKUYA_ANIME_11_HIKARU_END, 	/*0x15*/
 //
-	SAKUYA_ANIME_15_HATUDAN,/*0x16*/
-	SAKUYA_ANIME_16_,/*0x17*/
-	SAKUYA_ANIME_17_,/*0x18*/
-	SAKUYA_ANIME_18_,/*0x19*/
+	SAKUYA_ANIME_12_HATUDAN_START,	/*0x16*/
+	SAKUYA_ANIME_13_dummy,			/*0x17*/
+	SAKUYA_ANIME_14_dummy,			/*0x18*/
+	SAKUYA_ANIME_15_HATUDAN_END,	/*0x19*/
 };
 
 /*---------------------------------------------------------
@@ -256,21 +261,28 @@ static void move_doll02(SPRITE *src)
 		data->doll_vx = t256(1.0);
 		data->doll_vy = t256(0.0);
 		#if (1==USE_KEISYOU)
-		src->x256 = (data->sakuya_obj->x256);		dummy_obj->x256 = src->x256;
-		src->y256 = (data->sakuya_obj->y256);		dummy_obj->y256 = src->y256;
+		src->x256 = (data->sakuya_obj->x256);		send1_obj->x256 = src->x256;
+		src->y256 = (data->sakuya_obj->y256);		send1_obj->y256 = src->y256;
 		#else
-		src->x256 = (((((PLAYER_DATA *)player->data)->boss))->x256);		dummy_obj->x256 = src->x256;
-		src->y256 = (((((PLAYER_DATA *)player->data)->boss))->y256);		dummy_obj->y256 = src->y256;
+		src->x256 = (((((PLAYER_DATA *)player->data)->boss))->x256);		send1_obj->x256 = src->x256;
+		src->y256 = (((((PLAYER_DATA *)player->data)->boss))->y256);		send1_obj->y256 = src->y256;
 		#endif
 		data->sss = 0;
 		break;
 //------------------------------------------
 	case DB01:	/* 準備完了まで待つ */
-		src->anim_frame = 0;
+		#if 1
+		/* 魔方陣アニメーション */
+		src->m_angleCCW512++;
+		mask512(src->m_angleCCW512);
+		#else
+//		src->an im_frame = 0;
 //			if (2==data->nnn/*%(4-difficulty)*/)/* %2 == (5-3:Lunatic) */
-//			{	src->anim_frame = 1;}
+//			{	src->an im_frame = 1;}
 //			else
-//			{	src->anim_frame = 0;}
+//			{	src->an im_frame = 0;}
+		#endif
+//
 		#if (1==USE_KEISYOU)
 		if (((BOSS06_DATA *)data->sakuya_obj->data)->state1==1)
 		#else
@@ -301,8 +313,8 @@ static void move_doll02(SPRITE *src)
 //		data->doll_point_y=DOLL_POINT_CY00+cos512((data->doll_point_angle512))*DOLL_RADIUS_SIZE;
 
 		/*	*/
-		dummy_obj->x256 += (data->doll_vx)/**fps_fa ctor*/;
-		dummy_obj->y256 += (data->doll_vy)/**fps_fa ctor*/;
+		send1_obj->x256 += (data->doll_vx)/**fps_fa ctor*/;
+		send1_obj->y256 += (data->doll_vy)/**fps_fa ctor*/;
 		data->sss++;
 		if (
 	//		(t256(32) > abs(data->doll_point_x-src->x256)) &&
@@ -332,16 +344,16 @@ static void move_doll02(SPRITE *src)
 				data->star_remain_time	= (64*5);
 				data->nnn++;	if (data->nnn>(/*4-0*/3/*difficulty*/) )	{data->nnn=0/*1*/ /*0*/;}
 				#if (1==USE_KEISYOU)
-				src->x256 = (data->sakuya_obj->x256);		dummy_obj->x256 = src->x256;
-				src->y256 = (data->sakuya_obj->y256);		dummy_obj->y256 = src->y256;
+				src->x256 = (data->sakuya_obj->x256);		send1_obj->x256 = src->x256;
+				src->y256 = (data->sakuya_obj->y256);		send1_obj->y256 = src->y256;
 				#else
-				src->x256 = (((((PLAYER_DATA *)player->data)->boss))->x256);		dummy_obj->x256 = src->x256;
-				src->y256 = (((((PLAYER_DATA *)player->data)->boss))->y256);		dummy_obj->y256 = src->y256;
+				src->x256 = (((((PLAYER_DATA *)player->data)->boss))->x256);		send1_obj->x256 = src->x256;
+				src->y256 = (((((PLAYER_DATA *)player->data)->boss))->y256);		send1_obj->y256 = src->y256;
 				#endif
 			//	data->tx256 = DOLL_POINT_CX00;
 			//	data->ty256 = DOLL_POINT_CY00;
-			//	dummy_obj->x256 = data->tx256;
-			//	dummy_obj->y256 = data->ty256;
+			//	send1_obj->x256 = data->tx256;
+			//	send1_obj->y256 = data->ty256;
 			}
 		}
 		else
@@ -354,7 +366,7 @@ static void move_doll02(SPRITE *src)
 					/* CWの場合 */
 				//	enemy_sp2_bullet_create00(src, deg_360_to_512(3)+(( ((-data->state_d01*2/**data->hen_no_kazu*/)) +data->state_d01)>>3/*/5*/), t256(0.015), &(((BOSS06_DOLL_DATA *)src->data)->nnn) );
 /* CCWの場合 */
-					enemy_sp2_bullet_create01(dummy_obj,
+					enemy_sp2_bullet_create01(send1_obj,
 						data->doll_point_angle512,	//	-deg_360_to_512CCW(3)+(( ((-data->state_d01*2/**data->hen_no_kazu*/)) +data->state_d01)>>3/*/5*/),
 					//	t256(0.015),
 						data->star_remain_time//	&(((BOSS06_DOLL_DATA *)src->data)->nnn)
@@ -374,7 +386,6 @@ static void move_doll02(SPRITE *src)
 				魔方陣用
 				全方向に青ナイフ弾を撃つ
 			---------------------------------------------------------*/
-
 			//static void bullet_create_360_knifes(SPRITE *src, int speed256)
 			{
 			//	int angle512;
@@ -382,12 +393,20 @@ static void move_doll02(SPRITE *src)
 			//	{
 			//		bullet_create_sakuya_knife(src, (speed256), (angle512), /*i*/(angle512)/*anime_pattern*/);
 			//	}
-			bullet_create_n_way_dan_sa_type(src,
-				(t256(1.2)/*(speed256)*/),
-				(0/*aaa_angle512*/),
-				(int)(512/(18)),		/* 角度([360/360]度を18分割) */
-				BULLET_KNIFE20_06_YUKARI/*BULLET_KNIFE20_04_AOI*/,
-				(18));/* [18wayピンクナイフ弾] */
+			send1_obj->x256 = src->x256;
+			send1_obj->y256 = src->y256;
+			#if 1
+			/* あとで要る */
+	//		send1_obj->h128 = src->h128;
+	//		send1_obj->w128 = src->w128;
+			#endif
+		//	bullet_create_n_way_dan_sa_type(src,
+			send1_obj->BULLET_REGIST_speed256			=	(t256(1.2)/*(speed256)*/);
+			send1_obj->BULLET_REGIST_angle512			=	(0/*aaa_angle512*/);	/* 弾源角度512 */
+			send1_obj->BULLET_REGIST_div_angle512		=	(int)(512/(18));		/* 分割角度([360/360]度を18分割) */
+			send1_obj->BULLET_REGIST_bullet_obj_type	=	BULLET_KNIFE20_06_YUKARI;	/* [ピンクナイフ弾] */	/*BULLET_KNIFE20_04_AOI*/
+			send1_obj->BULLET_REGIST_n_way				=	(18) ;/* [18way] */
+			bullet_regist_basic();
 			}
 		}
 		data->state_d02 = DB02;
@@ -420,7 +439,7 @@ static void move_doll01(SPRITE *src)
 		src->y256 = data->sakuya_obj->y256+((data->sakuya_obj->h128-src->h128));
 		#else
 		src->x256 = ((((PLAYER_DATA *)player->data)->boss))->x256+((((((PLAYER_DATA *)player->data)->boss))->w128-src->w128));
-		src->y256 = ((((PLAYER_DATA *)player->data)->boss))->y256+((((((PLAYER_DATA *)player->data)->boss))->h128-src->h128));
+		src->y256 = ((((PLAYER_DATA *)player->data)->boss))->y256+((((((PLAYER_DATA *)player->data)->boss))->h128-src->h128))-t256(32);
 		#endif
 	//
 		#if (1==USE_KEISYOU)
@@ -570,9 +589,11 @@ static void sakuya_put_items(SPRITE *src)
 {
 	common_boss_put_items(src);
 //
-	//tama->anim_frame	= SAKUYA_ANIME_04_CENTER_A;//バグ(ここでプレイヤーショットのアニメパターンを弄るので、レミボムでハングアップする)
-	src->anim_frame 	= SAKUYA_ANIME_04_CENTER_A;//咲夜のアニメパターンを弄る
+	src->type			= BOSS_00_BOSS11;/* 咲夜のアニメパターン */
+//
 	BOSS06_DATA *data = (BOSS06_DATA *)src->data;
+	//tama->an im_frame = SAKUYA_ANIME_03_CENTER_A;//バグ(ここでプレイヤーショットのアニメパターンを弄るので、レミボムでハングアップする)
+	data->anime_frame	= SAKUYA_ANIME_03_CENTER_A;//咲夜のアニメパターンを弄る
 	data->state1		= 0;/* 共通して 値を 0 にする */
 	data->wait1 		= 80;
 	data->wait2_256 	= t256(-100);
@@ -613,7 +634,7 @@ static void sakuya_put_items(SPRITE *src)
 
 ---------------------------------------------------------*/
 
-static void sakuya_wait_state(SPRITE *src, /*int nextstate,*/ int anim_frame)
+static void sakuya_wait_state(SPRITE *src, /*int nextstate,*/ int set_anime_frame)
 {
 	BOSS06_DATA *data = (BOSS06_DATA *)src->data;
 	data->wait1 -= 1/*fps_fa ctor*/;
@@ -622,7 +643,7 @@ static void sakuya_wait_state(SPRITE *src, /*int nextstate,*/ int anim_frame)
 	else
 	{
 		data->state1++/* = nextstate*/;
-		src->anim_frame = anim_frame;
+		data->anime_frame = set_anime_frame;
 	}
 }
 
@@ -633,7 +654,7 @@ static void sakuya_wait_state(SPRITE *src, /*int nextstate,*/ int anim_frame)
 
 ---------------------------------------------------------*/
 
-static void danmaku_state_check_holding(SPRITE *src)	/*, int nextstate*/ /*, int anim_frame*/
+static void danmaku_state_check_holding(SPRITE *src)	/*, int nextstate*/ /*, int an im_frame*/
 {
 	BOSS06_DATA *data = (BOSS06_DATA *)src->data;
 	if (DANMAKU_00 == data->boss_base.danmaku_type)
@@ -646,7 +667,7 @@ static void danmaku_state_check_holding(SPRITE *src)	/*, int nextstate*/ /*, int
 /*---------------------------------------------------------
 	咲夜	中心→左右アニメサブ
 	-------------------------------------------------------
-	s->anim_frame = SAKUYA_ANIME_04_CENTER_A;
+	data->anime_frame = SAKUYA_ANIME_03_CENTER_A;
 	data->wait3 = 0;
 	で初期化されてる必要がある。
 ---------------------------------------------------------*/
@@ -657,7 +678,7 @@ static void sakuya_anime_to_sayuu(SPRITE *src)
 	if (0 < data->move_vx256)
 	{
 		/* 右へ移動 */
-		if (src->anim_frame==SAKUYA_ANIME_09_RIGHT)
+		if (data->anime_frame==SAKUYA_ANIME_07_RIGHT)
 		{
 			data->state1++/*	= SB06*/;/*おしまい*/
 		}
@@ -667,14 +688,14 @@ static void sakuya_anime_to_sayuu(SPRITE *src)
 			if (data->wait3>=3)
 			{
 				data->wait3=0;
-				src->anim_frame++;/*???*/
+				data->anime_frame++;/*???*/
 			}
 		}
 	}
 	else
 	{
 		/* 左へ移動 */
-		if (src->anim_frame==SAKUYA_ANIME_00_LEFT)
+		if (data->anime_frame==SAKUYA_ANIME_00_LEFT)
 		{
 			data->state1++/*	= SB06*/;/*おしまい*/
 		}
@@ -684,7 +705,7 @@ static void sakuya_anime_to_sayuu(SPRITE *src)
 			if (data->wait3>=3)
 			{
 				data->wait3=0;
-				src->anim_frame--;/*???*/
+				data->anime_frame--;/*???*/
 			}
 		}
 	}
@@ -694,7 +715,7 @@ static void sakuya_anime_to_sayuu(SPRITE *src)
 /*---------------------------------------------------------
 	咲夜	弾撃ちアニメ待機
 	-------------------------------------------------------
-	s->anim_frame = SAKUYA_ANIME_15_HATUDAN;
+	data->anime_frame = SAKUYA_ANIME_12_HATUDAN_START;
 	data->wait3 = 0;
 	で初期化されてる必要がある。
 ---------------------------------------------------------*/
@@ -702,7 +723,7 @@ static void sakuya_anime_to_sayuu(SPRITE *src)
 static void sakuya_tama_anime_wait3_0(SPRITE *src)
 {
 	BOSS06_DATA *data = (BOSS06_DATA *)src->data;
-	if (src->anim_frame==SAKUYA_ANIME_18_)
+	if (data->anime_frame==SAKUYA_ANIME_15_HATUDAN_END)
 	{
 		data->state1++/*	= SB06*/;
 	}
@@ -712,7 +733,7 @@ static void sakuya_tama_anime_wait3_0(SPRITE *src)
 		if (data->wait3>=3)
 		{
 			data->wait3=0;
-			src->anim_frame++;/*???*/
+			data->anime_frame++;/*???*/
 		}
 	}
 }
@@ -722,13 +743,18 @@ static void sakuya_tama_anime_wait3_0(SPRITE *src)
 
 ---------------------------------------------------------*/
 
-static void enemy_boss06_out(SPRITE *src)
-{
-	if (src->x256 < t256(50))												{	src->x256 = t256(50);}
-	if (src->x256 > t256(GAME_WIDTH)-t256(50)-((src->w128+src->w128)))		{	src->x256 = t256(GAME_WIDTH)-t256(50)-((src->w128+src->w128));}
-	if (src->y256 < t256(10))												{	src->y256 = t256(10);}
-	if (src->y256 > t256(GAME_HEIGHT)-t256(120)+((src->h128+src->h128)))	{	src->y256 = t256(GAME_HEIGHT)-t256(120)+((src->h128+src->h128));}
-}
+//static void enemy_boss06_out(SPRITE *src)
+//{
+//	boss_clip_min.x256 = t256(50);
+//	boss_clip_max.x256 = t256(GAME_WIDTH)-t256(50)-((src->w128+src->w128));
+//	boss_clip_min.y256 = t256(10);
+//	boss_clip_max.y256 = t256(GAME_HEIGHT)-t256(120)+((src->h128+src->h128));
+//
+//		 if (src->x256 < boss_clip_min.x256 )	{	src->x256 = boss_clip_min.x256;}
+//	else if (src->x256 > boss_clip_max.x256 )	{	src->x256 = boss_clip_max.x256;}
+//		 if (src->y256 < boss_clip_min.y256 )	{	src->y256 = boss_clip_min.y256;}
+//	else if (src->y256 > boss_clip_max.y256 )	{	src->y256 = boss_clip_max.y256;}
+//}
 
 
 /*---------------------------------------------------------
@@ -780,11 +806,11 @@ static void enemy_boss06_knifes3(SPRITE *src)	/*,*/ /*dou ble speed,*/	/*int len
 			src->x256				= tmp1_256;
 			src->y256				= tmp2_256;
 			src->color32			= 0x00ffffff;			/*	src->alpha			= 0x00;*/
-//			src->anim_frame 		= SAKUYA_ANIME_18_;//?????
-#if 0/*???*/
-/* スペルカードシステムでは対応できない。 */
+//			data->anime_frame		= SAKUYA_ANIME_15_HATUDAN_END;//?????
+			#if 0/*???*/
+			/* スペルカードシステムでは対応できない。 */
 			sp ell_card_number	= SPELL_CARD_10_sakuya_jjj/*5*/;/*???*/
-#endif
+			#endif
 			data->wait2_256 	= /*speed256*/t256(1)+(difficulty<<8);
 		}
 		else
@@ -794,19 +820,18 @@ static void enemy_boss06_knifes3(SPRITE *src)	/*,*/ /*dou ble speed,*/	/*int len
 		//	tmp_s_x = s->x;
 		//	tmp_s_y = s->y;
 			/* プレイヤー狙い弾 */
-#if 0
-/* CWの場合 */
-			src->x256		=	tmp_x256 + ((cos512((ii<<6))*len256)>>8);
-			src->y256		=	tmp_y256 + ((sin512((ii<<6))*len256)>>8);
-#else
-/* CCWの場合 */
-			src->x256		=	tmp_x256 + ((sin512((ii<<6))*len256)>>8);
-			src->y256		=	tmp_y256 + ((cos512((ii<<6))*len256)>>8);
-#endif
-			bullet_create_sakuya_follow_knife1/*2*/(src,
-				/*speed256*/t256(2.0),
-				(ii<<6)/*i*M_PI*2*1/8*/,			/*angle512*/
-				-30+(ii&(2-1)/*%2*/)*60);			/* -30 or 30 */
+			#if 1
+			/* CCWの場合 */
+			send1_obj->x256 	=	src->x256	=	tmp_x256 + ((sin512((ii<<6))*len256)>>8);
+			send1_obj->y256 	=	src->y256	=	tmp_y256 + ((cos512((ii<<6))*len256)>>8);
+		//	send1_obj->w128 	=	src->w128;/*弾*/
+		//	send1_obj->h128 	=	src->h128;/*弾*/
+			#endif
+		//	/*src,*/
+			send1_obj->BULLET_REGIST_speed256 = 						/*speed256*/	t256(1.0/*2.0*/);
+			send1_obj->BULLET_REGIST_angle512 = 						(ii<<6)/*i*M_PI*2*1/8*/;			/*angle512*/
+			send1_obj->BULLET_REGIST_sakuya_kurukurku_knife_height =	-30+(ii&(2-1)/*%2*/)*60;			/* -30 or 30 */
+			bullet_create_sakuya_kurukuru_knife/*2*/();
 		//	s->x = tmp_s_x;
 		//	s->y = tmp_s_y;
 		}
@@ -911,12 +936,12 @@ static void sakuya_idou_sub(SPRITE *src, int speed256, int target_point_name)
 		if (my_yudo_point < src->x256 )/*t256(50)*/
 		{
 			src->x256 -= t256(2.0/*3.0*/)/*fps_fa ctor*/;
-			if (SAKUYA_ANIME_00_LEFT < src->anim_frame)
+			if (SAKUYA_ANIME_00_LEFT < data->anime_frame)
 			{
 				data->wait3 += 1/*fps_fa ctor*/;
-				if (SAKUYA_ANIME_04_CENTER_A < data->wait3)
+				if (SAKUYA_ANIME_03_CENTER_A < data->wait3)
 				{
-					src->anim_frame--;
+					data->anime_frame--;
 					data->wait3 = 0;
 				}
 			}
@@ -939,8 +964,8 @@ static void sakuya_idou_sub(SPRITE *src, int speed256, int target_point_name)
 	#endif
 			data->boss_base.danmaku_type		= DANMAKU_01_sakuya;	/* 禊弾幕をセット */
 			data->boss_base.danmaku_time_out	= DANMAKU_01_SET_TIME;	/* 禊弾幕の発生時間 */
-	//		src->anim_frame 		= SAKUYA_ANIME_04_CENTER_A;
-			src->anim_frame 		= SAKUYA_ANIME_15_HATUDAN;
+	//		data->anime_frame		= SAKUYA_ANIME_03_CENTER_A;
+			data->anime_frame		= SAKUYA_ANIME_12_HATUDAN_START;
 		}
 	//	}
 		break;
@@ -948,22 +973,22 @@ static void sakuya_idou_sub(SPRITE *src, int speed256, int target_point_name)
 		sakuya_tama_anime_wait3_0(src);
 		break;
 	case SA03:	/* 禊弾幕が終わるまで待機 */
-		danmaku_state_check_holding(src/*, SA03*/ /*, SAKUYA_ANIME_04_CENTER_A*/);
+		danmaku_state_check_holding(src/*, SA03*/ /*, SAKUYA_ANIME_03_CENTER_A*/);
 		break;
 	case SA04:
-		src->anim_frame 		= SAKUYA_ANIME_04_CENTER_A;
+		data->anime_frame		= SAKUYA_ANIME_03_CENTER_A;
 		data->state1++/*	= SA05*/;
 		break;
 	case SA05:	/* 真ん中に戻る */
 		if (SAKUYA_POINT_X_MID > src->x256 )
 		{
 			src->x256 += t256(3.0/*3.0*/)/*fps_fa ctor*/;
-			if (SAKUYA_ANIME_09_RIGHT > src->anim_frame)
+			if (SAKUYA_ANIME_07_RIGHT > data->anime_frame)
 			{
 				data->wait3 += 1/*fps_fa ctor*/;
-				if (SAKUYA_ANIME_04_CENTER_A < data->wait3)
+				if (SAKUYA_ANIME_03_CENTER_A < data->wait3)
 				{
-					src->anim_frame++;
+					data->anime_frame++;
 					data->wait3 = 0;
 				}
 			}
@@ -1004,30 +1029,30 @@ static void sakuya_idou_sub(SPRITE *src, int speed256, int target_point_name)
 	#endif
 			data->boss_base.danmaku_type		= DANMAKU_01_sakuya;	/* 禊弾幕をセット */
 			data->boss_base.danmaku_time_out	= DANMAKU_01_SET_TIME;	/* 禊弾幕の発生時間 */
-		//	src->anim_frame 		= SAKUYA_ANIME_04_CENTER_A;
-			src->anim_frame 		= SAKUYA_ANIME_15_HATUDAN;
+		//	data->anime_frame		= SAKUYA_ANIME_03_CENTER_A;
+			data->anime_frame		= SAKUYA_ANIME_12_HATUDAN_START;
 		}
 		break;
 	case SA08:	/* 弾撃ちアニメ待機 */
 		sakuya_tama_anime_wait3_0(src);
 		break;
 	case SA09:	/* 禊弾幕が終わるまで待機 */
-		danmaku_state_check_holding(src/*, SA07*/ /*, SAKUYA_ANIME_04_CENTER_A*/);
+		danmaku_state_check_holding(src/*, SA07*/ /*, SAKUYA_ANIME_03_CENTER_A*/);
 		break;
 	case SA10:
-		src->anim_frame 		= SAKUYA_ANIME_04_CENTER_A;
+		data->anime_frame		= SAKUYA_ANIME_03_CENTER_A;
 		data->state1++/*	= SA05*/;
 		break;
 	case SA11:	/* 真ん中に戻る */
 		if (SAKUYA_POINT_X_MID < src->x256 )
 		{
 			src->x256 -= t256(3.0/*3.0*/)/*fps_fa ctor*/;
-			if (SAKUYA_ANIME_00_LEFT < src->anim_frame)
+			if (SAKUYA_ANIME_00_LEFT < data->anime_frame)
 			{
 				data->wait3 += 1/*fps_fa ctor*/;
-				if (SAKUYA_ANIME_04_CENTER_A < data->wait3)
+				if (SAKUYA_ANIME_03_CENTER_A < data->wait3)
 				{
-					src->anim_frame--;
+					data->anime_frame--;
 					data->wait3 = 0;
 				}
 			}
@@ -1071,7 +1096,7 @@ static void sakuya_idou_sub(SPRITE *src, int speed256, int target_point_name)
 		break;
 
 //	case SB00aaa:	/* 待機 */
-//		sakuya_wait_state(src, SAKUYA_ANIME_04_CENTER_A);
+//		sakuya_wait_state(src, SAKUYA_ANIME_03_CENTER_A);
 	//		data->wait1 -= 1/*fps_fa ctor*/;
 	//	if (data->wait1<0)
 	//	{
@@ -1091,15 +1116,15 @@ static void sakuya_idou_sub(SPRITE *src, int speed256, int target_point_name)
 			{
 				data->move_vx256 = t256(1.0/*0.5*/);
 //				ang512=(ra_nd()&(256-1)/*%(180*1.42)*/);
-//				if (ang512>deg_360_to_512(90))		{	ang512+=deg_360_to_512(90); 	src->anim_frame=(SAKUYA_ANIME_04_CENTER_A+1); }
-//				else								{									src->anim_frame=(SAKUYA_ANIME_04_CENTER_A-1); }
+//				if (ang512>deg_360_to_512(90))		{	ang512+=deg_360_to_512(90); 	data->anime_frame=(SAKUYA_ANIME_03_CENTER_A+1); }
+//				else								{									data->anime_frame=(SAKUYA_ANIME_03_CENTER_A-1); }
 //				ang512 -= deg_360_to_512(45);
 			}
 			else
 			{
 				data->move_vx256 = -t256(1.0/*0.5*/);
-//				if (src->x256 > t256(GAME_WIDTH/2) )	{	ang512=deg_360_to_512(180); 	src->anim_frame=(SAKUYA_ANIME_04_CENTER_A+2); }
-//				else									{	ang512=deg_360_to_512(0);		src->anim_frame=(SAKUYA_ANIME_04_CENTER_A-2); }
+//				if (src->x256 > t256(GAME_WIDTH/2) )	{	ang512=deg_360_to_512(180); 	data->anime_frame=(SAKUYA_ANIME_03_CENTER_A+2); }
+//				else									{	ang512=deg_360_to_512(0);		data->anime_frame=(SAKUYA_ANIME_03_CENTER_A-2); }
 			}
 //			data->move_angle512=/*deg512_2rad*/(ang512);
 		}
@@ -1107,7 +1132,7 @@ static void sakuya_idou_sub(SPRITE *src, int speed256, int target_point_name)
 		data->wait1 		= (35);/* [WAITSTATE] */	/* 弾撃たないでちょっと移動 */
 //		data->wait2_256 += t256(1);
 		//
-		src->anim_frame = SAKUYA_ANIME_04_CENTER_A;
+		data->anime_frame = SAKUYA_ANIME_03_CENTER_A;
 		data->wait3=0;
 		data->state1++/*	= SB02*/;
 		break;
@@ -1118,10 +1143,10 @@ static void sakuya_idou_sub(SPRITE *src, int speed256, int target_point_name)
 		break;
 	case SB03:
 		src->x256 += ((data->move_vx256))/**fps_fa ctor*/;	/* 移動 */	/* 弾撃たないでちょっと移動 */
-		sakuya_wait_state(src/*, SB05*/, SAKUYA_ANIME_15_HATUDAN);
+		sakuya_wait_state(src/*, SB05*/, SAKUYA_ANIME_12_HATUDAN_START);
 		break;
 	case SB04:
-		src->anim_frame = SAKUYA_ANIME_15_HATUDAN;
+		data->anime_frame = SAKUYA_ANIME_12_HATUDAN_START;
 		data->wait3 = 0;
 		data->state1++/*	= SB02*/;
 		break;
@@ -1129,18 +1154,18 @@ static void sakuya_idou_sub(SPRITE *src, int speed256, int target_point_name)
 		sakuya_tama_anime_wait3_0(src);
 		break;
 	case SB06:
-		//	enemy_boss06_mamemaki_state(src, SB07, SAKUYA_ANIME_18_);
+		//	enemy_boss06_mamemaki_state(src, SB07, SAKUYA_ANIME_15_HATUDAN_END);
 			data->boss_base.danmaku_type		= DANMAKU_02_sakuya;	/* 24弾幕をセット */
 			data->boss_base.danmaku_time_out	= DANMAKU_02_SET_TIME;	/* 24弾幕の発生時間 */
 			data->state1++/*	= SB07*/;
 		break;
 	case SB07:	/* 24弾幕が終わるまで移動 */
 		src->x256 += ((data->move_vx256))/**fps_fa ctor*/;	/* 移動 */	/* 弾撃ちながら移動 */
-		danmaku_state_check_holding(src/*, SA07*/ /*, SAKUYA_ANIME_04_CENTER_A*/);
+		danmaku_state_check_holding(src/*, SA07*/ /*, SAKUYA_ANIME_03_CENTER_A*/);
 		break;
 	case SB08:
 			src->x256 = t256(GAME_WIDTH)-src->x256; 			/* 反対側へワープ */
-			src->anim_frame = SAKUYA_ANIME_15_HATUDAN;
+			data->anime_frame = SAKUYA_ANIME_12_HATUDAN_START;
 			data->wait3 = 0;
 			data->state1++/*	= SB09*/;
 		break;
@@ -1151,20 +1176,20 @@ static void sakuya_idou_sub(SPRITE *src, int speed256, int target_point_name)
 			data->boss_base.danmaku_type		= DANMAKU_03_sakuya;	/* 11弾幕をセット */
 			data->boss_base.danmaku_time_out	= DANMAKU_03_SET_TIME;	/* 11弾幕の発生時間 */
 			data->wait1 			= (35);/* (SB12で)少し待機 */
-			src->anim_frame 		= SAKUYA_ANIME_04_CENTER_A;
+			data->anime_frame		= SAKUYA_ANIME_03_CENTER_A;
 			data->state1++/*	= SB07*/;
 		break;
 	case SB11:	/* 11弾幕が終わるまで待機 */
-		danmaku_state_check_holding(src/*, SA07*/ /*, SAKUYA_ANIME_04_CENTER_A*/);
+		danmaku_state_check_holding(src/*, SA07*/ /*, SAKUYA_ANIME_03_CENTER_A*/);
 		break;
 	case SB12:	/* (SB12で)少し待機 */
-		sakuya_wait_state(src/*, SB05*/, SAKUYA_ANIME_04_CENTER_A);
+		sakuya_wait_state(src/*, SB05*/, SAKUYA_ANIME_03_CENTER_A);
 		break;
 	case SB13:
 		data->state1	= SB01;
 		break;
 	}
-	enemy_boss06_out(src);
+//	enemy_boss06_out(src);
 }
 
 
@@ -1178,13 +1203,20 @@ static void sakuya_idou_sub(SPRITE *src, int speed256, int target_point_name)
 	switch (data->state1)
 	{
 	case SC00:
-		sakuya_wait_state(src, SAKUYA_ANIME_04_CENTER_A);
+		{	/* 横の制限を変える */
+			boss_clip_min.x256 = t256(0);			//t256(50);
+			boss_clip_max.x256 = t256(GAME_WIDTH);	//t256(GAME_WIDTH)-t256(50)-((src->w128+src->w128));
+		}
+		data->state1++;
+		break;
+	case SC0_0b:
+		sakuya_wait_state(src, SAKUYA_ANIME_03_CENTER_A);
 	//	data->wait1 -= 1/*fps_fa ctor*/;
 	//	if (data->wait1<0)	/* 待機時間が終わったら */
 	//	{
 	//		data->state1++/*	= SC01*/;
 //++//		pd->bossmode		= B00_NONE/*B01_BATTLE*/;
-	//		src->anim_frame 	= SAKUYA_ANIME_04_CENTER_A;
+	//		data->anime_frame	= SAKUYA_ANIME_03_CENTER_A;
 	//	}
 	//	else	{	}
 		break;
@@ -1194,31 +1226,31 @@ static void sakuya_idou_sub(SPRITE *src, int speed256, int target_point_name)
 			data->state1++/*	= SC02*/;
 			data->wait1 	= 10;
 			data->wait2_256 = t256(0);
-			src->anim_frame = SAKUYA_ANIME_00_LEFT;
+			data->anime_frame = SAKUYA_ANIME_00_LEFT;
 		}
 		else
 		{
 			sakuya_idou_sub(src, t256(3), SAKUYA_POINT_00_LEFT);
-			if (src->anim_frame>SAKUYA_ANIME_00_LEFT)
+			if (data->anime_frame > SAKUYA_ANIME_00_LEFT)
 			{
 				data->wait3 += 1/*fps_fa ctor*/;
 				if (data->wait3>=3)
 				{
-					src->anim_frame--;
+					data->anime_frame--;
 					data->wait3=0;
 				}
 			}
 		}
 		break;
 	case SC02:
-		sakuya_wait_state(src/*, SC03*/, SAKUYA_ANIME_02_/*???*/);
+		sakuya_wait_state(src/*, SC03*/, (SAKUYA_ANIME_03_CENTER_A-1)/*???*/);
 		break;
 	case SC03:
 		if (src->x256 > (SAKUYA_LIMIT_X_RIGHT)/*GAME_WIDTH-src->w+3*/ ) /* 右端に来たら */
 		{
 			data->state1++/*	= SC04*/;
 			data->wait2_256 = t256(0);
-			src->anim_frame = SAKUYA_ANIME_09_RIGHT;
+			data->anime_frame = SAKUYA_ANIME_07_RIGHT;
 		}
 		else
 		{
@@ -1240,7 +1272,7 @@ static void sakuya_idou_sub(SPRITE *src, int speed256, int target_point_name)
 				//if (difficulty)
 				{
 					bullet_create_jyuryoku_dan000(src, /*(0.7)*/t256(2)/*(2)*/, (deg_360_to_512(270)-((t256_floor(data->wait2_256))&(256-1)/*%(180*1.42)*/)), t256(0.04), BULLET_KNIFE20_05_AKA);
-				//	if (difficulty>1)
+				//	if (1<difficulty)
 					{	bullet_create_jyuryoku_dan000(src, /*(0.7)*/t256(2)/*(2)*/, (deg_360_to_512(180)-((t256_floor(data->wait2_256))&(256-1)/*%(180*1.42)*/)), t256(0.02), BULLET_KNIFE20_05_AKA);}
 				}
 #else
@@ -1249,7 +1281,7 @@ static void sakuya_idou_sub(SPRITE *src, int speed256, int target_point_name)
 				//if (difficulty)
 				{
 					bullet_create_jyuryoku_dan000(src, /*(0.7)*/t256(2)/*(2)*/, (-deg_360_to_512CCW(270)-((t256_floor(data->wait2_256))&(256-1)/*%(180*1.42)*/)), t256(0.04), BULLET_KNIFE20_05_AKA);
-				//	if (difficulty>1)
+				//	if (1<difficulty)
 					{	bullet_create_jyuryoku_dan000(src, /*(0.7)*/t256(2)/*(2)*/, (-deg_360_to_512CCW(180)-((t256_floor(data->wait2_256))&(256-1)/*%(180*1.42)*/)), t256(0.02), BULLET_KNIFE20_05_AKA);}
 				}
 #endif
@@ -1260,12 +1292,12 @@ static void sakuya_idou_sub(SPRITE *src, int speed256, int target_point_name)
 				#endif
 			}
 			sakuya_idou_sub(src, t256(5), SAKUYA_POINT_03_RIGHT);
-			if (src->anim_frame<SAKUYA_ANIME_09_RIGHT)
+			if (data->anime_frame < SAKUYA_ANIME_07_RIGHT)
 			{
 				data->wait3 += 1/*fps_fa ctor*/;
 				if (data->wait3>=7)
 				{
-					src->anim_frame++;
+					data->anime_frame++;
 					data->wait3=0;
 				}
 			}
@@ -1277,17 +1309,17 @@ static void sakuya_idou_sub(SPRITE *src, int speed256, int target_point_name)
 			( src->x256 > (SAKUYA_LIMIT_X_MID_RIGHT)))		/* 真ん中に来たら */
 		{
 			data->state1++/*	= SC05*/;
-			src->anim_frame = SAKUYA_ANIME_04_CENTER_A;
+			data->anime_frame = SAKUYA_ANIME_03_CENTER_A;
 		}
 		else
 		{
 			sakuya_idou_sub(src, t256(3), SAKUYA_POINT_01_MID_UP);
-			if (SAKUYA_ANIME_04_CENTER_A < src->anim_frame)
+			if (SAKUYA_ANIME_03_CENTER_A < data->anime_frame)
 			{
 				data->wait3 += 1/*fps_fa ctor*/;
 				if (data->wait3>=3)
 				{
-					src->anim_frame--;
+					data->anime_frame--;
 					data->wait3=0;
 				}
 			}
@@ -1299,17 +1331,17 @@ static void sakuya_idou_sub(SPRITE *src, int speed256, int target_point_name)
 			data->state1++/*	= SC06*/;
 			data->wait1 	= 10;
 			data->wait2_256 = 0;
-			src->anim_frame = SAKUYA_ANIME_09_RIGHT;
+			data->anime_frame = SAKUYA_ANIME_07_RIGHT;
 		}
 		else
 		{
 			sakuya_idou_sub(src, t256(3), SAKUYA_POINT_03_RIGHT);
-			if (src->anim_frame<SAKUYA_ANIME_09_RIGHT)
+			if (data->anime_frame < SAKUYA_ANIME_07_RIGHT)
 			{
 				data->wait3 += 1/*fps_fa ctor*/;
 				if (data->wait3>=3)
 				{
-					src->anim_frame++;
+					data->anime_frame++;
 					data->wait3=0;
 				}
 			}
@@ -1320,7 +1352,7 @@ static void sakuya_idou_sub(SPRITE *src, int speed256, int target_point_name)
 		{
 			data->state1++/*	= SC07*/;
 			data->wait2_256 = 0;
-			src->anim_frame = SAKUYA_ANIME_00_LEFT;
+			data->anime_frame = SAKUYA_ANIME_00_LEFT;
 		}
 		else
 		{
@@ -1333,7 +1365,7 @@ static void sakuya_idou_sub(SPRITE *src, int speed256, int target_point_name)
 				if (difficulty)
 				{
 					bullet_create_jyuryoku_dan000(src, t256(3), (((t256_floor(data->wait2_256))&(256-1)/*%(180*1.42)*/)+deg_360_to_512(90)), t256(0.04), BULLET_KNIFE20_05_AKA);
-					if (difficulty>1)
+					if (1<difficulty)
 					{	bullet_create_jyuryoku_dan000(src, t256(3), (((t256_floor(data->wait2_256))&(256-1)/*%(180*1.42)*/)), t256(0.02), BULLET_KNIFE20_05_AKA);}
 				}
 #else
@@ -1342,7 +1374,7 @@ static void sakuya_idou_sub(SPRITE *src, int speed256, int target_point_name)
 				if (difficulty)
 				{
 					bullet_create_jyuryoku_dan000(src, t256(3), (((t256_floor(data->wait2_256))&(256-1)/*%(180*1.42)*/)+deg_360_to_512CCW(360-90)), t256(0.04), BULLET_KNIFE20_05_AKA);
-					if (difficulty>1)
+					if (1<difficulty)
 					{	bullet_create_jyuryoku_dan000(src, t256(3), (((t256_floor(data->wait2_256))&(256-1)/*%(180*1.42)*/)), t256(0.02), BULLET_KNIFE20_05_AKA);}
 				}
 #endif
@@ -1353,12 +1385,12 @@ static void sakuya_idou_sub(SPRITE *src, int speed256, int target_point_name)
 				#endif
 			}
 			sakuya_idou_sub(src, t256(5), SAKUYA_POINT_00_LEFT);
-			if (src->anim_frame>SAKUYA_ANIME_00_LEFT)
+			if (data->anime_frame > SAKUYA_ANIME_00_LEFT)
 			{
 				data->wait3 += 1/*fps_fa ctor*/;
 				if (data->wait3>=7)
 				{
-					src->anim_frame--;
+					data->anime_frame--;
 					data->wait3=0;
 				}
 			}
@@ -1371,17 +1403,17 @@ static void sakuya_idou_sub(SPRITE *src, int speed256, int target_point_name)
 		{
 			data->state1++/*	= SC08*/;
 			data->wait2_256 = t256(60);
-			src->anim_frame = SAKUYA_ANIME_04_CENTER_A;
+			data->anime_frame = SAKUYA_ANIME_03_CENTER_A;
 		}
 		else
 		{
 			sakuya_idou_sub(src, t256(3), SAKUYA_POINT_01_MID_UP);
-			if (SAKUYA_ANIME_04_CENTER_A > src->anim_frame)
+			if (SAKUYA_ANIME_03_CENTER_A > data->anime_frame)
 			{
 				data->wait3 += 1/*fps_fa ctor*/;
 				if (data->wait3>=3)
 				{
-					src->anim_frame++;
+					data->anime_frame++;
 					data->wait3=0;
 				}
 			}
@@ -1393,7 +1425,7 @@ static void sakuya_idou_sub(SPRITE *src, int speed256, int target_point_name)
 		{
 		//	data->state1++/*	= SC01*/;
 			data->state1	= SC01;
-			src->anim_frame = SAKUYA_ANIME_04_CENTER_A;
+			data->anime_frame = SAKUYA_ANIME_03_CENTER_A;
 		}
 		else
 		{
@@ -1402,36 +1434,55 @@ static void sakuya_idou_sub(SPRITE *src, int speed256, int target_point_name)
 			{
 				int b_wait2_high;
 				b_wait2_high=(((int)((t256_floor(data->wait2_256))>>5/*/20*/)));
-			//	src->anim_frame++;	src->anim_frame %= 7;//??? 9???
-				src->anim_frame++;	src->anim_frame &= (8-1);
+			//	data->anime_frame++;	data->anime_frame %= 7;//??? 9???
+				data->anime_frame++;	data->anime_frame &= (8-1);
 				{
-#if 0
-/* CWの場合 */
-					bullet_create_sakuya_follow_knife1(src, (b_wait2_high<<8)+t256(4.0), (deg_360_to_512((180-30))+((b_wait2_high)*deg_360_to_512(40))), -80);
-					bullet_create_sakuya_follow_knife1(src, (b_wait2_high<<8)+t256(3.0), (deg_360_to_512((180-30))+((b_wait2_high)*deg_360_to_512(30))), -60);
-					if (difficulty>1)
+					#if 1
+					send1_obj->x256 	=	src->x256;
+					send1_obj->y256 	=	src->y256;
+				//	send1_obj->w128 	=	src->w128;/*弾*/
+				//	send1_obj->h128 	=	src->h128;/*弾*/
+					#endif
+//
+					#if 0
+					/* CWの場合 */
+						send1_obj->BULLET_REGIST_angle512 = (deg_360_to_512((180-30))+((b_wait2_high)*deg_360_to_512(40)));
+						send1_obj->BULLET_REGIST_angle512 = (deg_360_to_512((180-30))+((b_wait2_high)*deg_360_to_512(30)));
+					if (1<difficulty)
 					{
-						bullet_create_sakuya_follow_knife1(src, (b_wait2_high<<8)+t256(2.0), (deg_360_to_512((180-30))+((b_wait2_high)*deg_360_to_512(20))), -40);
+						send1_obj->BULLET_REGIST_angle512 = (deg_360_to_512((180-30))+((b_wait2_high)*deg_360_to_512(20)));
 					}
-#else
-/* CCWの場合 */
-						bullet_create_sakuya_follow_knife1(src, (b_wait2_high<<8)+t256(4.0), deg_360_to_512CCW(/*360+*/90-30)+(b_wait2_high)*deg_360_to_512CCW(40), -80);
-						bullet_create_sakuya_follow_knife1(src, (b_wait2_high<<8)+t256(3.0), deg_360_to_512CCW(/*360+*/90-30)+(b_wait2_high)*deg_360_to_512CCW(30), -60);
-					if (difficulty>1)
+					#endif
+					/* CCWの場合 */
+						/*src,*/
+						send1_obj->BULLET_REGIST_speed256 = (b_wait2_high<<7/*8*/)+t256(2.0/*4.0*/);
+						send1_obj->BULLET_REGIST_angle512 = deg_360_to_512CCW(/*360+*/90-30)+(b_wait2_high)*deg_360_to_512CCW(40);
+						send1_obj->BULLET_REGIST_sakuya_kurukurku_knife_height = -80;
+						bullet_create_sakuya_kurukuru_knife();
+						/*src,*/
+						send1_obj->BULLET_REGIST_speed256 = (b_wait2_high<<7/*8*/)+t256(1.5/*3.0*/);
+						send1_obj->BULLET_REGIST_angle512 = deg_360_to_512CCW(/*360+*/90-30)+(b_wait2_high)*deg_360_to_512CCW(30);
+						send1_obj->BULLET_REGIST_sakuya_kurukurku_knife_height = -60;
+						bullet_create_sakuya_kurukuru_knife();
+					if (1<difficulty)
 					{
-						bullet_create_sakuya_follow_knife1(src, (b_wait2_high<<8)+t256(2.0), deg_360_to_512CCW(/*360+*/90-30)+(b_wait2_high)*deg_360_to_512CCW(20), -40);
+						/*src,*/
+						send1_obj->BULLET_REGIST_speed256 = (b_wait2_high<<7/*8*/)+t256(1.0/*2.0*/);
+						send1_obj->BULLET_REGIST_angle512 = deg_360_to_512CCW(/*360+*/90-30)+(b_wait2_high)*deg_360_to_512CCW(20);
+						send1_obj->BULLET_REGIST_sakuya_kurukurku_knife_height = -40;
+						bullet_create_sakuya_kurukuru_knife();
 					}
-#endif
+
 				}
-				src->anim_frame = SAKUYA_ANIME_18_;
+				data->anime_frame = SAKUYA_ANIME_15_HATUDAN_END;
 			}
 		}
-		if (src->anim_frame>SAKUYA_ANIME_15_HATUDAN)
+		if (data->anime_frame > SAKUYA_ANIME_12_HATUDAN_START)
 		{
 			data->wait3 += 1/*fps_fa ctor*/;
 			if (data->wait3>=4)
 			{
-				src->anim_frame--;
+				data->anime_frame--;
 				data->wait3=0;
 			}
 		}
@@ -1453,14 +1504,21 @@ static void sakuya_idou_sub(SPRITE *src, int speed256, int target_point_name)
 	switch (data->state1)
 	{
 	case SD00:
-		sakuya_wait_state(src, SAKUYA_ANIME_15_HATUDAN);
+		{	/* 戻す? */
+			boss_clip_min.x256	= t256( 		0)+t256(24);
+			boss_clip_max.x256	= t256(GAME_WIDTH)-t256(24);
+		}
+		data->state1++;
+		break;
+	case SD0_0b:
+		sakuya_wait_state(src, SAKUYA_ANIME_12_HATUDAN_START);
 	//	data->wait1 -= 1/*fps_fa ctor*/;
 	//	if (data->wait1<0)	/* 待機時間が終わったら */
 	//	{
 	//		data->state1++/*	= SD01*/;
 //++//		pd->bo ssmode=B00_NONE/*B01_BA TTLE*/;
 //??//		data->boss_base.boss_timer += (20*64);			// + 20 [秒] ???	/* 16.666[秒] 1000 ???*/
-	//		src->anim_frame=SAKUYA_ANIME_15_HATUDAN;
+	//		data->anime_frame = SAKUYA_ANIME_12_HATUDAN_START;
 	//	}
 	//	else	{	}
 		break;
@@ -1473,7 +1531,7 @@ static void sakuya_idou_sub(SPRITE *src, int speed256, int target_point_name)
 			data->state1++/*	= SD02*/;
 			data->wait1 	= 10;
 			data->wait2_256 = 0;
-			src->anim_frame = SAKUYA_ANIME_09_;
+			data->anime_frame = SAKUYA_ANIME_08_HIKARU_START;
 		}
 		else
 		{
@@ -1487,19 +1545,19 @@ static void sakuya_idou_sub(SPRITE *src, int speed256, int target_point_name)
 			src->x256 += ((sin512((data->move_angle512))*t256(3))>>8)/**fps_fa ctor*/;
 			src->y256 += ((cos512((data->move_angle512))*t256(3))>>8)/**fps_fa ctor*/;
 #endif
-			if (src->anim_frame<SAKUYA_ANIME_18_)
+			if (data->anime_frame < SAKUYA_ANIME_15_HATUDAN_END)
 			{
 				data->wait3 += 1/*fps_fa ctor*/;
 				if (data->wait3>=3)
 				{
-					src->anim_frame++;
+					data->anime_frame++;
 					data->wait3=0;
 				}
 			}
 		}
 		break;
 	case SD02:
-		if (src->anim_frame==SAKUYA_ANIME_14_)
+		if (data->anime_frame==SAKUYA_ANIME_11_HIKARU_END)
 		{	/* 子供魔方陣生成(2回生成しちゃうバグあり) */
 		//	kodomo_num++;
 		//	if (1==kodomo_num)
@@ -1517,12 +1575,12 @@ static void sakuya_idou_sub(SPRITE *src, int speed256, int target_point_name)
 		}
 		else
 		{
-			if (src->anim_frame<SAKUYA_ANIME_14_)
+			if (data->anime_frame < SAKUYA_ANIME_11_HIKARU_END)
 			{
 				data->wait3 += 1/*fps_fa ctor*/;
 				if (data->wait3>=3)
 				{
-					src->anim_frame++;
+					data->anime_frame++;
 					data->wait3=0;
 				}
 			}
@@ -1532,30 +1590,6 @@ static void sakuya_idou_sub(SPRITE *src, int speed256, int target_point_name)
 //		break;
 	}
 }
-
-
-/*---------------------------------------------------------
-	enemy_boss06_knifes1
-	アングルは角度指定で(-90)～(90)
-	heightは"playerから"の高さ
----------------------------------------------------------*/
-
-#if 0
-static void enemy_boss06_knifes1(SPRITE *src, int speed256, int angle512, int height)
-{
-	/*	*/
-	/*	*/
-#if 0
-/* CWの場合 */
-//	bullet_create_sakuya_follow_knife1(src, speed256, /*deg_360_to_512*/(deg_360_to_512((180))-angle512), height);
-#else
-/* CCWの場合 */
-//	bullet_create_sakuya_follow_knife1(src, speed256, /*deg_360_to_512*/(-deg_360_to_512CCW((180))-angle512), height);
-	bullet_create_sakuya_follow_knife1(src, speed256, /*deg_360_to_512*/(/*deg_360_to_512CCW(360+90-(180))-*/angle512), height);
-#endif
-//	bullet_create_sakuya_follow_knife1(src, speed256, /*deg_360_to_512*/(angle512), height);
-}
-#endif
 
 
 /*---------------------------------------------------------
@@ -1590,22 +1624,22 @@ static void enemy_boss06_knifes1(SPRITE *src, int speed256, int angle512, int he
 				if (0==(ra_nd()&(2-1)/*%2*/))
 				{
 					data->state1++/*	= SE01*/;
-					src->anim_frame=(SAKUYA_ANIME_04_CENTER_A-2);
+					data->anime_frame = (SAKUYA_ANIME_03_CENTER_A-2);
 				}
 				else
 				{
 					data->state1/*+=2*/ = SE02;
-					src->anim_frame=(SAKUYA_ANIME_04_CENTER_A+2);
+					data->anime_frame = (SAKUYA_ANIME_03_CENTER_A+2);
 				}
 			}
 		}
-		if (src->anim_frame>SAKUYA_ANIME_09_)
+		if (data->anime_frame > SAKUYA_ANIME_08_HIKARU_START)
 		{
 			data->wait3 += 1/*fps_fa ctor*/;
 			if (data->wait3>=3)
 			{
 				data->wait3=0;
-				src->anim_frame--;
+				data->anime_frame--;
 			}
 		}
 		break;
@@ -1616,14 +1650,14 @@ static void enemy_boss06_knifes1(SPRITE *src, int speed256, int angle512, int he
 			data->wait1 	= 3;
 			data->state1--/*	= SE00*/;
 			data->wait2_256=t256(30);
-			src->anim_frame=SAKUYA_ANIME_18_;
+			data->anime_frame = SAKUYA_ANIME_15_HATUDAN_END;
 		}
 		else
 		{
 			if (src->x256 < t256(100) )
 			{
 				data->state1++/* = SE02*/;
-				src->anim_frame=SAKUYA_ANIME_09_RIGHT-1/*SAKUYA_ANIME_08_RIGHT-1*/;/*7 ???*/
+				data->anime_frame = SAKUYA_ANIME_07_RIGHT-1/*SAKUYA_ANIME_07_RIGHT-1*/;/*7 ???*/
 			}
 			else
 			{	src->x256 -= t256(2)/**fps_fa ctor*/;}
@@ -1636,14 +1670,14 @@ static void enemy_boss06_knifes1(SPRITE *src, int speed256, int angle512, int he
 			data->wait1 	= 3;
 			data->state1	= SE00;
 			data->wait2_256 = t256(30);
-			src->anim_frame = SAKUYA_ANIME_18_;
+			data->anime_frame = SAKUYA_ANIME_15_HATUDAN_END;
 		}
 		else
 		{
 			if (src->x256 > t256(GAME_WIDTH-100)-((src->w128+src->w128)) )
 			{
 				data->state1--/* = SE01*/;
-				src->anim_frame=SAKUYA_ANIME_00_LEFT+1;/*1 ???*/
+				data->anime_frame = SAKUYA_ANIME_00_LEFT+1;/*1 ???*/
 			}
 			else
 			{	src->x256 += t256(2)/**fps_fa ctor*/;}
@@ -1705,7 +1739,7 @@ static int sakuya_kyori(SPRITE *src)
 			data->state1++/*	= SG02*/;
 			data->wait1 	= 20;
 			data->wait2_256 = 0;
-			src->anim_frame=SAKUYA_ANIME_04_CENTER_A;
+			data->anime_frame = SAKUYA_ANIME_03_CENTER_A;
 		}
 		else
 		{
@@ -1719,27 +1753,27 @@ static int sakuya_kyori(SPRITE *src)
 		{
 				data->wait1 -= 1/*fps_fa ctor*/;
 			if (data->wait1<0)			{	data->state1++/* = SG03*/;
-											src->anim_frame=SAKUYA_ANIME_15_HATUDAN;	}		/* 待機時間が終わったら */
-		//	else if (data->wait1<6) 	{	src->anim_frame=SAKUYA_ANIME_14_;			}
-		//	else if (data->wait1<12)	{	src->anim_frame=SAKUYA_ANIME_13_;			}
-		//	else if (data->wait1<18)	{	src->anim_frame=SAKUYA_ANIME_12_;			}
-		//	else if (data->wait1<24)	{	src->anim_frame=SAKUYA_ANIME_11_;			}
-		//	else if (data->wait1<30)	{	src->anim_frame=SAKUYA_ANIME_10_;			}
-		//	else if (data->wait1<36)	{	src->anim_frame=SAKUYA_ANIME_09_;			}
-//			else if (data->wait1<36)	{	src->anim_frame=aaa_tbl[data->wait1];		}
-	//		else if (data->wait1>56)	{	src->anim_frame=SAKUYA_ANIME_09_;		}
-			else if (data->wait1<32)	{	src->anim_frame=SAKUYA_ANIME_09_+((data->wait1&0x38)>>3);		}
+											data->anime_frame=SAKUYA_ANIME_12_HATUDAN_START;	}		/* 待機時間が終わったら */
+		//	else if (data->wait1<6) 	{	data->anime_frame=SAKUYA_ANIME_11_HIKARU_END;			}
+		//	else if (data->wait1<12)	{	data->anime_frame=SAKUYA_ANIME_13_; 		}
+		//	else if (data->wait1<18)	{	data->anime_frame=SAKUYA_ANIME_12_; 		}
+		//	else if (data->wait1<24)	{	data->anime_frame=SAKUYA_ANIME_11_; 		}
+		//	else if (data->wait1<30)	{	data->anime_frame=SAKUYA_ANIME_10_; 		}
+		//	else if (data->wait1<36)	{	data->anime_frame=SAKUYA_ANIME_08_HIKARU_START; 		}
+//			else if (data->wait1<36)	{	data->anime_frame=aaa_tbl[data->wait1]; 	}
+	//		else if (data->wait1>56)	{	data->anime_frame=SAKUYA_ANIME_08_HIKARU_START; 	}
+			else if (data->wait1<32)	{	data->anime_frame=SAKUYA_ANIME_08_HIKARU_START+((data->wait1&0x38)>>3); 	}
 		}
 		break;
 	case SG03:
-		if (src->anim_frame==SAKUYA_ANIME_18_)
+		if (data->anime_frame==SAKUYA_ANIME_15_HATUDAN_END)
 		{
 			{
 			//	int rrr256;
 			//	/*data->length_s_p256*/rrr256 = sakuya_kyori(src);
 		//		bullet_create_sakuya_even_knife(src, t256(10), /*data->length_s_p256*/ /*rrr256,*/ 0/*0==右*/);
 		//		bullet_create_sakuya_even_knife(src, t256(10), /*data->length_s_p256*/ /*rrr256,*/ 1/*1==左*/);
-				bullet_create_sakuya_even_knife_bbb(src);
+				bullet_create_sakuya_ryoute_knife(src);
 			}
 			data->wait1=40;
 			if (src->y256 > t256(150))
@@ -1753,7 +1787,7 @@ static int sakuya_kyori(SPRITE *src)
 			/*念の為*/
 			mask512(data->move_angle512);
 			#endif
-			src->anim_frame = SAKUYA_ANIME_16_;/*16???*/
+			data->anime_frame = (SAKUYA_ANIME_12_HATUDAN_START+1);/*16???*/
 			data->state1++/*	= SG04*/;
 		}
 		else
@@ -1761,7 +1795,7 @@ static int sakuya_kyori(SPRITE *src)
 			data->wait3 += 1/*fps_fa ctor*/;
 			if (data->wait3>=3)
 			{
-				src->anim_frame++;
+				data->anime_frame++;
 				data->wait3=0;
 			}
 		}
@@ -1786,33 +1820,33 @@ static int sakuya_kyori(SPRITE *src)
 	{	data->wait2_256 += t256(1)/*fps_fa ctor*/;}
 	if (data->wait2_256 > t256(20)+(3-difficulty)*t256(30))
 	{
-		src->anim_frame=SAKUYA_ANIME_16_;/*16???*/
+		data->anime_frame = (SAKUYA_ANIME_12_HATUDAN_START+1);/*16???*/
 	//	data->length_s_p256 = sakuya_kyori(src);
 		enemy_boss06_knifes3(src/*,*/ /*1+difficulty,*/ /*(data->length_s_p256)*/ );
 	}
-	enemy_boss06_out(src);
+//	enemy_boss06_out(src);
 }
 		//	const Uint8 aaa_tbl[40/*(6*6)*/] =
 		//	{
-		//		SAKUYA_ANIME_14_,	SAKUYA_ANIME_14_,	SAKUYA_ANIME_14_,	SAKUYA_ANIME_14_,	SAKUYA_ANIME_14_,	SAKUYA_ANIME_14_,
+		//		SAKUYA_ANIME_11_HIKARU_END, SAKUYA_ANIME_11_HIKARU_END, SAKUYA_ANIME_11_HIKARU_END, SAKUYA_ANIME_11_HIKARU_END, SAKUYA_ANIME_11_HIKARU_END, SAKUYA_ANIME_11_HIKARU_END,
 		//		SAKUYA_ANIME_13_,	SAKUYA_ANIME_13_,	SAKUYA_ANIME_13_,	SAKUYA_ANIME_13_,	SAKUYA_ANIME_13_,	SAKUYA_ANIME_13_,
 		//		SAKUYA_ANIME_12_,	SAKUYA_ANIME_12_,	SAKUYA_ANIME_12_,	SAKUYA_ANIME_12_,	SAKUYA_ANIME_12_,	SAKUYA_ANIME_12_,
 		//		SAKUYA_ANIME_11_,	SAKUYA_ANIME_11_,	SAKUYA_ANIME_11_,	SAKUYA_ANIME_11_,	SAKUYA_ANIME_11_,	SAKUYA_ANIME_11_,
 		//		SAKUYA_ANIME_10_,	SAKUYA_ANIME_10_,	SAKUYA_ANIME_10_,	SAKUYA_ANIME_10_,	SAKUYA_ANIME_10_,	SAKUYA_ANIME_10_,
-		//		SAKUYA_ANIME_09_,	SAKUYA_ANIME_09_,	SAKUYA_ANIME_09_,	SAKUYA_ANIME_09_,	SAKUYA_ANIME_09_,	SAKUYA_ANIME_09_,
+		//		SAKUYA_ANIME_08_HIKARU_START,	SAKUYA_ANIME_08_HIKARU_START,	SAKUYA_ANIME_08_HIKARU_START,	SAKUYA_ANIME_08_HIKARU_START,	SAKUYA_ANIME_08_HIKARU_START,	SAKUYA_ANIME_08_HIKARU_START,
 		//		0,0,0,0/* アライン用ダミーデーター。 dummy for align*/
 		//	};
 //			const Uint8 aaa_tbl[40/*(6*6)*/] =
 //			{
-//	SAKUYA_ANIME_14_,	SAKUYA_ANIME_14_,	SAKUYA_ANIME_14_,	SAKUYA_ANIME_14_,
-//	SAKUYA_ANIME_14_,	SAKUYA_ANIME_14_,	SAKUYA_ANIME_14_,	SAKUYA_ANIME_14_,
+//	SAKUYA_ANIME_11_HIKARU_END, SAKUYA_ANIME_11_HIKARU_END, SAKUYA_ANIME_11_HIKARU_END, SAKUYA_ANIME_11_HIKARU_END,
+//	SAKUYA_ANIME_11_HIKARU_END, SAKUYA_ANIME_11_HIKARU_END, SAKUYA_ANIME_11_HIKARU_END, SAKUYA_ANIME_11_HIKARU_END,
 //	SAKUYA_ANIME_13_,	SAKUYA_ANIME_13_,	SAKUYA_ANIME_13_,	SAKUYA_ANIME_13_,
 //	SAKUYA_ANIME_13_,	SAKUYA_ANIME_13_,	SAKUYA_ANIME_13_,	SAKUYA_ANIME_13_,
 //	SAKUYA_ANIME_11_,	SAKUYA_ANIME_11_,	SAKUYA_ANIME_11_,	SAKUYA_ANIME_11_,
 //	SAKUYA_ANIME_11_,	SAKUYA_ANIME_11_,	SAKUYA_ANIME_11_,	SAKUYA_ANIME_11_,
-//	SAKUYA_ANIME_09_,	SAKUYA_ANIME_09_,	SAKUYA_ANIME_09_,	SAKUYA_ANIME_09_,
-//	SAKUYA_ANIME_09_,	SAKUYA_ANIME_09_,	SAKUYA_ANIME_09_,	SAKUYA_ANIME_09_,//32
-//	SAKUYA_ANIME_09_,	SAKUYA_ANIME_09_,	SAKUYA_ANIME_09_,	SAKUYA_ANIME_09_,
+//	SAKUYA_ANIME_08_HIKARU_START,	SAKUYA_ANIME_08_HIKARU_START,	SAKUYA_ANIME_08_HIKARU_START,	SAKUYA_ANIME_08_HIKARU_START,
+//	SAKUYA_ANIME_08_HIKARU_START,	SAKUYA_ANIME_08_HIKARU_START,	SAKUYA_ANIME_08_HIKARU_START,	SAKUYA_ANIME_08_HIKARU_START,//32
+//	SAKUYA_ANIME_08_HIKARU_START,	SAKUYA_ANIME_08_HIKARU_START,	SAKUYA_ANIME_08_HIKARU_START,	SAKUYA_ANIME_08_HIKARU_START,
 //	0,0,0,0/* アライン用ダミーデーター。 dummy for align*/
 //			};
 
@@ -1834,7 +1868,7 @@ static int sakuya_kyori(SPRITE *src)
 #endif
 		spell_card_number++;
 		data->state1	= SG02;
-		src->anim_frame = SAKUYA_ANIME_04_CENTER_A;
+		data->anime_frame = SAKUYA_ANIME_03_CENTER_A;
 	}
 	else
 	{
@@ -1852,16 +1886,16 @@ static int sakuya_kyori(SPRITE *src)
 		src->x256 += ((sin512((src->tmp_angleCCW512))*(data->wait2_256))>>8)/**fps_fa ctor*/;
 		src->y256 += ((cos512((src->tmp_angleCCW512))*(data->wait2_256))>>8)/**fps_fa ctor*/;
 	}
-	if (src->anim_frame>SAKUYA_ANIME_15_HATUDAN)
+	if (data->anime_frame > SAKUYA_ANIME_12_HATUDAN_START)
 	{
 		data->wait3 += 1/*fps_fa ctor*/;
 		if (data->wait3 >= 4)
 		{
-			src->anim_frame--;
+			data->anime_frame--;
 			data->wait3 = 0;
 		}
 	}
-	enemy_boss06_out(src);
+//	enemy_boss06_out(src);
 }
 
 /*---------------------------------------------------------
@@ -1870,6 +1904,15 @@ static int sakuya_kyori(SPRITE *src)
 
 /*static*/ void sakuya_11_keitai(SPRITE *src)
 {
+	src->color32 = 0xffffffff;	/*	src->alpha = 0xff;*/
+//
+	int iii;
+	iii = ra_nd();
+	if (0==(iii&0x07))
+	{
+		src->vx256 = (((signed int)((iii>> 8)&0xff))-127);
+		src->vy256 = (((signed int)((iii>>16)&0xff))-127);
+	}
 }
 
 /*---------------------------------------------------------
@@ -1892,7 +1935,19 @@ static void move_sakuya(SPRITE *src)
 	}
 	spell_card_generator222(src);	/* スペカ生成 */
 	#if 1/* [スペカシステム内に移動予定] */
+	/*---------------------------------------------------------
+		パチェ移動処理
+	---------------------------------------------------------*/
+	//
+	//	enemy_boss04_setpos(src, xxx,yyy);
+	//
+	boss_move_clip_rect(src);
 	#endif
+//
+	/*---------------------------------------------------------
+		アリス移動処理
+	---------------------------------------------------------*/
+//
 	boss_effect(src);			/* 回エフェクト */
 	danmaku_generator(src); 	/* 弾幕生成 */
 //
@@ -1918,25 +1973,30 @@ void add_boss_sakuya(STAGE_DATA *l)/*int lv*/
 	kodomo_num	= 0;
 
 //
-//	dummy_obj								= sprite_add_res(BASE_BOSS_SAKUYA_PNG);
-	dummy_obj->flags						&= (~(SP_FLAG_VISIBLE));
-	dummy_obj->anim_frame					= SAKUYA_ANIME_04_CENTER_A;
-	dummy_obj->type 						= SP_MUTEKI;
-//	dummy_obj->callback_mover				= dummy_move;
-	dummy_obj->x256 						= 0;
-	dummy_obj->y256 						= 0;
+//	send1_obj								= sprite_add_res(BASE_BOSS_SAKUYA_PNG);
+	send1_obj->flags						&= (~(SP_FLAG_VISIBLE));
+//	send1_obj->an im_frame					= SAKUYA_ANIME_03_CENTER_A;
+	send1_obj->type 						= SP_MUTEKI;
+//	send1_obj->callback_mover				= dummy_move;
+	send1_obj->x256 						= 0;
+	send1_obj->y256 						= 0;
 
 //
 //----[BOSS]
 		SPRITE *sakuya;
 	//	sakuya								= spr ite_add_file 0("boss/sakuya.png"/*"boss04.png"*/, 19, PRIORITY_03_ENEMY, 0); sakuya->anim_speed=0;
-		sakuya								= sprite_add_res(BASE_BOSS_SAKUYA_PNG);
+	//	sakuya								= sprite_add_res(BASE_BOSS_SAKUYA_PNG);
+		sakuya								= sprite_add_gu(ZAKO_TYPE_ATARI16_PNG);
 		sakuya->flags						|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK);
-		sakuya->yx_anim_frame				= SAKUYA_ANIME_04_CENTER_A;
-		sakuya->type						= SP_BOSS/*SP_BOSS06*/;
+	//	sakuya->yx_an im_frame				= SAKUYA_ANIME_03_CENTER_A;
+		sakuya->type						= BOSS_00_BOSS11;	/*SP_BOSS*/ 	/*SP_BOSS06*/
 		sakuya->callback_mover				= move_sakuya;
 		sakuya->callback_loser				= sakuya_put_items;
 //
+		#if 0/* 初期化済みの必要あり */
+		sakuya->vx256						= t256( 0);
+		sakuya->vy256						= t256( 0); 	/**fps_fa ctor*/
+		#endif
 		sakuya->base_health 				= ((1024)-1)*9;/*test*/
 		sakuya->base_score					= adjust_score_by_difficulty(score(5000000));	/* 500万 */
 	//------------ スペカ関連
@@ -1947,6 +2007,7 @@ void add_boss_sakuya(STAGE_DATA *l)/*int lv*/
 		BOSS06_DATA *data;
 		data								= mmalloc(sizeof(BOSS06_DATA));
 		sakuya->data						= data;
+		data->anime_frame					= SAKUYA_ANIME_03_CENTER_A;
 		data->state1						= /*ST_00*/0/*SA00*/;
 		data->wait1 						= 0;
 		data->wait2_256 					= t256(0);
@@ -1968,17 +2029,19 @@ void add_boss_sakuya(STAGE_DATA *l)/*int lv*/
 
 	//static void create_doll(SPRITE *sakuya)
 	{
+		/*static*/ SPRITE *obj_doll;		// 子供魔方陣のスプライト
 //		obj_doll							= sprite_add_res(BASE_MAHOUJIN_0_PNG);	//obj_doll->anim_speed	= 0;/*"boss04-lo.png"*/
 		obj_doll							= sprite_add_gu(ZAKO_TYPE_ATARI16_PNG); //obj_doll->anim_speed	= 0;/*"boss04-lo.png"*/
-		obj_doll->type						= TEKI_51_MAHOJIN1;
+	//	obj_doll->type						= TEKI_51_MAHOJIN1;
+		obj_doll->type						= BOSS_16_YOUSEI11; 	/*SP_ZAKO*/ 	/*SP_BOSS01*/
 //		obj_doll->type						= SP_MUTEKI;
 		obj_doll->base_health				= 999999;/* 倒せない */
 		obj_doll->flags 					|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK);
-		obj_doll->anim_frame				= 0;
+//		obj_doll->an im_frame				= 0;
 		obj_doll->color32					= 0x00ffffff;	/*	obj_doll->alpha 		= 0x00;*/
 		obj_doll->callback_mover			= move_doll00;
 		obj_doll->x256						= sakuya->x256+((sakuya->w128-obj_doll->w128));
-		obj_doll->y256						= sakuya->y256+((sakuya->h128-obj_doll->h128));
+		obj_doll->y256						= sakuya->y256+((sakuya->h128-obj_doll->h128))-t256(32);
 
 		{
 			BOSS06_DOLL_DATA *data;

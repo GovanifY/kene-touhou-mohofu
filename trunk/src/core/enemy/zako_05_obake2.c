@@ -35,8 +35,8 @@ static void lose_obake2(SPRITE *src)
 	{
 		destoroy = 0;
 		item_create(/*zzz*/ src,
-			(SP_ITEM_01_P008+(ra_nd()&1))/*50%(SP_ITEM_01_P008 or SP_ITEM_02_BOMB)*/
-			//66%==SP_ITEM_02_BOMB or 33%==SP_ITEM_01_P008 (SP_ITEM_EXTRA_HOMING+(ra_nd()&3/*%3*/)),
+			(SP_ITEM_01_P008+(ra_nd()&1))/*50%(SP_ITEM_01_P008 or SP_ITEM_04_BOMB)*/
+			//66%==SP_ITEM_04_BOMB or 33%==SP_ITEM_01_P008 (SP_ITEM_EXTRA_HOMING+(ra_nd()&3/*%3*/)),
 			, 1, ITEM_MOVE_FLAG_06_RAND_XY);
 	}
 }

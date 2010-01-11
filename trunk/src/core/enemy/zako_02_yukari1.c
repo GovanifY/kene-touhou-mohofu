@@ -37,7 +37,7 @@ static void lose_yukari1(SPRITE *src)
 	if (rand_percent(30))
 	{
 		if (rand_percent(50))	{	put_item = (SP_ITEM_00_P001&0xff);}
-		else					{	put_item = (SP_ITEM_06_TENSU&0xff);}
+		else					{	put_item = (SP_ITEM_05_TENSU&0xff);}
 	}
 //
 	if (99 != put_item)
@@ -89,8 +89,8 @@ static void move_yukari1(SPRITE *src)
 
 /* "yukari8x4.png"
 src->m_angleCCW512	   a bcde ----
-src->yx_an im_frame	 	 yyyy xxxx
-src->yx_an im_frame	 	 --ab -cde
+src->yx_an im_frame 	 yyyy xxxx
+src->yx_an im_frame 	 --ab -cde
 */
 }
 
@@ -100,7 +100,7 @@ src->yx_an im_frame	 	 --ab -cde
 
 void add_zako_yukari1(STAGE_DATA *l)/*int lv*/
 {
-	int lv;	lv	= l->user_y;
+	int lv; lv	= l->user_y;
 //
 	destoroy = 0;
 	int i;
@@ -108,7 +108,7 @@ void add_zako_yukari1(STAGE_DATA *l)/*int lv*/
 	{
 		SPRITE *s;
 //		s						= sp rite_add_res(BASE_YUKARI32_PNG);	//s->anim_speed=0;/*36"mi ng.png"*/
-		s						= sprite_add_gu(ZAKO_TYPE_ATARI16_PNG);	//s->anim_speed=0;/*36"mi ng.png"*/
+		s						= sprite_add_gu(ZAKO_TYPE_ATARI16_PNG); //s->anim_speed=0;/*36"mi ng.png"*/
 		s->type 				= /*SP_ZAKO*/TEKI_61_NIJI_HOSI/*_02_YUKARI1*/;
 //		s->type 				= SP_ZAKO/*_02_YUKARI1*/;
 		s->flags				|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK|SP_FLAG_TIME_OVER);

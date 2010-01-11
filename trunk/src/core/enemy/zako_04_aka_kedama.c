@@ -21,8 +21,12 @@ typedef struct
 
 static int enemy_rank;
 
-/* ‹¤—L•Ï” / shered */
-#define zzz_angle512 state
+#define USE_OLD 1
+
+#if (1==USE_OLD)
+	/* ‹¤—L•Ï” / shered */
+	#define zzz_angle512 state
+#endif
 
 /*---------------------------------------------------------
 	“G‚â‚ç‚ê
@@ -40,7 +44,9 @@ static void lose_aka_kedama1(SPRITE *src)
 
 static void move_aka_kedama1_2nd(SPRITE *src)
 {
+#if (1==USE_OLD)
 	AKA_KEDAMA1_DATA *data = (AKA_KEDAMA1_DATA *)src->data;
+#endif
 //	if (/*0 <*/ /*data->*/enemy_rank)	/* easy‚Í‘¬‚¢‚ñ‚¾‚©‚çê‡•ª‚¯‚µ‚È‚¢ */
 	{
 		/*
@@ -58,8 +64,13 @@ static void move_aka_kedama1_2nd(SPRITE *src)
 		}
 	}
 /* CCW‚Ìê‡ */
-	src->x256+=((sin512((data->zzz_angle512))*t256(3))>>8)/**fps_fa ctor*/;
-	src->y256+=((cos512((data->zzz_angle512))*t256(3))>>8)/**fps_fa ctor*/;
+#if (1==USE_OLD)
+	src->x256 += ((sin512((data->zzz_angle512))*t256(3))>>8)/**fps_fa ctor*/;
+	src->y256 += ((cos512((data->zzz_angle512))*t256(3))>>8)/**fps_fa ctor*/;
+#else
+	src->x256 += (src->vx256)/**fps_fa ctor*/;
+	src->y256 += (src->vy256)/**fps_fa ctor*/;
+#endif
 	if ((src->x256<0-((src->w128+src->w128)))||(src->x256 > t256(GAME_WIDTH))||
 		(src->y256<0-((src->h128+src->h128)))||(src->y256 > t256(GAME_HEIGHT)))
 	{
@@ -92,13 +103,24 @@ static void add_local_aka_kedama1_2nd(SPRITE *src/*, int lv*/)
 //		s->an im_frame			= 0;
 		s->x256 				= src->x256;
 		s->y256 				= src->y256;
+#if (1==USE_OLD)
+#else
+	//	data->zzz_angle512		= (i<<6);//  (/*360*/512/8)*i;
+		s->vx256 = ((sin512(((i<<6)/*data->zzz_angle512*/))*t256(1.5/*3.0*/))>>8)/**fps_fa ctor*/;
+		s->vy256 = ((cos512(((i<<6)/*data->zzz_angle512*/))*t256(1.5/*3.0*/))>>8)/**fps_fa ctor*/;
+#endif
+
+#if (1==USE_OLD)
 		AKA_KEDAMA1_DATA *data;
 		data					= mmalloc(sizeof(AKA_KEDAMA1_DATA));
 		s->data 				= data;
+#endif
 	//	data->enemy_rank		= ((AKA_KEDAMA1_DATA *)(src->data))->enemy_rank;
 		/*data->base.*/s->base_score		= score(10*2)*(1+/*data->*/enemy_rank);
 		/*data->base.*/s->base_health		= (1+/*data->*/enemy_rank)+(difficulty<<4);
+#if (1==USE_OLD)
 		data->zzz_angle512		= (i<<6);//  (/*360*/512/8)*i;
+#endif
 	}
 }
 
@@ -178,7 +200,8 @@ void add_zako_aka_kedama1(STAGE_DATA *l)/*int lv*/
 	s->data 				= data;
 //	data->enemy_rank		= enemy_rank;
 	/*data->base.*/s->base_score		= score(30*2);
-	/*data->base.*/s->base_health		= 12+(enemy_rank+enemy_rank)+(difficulty<<2);
+//	/*data->base.*/s->base_health		= (12)+(enemy_rank+enemy_rank)+(difficulty<<2);
+	/*data->base.*/s->base_health		= (6*8)+(enemy_rank+enemy_rank)+(difficulty<<2);
 	data->tx256 			= ((ra_nd()&((256*256)-1)))+t256(64);/*320?*/ /*t256(ra_nd()%270)+t256(50)*/
 //	data->ty256 			= ((ra_nd()&((256*256)-1)))+t256(16);/*350?*/ /*t256(ra_nd()%300)+t256(50)*/
 	data->ty256 			= ((ra_nd()&((256*128)-1)))+t256(16);/*350?*/ /*t256(ra_nd()%300)+t256(50)*/

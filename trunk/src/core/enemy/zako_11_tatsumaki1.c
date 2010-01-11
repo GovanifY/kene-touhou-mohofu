@@ -20,6 +20,7 @@ typedef struct
 	int state;			/* ó‘Ô */
 	int kaiten_houkou;	/* ‰ñ“]•ûŒü */
 	int speed256;		/* ‘¬“x */
+	int px256;			/* ‰¼‘zxˆÊ’u(”½“]—p) */
 //	int enemy_rank;		/* Ý’èƒtƒ@ƒCƒ‹‚©‚ç‚Ì“G‚Ì‹­‚³ */
 } TATSUMAKI1_DATA;
 static int destoroy;
@@ -38,84 +39,61 @@ static void lose_tatsumaki1(SPRITE *src)
 		destoroy = 0;
 		if (rand_percent(50/*10*/))
 		{
-			item_create(/*zzz*/ src,	SP_ITEM_02_BOMB, 1, ITEM_MOVE_FLAG_06_RAND_XY);
+			item_create(/*zzz*/ src,	SP_ITEM_04_BOMB, 1, ITEM_MOVE_FLAG_06_RAND_XY);
 		}
 	}
 }
-/*50%(SP_ITEM_01_P008 or SP_ITEM_02_BOMB) (SP_ITEM_01_P008+(ra_nd()&1)) */
-//66%==SP_ITEM_02_BOMB or 33%==SP_ITEM_01_P008 (SP_ITEM_EXTRA_HOMING+(ra_nd()&3/*%3*/)),
+/*50%(SP_ITEM_01_P008 or SP_ITEM_04_BOMB) (SP_ITEM_01_P008+(ra_nd()&1)) */
+//66%==SP_ITEM_04_BOMB or 33%==SP_ITEM_01_P008 (SP_ITEM_EXTRA_HOMING+(ra_nd()&3/*%3*/)),
 
 /*---------------------------------------------------------
 	“GˆÚ“®
 ---------------------------------------------------------*/
-
+enum
+{
+	SS00 = 0,
+	SS01,
+	SS02,
+};
 static void move_tatsumaki1(SPRITE *src)
 {
 	TATSUMAKI1_DATA *data = (TATSUMAKI1_DATA *)src->data;
+	data->speed256++;	/* t256(0.1) t256(0.2)‘¬‚·‚¬ */
 	switch (data->state)
 	{
-	case 0:
-		src->y256 += data->speed256/**fps_fa ctor*/;
-		if (src->y256 >= t256(GAME_HEIGHT/2)/*250*/ )
+	case SS00:/* ‰º‚ÖˆÚ“® */
+		src->y256 += t256(1.0)/**fps_fa ctor*/;
+		if (t256(GAME_HEIGHT/3/*2*/) < src->y256 )	/*t256(250)*/
 		{
-			data->speed256 = t256(1)/*2*/;/*‘¬‚·‚¬*/
-			data->state=1;
+			data->state++;/* = SS01;*/
 		}
 		break;
-	case 1:
-		data->speed256 += t256(0.1);
-		if (0 == data->kaiten_houkou)
+	case SS01:/* ã‚ÖˆÚ“® */
+		src->y256 -= t256(1.125)/**fps_fa ctor*/;
+		if (0 > src->y256 )
 		{
-			src->x256 -= data->speed256/**fps_fa ctor*/;
-			if (src->x256 <= t256(10))
-			{
-				src->x256 = t256(10);
-				data->speed256 = t256(2)/*3*/;/*‘¬‚·‚¬*/
-				data->state=2;
-			}
-		}
-		else
-		{
-			src->x256 += data->speed256/**fps_fa ctor*/;
-			if (src->x256 >= t256(GAME_WIDTH-10)-((src->w128+src->w128)))
-			{
-				src->x256 = t256(GAME_WIDTH-10)-((src->w128+src->w128));
-				data->speed256 = t256(2)/*3*/;/*‘¬‚·‚¬*/
-				data->state = 2;
-			}
+		//	data->speed256 = (-(data->speed256));/* ”½“] */
+			data->state++;/*  = SS02;*/
 		}
 		break;
-	case 2:
-		src->y256 -= data->speed256/**fps_fa ctor*/;
-		if (src->y256 <= 0)
-		{
-			src->y256 = 0;
-			data->speed256 = t256(1)/*2*/;/*‘¬‚·‚¬*/
-			data->state=3;
-		}
-		break;
-	case 3:
-		data->speed256 += t256(0.1)/*0.2*/;
-		src->y256 += data->speed256/**fps_fa ctor*/;
-		if (0 == data->kaiten_houkou)
-		{
-			src->x256 += data->speed256/**fps_fa ctor*/;
-		}
-		else
-		{
-			src->x256 -= data->speed256/**fps_fa ctor*/;
-		}
-		if (src->y256 > t256(GAME_HEIGHT) )/*>=*/
+	case SS02:/* ‰º‚ÖˆÚ“® */
+		src->y256 += t256(1.25)/**fps_fa ctor*/;
+		if (t256(GAME_HEIGHT) < src->y256 )
 		{
 			src->type = SP_DELETE;	/* ‚¨‚µ‚Ü‚¢ */
 		//	src->flags &= (~(SP_FLAG_VISIBLE));
 		}
 		break;
 	}
+	data->px256 -= (data->speed256)/**fps_fa ctor*/;
+	if ((0 > data->px256)||(t256(GAME_WIDTH-10) < data->px256))
+	{
+		data->speed256 = (-(data->speed256));/* ”½“] */
+	}
 //
 	if (0 == data->kaiten_houkou)
-			{	src->m_angleCCW512 += 5;	}
-	else	{	src->m_angleCCW512 -= 5;	}
+			{	src->m_angleCCW512 += 5;	src->x256	= (data->px256); 	}
+	else	{	src->m_angleCCW512 -= 5;	src->x256	= t256(GAME_WIDTH)-(data->px256); }
 	mask512(src->m_angleCCW512);
 }
 
@@ -142,16 +120,16 @@ void add_zako_tatsumaki1(STAGE_DATA *l)/*int lv*/
 		s->callback_hit_enemy	= callback_hit_zako;
 //		s->an im_frame			= (i&(16-1));/*(i&(8-1)) (i%11)*/
 		s->m_angleCCW512		= ((i&(16-1))<<5);
-		s->x256 				= t256(GAME_WIDTH/2)-((s->w128));
 		s->y256 				= -(((i+1)*(t256(24)/*s->h128+s->h128*/)));
 		TATSUMAKI1_DATA *data;
 		data					= mmalloc(sizeof(TATSUMAKI1_DATA));
 		s->data 				= data;
 		/*data->base.*/s->base_score		= score(10*2);
 		/*data->base.*/s->base_health		= (4*8)+(difficulty<<2);/*‚â‚í‚ç‚©‚·‚¬*/	/*(2+(difficulty<<2))*/
-		data->state 			= 0;
-		data->speed256			= t256(2);/*‘¬‚·‚¬*/	/*3+difficulty+lv/3*/
+		data->state 			= SS00;
+		data->speed256			= t256(1.2);/* t256(2.0)‘¬‚·‚¬ */	/*3+difficulty+lv/3*/
 		data->kaiten_houkou 	= (i&1);/*(0==i%2)?(0):(1)*/
+		data->px256 				= /*0*/t256(GAME_WIDTH-10)/*t256(GAME_WIDTH/2)-((s->w128))*/;
 //		data->enemy_rank 			= enemy_rank;
 	}
 }

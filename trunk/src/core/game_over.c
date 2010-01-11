@@ -29,7 +29,7 @@ void gamecore_term(void)
 //	//play_voice_auto_track(VO ICE04_SHIP_HAKAI);	// [***090123		コメントアウト
 	//stop_music(); 	// [***090123		コメントアウト
 	set_music_volume(128);
-	play_music_num(BGM_09_menu1);
+	play_music_num(BGM_20_menu1);
 	player_now_stage = 0;		// [***090702		追加
 	pd_bomber_time = 0; 		// [***090903		追加
 	#if 1

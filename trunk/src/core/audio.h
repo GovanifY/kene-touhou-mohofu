@@ -11,8 +11,8 @@ enum
 	BGM_05_stage5,		/* 5面道中 */
 	BGM_06_stage6,		/* 6面道中 */
 	BGM_07_stage7,		/* エンディング(道中) */
-	BGM_08_stage8,		/* エキストラステージ道中 */
-	BGM_09_menu1,		/* タイトル画面 */
+	BGM_08_stage8,		/* エキストラステージ1道中 */
+	BGM_09_stage9,		/* エキストラステージ2道中 */
 	BGM_10_boss1,		/* 1面ボス */
 	BGM_11_boss2,		/* 2面ボス */
 	BGM_12_boss3,		/* 3面ボス */
@@ -20,7 +20,10 @@ enum
 	BGM_14_boss5,		/* 5面ボス */
 	BGM_15_boss6,		/* 6面ボス */
 	BGM_16_menu2,		/* エンディング(シナリオ) */
-	BGM_17_boss8,		/* エキストラステージボス */
+	BGM_17_boss8,		/* エキストラステージ1ボス */
+	BGM_18_boss9,		/* エキストラステージ2ボス */
+	BGM_19_menu3,		/* キーコンフィグ */
+	BGM_20_menu1,		/* タイトル画面 */
 /* ----- 曲の数(読み込みファイル数) */
 //#define USE_MUSIC_FILES 15/*14*/ /**/
 	USE_MUSIC_FILES
@@ -84,4 +87,4 @@ extern void voice_play(int req, int play_track );
 /* 効果音の音響設計を行う(トラック割り振り) */
 #define USE_DESIGN_TRACK 	(1)
 
-#endif
+#endif /* _BGM_VOICE_H_ */

@@ -164,14 +164,28 @@ extern void bullet_create_tomari2_dan(				SPRITE *src, int speed256, int angle51
 extern void bullet_create_rot4096_dan(				SPRITE *src, int speed256, int angle512, int d_angle4096);
 extern void bullet_create_sakuya_knife( 			SPRITE *src, int speed256, int angle512, int p_angle512/*anim*/);
 extern void bullet_create_sakuya_no_rot_knife(		SPRITE *src, int speed256, int angle512, int gra256);
-extern void bullet_create_sakuya_follow_knife1( 	SPRITE *src, int speed256, int angle512, int height);
+extern void bullet_create_sakuya_kurukuru_knife(	void);//SPRITE *src, int speed256, int angle512, int height);
 //extern void bullet_create_sakuya_follow_knife2(	SPRITE *src, int speed256, int angle512, int height); /*dou ble x, dou ble y,*/
 //extern void bullet_create_sakuya_even_knife(		SPRITE *src, int speed256, int length, int r_or_l);
-extern void bullet_create_sakuya_even_knife_bbb(	SPRITE *src);
+extern void bullet_create_sakuya_ryoute_knife(		SPRITE *src);
 
 
-//extern void bullet_create_n_way_dan_type( 		SPRITE *src, int speed256, int angle512, int bullet_obj_type, int n_way);/* char *filename, int frame,*/
-extern void bullet_create_n_way_dan_sa_type(		SPRITE *src, int speed256, int angle512, int sa_angle512, int bullet_obj_type, int n_way);/* char *filename, int frame,*/
+//extern void bullet_create_n_way_dan_type( 			SPRITE *src, int speed256, int angle512, int bullet_obj_type, int n_way);/* char *filename, int frame,*/
+extern void bullet_regist_basic(void
+	/*	SPRITE *src,*/
+//	int speed256,
+//	int angle512,
+//	int sa_angle512,
+//	int bullet_obj_type,
+//	int n_way
+	);/* char *filename, int frame,*/
+#define BULLET_REGIST_speed256							user_data10 	/* aa */
+#define BULLET_REGIST_angle512							user_data11 	/* bb */
+#define BULLET_REGIST_div_angle512						user_data12 	/* cc */
+#define BULLET_REGIST_bullet_obj_type					user_data13 	/* dd */
+#define BULLET_REGIST_n_way 							user_data14 	/* ee */
+//
+#define BULLET_REGIST_sakuya_kurukurku_knife_height 	user_data15 	/* ff */
 
 #endif
 
@@ -209,9 +223,9 @@ enum
 	SPELL_CARD_01_sakuya_aaa,		/* 第一形態: 左右に動いて小弾撃ち */
 	SPELL_CARD_02_sakuya_bbb,		/* 第二形態: 全方位、豆まき */
 	SPELL_CARD_03_sakuya_ccc,		/* 第三形態: 垂直ナイフが落ちてくるよ */
-	SPELL_CARD_04_sakuya_ddd, 		/* 第四形態: 魔方陣生成 */
-	SPELL_CARD_05_sakuya_eee, 		/* 第五形態: (黄色マスカット弾) */
-//	SPELL_CARD_06_sakuya_fff, 		/* 第六形態: (黄色マスカット弾) */
+	SPELL_CARD_04_sakuya_ddd,		/* 第四形態: 魔方陣生成 */
+	SPELL_CARD_05_sakuya_eee,		/* 第五形態: (黄色マスカット弾) */
+//	SPELL_CARD_06_sakuya_fff,		/* 第六形態: (黄色マスカット弾) */
 //	SPELL_CARD_07_sakuya_ggg,		/* 第七形態: (分散魔方陣)追加計画中 */
 //	SPELL_CARD_08_sakuya_hhh,		/* 第八形態: (時止めナイフ)追加計画中 */
 	SPELL_CARD_09_sakuya_iii,		/* 第九形態: 最終形態(その1) */

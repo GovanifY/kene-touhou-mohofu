@@ -31,7 +31,7 @@ static void lose_midori_kedama2(SPRITE *src)
 	if ( (NUM_OF_ENEMIES-1) < destoroy/*all_destoroy*/)
 	{
 		destoroy = 0;
-		item_create(/*zzz*/ src, SP_ITEM_06_TENSU, 1, ITEM_MOVE_FLAG_06_RAND_XY);
+		item_create(/*zzz*/ src, SP_ITEM_05_TENSU, 1, ITEM_MOVE_FLAG_06_RAND_XY);
 	}
 }
 

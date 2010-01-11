@@ -2,12 +2,22 @@
 #include "bullet_object.h"
 
 /*---------------------------------------------------------
+	‹¤’ÊƒIƒuƒWƒFƒNƒg
+---------------------------------------------------------*/
+#if 1
+
+SPRITE *player;
+SPRITE *send1_obj;
+
+#endif
+
+/*---------------------------------------------------------
 	ƒ{ƒXŒ`‘Ô•ÏXŽž‚Ì‹¤’Ê
 ---------------------------------------------------------*/
-/*static*/ /*extern*/  unsigned int common_boss_flags;
 
 
 static SPRITE *obj_effect[8];	/* [ ] */
+/*static*/ /*extern*/  unsigned int common_boss_flags;
 
 /*---------------------------------------------------------
 	ƒ{ƒXŒ`‘Ô•ÏXŽž‚Ì‹¤’Êƒ‹[ƒ`ƒ“
@@ -35,11 +45,11 @@ void common_boss_put_items(SPRITE *src)
 ---------------------------------------------------------*/
 
 //	/*static*/ void callback_zako_hitbyweapon(SPRITE *src, SPRITE *tama)
-void callback_hit_zako(SPRITE *src/*“GŽ©‘Ì*/, SPRITE *tama/*Ž©’e*/)
+void callback_hit_zako(SPRITE *src/*“GŽ©‘Ì*/, SPRITE *tama /*Ž©’e*/)
 {
-	dummy_obj->x256 = tama->x256;
-	dummy_obj->y256 = tama->y256;
-	bakuhatsu_add_type_ddd(dummy_obj/*t->x256,t->y256*/,/*0,*/BAKUHATSU_MOVE12/*BAKUHATSU_MINI00*/);/*æ‚ÉŽÀs‚µ‚½•û‚ª‘¬‚¢*/
+	send1_obj->x256 = tama->x256;
+	send1_obj->y256 = tama->y256;
+	bakuhatsu_add_type_ddd(send1_obj/*t->x256,t->y256*/,/*0,*/BAKUHATSU_MOVE12/*BAKUHATSU_MINI00*/);/*æ‚ÉŽÀs‚µ‚½•û‚ª‘¬‚¢*/
 //
 	{
 	//	ENEMY_BASE *data	= (ENEMY_BASE *)s->data;
@@ -70,11 +80,11 @@ void callback_hit_zako(SPRITE *src/*“GŽ©‘Ì*/, SPRITE *tama/*Ž©’e*/)
 	-------------------------------------------------------
 ---------------------------------------------------------*/
 
-/*static*/ void callback_hit_boss(SPRITE *src/*“GŽ©‘Ì*/, SPRITE *tama/*Ž©’e*/)/*, int angle*/
+/*static*/ void callback_hit_boss(SPRITE *src/*“GŽ©‘Ì*/, SPRITE *tama /*Ž©’e*/)/*, int angle*/
 {
-	dummy_obj->x256 = tama->x256;
-	dummy_obj->y256 = tama->y256;
-	bakuhatsu_add_type_ddd(dummy_obj/*tama->x256,tama->y256*/,/*0,*/BAKUHATSU_MOVE12/*BAKUHATSU_MINI00*/);/*æ‚ÉŽÀs‚µ‚½•û‚ª‘¬‚¢*/
+	send1_obj->x256 = tama->x256;
+	send1_obj->y256 = tama->y256;
+	bakuhatsu_add_type_ddd(send1_obj/*tama->x256,tama->y256*/,/*0,*/BAKUHATSU_MOVE12/*BAKUHATSU_MINI00*/);/*æ‚ÉŽÀs‚µ‚½•û‚ª‘¬‚¢*/
 //
 	{/* BOSS_BASE */
 	//	BOSS99_DATA *data	= (BOSS99_DATA *)src->data;
@@ -156,10 +166,11 @@ static int ff_angle512;
 		#endif
 	}
 }
+extern void stage_boss_load_texture(void);
 /*static*/ void boss_effect_init(void)
 {
-//----[EFFECT]
-	int i;
+	//----[EFFECT]
+	{int i;
 	for (i=0; i<5; i++)
 	{
 		obj_effect[i]						= sprite_add_gu(JIKI_ATARI_ITEM_16);
@@ -169,7 +180,9 @@ static int ff_angle512;
 	//	obj_effect[i]->flags				|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK);
 		obj_effect[i]->flags				|= (/*SP_FLAG_VISIBLE|*/SP_FLAG_TIME_OVER);
 		obj_effect[i]->flags				&= (~(SP_FLAG_VISIBLE));	/*”ñ•\Ž¦*/
-	}
+	}}
+	// ƒ{ƒXƒeƒNƒXƒ`ƒƒ“Ç‚Ýž‚Ý
+	stage_boss_load_texture();
 }
 /*static*/ void boss_effect_term(void)
 {
@@ -282,21 +295,21 @@ static void enemy_homing_move(SPRITE *src)
 				break;
 			#if 0
 			case ST01:
-				dummy_obj->x256 = data->p1_x256;	/* ”­’eˆÊ’u‚Ì offset —p */
-				dummy_obj->y256 = data->p1_y256;	/* ”­’eˆÊ’u‚Ì offset —p */
-				src->m_angleCCW512/*data->aaa_angle512*/ = angle_jikinerai512(dummy_obj,s);
+				send1_obj->x256 = data->p1_x256;	/* ”­’eˆÊ’u‚Ì offset —p */
+				send1_obj->y256 = data->p1_y256;	/* ”­’eˆÊ’u‚Ì offset —p */
+				src->m_angleCCW512/*data->aaa_angle512*/ = angle_jikinerai512(send1_obj,s);
 				/* \•ª‚¿‚©‚Ã‚¢‚½‚ç */
-				if (1024 >(dummy_obj->y256-src->y256)+(dummy_obj->x256-src->x256) )
+				if (1024 >(send1_obj->y256-src->y256)+(send1_obj->x256-src->x256) )
 				{
 					data->state++;
 				}
 				break;
 			case ST02:
-				dummy_obj->x256 = data->p2_x256;	/* ”­’eˆÊ’u‚Ì offset —p */
-				dummy_obj->y256 = data->p2_y256;	/* ”­’eˆÊ’u‚Ì offset —p */
-				src->m_angleCCW512/*data->aaa_angle512*/ = angle_jikinerai512(dummy_obj,s);
+				send1_obj->x256 = data->p2_x256;	/* ”­’eˆÊ’u‚Ì offset —p */
+				send1_obj->y256 = data->p2_y256;	/* ”­’eˆÊ’u‚Ì offset —p */
+				src->m_angleCCW512/*data->aaa_angle512*/ = angle_jikinerai512(send1_obj,s);
 				/* \•ª‚¿‚©‚Ã‚¢‚½‚ç */
-				if (1024 >(dummy_obj->y256-src->y256)+(dummy_obj->x256-src->x256) )
+				if (1024 >(send1_obj->y256-src->y256)+(send1_obj->x256-src->x256) )
 				{
 					data->state++;
 				}
@@ -319,7 +332,7 @@ static void enemy_homing_move(SPRITE *src)
 				break;
 			}
 			mask512(src->m_angleCCW512/*data->aaa_angle512*/);
-			src->yx_anim_frame = (((src->m_angleCCW512/*data->aaa_angle512*/))>>(8-3));
+			src->yx_an im_frame = (((src->m_angleCCW512/*data->aaa_angle512*/))>>(8-3));
 		}
 //		/*data->v*/src->vx256 = ((sin512((src->m_angleCCW512/*data->aaa_angle512*/))*data->aaa_speed256)>>8)/**fps_fa ctor*/;
 //		/*data->v*/src->vy256 = ((cos512((src->m_angleCCW512/*data->aaa_angle512*/))*data->aaa_speed256)>>8)/**fps_fa ctor*/;
@@ -406,10 +419,10 @@ void bullet_create_enemy_homing(SPRITE *src)
 		data->p1_y256		= player->y256+(((cos512((i<<6))))<<6);/* <<6 ”¼Œa64 */
 //
 		{
-			dummy_obj->x256 = data->p1_x256;	/* ”­’eˆÊ’u‚Ì offset —p */
-			dummy_obj->y256 = data->p1_y256;	/* ”­’eˆÊ’u‚Ì offset —p */
+			send1_obj->x256 = data->p1_x256;	/* ”­’eˆÊ’u‚Ì offset —p */
+			send1_obj->y256 = data->p1_y256;	/* ”­’eˆÊ’u‚Ì offset —p */
 			int aa_angleCCW512;
-			aa_angleCCW512/*data->aaa_angle512*/ = angle_jikinerai512(dummy_obj,src);
+			aa_angleCCW512/*data->aaa_angle512*/ = angle_jikinerai512(send1_obj,src);
 			r->tmp_angleCCW512 = (((i<<6))-(aa_angleCCW512))>>(6-4);	/* 64•ªŠ„, ‰ÁŽZŠp“x */
 		}
 		data->state 		= (0);
@@ -420,16 +433,16 @@ void bullet_create_enemy_homing(SPRITE *src)
 	}
 }
 
-		//	s->yx_anim_frame = (deg_512_to_360(data->angle512)*20)/360; s->yx_anim_frame %=20;
-		//	s->yx_anim_frame = (((data->angle512)*(20/2))>>8);
-		//	s->yx_anim_frame = (((data->angle512)*(16/2))>>8);
+		//	s->yx_an im_frame = (deg_512_to_360(data->angle512)*20)/360; s->yx_an im_frame %=20;
+		//	s->yx_an im_frame = (((data->angle512)*(20/2))>>8);
+		//	s->yx_an im_frame = (((data->angle512)*(16/2))>>8);
 			#if 1
 			#else
 			/*–³—–î—‹ŒŒÝŠ·*/
 		//	{int aaa512;
 		//		aaa512 = 128+ 512 - data->angle512;
 		//		mask512(aaa512);
-		//		s->yx_anim_frame = (((aaa512))>>(8-3));
+		//		s->yx_an im_frame = (((aaa512))>>(8-3));
 		//	}
 			#endif
 

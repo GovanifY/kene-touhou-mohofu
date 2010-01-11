@@ -11,9 +11,6 @@
 
 extern int select_player;
 
-SPRITE *player;
-SPRITE *dummy_obj;
-
 int player_now_stage;		//
 int pd_bomber_time; 		// Use Gu
 
@@ -128,16 +125,16 @@ typedef struct
 //#define BASE_BOMBS			(PLAYERS8*6)/*廃止*/
 //#define BASE_LIVES			(PLAYERS8*7)/*廃止*/
 static Uint8 player_fix_status[BASE_MAX] =
-{/* REIMU(A/B) MARISA(A/B)  REMILIA YUYUKO CIRNO(A/Q) */
-      8,   8,   2,   2,    3,   4,   1,   1,    /* プレイヤーのアニメーション速度 */
-     16,  16,   8,   8,    4,  12,   9,   9,    /* 喰らいボムの受付時間 / hit_bomb_wait. */
-      4,   4,   8,   8,    9,  16,   9,   9,    /* オプションショットの更新間隔 / option shot interval. */
-     12,  12,   6,   6,    3,  12,   3,   3,    /* オプションショットのアニメーション速度 */
-      5,   5,   5,   5,    3,   6,   1,   1,    /* 通常ボムの強さ / standard bomb strength. */
-     30,  30,  48,  48,   12,  24,  12,  12,    /* 低速ボムの強さ / lower bomb strength. */
+{/* REIMU(A/B) MARISA(A/B)	REMILIA YUYUKO CIRNO(A/Q) */
+	  8,   8,	2,	 2,    3,	4,	 1,   1,	/* プレイヤーのアニメーション速度 */
+	 16,  16,	8,	 8,    4,  12,	 9,   9,	/* 喰らいボムの受付時間 / hit_bomb_wait. */
+	  4,   4,	8,	 8,    9,  16,	 9,   9,	/* オプションショットの更新間隔 / option shot interval. */
+	 12,  12,	6,	 6,    3,  12,	 3,   3,	/* オプションショットのアニメーション速度 */
+	  5,   5,	5,	 5,    3,	6,	 1,   1,	/* 通常ボムの強さ / standard bomb strength. */
+	 30,  30,  48,	48,   12,  24,	12,  12,	/* 低速ボムの強さ / lower bomb strength. */
 //
-//    3,   3,   3,   3,    3,   4,   3,   3,     /*廃止*/    /* 復活時のボム数 [初期ボム数](optionが充実したら無くなるかも) */
-//    4,   4,   4,   4,    3,   5,   9,   9,     /*廃止*/    /* 開始時の残りチャンス [初期プレイヤー数](optionが充実したら無くなるかも) */
+//	  3,   3,	3,	 3,    3,	4,	 3,   3,	 /*廃止*/	 /* 復活時のボム数 [初期ボム数](optionが充実したら無くなるかも) */
+//	  4,   4,	4,	 4,    3,	5,	 9,   9,	 /*廃止*/	 /* 開始時の残りチャンス [初期プレイヤー数](optionが充実したら無くなるかも) */
 };
 /*
 レミリアボム: 通常ボムの強さ:[旧==8] [新==4]
@@ -209,7 +206,7 @@ static void player_weapon_colision_check(SPRITE *shot, int erase_shot_type)
 	/* 敵にあたった場合に敵を消す */
 	{
 		/* 自弾にあたったのは敵自体なのか調べる． */
-		teki_obj = sprite_collision_check(shot, (SP_GROUP_ZAKO|SP_GROUP_BOSS)/*SP_GROUP_ENEMYS*/);
+		teki_obj = sprite_collision_check(shot, (SP_GROUP_TEKI/*|SP_GROUP_BOSS*/)/*SP_GROUP_ENEMYS*/);
 		if (NULL != teki_obj)			/* 敵自体に当たったら */
 		{
 			if (NULL != (teki_obj->callback_hit_enemy)) 	/*	*/
@@ -245,7 +242,7 @@ static void player_weapon_colision_check(SPRITE *shot, int erase_shot_type)
 			break;
 		default:
 			/* あたったのは本当にザコ類？ */
-			if (SP_ZAKO==(teki_obj->type&(SP_GROUP_ZAKO|SP_GROUP_BOSS)/*SP_GROUP_ENEMYS*/))
+			if (SP_ZAKO==(teki_obj->type&(SP_GROUP_TEKI/*|SP_GROUP_BOSS*/)/*SP_GROUP_ENEMYS*/))
 			{
 				callback_hit_zako(teki_obj/*敵自体*/, shot/*自弾*/);/*本当にザコ類*/
 			}
@@ -316,7 +313,7 @@ static /*int*/SPRITE *search_enemy_by_sprite(void)
 			#if 1
 			(SP_DELETE != s->type ) && /* 削除済みは飛ばす */
 			#endif
-			(0 != (s->type & (SP_GROUP_ZAKO|SP_GROUP_BOSS))/*SP_GROUP_ENEMYS*/) 	/* プレイヤーにとっての敵(ザコやボス) */
+			(0 != (s->type & (SP_GROUP_TEKI/*|SP_GROUP_BOSS*/))/*SP_GROUP_ENEMYS*/) 	/* プレイヤーにとっての敵(ザコやボス) */
 		)
 		{
 			if (
@@ -487,9 +484,9 @@ static void player_move_parrent_hlaser(SPRITE *src)
 	//		//parsys_add(NULL,20,0,src->x+((src->w)>>1),src->y+((src->h)>>1),20,ddd_dangle512,30,10,PIXELATE,NULL);
 	//	}
 		#if 0
-		src->anim_frame=((data->angle512*20)/512) % 20;
+		src->an im_frame=((data->angle512*20)/512) % 20;
 		#else
-		src->anim_frame=((data->angle512*10)>>8);
+		src->an im_frame=((data->angle512*10)>>8);
 		#endif
 	#endif
 	player_weapon_colision_check(src, PLAYER_WEAPON_TYPE_00_SHOT);
@@ -633,8 +630,8 @@ static void player_move_levarie(SPRITE *src)
 	{
 		u8 aaa_sss[16] =
 		{/* REIMU(A/B) MARISA(A/B) REMILIA YUYUKO CIRNO(A/Q) */
-			0, 0, 2, 8, 0, 0,  9,  9,   /* 回転速度 */
-			0, 0, 2, 0, 0, 0,  3,  3,   /* 拡大速度 */
+			0, 0, 2, 8, 0, 0,  9,  9,	/* 回転速度 */
+			0, 0, 2, 0, 0, 0,  3,  3,	/* 拡大速度 */
 		};
 		/*(暫定的)*/
 	//	if (0==(ra_nd()&0x40))/* きまぐれ回転 */
@@ -711,7 +708,7 @@ static void remilia_add_burn_fire(SPRITE *src/*, int ggg*/ /*r_or_l*/)	/* [***09
 			s->flags			|= (SP_FLAG_VISIBLE|SP_FLAG_TIME_OVER);
 			s->type 			= (/*SP_GROUP_JIKI_GET_ITEM*/JIKI_BOMBER_02|SP_GROUP_SHOT_SPECIAL)/*ボスに有効*/;/*(SP_GROUP_JIKI_GET_ITEM|SP_GROUP_SHOT_ZAKO) ボスに無効*/
 //			s->anim_speed		= 3;
-//			s->anim_frame		= 0;
+//			s->an im_frame		= 0;
 			s->callback_mover	= remilia_move_burn_fire;
 			s->color32			= 0x64ffffff;		/*	s->alpha			= 0x64 100;*/
 			s->x256 			= src->x256+((src->w128-s->w128));
@@ -1002,12 +999,12 @@ static void yu_gggg(SPRITE *s, int pd_weapon)	/* 幽々子 */
 
 #if 0
 	#if 1
-	//	s->anim_frame=((s->anim_frame+(data->opt_anime_add_id)+(data->opt_anime_add_id)-1/*data->pos*/)&(8-1)/*%8*/);
-		s->anim_frame=((s->anim_frame+(data->opt_anime_add_id))&(8-1)/*%8*/);
-	//	if (s->anim_frame<0)		{	s->anim_frame=7;}
+	//	s->an im_frame=((s->an im_frame+(data->opt_anime_add_id)+(data->opt_anime_add_id)-1/*data->pos*/)&(8-1)/*%8*/);
+		s->an im_frame=((s->an im_frame+(data->opt_anime_add_id))&(8-1)/*%8*/);
+	//	if (s->an im_frame<0)		{	s->an im_frame=7;}
 	#else
-		s->anim_frame++;
-		s->anim_frame &= (8-1);//if (s->anim_frame==8)	{s->anim_frame=0;}
+		s->an im_frame++;
+		s->an im_frame &= (8-1);//if (s->an im_frame==8)	{s->an im_frame=0;}
 	#endif
 #endif
 
@@ -1052,15 +1049,15 @@ static void animate_option_oz_ti(SPRITE *src)
 		{
 			data->anime_wait=/*data->anime_speed;*/player_fix_status[BASE_OPT_SHOT_ANIME+select_player];/*12*/ /*2*/ /*陰陽だまはゆっくり回るよ*/
 		#if 0
-		//	src->anim_frame=((src->anim_frame+(data->opt_anime_add_id)+(data->opt_anime_add_id)-1/*data->pos*/)&(8-1)/*%8*/);
-			src->anim_frame=((src->anim_frame+(data->opt_anime_add_id))&(8-1)/*%8*/);
-		//	if (src->anim_frame<0)		{	src->anim_frame=7;}
+		//	src->an im_frame=((src->an im_frame+(data->opt_anime_add_id)+(data->opt_anime_add_id)-1/*data->pos*/)&(8-1)/*%8*/);
+			src->an im_frame=((src->an im_frame+(data->opt_anime_add_id))&(8-1)/*%8*/);
+		//	if (src->an im_frame<0) 	{	src->an im_frame=7;}
 		#else
 			#if 0
-			src->anim_frame++;
-			src->anim_frame &= (8-1);//if (src->anim_frame==8)	{src->anim_frame=0;}
+			src->an im_frame++;
+			src->an im_frame &= (8-1);//if (src->an im_frame==8)	{src->an im_frame=0;}
 			#else
-			src->type = ((src->type) & (0xfff8))|((src->type+1) & (8-1));//if (src->anim_frame==8)	{src->anim_frame=0;}
+			src->type = ((src->type) & (0xfff8))|((src->type+1) & (8-1));//if (src->an im_frame==8) {src->an im_frame=0;}
 			#endif
 		#endif
 		}
@@ -1101,7 +1098,7 @@ static void re_ma_yu_move_option(SPRITE *src)	/* 霊夢 	魔理沙	仮幽々子 */
 						/*MARISA_B*/	ma_gggg,	// 魔理沙 B
 						/*REMILIA*/ 	ma_gggg,	// 現在ダミー
 						/*YUYUKO*/		yu_gggg,	// 幽々子
-						/*CIRNO_A*/		ma_gggg,	// 現在ダミー
+						/*CIRNO_A*/ 	ma_gggg,	// 現在ダミー
 						/*CIRNO_Q*/ 	ma_gggg,	// 現在ダミー
 					};
 					(ggg[select_player])(src, pd->weapon_power);
@@ -1325,11 +1322,11 @@ static void oz_ci_move_option(SPRITE *src) /* レミリア ＆ チルノ	[***090220 追加
 					const signed short fff[FORMATION_MAX][4] =
 					{
 						{	( 1),  (  2),	(-3),  ( -6) }, 								/* 0 FORMATION_01_ADD_R:		回転方向、角度加算値 */
-						{	(20),  ( 30),	(40),  ( 50) }, 								/* 1 FORMATION_01_RADIUS_R:	回転半径 */
-						{	( 1*104+20),  ( 2*104+20),	( 0*104+20),  ( 3*104+20) },		/* 2 FORMATION_02_LOCATE_X:	画面後方から支援するよ(wideth352dot) */
-						{  (240),  (240),  (220),  (220) }, 								/* 3 FORMATION_02_LOCATE_Y:	画面後方から支援するよ */
-						{	t256(12-33),  t256( 12-33), t256(26-33),  t256( 26-33) },		/* 4 FORMATION_00_LOCATE_Y_REMILIA:	レミリアの直前に四つ FORMATION_00_LOCATE_Y_REMILIA */	/* 2: レミリア用 */ 	/* 前方配置 */
-						{	t256(12-11-1),	t256(-12-1), t256(28-11-1),  t256(-28-1) }, 	/* 5 FORMATION_00_LOCATE_X:	レミリアの直後に四つ FORMATION_00_LOCATE_X */
+						{	(20),  ( 30),	(40),  ( 50) }, 								/* 1 FORMATION_01_RADIUS_R: 回転半径 */
+						{	( 1*104+20),  ( 2*104+20),	( 0*104+20),  ( 3*104+20) },		/* 2 FORMATION_02_LOCATE_X: 画面後方から支援するよ(wideth352dot) */
+						{  (240),  (240),  (220),  (220) }, 								/* 3 FORMATION_02_LOCATE_Y: 画面後方から支援するよ */
+						{	t256(12-33),  t256( 12-33), t256(26-33),  t256( 26-33) },		/* 4 FORMATION_00_LOCATE_Y_REMILIA: レミリアの直前に四つ FORMATION_00_LOCATE_Y_REMILIA */	/* 2: レミリア用 */ 	/* 前方配置 */
+						{	t256(12-11-1),	t256(-12-1), t256(28-11-1),  t256(-28-1) }, 	/* 5 FORMATION_00_LOCATE_X: レミリアの直後に四つ FORMATION_00_LOCATE_X */
 						{	t256(20),  t256( 20),	t256(25),  t256( 25) }, 				/* 6 FORMATION_00_LOCATE_Y_CIRNO_A: 	  チルノの直後に四人 FORMATION_00_LOCATE_Y_CIRNO */ /* 3: チルノ用 */
 						{	t256(20),  t256( 20),	t256(25),  t256( 25) }, 				/* 7 FORMATION_00_LOCATE_Y_CIRNO_Q: 	  チルノの直後に四人 FORMATION_00_LOCATE_Y_CIRNO */ /* 3: チルノ用 */
 					};
@@ -1860,7 +1857,7 @@ static void player_create_bomber_oogi_parrent(SPRITE *src)
 	s					= sprite_add_gu(JIKI_ATARI_ITEM_80);
 	s->flags			|= (/*SP_FLAG_VISIBLE|*/SP_FLAG_TIME_OVER);
 //	s->anim_speed		= 0;
-//	s->anim_frame		= 0;
+//	s->an im_frame		= 0;
 	s->color32			= 0xffffffff;		/*	s->alpha			= 0xff;*/
 	s->callback_mover	= player_move_add_oogi;
 	s->type 			= (/*SP_GROUP_JIKI_GET_ITEM*/JIKI_SHOT_00|SP_GROUP_SHOT_ZAKO);/* ボスの直接攻撃は禁止 */		/*(SP_GROUP_JIKI_GET_ITEM|SP_GROUP_SHOT_ZAKO) ボスに無効*/
@@ -1892,7 +1889,7 @@ static void player_create_bomber_cross_red_parrent(SPRITE *src) /* レミリア */ /
 	s->flags			|= (/*SP_FLAG_VISIBLE|*/SP_FLAG_TIME_OVER);
 	s->flags			&= (~(SP_FLAG_VISIBLE));	/*非表示*/
 //	s->anim_speed		= 0;
-//	s->anim_frame		= 0;
+//	s->an im_frame		= 0;
 	s->color32			= 0xdcffffff;		/*	s->alpha			= 0xdc;*/
 	s->callback_mover	= player_move_add_cross_red;
 //	s->type 			= (SP_GROUP_JIKI_GET_ITEM|SP_GROUP_SHOT_ZAKO);/* ボスの直接攻撃は禁止 */		/*(SP_GROUP_JIKI_GET_ITEM|SP_GROUP_SHOT_ZAKO) ボスに無効*/
@@ -1931,7 +1928,7 @@ static void player_add_hlaser(SPRITE *src)
 			s->y256 		= (src->y256) + ((src->h128)) + t256(15);
 		//	s->flags		|= (SP_FLAG_VISIBLE/*|SP_FLAG_TIME_OVER*/);
 			s->flags			&= (~(SP_FLAG_VISIBLE));	/*非表示*/
-			s->anim_frame	= 5-((int)((/*dou ble*/float)6.0/hlaser_NUM_OF_ENEMIES))*i;
+//...			s->an im_frame	= 5-((int)((/*dou ble*/float)6.0/hlaser_NUM_OF_ENEMIES))*i;
 			if (0==i)
 			{
 				s->callback_mover	= player_move_parrent_hlaser;
@@ -1977,7 +1974,7 @@ static void player_move_add_bomber_hlaser(SPRITE *src)
 		}
 	}
 	#if 0
-	src->anim_frame 	= (((int)pd_bomber_time>>4)&0x03);/*"bomber_slow.png"*/
+	src->an im_frame	= (((int)pd_bomber_time>>4)&0x03);/*"bomber_slow.png"*/
 	src->x256			= (player->x256)+((player->w128-src->w128));
 	src->y256			= (player->y256)+((player->h128-src->h128));
 	#endif
@@ -1998,7 +1995,7 @@ static void player_create_bomber_homing_parrent(SPRITE *src)	/*player_move_add_b
 //	c->flags			|= (SP_FLAG_VISIBLE/*|SP_FLAG_TIME_OVER*/);
 	c->flags			&= (~(SP_FLAG_VISIBLE));	/*非表示*/
 	c->data 			= 0/*d*/;
-	c->anim_frame		= 0;
+//	c->anim_frame		= 0;
 	c->color32			= 0xdcffffff;	/*	c->alpha			= 0x80 0xdc;*/
 	c->callback_mover	= player_move_add_bomber_hlaser;
 //	c->type 			= (SP_GROUP_JIKI_GET_ITEM|SP_GROUP_SHOT_SPECIAL)/*ボスに有効*/; /* 低速ボムもボスに有効とする */	/*(SP_GROUP_JIKI_GET_ITEM|SP_GROUP_SHOT_ZAKO) ボスに無効*/
@@ -2016,7 +2013,7 @@ static void player_create_bomber_homing_parrent(SPRITE *src)	/*player_move_add_b
 ---------------------------------------------------------*/
 
 //static int /*bomb_wait*/d->bomber_time;		/* ボムの有効時間 */	//次のボムを出せるまでの時間
-static int weapon_List8; 	//どの武器を装備しているか
+static int weapon_List8;	//どの武器を装備しているか
 
 	enum /*_weapon_type_*/
 	{
@@ -2239,8 +2236,8 @@ static void player_keycontrol(SPRITE *s1)
 	/* MARISA_B */	0x03a3,/* t256(3.64) 3.63671875 		  t256(2.0), */
 	/* REMILIA */	0x0347,/* t256(3.28) 3.27734375 		  t256(5.0), */
 	/* YUYUKO */	0x02c7,/* t256(2.78) 2.77734375 		  t256(5.0), */
-	/* CIRNO_A */ 	0x0373,/* t256(3.45) 3.44921875 		  t256(4.5), */ 			/* ⑨だから低速の方が速い */
-	/* CIRNO_Q */ 	0x0373,/* t256(3.45) 3.44921875 		  t256(4.5), */ 			/* ⑨だから低速の方が速い */
+	/* CIRNO_A */	0x0373,/* t256(3.45) 3.44921875 		  t256(4.5), */ 			/* ⑨だから低速の方が速い */
+	/* CIRNO_Q */	0x0373,/* t256(3.45) 3.44921875 		  t256(4.5), */ 			/* ⑨だから低速の方が速い */
 	/* 低速モード(通常時) */								/* 低速モード(ボム発動時) */
 	/* REIMU_A */	0x0178,/* t256(1.47) 1.46875000 t256(2.0) t256(2.0), */
 	/* REIMU_B */	0x0178,/* t256(1.47) 1.46875000 t256(2.0) t256(2.0), */
@@ -2248,26 +2245,29 @@ static void player_keycontrol(SPRITE *s1)
 	/* MARISA_B */	0x0233,/* t256(2.20) 2.19921875 t256(2.5) t256(2.0), */
 	/* REMILIA */	0x01d6,/* t256(1.84) 1.83593750 t256(2.5) t256(4.0), */
 	/* YUYUKO */	0x0161,/* t256(1.38) 1.37890625 t256(2.0) t256(4.5), */
-	/* CIRNO_A */ 	0x0269,/* t256(2.41) 2.41015625 t256(7.0) t256(5.0), */ /* 0x0700 ⑨だから低速の方が速い 0x0400==文高速時==幻想郷最速？ */
-	/* CIRNO_Q */ 	0x0700,/* t256(2.41) 2.41015625 t256(7.0) t256(5.0), */ /* 0x0700 ⑨だから低速の方が速い 0x0400==文高速時==幻想郷最速？ */
+	/* CIRNO_A */	0x0269,/* t256(2.41) 2.41015625 t256(7.0) t256(5.0), */ /* 0x0700 ⑨だから低速の方が速い 0x0400==文高速時==幻想郷最速？ */
+	/* CIRNO_Q */	0x0700,/* t256(2.41) 2.41015625 t256(7.0) t256(5.0), */ /* 0x0700 ⑨だから低速の方が速い 0x0400==文高速時==幻想郷最速？ */
 	};
-	/*const*/ signed int my_speed = player_speed256[select_player+	((my_pad & PSP_KEY_SLOW)?(PLAYERS8):(0))];
+	/* 自機速度を決める。 */
+	/*const*/ signed int my_speed = player_speed256[select_player + ((my_pad & PSP_KEY_SLOW)?(PLAYERS8):(0))];
+	/* 移動量を決める。(移動量 = 自機速度 x アナログキー、デジタルの場合は予めアナログキー移動量に変換してある) */
 	short	aaa_my_analog_x = (((my_speed)*(my_analog_x))>>8);
 	short	aaa_my_analog_y = (((my_speed)*(my_analog_y))>>8);
+	/* 斜めを考慮して移動する。 */
 	s1->x256 += ((((signed int)(jiki_move_length[((my_pad&0xf0)>>4)][0]))*(aaa_my_analog_x))>>8); /**fps_fa_ctor*/
 	s1->y256 += ((((signed int)(jiki_move_length[((my_pad&0xf0)>>4)][1]))*(aaa_my_analog_y))>>8); /**fps_fa_ctor*/
-	// はみだしたら修正。
-		 if (s1->x256 < t256(0))									{	s1->x256 = t256(0); 									}
-	else if (s1->x256 > t256(GAME_WIDTH) -((s1->w128+s1->w128)))	{	s1->x256 = t256(GAME_WIDTH) -((s1->w128+s1->w128)); 	}
-		 if (s1->y256 < t256(0))									{	s1->y256 = t256(0); 									}
-	else if (s1->y256 > t256(GAME_HEIGHT)-((s1->h128+s1->h128)))	{	s1->y256 = t256(GAME_HEIGHT)-((s1->h128+s1->h128)); 	}
+	/* 画面外に、はみだしたら修正。 */
+		 if (s1->x256 < t256(0))									{	s1->x256 = t256(0); 									}/* 左チェック */
+	else if (s1->x256 > t256(GAME_WIDTH) -((s1->w128+s1->w128)))	{	s1->x256 = t256(GAME_WIDTH) -((s1->w128+s1->w128)); 	}/* 右チェック */
+		 if (s1->y256 < t256(0))									{	s1->y256 = t256(0); 									}/* 上チェック */
+	else if (s1->y256 > t256(GAME_HEIGHT)-((s1->h128+s1->h128)))	{	s1->y256 = t256(GAME_HEIGHT)-((s1->h128+s1->h128)); 	}/* 下チェック */
 
 	/* コア移動 */
 	{
 		SPRITE *s2;
 		s2 = pd->core;
-		s2->x256 = s1->x256+((s1->w128-s2->w128))	-(t256(1));
-		s2->y256 = s1->y256-((s2->h128+s2->h128))	+(t256(20));
+		s2->x256 = s1->x256+((s1->w128-s2->w128))	-(t256( 1));	/* -(t256( 1)) とりあえず */
+		s2->y256 = s1->y256-((s2->h128+s2->h128))	+(t256(20));	/* +(t256(20)) とりあえず */
 	}
 	/* MAX時のアイテム自動収集 */
 	if (my_pad & PSP_KEY_UP/*PSP_CTRL_UP*/) 	/* 註：斜め上でも回収可能 */ /*&& (s1->y>0)*/
@@ -2308,11 +2308,11 @@ static void player_keycontrol(SPRITE *s1)
 				{
 					static const Uint8 weapon_tbl[(WP_MAX)*(PLAYERS8)] =
 					{/* REIMU(A/B) MARISA(A/B) REMILIA YUYUKO CIRNO(A/Q) */    /* レミリア強すぎるので調整(+5) */
-							 5, 5,	6, 6,  7+5,  9+8,  9,  9, 	/* WEAPON_L1 */
-							 5, 5,	6, 6,  6+5,  8+8,  9,  9, 	/* WEAPON_L2 */
-							 5, 5,	5, 5,  7+5,  7+8,  9,  9, 	/* WEAPON_L3 */
-							 5, 5,	5, 5,  6+5,  6+8,  9,  9, 	/* WEAPON_L4 */
-							 5, 5,	5, 5,  5+5,  5+8,  9,  9, 	/* WEAPON_L5 */
+							 5, 5,	6, 6,  7+5,  9+8,  9,  9,	/* WEAPON_L1 */
+							 5, 5,	6, 6,  6+5,  8+8,  9,  9,	/* WEAPON_L2 */
+							 5, 5,	5, 5,  7+5,  7+8,  9,  9,	/* WEAPON_L3 */
+							 5, 5,	5, 5,  6+5,  6+8,  9,  9,	/* WEAPON_L4 */
+							 5, 5,	5, 5,  5+5,  5+8,  9,  9,	/* WEAPON_L5 */
 					};
 					/*pd->*/weapon_interval = weapon_tbl[weapon_List8+select_player];
 //					/*pd->*/weapon_interval = weapon_tbl[(weapon_List<<3)+select_player];
@@ -2339,30 +2339,30 @@ static void player_keycontrol(SPRITE *s1)
 	/*---------------------------------------------------------
 		プレイヤーアニメーション関連処理
 	---------------------------------------------------------*/
-	{static int anim_delay;
-		/*pd->*/anim_delay -= 1/*fps_fa_ctor*/;
-		if (0 > /*pd->*/anim_delay)
+	{static int anime_delay;
+		/*pd->*/anime_delay -= 1/*fps_fa_ctor*/;
+		if (0 > /*pd->*/anime_delay)
 		{
-			/*pd->*/anim_delay = player_fix_status[BASE_SPEED_ANIME+select_player]/*2*/;
+			/*pd->*/anime_delay = player_fix_status[BASE_SPEED_ANIME+select_player]/*2*/;
 			//
-			static int auto_anim_frame = 4/*5*/;
-				 if (my_pad & PSP_KEY_LEFT/*PSP_CTRL_LEFT*/)	{	if (auto_anim_frame>0	)	 auto_anim_frame--; }
-			else if (my_pad & PSP_KEY_RIGHT/*PSP_CTRL_RIGHT*/)	{	if (auto_anim_frame</*7*/8/*10*/) auto_anim_frame++; }
+			static int auto_anime_frame = 4/*5*/;
+				 if (my_pad & PSP_KEY_LEFT/*PSP_CTRL_LEFT*/)	{	if (auto_anime_frame>0	)	 auto_anime_frame--; }
+			else if (my_pad & PSP_KEY_RIGHT/*PSP_CTRL_RIGHT*/)	{	if (auto_anime_frame</*7*/8/*10*/) auto_anime_frame++; }
 			else
 			{
-				if (auto_anim_frame>4/*5*/) auto_anim_frame--;
-				if (auto_anim_frame<4/*5*/) auto_anim_frame++;
+				if (auto_anime_frame>4/*5*/) auto_anime_frame--;
+				if (auto_anime_frame<4/*5*/) auto_anime_frame++;
 			}
 			{
-				int now_anim_frame;
+				int now_anime_frame;
 				static int auto_aniime;
 				auto_aniime++;
 				auto_aniime&=3;
-					 if (4==auto_anim_frame)	{	now_anim_frame = (auto_anim_frame + auto_aniime);	}
-				else if (4<auto_anim_frame) 	{	now_anim_frame = (auto_anim_frame + 3); 			}
-				else							{	now_anim_frame = (auto_anim_frame );				}
-				s1->anim_frame = (now_anim_frame);
-				s1->type = (SP_GROUP_JIKI_GET_ITEM)|(now_anim_frame);
+					 if (4==auto_anime_frame)	{	now_anime_frame = (auto_anime_frame + auto_aniime); }
+				else if (4<auto_anime_frame)	{	now_anime_frame = (auto_anime_frame + 3);			}
+				else							{	now_anime_frame = (auto_anime_frame );				}
+			//	s1->an im_frame = (now_anime_frame);
+				s1->type = (SP_GROUP_JIKI_GET_ITEM)|(now_anime_frame);
 			}
 		}
 	}
@@ -2475,12 +2475,12 @@ static void player_add_power(SPRITE *s1, SPRITE *tt, int add_power)
 	}
 	bonus_info_score_nodel(tt, add_score_point);/* */tt->type = SP_DELETE;/* おしまい */
 	check_weapon_level(pd);/* [pd->weapon_powerが変更された場合に必ず行う後チェック] */
-
-				#if (0==USE_DESIGN_TRACK)
-				play_voice_auto_track(VOICE05_BONUS);
-				#else
-				voice_play(VOICE05_BONUS, TRACK07_GRAZE);/*テキトー*/
-				#endif
+//
+	#if (0==USE_DESIGN_TRACK)
+	play_voice_auto_track(VOICE05_BONUS);
+	#else
+	voice_play(VOICE05_BONUS, TRACK07_GRAZE);/*テキトー*/
+	#endif
 }
 
 static void player_colision_check_item(SPRITE *s1/*, int mask*/)
@@ -2494,9 +2494,9 @@ static void player_colision_check_item(SPRITE *s1/*, int mask*/)
 		{
 		case SP_ITEM_00_P001:	player_add_power(s1, tt, 1);		break;	// ウェポンアイテム(小P)
 		case SP_ITEM_01_P008:	player_add_power(s1, tt, 8);		break;	// ウェポンアイテム(中P)	// [***090123		追加
-		case SP_ITEM_04_P128:	player_add_power(s1, tt, 127);		break;	// ウェポンアイテム(F)		// [***090123		追加
+		case SP_ITEM_02_P128:	player_add_power(s1, tt, 127);		break;	// ウェポンアイテム(F)		// [***090123		追加
 		//
-		case SP_ITEM_02_BOMB:
+		case SP_ITEM_04_BOMB:
 			//player_add_bomb(t);		// [*****本来はコメントアウトしないよ
 			if (8 < pd->bombs)	{	goto add_1000pts;	}/* 既に最大値ならば、1000pts */
 			pd->bombs++;
@@ -2504,11 +2504,11 @@ static void player_colision_check_item(SPRITE *s1/*, int mask*/)
 			tt->type = SP_DELETE;/* おしまい */
 			#endif
 //
-				#if (0==USE_DESIGN_TRACK)
-				play_voice_auto_track(VOICE05_BONUS);
-				#else
-				voice_play(VOICE05_BONUS, TRACK07_GRAZE);/*テキトー*/
-				#endif
+			#if (0==USE_DESIGN_TRACK)
+			play_voice_auto_track(VOICE05_BONUS);
+			#else
+			voice_play(VOICE05_BONUS, TRACK07_GRAZE);/*テキトー*/
+			#endif
 			break;
 
 		case SP_ITEM_03_1UP:
@@ -2539,7 +2539,7 @@ static void player_colision_check_item(SPRITE *s1/*, int mask*/)
 			break;
 		#endif
 add_1000pts:
-		case SP_ITEM_06_TENSU:
+		case SP_ITEM_05_TENSU:
 			{	/* PLAYER_SPLIT_LINE256 より上で取ると 1000pts. ... 下で取ると約100pts. */
 				/* (大体90pts、非常に難しいが、がんばれば(消える直前の3ライン)70ptsまで可能らしい) */
 				int add_score_point;
@@ -2605,7 +2605,7 @@ static void player_colision_check_enemy(SPRITE *s1, int player_hit_enemy_group_m
 static void player_colision_check_graze(SPRITE *s1/*, int mask*/)
 {
 	/* --- 敵弾 --- */
-	//	case S P_BULLET: 	/*not_break;*/
+	//	case S P_BULLET:	/*not_break;*/
 	//	case SP_LASER:		/*not_break;*/
 	//	case SP_BIGBULLET:	/*not_break;*/
 	//	case SP_BOSS02ICE:	/*not_break;*/
@@ -2693,7 +2693,7 @@ static void player_fukkatsu(SPRITE *s1)
 
 	s1->flags			|= (SP_FLAG_VISIBLE);		// 可視フラグのON(可視)
 	s1->color32 		= 0x50ffffff;		/*	s1->alpha			= 0x50;*/	/* 半透明 */
-	s1->anim_frame		= 5;
+//	s1->anim_frame		= 5;
 //
 	PLAYER_DATA *pd = (PLAYER_DATA *)s1->data;
 	pd->core->flags 	|= (SP_FLAG_VISIBLE);		// ○表示
@@ -2718,8 +2718,8 @@ static void player_explode(SPRITE *s1)
 			/* コンティニューの場合(GAME_OUT)easy の場合 */
 			/* 無駄に8個吐かせる  */
 			/* コンティニューの場合easy の場合： (キャッチ出来る数で点数は違うけど、どれか１つキャッチすれば POWER は同じだから) */
-		//	item_create(s1, (0==difficulty)?(SP_ITEM_04_P128):(SP_ITEM_01_P008), 8, ITEM_MOVE_FLAG_06_RAND_XY);
-			item_create(s1, (SP_ITEM_04_P128), 8, ITEM_MOVE_FLAG_06_RAND_XY);
+		//	item_create(s1, (0==difficulty)?(SP_ITEM_02_P128):(SP_ITEM_01_P008), 8, ITEM_MOVE_FLAG_06_RAND_XY);
+			item_create(s1, (SP_ITEM_02_P128), 8, ITEM_MOVE_FLAG_06_RAND_XY);
 		}
 		else
 		{
@@ -2744,7 +2744,7 @@ static void player_explode(SPRITE *s1)
 			if (0 != pd->bombs)
 			{
 				/* 使ってない分の持ってるボムを吐き出す */
-				item_create(s1, SP_ITEM_02_BOMB, pd->bombs, ITEM_MOVE_FLAG_06_RAND_XY);
+				item_create(s1, SP_ITEM_04_BOMB, pd->bombs, ITEM_MOVE_FLAG_06_RAND_XY);
 			}
 		}
 	}
@@ -2769,16 +2769,16 @@ static void player_explode(SPRITE *s1)
 		#endif
 		/* 自分爆発 */
 		#if 0
-		dummy_obj->x256 = s1->x256+t256( 5);						dummy_obj->y256 = s1->y256+t256( 5);						bakuhatsu_add_type_ddd(dummy_obj/*s1->x256+t256( 5), s1->y256+t256( 5)*/, /*0,*/ BAKUHATSU_MINI00);
-	/*	dummy_obj->x256 = s1->x256+t256( 5);	*/					dummy_obj->y256 += t256(20-5)/*= s1->y256+t256(20);*/		bakuhatsu_add_type_ddd(dummy_obj/*s1->x256+t256( 5), s1->y256+t256(20)*/, /*0,*/ BAKUHATSU_MINI00);
-		dummy_obj->x256 += t256(20-5)/*= s1->x256+t256(20)*/;	/*	dummy_obj->y256 = s1->y256+t256(20);	*/					bakuhatsu_add_type_ddd(dummy_obj/*s1->x256+t256(20), s1->y256+t256( 5)*/, /*0,*/ BAKUHATSU_MINI00);
-	/*	dummy_obj->x256 = s1->x256+t256(20);	*/					dummy_obj->y256 -= t256(20-5)/*= s1->y256+t256( 5)*/;		bakuhatsu_add_type_ddd(dummy_obj/*s1->x256+t256(20), s1->y256+t256(20)*/, /*0,*/ BAKUHATSU_MINI00);
+		send1_obj->x256 = s1->x256+t256( 5);						send1_obj->y256 = s1->y256+t256( 5);						bakuhatsu_add_type_ddd(send1_obj/*s1->x256+t256( 5), s1->y256+t256( 5)*/, /*0,*/ BAKUHATSU_MINI00);
+	/*	send1_obj->x256 = s1->x256+t256( 5);	*/					send1_obj->y256 += t256(20-5)/*= s1->y256+t256(20);*/		bakuhatsu_add_type_ddd(send1_obj/*s1->x256+t256( 5), s1->y256+t256(20)*/, /*0,*/ BAKUHATSU_MINI00);
+		send1_obj->x256 += t256(20-5)/*= s1->x256+t256(20)*/;	/*	send1_obj->y256 = s1->y256+t256(20);	*/					bakuhatsu_add_type_ddd(send1_obj/*s1->x256+t256(20), s1->y256+t256( 5)*/, /*0,*/ BAKUHATSU_MINI00);
+	/*	send1_obj->x256 = s1->x256+t256(20);	*/					send1_obj->y256 -= t256(20-5)/*= s1->y256+t256( 5)*/;		bakuhatsu_add_type_ddd(send1_obj/*s1->x256+t256(20), s1->y256+t256(20)*/, /*0,*/ BAKUHATSU_MINI00);
 		#endif
 		#if 0
-		dummy_obj->x256 = s1->x256+t256( 5);	dummy_obj->y256 = s1->y256+t256( 5);		bakuhatsu_add_type_ddd(dummy_obj/*s1->x256+t256( 5), s1->y256+t256( 5)*/, /*0,*/ BAKUHATSU_MINI00);
-		dummy_obj->x256 = s1->x256+t256( 5);	dummy_obj->y256 = s1->y256+t256(20);		bakuhatsu_add_type_ddd(dummy_obj/*s1->x256+t256( 5), s1->y256+t256(20)*/, /*0,*/ BAKUHATSU_MINI00);
-		dummy_obj->x256 = s1->x256+t256(20);	dummy_obj->y256 = s1->y256+t256(20);		bakuhatsu_add_type_ddd(dummy_obj/*s1->x256+t256(20), s1->y256+t256( 5)*/, /*0,*/ BAKUHATSU_MINI00);
-		dummy_obj->x256 = s1->x256+t256(20);	dummy_obj->y256 = s1->y256+t256( 5);		bakuhatsu_add_type_ddd(dummy_obj/*s1->x256+t256(20), s1->y256+t256(20)*/, /*0,*/ BAKUHATSU_MINI00);
+		send1_obj->x256 = s1->x256+t256( 5);	send1_obj->y256 = s1->y256+t256( 5);		bakuhatsu_add_type_ddd(send1_obj/*s1->x256+t256( 5), s1->y256+t256( 5)*/, /*0,*/ BAKUHATSU_MINI00);
+		send1_obj->x256 = s1->x256+t256( 5);	send1_obj->y256 = s1->y256+t256(20);		bakuhatsu_add_type_ddd(send1_obj/*s1->x256+t256( 5), s1->y256+t256(20)*/, /*0,*/ BAKUHATSU_MINI00);
+		send1_obj->x256 = s1->x256+t256(20);	send1_obj->y256 = s1->y256+t256(20);		bakuhatsu_add_type_ddd(send1_obj/*s1->x256+t256(20), s1->y256+t256( 5)*/, /*0,*/ BAKUHATSU_MINI00);
+		send1_obj->x256 = s1->x256+t256(20);	send1_obj->y256 = s1->y256+t256( 5);		bakuhatsu_add_type_ddd(send1_obj/*s1->x256+t256(20), s1->y256+t256(20)*/, /*0,*/ BAKUHATSU_MINI00);
 		#endif
 		#if 1
 		{int jj;
@@ -2791,9 +2791,9 @@ static void player_explode(SPRITE *s1)
 			};
 			for (jj=0; jj<(4); jj+=2)
 			{
-				dummy_obj->x256 = s1->x256+((jjaaa[jj  ])<<8);
-				dummy_obj->y256 = s1->y256+((jjaaa[jj+1])<<8);
-				bakuhatsu_add_type_ddd(dummy_obj/*s1->x256+t256( 5), s1->y256+t256( 5)*/, /*0,*/ BAKUHATSU_MINI00);
+				send1_obj->x256 = s1->x256+((jjaaa[jj  ])<<8);
+				send1_obj->y256 = s1->y256+((jjaaa[jj+1])<<8);
+				bakuhatsu_add_type_ddd(send1_obj/*s1->x256+t256( 5), s1->y256+t256( 5)*/, /*0,*/ BAKUHATSU_MINI00);
 			}
 		}
 		#endif
@@ -2904,18 +2904,29 @@ static void any_player_move(SPRITE *s1)
 		player_keycontrol(s1);
 	}
 	int player_hit_enemy_group;
-	//player_hit_enemy_group = SP_GROUP_ZAKO;
-	//player_hit_enemy_group = SP_GROUP_BOSS;
+	//player_hit_enemy_group = (SP_GROUP_TEKI);
+	//player_hit_enemy_group = (SP_GROUP_BOSS);
+	player_hit_enemy_group = (SP_GROUP_TEKI);
 	if (0 != pd_save_timer)/* 特殊処理 */
 	{
 		player_move_other(s1);
-		player_hit_enemy_group = (SP_GROUP_BOSS);	/* ボム中は、ボス / 中ザコ敵 にあたって死ぬ */
+	//
+		if (0==(pd->state_flag & (STATE_FLAG_05_IS_BOSS)))
+		{	/* 道中 */
+			/* ボム中は、 ザコ敵 にあたって死なない */
+			player_hit_enemy_group = (0);
+		}
+	//	else
+	//	{	/* ボス戦闘時 */
+	//		/* ボム中は、ボス にあたって死ぬ */
+	//		player_hit_enemy_group = (SP_GROUP_TEKI/*SP_GROUP_BOSS*/);
+	//	}
 	}
 	else		/*通常処理*/
 	{
 //	case PLAYER_STATE_00_NORMAL:
 		player_colision_check_graze(s1);
-		player_hit_enemy_group = (SP_GROUP_BOSS|SP_GROUP_ZAKO);
+//		player_hit_enemy_group = (SP_GROUP_TEKI/*|SP_GROUP_BOSS*/);/* 雑魚＆ボス */
 	}
 	/* ボム中は、ボス / 中ザコ敵 にあたって死ぬ */
 	/* スクリプト動作中 は、敵あたり判定はない */
@@ -2925,7 +2936,12 @@ static void any_player_move(SPRITE *s1)
 		/* 喰らいボム受付中 は、敵あたり判定はない */
 		if (PLAYER_STATE_01_HIT_BOMB != pd_player_status)
 		{
-			player_colision_check_enemy(s1, player_hit_enemy_group);/*SP_GROUP_ENEMYS*/
+			#if 0
+			if (0 != player_hit_enemy_group)/*(???)*/
+			#endif
+			{
+				player_colision_check_enemy(s1, /*(SP_GROUP_TEKI)*/player_hit_enemy_group);/*SP_GROUP_ENEMYS*/
+			}
 		}
 	}
 	/* アイテムは常に取れる */
@@ -2966,7 +2982,7 @@ static void option_create_re_ma_yu(SPRITE *src)
 	for (jj=0; jj<4; jj++)
 	{
 		SPRITE *s;
-	//	s						= sp rite_add_res( BASE_OPTION1_PNG+select_player ); 	/*+ REIMU MARISA YUYUKO */
+	//	s						= sp rite_add_res( BASE_OPTION1_PNG+select_player );	/*+ REIMU MARISA YUYUKO */
 		s						= sprite_add_gu( TAMA_TYPE_BULLET_DUMMY );	/*+ REIMU MARISA YUYUKO */
 		option[(OPTION_C1+jj)]	= s;
 	//	s->flags				|= (SP_FLAG_VISIBLE);
@@ -2974,7 +2990,7 @@ static void option_create_re_ma_yu(SPRITE *src)
 		s->flags				&= (~(SP_FLAG_COLISION_CHECK)); 	/* あたり判定のOFF(無敵) */
 
 		s->type 				= (JIKI_OPTION_00_00/*|SP_MUTEKI*/);
-		s->anim_frame			= 0;
+	//	s->anim_frame			= 0;
 	//
 		s->callback_mover		= re_ma_yu_move_option;
 		data					= mmalloc(sizeof(PL_OPTION_DATA));
@@ -3023,7 +3039,7 @@ static void option_create_oz_ci(SPRITE *src)	/* レミリア ＆ チルノ [***090220 追
 		s->flags				&= (~(SP_FLAG_COLISION_CHECK)); 	/* あたり判定のOFF(無敵) */
 
 		s->type 				= (JIKI_OPTION_00_00/*|SP_MUTEKI*/)+kk; kk+=8/*PLAYERS8*/;
-		s->anim_frame			= 0;
+	//	s->anim_frame			= 0;
 	//
 		s->callback_mover		= oz_ci_move_option;
 		/* レミリアのオプションは半透明っぽい */
@@ -3190,7 +3206,7 @@ extern int	now_max_continue;
 			else
 			{
 				/* ボーナスアイテムを出す */
-// 咲夜 		item_create(src, S P_ITEM_05_HOSI/*SP_ITEM_06_TENSU*/, 15, ITEM_MOVE_FLAG_01_COLLECT);/*星点を出す*/
+// 咲夜 		item_create(src, S P_ITEM_05_HOSI/*SP_ITEM_05_TENSU*/, 15, ITEM_MOVE_FLAG_01_COLLECT);/*星点を出す*/
 // 輝夜 		item_create_for_boss(src, ITEM_CREATE_MODE_01);// 輝夜 文 パチェ アリス
 				item_create_for_boss(src, ITEM_CREATE_MODE_01);
 			//
@@ -3207,8 +3223,7 @@ extern int	now_max_continue;
 	src->callback_mover 		= NULL;
 	src->type					= SP_DELETE;
 //
-	/* 輝夜を倒すと皆破壊される。 */
-	/* アリスを倒すと皆破壊される。 */
+	/* 輝夜/アリスを倒すと皆破壊される。 */
 	#if 1
 	common_boss_flags		= 0/*FLG_ALL_CAST*/;
 	#endif
@@ -3235,20 +3250,18 @@ extern int	now_max_continue;
 //	pd->core->alpha 	= 80;	/* 半透明 */
 	boss_effect_term();
 
-
-
 	/*---------------------------------------------------------
 		ボス特殊処理
 	---------------------------------------------------------*/
 	//	if (B02_BOSS_DESTROY==pd->bo ssmode) //ボスを倒したときの処理
 	//	if (/*ST ATE_FLAG_11_IS_BOSS_DESTROY==*/ (pd->state_flag & ST ATE_FLAG_11_IS_BOSS_DESTROY))
-	//void boss_destroy_aaa(void) 	/* ボスを倒した直後、「ボス後イベント」前の処理 */
+	//void boss_destroy_aaa(void)	/* ボスを倒した直後、「ボス後イベント」前の処理 */
 	{
 		bullets_to_hosi();/* 弾全部、星アイテムにする */
 		// TIME_20_DBWAITフレーム待ってから実行。ボスを倒した時に画面に表示されている弾を全て消す処理のために必要。
 		play_music_num(BGM_00_stop);
 		#if (0==USE_DESIGN_TRACK)
-		play_voice_auto_track(VOICE03_BOSS_HAKAI);		// [***090313		追加	もっとスマートなやり方がありそうだけど思いつかなかった。
+		play_voice_auto_track(VOICE03_BOSS_HAKAI);		// [***090313		追加
 		#else
 		voice_play(VOICE03_BOSS_HAKAI, TRACK03_SHORT_MUSIC/*TRACK02_ALEART_IVENT*/);
 //		voice_play(VOICE03_BOSS_HAKAI, TRACK01_EXPLODE);/*予備(うるさい)*/
@@ -3274,4 +3287,3 @@ extern int	now_max_continue;
 	}
 //
 }
-

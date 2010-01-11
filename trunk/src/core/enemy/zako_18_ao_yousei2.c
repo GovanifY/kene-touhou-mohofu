@@ -13,8 +13,10 @@ typedef struct
 	int state;			/* 妖精の状態 */
 	int enemy_rank; 	/* 設定ファイルからの敵の強さ */
 	int time_out;		/* 状態遷移用の時間切れ */
-	int ani_turn;		/* アニメーション方向(羽の上下) */
 	int nnn;			/* 弾を撃つ回数 */
+//
+	int ani_turn;		/* アニメーション方向(羽の上下) */
+	int anime_frame;	/* アニメーション */
 } AO_YOUSEI2_DATA;
 
 /*---------------------------------------------------------
@@ -24,7 +26,7 @@ typedef struct
 static void lose_ao_yousei2(SPRITE *src)
 {
 //	case SP_ZAKO_17_AO_YOUSEI2:
-	item_create(src, ((SP_ITEM_06_TENSU&0xff)|SP_ITEM_00_P001), 1, (ITEM_MOVE_FLAG_01_COLLECT|ITEM_MOVE_FLAG_06_RAND_XY)/*(up_flags)*/ );
+	item_create(src, ((SP_ITEM_05_TENSU&0xff)|SP_ITEM_00_P001), 1, (ITEM_MOVE_FLAG_01_COLLECT|ITEM_MOVE_FLAG_06_RAND_XY)/*(up_flags)*/ );
 }
 
 /*---------------------------------------------------------
@@ -59,10 +61,10 @@ static void move_ao_yousei2(SPRITE *src)
 			data->state++;// = STATE_01;/*次へ*/
 		}
 		else
-		{	/* 登場の動き */
-				 if (data->enemy_rank<3)	{	src->x256 -= t256(2)/**fps_fa ctor*/;	}
-			else if (data->enemy_rank<7)	{	src->y256 += t256(2)/**fps_fa ctor*/;	}
-			else							{	src->x256 += t256(2)/**fps_fa ctor*/;	}
+		{
+			/* 登場の動き */
+			src->x256 += src->vx256;/**fps_fa ctor*/
+			src->y256 += src->vy256;/**fps_fa ctor*/
 		}
 		break;
 	case STATE_01:	/* 少し待つ */
@@ -77,7 +79,7 @@ static void move_ao_yousei2(SPRITE *src)
 			mask512(p512);
 		//	const Uint8 aa_offs[8] = { OF_16, OF_12, OF_08, OF_04, OF_00, OF_04, OF_08, OF_12 };
 			const Uint8 aa_offs[8] = { SSS00, SSS04, SSS08, SSS16, SSS20, SSS16, SSS08, SSS04 };
-			src->yx_anim_frame = (src->yx_anim_frame&(4-1))+aa_offs[(p512>>6)]; 		/* 64  32== 512/16 */
+			data->anime_frame = (data->anime_frame&(4-1))+aa_offs[(p512>>6)];		/* 64  32== 512/16 */
 		}
 		break;
 	case STATE_02:	/* 弾を撃つ */
@@ -122,9 +124,9 @@ static void move_ao_yousei2(SPRITE *src)
 		if (data->nnn < 0)
 		{
 			/* 退場準備 */
-				 if (data->enemy_rank<3)	{	src->yx_anim_frame=(src->yx_anim_frame&(4-1))+SSS00;}
-			else if (data->enemy_rank<7)	{	src->yx_anim_frame=(src->yx_anim_frame&(4-1))+SSS08;}
-			else							{	src->yx_anim_frame=(src->yx_anim_frame&(4-1))+SSS00;}
+				 if (data->enemy_rank<3)	{	data->anime_frame=(data->anime_frame&(4-1))+SSS00;}
+			else if (data->enemy_rank<7)	{	data->anime_frame=(data->anime_frame&(4-1))+SSS08;}
+			else							{	data->anime_frame=(data->anime_frame&(4-1))+SSS00;}
 			data->state++;// = STATE_03;/*次へ*/
 			data->time_out = 50;
 		}
@@ -139,26 +141,26 @@ static void move_ao_yousei2(SPRITE *src)
 			src->type = SP_DELETE;	/* おしまい */
 		}
 		else
-		{	/* 退場の動き */
-				 if (data->enemy_rank<3)	{	src->x256 += t256(2)/**fps_fa ctor*/;}
-			else if (data->enemy_rank<7)	{	src->y256 -= t256(2)/**fps_fa ctor*/;}
-			else							{	src->x256 -= t256(2)/**fps_fa ctor*/;}
+		{
+			/* 退場の動き */
+			src->x256 -= src->vx256;/**fps_fa ctor*/
+			src->y256 -= src->vy256;/**fps_fa ctor*/
 		}
 		break;
 	}
 
 	if (0==data->ani_turn)
 	{
-		src->yx_anim_frame++;
-		if (3==(src->yx_anim_frame&(4-1)))
+		data->anime_frame++;
+		if (3==(data->anime_frame&(4-1)))
 		{
 			data->ani_turn=1;
 		}
 	}
 	else
 	{
-		src->yx_anim_frame--;
-		if (0==(src->yx_anim_frame&(4-1)))
+		data->anime_frame--;
+		if (0==(data->anime_frame&(4-1)))
 		{
 			data->ani_turn=0;
 		}
@@ -168,12 +170,33 @@ static void move_ao_yousei2(SPRITE *src)
 /*---------------------------------------------------------
 	敵を追加する
 ---------------------------------------------------------*/
+	#if 0
+//
+//	if ( (enemy_rank)>9) {enemy_rank=9;}
+	signed short spr_tbl[10][4] =
+	{
+{/* case 0: 	s->x=*/372 GAME_WIDTH352+20-80-12(280), /*s->y=*/100,		1,/*-s->w;*/		/*s->yx_an im_frame=*/SSS20},	//右下
+{/* case 1: 	s->x=*/392 GAME_WIDTH352+40-80-12(300), /*s->y=*/70,		1,/*-s->w;*/		/*s->yx_an im_frame=*/SSS20},	//右中
+{/* case 2: 	s->x=*/412 GAME_WIDTH352+60-80-12(320), /*s->y=*/40,		1,/*-s->w;*/		/*s->yx_an im_frame=*/SSS20},	//右上
+//
+{/* case 3: 	s->y=*/-30+80(50),			/*s->x=*/-300,		3,/*-s->w/2;*/		/*s->yx_an im_frame=*/SSS08},	//上右右
+{/* case 4: 	s->y=*/-50+80(30),			/*s->x=*/-220,		3,/*-s->w/2;*/		/*s->yx_an im_frame=*/SSS08},	//上右
+{/* case 5: 	s->y=*/-50+80(30),			/*s->x=*/-160,		3,/*-s->w/2;*/		/*s->yx_an im_frame=*/SSS08},	//上左
+{/* case 6: 	s->y=*/-30+80(50),			/*s->x=*/ -80,		3,/*-s->w/2;*/		/*s->yx_an im_frame=*/SSS08},	//上左左
+//
+{/* case 7: 	s->x=*/-20+80(60),			/*s->y=*/40,		0,/*		*/		/*s->yx_an im_frame=*/SSS00},	//左上
+{/* case 8: 	s->x=*/-40+80(40),			/*s->y=*/70,		0,/*		*/		/*s->yx_an im_frame=*/SSS00},	//左中
+{/* case 9: 	s->x=*/-60+80(20),			/*s->y=*/100,		0,/*		*/		/*s->yx_an im_frame=*/SSS00},	//左下
+	};
+//	s->y256 				= (spr_tbl[enemy_rank][1]<<8);
+//	s->x256 				= (spr_tbl[enemy_rank][0]<<8);
+//		 if (1==spr_tbl[enemy_rank][2]) {s->x256 -= ((s->w128+s->w128));}
+//	else if (3==spr_tbl[enemy_rank][2]) {s->x256 -= ((s->w128));}
+	#endif
 
 void add_zako_ao_yousei2(STAGE_DATA *l)/*int lv*/
 {
-	int enemy_rank; 	enemy_rank	= l->user_y;
-//
-	if ( (enemy_rank)>9) {enemy_rank=9;}
+	int enemy_rank; 	enemy_rank	= (l->user_1_moji&0x0f)/*user_y*/;
 	SPRITE *s;
 //	s						= sp rite_add_res(BASE_AO_YOUSEI24_PNG); //s->anim_speed=0;/*20"sp lash.png"*/
 	s						= sprite_add_gu(ZAKO_TYPE_ATARI16_PNG);
@@ -182,26 +205,33 @@ void add_zako_ao_yousei2(STAGE_DATA *l)/*int lv*/
 	s->callback_mover		= move_ao_yousei2;
 	s->callback_loser		= lose_ao_yousei2;
 	s->callback_hit_enemy	= callback_hit_zako;
-	signed short spr_tbl[10][4] =
+//	s->yx_an im_frame		= 0;// spr_tbl[enemy_rank][3];
+	s->x256 				= ((l->user_x)<<8);
+	s->y256 				= ((l->user_y)<<8);
+//
+	/* 登場の動き / 退場の動き */
+		 if (/*data->*/enemy_rank<3)	{	s->vx256 = -t256(2.0);	}
+//	else if (/*data->*/enemy_rank<7)	{	s->vx256 =	t256(2.0);	}
+	else								{	s->vx256 =	t256(2.0);	}
+	s->vy256 = (0);
+
+	#if 1//(1==USE_X_HOUKOU)
+	if (0 < (s->y256))
+	{	;	}
+	else
 	{
-{/* case 0: 	s->x=*/GAME_WIDTH+20,	1,/*-s->w;*/		/*s->y=*/100,		/*s->yx_anim_frame=*/SSS20},	//右下
-{/* case 1: 	s->x=*/GAME_WIDTH+40,	1,/*-s->w;*/		/*s->y=*/70,		/*s->yx_anim_frame=*/SSS20},	//右中
-{/* case 2: 	s->x=*/GAME_WIDTH+60,	1,/*-s->w;*/		/*s->y=*/40,		/*s->yx_anim_frame=*/SSS20},	//右上
-//
-{/* case 3: 	s->x=*/300, 			3,/*-s->w/2;*/		/*s->y=*/-30,		/*s->yx_anim_frame=*/SSS08},	//上右右
-{/* case 4: 	s->x=*/220, 			3,/*-s->w/2;*/		/*s->y=*/-50,		/*s->yx_anim_frame=*/SSS08},	//上右
-{/* case 5: 	s->x=*/160, 			3,/*-s->w/2;*/		/*s->y=*/-50,		/*s->yx_anim_frame=*/SSS08},	//上左
-{/* case 6: 	s->x=*/ 80, 			3,/*-s->w/2;*/		/*s->y=*/-30,		/*s->yx_anim_frame=*/SSS08},	//上左左
-//
-{/* case 7: 	s->x=*/-20, 			0,/*		*/		/*s->y=*/40,		/*s->yx_anim_frame=*/SSS00},	//左上
-{/* case 8: 	s->x=*/-40, 			0,/*		*/		/*s->y=*/70,		/*s->yx_anim_frame=*/SSS00},	//左中
-{/* case 9: 	s->x=*/-60, 			0,/*		*/		/*s->y=*/100,		/*s->yx_anim_frame=*/SSS00},	//左下
-	};
-	s->yx_anim_frame		=  spr_tbl[enemy_rank][3];
-	s->y256 				= (spr_tbl[enemy_rank][2]<<8);
-	s->x256 				= (spr_tbl[enemy_rank][0]<<8);
-		 if (1==spr_tbl[enemy_rank][1]) {s->x256 -= ((s->w128+s->w128));}
-	else if (3==spr_tbl[enemy_rank][1]) {s->x256 -= ((s->w128));}
+		/* y座標が負方向の場合は、x座標指定なので(x座標 y座標 を逆にする) */
+		{
+			int s_sss;
+			s_sss				= s->x256;
+			s->x256 			= -(s->y256);
+			s->y256 			= s_sss;
+		}
+		s->vy256			= (s->vx256);
+		s->vx256			= (0);
+//		s->AO_YOUSEI3_anime_houkou		= ((0x20)>>2);
+	}
+	#endif
 
 	AO_YOUSEI2_DATA *data;
 	data					= mmalloc(sizeof(AO_YOUSEI2_DATA));
@@ -211,6 +241,9 @@ void add_zako_ao_yousei2(STAGE_DATA *l)/*int lv*/
 	data->state 			= STATE_00;
 	data->enemy_rank		= enemy_rank;
 	data->time_out			= 40;
-	data->ani_turn			= 0;
 	data->nnn				= 3;	/* 3回撃つ */
+//
+	data->ani_turn			= 0;
+	data->anime_frame		= 0;// spr_tbl[enemy_rank][3];
+
 }

@@ -75,7 +75,7 @@ static const OPTION_STATUS_SETTING option_status_setting[OPTION_MENU_CONFIG_MAX]
 	{4, (2<<4), KEY_TAB_00_0,		3}, //	OPTION_CONFIG_01_BOMB,
 	{2, (4<<4), KEY_TAB_08_OFF, 	1}, //	OPTION_CONFIG_02_BGM,/*3 KEY_TAB_10_OFF*/
 	{2, (4<<4), KEY_TAB_08_OFF, 	1}, //	OPTION_CONFIG_03_SOUND,
-//	{4, (4<<4), KEY_TAB_13_EASY,	1}, //	OPTION_CONFIG_04_CURRENT_DIFFICULTY,
+//	{4, (4<<4), KEY_TAB_13_EASY,	0}, //	OPTION_CONFIG_04_CURRENT_DIFFICULTY,
 //	{8, (1<<4), KEY_TAB_00_0,		1}, //	OPTION_CONFIG_05_CURRENT_PLAYER,
 //	{2, (4<<4), KEY_TAB_08_OFF, 	1}, //	OPTION_CONFIG_06_ANALOG,
 //	ƒQ[ƒ€i’»Ý’è							OPTION_CONFIG_07_OPEN,
@@ -391,7 +391,7 @@ static const OPTION_STATUS_SETTING option_status_setting[OPTION_MENU_CONFIG_MAX]
 			}
 		}
 		#endif
-//		play_music_num(BGM_09_menu1);
+//		play_music_num(BGM_20_menu1);
 	//	{
 	//		//key_haikei_surface	= loadbmp("bg/title_bg.jpg");
 	//		SDL_Surface *loadpic	= loadbmp0("bg/title_bg.jpg", 0, 0);/*"bg/key_haikei_surface.png"*/

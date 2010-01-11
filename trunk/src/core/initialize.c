@@ -14,28 +14,29 @@ extern SDL_Surface *back_screen;
 
 extern void init_imglist(void);
 extern void init_math(void);
-//extern void keyboard_clear(void);
 extern void ini_load(void); 	// [***090110
 extern void ini_save(void); 	// [***090115
 extern void bg2_system_init(void);
-extern void preload_gfx(void);
+//extern void pr eload_gfx(void);
+extern void psp_pad_init(void);
 extern void psp_video_init(void);
+
 void game_system_init(void/*int argc, char *argv[]*/)
 {
-	#if (1==USE_GU)
-	#else
-	int my_err;
-	my_err =
-	#endif
+//	#if (1==USE_GU)
+//	#else
+//	int my_err;
+//	my_err =
+//	#endif
 	SDL_Init(SDL_INIT_VIDEO/*initflags*/ /*| SDL_INIT_JOYSTICK*/ | SDL_INIT_AUDIO );
-	#if (1==USE_GU)
-	#else
-	if (my_err < 0)
-	{
-		CHECKPOINT;
-		error(ERR_FATAL, "cant init SDL:"/*" %s",SDL_GetError()*/);
-	}
-	#endif
+//	#if (1==USE_GU)
+//	#else
+//	if (my_err < 0)
+//	{
+//		CHECKPOINT;
+//		error(ERR_FATAL, "cant init SDL:"/*" %s",SDL_GetError()*/);
+//	}
+//	#endif
 	SDL_InitSubSystem(SDL_INIT_AUDIO);
 
 	/* ----- ゲームモジュール選択 */
@@ -45,11 +46,10 @@ void game_system_init(void/*int argc, char *argv[]*/)
 	//#endif
 
 	ini_load();
-	sceCtrlSetSamplingCycle(0);
-	sceCtrlSetSamplingMode(PSP_CTRL_MODE_ANALOG);
 
 	/* ----- 初期化 */
 	psp_video_init();
+	psp_pad_init(); 	/* psp_video_init()より後でないと正常に pad check 出来ない。 */
 
 	/* ----- ゲーム本体初期化 */
 	init_audio();/*ini_load();より後(data_dirがわからないと効果音が読めないので)*/
@@ -76,17 +76,17 @@ void game_system_init(void/*int argc, char *argv[]*/)
 	#else
 	SDL_Flip(sdl_screen[SDL_00_SCREEN]);
 	#endif
-	preload_gfx();	/*	読み込んだ順番に画像キャッシュに配置されるので、
-						画像キャッシュの順番を決める為の読み込み */
+//	pr eload_gfx(); /*	読み込んだ順番に画像キャッシュに配置されるので、
+//						画像キャッシュの順番を決める為の読み込み */
 //
 	font_init();
 	menusystem_init();
 	//fps_init();
-	dummy_obj 		= mmalloc(sizeof(SPRITE));/* 引数受け渡し用 */
+	send1_obj		= mmalloc(sizeof(SPRITE));/* 引数受け渡し用 */
 	bg2_system_init();
 	/* ゲームコア game_core_init(); */
 //
-	play_music_num(BGM_09_menu1);
+	play_music_num(BGM_20_menu1);
 	/* メインメニューに戻る */
 	psp_loop=(ST_INIT_MENU|0/*ST_ME NU_SUB_MAIN_MENU*/);//newsta te(/*ST_INTRO*/ST_MENU/*ST_START_INTRO*/,0,1);
 }

@@ -16,7 +16,7 @@ typedef struct
 	int flag1;
 	int wait1;
 } KAKOMI1_DATA;
-//	int enemy_rank;		/* 設定ファイルからの敵の強さ */
+//	int enemy_rank; 	/* 設定ファイルからの敵の強さ */
 
 #define NUM_OF_ENEMIES (16)
 
@@ -67,8 +67,8 @@ static void move_kakomi1(SPRITE *src)
 	}
 	if (SP_DELETE != src->type)
 	{
-	//	src->an im_frame 	= ((data->wait1&0x10)>>4);
-		src->type 			= TEKI_54_CHOU1+((data->wait1&0x10)>>4);
+	//	src->an im_frame	= ((data->wait1&0x10)>>4);
+		src->type			= TEKI_54_CHOU1+((data->wait1&0x10)>>4);
 	}
 /* CCWの場合 */
 	src->x256=((sin512((data->angle512))*(data->radius256))>>8)+t256(GAME_WIDTH/2);
@@ -106,7 +106,7 @@ void add_zako_kakomi1(STAGE_DATA *l)/*int lv*/
 		data->flag0 			= 1;
 		data->flag1 			= 0;
 		data->wait1 			= 0;
-//		data->enemy_rank 			= enemy_rank;
+//		data->enemy_rank			= enemy_rank;
 	}
 }
 #undef NUM_OF_ENEMIES

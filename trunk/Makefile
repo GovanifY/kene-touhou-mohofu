@@ -4,7 +4,7 @@
 
 TARGET = kene
 
-PSP_EBOOT_TITLE = kene_r28
+PSP_EBOOT_TITLE = kene_r29
 
 #------------------------------------------------------------------------------
 # PSP setting
@@ -263,11 +263,17 @@ ifneq ($(CUSTOM_LIB),1)
 	LIBS += -lSDL_image
 	LIBS += -lpng
 	LIBS += -ljpeg
+	#標準
+	#LIBS += -lpspmath
+else
+	#カスタム
+	#LIBS += $(OBJ)/libpspmath/libpspmath.a
 endif
+	LIBS += $(OBJ)/vfpu/lib_vfpu.a
 
 LIBS += -lz
 
-LIBS += -lm
+#LIBS += -lm
 LIBS += -lc
 
 # smpeg は C++ ですが、libstdc++.a は使いません。
@@ -347,6 +353,7 @@ LIBS += -lpsprtc
 OBJDIRS += $(OBJ)
 OBJDIRS += $(OBJ)/core
 OBJDIRS += $(OBJ)/core/enemy
+OBJDIRS += $(OBJ)/core/gu_draw
 OBJDIRS += $(OBJ)/font
 
 # add after the others, in custom.mak
@@ -364,17 +371,18 @@ OBJS += $(OBJ)/core/danmaku.o
 OBJS += $(OBJ)/core/spell_card.o
 OBJS += $(OBJ)/core/enemy/common.o
 
-OBJS += $(OBJ)/core/enemy/boss_01_alice.o
-OBJS += $(OBJ)/core/enemy/boss_02_cirno.o
-OBJS += $(OBJ)/core/enemy/boss_03_aya.o
-OBJS += $(OBJ)/core/enemy/boss_03_mitei.o
-OBJS += $(OBJ)/core/enemy/boss_04_kaguya.o
-OBJS += $(OBJ)/core/enemy/boss_05_pache.o
+#OBJS += $(OBJ)/core/enemy/boss_08_kene.o
+#OBJS += $(OBJ)/core/enemy/boss_07_cirno.o
 OBJS += $(OBJ)/core/enemy/boss_06_sakuya.o
+OBJS += $(OBJ)/core/enemy/boss_05_pache.o
+OBJS += $(OBJ)/core/enemy/boss_04_kaguya.o
+OBJS += $(OBJ)/core/enemy/boss_03_mitei.o
+OBJS += $(OBJ)/core/enemy/boss_02_aya.o
+OBJS += $(OBJ)/core/enemy/boss_01_alice.o
 
-OBJS += $(OBJ)/core/enemy/chuu_01_youkai1.o
-OBJS += $(OBJ)/core/enemy/chuu_02_youkai2.o
 OBJS += $(OBJ)/core/enemy/chuu_03_rumia.o
+OBJS += $(OBJ)/core/enemy/chuu_02_youkai2.o
+OBJS += $(OBJ)/core/enemy/chuu_01_youkai1.o
 
 OBJS += $(OBJ)/core/enemy/zako_11_mahoujin.o
 OBJS += $(OBJ)/core/enemy/zako_01_obake1.o
@@ -409,7 +417,7 @@ OBJS += $(OBJ)/core/player.o
 
 OBJS += $(OBJ)/core/bonus.o
 #---
-OBJS += $(OBJ)/core/draw_screen.o
+OBJS += $(OBJ)/core/gu_draw/draw_screen.o
 
 OBJS += $(OBJ)/core/sprite.o
 OBJS += $(OBJ)/core/bg.o
@@ -434,7 +442,7 @@ OBJS += $(OBJ)/core/option_menu.o
 OBJS += $(OBJ)/core/key_config.o
 OBJS += $(OBJ)/core/music_room.o
 
-OBJS += $(OBJ)/core/ini_file.o
+OBJS += $(OBJ)/core/my_file.o
 
 #OBJS += $(OBJ)/core/fps.o
 
@@ -445,6 +453,8 @@ OBJS += $(OBJ)/font/shinonome16p.o
 
 OBJS += $(OBJ)/core/boot_main.o
 OBJS += $(OBJ)/core/initialize.o
+
+#OBJS += $(OBJ)/libpspmath.a
 
 #------------------------------------------------------------------------------
 
@@ -538,6 +548,7 @@ include $(PSPSDK)/lib/build.mak
 
 #$(OBJ)/libtremor/libvorbisidec_test.a: $(TREMOR_OBJS)
 $(OBJ)/$(LIBTREMOR_DIR)/libvorbisidec_test.a: $(TREMOR_OBJS)
+$(OBJ)/vfpu/lib_vfpu.a: $(LIB_PSP_MATH_OBJS)
 
 #---------------------------------------------------------------------
 # Rules to manage files
@@ -636,6 +647,7 @@ core:
 	@echo Remove shooting core files.
 	@$(RM) -f $(OBJ)/core/*.o
 	@$(RM) -f $(OBJ)/core/enemy/*.o
+	@$(RM) -f $(OBJ)/core/gu_draw/*.o
 
 font:
 	@echo Remove custom font files.

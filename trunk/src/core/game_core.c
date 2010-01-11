@@ -10,7 +10,7 @@
 #include "load_stage.h"
 #include "scenario_script.h"
 
-extern STAGE_DATA *leveltab;
+extern STAGE_DATA *stage_data_table;
 
 extern int select_player;
 extern int practice_mode;
@@ -25,14 +25,17 @@ extern void add_enemy_all_clear(		STAGE_DATA *l);/* 全面クリアーの場合、この敵を
 extern void bg2_control(				STAGE_DATA *l);
 
 	/* ボス */
-extern void add_boss_alice( 			STAGE_DATA *l);/* 1面はアリス */
-extern void add_boss_cirno( 			STAGE_DATA *l);
-extern void add_boss_aya(				STAGE_DATA *l);/* 2面は文 */
-extern void add_boss_mitei( 			STAGE_DATA *l);/* 3面はどうするか未定 */
-extern void add_boss_kaguya(			STAGE_DATA *l);/* 4面は輝夜 */
-extern void add_boss_pache( 			STAGE_DATA *l);/* 5面はパチュリー */
+extern void add_boss_kene(				STAGE_DATA *l);/* extra 2面 */
+extern void add_boss_cirno( 			STAGE_DATA *l);/* extra 1面 */
+//
 extern void add_boss_sakuya(			STAGE_DATA *l);/* 6面は咲夜 */
+extern void add_boss_pache( 			STAGE_DATA *l);/* 5面はパチュリー */
+extern void add_boss_kaguya(			STAGE_DATA *l);/* 4面は輝夜 */
+extern void add_boss_mitei( 			STAGE_DATA *l);/* 3面はどうするか未定 */
+extern void add_boss_aya(				STAGE_DATA *l);/* 2面は文 */
+extern void add_boss_alice( 			STAGE_DATA *l);/* 1面はアリス */
 	/* [中型敵]妖怪 */
+extern void add_chuu_koakuma(			STAGE_DATA *l);
 extern void add_chuu_rumia( 			STAGE_DATA *l);
 extern void add_chuu_youkai1(			STAGE_DATA *l);
 extern void add_chuu_youkai2(			STAGE_DATA *l);
@@ -45,7 +48,7 @@ extern void add_zako_tatsumaki1(		STAGE_DATA *l);
 	/* 妖怪 */
 extern void add_zako_kakomi1(			STAGE_DATA *l);
 	/* その他ザコ */
-extern void add_zako_obake1( 			STAGE_DATA *l);
+extern void add_zako_obake1(			STAGE_DATA *l);
 extern void add_zako_obake2(			STAGE_DATA *l);
 extern void add_zako_yukari1(			STAGE_DATA *l);
 extern void add_zako_yukari2(			STAGE_DATA *l);
@@ -78,7 +81,7 @@ extern void add_enemy_kanji_string( 	STAGE_DATA *l);
 
 ---------------------------------------------------------*/
 
-int difficulty = RANK_NORMAL;
+int difficulty = RANK_EASY/*  RANK_NORMAL*/;
 
 //static Uint32 stage_start_time;
 //static Uint32 game_start_time;
@@ -101,27 +104,34 @@ static void add_all_teki(STAGE_DATA *l)
 		add_enemy_all_clear,		/* ゲーム 全ステージ クリアー */
 		bg2_control,/*CTYPE_02_BG_CONTROL*/
 	/* ボス */
-		add_boss_alice,
-	//	enemy_error/*add_boss_cirno*/,
-		add_boss_aya,
-		add_boss_mitei, 			/* 3面はどうするか未定 */
-		add_boss_kaguya,
-		add_boss_pache, 		//		追加
-		add_boss_sakuya,		// [***090207		追加
+		add_boss_mitei, 			/*add_boss_kene*/		/* extra 2面 */
+		add_boss_pache, 			/*add_boss_cirno*/		/* extra 1面 */
+		add_boss_sakuya,			/* 6面は咲夜 */ 		// [***090207		追加
+		add_boss_pache, 			/* 5面はパチュリー */	//		追加
+		add_boss_kaguya,			/* 4面は輝夜 */
+		add_boss_mitei, 			/* 3面はどうするか未定(永琳? 慧音?) */
+		add_boss_aya,				/* 2面は文 */
+		add_boss_alice, 			/* 1面はアリス */
 	/* 特殊敵[中型敵] */
-		add_chuu_rumia,				/*	="ルーミア"	*/
-		add_chuu_youkai1,			/*	="妖怪1"	*/		// [***090207	追加
+		add_chuu_rumia, 			/*	="ルーミア" */		/*	6面は? */
+		add_chuu_rumia, 			/*add_chuu_koakuma*/	/*	5面は="小悪魔" */
+		add_chuu_rumia, 			/*add_chuu_udonge*/ 	/*	4面は鈴仙? */
+		add_chuu_rumia, 			/*add_chuu_tei*/		/*	3面はてゐ? */
+		add_chuu_rumia, 			/*	="ルーミア" */		/*	2面は天狗? */
+		add_chuu_rumia, 			/*	="ルーミア" */		/*	1面はルーミア */
+//		廃止?
 		add_chuu_youkai2,			/*	="妖怪2"	*/		// [***090207	追加
+		add_chuu_youkai1,			/*	="妖怪1"	*/		// [***090207	追加
 	/* 魔方陣 */
-		add_enemy_mahoujin,			/*	""	*/
-		add_enemy_mahoujin,			/*	""	*/
+		add_enemy_mahoujin, 		/*	""	*/
+		add_enemy_mahoujin, 		/*	""	*/
 	/* 竜巻 陰陽玉 */
 		add_zako_inyou1,			/*	-"陰陽玉1"	*/
 		add_zako_tatsumaki1,		/*	C"竜巻1"	*/		/*enemy_error*/
 	/* 妖怪 */
 		add_zako_kakomi1,			/*	-"囲妖怪1"	*/
 	/* その他ザコ */
-		add_zako_obake1, 			/*	-"おばけ1"	*/
+		add_zako_obake1,			/*	-"おばけ1"	*/
 		add_zako_obake2,			/*	-"おばけ2"	C"虹毛玉1"	*/		/*enemy_error*/
 		add_zako_yukari1,			/*	C"紫編隊1"	*/		/*enemy_error*/
 		add_zako_yukari2,			/*	C"紫編隊2"	*/		/*enemy_error*/
@@ -143,9 +153,9 @@ static void add_all_teki(STAGE_DATA *l)
 		add_zako_ao_yousei4,		/*	="青妖精4"	*/		//	追加
 //
 //
-		add_enemy_kanji_string,/*ETYPE_01_ENGLISH_TEXT*/
-		add_enemy_load_bg,/*ETYPE_02_LOAD_BG*/
-	//	add_enemy_load_picture,/*ETYPE_03_PICTURE*/ 	/* この方式は処理落ち解消しにくい(Gu化も難しい)ので都合により廃止 */
+		add_enemy_kanji_string, 	/* ETYPE_01_SJIS_TEXT */
+		add_enemy_load_bg,			/* ETYPE_02_LOAD_BG */
+	//	add_enemy_load_picture, 	/* ETYPE_03_PICTURE */		/* この方式は処理落ち解消しにくい(Gu化も難しい)ので都合により廃止 */
 	};
 	(*aaa[ (int)(l->user_i_code) ])(l); 	/* 中間コード形式のコマンドから各関数に分岐する */
 }
@@ -335,22 +345,23 @@ void shooting_game_core_work(void)
 				This routine, serch back to begin.
 				このルーチンは逆順に検索します。
 				*/
-				l = leveltab;
-				while (l != NULL)/* [head ==NULL] then end. */
+				l = stage_data_table;
+				while (NULL != l)	/* 敵リストの終わり(NULL)まで調べる */	/* [head ==NULL] then end. */
 				{
-					if (l->done == 0)	/* enemy set done flag */
+					/* 処理済み？ */
+					if (0 < l->v_time )//if (0 == l->done ) 	/* enemy set done flag */
 					{
-						#if 1
-						if (game_v_time >= (l->v_time))
-						#else
-						if (v_time >= ((l->time) ) )
-						#endif
+					//	#if 1
+						if (game_v_time >= (l->v_time)) 	/* (現在時間 >= 設定時間) なら、敵をセット */
+					//	#else
+					//	if (v_time >= ((l->time) ) )
+					//	#endif
 						{
-							add_all_teki(l);
-							l->done = 1;	/* enemy set done flag */
+							add_all_teki(l);	/* 敵をセット */
+							l->v_time = (-1); 	/* 処理済みをマーク */	/* enemy set done flag */	//l->done = 1;
 						}
 					}
-					l = l->next;/* choice alter. */
+					l = l->next;	/* 次を調べる */	/* choice alter. */
 				}
 			}
 			#else
@@ -391,11 +402,14 @@ void shooting_game_core_work(void)
 		/* 動作 */
 		bg_work_draw();
 		//controller_work();
-		sprite_work000(SP_GROUP_ALL_SDL_TYPE);
-//		sprite_work222(SP_GROUP_ALL_SDL_TYPE);/*弾幕用*/
+//		sprite_work222(SP_GROUP_ALL_SDL_WORK_TYPE);/*弾幕用*/
+//		sprite_work000(SP_GROUP_ALL_SDL_WORK_TYPE);
+		sprite_work000(SP_GROUP_ALL_SDL_CORE_TYPE);
 		/* 描画 */
-		sprite_display000(SP_GROUP_ALL_SDL_TYPE);
-//		sprite_display222(SP_GROUP_ALL_SDL_TYPE);/*弾幕用*/
+//		sprite_display222(SP_GROUP_ALL_SDL_DRAW_TYPE);/*弾幕用*/
+//		sprite_display000((SP_GROUP_ALL_SDL_DRAW_TYPE & (~SP_GROUP_TEKI)));
+//		sprite_display000(SP_GROUP_ALL_SDL_DRAW_TYPE);
+	//	pause_sprite_display();/* SDL表示(現状SP_GROUP_PAUSE_SP_MENU_TEXTのみSDL描画) */
 		draw_score_chache();
 		// この辺は速度低下するのでコールバックにすべき
 		if ((pd->state_flag & STATE_FLAG_06_IS_SCRIPT)) 	{	script_display();	}	/*STATE_FLAG_06_IS_SCRIPT==*/	//parsys_display();

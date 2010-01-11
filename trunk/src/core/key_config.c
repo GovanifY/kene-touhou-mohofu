@@ -153,7 +153,7 @@ extern void ini_save(void); 	// [***090115
 	switch (psp_loop/*key_config_state*/)
 	{
 	case (ST_WORK_KEY_CONFIG|KEY_CONFIG_STATE_00_INIT):
-		play_music_num(BGM_05_stage5);
+		play_music_num(BGM_19_menu3);
 		{
 			SDL_Surface *loadpic	= loadbmp0("bg/key_config.jpg", 0, 0);/*"bg/key_haikei_surface.png"*/
 			SDL_BlitSurface(loadpic, NULL, sdl_screen[SDL_01_BACK_SCREEN], NULL);
@@ -480,7 +480,7 @@ extern void ini_save(void); 	// [***090115
 			}
 		}
 		#endif
-		play_music_num(BGM_09_menu1);
+		play_music_num(BGM_20_menu1);
 		{
 			//key_haikei_surface	= loadbmp("bg/title_bg.jpg");
 			SDL_Surface *loadpic	= loadbmp0("bg/title_bg.jpg", 0, 0);/*"bg/key_haikei_surface.png"*/

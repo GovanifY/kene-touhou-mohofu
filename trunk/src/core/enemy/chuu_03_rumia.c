@@ -2,7 +2,7 @@
 #include "bullet_object.h"
 
 /*---------------------------------------------------------
-		"ƒ‹[ƒ~ƒA",		"GFAIRY",
+		"ƒ‹[ƒ~ƒA", 	"GFAIRY",
 	-------------------------------------------------------
 
 ---------------------------------------------------------*/
@@ -37,11 +37,11 @@ enum
 	t = ƒvƒŒƒCƒ„[‚Ì’e player's weapon
 ---------------------------------------------------------*/
 
-static void callback_hit_rumia1(SPRITE *src/*“G©‘Ì*/, SPRITE *tama/*©’e*/)
+static void callback_hit_rumia1(SPRITE *src/*“G©‘Ì*/, SPRITE *tama /*©’e*/)
 {
-	dummy_obj->x256 = tama->x256;
-	dummy_obj->y256 = tama->y256;
-	bakuhatsu_add_type_ddd(dummy_obj/*tama->x256,tama->y256*/,/*0,*/BAKUHATSU_MOVE12/*BAKUHATSU_MINI00*/);
+	send1_obj->x256 = tama->x256;
+	send1_obj->y256 = tama->y256;
+	bakuhatsu_add_type_ddd(send1_obj/*tama->x256,tama->y256*/,/*0,*/BAKUHATSU_MOVE12/*BAKUHATSU_MINI00*/);
 //
 	RUMIA_DATA *data	= (RUMIA_DATA *)src->data;
 //	WEAPON_BASE *w		= (WEAPON_BASE *)tama->data;
@@ -53,10 +53,10 @@ static void callback_hit_rumia1(SPRITE *src/*“G©‘Ì*/, SPRITE *tama/*©’e*/)
 	//
 		const u8 item_tbl[4] =
 		{
-			(SP_ITEM_04_P128&0xff), 	/* [F] */
+			(SP_ITEM_02_P128&0xff), 	/* [F] */
 			(SP_ITEM_01_P008&0xff), 	/* [P]‘å */
 			(SP_ITEM_00_P001&0xff), 	/* [p]¬ */
-			(SP_ITEM_06_TENSU&0xff), 	/* [“_] */
+			(SP_ITEM_05_TENSU&0xff),	/* [“_] */
 		};
 		item_create(src, (SP_GROUP_ITEMS|(item_tbl[difficulty])), 7, ITEM_MOVE_FLAG_06_RAND_XY/*ITEM_MOVE_FLAG_01_COLLECT*/);/* ‚¿‚ç‚Î‚é */
 		player_add_score(/*data->base.*/src->base_score);
@@ -142,9 +142,9 @@ static void move_rumia1(SPRITE *src)
 	}
 	if (SP_DELETE != src->type)
 	{
-		src->type 			= TEKI_00_BOSS11+((data->time_out&0x30)>>4);
+		src->type			= TEKI_00_BOSS11+((data->time_out&0x30)>>4);
 	}
-//	src->yx_anim_frame	= ((data->time_out&0x10)>>4);
+//	src->yx_an im_frame = ((data->time_out&0x10)>>4);
 //
 	danmaku_generator(src); /* ’e–‹¶¬ */
 }

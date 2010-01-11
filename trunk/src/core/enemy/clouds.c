@@ -93,8 +93,11 @@ void add_clouds(STAGE_DATA *l)
 	}
 //
 	// error check
+	#if 000
 	load_bg2_chache(/*filename*/(l->user_string), 0);
+	#endif
 //
+#if 000
 	static IMAGE_RESOURCE my_resource[1] =
 	{
 		{
@@ -106,9 +109,11 @@ void add_clouds(STAGE_DATA *l)
 			0, 0, 0
 		}
 	};
+#endif
 	strcpy(clouds_filename_work, /*filename*/(l->user_string));
 	{
-		w3[used_clouds] 				= sprite_add_internal_res((IMAGE_RESOURCE *)my_resource);
+	//	w3[used_clouds] 				= sprite_add_internal_res((IMAGE_RESOURCE *)my_resource);
+		w3[used_clouds] 				= sprite_add_gu(1/*test*/);
 	//	w3[used_clouds] 				= spr ite_add_file(filename,1,PRIORITY_01_SHOT/*P R_BACK1*/);
 	//	w3[used_clouds] 				= spr ite_add_file(filename,1,PRIORITY_01_SHOT/*P R_BACK2*/);
 		w3[used_clouds]->x256			=  (ra_nd()&((256*256)-1))+(ra_nd()&((128*256)-1))/*(ra_nd()%GAME_WIDTH)*/ /*((w3[i]->w)<<8)*/;
@@ -118,7 +123,7 @@ void add_clouds(STAGE_DATA *l)
 		w3[used_clouds]->type			= SP_MUTEKI;
 	//	w3[used_clouds]->alpha			= /*0*/0xff/*bg_alpha*/;
 		w3[used_clouds]->color32		= 0x3fffffff/*bg_alpha*/;
-	//	w3[used_clouds]->anim_frame 	= (l->user_x);	/*...*/
+	//	w3[used_clouds]->an im_frame	= (l->user_x);	/*...*/
 		w3[used_clouds]->callback_mover = clouds_mover;
 		CLOUDS_DATA *data;
 		data							= mmalloc(sizeof(CLOUDS_DATA));

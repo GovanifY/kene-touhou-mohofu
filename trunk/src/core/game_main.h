@@ -193,7 +193,7 @@ extern SDL_Surface *sdl_screen[4];
 #include "bullet_system.h"
 
 extern SPRITE *player;
-extern SPRITE *dummy_obj;
+extern SPRITE *send1_obj;
 
 extern int player_now_stage;
 
@@ -240,7 +240,7 @@ enum /*_option_config_*/
 	OPTION_CONFIG_08_MAX	/* 最大数 */
 };
 
-extern int option_config[OPTION_CONFIG_08_MAX];		/* 8 */		// 数字=ボタン変数 並びは "bg/key_haikei_surface.png"
+extern int option_config[OPTION_CONFIG_08_MAX]; 	/* 8 */ 	// 数字=ボタン変数 並びは "bg/key_haikei_surface.png"
 
 
 /* Gu */
@@ -272,7 +272,6 @@ extern void putpixel(SDL_Surface *surface, int x, int y, Uint32 color);
 extern void blit_scaled(SDL_Surface *src, SDL_Rect *src_rct, SDL_Surface *dst, SDL_Rect *dst_rct);
 //extern void blit_calpha(SDL_Surface *src, SDL_Rect *src_rct, SDL_Surface *dst, SDL_Rect *dst_rct);
 
-//extern int keyboard_keypressed(void);
 //extern void newsta te(int m, int s, int n);
 extern void *mmalloc(size_t size);
 

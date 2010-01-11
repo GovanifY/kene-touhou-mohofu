@@ -16,7 +16,7 @@ typedef struct
 //	int angleCCW512;
 	int speed256;
 	int state;
-//	int enemy_rank;		/* 設定ファイルからの敵の強さ */
+//	int enemy_rank; 	/* 設定ファイルからの敵の強さ */
 //
 	int wait;
 } MEIDO2_DATA;
@@ -150,7 +150,7 @@ static void move_meido2(SPRITE *src)
 //
 	if (SP_DELETE != src->type)
 	{
-		src->type 			= TEKI_40_CHUU_YOUSEI1+((((src->tmp_angleCCW512)&(512-1)))>>6);
+		src->type			= TEKI_40_CHUU_YOUSEI1+((((src->tmp_angleCCW512)&(512-1)))>>6);
 	}
 }
 
@@ -173,7 +173,7 @@ void add_zako_meido2(STAGE_DATA *l)/*int lv*/
 	for (i=0; i<NUM_OF_ENEMIES; i++)
 	{
 		SPRITE *s;
-//		s						= sp rite_add_res(BASE_AKA_MEIDO08_PNG); 	//s->anim_speed=0;/*37"rw ingx8.png""rw ingx.png"*/
+//		s						= sp rite_add_res(BASE_AKA_MEIDO08_PNG);	//s->anim_speed=0;/*37"rw ingx8.png""rw ingx.png"*/
 		s						= sprite_add_gu(ZAKO_TYPE_ATARI16_PNG); 	//s->anim_speed=0;/*37"rw ingx8.png""rw ingx.png"*/
 		s->type 				= /*SP_ZAKO*/TEKI_40_CHUU_YOUSEI1/*_13_MEIDO2*/;
 //		s->type 				= SP_ZAKO/*_13_MEIDO2*/;

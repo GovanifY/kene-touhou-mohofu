@@ -9,7 +9,7 @@
 static SDL_Surface *panel_base; 	// パネルベース
 static SDL_Surface *star_gauge;
 //static SDL_Surface *power_gauge;	// パワーゲージ。俺の環境だとloadbmp2で作ると普通に表示されるようになった。
-//static SDL_Surface *boss_gauge; 	// [***090305		追加:ボスHPゲージ
+//static SDL_Surface *boss_gauge;	// [***090305		追加:ボスHPゲージ
 
 /* サイドパネルの横表示位置 pannel x offset */
 //#define PPP (380)
@@ -185,7 +185,7 @@ static void draw_power_gauge(int weapon/*, int dx, int dy*/)
 //	rect_src.w = (int)((dou ble)weapon / 127/*128*/ * (dou ble)power_gauge->w); 	// [***090123		変更
 	#else
 	/* 1 dot ぐらい誤差あるかもしれないけど簡略化(高速化) */
-	rect_src.w = ((int)(weapon * 80/*power_gauge->w*/)>>7);	// [***090123		変更
+	rect_src.w = ((int)(weapon * 80/*power_gauge->w*/)>>7); // [***090123		変更
 	#endif
 	rect_dest.w = 80/*power_gauge->w*/;
 	rect_dest.h = 13/*power_gauge->h*/;
@@ -217,7 +217,7 @@ static void draw_boss_gauge(void/*int dx, int dy*/) 	// [***090305		変更
 	if (0 > boss_life_value)	return;/* 負数の場合は何もしない */
 	if (9*1024 < boss_life_value) return;/* 範囲外の場合は何もしない */
 	#else
-//	if (0 != ((boss_life_value)&(0xffffc000)) )	return;/* 範囲外の場合は何もしない */
+//	if (0 != ((boss_life_value)&(0xffffc000)) ) return;/* 範囲外の場合は何もしない */
 	if (0 > boss_life_value)
 	{
 	//	(((BOSS_BASE *)s->data)->boss_health) = 0;/* まずいかも */
@@ -617,6 +617,21 @@ void player_result_init(void)
 static void render_result(void/*int now_max_continue*/)
 {
 	PLAYER_DATA *pd = (PLAYER_DATA *)player->data;
+//
+	/* 幽々子 特殊能力：ステージクリア時にボムが増える */
+	if (YUYUKO==select_player)	/* 幽々子の場合 */
+	{
+		#if 1/*原作風*/
+		if (3 > pd->bombs)	/* クリアー時にボムが３つ未満なら */
+		{	pd->bombs = 3;	}	/* ３つに増やす */
+		#endif
+		#if 1/*模倣風*/
+		if (9 > pd->bombs)	/* クリアー時にボムが９つ未満なら */
+		{	pd->bombs++;	}	/* １つ増やす */
+		#endif
+		/* ボムがなくてもクリアーすればボムが４つになる */
+	}
+//
 	char buffer[64/*100*/];
 	strcpy(buffer,	"RESULT" ); 																			font_print_screen_xy(buffer, FONT03, 0,  32);
 	strcpy(buffer,	"STAGE   0 X 1000 PTS.");	dec_display( player_now_stage, 1, (char *)&buffer[ 8]); 	font_print_screen_xy(buffer, FONT05, 8, 100);
@@ -630,6 +645,7 @@ static void render_result(void/*int now_max_continue*/)
 					"LUNATIC   X 1.5",
 	};
 	font_print_screen_xy( (char *)level_name[(difficulty/*&0x03*/)], FONT03, 0/*26*/, 160);
+
 }
 
 /*---------------------------------------------------------
@@ -676,7 +692,9 @@ void stage_clear_work(void)
 	#endif
 		script_message_window_clear();
 		msg_time = (60*5);
-		print_kanji000(/*SDL_Rect *rect_srct*/ /*0,*/ /*text*/"CHALLENGE NEXT STAGE!" "\n" "\n" "少女祈祷中...", /*int color_type*/7, /*int wait*/0);
+		print_kanji000(/*SDL_Rect *rect_srct*/ /*0,*/ /*text*/
+			"CHALLENGE NEXT STAGE!" "\n" "\n"
+			"少女祈祷中...", /*int color_type*/7, /*int wait*/0);
 		render_result();
 	#if (1==USE_RESULT_WAIT)
 		break;
@@ -688,7 +706,7 @@ void stage_clear_work(void)
 			if (/*extra_stage*/8==player_now_stage)/* エキストラモードの場合、終了する */
 			{
 			//	#if 1/* この２つのセットで自動的に終了(GAME OVER)する */
-			//	now_max_continue = 1; 	/* コンティニューさせない */
+			//	now_max_continue = 1;	/* コンティニューさせない */
 			//	player_loop_quit();
 			//	#endif
 				player_now_stage--;/* 7までしか無いので */

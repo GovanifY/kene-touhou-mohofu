@@ -2,9 +2,9 @@
 #include "bullet_object.h"
 
 /*---------------------------------------------------------
-		"ódâˆ2",(ó\íË)		"GFAIRY",	(r27Ç©ÇÁêVãKí«â¡)
+		"ódâˆ1"(ê¬),(ébíËìI)		"GFAIRY",
 	-------------------------------------------------------
-
+	ç∑ï™éÅÇÃódâˆÅAÇ±ÇÍÇÕîpé~ÇµÇƒ "ódâˆ2" Ç…ãzé˚ó\íËÅB
 ---------------------------------------------------------*/
 
 typedef struct
@@ -23,11 +23,11 @@ typedef struct
 	t = ÉvÉåÉCÉÑÅ[ÇÃíe player's weapon
 ---------------------------------------------------------*/
 
-static void callback_hit_youkai1(SPRITE *src/*ìGé©ëÃ*/, SPRITE *tama/*é©íe*/)
+static void callback_hit_youkai1(SPRITE *src/*ìGé©ëÃ*/, SPRITE *tama /*é©íe*/)
 {
-	dummy_obj->x256 = tama->x256;
-	dummy_obj->y256 = tama->y256;
-	bakuhatsu_add_type_ddd(dummy_obj/*tama->x256,tama->y256*/,/*0,*/BAKUHATSU_MOVE12/*BAKUHATSU_MINI00*/);
+	send1_obj->x256 = tama->x256;
+	send1_obj->y256 = tama->y256;
+	bakuhatsu_add_type_ddd(send1_obj/*tama->x256,tama->y256*/,/*0,*/BAKUHATSU_MOVE12/*BAKUHATSU_MINI00*/);
 //
 	YOKAI1_DATA *data	= (YOKAI1_DATA *)src->data;
 //	WEAPON_BASE *w		= (WEAPON_BASE *)tama->data;
@@ -36,7 +36,7 @@ static void callback_hit_youkai1(SPRITE *src/*ìGé©ëÃ*/, SPRITE *tama/*é©íe*/)
 	{
 		bullets_to_hosi();/* íeëSïîÅAêØÉAÉCÉeÉÄÇ…Ç∑ÇÈ */
 	//
-		item_create(src, SP_ITEM_06_TENSU, 7, ITEM_MOVE_FLAG_06_RAND_XY/*ITEM_MOVE_FLAG_01_COLLECT*/);/*ì_êîÇèoÇ∑*/	/* ÇøÇÁÇŒÇÈ */
+		item_create(src, SP_ITEM_05_TENSU, 7, ITEM_MOVE_FLAG_06_RAND_XY/*ITEM_MOVE_FLAG_01_COLLECT*/);/*ì_êîÇèoÇ∑*/	/* ÇøÇÁÇŒÇÈ */
 		player_add_score(/*data->base.*/src->base_score);
 //
 		bakuhatsu_add_circle(src, 0);
@@ -69,19 +69,19 @@ static void move_youkai1(SPRITE *src)
 	switch (data->state)
 	{
 	case 0:/* è„Ç©ÇÁìoèÍ */
-		data->s2->y256	+= t256(2); 	/**fps_fa ctor*/
-		src->y256		+= t256(2); 	/**fps_fa ctor*/
-		if (t256(50) < src->y256)	{					data->state=1;	}
+		data->s2->y256	+= t256(2.0);	/**fps_fa ctor*/
+		src->y256		+= t256(2.0);	/**fps_fa ctor*/
+		if (t256(50.0) < src->y256) {					data->state=1;	}
 		break;
 	case 1:
 		if (1 > data->wait1)
 		{
-			if (2 != data->nnn) {	data->wait1=150;	data->state=2;	}
-			else				{						data->state=5;	}
+			if (2 != data->nnn) 	{	data->wait1=150;	data->state=2;	}
+			else					{						data->state=5;	}
 		}
 		break;
 	case 2:
-		if (1 > data->wait1)	{	data->wait1=30; 	data->state=3;	/*data->wait2=8 10*/;	}
+		if (1 > data->wait1)		{	data->wait1=30; 	data->state=3;	/*data->wait2=8 10*/;	}
 		else
 		{
 			data->wait2--;
@@ -97,12 +97,21 @@ static void move_youkai1(SPRITE *src)
 				#else
 				voice_play(VOICE14_BOSS_KOUGEKI_01, TRACK04_TEKIDAN);/*ÉeÉLÉgÅ[*/
 				#endif
-				bullet_create_n_way_dan_sa_type(src,
-					(t256(3.0)+((difficulty)<<6)),
-					ANGLE_JIKI_NERAI_DAN,
-					(int)(512/24),
-					BULLET_UROKO14_03_MIDORI,
-					8);
+			send1_obj->x256 = src->x256;
+			send1_obj->y256 = src->y256;
+			#if 1
+			/* Ç†Ç∆Ç≈óvÇÈ */
+	//		send1_obj->h128 = src->h128;
+	//		send1_obj->w128 = src->w128;
+			#endif
+
+			//	bullet_create_n_way_dan_sa_type(src,
+				send1_obj->BULLET_REGIST_speed256			=	(t256(3.0)+((difficulty)<<6));
+				send1_obj->BULLET_REGIST_angle512			=	ANGLE_JIKI_NERAI_DAN;
+				send1_obj->BULLET_REGIST_div_angle512		=	(int)(512/24);
+				send1_obj->BULLET_REGIST_bullet_obj_type	=	BULLET_UROKO14_03_MIDORI;
+				send1_obj->BULLET_REGIST_n_way				=	(8);
+				bullet_regist_basic();
 			}
 		}
 		break;
@@ -122,18 +131,27 @@ static void move_youkai1(SPRITE *src)
 				#else
 				voice_play(VOICE14_BOSS_KOUGEKI_01, TRACK04_TEKIDAN);/*ÉeÉLÉgÅ[*/
 				#endif
-				bullet_create_n_way_dan_sa_type(src,
-					t256(3.25)+((difficulty)<<6),
-					ANGLE_JIKI_NERAI_DAN,
-					(int)(512/24),
-					BULLET_UROKO14_04_MIZUIRO,
-					7);
+			send1_obj->x256 = src->x256;
+			send1_obj->y256 = src->y256;
+			#if 1
+			/* Ç†Ç∆Ç≈óvÇÈ */
+	//		send1_obj->h128 = src->h128;
+	//		send1_obj->w128 = src->w128;
+			#endif
+
+			//	bullet_create_n_way_dan_sa_type(src,
+				send1_obj->BULLET_REGIST_speed256			=	t256(3.25)+((difficulty)<<6);
+				send1_obj->BULLET_REGIST_angle512			=	ANGLE_JIKI_NERAI_DAN;
+				send1_obj->BULLET_REGIST_div_angle512		=	(int)(512/24);
+				send1_obj->BULLET_REGIST_bullet_obj_type	=	BULLET_UROKO14_04_MIZUIRO;
+				send1_obj->BULLET_REGIST_n_way				=	(7);
+				bullet_regist_basic();
 			}
 		}
 		break;
 	case 5:/* è„Ç÷ëﬁèÍ */
-		data->s2->y256 -= t256(2);		/**fps_fa ctor*/
-		src->y256 -= t256(2)/**fps_fa ctor*/;
+		data->s2->y256 -= t256(2.0);		/**fps_fa ctor*/
+		src->y256 -= t256(2.0)/**fps_fa ctor*/;
 		if ( -((src->h128+src->h128)) > src->y256)
 		{
 			src->type = SP_DELETE;
@@ -143,8 +161,8 @@ static void move_youkai1(SPRITE *src)
 	}
 	if (SP_DELETE != src->type)
 	{
-	//	src->an im_frame 	= ((data->wait1&0x10)>>4);
-		src->type 			= TEKI_54_CHOU1+((data->wait1&0x10)>>4);
+	//	src->an im_frame	= ((data->wait1&0x10)>>4);
+		src->type			= TEKI_54_CHOU1+((data->wait1&0x10)>>4);
 	}
 //
 	data->s2->m_angleCCW512++;
@@ -158,16 +176,16 @@ static void move_youkai1(SPRITE *src)
 static SPRITE *create_usiro_no_mahojin(SPRITE *src) //ñÇï˚êwÉOÉâÉtÉBÉbÉNê∂ê¨
 {
 	SPRITE *s2; 		// ñÇï˚êwÉOÉâÉtÉBÉbÉNÇÃÉXÉvÉâÉCÉg
-//	s2					= sp rite_add_res(BASE_MAHOUJIN_0_PNG);		//s2->anim_speed	= 0;/*"boss04-lo.png"*/
+//	s2					= sp rite_add_res(BASE_MAHOUJIN_0_PNG); 			//s2->anim_speed	= 0;/*"boss04-lo.png"*/
 //	s2					= sprite_add_gu(TAMA_TYPE_BULLET_JIPPOU32_PNG); 	//s2->anim_speed	= 0;/*"boss04-lo.png"*/
 	s2					= sprite_add_gu(ZAKO_TYPE_ATARI16_PNG); 			//s2->anim_speed	= 0;/*"boss04-lo.png"*/
-	s2->type			= TEKI_51_MAHOJIN1/*SP_MUTEKI*/;
+	s2->type			= TEKI_52_MAHOJIN/*SP_MUTEKI*/;
 //	s2->type			= MAHOU_JIN_00_aaa/*SP_MUTEKI*/;
 	s2->flags			|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK|SP_FLAG_TIME_OVER);
-//	s2->an im_frame		= 0;
-	s2->color32 		= 0xaa0000ff;		/* ê‘Ç¡Ç€Ç≠ */		/*	s2->alpha			= 0x00;*/
-	s2->x256			= src->x256/*+((src->w128-s2->w128))*/-t256(8);
-	s2->y256			= src->y256/*+((src->h128-s2->h128))*/-t256(8);
+//	s2->an im_frame 	= 0;
+	s2->color32 		= 0xaaff0000;		/* ê¬Ç¡Ç€Ç≠ */		/*	s2->alpha			= 0x00;*/
+	s2->x256			= src->x256/*+((src->w128-s2->w128))*/ /*-t256((8.0))*/;
+	s2->y256			= src->y256/*+((src->h128-s2->h128))*/ /*-t256((8.0))*/;
 	return (s2);
 }
 
@@ -184,27 +202,27 @@ void add_chuu_youkai1(STAGE_DATA *l)/*int lv*/
 	{
 		SPRITE *s1;
 		SPRITE *s2;
-	//	s->x256 				= (l->user_y)*t256(35)+t256(40);
-	//	s->x256 				= ((l->user_y)*t256(32))+t256(48);
-	//	dummy_obj->x256 		= ((l->user_y)<<(8+5))+t256(48);
-		dummy_obj->x256 		= ((l->user_x)<<(8));
-		dummy_obj->y256 		= t256(-30);
+	//	s->x256 				= (l->user_y)*t256(35.0)+t256(40.0);
+	//	s->x256 				= ((l->user_y)*t256(32.0))+t256(48.0);
+	//	send1_obj->x256 		= ((l->user_y)<<(8+5))+t256(48.0);
+		send1_obj->x256 		= ((l->user_x)<<(8));
+		send1_obj->y256 		= t256(-30.0);
 	//
-		s2						= create_usiro_no_mahojin(dummy_obj);
+		s2						= create_usiro_no_mahojin(send1_obj);
 	//
 	//	s1						= sp rite_add_res(BASE_GREAT_FAIRY02_PNG);	//s->anim_speed = 3;
-		s1						= sprite_add_gu(ZAKO_TYPE_ATARI16_PNG);	//s->anim_speed = 3;
-		s1->type 				= /*SP_CHUU*/TEKI_54_CHOU1/*SP_ZAKO_YOKAI1*/;
-	//	s1->type 				= SP_CHUU/*SP_ZAKO_YOKAI1*/;
+		s1						= sprite_add_gu(ZAKO_TYPE_ATARI16_PNG); //s->anim_speed = 3;
+		s1->type				= /*SP_CHUU*/TEKI_54_CHOU1/*SP_ZAKO_YOKAI1*/;
+	//	s1->type				= SP_CHUU/*SP_ZAKO_YOKAI1*/;
 		s1->flags				|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK|SP_FLAG_TIME_OVER);
 		s1->callback_mover		= move_youkai1;
 	//	s1->callback_loser		= lose_youkai1;
 		s1->callback_hit_enemy	= callback_hit_youkai1; 	/* ÉRÅ[ÉãÉoÉbÉNìoò^ */
-		s1->x256 				= dummy_obj->x256;
-		s1->y256 				= dummy_obj->y256;
+		s1->x256				= send1_obj->x256;
+		s1->y256				= send1_obj->y256;
 		YOKAI1_DATA *data;
 		data					= mmalloc(sizeof(YOKAI1_DATA));
-		s1->data 				= data;
+		s1->data				= data;
 		data->state 			= 0;
 		data->wait1 			= 30;
 		data->wait2 			= 10;/*0*/

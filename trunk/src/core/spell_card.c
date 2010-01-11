@@ -43,39 +43,39 @@ spell_card.c はスペカを管理するシステムです。
 	★動作の管理(結構未定)
 ---------------------------------------------------------*/
 // 咲夜 6面
-extern void sakuya_01_keitai(SPRITE *src);
-extern void sakuya_02_keitai(SPRITE *src);
-extern void sakuya_03_keitai(SPRITE *src);
-extern void sakuya_04_keitai(SPRITE *src);
-extern void sakuya_06_keitai(SPRITE *src);
-extern void sakuya_09_keitai(SPRITE *src);
-extern void sakuya_10_keitai(SPRITE *src);
 extern void sakuya_11_keitai(SPRITE *src);
+extern void sakuya_10_keitai(SPRITE *src);
+extern void sakuya_09_keitai(SPRITE *src);
+extern void sakuya_06_keitai(SPRITE *src);
+extern void sakuya_04_keitai(SPRITE *src);
+extern void sakuya_03_keitai(SPRITE *src);
+extern void sakuya_02_keitai(SPRITE *src);
+extern void sakuya_01_keitai(SPRITE *src);
 
 // パチェ 5面
-extern void pache_01_keitai(SPRITE *src);
-//tern void pache_02_keitai(SPRITE *src);
-//tern void pache_03_keitai(SPRITE *src);
-extern void pache_04_keitai(SPRITE *src);
 //tern void pache_05_keitai(SPRITE *src);
+extern void pache_04_keitai(SPRITE *src);
+//tern void pache_03_keitai(SPRITE *src);
+//tern void pache_02_keitai(SPRITE *src);
+extern void pache_01_keitai(SPRITE *src);
 
 // 輝夜 4面
-extern void kaguya_01_keitai(SPRITE *src);
-//tern void kaguya_02_keitai(SPRITE *src);
-//tern void kaguya_03_keitai(SPRITE *src);
-extern void kaguya_04_keitai(SPRITE *src);
-//tern void kaguya_05_keitai(SPRITE *src);
 //tern void kaguya_06_keitai(SPRITE *src);
+//tern void kaguya_05_keitai(SPRITE *src);
+extern void kaguya_04_keitai(SPRITE *src);
+//tern void kaguya_03_keitai(SPRITE *src);
+//tern void kaguya_02_keitai(SPRITE *src);
+extern void kaguya_01_keitai(SPRITE *src);
 
 // 未定 3面
 extern void mitei_01_keitai(SPRITE *src);
 
 // 文 2面
-extern void aya_01_keitai(SPRITE *src);
-//tern void aya_02_keitai(SPRITE *src);
-//tern void aya_03_keitai(SPRITE *src);
-extern void aya_04_keitai(SPRITE *src);
 extern void aya_05_keitai(SPRITE *src);
+extern void aya_04_keitai(SPRITE *src);
+//tern void aya_03_keitai(SPRITE *src);
+extern void aya_02_keitai(SPRITE *src);
+extern void aya_01_keitai(SPRITE *src);
 
 // アリス 1面
 extern void alice_01_keitai(SPRITE *src);
@@ -149,8 +149,8 @@ typedef struct
 // 文 2面
 	{	 500,	  s_time(120),	common_00_keitai,	"形態変更"							"\n"	},/* 500 120 初回の攻撃分(手動設定) */
 	{	 500,	  s_time(20),	aya_01_keitai,		"通常攻撃"							"\n"	},/*4*/
-	{	 500,	  s_time(40),	aya_01_keitai,		"岐符「未作成スペカ000」"			"\n"	},/*4*/
-	{	 500,	  s_time(20),	aya_01_keitai,		"岐符「未作成スペカ001」"			"\n"	},/*5*/
+	{	1500,	  s_time(40),	aya_02_keitai,		"華符「芳華絢爛」のテスト"			"\n"	},/*4*/
+	{	 500,	  s_time(20),	aya_04_keitai,		"岐符「未作成スペカ001」"			"\n"	},/*5*/
 	{	1000,	  s_time(40),	aya_04_keitai,		"岐符「未作成スペカ002」"			"\n"	},/*4*/
 	{	1000,	  s_time(40),	aya_05_keitai,		"岐符「未作成スペカ003」"			"\n"	},/*5*/
 	{	1000,	  s_time(40),	aya_04_keitai,		"岐符「未作成スペカ004」"			"\n"	},/*4*/
@@ -323,12 +323,12 @@ static void regist_spell_card(SPRITE *src)
 void boss_move_clip_rect(SPRITE *src)
 {
 	src->x256 += (src->vx256);
-		 if (src->x256< boss_clip_min.x256 )	{	 src->x256 = boss_clip_min.x256;	boss_hamidasi=1;	}
-	else if (src->x256> boss_clip_max.x256 )	{	 src->x256 = boss_clip_max.x256;	boss_hamidasi=1;	}
+		 if (src->x256 < boss_clip_min.x256 )	{	src->x256 = boss_clip_min.x256; 	boss_hamidasi=1;	}
+	else if (src->x256 > boss_clip_max.x256 )	{	src->x256 = boss_clip_max.x256; 	boss_hamidasi=1;	}
 //
 	src->y256 += (src->vy256);
-		 if (src->y256 < boss_clip_min.y256 )	{	 src->y256 = boss_clip_min.y256;	boss_hamidasi=1;	}
-	else if (src->y256 > boss_clip_max.y256 )	{	 src->y256 = boss_clip_max.y256;	boss_hamidasi=1;	}
+		 if (src->y256 < boss_clip_min.y256 )	{	src->y256 = boss_clip_min.y256; 	boss_hamidasi=1;	}
+	else if (src->y256 > boss_clip_max.y256 )	{	src->y256 = boss_clip_max.y256; 	boss_hamidasi=1;	}
 }
 
 /*---------------------------------------------------------
@@ -354,8 +354,8 @@ void boss_move_clip_rect(SPRITE *src)
 	spell_card_mode 		= 1/*on*/;	/* 特殊？ */
 	/* boss_rect_init */
 	boss_clip_min.x256	= t256( 		0)+t256(24);
-	boss_clip_min.y256	= t256(0);
 	boss_clip_max.x256	= t256(GAME_WIDTH)-t256(24);
+	boss_clip_min.y256	= t256(0);
 	boss_clip_max.y256	= t256(96);
 	boss_effect_init();
 }
