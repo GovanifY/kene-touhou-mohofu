@@ -278,8 +278,8 @@ R8G8B8A8フォーマットで色を設定する事になりますが、PSPはリトルエンディアンのCPUを
 #define mask4096(aaa)	{aaa &= (4096-1);}
 
 /* 数字をスコアに変換。及び逆変換。 */
-#define score(x)	((int)(((int)(x))/10))
-#define score_r(x)	((int)(((int)(x))*10))
+#define score(x)	((u32)(((u32)(x))/10))
+#define score_r(x)	((u32)(((u32)(x))*10))
 
 /* 数字を256固定小数点形式に変換。及びdou bleへ逆変換。 */
 #define t256(x) 				((int)((x)*256))

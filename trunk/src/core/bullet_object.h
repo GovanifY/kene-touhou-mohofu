@@ -60,8 +60,8 @@ enum
 //	int score;			/* 共用 */
 //} ENEMY_BASE;
 
-typedef struct
-{
+//typedef struct
+//{
 //------------ スペカ関連
 
 //	int boss_health;		/* 共用 */	/* (下位)体力 */
@@ -69,11 +69,13 @@ typedef struct
 	//int boss_life;			/* 共用 */	// (上位)体力
 //------------ 弾幕関連
 //	int dummy_tmp_angleCCW512;	/* 保持角度 */
-	int danmaku_type;
-	int danmaku_time_out;
-	int danmaku_test;
-	int dummy_aaaa;/* 予約(多分タイマーで使う) */
-} BOSS_BASE;
+#define boss_base_danmaku_type		user_data10
+#define boss_base_danmaku_time_out	user_data11
+#define boss_base_danmaku_test		user_data12
+#define boss_base_state001			user_data13
+	/*	int dummy_bbbb;*/ /* 予約(多分タイマーで使う) */
+//} BO SS_BASE;
+
 extern int boss_hamidasi;			/* 「移動できなかったフラグ」(使用前に手動でOFF==0にしとく) */
 extern POINT256 boss_clip_min;		/* ボス移動範囲(最小値) */
 extern POINT256 boss_clip_max;		/* ボス移動範囲(最大値) */
@@ -134,39 +136,24 @@ extern BULLET_STATUS bullet_resource[BULLET_RES_MAX];
 //extern void bullet_create(BULLET_STATUS *b);/* 弾の生成 */
 extern void bullet_create_resource(int type);/* 弾の生成 */
 
-// [r13]
-//void bullet_create_aka_maru_n_way(SPRITE *src, int speed256, int angle512, int angle2_512, int bu_type, int way)
+
 /* 弾の生成 */
 
 extern void bullet_create_aka_maru_jikinerai(		SPRITE *src, int speed256);
 extern void bullet_create_jyuryoku_dan000(			SPRITE *src, int speed256, int angle512, int delta256, int bullet_obj_type );
-
-//廃止extern void enemy_laser_create(				SPRITE *src, int speed256);/*廃止(bullet_create_hari_dan180()にversion up)*/
-//廃止extern void enemy_laser_create2(				SPRITE *src, int speed256, int angle512);/*廃止(bullet_create_hari_dan180()にversion up)*/
-//廃止extern void bullet_create_hari_dan180(		SPRITE *src, int speed256, int angle512, int x_offset256, int y_offset256 );/*廃止(bullet_create_offset_dan_type()にversion up)*/
-extern void bullet_create_offset_dan_type000(		SPRITE *src, int speed256, int angle512/*, int x_offset256, int y_offset256*/, int bullet_obj_type );
+extern void bullet_create_offset_dan_type000(		SPRITE *src, int speed256, int angle512, int bullet_obj_type );/*, int x_offset256, int y_offset256*/
 
 extern void bullet_create_enemy_homing( 			SPRITE *src);
-//static void enemy_homing_update(					SPRITE *src);
 
 extern void bullet_create_maru8_frame(				SPRITE *src, int speed256, int angle512, int set_frame);
-extern void bullet_create_momiji_dan(				SPRITE *src, int speed256, int angle512);
-//static void bullet_create_momiji_seed(			SPRITE *src, int speed256, int angle512, dou ble a);
-extern void bullet_create_oodama00( 				SPRITE *src, int speed256, int angle512, int ransu512, int add_speed256/*, int xoffs256, int yoffs256*/);
-//tern void bullet_create_oodama1(					SPRITE *src, int xoffs256, int yoffs256, int speed256, int angle512, int ransu);
-//tern void bullet_create_oodama2(					SPRITE *src, int speed256, int angle512, int a256);
-//廃止extern void bullet_create_gg_dan( 			SPRITE *src, int speed256, int angle512, int state_hi, int state_lo);/*廃止(bullet_create_n_way_dan_type()を使う)*/
 extern void bullet_create_hazumi_dan(				SPRITE *src, int speed256, int angle512, int delta256, int bound_counts);
 extern void bullet_create_tomari_dan(				SPRITE *src, int speed256, int angle512, int delta256);
-//extern id enemy_stop_bullet2_create(				SPRITE *src, int speed256, int angle512, int a256, dou ble next_angle);
 extern void bullet_create_tomari2_dan(				SPRITE *src, int speed256, int angle512, int a256, int next_angle512);
 
 extern void bullet_create_rot4096_dan(				SPRITE *src, int speed256, int angle512, int d_angle4096);
-extern void bullet_create_sakuya_knife( 			SPRITE *src, int speed256, int angle512, int p_angle512/*anim*/);
+extern void bullet_create_sakuya_knife( 			SPRITE *src, int speed256, int angle512, int p_angle512);/*anim*/
 extern void bullet_create_sakuya_no_rot_knife(		SPRITE *src, int speed256, int angle512, int gra256);
 extern void bullet_create_sakuya_kurukuru_knife(	void);//SPRITE *src, int speed256, int angle512, int height);
-//extern void bullet_create_sakuya_follow_knife2(	SPRITE *src, int speed256, int angle512, int height); /*dou ble x, dou ble y,*/
-//extern void bullet_create_sakuya_even_knife(		SPRITE *src, int speed256, int length, int r_or_l);
 extern void bullet_create_sakuya_ryoute_knife(		SPRITE *src);
 
 
@@ -201,13 +188,16 @@ extern void callback_hit_zako(SPRITE *src, SPRITE *t);
 
 extern void boss_move_clip_rect(SPRITE *src);
 
+// 共通形態
+extern void common_99_keitai(SPRITE *src);/* 撃破後に画面外にボスが逃げる */
 
 /* thegame.c のみで ザコ／ボスで宣言が必要なもの(グローバル)は、thegame.c へ移動した。 */
 
 /* ボスで宣言が必要なもの(グローバル) */
 
 extern void enemy_set_random_seed(void/*int set_seed*/);
-extern int enemy_get_random_item(void);
+//extern int en emy_get_random_item(void);
+extern void lose_random_item(SPRITE *src);
 
 #include "danmaku.h"
 
@@ -242,25 +232,7 @@ enum
 	SPELL_CARD_17_pache_hhh,
 //	SPELL_CARD_18_pache_iii,
 //	SPELL_CARD_19_pache_jjj,
-// 輝夜 4面
-	SPELL_CARD_00_kaguya_000,
-	SPELL_CARD_11_kaguya_bbb,
-	SPELL_CARD_12_kaguya_ccc,
-	SPELL_CARD_13_kaguya_ddd,
-	SPELL_CARD_14_kaguya_eee,
-	SPELL_CARD_15_kaguya_fff,
-	SPELL_CARD_16_kaguya_ggg,
-	SPELL_CARD_17_kaguya_hhh,
-// 未定 3面
-	SPELL_CARD_00_mitei_000,
-	SPELL_CARD_11_mitei_bbb,
-	SPELL_CARD_12_mitei_ccc,
-	SPELL_CARD_13_mitei_ddd,
-	SPELL_CARD_14_mitei_eee,
-	SPELL_CARD_15_mitei_fff,
-	SPELL_CARD_16_mitei_ggg,
-	SPELL_CARD_17_mitei_hhh,
-// 文 2面
+// 文 4面
 	SPELL_CARD_00_aya_000,
 	SPELL_CARD_11_aya_bbb,
 	SPELL_CARD_12_aya_ccc,
@@ -271,17 +243,35 @@ enum
 	SPELL_CARD_17_aya_hhh,
 	SPELL_CARD_18_aya_iii,
 	SPELL_CARD_19_aya_jjj,
+// 輝夜 3面
+	SPELL_CARD_00_kaguya_000,
+	SPELL_CARD_11_kaguya_bbb,
+	SPELL_CARD_12_kaguya_ccc,
+	SPELL_CARD_13_kaguya_ddd,
+	SPELL_CARD_14_kaguya_eee,
+	SPELL_CARD_15_kaguya_fff,
+	SPELL_CARD_16_kaguya_ggg,
+	SPELL_CARD_17_kaguya_hhh,
+// 未定 2面
+	SPELL_CARD_00_mima_000,
+	SPELL_CARD_11_mima_bbb,
+	SPELL_CARD_12_mima_ccc,
+	SPELL_CARD_13_mima_ddd,
+	SPELL_CARD_14_mima_eee,
+	SPELL_CARD_15_mima_fff,
+	SPELL_CARD_16_mima_ggg,
+	SPELL_CARD_17_mima_hhh,
 // アリス 1面
 	SPELL_CARD_00_alice_000,
 	SPELL_CARD_11_alice_bbb,
 	SPELL_CARD_12_alice_ccc,
 	SPELL_CARD_13_alice_ddd,
 	SPELL_CARD_14_alice_eee,
-	SPELL_CARD_15_alice_fff,
-	SPELL_CARD_16_alice_ggg,
-	SPELL_CARD_17_alice_hhh,
-	SPELL_CARD_18_alice_iii,
-	SPELL_CARD_19_alice_jjj,
+//	SPELL_CARD_15_alice_fff,
+//	SPELL_CARD_16_alice_ggg,
+//	SPELL_CARD_17_alice_hhh,
+//	SPELL_CARD_18_alice_iii,
+//	SPELL_CARD_19_alice_jjj,
 //
 	SPELL_CARD_MAX	/* 最大数 */
 };
@@ -291,26 +281,34 @@ enum
 extern void spell_card_generator222(SPRITE *src);
 extern void create_spell_card(SPRITE *src, int spell_card_type);
 
+#if (0==USE_BOSS_COMMON_MALLOC)
 extern void spell_card_boss_init_regist(SPRITE *src);
+#else
+extern void spell_card_boss_init_regist_void(void/*SPRITE *src*/);
+#endif
+
 extern void regist_spell_card222(SPRITE *src);
-extern void common_00_keitai(SPRITE *src);
 
 extern int spell_card_mode; 			/* スペカモード */
 extern int spell_card_limit_health; 	/* 規定値以下になればスペカモード解除 */
 extern int spell_card_boss_state;		/* 負値になればボススペカモードに入らない */
-extern int spell_card_boss_timer;		/* 共用 */	// 制限時間
+extern int spell_card_boss_timer;		/* [共用]制限時間 */
 
-extern int spell_card_number;			/* 共用 */	// スペカ番号
-extern int spell_card_max;				/* 共用 */	// スペカ番号最大限界値
+extern int spell_card_number;			/* [共用]スペカ番号 */
+extern int spell_card_max;				/* [共用]スペカ番号最大限界値 */
 
 /* 出現時x座標 */
 #define BOSS_XP256	(t256(GAME_WIDTH/2)-(t256(32/2)))/*sakuya->w128*/
 
 
-//------------ 回
+//------------ "回"みたいなマークのエフェクト
 
-/*static*/ void boss_effect(SPRITE *src);
-/*static*/ void boss_effect_init(void);
-/*static*/ void boss_effect_term(void);
+/*static*/extern  void boss_effect(SPRITE *src);
+/*static*/extern  void boss_effect_init(void);
+/*static*/extern  void boss_effect_term(void);
+
+
+//	ザコ登録の共通ルーチン
+//extern void add_zako_common(STAGE_DATA *l, SPRITE *src);
 
 #endif /* _SPELL_CARD_H_ */

@@ -91,7 +91,7 @@ PSP_MAIN_THREAD_STACK_SIZE_KB(32);		/* (ÉvÉçÉOÉâÉÄÇ™égópÇ∑ÇÈïœêîÇÃ)ÉXÉ^ÉbÉNóÃàÊÇ
 static int exit_callback(int arg1, int arg2, void *common)
 {
 	/* ÉRÅ[ÉãÉoÉbÉNë§Ç©ÇÁÅAÉÅÉCÉìë§ÇÃèÛë‘ÇëÄçÏÇ∑ÇÈ */
-	psp_loop = ST_PSP_QUIT;//newsta te(ST_PSP_QUIT,0,1);// [***** í«â¡:090103
+	psp_loop = ST_PSP_QUIT; 	// [***** í«â¡:090103
 	#if 1
 	/* óvÇÈÇ©Ç‡ */
 	sceKernelDelayThread(1000000);/* ÉRÅ[ÉãÉoÉbÉNë§Ç™1ïbë“Ç¬ */
@@ -146,7 +146,7 @@ extern void all_menu_work(void);
 extern void player_opt_init(void);
 extern void player_opt_work(void);
 
-extern void name_entry_init(void);
+//extern void name_entry_init(void);
 extern void name_entry_work(void);
 //
 extern void stage_clear_work(void);/*stage_clear.c*/
@@ -175,62 +175,32 @@ static void game_main(void)
 {
 	while (ST_PSP_QUIT != psp_loop)
 	{
-		#if 0
-		switch ((u8)(psp_loop>>8))
-		{
-		case (ST_INIT_GAME_PLAY_common>>8): common_load_init(); 		break;
-		case (ST_WORK_GAME_PLAY>>8):		shooting_game_core_work();	break;
-		case (ST_INIT_MENU>>8): 			all_menu_init();			break;
-		case (ST_WORK_MENU>>8): 			all_menu_work();			break;
-//		case (ST_INIT_PLAYER_SELECT>>8):	player_opt_init();			break;ãzé˚ÅBÇ»Çµ
-		case (ST_WORK_PLAYER_SELECT>>8):	player_opt_work();			break;
-		case (ST_INIT_NAME_ENTRY>>8):		name_entry_init();			break;
-		case (ST_WORK_NAME_ENTRY>>8):		name_entry_work();			break;
-//
-		case (ST_WORK_STAGE_FIRST>>8):		stage_first_init(); 		break;
-		case (ST_WORK_STAGE_CLEAR>>8):		stage_clear_work(); 		break;
-//
-	//	case (ST_INIT_GAME_OVER>>8):		gameover_init();			break;ãzé˚ÅBÇ»Çµ
-		case (ST_WORK_GAME_OVER>>8):		gameover_work();			break;	/*newsta te(ST_INTRO,0,1);*/
-	//	case (ST_INIT_RESULT>>8):			result_init();				break;ãzé˚ÅBÇ»Çµ
-		case (ST_WORK_RESULT>>8):			result_work();				break;
-	//	case (ST_INIT_KEY_CONFIG>>8):		key_config_init();			break;ãzé˚ÅBÇ»Çµ
-		case (ST_WORK_KEY_CONFIG>>8):		key_config_work();			break;
-	//	case (ST_INIT_STORY>>8):			story_init();				break;ãzé˚ÅBÇ»Çµ
-		case (ST_WORK_STORY>>8):			story_work();				break;
-	//	case (ST_INTRO>>8): 				intro_init();				break;
-	//	case (ST_INTRO>>8): 				intro_work();				break;
-	//	case (ST_START_INTRO>>8):			startintro_init();			break;
-	//	case (ST_START_INTRO>>8):			startintro_work();			break;
-		}
-		#else
 		/*const*/static void (*aaa_call_table[/*16*/(16)])(void) =
 		{
-			NULL,	/* pspèIóπ */
-			common_load_init,
-			shooting_game_core_work,
-			all_menu_init,
+			NULL,						/* ST_PSP_QUIT					= 0x0000, pspèIóπ */
+			common_load_init,			/* ST_INIT_GAME_PLAY_common 	= 0x0100, */
+			shooting_game_core_work,	/* ST_WORK_GAME_PLAY */
+			all_menu_init,				/* ST_INIT_MENU */
 
-			all_menu_work,
-			player_opt_work,
-			name_entry_init,
-			name_entry_work,
+			all_menu_work,				/* ST_WORK_MENU */
+			player_opt_work,			/* ST_WORK_PLAYER_SELECT */
+			story_work,   				/* <<åªç›äJÇ´>> */		/* ST_INIT_NAME_ENTRY */
+			name_entry_work,			/* ST_WORK_NAME_ENTRY */
 
-			stage_first_init,
-			stage_clear_work,
-			gameover_work,
-			result_work,
+			stage_first_init,			/* ST_WORK_STAGE_FIRST */
+			stage_clear_work,			/* ST_WORK_STAGE_CLEAR */
+			gameover_work,				/* ST_WORK_GAME_OVER */
+			result_work,				/* ST_WORK_RESULT */
 
-			story_work,
-			option_menu_work,
-			key_config_work,
-			music_room_work,
+			story_work, 				/* ST_WORK_STORY */
+			option_menu_work,			/* ST_WORK_OPTION_MENU */
+			key_config_work,			/* ST_WORK_KEY_CONFIG */
+			music_room_work,			/* ST_WORK_MUSIC_ROOM */
 		};
 		/* é¿çs */
 		{
 			(aaa_call_table[(((u8)(psp_loop>>8)))])();
 		}
-		#endif
 		vbl_draw_screen();	/* âÊñ ï`âÊÇ∆ÉLÅ[ì¸óÕ(ñ{ìñÇÕ v-blanc É^ÉCÉ~ÉìÉOÇ≈) */
 	}
 }

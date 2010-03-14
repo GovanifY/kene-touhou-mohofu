@@ -446,11 +446,11 @@ SDL_Surface *loadbmp0(char *filename, int use_alpha, int use_chache)
 	}
 	if (use_alpha)
 	{
-		s2 = SDL_DisplayFormatAlpha(s1);	// α値を持ったsurface
+		s2 = SDL_DisplayFormatAlpha(s1);/*サーフェスを表示フォーマットに変換する。*/	// α値を持ったsurface
 	}
 	else
 	{
-		s2 = SDL_DisplayFormat(s1);
+		s2 = SDL_DisplayFormat(s1);/*サーフェスを表示フォーマットに変換する。*/
 	}
 	if ( NULL == s2 )
 	{

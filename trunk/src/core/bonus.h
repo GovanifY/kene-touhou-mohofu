@@ -59,18 +59,18 @@ extern void item_create(SPRITE *src/*int x, int y*/, int type, int num, int up_f
 extern void item_create_for_boss(SPRITE *src, int item_create_mode);
 
 extern void bonus_info_score_nodel(SPRITE *src/*int x, int y*/, int score_type);
-extern void bonus_info_any_score_nodel(SPRITE *src/*int x, int y*/, int score_num);
+extern void bonus_info_any_score_nodel(SPRITE *src/*int x, int y*/, u32 score_num_pts);
 //extern void item_from_bullets(int put_item_num);
 extern void bullets_to_hosi(void);
 
 /* スコア加算する場合は、カンスト チェックがあるので、必ずここを使う */
-extern void player_add_score(int score_num);
+extern void player_add_score(u32 score_num_pts);
 #if (1==USE_EXTEND_CHECK)
 extern void player_check_extend_score(void);/* エクステンドチェック */
 #endif /* (1==USE_EXTEND_CHECK) */
 
 /* 難易度スコア補正 */
-extern int adjust_score_by_difficulty(int convert_score);
+extern u32 adjust_score_by_difficulty(u32 convert_score);
 
 
 //extern void bonus_add(SPRITE *src/*int x, int y*/, int type, int num, int up_flags);/*廃止*/

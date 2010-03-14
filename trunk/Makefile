@@ -4,7 +4,7 @@
 
 TARGET = kene
 
-PSP_EBOOT_TITLE = kene_r29
+PSP_EBOOT_TITLE = kene_r30
 
 #------------------------------------------------------------------------------
 # PSP setting
@@ -352,7 +352,8 @@ LIBS += -lpsprtc
 
 OBJDIRS += $(OBJ)
 OBJDIRS += $(OBJ)/core
-OBJDIRS += $(OBJ)/core/enemy
+OBJDIRS += $(OBJ)/core/douchu
+OBJDIRS += $(OBJ)/core/boss
 OBJDIRS += $(OBJ)/core/gu_draw
 OBJDIRS += $(OBJ)/font
 
@@ -369,48 +370,71 @@ OBJS += $(OBJ)/core/bullet_object.o
 OBJS += $(OBJ)/core/bullet_system.o
 OBJS += $(OBJ)/core/danmaku.o
 OBJS += $(OBJ)/core/spell_card.o
-OBJS += $(OBJ)/core/enemy/common.o
-
-#OBJS += $(OBJ)/core/enemy/boss_08_kene.o
-#OBJS += $(OBJ)/core/enemy/boss_07_cirno.o
-OBJS += $(OBJ)/core/enemy/boss_06_sakuya.o
-OBJS += $(OBJ)/core/enemy/boss_05_pache.o
-OBJS += $(OBJ)/core/enemy/boss_04_kaguya.o
-OBJS += $(OBJ)/core/enemy/boss_03_mitei.o
-OBJS += $(OBJ)/core/enemy/boss_02_aya.o
-OBJS += $(OBJ)/core/enemy/boss_01_alice.o
-
-OBJS += $(OBJ)/core/enemy/chuu_03_rumia.o
-OBJS += $(OBJ)/core/enemy/chuu_02_youkai2.o
-OBJS += $(OBJ)/core/enemy/chuu_01_youkai1.o
-
-OBJS += $(OBJ)/core/enemy/zako_11_mahoujin.o
-OBJS += $(OBJ)/core/enemy/zako_01_obake1.o
-OBJS += $(OBJ)/core/enemy/zako_05_obake2.o
-OBJS += $(OBJ)/core/enemy/zako_02_yukari1.o
-OBJS += $(OBJ)/core/enemy/zako_03_yukari2.o
-OBJS += $(OBJ)/core/enemy/zako_04_aka_kedama.o
-OBJS += $(OBJ)/core/enemy/zako_06_midori_kedama1.o
-OBJS += $(OBJ)/core/enemy/zako_07_midori_kedama2.o
-OBJS += $(OBJ)/core/enemy/zako_08_kedama1.o
-OBJS += $(OBJ)/core/enemy/zako_09_kedama2.o
-OBJS += $(OBJ)/core/enemy/zako_10_inyou1.o
-OBJS += $(OBJ)/core/enemy/zako_11_tatsumaki1.o
-OBJS += $(OBJ)/core/enemy/zako_12_kakomi1.o
-OBJS += $(OBJ)/core/enemy/zako_13_meido1.o
-OBJS += $(OBJ)/core/enemy/zako_14_meido2.o
-OBJS += $(OBJ)/core/enemy/zako_15_meido3.o
-OBJS += $(OBJ)/core/enemy/zako_16_meido4.o
-OBJS += $(OBJ)/core/enemy/zako_17_ao_yousei1.o
-OBJS += $(OBJ)/core/enemy/zako_18_ao_yousei2.o
-OBJS += $(OBJ)/core/enemy/zako_19_ao_yousei3.o
-OBJS += $(OBJ)/core/enemy/zako_20_ao_yousei4.o
-
-OBJS += $(OBJ)/core/enemy/kanji_text.o
-OBJS += $(OBJ)/core/enemy/game_clear.o
-OBJS += $(OBJ)/core/enemy/clouds.o
-OBJS += $(OBJ)/core/enemy/bakuhatsu.o
-
+OBJS += $(OBJ)/core/boss/common.o
+#; É{ÉX(ñ{ëÃ)
+#OBJS += $(OBJ)/core/boss/boss_08_kene.o
+#OBJS += $(OBJ)/core/boss/boss_07_cirno.o
+OBJS += $(OBJ)/core/boss/boss_06_sakuya.o
+OBJS += $(OBJ)/core/boss/boss_05_pache.o
+OBJS += $(OBJ)/core/boss/boss_04_aya.o
+OBJS += $(OBJ)/core/boss/boss_03_kaguya.o
+OBJS += $(OBJ)/core/boss/boss_02_mima.o
+OBJS += $(OBJ)/core/boss/boss_01_alice.o
+#; É{ÉXÇÃÉIÉvÉVÉáÉì
+OBJS += $(OBJ)/core/boss/option_10_sakuya_ryoute.o
+OBJS += $(OBJ)/core/boss/option_09_sakuya_360knife.o
+OBJS += $(OBJ)/core/boss/option_08_sakuya_star.o
+OBJS += $(OBJ)/core/boss/option_07_sakuya_laser.o
+#
+OBJS += $(OBJ)/core/boss/option_06_aya_momiji02.o
+OBJS += $(OBJ)/core/boss/option_05_aya_momiji01.o
+#
+OBJS += $(OBJ)/core/boss/option_04_kaguya_tamanoe.o
+OBJS += $(OBJ)/core/boss/option_03_kaguya_houmotu.o
+OBJS += $(OBJ)/core/boss/option_02_mima_hosi.o
+#
+OBJS += $(OBJ)/core/boss/option_01_alice_doll.o
+#; íÜÉ{ÉXÇ‡Ç«Ç´
+OBJS += $(OBJ)/core/douchu/chuu_03_rumia.o
+OBJS += $(OBJ)/core/douchu/chuu_02_youkai2.o
+OBJS += $(OBJ)/core/douchu/chuu_01_youkai1.o
+#; ÉUÉRÇÃÉIÉvÉVÉáÉì
+OBJS += $(OBJ)/core/douchu/option_50_homing.o
+#; ÉUÉR
+#	/* ñÇï˚êw[A/B] */
+OBJS += $(OBJ)/core/douchu/zako_11_mahoujin.o
+#	/* ó≥ä™ âAózã  */
+OBJS += $(OBJ)/core/douchu/zako_10_inyou1.o
+OBJS += $(OBJ)/core/douchu/zako_11_tatsumaki1.o
+#	/* ódâˆ */
+OBJS += $(OBJ)/core/douchu/zako_12_kakomi1.o
+OBJS += $(OBJ)/core/douchu/zako_04_aka_kedama.o
+#	/* ñ—ã  */
+OBJS += $(OBJ)/core/douchu/zako_03_yukari2.o
+OBJS += $(OBJ)/core/douchu/zako_06_midori_kedama1.o
+OBJS += $(OBJ)/core/douchu/zako_07_midori_kedama2.o
+OBJS += $(OBJ)/core/douchu/zako_08_kedama1.o
+OBJS += $(OBJ)/core/douchu/zako_09_kedama2.o
+#	/* [Códê∏]ÇªÇÃëºÉUÉR */
+OBJS += $(OBJ)/core/douchu/zako_01_obake1.o
+OBJS += $(OBJ)/core/douchu/zako_02_obake2.o
+OBJS += $(OBJ)/core/douchu/zako_05_karasu1.o
+#	/* [Bódê∏]íÜódê∏ */
+OBJS += $(OBJ)/core/douchu/zako_13_meido1.o
+OBJS += $(OBJ)/core/douchu/zako_14_meido2.o
+OBJS += $(OBJ)/core/douchu/zako_15_meido3.o
+OBJS += $(OBJ)/core/douchu/zako_16_meido4.o
+#	/* [Aódê∏]è¨ódê∏ */
+OBJS += $(OBJ)/core/douchu/zako_17_ao_yousei1.o
+OBJS += $(OBJ)/core/douchu/zako_18_ao_yousei2.o
+OBJS += $(OBJ)/core/douchu/zako_19_ao_yousei3.o
+OBJS += $(OBJ)/core/douchu/zako_20_ao_yousei4.o
+#; ìGà»äOÇæÇ™ìGàµÇ¢
+OBJS += $(OBJ)/core/douchu/kanji_text.o
+OBJS += $(OBJ)/core/douchu/game_clear.o
+OBJS += $(OBJ)/core/douchu/clouds.o
+OBJS += $(OBJ)/core/douchu/bakuhatsu.o
+#
 OBJS += $(OBJ)/core/stage_clear.o
 OBJS += $(OBJ)/core/game_core.o
 OBJS += $(OBJ)/core/player.o
@@ -419,7 +443,9 @@ OBJS += $(OBJ)/core/bonus.o
 #---
 OBJS += $(OBJ)/core/gu_draw/draw_screen.o
 
-OBJS += $(OBJ)/core/sprite.o
+OBJS += $(OBJ)/core/sprite_old.o
+#OBJS += $(OBJ)/core/sprite_SDL.o
+OBJS += $(OBJ)/core/sprite_bullet.o
 OBJS += $(OBJ)/core/bg.o
 OBJS += $(OBJ)/core/font.o
 #---
@@ -646,7 +672,8 @@ DELTREE = @$(RM) -f -rd obj
 core:
 	@echo Remove shooting core files.
 	@$(RM) -f $(OBJ)/core/*.o
-	@$(RM) -f $(OBJ)/core/enemy/*.o
+	@$(RM) -f $(OBJ)/core/douchu/*.o
+	@$(RM) -f $(OBJ)/core/boss/*.o
 	@$(RM) -f $(OBJ)/core/gu_draw/*.o
 
 font:

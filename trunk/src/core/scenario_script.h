@@ -20,4 +20,10 @@ extern void script_message_window_clear(void);
 //static extern int print_kanji(SDL_Surface *drawmap, SDL_Rect *rect, const char *str, int color_type, int wait);
 extern /*static*/ int print_kanji000(/*SDL_Surface *drawmap,*/ /*SDL_Rect *rect,*/ const char *str, int color_type, int wait);
 
+/*
+	print_kanji000 の特殊機能(color_typeに指定)
+	STR_CODE_NO_ENTER	改行しない
+*/
+#define STR_CODE_NO_ENTER (0x10)
+
 #endif /* _SCENARIO_H_ */

@@ -31,7 +31,7 @@ extern void add_boss_cirno( 			STAGE_DATA *l);/* extra 1面 */
 extern void add_boss_sakuya(			STAGE_DATA *l);/* 6面は咲夜 */
 extern void add_boss_pache( 			STAGE_DATA *l);/* 5面はパチュリー */
 extern void add_boss_kaguya(			STAGE_DATA *l);/* 4面は輝夜 */
-extern void add_boss_mitei( 			STAGE_DATA *l);/* 3面はどうするか未定 */
+extern void add_boss_mima(  			STAGE_DATA *l);/* 3面はどうするか未定 */
 extern void add_boss_aya(				STAGE_DATA *l);/* 2面は文 */
 extern void add_boss_alice( 			STAGE_DATA *l);/* 1面はアリス */
 	/* [中型敵]妖怪 */
@@ -47,23 +47,24 @@ extern void add_zako_inyou1(			STAGE_DATA *l);
 extern void add_zako_tatsumaki1(		STAGE_DATA *l);
 	/* 妖怪 */
 extern void add_zako_kakomi1(			STAGE_DATA *l);
-	/* その他ザコ */
-extern void add_zako_obake1(			STAGE_DATA *l);
-extern void add_zako_obake2(			STAGE_DATA *l);
-extern void add_zako_yukari1(			STAGE_DATA *l);
-extern void add_zako_yukari2(			STAGE_DATA *l);
+extern void add_zako_aka_kedama1(		STAGE_DATA *l);		/* 橙 */
 	/* 毛玉 */
-extern void add_zako_aka_kedama1(		STAGE_DATA *l);
+extern void add_zako_inseki1(			STAGE_DATA *l); 	/* その他ザコ */
+extern void add_zako_yukari2(			STAGE_DATA *l); 	/* その他ザコ */
 extern void add_zako_midori_kedama1(	STAGE_DATA *l);
 extern void add_zako_midori_kedama2(	STAGE_DATA *l);
 extern void add_zako_kedama1(			STAGE_DATA *l);
 extern void add_zako_kedama2(			STAGE_DATA *l);
-	/* 中妖精 */
+	/* [C妖精]その他ザコ */
+extern void add_zako_obake1(			STAGE_DATA *l);
+extern void add_zako_obake2(			STAGE_DATA *l);
+extern void add_zako_karasu1(			STAGE_DATA *l);
+	/* [B妖精]中妖精 */
 extern void add_zako_meido1(			STAGE_DATA *l);
 extern void add_zako_meido2(			STAGE_DATA *l);
 extern void add_zako_meido3(			STAGE_DATA *l);
 extern void add_zako_meido4(			STAGE_DATA *l);
-	/* 小妖精 */
+	/* [A妖精]小妖精 */
 extern void add_zako_ao_yousei1(		STAGE_DATA *l);
 extern void add_zako_ao_yousei2(		STAGE_DATA *l);
 extern void add_zako_ao_yousei3(		STAGE_DATA *l);
@@ -81,10 +82,10 @@ extern void add_enemy_kanji_string( 	STAGE_DATA *l);
 
 ---------------------------------------------------------*/
 
-int difficulty = RANK_EASY/*  RANK_NORMAL*/;
+int difficulty = RANK_EASY; 	/*  RANK_NORMAL*/
 
-//static Uint32 stage_start_time;
-//static Uint32 game_start_time;
+//static u32 stage_start_time;
+//static u32 game_start_time;
 
 /*---------------------------------------------------------
 	敵の追加
@@ -104,12 +105,12 @@ static void add_all_teki(STAGE_DATA *l)
 		add_enemy_all_clear,		/* ゲーム 全ステージ クリアー */
 		bg2_control,/*CTYPE_02_BG_CONTROL*/
 	/* ボス */
-		add_boss_mitei, 			/*add_boss_kene*/		/* extra 2面 */
+		add_boss_mima,  			/*add_boss_kene*/		/* extra 2面 */
 		add_boss_pache, 			/*add_boss_cirno*/		/* extra 1面 */
 		add_boss_sakuya,			/* 6面は咲夜 */ 		// [***090207		追加
 		add_boss_pache, 			/* 5面はパチュリー */	//		追加
 		add_boss_kaguya,			/* 4面は輝夜 */
-		add_boss_mitei, 			/* 3面はどうするか未定(永琳? 慧音?) */
+		add_boss_mima,  			/* 3面はどうするか未定(永琳? 慧音?) */
 		add_boss_aya,				/* 2面は文 */
 		add_boss_alice, 			/* 1面はアリス */
 	/* 特殊敵[中型敵] */
@@ -130,23 +131,24 @@ static void add_all_teki(STAGE_DATA *l)
 		add_zako_tatsumaki1,		/*	C"竜巻1"	*/		/*enemy_error*/
 	/* 妖怪 */
 		add_zako_kakomi1,			/*	-"囲妖怪1"	*/
-	/* その他ザコ */
-		add_zako_obake1,			/*	-"おばけ1"	*/
-		add_zako_obake2,			/*	-"おばけ2"	C"虹毛玉1"	*/		/*enemy_error*/
-		add_zako_yukari1,			/*	C"紫編隊1"	*/		/*enemy_error*/
-		add_zako_yukari2,			/*	C"紫編隊2"	*/		/*enemy_error*/
+		add_zako_aka_kedama1,		/*	a"赤毛玉1"	*/		/* 橙 */
 	/* 毛玉 */
-		add_zako_aka_kedama1,		/*	a"赤毛玉1"	*/
+		add_zako_inseki1,			/*	C"隕石1"	*/		/*enemy_error*/ 	/* その他ザコ */
+		add_zako_yukari2,			/*	C"紫編隊2"	*/		/*enemy_error*/ 	/* その他ザコ */
 		add_zako_midori_kedama1,	/*	-"緑毛玉1"	*/
 		add_zako_midori_kedama2,	/*	C"緑毛玉2"	*/		/*enemy_error*/
 		add_zako_kedama1,			/*	-"毛玉1"	*/
 		add_zako_kedama2,			/*	-"毛玉2"	*/
-	/* 中妖精 */
+	/* [C妖精]その他ザコ */
+		add_zako_obake1,			/*	-"おばけ1"	*/
+		add_zako_obake2,			/*	-"おばけ2"	C"虹毛玉1"	*/		/*enemy_error*/
+		add_zako_karasu1,			/*	-"烏1"	*/
+	/* [B妖精]中妖精 */
 		add_zako_meido1,			/*	-"メイド1"	*/
 		add_zako_meido2,			/*	-"メイド2"	*/
 		add_zako_meido3,			/*	C"メイド3"	*/		/*enemy_error*/
 		add_zako_meido4,			/*	-"メイド4"	*/
-	/* 小妖精 */
+	/* [A妖精]小妖精 */
 		add_zako_ao_yousei1,		/*	="青妖精1"	*/		// [***090207	追加
 		add_zako_ao_yousei2,		/*	="青妖精2"	*/		// [***090124	追加
 		add_zako_ao_yousei3,		/*	="青妖精3"	*/		//	追加
@@ -164,13 +166,23 @@ static void add_all_teki(STAGE_DATA *l)
 /*---------------------------------------------------------
 
 ---------------------------------------------------------*/
-static Uint32 game_v_time;
+static u32 game_v_time;
+static int v_time_hold_mode;
 static void init_stage_start_time(void)
 {
 //	stage_start_time = psp_get_uint32_ticks();
 	game_v_time = 0;
 }
 
+void hold_game_time(void)/* ゲーム時間の一時停止(咲夜、新規格イベント(構想中)等、使う) */
+{
+	v_time_hold_mode = 1;
+}
+
+void continue_game_time(void)/* ゲーム時間の動作開始 */
+{
+	v_time_hold_mode = 0;
+}
 
 /*---------------------------------------------------------
 	シューティングゲーム本体の初期化
@@ -180,6 +192,7 @@ extern int continue_stage;
 extern void set_rnd_seed(int set_seed);
 extern /*int*/void load_stage(void/*int level*/);
 extern void player_init(void);
+extern void player_few_muteki(void);
 extern void score_panel_init(void);
 void common_load_init(void)
 {
@@ -188,53 +201,35 @@ void common_load_init(void)
 	/* Load next stage */
 	load_stage();//if (0==load_stage(/*level*/))	{	error(ERR_WARN, "no entrys for level %d",level);}
 	// ロード中は処理落ちしているので、ロード後に時間を再作成する。
-	init_stage_start_time();/*stage_start_time = psp_get_uint32_ticks();*/
-//	game_start_time = psp_get_uint32_ticks();
-
-//	stage_start_time = psp_get_uint32_ticks();
-//	game_v_time = (psp_get_uint32_ticks()-stage_start_time);
-//	game_v_time = (psp_get_uint32_ticks()-stage_start_time);
-	//	play_music_num(BGM_01_stage1);	コメントアウト
+	init_stage_start_time();
+//
+	player_few_muteki();/* ステージ開始時のみ若干の無敵状態にセット */
 //
 	script_message_window_clear();/*スクリプトメッセージ画面を消す*/
+	continue_game_time();/* ゲーム時間の動作開始 */
+			#if 1/*Gu化完了したら要らなくなる*/
+			{
+				psp_clear_screen();	/* [PAUSE] 復帰時にSDL画面を消す。 */
+			}
+			#endif
 	psp_loop = (ST_WORK_GAME_PLAY|0);
 }
-//	int stage;	stage=((PLAYER_DATA *)player->data)->stage;
 
 
 /*---------------------------------------------------------
 	ゲームコア初回(ゲーム開始時)限定の初期化
 ---------------------------------------------------------*/
 
-extern void player_result_init(void);
 //void shooting_game_core_1st_init(void)
 void stage_first_init(void)
 {
-	#if (000)/* ??? */
-		#if (0==USE_DESIGN_TRACK)
-		play_voice_auto_track(VOICE01_MENU_OK);
-		#else
-		voice_play(VOICE01_MENU_OK, TRACK01_EXPLODE);
-		#endif
-	#endif
-//
 	score_panel_init();
-	player_result_init();
 	//sprite_controller_remove_all();
-	player_init();
+//
+	player_init();/* 初回のみ設定 */
+//	player_few_muteki();/* ステージ開始時のみ若干の無敵状態にセット */
 //
 	script_message_window_clear();
-//
-//	#if (1 == US E_ENDING_DEBUG)
-//	/*player_init();より後の必要*/
-//	if (MA X_STAGE6_FOR_CHECK == continue_stage)
-//	{	PLAYER_DATA *pd = (PLAYER_DATA *)player->data;
-//	//	pd->bo ssmode	= B07_AF TER_LOAD;
-//		pd->state_flag	|= (STATE_FLAG_10_IS_LOAD_SCRIPT|STATE_FLAG_05_IS_BOSS|ST ATE_FLAG_11_IS_BOSS_DESTROY);
-//		continue_stage--;
-//		practice_mode = 0;
-//	}
-//	#endif //(1==US E_ENDING_DEBUG)
 	player_now_stage/*data->now_stage*/ /*level*/	= continue_stage/*+1-1*/ /*1*/;
 //
 	psp_loop = (ST_INIT_GAME_PLAY_common|0);
@@ -247,52 +242,65 @@ void stage_first_init(void)
 
 void incliment_scene(void)
 {
-	PLAYER_DATA *pd = (PLAYER_DATA *)player->data;
 	{
 		/*ボス戦闘後イベント*/
-	//	if (B09_STAGE_LOAD==pd->bo ssmode) // 9:stage読み込み
-		if (/*STATE_FLAG_05_IS_BOSS == */(pd->state_flag & STATE_FLAG_05_IS_BOSS))
+	//	if (B09_STAGE_LOAD==pd_bo ssmode) // 9:stage読み込み
+		if (/*STATE_FLAG_05_IS_BOSS == */(pd_state_flag & STATE_FLAG_05_IS_BOSS))
 		{
 			psp_loop = (ST_WORK_STAGE_CLEAR|0);
 		}
 		/*ボス戦闘前イベント*/
 		else
-	//	if (B08_START == pd->bo ssmode) // 8:ボス曲を鳴らし、1ボスとの戦闘へ。
+	//	if (B08_START == pd_bo ssmode) // 8:ボス曲を鳴らし、1ボスとの戦闘へ。
 		{
-			if (0!=boss_bgm_mode)
-			{	/* ボスイベント後にボス曲 */
-				set_music_volume(128);/* 曲音量戻す */
-				play_music_num( (BGM_10_boss1-1)+player_now_stage );/* ボス曲鳴らす */
-			}
-		//	else
-		//	{	/* ボスイベント前にボス曲 */
-		//	}
-			pd->state_flag |= (STATE_FLAG_05_IS_BOSS|STATE_FLAG_13_DRAW_BOSS_GAUGE);
+			pd_state_flag |= (STATE_FLAG_05_IS_BOSS|STATE_FLAG_13_DRAW_BOSS_GAUGE);
 		}
 	}
 }
 //
-extern void script_load(void);
+extern void script_ivent_load(void);
 /* 注意：static関数にしない */void my_special(void)
 {
-	PLAYER_DATA *pd = (PLAYER_DATA *)player->data;
-//	if (pd->bo ssmode==B05_BEFORE_LOAD) 	// [***090313	追加
-//	if (pd->bo ssmode==B07_AFTER_LOAD)		// [***090313	追加
-	if (pd->state_flag & (STATE_FLAG_10_IS_LOAD_SCRIPT))		// [***090313	追加
+	#if 1
+	/*
+		★「(喰らいボム受付期間中に)ボスと相打ちするとハングアップ」バグ(～r29)対策
+	*/
+	if (0 < /*bomb_wait*/pd_bomber_time)		/* ボムウェイト処理 */
 	{
-		pd->state_flag &= (~(STATE_FLAG_10_IS_LOAD_SCRIPT));/*off*/
-		script_load(/*0 1*/);
+		return;/* ボム発動中は待機 */
 	}
-//	if (pd->state_flag & (ST ATE_FLAG_11_IS_BOSS_DESTROY))
+	#endif
+//
+
+
+	#if 0
+	/*
+		★「(喰らいボム受付期間中に)ボスと相打ちするとハングアップ」バグ(～r29)対策
+	*/
+	/* キー入力無効中(==復活中) は、敵あたり判定はない */
+	if (0==(pd_state_flag & (/*STATE_FLAG_06_IS_SCRIPT|*/STATE_FLAG_16_NOT_ALLOW_KEY_CONTROL)))
+	{
+		return;/* ボム発動中は待機 */
+	}
+	#endif
+//	if (pd_bo ssmode==B05_BEFORE_LOAD) 	// [***090313	追加
+//	if (pd_bo ssmode==B07_AFTER_LOAD)		// [***090313	追加
+	if (pd_state_flag & (STATE_FLAG_10_IS_LOAD_SCRIPT))		// [***090313	追加
+	{
+		pd_state_flag &= (~(STATE_FLAG_10_IS_LOAD_SCRIPT));/*off*/
+		script_ivent_load(/*0 1*/);
+	}
+
+//	if (pd_state_flag & (ST ATE_FLAG_11_IS_BOSS_DESTROY))
 //	{
-//		pd->state_flag &= (~(ST ATE_FLAG_11_IS_BOSS_DESTROY));/*off*/
+//		pd_state_flag &= (~(ST ATE_FLAG_11_IS_BOSS_DESTROY));/*off*/
 //		boss_destroy_aaa();
 //	}
 	/* スクリプトが終わった？ */
-	if (pd->state_flag & (STATE_FLAG_12_END_SCRIPT))
+	if (pd_state_flag & (STATE_FLAG_12_END_SCRIPT))
 	{
-		pd->state_flag &= (~(STATE_FLAG_12_END_SCRIPT));/*off*/ 	/*	pd->bo ssmode=B00_NONE;*/
-	//	pd->state_flag &= (~(STATE_FLAG_12_END_SCRIPT));/*off*/ 	/*	pd->bo ssmode=B00_NONE;*/	/*B01_BA TTLE*/
+		pd_state_flag &= (~(STATE_FLAG_12_END_SCRIPT));/*off*/ 	/*	pd_bo ssmode=B00_NONE;*/
+	//	pd_state_flag &= (~(STATE_FLAG_12_END_SCRIPT));/*off*/ 	/*	pd_bo ssmode=B00_NONE;*/	/*B01_BA TTLE*/
 		incliment_scene();
 	}
 }
@@ -310,34 +318,28 @@ extern void vbl_draw_screen(void);/*support.c*/
 extern void script_display(void);
 extern void score_display(void);
 extern void bg_work_draw(void);
-extern void draw_score_chache(void);
+extern void draw_SDL_score_chache(void);
+
 void shooting_game_core_work(void)
 {
 	while ((ST_WORK_GAME_PLAY>>8) == (psp_loop>>8) )
 	{
-	//	if (psp_loop != (ST_WORK_GAME_PLAY&0xff00) /*|| state.newsta te==1*/) return;
-		/* game_v_time=Zeit seit Spielbeginn in 1/10 sec. */
-		game_v_time++;//=(psp_get_uint32_ticks()-stage_start_time);
+
+		if (0==v_time_hold_mode)
+		{
+			/* game_v_time=Zeit seit Spielbeginn in 1/10 sec. */
+			game_v_time++;//=(psp_get_uint32_ticks()-stage_start_time);
+		}
 	//
-		PLAYER_DATA *pd = (PLAYER_DATA *)player->data;
-		if (pd->state_flag & STATE_FLAG_14_GAME_LOOP_QUIT)
+
+
+		if (pd_state_flag & STATE_FLAG_14_GAME_LOOP_QUIT)
 		{
 			;	/* GAMEOUT中 */
 		}
 		else
 		{
 			/* 生きてる */
-		//	if (0==my_pad)
-			if (0==(my_pad & PSP_KEY_PAUSE))
-			{
-				if (my_pad_alter & PSP_KEY_PAUSE)
-				{
-				//	if (0==(pd->state_flag & STATE_FLAG_06_IS_SCRIPT))/*たまにうまくいかない事がある*/
-					{
-						psp_loop=(ST_INIT_MENU|ST_MENU_SUB_PAUSE);//newsta te(ST_MENU,ST_MENU_SUB_PAUSE,1);
-					}
-				}
-			}
 			#if 1
 			{
 				STAGE_DATA *l;
@@ -387,8 +389,8 @@ void shooting_game_core_work(void)
 				static関数にすると、GCCが勝手に __inline__ 関数に変換する為(-O3の場合)
 				追い出した意味が無くなります。(インライン展開される)
 			 */
-		//	if (B00_NONE != pd->bo ssmode)
-			if (pd->state_flag & (STATE_FLAG_10_IS_LOAD_SCRIPT/*|ST ATE_FLAG_11_IS_BOSS_DESTROY*/|STATE_FLAG_12_END_SCRIPT))
+		//	if (B00_NONE != pd_bo ssmode)
+			if (pd_state_flag & (STATE_FLAG_10_IS_LOAD_SCRIPT|STATE_FLAG_12_END_SCRIPT))/*|ST ATE_FLAG_11_IS_BOSS_DESTROY*/
 			{
 				my_special();/* 注意：static関数にしない */
 			}
@@ -396,7 +398,7 @@ void shooting_game_core_work(void)
 //
 		#if 0/*ゲーム時間デバッグ用*/
 		/* パネルのスコア欄にゲーム時間を 表示させる。っていうか書き換えちゃう。 */
-		((PLAYER_DATA *)player->data)->score		= (game_v_time);
+		pd_score		= (game_v_time);
 		#endif
 //
 		/* 動作 */
@@ -404,16 +406,31 @@ void shooting_game_core_work(void)
 		//controller_work();
 //		sprite_work222(SP_GROUP_ALL_SDL_WORK_TYPE);/*弾幕用*/
 //		sprite_work000(SP_GROUP_ALL_SDL_WORK_TYPE);
-		sprite_work000(SP_GROUP_ALL_SDL_CORE_TYPE);
+		sprite_work_SDL(SP_GROUP_ALL_SDL_CORE_TYPE);/*gu汎用*/
+		sprite_work_444(SP_GROUP_ALL_SDL_CORE_TYPE);/*弾幕専用*/
 		/* 描画 */
 //		sprite_display222(SP_GROUP_ALL_SDL_DRAW_TYPE);/*弾幕用*/
 //		sprite_display000((SP_GROUP_ALL_SDL_DRAW_TYPE & (~SP_GROUP_TEKI)));
 //		sprite_display000(SP_GROUP_ALL_SDL_DRAW_TYPE);
-	//	pause_sprite_display();/* SDL表示(現状SP_GROUP_PAUSE_SP_MENU_TEXTのみSDL描画) */
-		draw_score_chache();
+	//	pause_sprite_display();/* SDL表示(現状SP_GROUP_PAUSE_S P_ME NU_TEXTのみSDL描画) */
+	//	draw_SDL_score_chache();/* SDL描画 */
 		// この辺は速度低下するのでコールバックにすべき
-		if ((pd->state_flag & STATE_FLAG_06_IS_SCRIPT)) 	{	script_display();	}	/*STATE_FLAG_06_IS_SCRIPT==*/	//parsys_display();
-		if (0!=draw_side_panel) 							{	score_display();	}	/*ST ATE_FLAG_09_IS_PANEL_WINDOW==*/	/*(pd->state_flag & ST ATE_FLAG_09_IS_PANEL_WINDOW)*/
+		if ((pd_state_flag & STATE_FLAG_06_IS_SCRIPT)) 	{	script_display();	}	/*STATE_FLAG_06_IS_SCRIPT==*/
+		if (0!=draw_side_panel) 							{	score_display();	}	/*ST ATE_FLAG_09_IS_PANEL_WINDOW==*/	/*(pd_state_flag & ST ATE_FLAG_09_IS_PANEL_WINDOW)*/
+//
+
+// ハングアップ対策：常にポーズ可能に変更する。(2010-02-11)
+		//	if (0==my_pad)
+			if (0==(my_pad & PSP_KEY_PAUSE))
+			{
+				if (my_pad_alter & PSP_KEY_PAUSE)
+				{
+				//	if (0==(pd_state_flag & STATE_FLAG_06_IS_SCRIPT))/*たまにうまくいかない事がある*/
+					{
+						psp_loop = (ST_INIT_MENU|ST_MENU_SUB_PAUSE);
+					}
+				}
+			}
 //
 		vbl_draw_screen();	/* 画面描画とキー入力(本当は v-blanc タイミングで) */
 	}

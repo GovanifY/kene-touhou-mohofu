@@ -111,7 +111,7 @@ static void font_render_surface_xy(SDL_Surface *txt_image_surface, char *text, i
 void font_print_screen_xy(char *text, int font_number, int x, int y)
 {
 //	SDL_SetColorKey(fonts[font_number].fontimg/*screen*/,SDL_SRCCOLORKEY|SDL_RLEACCEL,0x00000000);
-	font_render_surface_xy(sdl_screen[SDL_00_SCREEN], text, font_number, x, y);
+	font_render_surface_xy(sdl_screen[SDL_00_VIEW_SCREEN], text, font_number, x, y);
 }
 
 
@@ -137,11 +137,11 @@ SDL_Surface *font_render(char *text, int font_number)
 		#endif
 		strlen(text)*fonts[font_number].w,
 		fonts[font_number].h,
-		sdl_screen[SDL_00_SCREEN]->format->BitsPerPixel,
-		sdl_screen[SDL_00_SCREEN]->format->Rmask,
-		sdl_screen[SDL_00_SCREEN]->format->Gmask,
-		sdl_screen[SDL_00_SCREEN]->format->Bmask,
-		sdl_screen[SDL_00_SCREEN]->format->Amask);
+		sdl_screen[SDL_00_VIEW_SCREEN]->format->BitsPerPixel,
+		sdl_screen[SDL_00_VIEW_SCREEN]->format->Rmask,
+		sdl_screen[SDL_00_VIEW_SCREEN]->format->Gmask,
+		sdl_screen[SDL_00_VIEW_SCREEN]->format->Bmask,
+		sdl_screen[SDL_00_VIEW_SCREEN]->format->Amask);
 	SDL_FillRect(txt_image_surface, NULL, 0/*SD L_MapRGB(txt_image_surface->format,0,0,0)*/);
 	SDL_SetColorKey(txt_image_surface,SDL_SRCCOLORKEY|SDL_RLEACCEL,0x00000000);
 	font_render_surface_xy(txt_image_surface, text, font_number, 0, 0);

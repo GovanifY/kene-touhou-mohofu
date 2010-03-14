@@ -36,10 +36,11 @@
 
 enum
 {
-	SDL_00_SCREEN		= 0,
+	SDL_00_VIEW_SCREEN		= 0,
 	SDL_01_BACK_SCREEN,
-	SDL_02_TEX_SCREEN,
-	SDL_03_000_SCREEN,
+//	SDL_02_TEX_SCREEN,
+//	SDL_03_000_SCREEN,
+	SDL_99_MAX_SCREEN,
 };
 
 //1231101(Gu) 1229917(SDL)
@@ -56,7 +57,7 @@ enum
 		#define USE_ZBUFFER 	(1)
 	#endif
 #else
-	#define SDL_VRAM_SCREEN 	sdl_screen[SDL_00_SCREEN]
+	#define SDL_VRAM_SCREEN 	sdl_screen[SDL_00_VIEW_SCREEN]
 	#define SDL_BUF_WIDTH512	PSP_WIDTH480
 #endif
 
@@ -89,7 +90,7 @@ enum /*_state*/
 	ST_INIT_MENU				= 0x0300,
 	ST_WORK_MENU				= 0x0400,
 	ST_WORK_PLAYER_SELECT		= 0x0500,
-	ST_INIT_NAME_ENTRY			= 0x0600,
+	ST_dummy					= 0x0600,/* 予備 ST_INIT_NAME_ENTRY */
 	ST_WORK_NAME_ENTRY			= 0x0700,
 //
 	ST_WORK_STAGE_FIRST 		= 0x0800,
@@ -103,6 +104,37 @@ enum /*_state*/
 	ST_WORK_KEY_CONFIG			= 0x0e00,
 	ST_WORK_MUSIC_ROOM			= 0x0f00,
 };
+		#if 0
+		switch ((u8)(psp_loop>>8))
+		{
+		case (ST_INIT_GAME_PLAY_common>>8): common_load_init(); 		break;
+		case (ST_WORK_GAME_PLAY>>8):		shooting_game_core_work();	break;
+		case (ST_INIT_MENU>>8): 			all_menu_init();			break;
+		case (ST_WORK_MENU>>8): 			all_menu_work();			break;
+//		case (ST_INIT_PLAYER_SELECT>>8):	player_opt_init();			break;吸収。なし
+		case (ST_WORK_PLAYER_SELECT>>8):	player_opt_work();			break;
+//		case (ST_INIT_NAME_ENTRY>>8):		name_entry_init();			break;吸収。なし
+		case (ST_WORK_NAME_ENTRY>>8):		name_entry_work();			break;
+//
+		case (ST_WORK_STAGE_FIRST>>8):		stage_first_init(); 		break;
+		case (ST_WORK_STAGE_CLEAR>>8):		stage_clear_work(); 		break;
+//
+	//	case (ST_INIT_GAME_OVER>>8):		gameover_init();			break;吸収。なし
+		case (ST_WORK_GAME_OVER>>8):		gameover_work();			break;
+	//	case (ST_INIT_RESULT>>8):			result_init();				break;吸収。なし
+		case (ST_WORK_RESULT>>8):			result_work();				break;
+	//	case (ST_INIT_KEY_CONFIG>>8):		key_config_init();			break;吸収。なし
+		case (ST_WORK_KEY_CONFIG>>8):		key_config_work();			break;
+	//	case (ST_INIT_STORY>>8):			story_init();				break;吸収。なし
+		case (ST_WORK_STORY>>8):			story_work();				break;
+	//	case (ST_INTRO>>8): 				intro_init();				break;
+	//	case (ST_INTRO>>8): 				intro_work();				break;
+	//	case (ST_START_INTRO>>8):			startintro_init();			break;
+	//	case (ST_START_INTRO>>8):			startintro_work();			break;
+		}
+		#endif
+
+
 #if 0
 enum PspCtrlButtons
 {
@@ -162,8 +194,8 @@ enum
 	KEY_NUM12_MAX			/* 最大数 */
 };
 
-extern Uint32 my_pad;		/*今回入力*/
-extern Uint32 my_pad_alter; /*前回入力*/
+extern u32 my_pad;		/*今回入力*/
+extern u32 my_pad_alter; /*前回入力*/
 
 
 #define IS_KEYBOARD_PULLED ((0==my_pad)&&(my_pad^my_pad_alter))/* 何かキーを離されたら */
@@ -184,12 +216,10 @@ extern int pad_config[KEY_NUM12_MAX];
 //extern int ke yconfig[KEY_NUM12_MAX];
 
 
-
-//extern dou  ble fps_fa ctor;
 //extern SDL_Surface *screen;
-extern SDL_Surface *sdl_screen[4];
+extern SDL_Surface *sdl_screen[SDL_99_MAX_SCREEN];/*(4)*/
 
-#include "sprite.h"
+#include "sprite_system.h"
 #include "bullet_system.h"
 
 extern SPRITE *player;
@@ -214,9 +244,17 @@ extern int msg_time;/* メッセージ(仮対応)表示時間 */
 
 typedef struct
 {
-	char name[4];
-	int score;
+	char name[16/*4*/];
+//
+	u32 score;
 	int player;
+	int final_stage;	/* 到達ステージ */
+	int difficulty; 	/* 難易度 */
+//
+	int use_continue;	/* コンティニュー回数 */
+	int count_miss; 	/* ミス回数 */
+	int used_bomber;	/* ボム使用回数 */
+	int count_bonus;	/* スペルカードボーナス回数 */
 } SCORE_FORMAT;
 
 //extern char moddir[20];
@@ -251,9 +289,7 @@ extern int draw_side_panel;/* パネル表示on(0以外)/off(0) */
 extern int draw_boss_hp_value;	/* ボスhp描画値 */
 extern int boss_life_value; 	/* ボス魔方陣サイズ描画値 */
 #endif
-extern int boss_bgm_mode;
 
-//void toggle_fullscreen(void);
 extern void error(int errorlevel, char *msg, ...);
 extern SDL_Surface *loadbmp0(char *filename, int use_alpha, int use_chache);
 extern SDL_Surface *loadbmp1(char *filename);
@@ -261,18 +297,7 @@ extern SDL_Surface *loadbmp2(char *filename);
 
 
 extern void unloadbmp_by_surface(SDL_Surface *s);
-//extern void unload_bmp_by_name(char *name);
-//static void imglist_add(SDL_Surface *s, char *name);
-//static SDL_Surface *imglist_search(char *name);
-//static void imglist_garbagecollect(void);
-extern Uint32 getpixel(SDL_Surface *surface, int x, int y);
-extern void putpixel(SDL_Surface *surface, int x, int y, Uint32 color);
-//extern void draw_line(SDL_Surface *s, int x1, int y1, int x2, int y2, Uint32 farbe1, Uint32 farbe2);
-//extern void draw_line_simple(SDL_Surface *s, int x1, int y1, int x2, int y2, Uint32 farbe1);
-extern void blit_scaled(SDL_Surface *src, SDL_Rect *src_rct, SDL_Surface *dst, SDL_Rect *dst_rct);
-//extern void blit_calpha(SDL_Surface *src, SDL_Rect *src_rct, SDL_Surface *dst, SDL_Rect *dst_rct);
 
-//extern void newsta te(int m, int s, int n);
 extern void *mmalloc(size_t size);
 
 
@@ -281,11 +306,12 @@ extern int tiny_strcmp(char *aaa, const char *bbb);/* MIPS R4000系にあわせて、最
 extern void display_vidinfo(void);
 
 
+extern void psp_pause_filter(void);/* 仮想スクリーンにもやもやエフェクトをかける */
 extern void psp_clear_screen(void);/* 仮想スクリーンを黒で消す */
 //extern void psp_push_screen(void);/* 仮想スクリーンを退避 */
 //extern void psp_pop_screen(void);/* 仮想スクリーンを復活 */
-#define psp_push_screen(aaa) psp_move_screen( SDL_00_SCREEN, SDL_01_BACK_SCREEN )
-#define psp_pop_screen(aaa)  psp_move_screen( SDL_01_BACK_SCREEN, SDL_00_SCREEN )
+#define psp_push_screen(aaa) psp_move_screen( SDL_00_VIEW_SCREEN, SDL_01_BACK_SCREEN )
+#define psp_pop_screen(aaa)  psp_move_screen( SDL_01_BACK_SCREEN, SDL_00_VIEW_SCREEN )
 extern void psp_move_screen(int src_screen_number, int dst_screen_number );
 
 /* 0:しない。 1:する。 [メモリゼロクリアー機能]
@@ -321,5 +347,11 @@ extern void psp_move_screen(int src_screen_number, int dst_screen_number );
 (グレイズを10万の位まで稼いだり、いろいろ実験してみたけど...)
 アリス：カンストなんて無いわ！
 */
+
+
+/* 0:しない。 1:する。 作成中なので1に出来ない。 */
+#define USE_BOSS_COMMON_MALLOC (0)
+//#define USE_BOSS_COMMON_MALLOC (1)
+
 
 #endif /* _GAME_MAIN_H_ */

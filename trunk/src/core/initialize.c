@@ -74,7 +74,7 @@ void game_system_init(void/*int argc, char *argv[]*/)
 //
 	#if (1==USE_GU)
 	#else
-	SDL_Flip(sdl_screen[SDL_00_SCREEN]);
+	SDL_Flip(sdl_screen[SDL_00_VIEW_SCREEN]);
 	#endif
 //	pr eload_gfx(); /*	読み込んだ順番に画像キャッシュに配置されるので、
 //						画像キャッシュの順番を決める為の読み込み */
@@ -86,9 +86,9 @@ void game_system_init(void/*int argc, char *argv[]*/)
 	bg2_system_init();
 	/* ゲームコア game_core_init(); */
 //
-	play_music_num(BGM_20_menu1);
+	play_music_num(BGM_21_menu01);
 	/* メインメニューに戻る */
-	psp_loop=(ST_INIT_MENU|0/*ST_ME NU_SUB_MAIN_MENU*/);//newsta te(/*ST_INTRO*/ST_MENU/*ST_START_INTRO*/,0,1);
+	psp_loop = (ST_INIT_MENU|0/*ST_ME NU_SUB_MAIN_MENU*/);
 }
 
 /*---------------------------------------------------------

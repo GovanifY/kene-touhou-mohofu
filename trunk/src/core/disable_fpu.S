@@ -48,8 +48,8 @@ tiny_strcmp:
 	.set	noreorder
 	.set	nomacro
 L_loop:
-	lb		$3,0($5)				# 評価式3 = (Uint8)(*bbb)
-	lb		$2,0($4)				# 評価式2 = (Uint8)(*aaa)						# スロットＡ
+	lb		$3,0($5)				# 評価式3 = (unsigned char)(*bbb)
+	lb		$2,0($4)				# 評価式2 = (unsigned char)(*aaa)				# スロットＡ
 
 	bne 	$3,$2,L_not_equal		# if ( 評価式3 != 評価式2 ) { goto not_equal; }	# スロットＡ
 	addiu	$5,$5,1 				# bbb++ 										# スロットＢ[先読み実行]

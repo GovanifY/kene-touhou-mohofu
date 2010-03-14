@@ -146,18 +146,19 @@ void play_music_num(int num)
 		/*	6 */	"stage6",	/* 6面道中 */
 		/*	7 */	"stage7",	/* エンディング(道中) */
 		/*	8 */	"stage8",	/* エキストラステージ1道中 */
-		/*  9 */	"stage9",	/* エキストラステージ2道中 */
+		/*	9 */	"stage9",	/* エキストラステージ2道中 */
 		/* 10 */	"boss1",	/* 1面ボス */
 		/* 11 */	"boss2",	/* 2面ボス */
 		/* 12 */	"boss3",	/* 3面ボス */
 		/* 13 */	"boss4",	/* 4面ボス */
 		/* 14 */	"boss5",	/* 5面ボス */
 		/* 15 */	"boss6",	/* 6面ボス */
-		/* 16 */	"menu2",	/* エンディング(シナリオ) */
-		/* 17 */	"boss8",	/* エキストラステージ1ボス */
-		/* 18 */	"boss9",	/* エキストラステージ2ボス */
-		/* 19 */	"menu3",	/* キーコンフィグ */
-		/* 20 */	"menu1",	/* タイトル画面 */
+		/* 16 */	"boss7",	/* エキストラステージ1ボス */
+		/* 17 */	"boss8",	/* エキストラステージ2ボス */
+		/* 18 */	"boss9",	/* エキストラステージ3ボス */
+		/* 19 */	"menu3",	/* エンディング(シナリオ) */
+		/* 20 */	"menu2",	/* キーコンフィグ */
+		/* 21 */	"menu1",	/* タイトル画面 */
 		};		// いろいろ追加
 		const char *name_extention[] =
 		{
@@ -413,23 +414,26 @@ static void voice_load(void)
 {
 	static const char *voice_file_name[VOICE16_MAX_FILES] =
 	{
-		"se_a.wav", 	/*	0 */	//	"shot.wav", 	/*	0 */
-		"se_b.wav", 	/*	1 */	//	"hit.wav",		/*	1 */
-		"se_c.wav", 	/*	2 */	//	"foedst.wav",	/*	2 */
-		"se_d.wav", 	/*	3 */	//	"bossdst.wav",	/*	3 */
-		"se_e.wav", 	/*	4 */	//	"shipdst.wav",	/*	4 */
-		"se_f.wav", 	/*	5 */	//	"bonus.wav",	/*	5 */
-		"se_g.wav", 	/*	6 */	//	"extend.wav",	/*	6 */
-		"se_h.wav", 	/*	7 */	//	"bomb.wav", 	/*	7 */
+		"se_a.wav", 	/*	0 */	//	"shot.wav", 	/*	0 */	"ショット",
+		"se_b.wav", 	/*	1 */	//	"hit.wav",		/*	1 */	"メニュー決定",
+		"se_c.wav", 	/*	2 */	//	"foedst.wav",	/*	2 */	"メニュー選択",
+		"se_d.wav", 	/*	3 */	//	"bossdst.wav",	/*	3 */	"ボス退場",
 	//
-		"se_i.wav", 	/*	8 */	//	"death.wav",	/*	8 */
-		"se_j.wav", 	/*	9 */	//	"graze.wav",	/*	9 */
-		"se_k.wav", 	/* 10 */	//	"e_shot.wav",	/* 10 */
-		"se_l.wav", 	/* 11 */	//	"e_shot00.wav", /* 11 */
-		"se_m.wav", 	/* 12 */	//	"b2_shot.wav",	/* 12 */
-		"se_n.wav", 	/* 13 */	//	"_shot.wav",	/* 13 */
-		"se_o.wav", 	/* 14 */	//	"e_shot01.wav", /* 14 */
-		"se_p.wav", 	/* 15 */	//	"hit.wav",		/* 15 */
+		"se_e.wav", 	/*	4 */	//	"shipdst.wav",	/*	4 */	"ピチューン",
+		"se_f.wav", 	/*	5 */	//	"bonus.wav",	/*	5 */	"アイテム取得",
+		"se_g.wav", 	/*	6 */	//	"extend.wav",	/*	6 */	"増えた",
+		"se_h.wav", 	/*	7 */	//	"bomb.wav", 	/*	7 */	"自分スペカ",
+	//
+		"se_i.wav", 	/*	8 */	//	"death.wav",	/*	8 */	"ザコ倒した",
+		"se_j.wav", 	/*	9 */	//	"graze.wav",	/*	9 */	"グレイズ",
+		"se_p.wav", 	/* 15 */	//	"hit.wav",		/* 15 */	"時間制限",
+		"se_l.wav", 	/* 11 */	//	"e_shot00.wav", /* 11 */	"キラリン☆",
+	//
+		"se_k.wav", 	/* 10 */	//	"e_shot.wav",	/* 10 */	"ボスショット1",
+		"se_m.wav", 	/* 12 */	//	"b2_shot.wav",	/* 12 */	"ボスショット2",
+		"se_n.wav", 	/* 13 */	//	"_shot.wav",	/* 13 */	"ボスショット3",
+		"se_o.wav", 	/* 14 */	//	"e_shot01.wav", /* 14 */	"ボスショット4",
+		"se_q.wav", 	/* 16 */	//	"qupiin.wav"	/* 16 */	"ボスショット5",
 	};		//いろいろ追加
 	int i;
 	char name[64/*52*/];
@@ -473,7 +477,7 @@ void init_audio(void)
 	}
 //
 	const int audio_rate		= 44100;	// 22050
-	const Uint16 audio_format	= AUDIO_S16;
+	const u16 audio_format		= AUDIO_S16;
 	const int audio_channels	= 2;
 	const int audio_buffers 	= 1024; 	//512
 	if (Mix_OpenAudio(audio_rate, audio_format, audio_channels, audio_buffers) < 0)
@@ -491,5 +495,3 @@ void init_audio(void)
 	use_audio = 1;/*使用可能*/
 	voice_load();
 }
-
-

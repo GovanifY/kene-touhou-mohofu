@@ -1,3 +1,9 @@
+
+/*---------------------------------------------------------
+	将来的にSDL使わなくなる予定なので、
+	グラフィック読み込みライブラリ
+---------------------------------------------------------*/
+
 #include <stdlib.h>
 #include <malloc.h>
 #include <pspdisplay.h>
@@ -6,8 +12,8 @@
 #include <pspgu.h>
 #include <psptypes.h>
 #include <psptypes.h>
-#include "graphics.h"
 
+#include "graphics00.h"
 
 static int getNextPower2(int width)
 {

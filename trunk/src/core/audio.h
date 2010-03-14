@@ -13,17 +13,18 @@ enum
 	BGM_07_stage7,		/* エンディング(道中) */
 	BGM_08_stage8,		/* エキストラステージ1道中 */
 	BGM_09_stage9,		/* エキストラステージ2道中 */
-	BGM_10_boss1,		/* 1面ボス */
-	BGM_11_boss2,		/* 2面ボス */
-	BGM_12_boss3,		/* 3面ボス */
-	BGM_13_boss4,		/* 4面ボス */
-	BGM_14_boss5,		/* 5面ボス */
-	BGM_15_boss6,		/* 6面ボス */
-	BGM_16_menu2,		/* エンディング(シナリオ) */
-	BGM_17_boss8,		/* エキストラステージ1ボス */
-	BGM_18_boss9,		/* エキストラステージ2ボス */
-	BGM_19_menu3,		/* キーコンフィグ */
-	BGM_20_menu1,		/* タイトル画面 */
+	BGM_10_boss01,		/* 1面ボス */
+	BGM_11_boss02,		/* 2面ボス */
+	BGM_12_boss03,		/* 3面ボス */
+	BGM_13_boss04,		/* 4面ボス */
+	BGM_14_boss05,		/* 5面ボス */
+	BGM_15_boss06,		/* 6面ボス */
+	BGM_16_boss07,		/* エキストラステージ1ボス */
+	BGM_17_boss08,		/* エキストラステージ2ボス */
+	BGM_18_boss09,		/* エキストラステージ3ボス */
+	BGM_19_menu03,		/* エンディング(シナリオ) */
+	BGM_20_menu02,		/* キーコンフィグ */
+	BGM_21_menu01,		/* タイトル画面 */
 /* ----- 曲の数(読み込みファイル数) */
 //#define USE_MUSIC_FILES 15/*14*/ /**/
 	USE_MUSIC_FILES
@@ -31,23 +32,25 @@ enum
 
 enum
 {
-	VOICE00_SHOT = 0,									/* a   ショット音 						[ちりちりちり] */
-	VOICE01_MENU_OK,			/* メニュー決定音 */	/* b   音 								[びょいー] */
-	VOICE02_MENU_SELECT,		/* メニュー選択音 */	/* c   サコ死に音 + 弾消し音 + メニュー	[ちゅ] */
-	VOICE03_BOSS_HAKAI, 								/* d ; ボス死に音?						[ぼがーーん] */
-	VOICE04_SHIP_HAKAI, 								/* e : 自機破壊音 						[ぴちゅーん] */
-	VOICE05_BONUS,										/* f   アイテム取得音 					[かつん] */
-	VOICE06_EXTEND, 									/* g : 残機増加音 						[びゅわわわわん] */
-	VOICE07_BOMB,										/* h   音 								[かしゅるしゃしゃん] */
+	VOICE00_SHOT = 0,			//	"ショット", 		/* a    			ショット音							[ちりちりちり] */
+	VOICE01_MENU_OK,			//	"メニュー決定", 	/*[b]   [s(?)]		音								[びょいー] */
+	VOICE02_MENU_SELECT,		//	"メニュー選択", 	/* c    			サコ死に音 + 弾消し音 + メニュー [ちゅ] */
+	VOICE03_BOSS_HAKAI, 		//	"ボス退場", 		/*[d];  [s(?)]		ボス死に音?						[ぼがーーん] */
+	VOICE04_SHIP_HAKAI, 		//	"ピチューン",		/* e :  			自機破壊音							[ぴちゅーん] */
+	VOICE05_BONUS,				//	"アイテム取得", 	/* f    			アイテム取得音					[かつん] */
+	VOICE06_EXTEND, 			//	"増えた",			/* g :  			残機増加音						[びゅわわわわん] */
+	VOICE07_BOMB,				//	"自分スペカ",		/*[h]   [s(?)]		音								[かしゅるしゃしゃん] */
 //
-	VOICE08_DEATH,										/* i   サコ死に音専用 					[どすーーー] */
-	VOICE09_GRAZE,										/* j   グレイズ音 						[か] */
-	VOICE10_MAGICF_E_SHOT,								/* k   音 								[ふわ] */
-	VOICE11_KIRARIN,									/* l   きらりん音  */
-	VOICE12_SAKUYA_B2_SHOT, 							/* m   咲夜 音							[ぱあん] */
-	VOICE13_SAKUYA_SHOT02,								/* n   咲夜じゅわショット音				[ちゅるちゅるちゅる] */
-	VOICE14_BOSS_KOUGEKI_01,							/* o ; ボス攻撃音?						[ばあん] */
-	VOICE15_COUNT_TIMER,								/* p : 時間制限カウント音 				[へにょん] */
+	VOICE08_DEATH,				//	"ザコ倒した",		/* i    			サコ死に音専用					[どすーーー] */
+	VOICE09_GRAZE,				//	"グレイズ", 		/* j    			グレイズ音						[か] */
+	VOICE15_COUNT_TIMER,		//	"時間制限", 		/* p :  			時間制限カウント音				[へにょん] */
+	VOICE11_BOSS_KIRARIN,		//	"キラリン☆",		/* l    			きらりん音  */
+//
+	VOICE10_MAGICF_E_SHOT,		//	"ボスショット1",	/* k    			音								[ふわ] */
+	VOICE12_SAKUYA_B2_SHOT, 	//	"ボスショット2",	/* m    			咲夜 音							[ぱあん] */
+	VOICE13_SAKUYA_SHOT02,		//	"ボスショット3",	/* n    			咲夜じゅわショット音 			[ちゅるちゅるちゅる] */
+	VOICE14_BOSS_KOUGEKI_01,	//	"ボスショット4",	/*[o];  [s(?)]		ボス攻撃音?						[ばあん] */
+	VOICE16_BOSS_KYUPIN,		//	"ボスショット5",	/* l    			キュピーン音  */
 //
 	VOICE16_MAX_FILES,
 };
@@ -71,7 +74,7 @@ extern void set_voice_volume(int volume);
 extern void set_music_volume(int volume);
 
 //extern void stop_music(void);/*廃止*/
-//#define stop_music(aaa) 	play_music_num(BGM_00_stop)
+//#define stop_music(aaa)	play_music_num(BGM_00_stop)
 extern void fadeout_music(void);
 extern void pause_music(void);
 extern void resume_music(void);
@@ -85,6 +88,6 @@ extern void voice_play_vbl(void);
 extern void voice_play(int req, int play_track );
 
 /* 効果音の音響設計を行う(トラック割り振り) */
-#define USE_DESIGN_TRACK 	(1)
+#define USE_DESIGN_TRACK	(1)
 
 #endif /* _BGM_VOICE_H_ */

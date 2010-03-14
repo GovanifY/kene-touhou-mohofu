@@ -22,9 +22,9 @@ enum
 	DANMAKU_08_rumia,		/* 紅1面ボス ルーミア 夜符「ナイトバード」にちょっとだけ似た弾幕(予定) */
 	DANMAKU_09_alice,		/* アリスっぽい？テキトー弾幕 */
 	DANMAKU_0a_houka_kenran,/* 紅美鈴 華符「芳華絢爛」にちょっとだけ似た弾幕(予定) */
-	DANMAKU_0b_test,
+	DANMAKU_0b_alice_doll,	/* アリス人形弾幕 */
 //40[sec]
-	DANMAKU_0c_test,
+	DANMAKU_0c_hana_test,	/* 魅魔、花てすと弾幕 */
 	DANMAKU_0d_test,
 	DANMAKU_0e_test,
 	DANMAKU_0f_test,
@@ -60,22 +60,9 @@ enum
 
 extern void tmp_angle_jikinerai512(SPRITE *p, SPRITE *sss);
 extern void danmaku_generator(SPRITE *src);
-typedef struct /*_boss05_data*/
-{
-	BOSS_BASE boss_base;
-//------------ 移動関連
-	int dummy_state1;							/* 行動 */
-	int dummy_move_type;		/*	移動タイプ */	/* 形態 */
-//
-	int dummy_wait1;
-	int dummy_wait2_256;
-//
-	int dummy_wait3;
-//	int dummy_level;
-	int dummy_move_angle512;
-	int dummy_length_s_p256;	/* 咲夜とプレイヤーとの距離 */
-	int dummy_aaaa;
-} BOSS99_DATA;/*とりあえずダミー定義*/
+
+
+
 #endif /* _DANMAKU_H_ */
 
 

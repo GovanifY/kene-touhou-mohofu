@@ -18,7 +18,7 @@
 ---------------------------------------------------------*/
 
 /* ƒrƒ…ƒŒƒbƒgƒv[ƒ‹‚ÌÀ‘Ô‚Í‚½‚¾‚ÌŒÅ’è”z—ñ */
-/*extern*/ TGameSprite bullet_pool[MAX_BULLET_POOL];
+/*extern*/ TGameSprite bullet_pool[MAX_POOL_BULLET];
 
 static int bullet_system_regist_objects;/* “o˜^‚µ‚½” */
 static int regist_locate;/* Ÿ‚Ì’e‚ª“o˜^o—ˆ‚»‚¤‚ÈˆÊ’u */
@@ -27,7 +27,7 @@ static int regist_locate;/* Ÿ‚Ì’e‚ª“o˜^o—ˆ‚»‚¤‚ÈˆÊ’u */
 	“G’e“o˜^
 ---------------------------------------------------------*/
 /* Å‘å“o˜^” */
-#define REGIST_MAX_LIMIT (MAX_BULLET_POOL-10)
+#define REGIST_MAX_LIMIT (MAX_POOL_BULLET-10)
 int bullet_system_regist_object(int image_resource_num)
 {
 	if ((REGIST_MAX_LIMIT)<bullet_system_regist_objects)
@@ -39,7 +39,7 @@ int bullet_system_regist_object(int image_resource_num)
 	i = regist_locate;
 	i++;
 bbb_my_loop:
-	for (; i<MAX_BULLET_POOL;)
+	for (; i<MAX_POOL_BULLET;)
 	{
 		if (0==bullet_pool[i].used)
 		{
@@ -65,7 +65,7 @@ void bullet_system_init(void)
 	regist_locate					= 0;
 	bullet_system_regist_objects	= 0;
 	u32 i;
-	for (i=0; i<MAX_BULLET_POOL; i++)
+	for (i=0; i<MAX_POOL_BULLET; i++)
 	{
 		bullet_pool[i].used 		= 0;
 	}

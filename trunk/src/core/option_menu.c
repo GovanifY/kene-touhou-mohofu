@@ -115,7 +115,7 @@ static const OPTION_STATUS_SETTING option_status_setting[OPTION_MENU_CONFIG_MAX]
 	#define slide_offset_x	bg_alpha_aaa
 	static int jump_quit_menu;
 //	int i;
-	switch (psp_loop/*key_config_state*/)
+	switch (psp_loop)
 	{
 	case (ST_WORK_OPTION_MENU|OPTION_MENU_STATE_00_INIT):
 //		play_music_num(BGM_05_stage5);
@@ -198,25 +198,25 @@ static const OPTION_STATUS_SETTING option_status_setting[OPTION_MENU_CONFIG_MAX]
 
 		slide_offset_x/*bg_alpha_aaa*/				= 480/*0*/;
 		/* メインメニューに戻る */
-		jump_quit_menu	= (ST_INIT_MENU|0/*ST_ME NU_SUB_MAIN_MENU*/);	//newsta te(ST_MENU/*ST_INTRO*/,0,1);
-		psp_loop++;//key_config_state = (ST_WORK_OPTION_MENU|OPTION_MENU_STATE_01_SLIDE_IN);
+		jump_quit_menu	= (ST_INIT_MENU|0/*ST_ME NU_SUB_MAIN_MENU*/);
+		psp_loop++;
 		break;
 	case (ST_WORK_OPTION_MENU|OPTION_MENU_STATE_01_SLIDE_IN):
-	//	bg_alpha_aaa += /*1*/2/*6*/;/**fps_fa ctor*/
-		slide_offset_x -= 8;/**fps_fa ctor*/
+	//	bg_alpha_aaa += /*1*/2/*6*/;/*fps_factor*/
+		slide_offset_x -= 8;/*fps_factor*/
 	//	if ((/*250-6*/224) < bg_alpha_aaa)
 		if (slide_offset_x < 0)
 		{
 	//		bg_alpha_aaa = 255;
 			slide_offset_x = 0;
 //			psp_push_screen();
-			psp_loop++;//key_config_state = (ST_WORK_OPTION_MENU|OPTION_MENU_STATE_02_SELECT_LEFT_MENU);
+			psp_loop++;
 		}
 //		SDL_SetAlpha(/*key_haikei_surface*/sdl_screen[SDL_01_BACK_SCREEN], SDL_SRCALPHA, bg_alpha_aaa);
-		psp_pop_screen();//SDL_BlitSurface(key_haikei_surface,NULL,sdl_screen[SDL_00_SCREEN],NULL);
+		psp_pop_screen();//SDL_BlitSurface(key_haikei_surface,NULL,sdl_screen[SDL_00_VIEW_SCREEN],NULL);
 		break;
 	case (ST_WORK_OPTION_MENU|OPTION_MENU_STATE_02_SELECT_LEFT_MENU):
-		psp_pop_screen();//SDL_BlitSurface(key_haikei_surface,NULL,sdl_screen[SDL_00_SCREEN],NULL);
+		psp_pop_screen();//SDL_BlitSurface(key_haikei_surface,NULL,sdl_screen[SDL_00_VIEW_SCREEN],NULL);
 		if (0==my_pad)
 		{
 			if (OPTION_MENU_07_RESET > menu_cursor1)
@@ -224,11 +224,7 @@ static const OPTION_STATUS_SETTING option_status_setting[OPTION_MENU_CONFIG_MAX]
 				/* あまり重要でないので上下音、無しにしてみた */
 				if (my_pad_alter & (/*PSP_KEY_UP|PSP_KEY_DOWN|*/PSP_KEY_LEFT|PSP_KEY_RIGHT))				// 上下左右ボタン入力
 				{
-					#if (0==USE_DESIGN_TRACK)
-					play_voice_auto_track(VOICE02_MENU_SELECT);
-					#else
 					voice_play(VOICE02_MENU_SELECT, TRACK01_EXPLODE);
-					#endif
 				}
 			}
 		//
@@ -249,11 +245,7 @@ static const OPTION_STATUS_SETTING option_status_setting[OPTION_MENU_CONFIG_MAX]
 				{
 					if (my_pad_alter & PSP_KEY_SHOT_OK) // ショットボタン入力
 					{
-						#if (0==USE_DESIGN_TRACK)
-						play_voice_auto_track(VOICE07_BOMB);
-						#else
 						voice_play(VOICE07_BOMB, TRACK01_EXPLODE);/*テキトー*/
-						#endif
 						set_default_option(option_setting);
 						menu_cursor1 = OPTION_MENU_09_QUIT;
 					}
@@ -263,12 +255,8 @@ static const OPTION_STATUS_SETTING option_status_setting[OPTION_MENU_CONFIG_MAX]
 				{
 					if (my_pad_alter & PSP_KEY_BOMB_CANCEL) 	// キャンセルボタン入力
 					{
-						#if (0==USE_DESIGN_TRACK)
-						play_voice_auto_track(VOICE04_SHIP_HAKAI);
-						#else
 						voice_play(VOICE04_SHIP_HAKAI, TRACK03_SHORT_MUSIC/*TRACK01_EXPLODE*/);/* 自機死に音は、なるべく重ねない */
-						#endif
-						psp_loop++;//	key_config_state = (ST_WORK_OPTION_MENU|OPTION_MENU_STATE_06_FADE_INIT);
+						psp_loop++;
 					}
 					else
 					if (my_pad_alter & PSP_KEY_SHOT_OK) 	// ショットボタン入力
@@ -278,7 +266,7 @@ static const OPTION_STATUS_SETTING option_status_setting[OPTION_MENU_CONFIG_MAX]
 
 //						if ((1)/*==saiteigen_exsist*/)
 						{
-							psp_loop++;//	key_config_state = (ST_WORK_OPTION_MENU|OPTION_MENU_STATE_06_FADE_INIT);
+							psp_loop++;
 							// 最終的に代入される物
 							#if 0
 							//	システム(PSPのハードウェア)順
@@ -300,20 +288,12 @@ static const OPTION_STATUS_SETTING option_status_setting[OPTION_MENU_CONFIG_MAX]
 							}
 							#endif
 						//	ini_save();
-							#if (0==USE_DESIGN_TRACK)
-							play_voice_auto_track(VOICE02_MENU_SELECT);
-							#else
 							voice_play(VOICE02_MENU_SELECT, TRACK01_EXPLODE);/*テキトー*/
-							#endif
 						}
 //						else
 //						{
 //						//	"dame dayo"
-//							#if (0==USE_DESIGN_TRACK)
-//							play_voice_auto_track(VOICE09_GRAZE);
-//							#else
 //							voice_play(VOICE09_GRAZE, TRACK01_EXPLODE);/*テキトー*/
-//							#endif
 //						}
 					}
 				}
@@ -322,11 +302,7 @@ static const OPTION_STATUS_SETTING option_status_setting[OPTION_MENU_CONFIG_MAX]
 				{
 					if (my_pad_alter & PSP_KEY_SHOT_OK) // ショットボタン入力
 					{
-						#if (0==USE_DESIGN_TRACK)
-						play_voice_auto_track(VOICE07_BOMB);
-						#else
 						voice_play(VOICE07_BOMB, TRACK01_EXPLODE);/*テキトー*/
-						#endif
 						psp_loop++;
 						/* キーコンフィグメニューへ移動 */
 						jump_quit_menu = (ST_WORK_KEY_CONFIG/*ST_INIT_KEY_CONFIG*/|0);	//(ST_INIT_MENU|ST_MENU_SUB_OPTION);
@@ -337,11 +313,7 @@ static const OPTION_STATUS_SETTING option_status_setting[OPTION_MENU_CONFIG_MAX]
 				{
 					if (my_pad_alter & PSP_KEY_SHOT_OK) // ショットボタン入力
 					{
-						#if (0==USE_DESIGN_TRACK)
-						play_voice_auto_track(VOICE07_BOMB);
-						#else
 						voice_play(VOICE07_BOMB, TRACK01_EXPLODE);/*テキトー*/
-						#endif
 						psp_loop++;
 						/* キーコンフィグメニューへ移動 */
 						jump_quit_menu = (ST_WORK_MUSIC_ROOM/*ST_INIT_KEY_CONFIG*/|0);	//(ST_INIT_MENU|ST_MENU_SUB_OPTION);
@@ -369,11 +341,7 @@ static const OPTION_STATUS_SETTING option_status_setting[OPTION_MENU_CONFIG_MAX]
 						}
 						option_setting[menu_cursor1] = menu_cursor2;
 						//
-//						#if (0==USE_DESIGN_TRACK)
-//						play_voice_auto_track(VOICE02_MENU_SELECT);
-//						#else
 //						voice_play(VOICE02_MENU_SELECT, TRACK01_EXPLODE);/*テキトー*/
-//						#endif
 					}
 				}
 			}
@@ -391,7 +359,7 @@ static const OPTION_STATUS_SETTING option_status_setting[OPTION_MENU_CONFIG_MAX]
 			}
 		}
 		#endif
-//		play_music_num(BGM_20_menu1);
+//		play_music_num(BGM_21_menu01);
 	//	{
 	//		//key_haikei_surface	= loadbmp("bg/title_bg.jpg");
 	//		SDL_Surface *loadpic	= loadbmp0("bg/title_bg.jpg", 0, 0);/*"bg/key_haikei_surface.png"*/
@@ -401,10 +369,10 @@ static const OPTION_STATUS_SETTING option_status_setting[OPTION_MENU_CONFIG_MAX]
 	//	}
 //		bg_alpha_aaa		= 255;
 //		bg_alpha_aaa		= 0;
-		psp_loop++;//	key_config_state = (ST_WORK_OPTION_MENU|OPTION_MENU_STATE_07_FADE_OUT);
+		psp_loop++;
 		break;
 	case (ST_WORK_OPTION_MENU|OPTION_MENU_STATE_07_FADE_OUT):
-//		bg_alpha_aaa += /*1*/2/*8*/;/**fps_fa ctor*/
+//		bg_alpha_aaa += /*1*/2/*8*/;/*fps_factor*/
 //		if ((/*250-8*/224) < bg_alpha_aaa)
 		{
 //			bg_alpha_aaa = 255;
@@ -412,7 +380,7 @@ static const OPTION_STATUS_SETTING option_status_setting[OPTION_MENU_CONFIG_MAX]
 			psp_loop = jump_quit_menu;
 		}
 //		SDL_SetAlpha(/*key_haikei_surface*/sdl_screen[SDL_01_BACK_SCREEN], SDL_SRCALPHA, bg_alpha_aaa);
-//		psp_pop_screen();//SDL_BlitSurface(key_haikei_surface,NULL,sdl_screen[SDL_00_SCREEN],NULL);
+//		psp_pop_screen();//SDL_BlitSurface(key_haikei_surface,NULL,sdl_screen[SDL_00_VIEW_SCREEN],NULL);
 		break;
 	}
 	if (
@@ -456,7 +424,7 @@ static const OPTION_STATUS_SETTING option_status_setting[OPTION_MENU_CONFIG_MAX]
 					ix3 += ((option_status_setting[i].chr_length));
 					rect_locate_offset.y = (Y_LOCATE_OFFSET)+(/*num*/kk)-(jj);
 					SDL_SetAlpha(	option_menu_name_surface[kinou_number+i2], SDL_SRCALPHA, aaa_alpha );
-					SDL_BlitSurface(option_menu_name_surface[kinou_number+i2], NULL,sdl_screen[SDL_00_SCREEN],&rect_locate_offset);
+					SDL_BlitSurface(option_menu_name_surface[kinou_number+i2], NULL,sdl_screen[SDL_00_VIEW_SCREEN],&rect_locate_offset);
 				}
 				kk += 20;/* 縦の文字間隔 */
 			}
@@ -469,7 +437,7 @@ static const OPTION_STATUS_SETTING option_status_setting[OPTION_MENU_CONFIG_MAX]
 				rect_locate_offset.x = slide_offset_x + (X_LOCATE_OFFSET_02)-(jj);
 				rect_locate_offset.y = (Y_LOCATE_OFFSET)+(/*num*/ /*gazo_iti_henkan[i]*/kk)-(jj);
 				SDL_SetAlpha(	option_menu_name_surface[i+(KEY_TAB_17_MAX)], SDL_SRCALPHA, /*bg_alpha_aaa*/(127+(jj<<6)));
-				SDL_BlitSurface(option_menu_name_surface[i+(KEY_TAB_17_MAX)], NULL,sdl_screen[SDL_00_SCREEN],&rect_locate_offset);
+				SDL_BlitSurface(option_menu_name_surface[i+(KEY_TAB_17_MAX)], NULL,sdl_screen[SDL_00_VIEW_SCREEN],&rect_locate_offset);
 				kk += 20;/* 縦の文字間隔 */
 			}
 		}

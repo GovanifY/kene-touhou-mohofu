@@ -582,7 +582,7 @@ static void gu_draw_front_spell_logo(void)
 
 /* --- [ 縦文字 ] --- */
 /* SPELL_LOGO_LOCATE_X01_200: 画面左上からの xオフセット(距離) */
-#define SPELL_LOGO_LOCATE_X01_200 (200)
+#define SPELL_LOGO_LOCATE_X01_200 (16/*200*/)
 #define SPELL_LOGO_LOCATE_X02_240 (SPELL_LOGO_LOCATE_X01_200+SPELL_LOGO_HEIGHT_64)
 #define y5 x5
 	y5 = 0; 	//	x4 = (val5 & 0xff);
@@ -704,7 +704,8 @@ static void gu_draw_sdl_screen(void)
 #else
 	#define SCRIPT_WINDOW_X_SIZE_340		(340)
 	#define SCRIPT_WINDOW_X_SIZE_256		(256)
-	#define SCRIPT_WINDOW_Y_SIZE_070		(70)
+	#define SCRIPT_WINDOW_Y_SIZE_070		(70)/*70 == (16*4)+6 ??? */
+	#define SCRIPT_WINDOW_Y_SIZE_052		(52/*52*/)/*70 == (16*3)+4 ??? */
 	#define SCRIPT_WINDOW_Y_SIZE_012		(12)
 	/* 6 == ((480-128-340)/2) == ((GAME_WIDTH-SCRIPT_WINDOW_X_SIZE_340)/2) == SCRIPT_WINDOW_SPACE_020 */
 	#define SCRIPT_WINDOW_SPACE_020 		(6)
@@ -723,7 +724,12 @@ static void gu_draw_serifu_screen(void)
  */
 	unsigned int j;
 	unsigned int i;
+	#define SCRIPT_FONT_SCREEN_TEXTURE_OFFSET_X 	(0) /* [テクスチャオフセット] */
+	#define SCRIPT_FONT_SCREEN_TEXTURE_OFFSET_Y 	(1+8) /* [テクスチャオフセット※1] */
+	#define SCRIPT_FONT_SCREEN_TEXTURE_SIZE_X 		(1+4+47/*70*/) /* [テクスチャサイズ] */
 	#define FONT_SCREEN_MARGIN_010		(10)	/* [フォント端マージン] */
+	/* [※1] ((16/2)[dots]+1[dots](Gu干渉ライン)) */
+	/* 8[ライン(depth_32bit_int)]==16[ライン(depth_16bit_short)] */
 	#if 0
 	unsigned int count29;
 	count29 = 0;
@@ -766,19 +772,102 @@ static void gu_draw_serifu_screen(void)
 	//	}
 	//	#endif
 		vertices[(i)].u = j;
-		vertices[(i)].v = 1/*+(0)*/;
+		vertices[(i)].v = 1+(SCRIPT_FONT_SCREEN_TEXTURE_OFFSET_Y);/*+(0)*/
 		vertices[(i)].x = (FONT_SCREEN_MARGIN_010)+(SCRIPT_WINDOW_X_POSITION_020)+j/**480/512*/;
-		vertices[(i)].y = (FONT_SCREEN_MARGIN_010)+(SCRIPT_WINDOW_Y_POSITION_182)/*+(0)*/;
+		vertices[(i)].y = (FONT_SCREEN_MARGIN_010)+(SCRIPT_WINDOW_Y_POSITION_182);/*+(0)*/
 		vertices[(i)].z = 0;
 		vertices[(i)+1].u = (j+w_size99);
-		vertices[(i)+1].v = 1+(1+4+47/*70*/)/*272*/ /*320*/;
-		vertices[(i)+1].x = (FONT_SCREEN_MARGIN_010)+(SCRIPT_WINDOW_X_POSITION_020)+(j+w_size99)/**480/512*/;
-		vertices[(i)+1].y = (FONT_SCREEN_MARGIN_010)+(SCRIPT_WINDOW_Y_POSITION_182)+(1+4+47/*70*/)/*272*/;
+		vertices[(i)+1].v = 1+(SCRIPT_FONT_SCREEN_TEXTURE_OFFSET_Y)+(SCRIPT_FONT_SCREEN_TEXTURE_SIZE_X);/*272*/ /*320*/
+		vertices[(i)+1].x = (FONT_SCREEN_MARGIN_010)+(SCRIPT_WINDOW_X_POSITION_020)+(j+w_size99);/**480/512*/
+		vertices[(i)+1].y = (FONT_SCREEN_MARGIN_010)+(SCRIPT_WINDOW_Y_POSITION_182)+(SCRIPT_FONT_SCREEN_TEXTURE_SIZE_X);/*272*/
 		vertices[(i)+1].z = 0;
 		i += 2;
 		j += SLICE_SIZE32;
 	}
 	sceGuDrawArray(GU_SPRITES, TEXTURE_FLAGS5650, (count29), NULL, vertices);
+}
+
+/*---------------------------------------------------------
+
+---------------------------------------------------------*/
+
+#if 1
+	//#define SUPEKA_WINDOW_Y_SIZE_070		(32/*70*/)/*70 == (16*4)+6 ??? */
+	/* 6 == ((480-128-340)/2) == ((GAME_WIDTH-SUPEKA_WINDOW_X_SIZE_340)/2) == SUPEKA_WINDOW_SPACE_020 */
+	//#define SUPEKA_WINDOW_SPACE_020		(6)
+	#define SUPEKA_WINDOW_X_POSITION_020	(128-32)
+	#define SUPEKA_WINDOW_Y_POSITION_182	(12)
+#endif
+static void gu_draw_supeka_screen(void)
+{
+/* 実験:
+(a) SLICE_SIZE 64 で 512 x 272 転送 (場合分けなし)
+(b) SLICE_SIZE 64 で 480 x 272 転送 (場合分けあり)
+(c) SLICE_SIZE 32 で 480 x 272 転送 (場合分けなし)
+結果: 速い : (b) > (c) > (a)  : 遅い
+ */
+	unsigned int j;
+	unsigned int i;
+	#define SUPEKA_FONT_SCREEN_TEXTURE_OFFSET_X 	(0) /* [テクスチャオフセット] */
+	#define SUPEKA_FONT_SCREEN_TEXTURE_OFFSET_Y 	(1+8) /* [テクスチャオフセット※1] */
+	#define SUPEKA_FONT_SCREEN_TEXTURE_SIZE_X 		(18) /* [テクスチャサイズ] 70 */
+	/* [※1] ((16/2)[dots]+1[dots](Gu干渉ライン)) */
+	/* 8[ライン(depth_32bit_int)]==16[ライン(depth_16bit_short)] */
+	#if 0
+	unsigned int SUPEKA_count29;
+	SUPEKA_count29 = 0;
+	for (j=0; (j+SLICE_SIZE32)<=(/*480*/512/*512*/); j+=SLICE_SIZE32)
+	{
+		SUPEKA_count29 += 2;
+	}
+	#else
+		#if (0==USE_SLICE_32)
+			/*
+			320 == 480-((6[画面端マージン] + 10[フォント端マージン] )x 2) -(128[パネルウィンドウ幅])
+			*/
+		//	#define SUPEKA_count29 (16)/* 16 == 2 x (512/64[SLICE_SIZE32] ) */
+		//	#define SUPEKA_count29 (10)/* 16 == 2 x (512/64[SLICE_SIZE32] ) */
+			#define SUPEKA_count29 (8/*10*/)/* 10 == 2 x (320/64[SLICE_SIZE32] ) */
+		//	#define SUPEKA_count29 (12)/* 10 == 2 x (320/64[SLICE_SIZE32] ) */
+		#else
+			#define SUPEKA_count29 (30)/* 30 == 2 x (480/32[SLICE_SIZE32] ) */
+		#endif
+	#endif
+	Vertex_uvcxyz	*vertices;
+	vertices = (Vertex_uvcxyz*)sceGuGetMemory(SUPEKA_count29 * sizeof(Vertex_uvcxyz));
+	i=0;
+	j=0+(SUPEKA_FONT_SCREEN_TEXTURE_OFFSET_X);
+	//#if (0==USE_SLICE_32)
+	//unsigned int w_size;
+	//w_size = SLICE_SIZE32;
+	//#else
+		#define SUPEKA_w_size99 SLICE_SIZE32
+	//#endif
+//	for (; (j+SLICE_SIZE32)<=(/*480*/512/*512*/); )
+	for (; i<SUPEKA_count29; )
+	{
+	//	#if (0==USE_SLICE_32)
+	//	/* 最後 */
+	//	if (i==(SUPEKA_count29-2))
+	//	{
+	//	//	w_size = 32;	/* 32 == 512-480 */
+	//		w_size = 44;	/* 44 == 384-340 */
+	//	}
+	//	#endif
+		vertices[(i)].u = j;
+		vertices[(i)].v = 1+(SUPEKA_FONT_SCREEN_TEXTURE_OFFSET_Y);/*+(0)*/
+		vertices[(i)].x = (SUPEKA_WINDOW_X_POSITION_020)+j/**480/512*/;
+		vertices[(i)].y = (SUPEKA_WINDOW_Y_POSITION_182);/*+(0)*/
+		vertices[(i)].z = 0;
+		vertices[(i)+1].u = (j+SUPEKA_w_size99);
+		vertices[(i)+1].v = 1+(SUPEKA_FONT_SCREEN_TEXTURE_OFFSET_Y)+(SUPEKA_FONT_SCREEN_TEXTURE_SIZE_X);// /*272*/ /*320*/
+		vertices[(i)+1].x = (SUPEKA_WINDOW_X_POSITION_020)+(j+SUPEKA_w_size99);/**480/512*/
+		vertices[(i)+1].y = (SUPEKA_WINDOW_Y_POSITION_182)+(SUPEKA_FONT_SCREEN_TEXTURE_SIZE_X);/*272*/
+		vertices[(i)+1].z = 0;
+		i += 2;
+		j += SLICE_SIZE32;
+	}
+	sceGuDrawArray(GU_SPRITES, TEXTURE_FLAGS5650, (SUPEKA_count29), NULL, vertices);
 }
 
 /*---------------------------------------------------------
@@ -873,7 +962,7 @@ static void gu_draw_rect_window(int rect_type)
 			{(SCRIPT_WINDOW_X_POSITION_020),(SCRIPT_WINDOW_Y_POSITION_212),(SCRIPT_WINDOW_X_SIZE_256),	(SCRIPT_WINDOW_Y_SIZE_012),(0x7fff0f0f),(0x7f0f0f0f)},/* BLUE ボススペカ */
 			{(SCRIPT_WINDOW_X_POSITION_020),(SCRIPT_WINDOW_Y_POSITION_212),(SCRIPT_WINDOW_X_SIZE_256),	(SCRIPT_WINDOW_Y_SIZE_012),(0x7f0f0fff),(0x7f0f0f0f)},/* RED	自機スペカ */
 			{(SCRIPT_WINDOW_X_POSITION_020),(SCRIPT_WINDOW_Y_POSITION_182),(SCRIPT_WINDOW_X_SIZE_256),	(SCRIPT_WINDOW_Y_SIZE_012),(0x7f0f0f0f),(0x7f0f0f0f)},/* 未使用 */
-			{(SCRIPT_WINDOW_X_POSITION_020),(SCRIPT_WINDOW_Y_POSITION_182),(SCRIPT_WINDOW_X_SIZE_340),	(SCRIPT_WINDOW_Y_SIZE_070),(0x7f0f0f0f),(0x7f0f0f0f)},/* MASSAGE*/
+			{(SCRIPT_WINDOW_X_POSITION_020),(SCRIPT_WINDOW_Y_POSITION_182),(SCRIPT_WINDOW_X_SIZE_340),	(SCRIPT_WINDOW_Y_SIZE_052),(0x7f0f0f0f),(0x7f0f0f0f)},/* MASSAGE*/
 		};
 	//	#define SCRIPT_WINDOW_TEXTURE_FLAGS 	(GU_TEXTURE_16BIT | 				GU_VERTEX_16BIT | GU_TRANSFORM_2D)
 	//	#define SCRIPT_WINDOW_TEXTURE_FLAGS 	(									GU_VERTEX_16BIT | GU_TRANSFORM_2D)

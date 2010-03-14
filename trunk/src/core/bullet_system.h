@@ -5,9 +5,9 @@
 	敵弾管理システム
 ---------------------------------------------------------*/
 
-/* MAX_BULLET_POOL: 2のn乗の必要あり(1024とか2048とか) */
-#define MAX_BULLET_POOL 1024
-extern TGameSprite bullet_pool[MAX_BULLET_POOL];
+/* MAX_POOL_BULLET: 2のn乗の必要あり(1024とか2048とか) */
+#define MAX_POOL_BULLET 1024
+extern TGameSprite bullet_pool[MAX_POOL_BULLET];
 
 
 extern void bullet_system_init(void);

@@ -152,7 +152,7 @@ static char *malloc_buf;
 error111:
 	return (NULL);
 }
-/*static*/ int my_fgets(void/*char *buffer_name, int num, char *wfp*/)
+static int my_fgets(void/*char *buffer_name, int num, char *wfp*/)
 {
 	int ii;
 	ii = 0;
@@ -170,6 +170,16 @@ error111:
 //	error(ERR_FATAL, "TEST %s\nno: %d (%s)",buffer_name,errno,strerror(errno));
 //	return (NULL);
 }
+/*static*/ int my_file_fgets(void/*char *buffer_name, int num, char *wfp*/)
+{
+ggg_loop:;
+	int ii;
+	ii = my_fgets();
+			/* ';'で始まる行はコメント行なので、次の行まで飛ばす。 */
+	if (';'==(buffer_text_1_line[0]))		{	goto ggg_loop;/*continue;*/ }	/* ';'で始まる行はコメントなのでやらないでとばす */
+	return (ii);
+}
+//1968725
 /*static*/ void my_fclose(void/*void *wfp*/)
 {
 	free(malloc_buf);
@@ -204,39 +214,41 @@ static int ini_load_item(/*FILE *fp,*/ char *search, char *str_result)
 	{loop:;
 	//	while (/*NULL*/0 != fgets(buffer_text_1_line,128,fp))
 	//	if (/*NULL*/0 != fgets(buffer_text_1_line,128,fp))
-		if (/*NULL*/0 != my_fgets(/*buffer_text_1_line,128,fp*/))
+		if (/*NULL*/0 != my_file_fgets(/*buffer_text_1_line,128,fp*/))
 		{
-			char *c;					/* 走査位置 */
-			c = buffer_text_1_line;
+			char *ch;					/* 走査位置 */
+			ch = buffer_text_1_line;
 			/* skiped lines. */
 			#if 0
-			if (*c=='\n')		{	goto loop;/*continue;*/ }	/* 改行のみの行は空行なのでやらないでとばす */
-			while (isspace(*c)) {	c++;					}	/* 空白やTABを除去 */
+			/* '\n'が悪いのか巧くいかない(???) */
+			if ('\n'==(*ch))		{	goto loop;/*continue;*/ }	/* 改行のみの行は空行なのでやらないでとばす */
+			while (isspace(*ch)) 	{	ch++;					}	/* 空白やTABを除去 */
 			#else
 			{my_isspace:;
-				if (*c <= ' ')
+				if (' '>=(*ch))
 				{
-					c++;
-					if (*c == 0x0a)
+					ch++;
+					if (0x0a==(*ch))
 					{	goto loop;/*continue;*/ }	/* skiped null line. */
 					else
 					{	goto my_isspace;	}
 				}
 			}
 			#endif
-			if (*c=='#')		{	goto loop;/*continue;*/ }	/* #で始まる行はコメントなのでやらないでとばす */
+			/* ';'で始まる行はコメント行なので、次の行まで飛ばす。 */
+//			if (';'==(*ch))		{	goto loop;/*continue;*/ }	/* ';'で始まる行はコメントなのでやらないでとばす */
 			//
 		//	error(ERR_FATAL, "test %s\n", c );/*test k0a,1 */
 			//
 			{char *sc = item_name;
 				int i=0;
-				while (*c != ','/*'='*/)	/* 区切り',' '=' を探す */
+				while (',' != (*ch))	/* 区切り',' を探す */
 				{
 					i++;
-					if (30 < i)	{	return (-1);	}	/* >= 30 長すぎたらエラー */
-					*sc++ = *c++;
+					if (30 < i) 	{	return (-1);	}	/* >= 30 長すぎたらエラー */
+					*sc++ = *ch++;
 				}
-				c++;		/* '=' を無視 ('=' の分をとばす) */
+				ch++;		/* 区切り',' を無視 (',' の分をとばす) */
 				*sc = 0;	// '\0' を追記。  NULL
 			}
 			//
@@ -248,10 +260,10 @@ static int ini_load_item(/*FILE *fp,*/ char *search, char *str_result)
 				{
 					char re_s[32/*30*/];
 					char *re_e = re_s;
-				//	while (*c != '\n')		/* intの方は数字じゃない物は排除してくれるみたいだから問題なし。(13でなくてok) */
-					while (*c != 0x0a)		/* intの方は数字じゃない物は排除してくれるみたいだから問題なし。(13でなくてok) */
+				//	while ('\n' != (*ch))		/* intの方は数字じゃない物は排除してくれるみたいだから問題なし。(13でなくてok) */
+					while (0x0a != (*ch))		/* intの方は数字じゃない物は排除してくれるみたいだから問題なし。(13でなくてok) */
 					{
-						*re_e++ = *c++;
+						*re_e++ = *ch++;
 					}
 					re_e = 0;
 					/*int_result =*/return (atoi(re_s));
@@ -261,10 +273,10 @@ static int ini_load_item(/*FILE *fp,*/ char *search, char *str_result)
 				else // 対象を文字列として解析する。 (PARTH_MODE_CHAR) */
 				{
 					char *re_e = str_result;
-				//	while (*c != 0x0d/*13*/)	/* charの方は\nじゃなくて13にしないとちゃんと取ってくれないよ。(13でないとng) */
-					while (*c != 0x0a)		/* charの方は\nじゃなくて13にしないとちゃんと取ってくれないよ。(13でないとng) */
+				//	while (0x0d != (*ch)/*13*/)	/* charの方は\nじゃなくて13にしないとちゃんと取ってくれないよ。(13でないとng) */
+					while (0x0a != (*ch))		/* charの方は\nじゃなくて13にしないとちゃんと取ってくれないよ。(13でないとng) */
 					{
-						*re_e++ = *c++;
+						*re_e++ = *ch++;
 					}
 					re_e = 0;
 					/*int_result =*/return (1);/* ok */
@@ -280,6 +292,17 @@ static int ini_load_item(/*FILE *fp,*/ char *search, char *str_result)
 	return (-1);/* 見つからなかったらエラー */
 }
 
+static const char *my_config_title[OPTION_CONFIG_08_MAX]=
+{
+	"player",
+	"bomb",
+	"bgm",
+	"sound",
+	"current_difficulty",
+	"current_player",
+	"analog",
+	"open",
+};
 //extern char str_pa ss_word[]; 	/* [***090222 */
 extern int select_player;
 static int ini_load_local(void)
@@ -312,10 +335,10 @@ static int ini_load_local(void)
 	#if 0
 	CONFIG_LOAD_ITEM("SELECT",		pad_config[KEY_NUM00_SELECT]);
 	CONFIG_LOAD_ITEM("START",		pad_config[KEY_NUM01_START]);
-	CONFIG_LOAD_ITEM("UP",			pad_config[KEY_NUM02_UP ]);
+	CONFIG_LOAD_ITEM("UP",			pad_config[KEY_NUM02_UP    ]);
 	CONFIG_LOAD_ITEM("RIGHT",		pad_config[KEY_NUM03_RIGHT ]);
-	CONFIG_LOAD_ITEM("DOWN",		pad_config[KEY_NUM04_DOWN ]);
-	CONFIG_LOAD_ITEM("LEFT",		pad_config[KEY_NUM05_LEFT ]);
+	CONFIG_LOAD_ITEM("DOWN",		pad_config[KEY_NUM04_DOWN  ]);
+	CONFIG_LOAD_ITEM("LEFT",		pad_config[KEY_NUM05_LEFT  ]);
 	CONFIG_LOAD_ITEM("L_T", 		pad_config[KEY_NUM06_L_TRIG]);
 	CONFIG_LOAD_ITEM("R_T", 		pad_config[KEY_NUM07_R_TRIG]);
 	CONFIG_LOAD_ITEM("TRIANGLE",	pad_config[KEY_NUM08_TRIANGLE]);
@@ -325,10 +348,10 @@ static int ini_load_local(void)
 	#else
 	CONFIG_LOAD_ITEM("K0a", 		pad_config[KEY_NUM00_SELECT]);
 	CONFIG_LOAD_ITEM("K0b", 		pad_config[KEY_NUM01_START]);
-	CONFIG_LOAD_ITEM("K0c", 		pad_config[KEY_NUM02_UP ]);
+	CONFIG_LOAD_ITEM("K0c", 		pad_config[KEY_NUM02_UP    ]);
 	CONFIG_LOAD_ITEM("K0d", 		pad_config[KEY_NUM03_RIGHT ]);
-	CONFIG_LOAD_ITEM("K0e", 		pad_config[KEY_NUM04_DOWN ]);
-	CONFIG_LOAD_ITEM("K0f", 		pad_config[KEY_NUM05_LEFT ]);
+	CONFIG_LOAD_ITEM("K0e", 		pad_config[KEY_NUM04_DOWN  ]);
+	CONFIG_LOAD_ITEM("K0f", 		pad_config[KEY_NUM05_LEFT  ]);
 	CONFIG_LOAD_ITEM("K0g", 		pad_config[KEY_NUM06_L_TRIG]);
 	CONFIG_LOAD_ITEM("K0h", 		pad_config[KEY_NUM07_R_TRIG]);
 	CONFIG_LOAD_ITEM("K0i", 		pad_config[KEY_NUM08_TRIANGLE]);
@@ -336,14 +359,21 @@ static int ini_load_local(void)
 	CONFIG_LOAD_ITEM("K0k", 		pad_config[KEY_NUM10_CROSS]);
 	CONFIG_LOAD_ITEM("K0l", 		pad_config[KEY_NUM11_SQUARE]);
 	#endif
-	CONFIG_LOAD_ITEM("player",				option_config[OPTION_CONFIG_00_PLAYER]	);
-	CONFIG_LOAD_ITEM("bomb",				option_config[OPTION_CONFIG_01_BOMB]	);
-	CONFIG_LOAD_ITEM("bgm", 				option_config[OPTION_CONFIG_02_BGM] );
-	CONFIG_LOAD_ITEM("sound",				option_config[OPTION_CONFIG_03_SOUND]	);
-	CONFIG_LOAD_ITEM("current_difficulty",	option_config[OPTION_CONFIG_04_CURRENT_DIFFICULTY]	);
-	CONFIG_LOAD_ITEM("current_player",		option_config[OPTION_CONFIG_05_CURRENT_PLAYER]	);
-	CONFIG_LOAD_ITEM("analog",				option_config[OPTION_CONFIG_06_ANALOG]	);
-	CONFIG_LOAD_ITEM("open",				option_config[OPTION_CONFIG_07_OPEN]	);
+	{
+		int i;
+		for (i=0; i<OPTION_CONFIG_08_MAX; i++)
+		{
+			CONFIG_LOAD_ITEM( (char *)my_config_title[i],				option_config[i]	);
+		}
+	}
+//	CONFIG_LOAD_ITEM("player",				option_config[OPTION_CONFIG_00_PLAYER]	);
+//	CONFIG_LOAD_ITEM("bomb",				option_config[OPTION_CONFIG_01_BOMB]	);
+//	CONFIG_LOAD_ITEM("bgm", 				option_config[OPTION_CONFIG_02_BGM] );
+//	CONFIG_LOAD_ITEM("sound",				option_config[OPTION_CONFIG_03_SOUND]	);
+//	CONFIG_LOAD_ITEM("current_difficulty",	option_config[OPTION_CONFIG_04_CURRENT_DIFFICULTY]	);
+//	CONFIG_LOAD_ITEM("current_player",		option_config[OPTION_CONFIG_05_CURRENT_PLAYER]	);
+//	CONFIG_LOAD_ITEM("analog",				option_config[OPTION_CONFIG_06_ANALOG]	);
+//	CONFIG_LOAD_ITEM("open",				option_config[OPTION_CONFIG_07_OPEN]	);
 	difficulty		= option_config[OPTION_CONFIG_04_CURRENT_DIFFICULTY];
 	select_player	= option_config[OPTION_CONFIG_05_CURRENT_PLAYER];
 //	if (-1 == ini_load_item(/*fp,*/ "pa ssword", st r_pass_word))	{	goto error00;/* return (-1); */ 	}
@@ -379,33 +409,44 @@ error00:
 					if (-1 != aaa)
 					{
 						/* 埋め込む */
+						high_score_table[j][i].final_stage = tmp_str32[1/*10*/]-('0');
+
 					//	strncpy(high_score_table[j][i].name, &tmp_str32[10], 3);
 						high_score_table[j][i].name[0] = tmp_str32[2/*10*/];
 						high_score_table[j][i].name[1] = tmp_str32[3/*11*/];
 						high_score_table[j][i].name[2] = tmp_str32[4/*12*/];
+						high_score_table[j][i].name[3] = tmp_str32[5/*13*/];
+//
+						high_score_table[j][i].name[4] = tmp_str32[6/*14*/];
+						high_score_table[j][i].name[5] = tmp_str32[7/*15*/];
+						high_score_table[j][i].name[6] = tmp_str32[8/*16*/];
+						high_score_table[j][i].name[7] = tmp_str32[9/*16*/];
 						char tmp_str16[64/*50*/];
-						strcpy(tmp_str16, &tmp_str32[5/*13*/]);
+						strcpy(tmp_str16, &tmp_str32[10/*5 13*/]);
 						tmpscore = atoi(tmp_str16);
-						tmpscore /= 10;
+//						tmpscore /= 10;
 					}
 					else/* エラー */
 					{
 						ng2=1;
 					}
 				}
-				else
+			/*	else // 直前の ini_load_item() でエラーが起きた場合に初期化するので このelse無効。 */
 			//	if (1==ng2) /* pspは0レジスタがあるので0と比較したほうが速い */
-			//	if (0!=ng2)
+				if (0!=ng2)
 				{
+					high_score_table[j][i].final_stage = (6-i); 	/* 到達ステージ */
 					static const int init_score_tbl[5]=
 					{
-						score(50000000),
-						score(4000000),
-						score(300000),
-						score(20000),
-						score(1000),
+						score(100000000),	//	score(70000000),		//score(50000000),
+						score( 50000000),	//	score(60000000),		//score(4000000),
+						score( 10000000),	//	score(50000000),		//score(300000),
+						score(  5000000),	//	score(10000000),		//score(20000),
+						score(  1000000),	//	score( 5000000),		//score(1000),
 					};
-					strcpy(high_score_table[j][i].name,"ZUN"/*"DEN"*/);
+				//	strcpy(high_score_table[j][i].name,"12345678"/*"DEN"*/);
+				//	strcpy(high_score_table[j][i].name,"ZUN     "/*"DEN"*/);
+					strcpy(high_score_table[j][i].name,"NANASHI "/*"DEN"*/);
 					tmpscore = init_score_tbl[i];
 				}
 				high_score_table[j][i].score = tmpscore;
@@ -501,43 +542,66 @@ void ini_save(void)
 //
 	char buf[64/*50*/];
 //	fprintf(fp, "moddir=%s",	moddir);
-	#if 0
-	sprintf(buf, "SELECT,%d",		pad_config[KEY_NUM00_SELECT]);		write_buf(/*fp,*/fd, buf);
-	sprintf(buf, "START,%d",		pad_config[KEY_NUM01_START]);		write_buf(/*fp,*/fd, buf);
-	sprintf(buf, "UP,%d",			pad_config[KEY_NUM02_UP]);			write_buf(/*fp,*/fd, buf);
-	sprintf(buf, "RIGHT,%d",		pad_config[KEY_NUM03_RIGHT]);		write_buf(/*fp,*/fd, buf);
-	sprintf(buf, "DOWN,%d", 		pad_config[KEY_NUM04_DOWN]);		write_buf(/*fp,*/fd, buf);
-	sprintf(buf, "LEFT,%d", 		pad_config[KEY_NUM05_LEFT]);		write_buf(/*fp,*/fd, buf);
-	sprintf(buf, "L_T,%d",			pad_config[KEY_NUM06_L_TRIG]);		write_buf(/*fp,*/fd, buf);
-	sprintf(buf, "R_T,%d",			pad_config[KEY_NUM07_R_TRIG]);		write_buf(/*fp,*/fd, buf);
-	sprintf(buf, "TRIANGLE,%d", 	pad_config[KEY_NUM08_TRIANGLE]);	write_buf(/*fp,*/fd, buf);
-	sprintf(buf, "CIRCLE,%d",		pad_config[KEY_NUM09_CIRCLE]);		write_buf(/*fp,*/fd, buf);
-	sprintf(buf, "CROSS,%d",		pad_config[KEY_NUM10_CROSS]);		write_buf(/*fp,*/fd, buf);
-	sprintf(buf, "SQUARE,%d",		pad_config[KEY_NUM11_SQUARE]);		write_buf(/*fp,*/fd, buf);
-	#else
-	sprintf(buf, "K0a,%d",			pad_config[KEY_NUM00_SELECT]);		write_buf(/*fp,*/fd, buf);
-	sprintf(buf, "K0b,%d",			pad_config[KEY_NUM01_START]);		write_buf(/*fp,*/fd, buf);
-	sprintf(buf, "K0c,%d",			pad_config[KEY_NUM02_UP]);			write_buf(/*fp,*/fd, buf);
-	sprintf(buf, "K0d,%d",			pad_config[KEY_NUM03_RIGHT]);		write_buf(/*fp,*/fd, buf);
-	sprintf(buf, "K0e,%d",			pad_config[KEY_NUM04_DOWN]);		write_buf(/*fp,*/fd, buf);
-	sprintf(buf, "K0f,%d",			pad_config[KEY_NUM05_LEFT]);		write_buf(/*fp,*/fd, buf);
-	sprintf(buf, "K0g,%d",			pad_config[KEY_NUM06_L_TRIG]);		write_buf(/*fp,*/fd, buf);
-	sprintf(buf, "K0h,%d",			pad_config[KEY_NUM07_R_TRIG]);		write_buf(/*fp,*/fd, buf);
-	sprintf(buf, "K0i,%d",			pad_config[KEY_NUM08_TRIANGLE]);	write_buf(/*fp,*/fd, buf);
-	sprintf(buf, "K0j,%d",			pad_config[KEY_NUM09_CIRCLE]);		write_buf(/*fp,*/fd, buf);
-	sprintf(buf, "K0k,%d",			pad_config[KEY_NUM10_CROSS]);		write_buf(/*fp,*/fd, buf);
-	sprintf(buf, "K0l,%d",			pad_config[KEY_NUM11_SQUARE]);		write_buf(/*fp,*/fd, buf);
-	#endif
+//	#if 0
+//	sprintf(buf, "SELECT,%d",		pad_config[KEY_NUM00_SELECT]);		write_buf(/*fp,*/fd, buf);
+//	sprintf(buf, "START,%d",		pad_config[KEY_NUM01_START]);		write_buf(/*fp,*/fd, buf);
+//	sprintf(buf, "UP,%d",			pad_config[KEY_NUM02_UP]);			write_buf(/*fp,*/fd, buf);
+//	sprintf(buf, "RIGHT,%d",		pad_config[KEY_NUM03_RIGHT]);		write_buf(/*fp,*/fd, buf);
+//	sprintf(buf, "DOWN,%d", 		pad_config[KEY_NUM04_DOWN]);		write_buf(/*fp,*/fd, buf);
+//	sprintf(buf, "LEFT,%d", 		pad_config[KEY_NUM05_LEFT]);		write_buf(/*fp,*/fd, buf);
+//	sprintf(buf, "L_T,%d",			pad_config[KEY_NUM06_L_TRIG]);		write_buf(/*fp,*/fd, buf);
+//	sprintf(buf, "R_T,%d",			pad_config[KEY_NUM07_R_TRIG]);		write_buf(/*fp,*/fd, buf);
+//	sprintf(buf, "TRIANGLE,%d", 	pad_config[KEY_NUM08_TRIANGLE]);	write_buf(/*fp,*/fd, buf);
+//	sprintf(buf, "CIRCLE,%d",		pad_config[KEY_NUM09_CIRCLE]);		write_buf(/*fp,*/fd, buf);
+//	sprintf(buf, "CROSS,%d",		pad_config[KEY_NUM10_CROSS]);		write_buf(/*fp,*/fd, buf);
+//	sprintf(buf, "SQUARE,%d",		pad_config[KEY_NUM11_SQUARE]);		write_buf(/*fp,*/fd, buf);
+//	#else
+//	sprintf(buf, "K0a,%d",			pad_config[KEY_NUM00_SELECT]);		write_buf(/*fp,*/fd, buf);
+//	sprintf(buf, "K0b,%d",			pad_config[KEY_NUM01_START]);		write_buf(/*fp,*/fd, buf);
+//	sprintf(buf, "K0c,%d",			pad_config[KEY_NUM02_UP]);			write_buf(/*fp,*/fd, buf);
+//	sprintf(buf, "K0d,%d",			pad_config[KEY_NUM03_RIGHT]);		write_buf(/*fp,*/fd, buf);
+//	sprintf(buf, "K0e,%d",			pad_config[KEY_NUM04_DOWN]);		write_buf(/*fp,*/fd, buf);
+//	sprintf(buf, "K0f,%d",			pad_config[KEY_NUM05_LEFT]);		write_buf(/*fp,*/fd, buf);
+//	sprintf(buf, "K0g,%d",			pad_config[KEY_NUM06_L_TRIG]);		write_buf(/*fp,*/fd, buf);
+//	sprintf(buf, "K0h,%d",			pad_config[KEY_NUM07_R_TRIG]);		write_buf(/*fp,*/fd, buf);
+//	sprintf(buf, "K0i,%d",			pad_config[KEY_NUM08_TRIANGLE]);	write_buf(/*fp,*/fd, buf);
+//	sprintf(buf, "K0j,%d",			pad_config[KEY_NUM09_CIRCLE]);		write_buf(/*fp,*/fd, buf);
+//	sprintf(buf, "K0k,%d",			pad_config[KEY_NUM10_CROSS]);		write_buf(/*fp,*/fd, buf);
+//	sprintf(buf, "K0l,%d",			pad_config[KEY_NUM11_SQUARE]);		write_buf(/*fp,*/fd, buf);
+//	#endif
+	{
+		int i;
+		for (i=0; i<KEY_NUM12_MAX; i++)
+		{
+			sprintf(buf,
+				"K0%c,%d",
+				('a'+i),
+				pad_config[i]);
+				write_buf(/*fp,*/fd, buf);
+		}
+	}
 	option_config[OPTION_CONFIG_04_CURRENT_DIFFICULTY]	= difficulty;
 	option_config[OPTION_CONFIG_05_CURRENT_PLAYER]		= select_player;
-	sprintf(buf, "player,%d",				option_config[OPTION_CONFIG_00_PLAYER]);				write_buf(/*fp,*/fd, buf);
-	sprintf(buf, "bomb,%d", 				option_config[OPTION_CONFIG_01_BOMB]);					write_buf(/*fp,*/fd, buf);
-	sprintf(buf, "bgm,%d",					option_config[OPTION_CONFIG_02_BGM]);					write_buf(/*fp,*/fd, buf);
-	sprintf(buf, "sound,%d",				option_config[OPTION_CONFIG_03_SOUND]); 				write_buf(/*fp,*/fd, buf);
-	sprintf(buf, "current_difficulty,%d",	option_config[OPTION_CONFIG_04_CURRENT_DIFFICULTY]);	write_buf(/*fp,*/fd, buf);
-	sprintf(buf, "current_player,%d",		option_config[OPTION_CONFIG_05_CURRENT_PLAYER]);		write_buf(/*fp,*/fd, buf);
-	sprintf(buf, "analog,%d",				option_config[OPTION_CONFIG_06_ANALOG]);				write_buf(/*fp,*/fd, buf);
-	sprintf(buf, "open,%d", 				option_config[OPTION_CONFIG_07_OPEN]);					write_buf(/*fp,*/fd, buf);
+
+	{
+		int i;
+		for (i=0; i<OPTION_CONFIG_08_MAX; i++)
+		{
+			sprintf(buf,
+				"%s,%d",
+				my_config_title[i],
+				option_config[i]);
+				write_buf(/*fp,*/fd, buf);
+		}
+	}
+//	sprintf(buf, "player,%d",				option_config[OPTION_CONFIG_00_PLAYER]);				write_buf(/*fp,*/fd, buf);
+//	sprintf(buf, "bomb,%d", 				option_config[OPTION_CONFIG_01_BOMB]);					write_buf(/*fp,*/fd, buf);
+//	sprintf(buf, "bgm,%d",					option_config[OPTION_CONFIG_02_BGM]);					write_buf(/*fp,*/fd, buf);
+//	sprintf(buf, "sound,%d",				option_config[OPTION_CONFIG_03_SOUND]); 				write_buf(/*fp,*/fd, buf);
+//	sprintf(buf, "current_difficulty,%d",	option_config[OPTION_CONFIG_04_CURRENT_DIFFICULTY]);	write_buf(/*fp,*/fd, buf);
+//	sprintf(buf, "current_player,%d",		option_config[OPTION_CONFIG_05_CURRENT_PLAYER]);		write_buf(/*fp,*/fd, buf);
+//	sprintf(buf, "analog,%d",				option_config[OPTION_CONFIG_06_ANALOG]);				write_buf(/*fp,*/fd, buf);
+//	sprintf(buf, "open,%d", 				option_config[OPTION_CONFIG_07_OPEN]);					write_buf(/*fp,*/fd, buf);
 //	sprintf(buf, "pa ssword,%s",			str_pa ss_word);		write_buf(/*fp,*/fd, buf);
 	/* high_score save */
 	{int j;
@@ -551,14 +615,14 @@ void ini_save(void)
 					"%c"			/* rank number */
 					"," 			/* == 区切り dummy */
 					"0" 			/* practice mode */
-					"0" 			/* final stage */
-					"%3s"			/* name */
-					"%09d0",		/* score */
+					"%c" 			/* final stage */
+					"%8s"			/* name */
+					"%09d"/*"0"*/,		/* score */
 				//
 					(j+'0'),		/* player number */
 					(i+'0'),		/* score rank number */
 									/* practice mode */
-									/* final stage */
+					(high_score_table[j][i].final_stage+'0'),				/* final stage */
 					high_score_table[j][i].name,
 					high_score_table[j][i].score
 				);	write_buf(/*fp,*/fd, buf);
@@ -587,5 +651,5 @@ void save_screen_shot(void)
 	screen_num &= 0x1f;
 	screen_buf[33/*22*/]= ((9+1)<screen_num)?(('A'-(9+1)-1)+screen_num):(('0'-1)+screen_num);
 	gu_save_screen();
-	SDL_SaveBMP(sdl_screen[SDL_00_SCREEN], screen_buf);
+	SDL_SaveBMP(sdl_screen[SDL_00_VIEW_SCREEN], screen_buf);
 }

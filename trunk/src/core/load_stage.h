@@ -4,23 +4,25 @@
 #include "game_main.h"
 
 //#define  MAX_IVENT_ENTRY	512
-#define  MAX_PARA1_44		/*64*/(64-20)/*(64-(4*5))*/
+#define  MAX_PARA1_36		/*64*/(64-20-8)/*(64-(4*5))*/
 
 typedef struct _stage_data
 {
-	Uint32		v_time; 			/* 1/60 単位の時間カウンタ */	//	int 		dummy_done;
+	u32 		v_time; 			/* 1/60 単位の時間カウンタ */	//	int 		dummy_done;
 	struct _stage_data *next;
-	Uint32		user_x; 			/* para 0 */	/*ctype*/	/* [***090210	追加 */
+	u32 		user_x; 			/* para 0 */	/*ctype*/	/* [***090210	追加 */
 	int 		user_y; 			/* para 2 */
 //(16[Bytes] == (4x4) )
 	char		user_i_code;		/* intermediate code 中間コード */
 	char		user_1_moji;		/* 'E'とか'T'とか	*/
-	Uint16		user_16;			/* */
+	u16 		user_item16;		/* item */
+	int 		user_hp; 			/* para 2 */
+	int 		user_score; 		/* para 2 */
 //(20[Bytes] == (4x5) )
-	char		user_string[MAX_PARA1_44/*(64)*/];/* para 1 */
+	char		user_string[MAX_PARA1_36/*(64)*/];/* para 1 */
 //(64[Bytes] == (4x4)+(4)+(44) )
 } STAGE_DATA;	/* .align 64 [bytes] */
-//	Uint16		dummy_scroll_speed256;	/* para3 scroll speed256 */ /* [***090210	追加 */
+//	u16 	dummy_scroll_speed256;	/* para3 scroll speed256 */ /* [***090210	追加 */
 
 
 
@@ -61,35 +63,34 @@ enum
 /*0x16*/		CTYPE_22_TATSUMAKI1,
 			/* 妖怪 */
 /*0x17*/		CTYPE_23_KAKOMI1,
-			/* その他ザコ */
-/*0x18*/		CTYPE_24_OBAKE1,
-/*0x19*/		CTYPE_25_OBAKE2,	/* 旧"虹毛玉1" */
-/*0x1a*/		CTYPE_26_YUKARI1,
-/*0x1b*/		CTYPE_27_YUKARI2,
+/*0x1a*/		CTYPE_26_AKA_KEDAMA1,		/* 橙 */
 			/* 毛玉 */
-/*0x1c*/		CTYPE_28_AKA_KEDAMA1,
-/*0x1d*/		CTYPE_29_MIDORI_KEDAMA1,
-/*0x1e*/		CTYPE_30_MIDORI_KEDAMA2,
-/*0x1f*/		CTYPE_31_KEDAMA1,
-/*0x20*/		CTYPE_32_KEDAMA2,
-			/* 中妖精 */
-/*0x21*/		CTYPE_33_MEIDO1,
-/*0x22*/		CTYPE_34_MEIDO2,
-/*0x23*/		CTYPE_35_MEIDO3,
-/*0x24*/		CTYPE_36_MEIDO4,
-			/* 小妖精 */
-/*0x25*/		CTYPE_37_AO_YOUSEI1,	// [***090124		追加
-/*0x26*/		CTYPE_38_AO_YOUSEI2,	// [***090207		追加
-/*0x27*/		CTYPE_39_AO_YOUSEI3,	//		追加
-/*0x28*/		CTYPE_40_AO_YOUSEI4,	//		追加
+/*0x18*/		CTYPE_24_YUKARI1,			/* その他ザコ */
+/*0x19*/		CTYPE_25_YUKARI2,			/* その他ザコ */
+/*0x1b*/		CTYPE_27_MIDORI_KEDAMA1,
+/*0x1c*/		CTYPE_28_MIDORI_KEDAMA2,
+/*0x1d*/		CTYPE_29_KEDAMA1,
+/*0x1e*/		CTYPE_30_KEDAMA2,
+			/* [C妖精]その他ザコ */
+/*0x1f*/		CTYPE_31_OBAKE1,
+/*0x20*/		CTYPE_32_OBAKE2,	/* 旧"虹毛玉1" */
+/*0x21*/		CTYPE_33_KARASU,
+			/* [B妖精]中妖精 */
+/*0x22*/		CTYPE_34_MEIDO1,
+/*0x23*/		CTYPE_35_MEIDO2,
+/*0x24*/		CTYPE_36_MEIDO3,
+/*0x25*/		CTYPE_37_MEIDO4,
+			/* [A妖精]小妖精 */
+/*0x26*/		CTYPE_38_AO_YOUSEI1,	// [***090124		追加
+/*0x27*/		CTYPE_39_AO_YOUSEI2,	// [***090207		追加
+/*0x28*/		CTYPE_40_AO_YOUSEI3,	//		追加
+/*0x29*/		CTYPE_41_AO_YOUSEI4,	//		追加
 				//
-
 				//
-/*0x29*/		ETYPE_01_SJIS_TEXT,
-/*0x2a*/		ETYPE_02_LOAD_BG,
-/*0x2b*/	//	ETYPE_03_PICTURE,	/* この方式は処理落ち解消しにくいので都合により廃止 */
+/*0x2a*/		ETYPE_01_SJIS_TEXT,
+/*0x2b*/		ETYPE_02_LOAD_BG,
+/*0x2c*/	//	ETYPE_03_PICTURE,	/* この方式は処理落ち解消しにくいので都合により廃止 */
 				//
-/*0x2c*/		/*拡張可能*/
 /*0x2d*/		/*拡張可能*/
 /*0x2e*/		/*拡張可能*/
 /*0x2f*/		/*拡張可能*/

@@ -5,6 +5,7 @@
 
 #include "game_main.h"
 #include "name_entry.h"/**/
+extern int select_player;
 
 /*---------------------------------------------------------
 	ハイスコア表示デモ画面
@@ -14,22 +15,6 @@
 /*extern*/ SCORE_FORMAT high_score_table[MAX_8_SAVE_PLAYERS][MAX_5_RANKING/*5*/];
 
 /*local static*/
-
-
-typedef struct
-{
-	int amplifier256;		/* 横のズレ量の割合。 amplifier x offset */
-	int phase256;			/* 横のズレ量。 phase x offset */
-	int phaseout256;		/* 横のズレ量。 phase x offset */
-//	int phaseout_speed256;
-	int direction;						/* ズレる方向 */
-	int move_done_flag; 				/* 移動完了したか、してないかの状態 */
-//	定数
-	int xg256;
-	int yg256;
-	int amplifier_speed256;
-	int phase_speed256;
-} MOVE_FONT_DATA;
 
 static int move_done_lines; 			/* 移動完了した行の数 */
 static int more_show;					/* 別の戦歴をまだ見る */
@@ -75,86 +60,98 @@ static const signed int result_const_status[RESULT_DATA_03_MAX][MAX_7_LINES] =
 };
 
 /*---------------------------------------------------------
+	ハイスコア表示デモ画面
+---------------------------------------------------------*/
+
+typedef struct
+{
+	int x256;
+	int y256;
+//
+	int amplifier256;		/* 横のズレ量の割合。 amplifier x offset */
+	int phase256;			/* 横のズレ量。 phase x offset */
+	int phaseout256;		/* 横のズレ量。 phase x offset */
+	int direction;			/* ズレる方向 */
+	int move_done_flag; 	/* 移動完了したか、してないかの状態 */
+//	定数
+	int xg256;
+	int yg256;
+	int amplifier_speed256;
+	int phase_speed256;
+} RR_OBJ;
+
+static RR_OBJ result_my_obj[MAX_7_LINES/*6*/];
+static SDL_Surface *result_surfaces[MAX_7_LINES/*6*/];
+
+
+/*---------------------------------------------------------
 	ハイスコア表示デモ画面(文字移動用)
 ---------------------------------------------------------*/
 
-static void move_result(SPRITE *src)
+static void move_result(void)
 {
-	MOVE_FONT_DATA *data = (MOVE_FONT_DATA *)src->data;
-	if (0==data->move_done_flag)	/* 移動は必要？ */
+	int i;
+	for (i=0; i<MAX_7_LINES; i++)
 	{
-		src->x256 = ((data->xg256) );
-		src->y256 = ((data->yg256) );
-		if (0==data->direction)	/* 移動する向き */
+		if (0==result_my_obj[i].move_done_flag) 	/* 移動は必要？ */
 		{
-			/* slide-in */
-			data->amplifier256 -= data->amplifier_speed256;
-			if (data->amplifier256 <= t256(0.3) )
+			result_my_obj[i].x256 = ((result_my_obj[i].xg256) );
+			result_my_obj[i].y256 = ((result_my_obj[i].yg256) );
+			if (0==result_my_obj[i].direction)		/* 移動する向き */
 			{
-				data->move_done_flag=1;	/* 移動完了 */
-				move_done_lines++;
+				/* slide-in */
+				result_my_obj[i].amplifier256 -= result_my_obj[i].amplifier_speed256;
+				if (result_my_obj[i].amplifier256 <= t256(0.3) )
+				{
+					result_my_obj[i].move_done_flag=1;	/* 移動完了 */
+					move_done_lines++;
+				}
+				else
+				{
+					result_my_obj[i].phase256 += result_my_obj[i].phase_speed256;/*fps_factor*/
+					result_my_obj[i].x256 += ((result_my_obj[i].phase256*result_my_obj[i].amplifier256)>>8);
+				}
 			}
 			else
 			{
-				data->phase256 += data->phase_speed256/**fps_fa ctor*/;
-				src->x256 += ((data->phase256*data->amplifier256)>>8);
-			}
-		}
-		else
-		{
-			data->phaseout256 += data->phase_speed256/**fps_fa ctor*/;
-			src->x256 += ((data->phaseout256*data->amplifier256)>>8);
-		//	if (1==more_show)	/* pspは0レジスタがあるので0と比較したほうが速い */
-			if (0!=more_show)
-			{
-				src->y256 -= ((data->phase256*data->amplifier256)>>8);		/* phase256 は流用 */
-			}
-			/* slide-out */
-			data->amplifier256 += data->amplifier_speed256;
-			if (
-			//	(data->amplifier256 >= t256(100/*400*/) ) &&
-			//	((src->x<-src->w)||(src->x>PSP_WIDTH480)) /* 画面外 */
-				((src->x256<-((src->w128+src->w128)))||(src->x256>t256(PSP_WIDTH480)))||	/* 画面外 */
-				(( (src->y256+t256(32)/*(s->h)*/) < 0))	/* 画面外 */
-				)
-			{
-				data->move_done_flag=1;	/* 移動完了 */
-				move_done_lines++;
+				result_my_obj[i].phaseout256 += result_my_obj[i].phase_speed256;/*fps_factor*/
+				result_my_obj[i].x256 += ((result_my_obj[i].phaseout256*result_my_obj[i].amplifier256)>>8);
+				/* slide-out */
+				result_my_obj[i].amplifier256 += result_my_obj[i].amplifier_speed256;
+				if (
+						(t256(PSP_WIDTH480)  < result_my_obj[i].x256)	/* 画面外 */
+					)
+				{
+					result_my_obj[i].move_done_flag=1;	/* 移動完了 */
+					move_done_lines++;
+				}
 			}
 		}
 	}
 }
 
+
 /*---------------------------------------------------------
 	ハイスコア表示デモ画面
 ---------------------------------------------------------*/
-
-static SPRITE *result_sprites[MAX_7_LINES/*6*/];
-static SDL_Surface *result_surfaces[MAX_7_LINES/*6*/];
-
 static void result_font_render(void)
 {
-	MOVE_FONT_DATA *hd;
 	int i;
-//
-	static IMAGE_RESOURCE my_resource[1] =
-	{
-		{
-			NULL,/*dummy*/
-			0,/*dummy*/
-			1,
-		//	iyx(1,1),/*廃止*/
-			PRIORITY_01_SHOT,
-			0/*dummy*/	/* あたり判定円の半径(あたり判定の大きさ) */
-		}
-	};
-//
 	for (i=0; i<MAX_7_LINES; i++)
 	{
 		if (i<5)
 		{
 			char ttmp[64/*50*/];
-			sprintf(ttmp,"%1d %-3s %09d0",i+1,high_score_table[(show_player_num)][i].name,high_score_table[(show_player_num)][i].score);
+			sprintf(ttmp,
+				"%1d "		/* 順位 */
+				"%-8s " 	/* プレイヤー名 */
+				"%09d0" 	/* スコア */
+				"[%1d]",	/* 到達ステージ */
+				(i+1),	/* 順位 */
+				high_score_table[(show_player_num)][i].name,
+				high_score_table[(show_player_num)][i].score,
+				high_score_table[(show_player_num)][i].final_stage
+				);
 		//	result_surfaces[i]		= font_render(ttmp,(0==i)?FONT05:FONT01);
 		//	result_surfaces[i]		= font_render(ttmp,(0==i)?FONT03:FONT07);
 			result_surfaces[i]		= font_render(ttmp, FONT03);
@@ -162,7 +159,7 @@ static void result_font_render(void)
 		else
 		if (5==i)
 		{
-			result_surfaces[5]		= font_render("RESULT OF SCORE"/*"TOP FIVE FIGHTERS"*/, FONT05);
+			result_surfaces[5]		= font_render("RESULT OF SCORE", FONT05);/*"TOP FIVE FIGHTERS"*/
 		}
 		else
 		if (6==i)
@@ -173,57 +170,41 @@ static void result_font_render(void)
 			/* 1==*/	"REIMU_B",
 			/* 2==*/	"MARISA_A",
 			/* 3==*/	"MARISA_B",
-			/* 5==*/	"REMILIA",
-			/* 7==*/	"YUYUKO",
+			/* 4==*/	"REMILIA",
+			/* 5==*/	"YUYUKO",
 			/* 6==*/	"CHIRNO_A",
-			/* 4==*/	"CHIRNO_Q",
+			/* 7==*/	"CHIRNO_Q",
 			};
 			result_surfaces[6]				= font_render((char *)score_name[(show_player_num)], FONT03/*FONT06*/);
 		}
-		result_sprites[i]					= sprite_add_res_list(
-			result_surfaces[i],
-		//	1,
-		//	iyx(1,1),
-		//	PRIORITY_01_SHOT,
-			SP_FLAG_NOT_CACHE/*1*/,
-		//	0
-			(IMAGE_RESOURCE *)my_resource
-			);
-		hd									= mmalloc(sizeof(MOVE_FONT_DATA));
-		result_sprites[i]->data 			= hd;
-		hd->xg256							= result_const_status[RESULT_DATA_00_XG256][i];
-		hd->yg256							= result_const_status[RESULT_DATA_01_YG256][i];
-		hd->phase_speed256					= result_const_status[RESULT_DATA_02_PHASE_SPEED256][i];
-		hd->amplifier_speed256				= t256(1.0);
-		result_sprites[i]->flags			|= (SP_FLAG_VISIBLE);
-		result_sprites[i]->type 			= SP_MENU_TEXT/*SP_MUTEKI*/;
-		result_sprites[i]->x256 			= 0;					//	result_sprites[5]->x		= 0/*30*/;
-		result_sprites[i]->y256 			= 0/*(i*25+110)*/;		//	result_sprites[5]->y		= 0/*50*/;
-		result_sprites[i]->callback_mover	= move_result;
+
+//		result_my_obj[i]->data			= hd;
+		result_my_obj[i].xg256							= result_const_status[RESULT_DATA_00_XG256][i];
+		result_my_obj[i].yg256							= result_const_status[RESULT_DATA_01_YG256][i];
+		result_my_obj[i].phase_speed256 				= result_const_status[RESULT_DATA_02_PHASE_SPEED256][i];
+		result_my_obj[i].amplifier_speed256 			= t256(10.0);//t256(1.0);
+//		result_my_obj[i].flags			|= (SP_FLAG_VISIBLE);
+//		result_my_obj[i].type			= S P_ME NU_TEXT/*S P_M UTEKI*/;
+		result_my_obj[i].x256			= 0;					//	result_my_obj[5]->x 	= 0/*30*/;
+		result_my_obj[i].y256			= 0/*(i*25+110)*/;		//	result_my_obj[5]->y 	= 0/*50*/;
+//		result_my_obj[i].callback_mover = move_result;
 	}
 	for (i=0; i<MAX_7_LINES/*5*/; i++)
 	{
-		hd=(MOVE_FONT_DATA *)result_sprites[i]->data;
-		hd->phase256			= (i<<6);
-		hd->phaseout256 		= ((4-i)<<6);
-		hd->amplifier256		= t256(100/*300*/);
-		hd->direction			= 0;
-		hd->move_done_flag		= 0;
+
+		result_my_obj[i].phase256			= (i<<6);/*(0)*/
+		result_my_obj[i].phaseout256		= ((4-i)<<6);/*(5<<6)*/
+		result_my_obj[i].amplifier256		= t256(100/*300*/);
+		result_my_obj[i].direction			= 0;
+		result_my_obj[i].move_done_flag 	= 0;
 	}
-//	hd=(MOVE_FONT_DATA *)result_sprites[5]->data;
-//	hd->phase256			= (0);
-//	hd->phaseout256 		= (5<<6);
-//	hd->amplifier256		= t256(100/*300*/);
-//	hd->direction			= 0;
-//	hd->move_done_flag		= 0;
-//
 }
 static void result_font_free(void)
 {
 	int i;
 	for (i=0; i<MAX_7_LINES; i++)
 	{
-		result_sprites[i]->type = SP_DELETE;
+//		result_my_obj[i].type = SP_DELETE;
 		#if 1
 		/* ここでハングアップ */
 	//	if (result_surfaces[i])
@@ -238,7 +219,7 @@ static void result_font_free(void)
 ---------------------------------------------------------*/
 
 //static SDL_Surface *back;
-
+//extern int select_player;
 enum
 {
 	RESULT_00_INIT = 0,
@@ -253,52 +234,52 @@ void result_work(void)
 {
 	if ( (ST_WORK_RESULT|RESULT_00_INIT) != (psp_loop) )
 	{
-		psp_pop_screen();	//SDL_BlitSurface(back,NULL,sdl_screen[SDL_00_SCREEN],NULL);
+		psp_pop_screen();	//SDL_BlitSurface(back,NULL,sdl_screen[SDL_00_VIEW_SCREEN],NULL);
 	}
-	switch ((Uint8)(psp_loop&0xff)/*state.substate*/)
+	switch ((u8)(psp_loop&0xff)/*state.substate*/)
 	{
 	case RESULT_00_INIT:
 		//void result_init(void)
-		show_player_num=0;
+		show_player_num = (select_player & 7);/*0*/
 		psp_push_screen();	//back=SDL_ConvertSurface(screen,screen->format,screen->flags);
 		//if (NULL==back)
 		//{
 		//	CHECKPOINT;
 		//	error(ERR_FATAL, "cant create background surface");
 		//}
-		psp_loop++;//newsta te(ST_RESULT,RESULT_01_SET_LOCATION,0);
+		psp_loop++;
 		break;
 	case RESULT_01_SET_LOCATION:
 		{
 			move_done_lines=0;
 			result_font_render();
-			psp_loop++;//newsta te(ST_RESULT,RESULT_02_SLIDE_IN,0);
+			psp_loop++;
 		}
 		break;
 	case RESULT_02_SLIDE_IN:
 		if (move_done_lines==MAX_7_LINES)
 		{
-			psp_loop++;//newsta te(ST_RESULT,RESULT_03_PAD_CHECK,0);
+			psp_loop++;
 		}
 		break;
 	case RESULT_03_PAD_CHECK:
 		if (0==my_pad)/* 今何も押されてなくて */
 		{
 			/* 次の人の戦歴を見る */
-			if (my_pad_alter & (PSP_KEY_SHOT_OK|PSP_KEY_RIGHT|PSP_KEY_LEFT))	/* さっきPSP_KEY_SHOT_OKが押されてた */
+			if (my_pad_alter & (PSP_KEY_RIGHT|PSP_KEY_LEFT|PSP_KEY_UP|PSP_KEY_DOWN))	/* さっきPSP_KEY_SHOT_OKが押されてた */
 			{
 				show_player_num++;								/* 次の人にする */
-			//	if (/*4*/7<show_player_num) {show_player_num=0;} 	/* 最後まで見たら始めから見る */
+			//	if (/*4*/7<show_player_num) {show_player_num=0;}	/* 最後まで見たら始めから見る */
 				show_player_num &= 7;								/* 最後まで見たら始めから見る */
 				more_show=1;	/* また見るよ */
-				psp_loop++;//newsta te(ST_RESULT,RESULT_04_SLIDE_OUT,0);
+				psp_loop++;
 			}
 			/* 見るのやめてメニューに戻る */
 			else
-			if (my_pad_alter & PSP_KEY_BOMB_CANCEL/*PSP_KEY_OPTION*/)		// キャンセルボタンの追加
+			if (my_pad_alter & (PSP_KEY_SHOT_OK|PSP_KEY_BOMB_CANCEL|PSP_KEY_OPTION|PSP_KEY_PAUSE|PSP_KEY_SELECT))
 			{
 				more_show=0;	/* もうおしまい */
-				psp_loop++;//newsta te(ST_RESULT,RESULT_04_SLIDE_OUT,0);
+				psp_loop++;
 			}
 		}
 		break;
@@ -308,12 +289,10 @@ void result_work(void)
 			int i;
 			for (i=0;i<MAX_7_LINES;i++)
 			{
-				MOVE_FONT_DATA *hd;
-				hd=(MOVE_FONT_DATA *)result_sprites[i]->data;
-				hd->direction=1;
-				hd->move_done_flag=0;
+				result_my_obj[i].direction = 1;
+				result_my_obj[i].move_done_flag = 0;
 			}
-			psp_loop++;//newsta te(ST_RESULT,RESULT_05_RETRY_CHECK,0);
+			psp_loop++;
 		}
 		break;
 	case RESULT_05_RETRY_CHECK:
@@ -323,47 +302,34 @@ void result_work(void)
 		//	if (1==more_show)	/* pspは0レジスタがあるので0と比較したほうが速い */
 			if (0!=more_show)	/* また見るよ */
 			{
-				psp_loop=(ST_WORK_RESULT|RESULT_01_SET_LOCATION);//newsta te(ST_RESULT,RESULT_01_SET_LOCATION,0);
+				psp_loop = (ST_WORK_RESULT|RESULT_01_SET_LOCATION);
 			}
 			else	/* if (0==more_show) もうおしまい */
 			{
 			//	SDL_FreeSurface(back);
-			//	newsta te(ST_MENU,0,1);
-				psp_loop=(ST_INIT_MENU|0/*ST_ME NU_SUB_MAIN_MENU*/);//newsta te(ST_MENU/*ST_INTRO*/,0,1);
+				psp_loop = (ST_INIT_MENU|0/*ST_ME NU_SUB_MAIN_MENU*/);
 			}
 		}
 		break;
 	}
-	sprite_work000(SP_GROUP_PAUSE_SP_MENU_TEXT);/*SP_GROUP_ETC*/
-	pause_sprite_display();/*SP_GROUP_ETC*/
-}
-
-
-/*---------------------------------------------------------
-	ハイスコア
----------------------------------------------------------*/
-extern int select_player;
-extern int	now_max_continue;
-int last_score;
-void check_high_score(void)
-{
-//	int my_flag;my_flag=0;
-	if (
-			#if (0==USE_CONTINUED_RANKING)
-			( (/*3*/DEFAULT_MAX_CONTINUE-1) == now_max_continue ) &&
-			#endif
-			(last_score > high_score_table[select_player][4].score)
-		)
+	if ((ST_WORK_RESULT|RESULT_01_SET_LOCATION) < psp_loop)
 	{
-		/* you made it! enter your name in the hiscore-list */
-//		my_flag=1;
-		psp_loop=(ST_INIT_NAME_ENTRY|0);//newsta te(ST_NAME_ENTRY,0,1);
-	}
-	else
-//	if (0==my_flag) 	/* pspは0レジスタがあるので0と比較したほうが速い */
-	{
-		/* you'd better play barbie */
-		psp_loop=(ST_INIT_MENU|0/*ST_ME NU_SUB_MAIN_MENU*/);//newsta te(ST_MENU/*ST_INTRO*/,0,1);
+//	sp rite_work_SDL(SP_GROUP_PAUSE_S P_ME NU_TEXT);/*SP_GROUP_ETC*/
+//	pause_sp rite_display();/*SP_GROUP_ETC*/
+		{
+			move_result();
+		}
+		/* 描画 */
+		{			/*static*/ SDL_Rect rect_locate_offset; 	/* 表示位置 */
+			int i;
+			for (i=0; i<MAX_7_LINES; i++)
+			{
+				rect_locate_offset.x = ((result_my_obj[i].x256)>>8);
+				rect_locate_offset.y = ((result_my_obj[i].y256)>>8);
+				SDL_SetAlpha(	result_surfaces[i], SDL_SRCALPHA, /*bg_alpha_aaa*/(255));
+				SDL_BlitSurface(result_surfaces[i], NULL,sdl_screen[SDL_00_VIEW_SCREEN],&rect_locate_offset);
+			}
+		}
 	}
 }
 
@@ -371,16 +337,23 @@ void check_high_score(void)
 	ハイスコア名前入力画面
 ---------------------------------------------------------*/
 
+/*global*/int last_score;
+
+
 static char *entry;
 
-#define MAX_40_LETTER	(40)
+#define KEYBOARD_W10	(16)
+#define KEYBOARD_H04	(5)
+#define KEYBOARD_M40	((KEYBOARD_W10)*(KEYBOARD_H04))
+
+#define MAX_40_LETTER	(KEYBOARD_M40)
 static SDL_Surface *letter_surface[MAX_40_LETTER];
 
 typedef struct
 {
 	int xpos;
 	int ypos;
-	int scale256;
+	int dummy_scale256;
 	char ascii;
 } LETTER;
 static LETTER letter[MAX_40_LETTER];
@@ -392,74 +365,67 @@ static int now_select_name_chr;
 static int plate_x;
 static int plate_y;
 
-static int sel;
+static /*un*/signed int sel_aaa;
 
 enum
 {
 	NAME_ENTRY_00_INIT = 0,
-//	NAME_ENTRY_01_SLIDE_IN,
-//	NAME_ENTRY_02_SLIDE_OUT,
 	NAME_ENTRY_03_ENTRY,
-	NAME_ENTRY_04_QUIT,
 };
-	/*
-	unsigned char c;
-	for (c='A';c<='Z';c++) {	tmp_str[0] = c; 	letter[i].ascii= c; 	letter_surface[i++]=font_render(tmp_str,FONT02);	}	// 0-25
-	for (c='0';c<='9';c++) {	tmp_str[0] = c; 	letter[i].ascii= c; 	letter_surface[i++]=font_render(tmp_str,FONT02);	}	// 26-36
-													letter[i].ascii='.';	letter_surface[i++]=font_render(".",FONT02);			// 37
-													letter[i].ascii='-';	letter_surface[i++]=font_render("-",FONT02);			// 38
-													letter[i].ascii= -1;	letter_surface[i++]=font_render("DEL",FONT02);			// 39
-													letter[i].ascii= -2;	letter_surface[i++]=font_render("OK",FONT02);			// 40
-	for (i=0;i<40;i++) {
-		SDL_SetColorKey(letter[i].surface,SDL_SRCCOLORKEY,0x00000000);
-		letter[i].xpos=(i%10)*25+30;
-		letter[i].ypos=(i/10)*25+100;
-	}
-	*/
 
 /* ランキング表示y */
-#define RANK_LOCATE_X_48	(40)
-#define RANK_LOCATE_OFS_X_24	(24)
+#define RANK_LOCATE_X_48		(40)
+#define RANK_LOCATE_OFS_X_08	(8)/*24*/
 
-void name_entry_init(void)
+static void name_entry_init(void)
 {
-	int i/*=0*/;
+	int i;
 	int j;
 	/* キーボード(の文字)の初期化 */
-//	char tmp_str[/*128*/32/*100*/];
-	char tmp_str[64];
+	char tmp_str[96];/*64*/ /* 96 == 3 x [32] */
 	tmp_str[1] = '\0';/* 0 == EOS 文字列の終わり / End of String */
-	for (i=0; i<(40-2); )
+	for (i=0; i<(KEYBOARD_M40-2); )
 	{
 		const char *str_aaa = /* 8*5==40==38(chars)+1(dummy)+1(0) */
-		{ "ABCDEFG123" "HIJKLMN456" "OPQRSTU789" "VWXYZ.-0" /*.align*/" " };
-		unsigned char c /*= 'A'*/;
+	//	{ "ABCDEFG123" "HIJKLMN456" "OPQRSTU789" "VWXYZ.-0" /*.align*/" " };
+		{
+			/* 現在定義されているフォントが少ない為 */
+			"ABCDEFGHIJKLMNOP"
+			"QRSTUVWXYZ..:://"	/* 注意:スコア記録形式を変えるまで ','文字は使えない。 */
+			"ABCDEFGHIJKLMNOP"
+			"QRSTUVWXYZ--//--"
+			"0123456789[]!?" /*.align*/"  "
+		};
+		unsigned char c;
 		c = str_aaa[i];
 		tmp_str[0] = c;
 		letter[i].ascii = c; letter_surface[i] = font_render(tmp_str, FONT03/*FONT02*/); /* */
 		i++;
 	}
-	letter[i].ascii= MY_CODE_DEL_KEY;	letter_surface[i++] = font_render(/*"DEL"*/"/",FONT03/*FONT02*/); /* 39 */
-	letter[i].ascii= MY_CODE_OK_KEY;	letter_surface[i++] = font_render(/*"OK"*/"!", FONT03/*FONT02*/); /* 40 */
+	letter[i].ascii = MY_CODE_DEL_KEY;	letter_surface[i++] = font_render(/*"DEL"*/"/",FONT03/*FONT02*/); /* 39 */
+	letter[i].ascii = MY_CODE_OK_KEY;	letter_surface[i++] = font_render(/*"OK"*/"!", FONT03/*FONT02*/); /* 40 */
 	{
 		int k;
 		k = 0;
-		for (j=0; j<(4*20)/*(4*36)*/; j += (20)/*(36)*/ /*25*/)
+		for (j=0; j<(KEYBOARD_H04*20);/*(4*36)*/ j+=(20))	 /*(36)*/ /*25*/
 		{
-			for (i=0; i<(10*20)/*(10*30)*/; i += (20)/*(30)*/ /*25*/)
+			for (i=0; i<(KEYBOARD_W10*20);/*(10*30)*/ i+=(20))/*(30)*/ /*25*/
 			{
-				SDL_SetColorKey(letter_surface[k],SDL_SRCCOLORKEY,0x00000000);
-				letter[k].xpos = (i) + (32)/*48*/ /* 30*/;
-				letter[k].ypos = (j) + (160)/*84*/ /*100*/;
+				#if 0/* Gu側と合成できる訳はないので、現状合っても無くても結果はほぼ同じ。 */
+				/* ここを有効にした場合、よく見ると文字文字同士の SDL-SDL 合成は出来てる。 */
+				SDL_SetColorKey(letter_surface[k],(SDL_SRCCOLORKEY),0x00000000);	/* 現状 SDL合成だが、やめてみるてすと。 */
+				#endif
+				letter[k].xpos = (i) + (16);	/*32*/		/*48*/ /* 30*/
+				letter[k].ypos = (j) + (168);	/*160*/ 	/*84*/ /*100*/
 				k++;
 			}
 		}
 	}
 	/* キーボード(の文字)の拡大率を初期化 */
-	for (i=0; i<40; i++)
-	{
-		letter[i].scale256=t256(1.0/*0.0*/);
-	}
+//	for (i=0; i<KEYBOARD_M40; i++)
+//	{
+//		letter[i].scale256 = t256(1.0);/*0.0*/
+//	}
 	/* 新たにランクインしたスコア位置を調べる */
 	for (i=0; i<5; i++)
 	{
@@ -476,44 +442,44 @@ void name_entry_init(void)
 		high_score_table[select_player][j] = high_score_table[select_player][j-1];
 	}
 	/* 新たにランクインしたスコア位置へ挿入 */
-	high_score_table[select_player][my_rank].score = last_score;
+	high_score_table[select_player][my_rank].score			= last_score;
+	high_score_table[select_player][my_rank].final_stage	= player_now_stage;/**/
+
 //
-	entry=high_score_table[select_player][my_rank].name;
+	entry = high_score_table[select_player][my_rank].name;
 	entry[0] = ' ';
 	entry[1] = ' ';
 	entry[2] = ' ';
-	entry[3] = 0;
-	now_select_name_chr=0;
-//	switch (my_rank)
-//	{
-//	case 0: 	sp rintf(tmp_str,"NEW HISCORE");						break;
-//	default:	sp rintf(tmp_str,"PLACE %d IN THE LIST",my_rank+1); 	break;
-//	}
-//	char *aaaa[5] =
-//	{
-//		"1"/*"ST"*/ /*"NEW HISCORE"*/,
-//		"2"/*"ND"*/ /*"PLACE 2 IN THE LIST"*/,
-//		"3"/*"RD"*/ /*"PLACE 3 IN THE LIST"*/,
-//		"4"/*"TH"*/ /*"PLACE 4 IN THE LIST"*/,
-//		"5"/*"TH"*/ /*"PLACE 5 IN THE LIST"*/,
-//	};
+	entry[3] = ' ';
+//
+	entry[4] = ' ';
+	entry[5] = ' ';
+	entry[6] = ' ';
+	entry[7] = ' ';
+	entry[8] = 0;
+	now_select_name_chr = 0;
+
 	/* ｎ位タイトル描画 */
 	{
 		for (j=0; j<5; j++)
 		{// /*static*/ SDL_Surface *headline;
 		//	result_surfaces[j]		= font_render(/*tmp_str*/(&aaaa[my_rank][0]),FONT03);
 			{// char ttmp[64/*50*/];
-				sprintf(tmp_str,"%1d %-3s %09d0",j+1,high_score_table[(select_player)][j].name,high_score_table[(select_player)][j].score);
+				sprintf(tmp_str,
+					"%1d %-8s %09d0",
+					(j+1),
+					high_score_table[(select_player)][j].name,
+					high_score_table[(select_player)][j].score);
 				result_surfaces[j]		= font_render(tmp_str, (my_rank==j)?(FONT03/*白*/):(FONT05/*紅(黄)*/) );
 			}
 			SDL_Rect r;
 		//	r.x = (GAME_WIDTH/2)-((result_surfaces[j]->w)>>1);
 		//	r.y = (40);
-			r.x = (RANK_LOCATE_OFS_X_24);
+			r.x = (RANK_LOCATE_OFS_X_08);
 			r.y = (RANK_LOCATE_X_48)+(j*20);
 			r.w = result_surfaces[j]->w;
 			r.h = result_surfaces[j]->h;
-			SDL_BlitSurface(result_surfaces[j], NULL, sdl_screen[SDL_00_SCREEN], &r);
+			SDL_BlitSurface(result_surfaces[j], NULL, sdl_screen[SDL_00_VIEW_SCREEN], &r);
 			SDL_FreeSurface(result_surfaces[j]);
 		}
 	}
@@ -525,18 +491,18 @@ void name_entry_init(void)
 		SDL_Rect r;
 	//	plate_x = r.x = (GAME_WIDTH/2)-((plate->w)>>1);
 	//	plate_y = r.y = (GAME_HEIGHT-12)-(plate->h);
-		plate_x = r.x = (RANK_LOCATE_OFS_X_24+32);
+		plate_x = r.x = (RANK_LOCATE_OFS_X_08+32);
 		plate_y = r.y = (RANK_LOCATE_X_48)+(my_rank*20);
 		r.w = plate->w;
 		r.h = plate->h;
-		SDL_BlitSurface(plate,NULL,sdl_screen[SDL_00_SCREEN],&r);
+		SDL_BlitSurface(plate,NULL,sdl_screen[SDL_00_VIEW_SCREEN],&r);
 		if (plate)
 		{
 			unloadbmp_by_surface(plate);/*unload_bmp_by_name("panel/name_plate.png");*/
 		}
 	}
 	#else
-	plate_x = (RANK_LOCATE_OFS_X_24+32);
+	plate_x = (RANK_LOCATE_OFS_X_08+32);
 	plate_y = (RANK_LOCATE_X_48)+(my_rank*20);
 	#endif
 	psp_push_screen();	//back=SDL_ConvertSurface(screen,screen->format,screen->flags);
@@ -545,10 +511,11 @@ void name_entry_init(void)
 	//	CHECKPOINT;
 	//	error(ERR_FATAL, "cant create background surface");
 	//}
-//	sel=-1;
-	sel = 0;
-	psp_loop=(ST_WORK_NAME_ENTRY|NAME_ENTRY_03_ENTRY/*NAME_ENTRY_01_SLIDE_IN*/);//newsta te(ST_NAME_ENTRY,H CLISTE_ENTRY,0);
+//	sel_aaa = -1;
+	sel_aaa = 0;
+	psp_loop++;// = (ST_WORK_NAME_ENTRY|NAME_ENTRY_03_ENTRY);
 }
+
 
 /*---------------------------------------------------------
 	ハイスコア名前入力画面、動作(の子関数)[表示部分]
@@ -560,75 +527,49 @@ static void name_entry_draw(void)
 //
 	SDL_Rect s;
 	SDL_Rect r;
-	s.x=0;
-	s.y=0;
-	// 文字を描画
+	s.x = 0;
+	s.y = 0;
+	/* キーボード文字を描画 */
 	{
 		int i;
-		for (i=0; i<40; i++)
+		for (i=0; i<KEYBOARD_M40; i++)
 		{
-			if (i != sel)
+			int sw; sw	= (letter_surface[i]->w); s.w	= (/*letter_surface[i]->w*/sw); 		r.w 	= ((/*s.w*/sw));
+			int sh; sh	= (letter_surface[i]->h); s.h	= (/*letter_surface[i]->h*/sh); 		r.h 	= ((/*s.h*/sh));
+			r.x = (letter[i].xpos);//-(((s.w)*letter[i].scale256)>>(8+3));/*(8+1)*/
+			r.y = (letter[i].ypos);//-(((s.h)*letter[i].scale256)>>(8+3));/*(8+1)*/
+
+			if (i == sel_aaa)/* 選択中文字==キーボード文字 */
 			{
-				s.w = letter_surface[i]->w;
-				s.h = letter_surface[i]->h;
-//				r.x = letter[i].xpos-((letter_surface[i]->w*letter[i].scale256)>>(8+1));
-//				r.y = letter[i].ypos-((letter_surface[i]->h*letter[i].scale256)>>(8+1));
-				r.x = letter[i].xpos-((letter_surface[i]->w*letter[i].scale256)>>(8+3));
-				r.y = letter[i].ypos-((letter_surface[i]->h*letter[i].scale256)>>(8+3));
-//				r.w = ((s.w*letter[i].scale256)>>8);
-//				r.h = ((s.h*letter[i].scale256)>>8);
-				r.w = ((s.w));
-				r.h = ((s.h));
-				/*blit_scaled*/SDL_BlitSurface(letter_surface[i],&s,sdl_screen[SDL_00_SCREEN],&r);
-//				if (sel >= 0)	{	if (letter[i].scale256 > t256(1.0)) {	letter[i].scale256 -= t256(0.05);}}
-				if (sel >= 0)	{	if (letter[i].scale256 > t256(1.0)) {	letter[i].scale256 -= t256(0.05);}}
+//				letter[i].scale256 = t256(1.6);
+				{
+					static int angle512/*=0*/;
+					angle512 += deg_360_to_512CCW(360-(5)/*15*/);/*fps_factor*/ 	/* CCWの場合 */
+					mask512(angle512);//	if (angle>360)	{	angle-=360;}
+					r.x 	+= ((sin512((angle512)))>>5);/*xa*/
+					r.y 	+= ((sin512((angle512)))>>6);/*ya*/ /*xa>>1*/
+				}
 			}
-			else
-			{
-//				if (sel >= 0)	{	if (letter[i].scale256 <= t256(3.0))	{	letter[i].scale256 += t256(0.2);}}
-				if (sel >= 0)	{	if (letter[i].scale256 <= t256(1.6))	{	letter[i].scale256 += t256(0.2);}}
-			}
+//			else/* 選択中文字 != キーボード文字 */
+//			{
+//				letter[i].scale256 = t256(1.0);
+//			}
+			/* 描画 */
+			/*blit_scaled*/SDL_BlitSurface(letter_surface[i],&s,sdl_screen[SDL_00_VIEW_SCREEN],&r);
 		}
 	}
-	//
-	if (sel >= 0)
-	{
-		static int angle512/*=0*/;
-		int xa;
-	//	int ya;
-#if 0
-/* CWの場合 */
-		angle512 += deg_360_to_512((5)/*15*/)/**fps_fa ctor*/;
-#else
-/* CCWの場合 */
-		angle512 += deg_360_to_512CCW(360-(5)/*15*/)/**fps_fa ctor*/;
-#endif
-		mask512(angle512);//	if (angle>360)	{	angle-=360;}
-		xa		= ((/*cos512*/sin512((angle512)))>>(8-3));
-	//	xa		= ((/*cos512*/sin512((angle512))*10)>>8);
-	//	ya		= ((sin512((angle512))*10)>>8);
-		int sw; sw	= (letter_surface[sel]->w); s.w 	= (/*letter_surface[sel]->w*/sw);
-		int sh; sh	= (letter_surface[sel]->h); s.h 	= (/*letter_surface[sel]->h*/sh);
-//		r.w 	= ((/*s.w*/sw*(letter[sel].scale256))>>8);
-//		r.h 	= ((/*s.h*/sh*(letter[sel].scale256))>>8);
-		r.w 	= ((/*s.w*/sw));
-		r.h 	= ((/*s.h*/sh));
-		r.x 	= (letter[sel].xpos)-(((/*letter[sel].surface->w*/sw)*(letter[sel].scale256))>>(8+1))+((sin512((angle512)))>>5/*xa*/);
-		r.y 	= (letter[sel].ypos)-(((/*letter[sel].surface->h*/sh)*(letter[sel].scale256))>>(8+1))+((sin512((angle512)))>>6/*xa>>1*/)/*ya*/;
-		/*blit_scaled*/SDL_BlitSurface(letter_surface[sel],&s,sdl_screen[SDL_00_SCREEN],&r);
-	}
+	/* 決定文字を描画 */
+/*	if (0 <= sel_aaa)*/
 	{
 		SDL_Surface *e;
 		e		= font_render(entry,FONT03/*FONT02*/);
-		s.x 	= 0;
-		s.y 	= 0;
-		s.w 	= e->w;
-		s.h 	= e->h;
-		r.x 	= plate_x /*+ 5*/;
-		r.y 	= plate_y /*+ 5*/;
-		r.w 	= e->w/**2*/;
-		r.h 	= e->h/**2*/;
-		/*blit_scaled*/SDL_BlitSurface(e,&s,sdl_screen[SDL_00_SCREEN],&r);
+	//	s.x 	= 0;
+	//	s.y 	= 0;
+		s.w 	= e->w; 	r.w 	= e->w;/**2*/
+		s.h 	= e->h; 	r.h 	= e->h;/**2*/
+		r.x 	= plate_x; /*+ 5*/
+		r.y 	= plate_y; /*+ 5*/
+		/*blit_scaled*/SDL_BlitSurface(e,&s,sdl_screen[SDL_00_VIEW_SCREEN],&r);
 		SDL_FreeSurface(e);
 	}
 }
@@ -639,31 +580,26 @@ static void name_entry_draw(void)
 
 void name_entry_work(void)
 {
-	int i;
-	switch (psp_loop)
+	if ((ST_WORK_NAME_ENTRY|0)==psp_loop)
 	{
-//	case (ST_WORK_NAME_ENTRY|NAME_ENTRY_01_SLIDE_IN):/*開始時(その１)にキーボードを拡大する*/
-//		for (i=0; i<40; i++)	{	letter[i].scale256 += t256(0.1);	}
-//		if (letter[0].scale256 >= t256(3)) {	psp_loop++; 			}
-//		break;
-//	case (ST_WORK_NAME_ENTRY|NAME_ENTRY_02_SLIDE_OUT):/*開始時(その２)にキーボードを縮小する*/
-//		for (i=0; i<40; i++)	{	letter[i].scale256 -= t256(0.1);	}
-//		if (letter[0].scale256 <= t256(1)) {	psp_loop++; sel = 0;	}
-//		letter[0].scale256 = t256(1);
-//		{	psp_loop++; sel = 0;	}
-//		break;
-	case (ST_WORK_NAME_ENTRY|NAME_ENTRY_03_ENTRY):/* */
+		name_entry_init();
+	}
+	else
+	//if ((ST_WORK_NAME_ENTRY|NAME_ENTRY_03_ENTRY)==psp_loop)
+	{
 		if (0 == my_pad)/* 今何も押されてなくて */
 		{
 			/* 斜め移動はしない */
-				 if (my_pad_alter & PSP_KEY_LEFT )	{		sel--;		if (sel<0)		sel=39; 	}
-			else if (my_pad_alter & PSP_KEY_RIGHT)	{		sel++;		if (sel==40)	sel=0;		}
-			else if (my_pad_alter & PSP_KEY_UP	 )	{		sel-=10;	if (sel<0)		sel+=40;	}
-			else if (my_pad_alter & PSP_KEY_DOWN )	{		sel+=10;	if (sel>39) 	sel-=40;	}
+				 if (my_pad_alter & PSP_KEY_LEFT )	{	sel_aaa--;				if (sel_aaa <  (0)) 				sel_aaa  = (KEYBOARD_M40-1);	}
+			else if (my_pad_alter & PSP_KEY_RIGHT)	{	sel_aaa++;				if (sel_aaa == (KEYBOARD_M40))		sel_aaa  = (0); 				}
+			else if (my_pad_alter & PSP_KEY_UP	 )	{	sel_aaa-=KEYBOARD_W10;	if (sel_aaa <  (0)) 				sel_aaa += (KEYBOARD_M40);		}
+			else if (my_pad_alter & PSP_KEY_DOWN )	{	sel_aaa+=KEYBOARD_W10;	if (sel_aaa >  (KEYBOARD_M40-1))	sel_aaa -= (KEYBOARD_M40);		}
+			//
+
 			//
 			if (my_pad_alter & PSP_KEY_SHOT_OK) 	/* 入力決定 == (さっき)入力決定ボタンが押されてた。 */
 			{
-				switch (letter[sel].ascii)
+				switch (letter[sel_aaa].ascii)
 				{
 				case MY_CODE_DEL_KEY: /* [削除キー](DEL)を決定した場合。 Delete last character */
 					goto delete_last_character;
@@ -672,14 +608,14 @@ void name_entry_work(void)
 					goto agree_entry;
 					break;
 				default:
-					if (now_select_name_chr < 3) /* 3文字以下決定した場合は文字入力。  3 chrs, name input entry. */
+					if (now_select_name_chr < 8) /* 8[3]文字以下決定した場合は文字入力。  3 chrs, name input entry. */
 					{
-						entry[now_select_name_chr] = letter[sel].ascii;
+						entry[now_select_name_chr] = letter[sel_aaa].ascii;
 						now_select_name_chr++;
 					}
-					else /* 3文字以上の決定した場合は自動的に入力終了キーを押したことにする。 */
+					else /* 8[3]文字以上の決定した場合は自動的に入力終了キーを押したことにする。 */
 					{
-						sel = 39;/* [入力終了キー](OK)を押したのと同じ。 force set [OK] */
+						sel_aaa = (KEYBOARD_M40-1);/* [入力終了キー](OK)を押したのと同じ。 force set [OK] */
 					}
 					break;
 				}
@@ -699,26 +635,27 @@ void name_entry_work(void)
 			//	if (str cmp(entry,"   "))		// 名前入力の入力文字がある場合で。何か入力されている場合で。(str cmpは==だと0を返す)
 				if (0 < now_select_name_chr)	// 名前入力の入力文字がある場合で。何か入力されている場合で。(str cmpは==だと0を返す)
 				{
+					#if 0
 					/* キーボードの文字を開放する */
-					for (i=0; i<40; i++)
-					{
-						#if 0
-					//	if (letter_surface[i])
+					{	int i;
+						for (i=0; i<KEYBOARD_M40; i++)
 						{
-							/* ここでハングアップ */
-							SDL_FreeSurface(letter_surface[i]);
+							#if 0
+						//	if (letter_surface[i])
+							{
+								/* ここでハングアップ */
+								SDL_FreeSurface(letter_surface[i]);
+							}
+							#endif
 						}
-						#endif
 					}
 				//	SDL_FreeSurface(back);
-					psp_loop=(ST_INIT_MENU|0/*ST_ME NU_SUB_MAIN_MENU*/);//newsta te(ST_MENU/*ST_INTRO*/,0,1);
+					#endif
+					psp_loop = (ST_INIT_MENU|0/*ST_ME NU_SUB_MAIN_MENU*/);
 					return;
 				}
 			}
 		}
-		break;
-//	case (ST_WORK_NAME_ENTRY|NAME_ENTRY_04_QUIT):/* */
-//		break;
+		name_entry_draw();/*描画部分*/
 	}
-	name_entry_draw();/*描画部分*/
 }
