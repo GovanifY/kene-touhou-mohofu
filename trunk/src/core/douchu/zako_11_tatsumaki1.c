@@ -2,9 +2,11 @@
 #include "douchu.h"
 
 /*---------------------------------------------------------
+	東方模倣風  ～ Toho Imitation Style.
+	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	-------------------------------------------------------
 		"竜巻1",		"PROBALL",
 	-------------------------------------------------------
-	バグあり？？？
 	-------------------------------------------------------
 →	↓	 ←
 ↑. ↓	/↑
@@ -13,11 +15,18 @@
 ←←++→→
    /  .
 ---------------------------------------------------------*/
+#if 0/* めも */
+/* ボス共通規格 */
+	#define target_x256 		user_data00 	/* 目標x座標 */
+	#define target_y256 		user_data01 	/* 目標y座標 */
+	#define vvv256				user_data02 	/* 目標座標への到達割合 */
+	#define time_out			user_data03 	/* 制限時間 */
+#endif
 
-#define state			user_data02 	/* 状態 */
-#define speed256		user_data03 	/* 速度 */
-#define kaiten_houkou	user_data04 	/* 回転方向 */
-#define px256			user_data05 	/* 仮想x位置(反転用) */
+#define state			user_data04 	/* 状態 */
+#define speed256		user_data05 	/* 速度 */
+#define kaiten_houkou	user_data06 	/* 回転方向 */
+#define px256			user_data07 	/* 仮想x位置(反転用) */
 
 
 /*---------------------------------------------------------
@@ -70,7 +79,7 @@ static void move_tatsumaki1(SPRITE *src)
 		break;
 	case SS02:/* 下へ移動 */
 		src->y256 += t256(1.25);/*fps_factor*/
-		gamen_gai_nara_osimai(src);/* 画面外ならおしまい */
+		gamen_gai_nara_zako_osimai(src);/* 画面外ならおしまい */
 		break;
 	}
 	src->px256 -= (src->speed256);/*fps_factor*/
@@ -80,9 +89,9 @@ static void move_tatsumaki1(SPRITE *src)
 	}
 //
 	if (0 == src->kaiten_houkou)
-			{	src->m_angleCCW512 += 5;	src->x256	= (src->px256); 	}
-	else	{	src->m_angleCCW512 -= 5;	src->x256	= t256(GAME_WIDTH)-(src->px256); }
-	mask512(src->m_angleCCW512);
+			{	src->m_angleCCW1024 += 10;	src->x256	= (src->px256); 	}
+	else	{	src->m_angleCCW1024 -= 10;	src->x256	= t256(GAME_WIDTH)-(src->px256); }
+	mask1024(src->m_angleCCW1024);
 }
 
 
@@ -90,38 +99,30 @@ static void move_tatsumaki1(SPRITE *src)
 	敵を追加する
 ---------------------------------------------------------*/
 
-void add_zako_tatsumaki1(STAGE_DATA *l)
+global void add_zako_tatsumaki1(STAGE_DATA *l)
 {
 	SPRITE *h;
-	h						= sprite_add_gu(ZAKO_TYPE_ATARI16_PNG);
-	h->type 				= TEKI_62_TATSUMAKI;
-	add_zako_common(l, h);
-	h->callback_mover		= move_tatsumaki1;
-//	h->callback_loser		= lose_tatsumaki1;
-//	h->callback_hit_enemy	= callback_hit_zako;
-//	h->m_angleCCW512		= ((i&(16-1))<<5);
-//
-	h->state 			= SS00;
-	h->speed256			= t256(1.2);/* t256(2.0)速すぎ */	/*3+difficulty+lv/3*/
-	h->px256 			= /*0*/t256(GAME_WIDTH-10)/*t256(GAME_WIDTH/2)-((s->w128))*/;
-	/* 画面右側の場合、左方向へ進む */
-	if ( t256((GAME_WIDTH)/2) < h->x256)
+	h							= sprite_add_gu_error();
+	if (NULL!=h)/* 登録できた場合のみ */
 	{
-		h->kaiten_houkou 	= 1;//(i&1);/*(0==i%2)?(0):(1)*/
-		//	/*左方向*/
-	}
-	else
-	{
-		h->kaiten_houkou 	= 0;//(i&1);/*(0==i%2)?(0):(1)*/
+		add_zako_common(l, h);
+		h->m_Hit256R			= ZAKO_ATARI16_PNG;
+		h->type 				= TEKI_62_TATSUMAKI;
+		h->callback_mover		= move_tatsumaki1;
+	//	h->callback_loser		= lose_tatsumaki1;/*old*/
+	//	h->m_angleCCW1024		= ((i&(16-1))<<6);
+	//
+		h->state				= SS00;
+		h->speed256 			= t256(1.2);/* t256(2.0)速すぎ */	/*3+difficulty+lv/3*/
+		h->px256				= t256(GAME_WIDTH-10);	/*0*/	/*t256(GAME_WIDTH/2)-((s->w128))*/
+		/* 画面右側の場合、左方向へ進む */
+		if ( t256((GAME_WIDTH)/2) < h->x256)
+		{
+			h->kaiten_houkou	= (1);	/*左方向*/
+		}
+		else
+		{
+			h->kaiten_houkou	= (0);
+		}
 	}
 }
-
-//	h->y256 				= -(((i+1)*(t256(24)/*s->h128+s->h128*/)));
-//	/*h->base.*/h->base_score		= score(10*2);
-//	/*h->base.*/h->base_hp		= (8*(4*8))+(1/*di fficulty*/<<(2+3));/*やわらかすぎ*/	/*(2+(di fficulty<<2))*/
-//	h->enemy_rank 			= enemy_rank;
-
-//#undef N UM_OF_ENEMIES
-//	int enemy_rank;	enemy_rank	= l->user_y;
-//
-//	destoroy = 0;

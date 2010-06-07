@@ -2,15 +2,24 @@
 #include "douchu.h"
 
 /*---------------------------------------------------------
+	東方模倣風  ～ Toho Imitation Style.
+	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	-------------------------------------------------------
 		"囲妖怪1",		"CUBE",
 	-------------------------------------------------------
 
 ---------------------------------------------------------*/
+#if 0/* めも */
+/* ボス共通規格 */
+	#define target_x256 		user_data00 	/* 目標x座標 */
+	#define target_y256 		user_data01 	/* 目標y座標 */
+	#define vvv256				user_data02 	/* 目標座標への到達割合 */
+	#define time_out			user_data03 	/* 制限時間 */
+#endif
 
-#define radius256		user_data00
-#define angle512		user_data01
-#define time_out		user_data02
-
+#define time_out		user_data03
+#define angle1024		user_data04
+#define radius256		user_data05
 
 /*---------------------------------------------------------
 	敵移動
@@ -26,14 +35,23 @@ static void move_kakomi1(SPRITE *src)
 		}
 		if (0==(ra_nd()&(512-1)))	/* 1/512 ← 1/500 の確率で弾打つ */ 			/*%500*/
 		{
-			bullet_create_aka_maru_jikinerai(src, t256(1.0));
+			obj_send1->x256 					= src->x256;
+			obj_send1->y256 					= src->y256;
+			br.BULLET_REGIST_speed256			= t256(1.0);				/* 弾速 */
+		//	br.BULLET_REGIST_speed256			= speed256; 				/* 弾速 */
+			br.BULLET_REGIST_angle1024			= ANGLE_JIKI_NERAI_DAN; 	/* 自機狙い弾 */	/* 発射中心角度 / 特殊機能(自機狙い/他) */
+		//	br.BULLET_REGIST_div_angle1024		= (0);						/* ダミー角度(未使用) */
+			br.BULLET_REGIST_bullet_obj_type	= BULLET_MARU8_00_AKA;		/* [赤弾] */ /* 弾グラ */
+			br.BULLET_REGIST_n_way				= (1);						/* [1way] */
+			br.BULLET_REGIST_regist_type		= REGIST_TYPE_00_MULTI_VECTOR;
+			bullet_regist_vector();
 		}
 		if (0==(ra_nd()&(512-1)))	/* 1/512 ← 1/600 の確率確率でアイテム出す */	/*%600*/
 		{
 			item_create(src, SP_ITEM_00_P001, 1, ITEM_MOVE_FLAG_06_RAND_XY);
 		}
-		src->angle512--;	/*fps_factor*/	/*deg_360_to_512(3)*/	/*2*/	/* deg_360_to_512(3) 速すぎる */
-		mask512(src->angle512); //if (src->angle360<0)	{	src->angle360+=360;}
+		src->angle1024 -= (2);		/*fps_factor*/	/*2*/	/* deg_360_to_512(3) 速すぎる */
+		mask1024(src->angle1024);
 	}
 	else
 	{
@@ -45,24 +63,45 @@ static void move_kakomi1(SPRITE *src)
 	}
 	if (SP_DELETE != src->type)
 	{
-		src->type			= TEKI_54_CHOU1+((src->time_out&0x10)>>4);	/* アニメーション */
+		src->type			= TEKI_54_CHOU1+((src->time_out&0x10)>>4);				/* アニメーション */
 	}
-
-/* CCWの場合 */
-	src->x256=((sin512((src->angle512))*(src->radius256))>>8)+t256(GAME_WIDTH/2);
-	src->y256=((cos512((src->angle512))*(src->radius256))>>8)+t256(GAME_HEIGHT/2);
+	src->x256	= ((sin1024((src->angle1024))*(src->radius256))>>8)+t256(GAME_WIDTH/2); /* CCWの場合 */
+	src->y256	= ((cos1024((src->angle1024))*(src->radius256))>>8)+t256(GAME_HEIGHT/2);
 }
 
 /*---------------------------------------------------------
 	敵を追加する
 ---------------------------------------------------------*/
 
-void add_zako_kakomi1(STAGE_DATA *l)
+global void add_zako_kakomi1(STAGE_DATA *l)
 {
-//	int enemy_rank; 	enemy_rank	= l->user_y;	/* 設定ファイルからの敵の強さ */
+	SPRITE *h;
+	h								= sprite_add_gu_error();
+	if (NULL!=h)
+	{
+		add_zako_common(l, h);
+		h->m_Hit256R				= ZAKO_ATARI16_PNG;
+		h->type 					= TEKI_54_CHOU1;
+		h->callback_mover			= move_kakomi1;
+		h->callback_hit_enemy		= callback_hit_zako;
+		//
+		h->radius256				= t256(350);
+		#if 1
+		/* r30互換 */
+		h->angle1024				= (l->user_x + l->user_x);/*(i<<5)*/	//	/*360*/(1024/16)*i;
+		#else
+		/* r31 */
+		h->angle1024				= (l->user_x);/*(i<<5)*/	//	/*360*/(1024/16)*i;
+		#endif
+		h->time_out 				= (295);
+	}
+}
+//		/*h->base.*/h->base_hp		= (8*30)+/*enemy_rank+*/(1/*di fficulty*/<<(2+3));	/*1+lv+(di fficulty<<2)*/
+//		/*h->base.*/h->base_score	= score(15*2)*(1+2/*enemy_rank*/);
+
 /*
 ;[16分割]
-  0,  32,  64,  96,
+  0,  32,  64,	96,
 128, 160, 192, 224,
 256, 288, 320, 352,
 384, 416, 448, 480,
@@ -82,19 +121,3 @@ void add_zako_kakomi1(STAGE_DATA *l)
 432, 440, -8
 472, 480, -8
 */
-	{
-		SPRITE *h;
-		h							= sprite_add_gu(ZAKO_TYPE_ATARI16_PNG);
-		h->type 					= TEKI_54_CHOU1;
-		h->flags					|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK|SP_FLAG_TIME_OVER);
-		h->callback_mover			= move_kakomi1;
-		h->callback_hit_enemy		= callback_hit_zako;
-//
-		/*h->base.*/h->base_score	= score(15*2)*(1+2/*enemy_rank*/);
-		/*h->base.*/h->base_hp		= (8*30)+/*enemy_rank+*/(1/*di fficulty*/<<(2+3));	/*1+lv+(di fficulty<<2)*/
-		h->radius256				= t256(350);
-		h->angle512 				= (l->user_x);/*(i<<5)*/	//	/*360*/(512/16)*i;
-		h->time_out 				= (295);
-	}
-}
-

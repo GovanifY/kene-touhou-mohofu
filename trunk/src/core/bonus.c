@@ -1,12 +1,12 @@
 
-
-
 /*---------------------------------------------------------
+	東方模倣風  ～ Toho Imitation Style.
+	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	-------------------------------------------------------
 	アイテム関連
 ---------------------------------------------------------*/
 
 #include "game_main.h"
-#include "bonus.h"
 
 /*---------------------------------------------------------
 	アイテムの移動
@@ -17,74 +17,46 @@
 //{
 #define ITEM_DATA_true_y256 	user_data00 	/* 本来のy座標 */
 #define ITEM_DATA_y_sum256		user_data01 	/* アイテム投げ出し用 y軸 積算値(y軸、上方がマイナス) */
-#define ITEM_DATA_angle512		user_data02
+#define ITEM_DATA_angle1024 	user_data02
 #define ITEM_DATA_flags00		user_data03 	/* 収集フラグ	[***090116	変更 */
 /*	自動収集 */
-#define ITEM_DATA_flag_first	user_data04 	/* firstフラグ */
+#define ITEM_DATA_time_in		user_data04 	/* 出現時間 */
 #define ITEM_DATA_x_sa256		user_data05 	/* 差分 x */
 #define ITEM_DATA_y_sa256		user_data06 	/* 差分 y */
 //} ITEM_DATA;
+/* 共用 */
+#define ITEM_DATA_flag_first	ITEM_DATA_time_in	/* firstフラグ */
 
-static void move_items(SPRITE *src)
+
+/*---------------------------------------------------------
+	アイテムの移動(自動収集の場合)
+---------------------------------------------------------*/
+
+static void move_item_type02(SPRITE *src)	/* 自動収集ならば、自分に集まる */
 {
-//	ITEM_DATA *data = (ITEM_DATA *)src->data;
-	/* 自動収集モードのどれかが作動してたら、 */
-	if (0 != (
-		(pd_state_flag) &
-		(STATE_FLAG_01_PLAYER_UP_AUTO_GET_ITEM |		/* MAX時の上回収 */
-		 STATE_FLAG_02_BOMB_AUTO_GET_ITEM | 			/* ボム発動中のみ回収 */
-		 STATE_FLAG_03_SCORE_AUTO_GET_ITEM				/* ボス撃破時の一時回収 */
-		) ))
-	{
-		src->ITEM_DATA_flags00 |= ITEM_MOVE_FLAG_01_COLLECT/*1*/;	/* そのアイテムは自動収集にする */
-	}
-	/* 自動収集でなければ、単純に放物線を描いて落ちる */
-	if (0 == ((src->ITEM_DATA_flags00)&ITEM_MOVE_FLAG_01_COLLECT))
-	{
-		/* [***090123 [***090220	変更5=>4=>3 t256(3.0) */
-	//	if (src->ITEM_DATA_y_sum256 < t256(1.5) )	/* t256(2.2) アイテム落下、最大速度の調整 */
-		if (src->ITEM_DATA_y_sum256 < t256(2.0) )	/* t256(2.2) アイテム落下、最大速度の調整 */
-		/* t256(2.2) == コンティニュー復活時の[F]を画面の下隅(右下、左下)で死んだ場合で、
-			足が一番遅い、幽々子が(高速モードならば)余裕で取れる速度に調整する。
-			(低速モードでは取れなくても構わない) */
-		{
-			src->ITEM_DATA_y_sum256 += src->ITEM_DATA_angle512; 	/* x1.5 */
-		}
-		src->ITEM_DATA_true_y256 += (src->ITEM_DATA_y_sum256);/*fps_factor*/
-		if (src->ITEM_DATA_true_y256 > GAME_HEIGHT*256)
-		{
-			/* ウェポンアイテム (小P) (中P) (F) のいずれか逃したら、チェイン破棄 */
-			switch (src->type)
-			{
-			case SP_ITEM_00_P001:	/* ウェポンアイテム(小P) */
-			case SP_ITEM_01_P008:	/* ウェポンアイテム(中P) */
-			case SP_ITEM_02_P128:	/* ウェポンアイテム(F) */
-				pd_chain_point = 0;
-				break;
-			/* [点][星][B][1UP]等逃しても、チェイン維持。 */
-			}
-			src->type = SP_DELETE;				/* 画面外に出たらおしまい */
-		}
-	}
-	else	/* 自動収集ならば、自分に集まる */
 	{
 		src->ITEM_DATA_y_sum256--;
-		if (1 > src->ITEM_DATA_y_sum256)
+		if (0 <= src->ITEM_DATA_y_sum256)/*0レジスタ使う*/
+		{
+			;
+		}
+		else
+	//	if (1 > src->ITEM_DATA_y_sum256)
 		{
 			src->ITEM_DATA_y_sum256 = 0;
 		}
 		if (0 == src->ITEM_DATA_flag_first)
 		{
 			src->ITEM_DATA_flag_first = 1;
-			src->ITEM_DATA_y_sum256 = t256(4.0/*1.0*/); 	/* pspは解像度が低いので細工(x4) */ 	/* (2.5==5*0.5) */
+			src->ITEM_DATA_y_sum256 = t256(2.0/*1.0*/); 	/* pspは解像度が低いので細工(x2) */ 	/* (2.5==5*0.5) */
 		}
-		src->ITEM_DATA_x_sa256 = (src->x256 - player->x256);
-		src->ITEM_DATA_y_sa256 = (src->ITEM_DATA_true_y256 - player->y256);
+		src->ITEM_DATA_x_sa256 = (src->x256 - obj_player->x256);
+		src->ITEM_DATA_y_sa256 = (src->ITEM_DATA_true_y256 - obj_player->y256);
 		/* 自分に集まる */
 		int aaa_x256;
 		int aaa_y256;
-		aaa_x256 = ((src->ITEM_DATA_x_sa256 * src->ITEM_DATA_y_sum256)>>10/*8*/); /*fps_factor*/	/* pspは解像度が低いので細工(/4) */
-		aaa_y256 = ((src->ITEM_DATA_y_sa256 * src->ITEM_DATA_y_sum256)>>10/*8*/); /*fps_factor*/	/* pspは解像度が低いので細工(/4) */
+		aaa_x256 = ((src->ITEM_DATA_x_sa256 * src->ITEM_DATA_y_sum256)>>9/*8*/);	/*fps_factor*/	/* pspは解像度が低いので細工(/2) */
+		aaa_y256 = ((src->ITEM_DATA_y_sa256 * src->ITEM_DATA_y_sum256)>>9/*8*/);	/*fps_factor*/	/* pspは解像度が低いので細工(/2) */
 		if ( (SP_ITEM_06_HOSI) == (src->type))	/* 星点のみ特別処理 */
 		{
 			if (
@@ -106,8 +78,8 @@ static void move_items(SPRITE *src)
 				voice_play(VOICE05_BONUS, TRACK07_GRAZE);/*テキトー*/
 			}
 		}
-		src->x256 = player->x256 + (aaa_x256);	/*fps_factor*/
-		src->ITEM_DATA_true_y256 = player->y256 + (aaa_y256);	/*fps_factor*/
+		src->x256 = obj_player->x256 + (aaa_x256);	/*fps_factor*/
+		src->ITEM_DATA_true_y256 = obj_player->y256 + (aaa_y256);	/*fps_factor*/
 	}
 	if (SP_DELETE != src->type)
 	{
@@ -116,7 +88,7 @@ static void move_items(SPRITE *src)
 		#if 0
 		if (t256(0) >= src->y256)		/* 上にいると取れないけど速い */
 		#else
-		if (t256(-16) >= src->y256)		/* この辺の仕様はたぶん変わる。(Guスプライト座標中心管理とかで) */
+		if (t256(-16) >= src->y256) 	/* この辺の仕様はたぶん変わる。(Guスプライト座標中心管理とかで) */
 		#endif
 		{
 			src->y256 = 0;
@@ -154,64 +126,148 @@ static void move_items(SPRITE *src)
 □□□□□□□□□□■□□□□□□□□□□
 */
 
+/*---------------------------------------------------------
+	アイテムの移動(通常時その２)
+---------------------------------------------------------*/
+
+static void move_item_type01(SPRITE *src)
+{
+	/* 自動収集モードのどれかが作動してたら、 */
+	if (0 != (
+		(pd_state_flag) &
+		(STATE_FLAG_01_PLAYER_UP_AUTO_GET_ITEM |		/* MAX時の上回収 */
+		 STATE_FLAG_02_BOMB_AUTO_GET_ITEM | 			/* ボム発動中のみ回収 */
+		 STATE_FLAG_03_SCORE_AUTO_GET_ITEM				/* ボス撃破時の一時回収 */
+		) ))
+	{
+		src->ITEM_DATA_flags00 |= (ITEM_MOVE_FLAG_01_COLLECT);	/*1*/	/* そのアイテムは自動収集にする */
+	}
+	/* 自動収集でなければ、単純に放物線を描いて落ちる */
+	if (0 == ((src->ITEM_DATA_flags00)&ITEM_MOVE_FLAG_01_COLLECT))
+	{
+		/* [***090123 [***090220	変更5=>4=>3 t256(3.0) */
+	//	if (src->ITEM_DATA_y_sum256 < t256(1.5) )	/* t256(2.2) アイテム落下、最大速度の調整 */
+		if (src->ITEM_DATA_y_sum256 < t256(2.0) )	/* t256(2.2) アイテム落下、最大速度の調整 */
+		/* t256(2.2) == コンティニュー復活時の[F]を画面の下隅(右下、左下)で死んだ場合で、
+			足が一番遅い、幽々子が(高速モードならば)余裕で取れる速度に調整する。
+			(低速モードでは取れなくても構わない) */
+		{
+			src->ITEM_DATA_y_sum256 += ((src->ITEM_DATA_angle1024)>>1); 	/* x1.5 */
+		}
+		src->ITEM_DATA_true_y256 += (src->ITEM_DATA_y_sum256);/*fps_factor*/
+		if (src->ITEM_DATA_true_y256 > GAME_HEIGHT*256)
+		{
+			/* ウェポンアイテム (小P) (中P) (F) のいずれか逃したら、チェイン破棄 */
+			switch (src->type)
+			{
+			case SP_ITEM_00_P001:	/* ウェポンアイテム(小P) */
+			case SP_ITEM_01_P008:	/* ウェポンアイテム(中P) */
+			case SP_ITEM_02_P128:	/* ウェポンアイテム(F) */
+				pd_chain_point = 0;
+				break;
+			/* [点][星][B][1UP]等逃しても、チェイン維持。 */
+			}
+			src->type = SP_DELETE;				/* 画面外に出たらおしまい */
+		}
+	}
+	else	/* 自動収集ならば、自分に集まる */
+	{
+		src->callback_mover 		= move_item_type02;
+		src->ITEM_DATA_flag_first	= 0;
+	}
+	if (SP_DELETE != src->type)
+	{
+		/* 画面内に変換 */
+		src->y256 = src->ITEM_DATA_true_y256;
+		#if 0
+		if (t256(0) >= src->y256)		/* 上にいると取れないけど速い */
+		#else
+		if (t256(-16) >= src->y256) 	/* この辺の仕様はたぶん変わる。(Guスプライト座標中心管理とかで) */
+		#endif
+		{
+			src->y256 = 0;
+			src->type |= 0x08;
+		}
+		else
+		{
+			src->type &= (~0x08);
+		}
+	}
+}
+
+/*---------------------------------------------------------
+	アイテムの移動(通常時その１)
+	初回時の投げ出し処理。
+	投げ出し中はあたり判定なし。(回収できない)
+---------------------------------------------------------*/
+#if 0
+static void move_item_type00(SPRITE *src)
+{
+}
+#endif
 
 /*---------------------------------------------------------
 	アイテム出現させる子関数
 ---------------------------------------------------------*/
 /*int x, int y*/
-static SPRITE *item_mono_create(SPRITE *src, int sel_type)
+static SPRITE *item_mono_create(SPRITE *src, int sel_type)/*  */
 {
-//	アイテムの種類を選ぶ
-	SPRITE *s;
-	s			= sprite_add_only_bullet(ZAKO_TYPE_ATARI16_PNG);
-	sel_type &= 0x07;
-//	s->yx_an im_frame = ((/*SP_ITEM_FIRE_POWER-*/sel_type)/*&0x07*/);
-//	出現位置を決める
-	#define OFFSET_X64		(64*256)/* 64はずらし分 2のn乗の必要有り */
-	#define ITEM_WIDTH16	(16*256)/* 16はアイテム幅 */
-	#define ITEM_X_LIMIT	(GAME_WIDTH*256+OFFSET_X64-ITEM_WIDTH16)
-	int x256;
-	x256 = src->x256;
-	x256 += ((ra_nd()&((OFFSET_X64+OFFSET_X64)-1)));
-	if (x256 < OFFSET_X64)
+	//	アイテムの種類を選ぶ
+	SPRITE *h;
+	h						= sprite_add_only_bullet_error();
+	if (NULL != h)
 	{
-		x256 = OFFSET_X64;
-	}
-	else
-	if (x256 > (ITEM_X_LIMIT))
-	{
-		x256 = (ITEM_X_LIMIT);
-	}
-//	登録する
-	s->x256 			= (x256)-(OFFSET_X64);
-	s->y256 			= src->y256;
-//	sel_type &= 0x07;
-	sel_type |= SP_ITEM_00_P001;
-	s->type 			= sel_type;
-	s->callback_mover	= move_items;
-	if ( SP_ITEM_06_HOSI == sel_type )	/* 星点のみ特別処理 */
-	{
-		/* 紅は、こうらしい */
-	//	if ( USER_BOMOUT_WAIT > pd_bomber_time )
-		if ( USER_BOMOUT_WAIT > pd_bomber_time )
-		{	/* ボム中(設定無敵時間中)は100pts.(稼げない) */
-			bonus_info_score_nodel(s, SCORE_100);/*自動消去へ仕様変更s->type = SP_DELETE;*/
+		h->m_Hit256R			= ZAKO_ATARI16_PNG;
+		{
+		//	出現位置を決める
+			#define OFFSET_X64		(64*256)/* 64はずらし分 2のn乗の必要有り */
+			#define ITEM_WIDTH16	(16*256)/* 16はアイテム幅 */
+			#define ITEM_X_LIMIT	(GAME_WIDTH*256+OFFSET_X64-ITEM_WIDTH16)
+			int x256;
+			x256 = src->x256;
+			x256 += ((ra_nd()&((OFFSET_X64+OFFSET_X64)-1)));
+			if (x256 < OFFSET_X64)
+			{
+				x256 = OFFSET_X64;
+			}
+			else
+			if (x256 > (ITEM_X_LIMIT))
+			{
+				x256 = (ITEM_X_LIMIT);
+			}
+		//	登録する
+			h->x256 				= (x256)-(OFFSET_X64);
 		}
-		else/* 星点 */
-		{	/* ボム後の実質無敵期間中はこちら(稼げる) */
-			/* ((graze/3)*10)+(500) pts */
-			bonus_info_any_score_nodel(s, (score(500)+(((pd_graze_point*86)>>8)/*(pd->graze_point/3)*/)) );/*自動消去へ仕様変更c->type = SP_DELETE;*/
+		h->y256 					= src->y256;
+
+		h->callback_mover			= move_item_type01;
+	//
+		sel_type &= 0x07;		/* アイテムの種類 == グラフィックの種類 */
+		sel_type |= SP_ITEM_00_P001;
+		h->type 				= sel_type;
+	//
+		if ( SP_ITEM_06_HOSI == sel_type )	/* 星点のみ特別処理 */
+		{
+			/* 紅は、こうらしい */
+			if ( USER_BOMOUT_WAIT > pd_bomber_time )
+			{	/* ボム中(設定無敵時間中)は100pts.(稼げない) */
+				bonus_info_score_nodel(h, SCORE_100);/*自動消去へ仕様変更s->type = SP_DELETE;*/
+			}
+			else/* 星点 */
+			{	/* ボム後の実質無敵期間中はこちら(稼げる) */
+				/* ((graze/3)*10)+(500) pts */
+				bonus_info_any_score_nodel(h, (score(500)+(((pd_graze_point*86)>>8)/*(pd->graze_point/3)*/)) );/*自動消去へ仕様変更c->type = SP_DELETE;*/
+			}
+			h->flags			= (0/*SP_FLAG_VISIBLE|SP_FLAG_TIME_OVER*/);/*当たり判定なし*/
 		}
-		s->flags			|= (SP_FLAG_VISIBLE|SP_FLAG_TIME_OVER);/*当たり判定なし*/
+	//	else
+	//	{
+	//	}
 	}
-	else
-	{
-		s->flags			|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK|SP_FLAG_TIME_OVER);
-	}
-	return (s);
 	#undef OFFSET_X64
 	#undef ITEM_WIDTH16
 	#undef ITEM_X_LIMIT
+	return (h);
 }
 
 
@@ -222,11 +278,10 @@ static SPRITE *item_mono_create(SPRITE *src, int sel_type)
 static void s_item_convert_hosi(SPRITE *h)
 {
 	{
-		h->callback_mover	= move_items;
+		h->callback_mover	= move_item_type01;
 	//	if ( SP_ITEM_06_HOSI == sel_type )	/* 星点のみ特別処理 */
 		{
 			/* 紅は、こうらしい */
-		//	if ( USER_BOMOUT_WAIT > pd_bomber_time )
 			if ( USER_BOMOUT_WAIT > pd_bomber_time )
 			{	/* ボム中(設定無敵時間中)は100pts.(稼げない) */
 				bonus_info_score_nodel(h, SCORE_100);/*自動消去へ仕様変更s->type = SP_DELETE;*/
@@ -236,42 +291,49 @@ static void s_item_convert_hosi(SPRITE *h)
 				/* ((graze/3)*10)+(500) pts */
 				bonus_info_any_score_nodel(h, (score(500)+(((pd_graze_point*86)>>8)/*(pd->graze_point/3)*/)) );/*自動消去へ仕様変更c->type = SP_DELETE;*/
 			}
-			h->flags			|= (SP_FLAG_VISIBLE|SP_FLAG_TIME_OVER);/*当たり判定なし*/
+//			h->flags			|= (SP_FLAG_VISIBLE|SP_FLAG_TIME_OVER);/*当たり判定なし*/
 		}
 	}
-	//	ITEM_DATA *data;
-	//	data				= mmal loc(sizeof(ITEM_DATA));
-	//	h->data 			= data;
 		h->type = SP_ITEM_06_HOSI;
 		h->ITEM_DATA_true_y256		= (/*src*/h->y256); /* 仮想 */
 
-//		h->ITEM_DATA_angle512		= 6;	/* 6.51898646904403967309077986986488 ra d2deg512(0.08);*/
+//		h->ITEM_DATA_angle1024		= (2*6);	/* 2*6.51898646904403967309077986986488 cv1024r(0.08);*/
 		h->ITEM_DATA_flags00		= ((ITEM_MOVE_FLAG_01_COLLECT|ITEM_MOVE_FLAG_06_RAND_XY)&ITEM_MOVE_FLAG_01_COLLECT);
-		h->ITEM_DATA_flag_first = 0;
 //	}
-	h->m_angleCCW512	= 0;			/* 描画用角度(下が0度で左回り(反時計回り)) */	/* 0 == 傾かない。下が0度 */
+	h->m_angleCCW1024				= (0);			/* 描画用角度(下が0度で左回り(反時計回り)) */	/* 0 == 傾かない。下が0度 */
 }
 
 
 /*---------------------------------------------------------
 	総ての敵弾を、hosiアイテムに変える
 ---------------------------------------------------------*/
-extern SPRITE *sprite_list444_head;/* 弾専用スプライト リスト */
+//extern SPRITE *sprite_list444_head;/* 弾専用スプライト リスト */
 //void item_from_bullets(int put_item_num)
 extern void item_convert_hosi(SPRITE */*src*/h);
-void bullets_to_hosi(void)
+global void bullets_to_hosi(void)
 {
-	SPRITE *s = sprite_list444_head;/* 弾専用スプライト リストの先頭 から探す */
-	while (NULL != s)/* スプライト リストの最後まで調べる */
+//	SPRITE *s = sprite_list444_head;/* 弾専用スプライト リストの先頭 から探す */
+//	while (NULL != s)/* スプライト リストの最後まで調べる */
+
+	int ii;
+	for (ii=0; ii<SPRITE_444POOL_MAX; ii++ )/* 全部調べる。 */
 	{
-		if (SP_GROUP_BULLETS & s->type)
+		SPRITE *s;
+		s = &sprite_444pool[ii];
+	//
+		#if 1/* 要らない気がする(てすとちう) */
+		if (s->type != SP_DELETE ) /* 削除済みは飛ばす */
+		#endif
 		{
-		//	item_create(s, /*put_item_num*/SP_IT EM_06_HOSI/*SP_IT EM_06_HOSI*/, 1, (IT EM_MOVE_FLAG_01_COLLECT|ITEM_MOVE_FLAG_06_RAND_XY) );
-		//	s->type = SP_DELETE;
-		//	s->type = SP_IT EM_06_HOSI;
-			s_item_convert_hosi(s);//, /*put_item_num*/SP_IT EM_06_HOSI/*SP_IT EM_06_HOSI*/, 1, (IT EM_MOVE_FLAG_01_COLLECT|ITEM_MOVE_FLAG_06_RAND_XY) );
+			if (SP_GROUP_BULLETS & s->type)
+			{
+			//	item_create(s, /*put_item_num*/SP_IT EM_06_HOSI/*SP_IT EM_06_HOSI*/, 1, (IT EM_MOVE_FLAG_01_COLLECT|ITEM_MOVE_FLAG_06_RAND_XY) );
+			//	s->type = SP_DELETE;
+			//	s->type = SP_IT EM_06_HOSI;
+				s_item_convert_hosi(s);//, /*put_item_num*/SP_IT EM_06_HOSI/*SP_IT EM_06_HOSI*/, 1, (IT EM_MOVE_FLAG_01_COLLECT|ITEM_MOVE_FLAG_06_RAND_XY) );
+			}
+//			s = s->next;/*次*/
 		}
-		s = s->next;/*次*/
 	}
 }
 
@@ -281,8 +343,8 @@ void bullets_to_hosi(void)
 ---------------------------------------------------------*/
 
 /* [***090125	追加: up_flags の ITEM_MOVE_FLAG_01_COLLECT ビットがオンでプレイヤーに集まります。 */
-void item_create(
-	SPRITE *src/*int x, int y*/,
+global void item_create(
+	SPRITE *src,/*int x, int y*/
 	int item_type,
 	int num_of_creates,
 	int up_flags
@@ -293,26 +355,26 @@ void item_create(
 	{
 		SPRITE *h;
 		h			= item_mono_create(src, item_type);
+		#if 1
 		if (NULL==h) return;
-//
-	//	ITEM_DATA *data;
-	//	data				= mmal loc(sizeof(ITEM_DATA));
-	//	h->data 			= data;
-		h->ITEM_DATA_true_y256		= (src->y256);	/* 仮想 */
-
-		#if 0
-		/* 基本的に画面外(上)にあまり喰み出さない(旧タイプ) */
-		/* アイテムマーカーを作成しない事が前提の動き */
-		h->ITEM_DATA_y_sum256		= -(/*256*/((src->y256)>>7))-(ra_nd()&0xff);	/* アイテム投げ出し初期値(y軸、上方がマイナス) */
 		#else
-		/* 画面外(上)に喰み出す(が、喰み出しマーカー作ってない) */
-		/* アイテムマーカーを作成する事が前提の動き */
-	//	h->ITEM_DATA_y_sum256		= -(/*256*/((200*256)>>7))-(ra_nd()&0xff);		/* アイテム投げ出し初期値(y軸、上方がマイナス) */
-		h->ITEM_DATA_y_sum256		= -(/*256*/((512)))-(ra_nd()&0xff); 			/* アイテム投げ出し初期値(y軸、上方がマイナス) */
+		if (NULL != h)
 		#endif
-		h->ITEM_DATA_angle512		= 6;	/* 6.51898646904403967309077986986488 ra d2deg512(0.08);*/
-		h->ITEM_DATA_flags00		= (up_flags&ITEM_MOVE_FLAG_01_COLLECT);
-		h->ITEM_DATA_flag_first = 0;
+		{
+			h->ITEM_DATA_true_y256		= (src->y256);	/* 仮想 */
+			#if 0
+			/* 基本的に画面外(上)にあまり喰み出さない(旧タイプ) */
+			/* アイテムマーカーを作成しない事が前提の動き */
+			h->ITEM_DATA_y_sum256		= -(/*256*/((src->y256)>>7))-(ra_nd()&0xff);	/* アイテム投げ出し初期値(y軸、上方がマイナス) */
+			#else
+			/* 画面外(上)に喰み出す(喰み出しマーカー必須) */
+			/* アイテムマーカーを作成する事が前提の動き */
+		//	h->ITEM_DATA_y_sum256		= -(/*256*/((200*256)>>7))-(ra_nd()&0xff);		/* アイテム投げ出し初期値(y軸、上方がマイナス) */
+			h->ITEM_DATA_y_sum256		= -(/*256*/((512)))-(ra_nd()&0xff); 			/* アイテム投げ出し初期値(y軸、上方がマイナス) */
+			#endif
+			h->ITEM_DATA_angle1024		= (6*2);	/* 2*6.51898646904403967309077986986488 cv1024r(0.08);*/
+			h->ITEM_DATA_flags00		= (up_flags&ITEM_MOVE_FLAG_01_COLLECT);
+		}
 	}
 }
 
@@ -321,7 +383,7 @@ void item_create(
 ---------------------------------------------------------*/
 //	#define ITEM_CREATE_MODE_01 	(12*0)
 //	#define ITEM_CREATE_MODE_02 	(12*1)
-void item_create_for_boss(SPRITE *src, int item_create_mode)
+global void item_create_for_boss(SPRITE *src, int item_create_mode)
 {
 	#define ITEM_03 	(4*0)
 	#define ITEM_02 	(4*1)
@@ -399,11 +461,11 @@ void item_create_for_boss(SPRITE *src, int item_create_mode)
 	ランダムアイテム敵の場合に使う、共通発生テーブル
 ---------------------------------------------------------*/
 
-static unsigned int random_item_seed/*=0*/;
+static unsigned int random_item_seed;		/*=0*/
 
-void enemy_set_random_seed(void/*int set_seed*/)
+global void enemy_set_random_seed(void) 	/*int set_seed*/
 {
-	random_item_seed = (ra_nd()&(8-1))/*set_seed*/;
+	random_item_seed = (ra_nd()&(8-1)); 	/*set_seed*/
 }
 static int s_enemy_get_random_item(void)
 {
@@ -427,154 +489,10 @@ static int s_enemy_get_random_item(void)
 	敵やられ
 ---------------------------------------------------------*/
 
-/*static*/ void lose_random_item(SPRITE *src)
+global /*static*/ void lose_random_item(SPRITE *src)
 {
 	item_create(src, s_enemy_get_random_item(), (1), (/*IT EM_MOVE_FLAG_01_COLLECT|*/ITEM_MOVE_FLAG_06_RAND_XY)/*(up_flags)*/ );
 }
-
-
-
-//	int put_item;	put_item=99;
-//	case SP_ZAKO_03_YUKARI2:
-//	if (rand_percent(30))
-//	{
-//		if (rand_percent(50))	{	put_item=(SP_ITEM_00_P001&0xff);}
-//		else					{	put_item=(SP_ITEM_05_TENSU&0xff);}
-//	}
-//(put_item|SP_ITEM_00_P001)
-//	if (99!=put_item)
-
-//		static const u16/*int*/ item_table[8] =
-//		{
-//			SP_ITEM_07_SPECIAL,
-//			SP_ITEM_04_BOMB,
-//			SP_ITEM_04_BOMB/*低速ボムに吸収==SP_ITEM_EXTRA_HOMING*/,
-//			SP_ITEM_04_BOMB/*低速ボムに吸収==SP_ITEM_EXTRA_HLASER*/,
-//			//
-//			SP_ITEM_01_P008/*ウェポンアイテム(中)==SP_ITEM_FIRE_POWER_G ウェポンアイテム(強)==SP_ITEM_EXTRA_SHIELD*/,
-//			SP_ITEM_00_P001,
-//			SP_ITEM_01_P008,/*ウェポンアイテム(中)==SP_ITEM_FIRE_POWER_G*/
-//			SP_ITEM_05_TENSU,
-//		};
-//		static unsigned int drop_item=0;
-//		drop_item++;
-//		drop_item &= (8-1);//if (drop_item==8)	{	drop_item=0;}
-/* [***20090223 追加 テーブルにしたよ */
-//					SP_ITEM_00_P001,		/*0x1000*/
-//					SP_ITEM_04_BOMB,		/*0x1003*/
-//					SP_ITEM_01_P008,		/*0x1007*/	//	SP_ITEM_00_P001/*0x1000*/,
-//					SP_ITEM_00_P001,		/*0x1002*/	/*SP_ITEM_07_SPECIAL*/
-//					SP_ITEM_00_P001,		/*0x1000*/
-//					SP_ITEM_01_P008,		/*0x1004*/	//	SP_ITEM_01_P008/*0x1007*/,
-//					//
-//					SP_ITEM_04_BOMB,		/*0x1003*/
-//					SP_ITEM_00_P001,		/*0x1002*/		/*SP_ITEM_07_SPECIAL*/
-//					SP_ITEM_05_TENSU,		/*0x1001*/
-//					SP_ITEM_03_1UP			/*0x1005*/
-
-
-
-
-/*-------------------------------------------------------*/
-/*-------------------------------------------------------*/
-/*-------------------------------------------------------*/
-
-
-/*---------------------------------------------------------
-	sdl_screen[SDL_00_VIEW_SCREEN]サーフェイスに、スコアをレンダリング
----------------------------------------------------------*/
-
-#if 0
-//	   void font07_render_scorenum_xy( int time_out, int number, int x256, int y256)
-//atic void font07_render_scorenum_xy(SCORE_CHACHE_DATA *aaa){}
-void draw_SDL_score_chache(void)
-{
-//				SDL_Rect s,d;
-//				s.w=(8); d.w=(8);
-//				s.h=(8); d.h=(8);
-	if (SDL_MUSTLOCK(sdl_screen[SDL_00_VIEW_SCREEN]))	{	SDL_LockSurface(sdl_screen[SDL_00_VIEW_SCREEN]); }/*ロックする*/
-	int i;
-	for (i=0; i<MAX_SCORE_CHACHE; i++)
-	{
-		SCORE_CHACHE_DATA *aaa;
-		aaa = &(score_number_chache[i]);
-		if (SCORE_DELETE < aaa->time_out)
-		{
-			aaa->time_out -= 2;
-			{
-			//	font07_render_scorenum_xy(
-				//	(aaa->time_out),
-				//	(aaa->number),
-				//	(aaa->x256)/*dx*/,
-				//	(aaa->y256)/*dy*/
-			//		&(score_number_chache[i])
-			//		);
-//				s.x = ((aaa->number)<<3)+(8);
-//				s.y = 0;
-//				d.x = (t256_floor(aaa->x256));
-//				d.y = (t256_floor(aaa->y256))/*+((aaa->time_out)>>5) 上に移動*/;
-//				#if 0
-//				/*遅い*/
-//				SDL_SetAlpha(font07_img,SDL_SRCALPHA,(aaa->time_out));
-//				#endif
-//				SDL_BlitSurface(font07_img,&s,sdl_screen[SDL_00_VIEW_SCREEN],&d);
-				u16 alpha256;	alpha256 = (aaa->time_out);
-
-				u16 *pd;
-				{
-					u32 y2562 = ((aaa->y256)&0x1ff00);
-					pd = (u16 *)sdl_screen[SDL_00_VIEW_SCREEN]->pixels + (y2562+y2562) + (t256_floor(aaa->x256));/*x 512/256 */
-				}
-				int iii;	iii = (aaa->number);
-				int yyy;
-				for (yyy=0; yyy<6; yyy++)
-				{
-					#define v (0)
-					#define M (1)
-					#define f8(a,b,c,d, e,f,g,h) ((a<<0)|(b<<1)|(c<<2)|(d<<3)|(e<<4)|(f<<5)|(g<<6)|(h<<7))
-					static const u8 score_font_08x05[/*(6*10)*/(64)] =
-					{
-f8(v,v,v,M,M,v,v,v),f8(v,v,v,v,v,v,v,v),f8(v,v,v,v,v,v,v,v),f8(v,v,v,v,v,v,v,v),f8(v,v,v,v,v,v,v,v),f8(v,M,M,M,M,M,v,v),f8(v,v,v,M,v,v,v,v),f8(v,M,v,v,v,v,v,v),f8(v,v,M,M,v,v,v,v),f8(v,v,M,v,v,v,v,v),
-f8(v,v,M,v,v,M,v,v),f8(v,v,v,v,v,v,v,v),f8(v,v,v,v,v,v,v,v),f8(v,M,M,M,M,v,v,v),f8(M,M,M,M,M,M,M,v),f8(v,v,v,M,v,v,v,v),f8(v,M,M,M,M,M,M,v),f8(v,M,v,v,M,M,M,v),f8(v,v,v,M,M,v,v,v),f8(v,v,M,M,M,M,v,v),
-f8(v,M,v,v,v,v,M,v),f8(v,v,v,v,v,v,v,v),f8(v,v,M,M,M,v,v,v),f8(v,v,v,v,v,v,v,v),f8(M,v,M,v,M,v,M,v),f8(v,v,M,M,M,M,v,v),f8(v,v,v,v,v,v,v,v),f8(M,M,M,M,M,v,v,v),f8(v,v,v,v,M,v,v,v),f8(M,M,M,v,v,M,v,v),
-f8(v,M,v,v,v,v,M,v),f8(v,M,M,M,M,M,M,v),f8(v,v,v,v,v,v,v,v),f8(v,v,M,M,v,v,v,v),f8(M,M,M,v,M,M,M,v),f8(v,v,M,v,v,M,v,v),f8(v,v,M,v,v,M,v,v),f8(v,M,v,v,v,v,v,v),f8(v,M,v,v,M,M,v,v),f8(v,v,M,v,M,M,v,v),
-f8(v,v,M,v,v,M,v,v),f8(v,v,v,v,v,v,v,v),f8(v,v,v,v,v,v,v,v),f8(v,v,v,v,v,v,v,v),f8(M,v,v,v,v,v,M,v),f8(v,M,M,v,M,M,v,v),f8(v,M,M,v,v,M,M,v),f8(v,M,v,v,v,v,v,v),f8(v,M,v,v,v,M,M,v),f8(v,M,M,v,M,v,v,v),
-f8(v,v,v,M,M,v,v,v),f8(v,v,v,v,v,v,v,v),f8(M,M,M,M,M,M,M,v),f8(M,M,M,M,M,M,M,v),f8(M,M,M,M,M,M,M,v),f8(M,M,M,M,M,M,M,v),f8(M,M,v,v,v,v,M,M),f8(v,v,M,M,M,M,M,v),f8(M,v,v,v,v,v,M,M),f8(M,M,v,v,v,M,M,M),
-						/*dummy*/0,0,0,0
-					};
-					#undef v
-					#undef M
-					#undef f8
-					{
-						const u8 ddd = score_font_08x05[iii];
-						int kkk;
-						kkk = 1;
-						int xxx;
-						for (xxx=0; xxx<8; xxx++)
-						{
-							if (ddd & (kkk) )
-							{	/* 汎用転送(アルファ任意) */
-							#define bgRGB (*pd)
-							#define fgRGB (0xffff)
-							(*pd) = (u16)MAKECOL16(
-								(((GETR16F(fgRGB) * (alpha256)) + (GETR16F(bgRGB) * (256 - alpha256))) >> 8),
-								(((GETG16F(fgRGB) * (alpha256)) + (GETG16F(bgRGB) * (256 - alpha256))) >> 8),
-								(((GETB16F(fgRGB) * (alpha256)) + (GETB16F(bgRGB) * (256 - alpha256))) >> 8)	);
-							}
-							pd++;
-							kkk += kkk;
-						}
-					}
-					pd += (512-8);
-					iii += 10;
-				}
-			}
-		}
-	}
-	if (SDL_MUSTLOCK(sdl_screen[SDL_00_VIEW_SCREEN]))	{	SDL_UnlockSurface(sdl_screen[SDL_00_VIEW_SCREEN]);	}/*ロック解除*/
-}
-#endif
-
 
 /*-------------------------------------------------------*/
 /*-------------------------------------------------------*/
@@ -584,7 +502,7 @@ f8(v,v,v,M,M,v,v,v),f8(v,v,v,v,v,v,v,v),f8(M,M,M,M,M,M,M,v),f8(M,M,M,M,M,M,M,v),
 	難易度スコア補正
 ---------------------------------------------------------*/
 
-u32 adjust_score_by_difficulty(u32 convert_score)
+global u32 adjust_score_by_difficulty(u32 convert_score)
 {
 	u32 mul_tbl256[4] = /* 難易度補正 */
 	{
@@ -618,7 +536,7 @@ u32 adjust_score_by_difficulty(u32 convert_score)
 //#define PLAYER_MAX_SCORE	(score( 9999999990))
 #define PLAYER_MAX_SCORE	(	  ( 999999999 ))
 
-void player_add_score(u32 score_num_pts)
+global void player_add_score(u32 score_num_pts)
 {
 	pd_my_score += score_num_pts;
 	/* カンスト(スコアカウンター ストップ)チェックも約1秒(60flame)に1回で
@@ -638,7 +556,7 @@ static int extend_check_counter;
 #endif /* (1==USE_EXTEND_CHECK) */
 #if (1==USE_EXTEND_CHECK)
 /* score_panel.c: エクステンドチェックは約1秒(60flame)に1回で問題ないと思う。 */
-void player_check_extend_score(void)
+global void player_check_extend_score(void)
 {
 	/* 1000万、2500万、5000万、10000万(1億)でエクステンド */
 	#if (1==USE_EXTEND_CHECK)
@@ -679,7 +597,7 @@ void player_check_extend_score(void)
 /*---------------------------------------------------------
 	プレイヤー開始時／プレイヤーコンティニュー開始時に呼ばれる。
 ---------------------------------------------------------*/
-void player_init_extend_score(void)
+global void player_init_extend_score(void)
 {
 	extend_check_score		= score(   10000000);
 	extend_check_counter	= 0;

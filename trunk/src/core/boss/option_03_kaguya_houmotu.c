@@ -1,20 +1,22 @@
 
-#include "bullet_object.h"
+#include "game_main.h"
 
 /*---------------------------------------------------------
+	“Œ•û–Í•í•—  ` Toho Imitation Style.
+	ƒvƒƒWƒFƒNƒgƒy[ƒW http://code.google.com/p/kene-touhou-mohofu/
+	-------------------------------------------------------
 	‹P–é ƒIƒvƒVƒ‡ƒ“
 	-------------------------------------------------------
-
-
 ---------------------------------------------------------*/
 
 #define xcenter256			user_data00
 #define ycenter256			user_data01
-#define time_out			user_data02
 
-#define rotate_angle512 	user_data03 	/* ƒ{ƒX‚ð’†S‚Æ‚µ‚ÄA‰ñ“]Šp“xB(‰ºCCW512Œ`Ž®) */
-//#define fire_wait1			user_data04 	/* */
-//#define shot_angle512 	user_data05 	/* */
+#define time_out			user_data03
+
+#define rotate_angle1024	user_data04 	/* ƒ{ƒX‚ð’†S‚Æ‚µ‚ÄA‰ñ“]Šp“xB(‰ºCCW1024Œ`Ž®) */
+//#define fire_wait1		user_data05 	/* */
+//#define shot_angle1024	user_data06 	/* */
 
 
 /*---------------------------------------------------------
@@ -34,65 +36,55 @@ static void lose_kaguya_doll(SPRITE *src)
 
 static void move_kaguya_doll(SPRITE *src)
 {
-	/* ƒIƒvƒVƒ‡ƒ“ˆÊ’uA‰ñ“]ˆÚ“® */
-	src->rotate_angle512++;
-	mask512(src->rotate_angle512);
-	#define HANKEI_45_DOT (45)				/* ”¼Œa */
-	#if 0
-	src->x256 = (pd_boss)->x256 + ((sin512((src->rotate_angle512))*(HANKEI_45_DOT)));	/*CCW*/
-	src->y256 = (pd_boss)->y256 + ((cos512((src->rotate_angle512))*(HANKEI_45_DOT)));
-	#else
-	src->x256 = src->xcenter256 + ((sin512((src->rotate_angle512))*(HANKEI_45_DOT)));	/*CCW*/
-	src->y256 = src->ycenter256 + ((cos512((src->rotate_angle512))*(HANKEI_45_DOT)));
-	#endif
-	#undef HANKEI_45_DOT
+	check_boss_option_time_out(src);	/* ŽžŠÔŒo‰ß‚ÅI—¹Bƒ{ƒX‚ð“|‚·‚ÆŠF”j‰ó‚³‚ê‚éB */
 //
-	#if 1
-	src->time_out--;
-	if (0 > src->time_out)/* ƒXƒyƒJƒVƒXƒeƒ€‚Ì“s‡‚Å—v‚éB */
-	{
-		/* ‹P–é‚ð“|‚·‚ÆŠF”j‰ó‚³‚ê‚éB */
-		if (0==draw_boss_hp_value)
-		{
-			src->type = SP_DELETE;
-		}
-	}
-	#endif
+	/* ƒIƒvƒVƒ‡ƒ“ˆÊ’uA‰ñ“]ˆÚ“® */
+	src->rotate_angle1024 += (2);
+	mask1024(src->rotate_angle1024);
+	#define HANKEI_45_DOT (45)				/* ”¼Œa */
+	src->x256 = src->xcenter256 + ((sin1024((src->rotate_angle1024))*(HANKEI_45_DOT))); 	/*CCW*/
+	src->y256 = src->ycenter256 + ((cos1024((src->rotate_angle1024))*(HANKEI_45_DOT)));
+	#undef HANKEI_45_DOT
+	src->color32		= (src->color32 & 0x00ffffff) | ((src->time_out<<(23))&0xff000000);
 }
+
+/*---------------------------------------------------------
+	“G‚ð’Ç‰Á‚·‚é
+---------------------------------------------------------*/
 
 void add_zako_kaguya_houmotsu(SPRITE *src)
 {
-//	#define ADD_ANGLE (171) 	/* 1Žü‚ð3•ªŠ„‚µ‚½Šp“xA170.66 == 512/3 */
-//	#define ADD_ANGLE (85)		/* 1Žü‚ð6•ªŠ„‚µ‚½Šp“xA 85.33 == 512/6 */
-	#define ADD_ANGLE (102) 	/* 1Žü‚ð5•ªŠ„‚µ‚½Šp“xA102.40 == 512/5 */
+//	#define ADD_ANGLE (171*2)	/* 1Žü‚ð3•ªŠ„‚µ‚½Šp“xA170.66*2 == 1024/3 */
+//	#define ADD_ANGLE (85*2)	/* 1Žü‚ð6•ªŠ„‚µ‚½Šp“xA 85.33*2 == 1024/6 */
+	#define ADD_ANGLE (102*2)	/* 1Žü‚ð5•ªŠ„‚µ‚½Šp“xA102.40*2 == 1024/5 */
 //	const int add_angle = (ADD_ANGLE);	/* ‰ÁŽZŠp“x */
 //
 	int i;
 	i=0;
-	int i_angle;	/* ÏŽZŠp“x */
-	for (i_angle=0; i_angle<(512);	i_angle += (ADD_ANGLE)) /* ˆêŽü */
+	int i_angle1024;	/* ÏŽZŠp“x */
+	for (i_angle1024=0; i_angle1024<(1024); i_angle1024 += (ADD_ANGLE)) /* ˆêŽü */
 	#undef ADD_ANGLE
 	{
 		SPRITE *h;
-		h						= sprite_add_gu(ZAKO_TYPE_ATARI16_PNG);
-		h->type 				= BOSS_16_YOUSEI11+(i); 	i++;
-		h->flags				= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK);
-//
-		h->callback_mover		= move_kaguya_doll;
-		h->callback_loser		= lose_kaguya_doll;
-		h->callback_hit_enemy	= callback_hit_zako;
-//
-		h->xcenter256			= (src->x256);
-		h->ycenter256			= (src->y256);
-//
-		h->base_hp				= ((8*1024)-1);
-		h->base_score			= adjust_score_by_difficulty(score( 400000));	/* 40–œ */
+		h							= sprite_add_gu_error();
+		if (NULL!=h)/* “o˜^‚Å‚«‚½ê‡‚Ì‚Ý */
+		{
+			h->m_Hit256R			= ZAKO_ATARI16_PNG;
+			h->type 				= BOSS_16_YOUSEI11+(i); 	i++;
+			h->flags				= (SP_FLAG_COLISION_CHECK/*|SP_FLAG_VISIBLE*/);
 	//
-		h->rotate_angle512		= i_angle;
-		h->time_out 			= (100);/*‚æ‚­‚í‚©‚ñ‚È‚¢(ƒXƒyƒJƒVƒXƒeƒ€‚Ì‚¹‚¢‚Å‚¤‚Ü‚­‚¢‚©‚È‚¢)*/
+			h->callback_mover		= move_kaguya_doll;
+			h->callback_loser		= lose_kaguya_doll;
+			h->callback_hit_enemy	= callback_hit_zako;
+	//
+			h->xcenter256			= (src->x256);
+			h->ycenter256			= (src->y256);
+	//
+			h->base_hp				= ((8*1024)-1); 	/* 8192==(8*1024) */
+			h->base_score			= adjust_score_by_difficulty(score( 400000));	/* 40–œ */
+		//
+			h->rotate_angle1024 	= i_angle1024;
+			h->time_out 			= (0x01ff); 	/* §ŒÀŽžŠÔ */
+		}
 	}
 }
-	//		/* 4–Ê‚Ìê‡ */
-	//	h->base.health			= (difficulty<<8/*[x256]*/)+ 200+1024;
-//		h->base.life			= (((difficulty<<8/*[x256]*/)+ 200+1024)>>10);
-	//	h->base.score			= score(600)*(difficulty+1);

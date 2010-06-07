@@ -2,6 +2,12 @@
 #include "game_main.h"
 
 /*---------------------------------------------------------
+	東方模倣風	～ Toho Imitation Style.
+	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	-------------------------------------------------------
+---------------------------------------------------------*/
+
+/*---------------------------------------------------------
 	演出用浮遊物
 	-------------------------------------------------------
 
@@ -15,12 +21,18 @@ static int used_clouds;
 /*---------------------------------------------------------
 
 ---------------------------------------------------------*/
-
-typedef struct
-{
-	int speed_base256;
-	int speed_rand256;
-} CLOUDS_DATA;
+#if 0/* めも */
+/* ボス共通規格 */
+	#define target_x256 		user_data00 	/* 目標x座標 */
+	#define target_y256 		user_data01 	/* 目標y座標 */
+	#define vvv256				user_data02 	/* 目標座標への到達割合 */
+	#define time_out			user_data03 	/* 制限時間 */
+#endif
+//typedef struct
+//{
+#define CLOUDS_DATA_speed_base256	user_data04
+#define CLOUDS_DATA_speed_rand256	user_data05
+//} CLOUDS_DATA;
 
 /*---------------------------------------------------------
 
@@ -28,19 +40,18 @@ typedef struct
 
 static void clouds_mover(SPRITE *src)
 {
-	CLOUDS_DATA *data = (CLOUDS_DATA *)src->data;
-	src->y256 += data->speed_base256;/*fps_factor*/
-	src->y256 += data->speed_rand256;/*fps_factor*/
+	src->y256 += src->CLOUDS_DATA_speed_base256;/*fps_factor*/
+	src->y256 += src->CLOUDS_DATA_speed_rand256;/*fps_factor*/
 	if (src->y256 > t256(GAME_HEIGHT))
 	{
 		#if 0/*SDL(左隅座標)*/
 		src->y256			-= (t256(GAME_HEIGHT)+((src->w128+src->w128)));
-		data->speed_rand256 = (ra_nd()&((128)-1));
+		src->CLOUDS_DATA_speed_rand256 = (ra_nd()&((128)-1));
 		src->x256			= (ra_nd()&((256*256)-1))+(ra_nd()&((128*256)-1))-((src->w128+src->w128));	/*(ra_nd()%GAME_WIDTH)*/
 		#else/*Gu(中心座標)*/
 		src->y256			-= (t256(GAME_HEIGHT));
-		data->speed_rand256 = (ra_nd()&((128)-1));
-		src->x256			= (ra_nd()&((256*256)-1))+(ra_nd()&((128*256)-1));  						/*(ra_nd()%GAME_WIDTH)*/
+		src->CLOUDS_DATA_speed_rand256 = (ra_nd()&((128)-1));
+		src->x256			= (ra_nd()&((256*256)-1))+(ra_nd()&((128*256)-1));							/*(ra_nd()%GAME_WIDTH)*/
 		#endif
 		//c->alpha			= bg_alpha;
 //		src->alpha			= 200;/*遅すぎる([60-50fps -> [40-30]fps)*/
@@ -57,7 +68,7 @@ static void clouds_mover(SPRITE *src)
 //	sp rintf(filename,"wolke01_%d.png",lev);
 //	strcpy(filename,render_filename(/*TYPE_02_WOLKE0Z_Z,*/ /*lev,*/ 2));
 //	strcpy(filename,render_filename(/*TYPE_02_WOLKE0Z_Z,*/ /*lev,*/ 1));
-/*static*/ void clouds_init(/*int lev*/)
+global /*static*/ void clouds_init(/*int lev*/)
 {
 //	int i;
 //	char filename[32/*20*/];
@@ -82,7 +93,7 @@ static void clouds_mover(SPRITE *src)
 //	int total_frames,		1/*(l->user_x)*/,
 //	int x_divide_frames,	1,
 //	int y_divide_frames,	1,
-//	u8 priority, 		PR IORITY_00_BG/*P R_BACK0*/,
+//	u8 priority,		PR IORITY_00_BG/*P R_BACK0*/,
 //	int use_alpha,			0,
 //	int anime_speed 		3
 
@@ -91,7 +102,7 @@ static char clouds_filename_work[32];
 extern void load_bg2_chache(char *filename, int use_alpha);
 /*l->user_string,l->user_x,l->user_y*/
 // /*static*/extern SPRITE *sprite_add_internal_res(IM AGE_RESOURCE *image_resource_ptr);
-void add_clouds(STAGE_DATA *l)
+global void add_clouds(STAGE_DATA *l)
 {
 	if ((MAX_CLOUDS-1) < used_clouds)
 	{
@@ -103,6 +114,30 @@ void add_clouds(STAGE_DATA *l)
 	load_bg2_chache(/*filename*/(l->user_string), 0);
 	#endif
 //
+	strcpy(clouds_filename_work, /*filename*/(l->user_string));
+	{
+		SPRITE *h;
+		h						= sprite_add_gu_error();
+		if (NULL!=h)/* 登録できた場合のみ */
+		{
+			w3[used_clouds] 	= h;
+			used_clouds++;
+		//
+			h->m_Hit256R		= (1/*test*/);
+			h->x256 			=  (ra_nd()&((256*256)-1))+(ra_nd()&((128*256)-1)); 	/*(ra_nd()%GAME_WIDTH)*/ /*((w3[i]->w)<<8)*/
+			h->y256 			= -64-(ra_nd()&((256*256)-1));							/*(ra_nd()%GAME_HEIGHT)*/
+			h->flags			&= (~(SP_FLAG_COLISION_CHECK));/*あたり判定なし*/
+//			h->flags			|= (SP_FLAG_VISIBLE);
+			h->type 			= SP_MUTEKI;
+			h->color32			= MAKE32RGBA(0xff, 0xff, 0xff, 0x3f);	/*bg_alpha*/	//	h->alpha	= /*0*/0xff/*bg_alpha*/;
+			h->callback_mover	= clouds_mover;
+			h->CLOUDS_DATA_speed_base256			= (l->user_y);	/*t256(0.5)-*/	/*1.0*/
+		//	h->CLOUDS_DATA_speed_base256			= t256(1.0);/*2.0*/
+		//	h->CLOUDS_DATA_speed_base256			= t256(1.5);/*3.0*/
+			h->CLOUDS_DATA_speed_rand256			= (ra_nd()&((128)-1));
+		}
+	}
+}
 #if 000
 	static const IM AGE_RESOURCE my_resource[1] =
 	{
@@ -116,34 +151,12 @@ void add_clouds(STAGE_DATA *l)
 		}
 	};
 #endif
-	strcpy(clouds_filename_work, /*filename*/(l->user_string));
-	{
-		w3[used_clouds] 				= sprite_add_gu(1/*test*/);
-		w3[used_clouds]->x256			=  (ra_nd()&((256*256)-1))+(ra_nd()&((128*256)-1))/*(ra_nd()%GAME_WIDTH)*/ /*((w3[i]->w)<<8)*/;
-		w3[used_clouds]->y256			= -64-(ra_nd()&((256*256)-1))/*(ra_nd()%GAME_HEIGHT)*/;
-		w3[used_clouds]->flags			&= (~(SP_FLAG_COLISION_CHECK));/*あたり判定なし*/
-		w3[used_clouds]->flags			|= (SP_FLAG_VISIBLE);
-		w3[used_clouds]->type			= SP_MUTEKI;
-	//	w3[used_clouds]->alpha			= /*0*/0xff/*bg_alpha*/;
-		w3[used_clouds]->color32		= 0x3fffffff/*bg_alpha*/;
-	//	w3[used_clouds]->an im_frame	= (l->user_x);	/*...*/
-		w3[used_clouds]->callback_mover = clouds_mover;
-		CLOUDS_DATA *data;
-		data							= mmalloc(sizeof(CLOUDS_DATA));
-		w3[used_clouds]->data			= data;
-		data->speed_base256 			= /*t256(0.5)-*/ (l->user_y);/*1*/
-	//	data->speed_base256 			= t256(1);/*2*/
-	//	data->speed_base256 			= t256(1.5);/*3*/
-		data->speed_rand256 			= (ra_nd()&((128)-1));
-	}
-	used_clouds++;
-}
 
 /*---------------------------------------------------------
 	ステージ開始時、ゲームオーバー時に開放
 ---------------------------------------------------------*/
 
-void clouds_destroy(void)
+global void clouds_destroy(void)
 {
 	//static void clouds_remove(void)
 	{
@@ -162,7 +175,7 @@ void clouds_destroy(void)
 	psp起動時に一度だけ初期化する
 ---------------------------------------------------------*/
 
-void clouds_system_init(void)
+global void clouds_system_init(void)
 {
 	used_clouds = 0;
 }

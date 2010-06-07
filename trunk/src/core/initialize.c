@@ -1,16 +1,27 @@
 
+#include "game_main.h"
+
 /*---------------------------------------------------------
+	東方模倣風  ～ Toho Imitation Style.
+	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	-------------------------------------------------------
 	ゲームシステム初期化処理、関連
 ---------------------------------------------------------*/
 
-#include "game_main.h"
 #include "scenario_script.h"
 
-extern SDL_Surface *back_screen;
+#include "kanji_system.h"
+
 
 /*---------------------------------------------------------
 	ゲームシステム初期化処理
 ---------------------------------------------------------*/
+
+extern void render_blit_fake_loading_init(void);
+extern void render_blit_fake_loading_full(void);
+
+extern void kanji_system_init(void);/* 組み込み */
+extern void kanji_system_exit(void);/* 外す */
 
 extern void init_imglist(void);
 extern void init_math(void);
@@ -19,60 +30,48 @@ extern void ini_save(void); 	// [***090115
 extern void bg2_system_init(void);
 //extern void pr eload_gfx(void);
 extern void psp_pad_init(void);
-extern void psp_video_init(void);
-
-void game_system_init(void/*int argc, char *argv[]*/)
+extern void psp_video_init01(void);
+extern void psp_video_init02(void);
+extern void old_menu_system_init(void);
+extern int continue_stage;
+void game_system_init(void)
 {
-//	#if (1==USE_GU)
-//	#else
-//	int my_err;
-//	my_err =
-//	#endif
-	SDL_Init(SDL_INIT_VIDEO/*initflags*/ /*| SDL_INIT_JOYSTICK*/ | SDL_INIT_AUDIO );
-//	#if (1==USE_GU)
-//	#else
-//	if (my_err < 0)
-//	{
-//		CHECKPOINT;
-//		error(ERR_FATAL, "cant init SDL:"/*" %s",SDL_GetError()*/);
-//	}
-//	#endif
+	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO /*| SDL_INIT_JOYSTICK*/ );
 	SDL_InitSubSystem(SDL_INIT_AUDIO);
 
-	/* ----- ゲームモジュール選択 */
-	//#if defined(ENABLE_PSP)
-	//#else
+	/* ----- */
 	pspDebugScreenInit();
-	//#endif
-
+//	render_blit_fake_loading_init();
+//	render_blit_fake_loading_full();
 	ini_load();
 
 	/* ----- 初期化 */
-	psp_video_init();
+	psp_video_init01();
+//	render_blit_fake_loading_full();
+	psp_video_init02();
 	psp_pad_init(); 	/* psp_video_init()より後でないと正常に pad check 出来ない。 */
 
+
 	/* ----- ゲーム本体初期化 */
-	init_audio();/*ini_load();より後(data_dirがわからないと効果音が読めないので)*/
-	init_math();/*	keyboard_clear();*/
+	init_audio();
+	init_math();/*keyboard_clear();*/
 	init_imglist();
 //
-	script_system_init();/* 組み込み */
+	story_script_system_init();/* 組み込み */
+//	game_script_system_init();/* 組み込み */
+	kanji_system_init();/* 組み込み */
 //
-	#if (1==USE_GU)
+	#if 1//(1==US E_GU)
 	#else
-	{//static SDL_Surface *loadpic = NULL;		// load画面用
-		SDL_Surface *loadpic=loadbmp0("bg/loading.png", 0, 0);
-		SDL_BlitSurface(loadpic, NULL, sdl_screen[SDL_01_BACK_SCREEN], NULL);
-		unloadbmp_by_surface(loadpic);
-	}
+	load_SDL_bg(BG_TYPE_xx_loading);
 	psp_pop_screen();
 	#endif
 //
 	#if (1)/*Guで描く前に必要な初期化*/
-	pd_bomber_time=0;
+	pd_bomber_time = 0;
 	#endif
 //
-	#if (1==USE_GU)
+	#if 1//(1==US E_GU)
 	#else
 	SDL_Flip(sdl_screen[SDL_00_VIEW_SCREEN]);
 	#endif
@@ -80,16 +79,21 @@ void game_system_init(void/*int argc, char *argv[]*/)
 //						画像キャッシュの順番を決める為の読み込み */
 //
 	font_init();
-	menusystem_init();
+
 	//fps_init();
-	send1_obj		= mmalloc(sizeof(SPRITE));/* 引数受け渡し用 */
+	obj_send1		= my_calloc(sizeof(SPRITE));/* 引数受け渡し用 */
 	bg2_system_init();
 	/* ゲームコア game_core_init(); */
+	continue_stage					= (1-1);	/* (0) */
+//	practice_mode					= 0;
+//	volume							= 0;
+//	zanki							= 2;
+	old_menu_system_init();
 //
-	play_music_num(BGM_21_menu01);
-	/* メインメニューに戻る */
-	psp_loop = (ST_INIT_MENU|0/*ST_ME NU_SUB_MAIN_MENU*/);
+	play_music_num(BGM_22_menu01);
+	main_call_func = title_menu_start;	/* タイトルメニューへ移動 */
 }
+
 
 /*---------------------------------------------------------
 	ゲームシステム開放処理
@@ -97,16 +101,26 @@ void game_system_init(void/*int argc, char *argv[]*/)
 void game_system_exit(void)
 {
 	ini_save();
-	/* TODO: Free everything (memory, SDL_Surfaces, Joysticks...) */
-	script_system_exit();
+	kanji_system_exit();
+//	script_system_exit();
 	exit_audio();
-	//fprintf(stdout,"Thank you for playing\n");
+//	psp_denug_printf("Thank you for playing");
+	#if (0)/* r31 現状うまくいかないです。*/
+	/* たぶんSDL231の開放処理にバグあると思います。
+	登録(具体的にはmallocとかでメモリ確保)してないのに
+	開放(freeとか)して、辻褄が合わなくなってる。
+	*/
 	SDL_Quit(); 	// [***** 追加:090103
+	#endif /* (0) */
 	#ifdef ENABLE_PROFILE
 	gprof_cleanup();
 	#endif
 	sceKernelExitGame();
 }
+
+/*---------------------------------------------------------
+	プロファイラー gprof の使い方メモ。
+---------------------------------------------------------*/
 #if 0
 psp-gprof ./kene.elf gmon.out > gmon.txt
 

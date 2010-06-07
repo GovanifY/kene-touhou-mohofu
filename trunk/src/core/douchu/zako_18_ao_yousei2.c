@@ -2,13 +2,22 @@
 #include "douchu.h"
 
 /*---------------------------------------------------------
+	東方模倣風  ～ Toho Imitation Style.
+	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	-------------------------------------------------------
 		"青妖精2",		"SPLASH",
 	-------------------------------------------------------
 
 ---------------------------------------------------------*/
-
-#define time_out		user_data02 	/* 経過時間 */		/* 状態遷移用の時間切れ */
-#define nnn				user_data04 	/* 弾を撃つ回数 */
+#if 0/* めも */
+/* ボス共通規格 */
+	#define target_x256 		user_data00 	/* 目標x座標 */
+	#define target_y256 		user_data01 	/* 目標y座標 */
+	#define vvv256				user_data02 	/* 目標座標への到達割合 */
+	#define time_out			user_data03 	/* 制限時間 */
+#endif
+#define time_out		user_data03 	/* 経過時間 */		/* 状態遷移用の時間切れ */
+#define nnn 			user_data04 	/* 弾を撃つ回数 */
 #define state			user_data05 	/* 妖精の状態 */
 
 
@@ -27,6 +36,7 @@ enum
 	STATE_03,
 };
 
+
 //#define SSS00 ( 0<<2)/*右*/
 //#define SSS04 ( 4<<2)/*右斜め下*/
 //#define SSS08 ( 8<<2)/*下１*/
@@ -35,8 +45,6 @@ enum
 //#define SSS20 (20<<2)/*左*/
 static void move_ao_yousei2(SPRITE *src)
 {
-	int p512;
-//
 	src->time_out--;	/* 常に時間経過 */
 	switch (src->state)
 	{
@@ -61,43 +69,30 @@ static void move_ao_yousei2(SPRITE *src)
 		}
 		else
 		{
-			p512=atan_512(player->y256-src->y256,player->x256-src->x256);
-			mask512(p512);
+			tmp_angleCCW1024_jikinerai(obj_player, src);
+			mask1024(src->tmp_angleCCW1024);
 		//	const u8 aa_offs[8] = { OF_16, OF_12, OF_08, OF_04, OF_00, OF_04, OF_08, OF_12 };
 //			const u8 aa_offs[8] = { SSS00, SSS04, SSS08, SSS16, SSS20, SSS16, SSS08, SSS04 };
-//			src->anime_frame = (src->anime_frame&(4-1))+aa_offs[(p512>>6)];		/* 64  32== 512/16 */
-			src->type 				= /*SP_ZAKO*/TEKI_12_YOUSEI1_1+(p512>>6)/*_17_AO_YOUSEI2*/;
+//			src->anime_frame = (src->anime_frame&(4-1))+aa_offs[(src->tmp_angleCCW1024>>7)];	/* 64  32== 512/16 */
+			src->type				= /*SP_ZAKO*/TEKI_12_YOUSEI1_1+(src->tmp_angleCCW1024>>7)/*_17_AO_YOUSEI2*/;
 		}
 		break;
 	case STATE_02:	/* 弾を撃つ */
-	//	bullet_create_offset_dan_type000(src, /*((1+difficulty)<<7)*/t256(2.5)/*t256(3)*/, ANGLE_JIKI_NERAI_DAN/*, t256(0), t256(0)*/, BULLET_HARI32_00_AOI);
-	//	bullet_create_offset_dan_type000(src, /*((1+difficulty)<<8)*/t256(3.5)/*t256(4)*/, ANGLE_JIKI_NERAI_DAN/*, t256(0), t256(0)*/, BULLET_HARI32_00_AOI);
-
-	//	#if 0/*SDL(左隅座標)*/
-	//	p512=atan_512(player->y256-src->y256+((player->h128)), player->x256-src->x256-((player->w128)));
-	//	#else/*Gu(中心座標)*/
-	//	p512=atan_512(player->y256-src->y256, player->x256-src->x256);
-	//	#endif
-	//	if (0 < difficulty)
 		{
 			int k;
 			for (k=0; k<6/*4*/; k++)
 			{
-		//		/*bullet_create_maru8_frame*/bullet_create_offset_dan_type000(
-		//			src,			/*	*/
-		//			t256(2.5)+(k<<7),			/* 弾速 */
-		//			((p512))+(1-((k&(2-1)/*%2*/)*2))*((512*1/12)),			/* 発射中心角度 / 特殊機能(自機狙い/他) */
-		//			(BULLET_MARU8_00_AKA+(/*0*/7-k/*とりあえず*/))	/* 弾グラ */
-		//		);
-				const static u16 bk_tbl[4]={((int)(512*1/8)),((int)(512*1/12)),((int)(512*1/16)),((int)(512*1/24))};
-				send1_obj->x256 = src->x256;
-				send1_obj->y256 = src->y256;
-				send1_obj->BULLET_REGIST_speed256			=	(t256(2.5)+(k<<6));				/* 弾速 */
-				send1_obj->BULLET_REGIST_angle512			=	ANGLE_JIKI_NERAI_DAN;//(((p512))+(1-((k&(2-1)/*%2*/)*2))*((512*1/24)));
-				send1_obj->BULLET_REGIST_div_angle512		=	(bk_tbl[(difficulty)]); 				/* 分割角度 */
-				send1_obj->BULLET_REGIST_bullet_obj_type	=	(BULLET_MARU8_00_AKA+(/*0*/6-k/*とりあえず*/));	/* [赤弾] */
-				send1_obj->BULLET_REGIST_n_way				=	(7);				/* [7way] */
-				bullet_regist_basic();
+				const static u16 bk1024_tbl[4] =
+				{((int)(1024*1/8)), ((int)(1024*1/12)), ((int)(1024*1/16)), ((int)(1024*1/24))};
+				obj_send1->x256 					= (src->x256);
+				obj_send1->y256 					= (src->y256);
+				br.BULLET_REGIST_speed256			= (t256(2.5)+(k<<6));					/* 弾速 */
+				br.BULLET_REGIST_angle1024			= ANGLE_JIKI_NERAI_DAN; 				/* */
+				br.BULLET_REGIST_div_angle1024		= (bk1024_tbl[(difficulty)]);			/* 分割角度 */
+				br.BULLET_REGIST_bullet_obj_type	= (BULLET_MARU8_00_AKA+(/*0*/6-k/*とりあえず*/)); /* [赤弾] */
+				br.BULLET_REGIST_n_way				= (7);									/* [7way] */
+				br.BULLET_REGIST_regist_type		= REGIST_TYPE_00_MULTI_VECTOR;
+				bullet_regist_vector();
 			}
 		}
 //				if (1 < difficulty)
@@ -115,8 +110,8 @@ static void move_ao_yousei2(SPRITE *src)
 		if (0 > src->nnn)
 		{
 			/* 退場準備 */
-//				 if (src->enemy_rank<3)	{	src->anime_frame=(src->anime_frame&(4-1))+SSS00;}
-//			else if (src->enemy_rank<7)	{	src->anime_frame=(src->anime_frame&(4-1))+SSS08;}
+//				 if (src->enemy_rank<3) 	{	src->anime_frame=(src->anime_frame&(4-1))+SSS00;}
+//			else if (src->enemy_rank<7) 	{	src->anime_frame=(src->anime_frame&(4-1))+SSS08;}
 //			else							{	src->anime_frame=(src->anime_frame&(4-1))+SSS00;}
 			src->state++;// = STATE_03;/*次へ*/
 			src->time_out = 50;
@@ -165,7 +160,7 @@ static void move_ao_yousei2(SPRITE *src)
 ---------------------------------------------------------*/
 	#if 0
 //
-//	if ( (enemy_rank)>9) {enemy_rank=9;}
+//	if ( (enemy_rank)>9) 	{enemy_rank=9;}
 	signed short spr_tbl[10][4] =
 	{
 {/* case 0: 	s->x=*/372 GAME_WIDTH352+20-80-12(280), /*s->y=*/100,		1,/*-s->w;*/		/*s->yx_an im_frame=*/SSS20},	//右下
@@ -183,62 +178,59 @@ static void move_ao_yousei2(SPRITE *src)
 	};
 //	s->y256 				= (spr_tbl[enemy_rank][1]<<8);
 //	s->x256 				= (spr_tbl[enemy_rank][0]<<8);
-//		 if (1==spr_tbl[enemy_rank][2]) {s->x256 -= ((s->w128+s->w128));}
-//	else if (3==spr_tbl[enemy_rank][2]) {s->x256 -= ((s->w128));}
+//		 if (1==spr_tbl[enemy_rank][2]) 	{	s->x256 -= ((s->w128+s->w128));}
+//	else if (3==spr_tbl[enemy_rank][2]) 	{	s->x256 -= ((s->w128));}
 	#endif
 
-void add_zako_ao_yousei2(STAGE_DATA *l)
+global void add_zako_ao_yousei2(STAGE_DATA *l)
 {
 	SPRITE *h;
-	h						= sprite_add_gu(ZAKO_TYPE_ATARI16_PNG);
-	h->type 				= TEKI_12_YOUSEI1_1;
-	add_zako_common(l, h);
-//
-//	h->flags				|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK|SP_FLAG_TIME_OVER);
-	h->callback_mover		= move_ao_yousei2;
-//	h->callback_loser		= lose_random_item;
-//	h->callback_hit_enemy	= callback_hit_zako;
-//	h->yx_an im_frame		= 0;// spr_tbl[enemy_rank][3];
-	h->x256 				= ((l->user_x)<<8);
-	h->y256 				= ((l->user_y)<<8);
-//
-	/* 登場の動き / 退場の動き */
-//		 if (/*h->*/enemy_rank<3)	{	h->vx256 = -t256(2.0);	}
-//	else if (/*h->*/enemy_rank<7)	{	h->vx256 =	t256(2.0);	}
-//	else								{	h->vx256 =	t256(2.0);	}
-		 if (t256(64)			 > h->x256) 	{	h->vx256 =	t256(2.0);	}	/* 出現位置が左なら、右へ移動 */
-	else if (t256(GAME_WIDTH-64) < h->x256) 	{	;	}						/* 中心付近なら左右に移動しない */
-	else										{	h->vx256 = -t256(2.0);	}	/* 出現位置が右なら、左へ移動 */
-
-	h->vy256 = (0);
-
-	#if 1//(1==USE_X_HOUKOU)
-	if (0 < (h->y256))
-	{	;	}
-	else
+	h							= sprite_add_gu_error();
+	if (NULL!=h)/* 登録できた場合のみ */
 	{
-		/* y座標が負方向の場合は、x座標指定なので(x座標 y座標 を逆にする) */
+		add_zako_common(l, h);
+		h->m_Hit256R			= ZAKO_ATARI16_PNG;
+		h->type 				= TEKI_12_YOUSEI1_1;
+	//
+		h->callback_mover		= move_ao_yousei2;
+	//	h->yx_an im_frame		= 0;// spr_tbl[enemy_rank][3];
+		h->x256 				= ((l->user_x)<<8);
+		h->y256 				= ((l->user_y)<<8);
+	//
+		/* 登場の動き / 退場の動き */
+	//		 if (/*h->*/enemy_rank<3)	{	h->vx256 = -t256(2.0);	}
+	//	else if (/*h->*/enemy_rank<7)	{	h->vx256 =	t256(2.0);	}
+	//	else								{	h->vx256 =	t256(2.0);	}
+			 if (t256(64)			 > h->x256) 	{	h->vx256 =	t256(2.0);	}	/* 出現位置が左なら、右へ移動 */
+		else if (t256(GAME_WIDTH-64) < h->x256) 	{	;	}						/* 中心付近なら左右に移動しない */
+		else										{	h->vx256 = -t256(2.0);	}	/* 出現位置が右なら、左へ移動 */
+
+		h->vy256 = (0);
+
+		#if 1//(1==USE_X_HOUKOU)
+		if (0 < (h->y256))
+		{	;	}
+		else
 		{
-			int s_sss;
-			s_sss				=  (h->x256);
-			h->x256 			= -(h->y256);
-			h->y256 			= s_sss;
+			/* y座標が負方向の場合は、x座標指定なので(x座標 y座標 を逆にする) */
+			{
+				int s_sss;
+				s_sss				=  (h->x256);
+				h->x256 			= -(h->y256);
+				h->y256 			= s_sss;
+			}
+			h->vy256			= (h->vx256);
+			h->vx256			= (0);
+	//		h->AO_YOUSEI3_anime_houkou		= ((0x20)>>2);
 		}
-		h->vy256			= (h->vx256);
-		h->vx256			= (0);
-//		h->AO_YOUSEI3_anime_houkou		= ((0x20)>>2);
+		#endif
+
+		h->state			= STATE_00;
+	//	h->enemy_rank		= enemy_rank;
+		h->time_out 		= 40;
+		h->nnn				= 3;	/* 3回撃つ */
+	//
+	//	h->ani_turn 		= 0;
+	//	h->anime_frame		= 0;// spr_tbl[enemy_rank][3];
 	}
-	#endif
-
-
-//	/*h->base.*/h->base_score		= score(50*2);
-//	/*h->base.*/h->base_hp		= (8*20)+(1/*di fficulty*/<<(2+3));
-	h->state 			= STATE_00;
-//	h->enemy_rank		= enemy_rank;
-	h->time_out			= 40;
-	h->nnn				= 3;	/* 3回撃つ */
-//
-//	h->ani_turn			= 0;
-//	h->anime_frame		= 0;// spr_tbl[enemy_rank][3];
-
 }

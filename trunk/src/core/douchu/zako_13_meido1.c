@@ -2,14 +2,25 @@
 #include "douchu.h"
 
 /*---------------------------------------------------------
+	東方模倣風  ～ Toho Imitation Style.
+	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	-------------------------------------------------------
 	"メイド1",		"RWINGX",	rwingx
 	-------------------------------------------------------
 	上から横に等間隔で整列して現れ、プレイヤーに向かい
 	ある程度近づくと、弾置いて反転して逃げる。
 ---------------------------------------------------------*/
+#if 0/* めも */
+/* ボス共通規格 */
+	#define target_x256 		user_data00 	/* 目標x座標 */
+	#define target_y256 		user_data01 	/* 目標y座標 */
+	#define vvv256				user_data02 	/* 目標座標への到達割合 */
+	#define time_out			user_data03 	/* 制限時間 */
+#endif
 
-#define time_out	user_data02
-#define speed256	user_data03
+#define time_out	user_data03
+#define speed256	user_data04
+
 
 /*---------------------------------------------------------
 	敵移動
@@ -20,7 +31,7 @@ static void move_meido1(SPRITE *src)
 	src->time_out--;/*fps_factor*/
 	if (0 > src->time_out)
 	{
-		gamen_gai_nara_osimai(src);/* 画面外ならおしまい */
+		gamen_gai_nara_zako_osimai(src);/* 画面外ならおしまい */
 	}
 	else
 	if (1024 > src->time_out)
@@ -30,13 +41,20 @@ static void move_meido1(SPRITE *src)
 		{
 		//	if (src->enemy_rank)
 			{
-				bullet_create_aka_maru_jikinerai(src,
-					t256(2.8) // //t256(1.0)+t256(src->enemy_rank)/*t256(3)+t256(src->enemy_rank)*/
-				);
-			}/*速過ぎ*/
+				obj_send1->x256 					= src->x256;
+				obj_send1->y256 					= src->y256;
+				br.BULLET_REGIST_speed256			= t256(2.8);				/* 弾速 */	 // //t256(1.0)+t256(src->enemy_rank)/*t256(3)+t256(src->enemy_rank)*/	/*速過ぎ*/
+			//	br.BULLET_REGIST_speed256			= speed256; 				/* 弾速 */
+				br.BULLET_REGIST_angle1024			= ANGLE_JIKI_NERAI_DAN; 	/* 自機狙い弾 */	/* 発射中心角度 / 特殊機能(自機狙い/他) */
+			//	br.BULLET_REGIST_div_angle1024		= (0);						/* ダミー角度(未使用) */
+				br.BULLET_REGIST_bullet_obj_type	= BULLET_MARU8_00_AKA;		/* [赤弾] */ /* 弾グラ */
+				br.BULLET_REGIST_n_way				= (1);						/* [1way] */
+				br.BULLET_REGIST_regist_type		= REGIST_TYPE_00_MULTI_VECTOR;
+				bullet_regist_vector();
+			}
 			src->time_out = 1023;
-			src->tmp_angleCCW512 += deg_360_to_512CCW(180/*360-180*/);/* 反転して逃げる */
-			mask512(src->tmp_angleCCW512);// src->angle %= deg_360_to_512(360);
+			src->tmp_angleCCW1024 += (1024/2);	/* (1024/2) == [180/360 度] 反転して逃げる */
+			mask1024(src->tmp_angleCCW1024);
 		//	src->speed256 = /*t256(6+src->enemy_rank)*/;/*速過ぎ*/
 		}
 	}
@@ -45,7 +63,7 @@ static void move_meido1(SPRITE *src)
 	{
 		/* プレイヤーに突っ込んでくる / schnell richtung player */
 		src->time_out = 2047;
-		src->tmp_angleCCW512	= atan_512(player->y256-src->y256,player->x256-src->x256);
+		tmp_angleCCW1024_jikinerai(obj_player, src);
 	//	src->speed256	= /*t256(3+(src->enemy_rank>>1))*/ /*(4+src->enemy_rank)*/;/*速過ぎ*/
 	}
 	else
@@ -53,7 +71,7 @@ static void move_meido1(SPRITE *src)
 	{
 		if (0 < src->speed256)
 		{
-			src->speed256 -= 5/*t256(0.1)*/;/*減速*/
+			src->speed256 -= (5);/*t256(0.1)*/ /*減速*/
 		}
 	}
 	else
@@ -61,34 +79,17 @@ static void move_meido1(SPRITE *src)
 	{
 		if ( src->speed256 < t256(1.0))
 		{
-			src->speed256 += 5/*t256(0.1)*/;/*加速*/
+			src->speed256 += (5);/*t256(0.1)*/ /*加速*/
 		}
 	}
 //
 	/*以下rwingx.cと同じ*/
 /* CCWの場合 */
-	src->x256 += ((sin512((src->tmp_angleCCW512))*src->speed256)>>8);/*fps_factor*/
-	src->y256 += ((cos512((src->tmp_angleCCW512))*src->speed256)>>8);/*fps_factor*/
-//	src->an im_frame=(deg_512_to_360(src->angle512+deg_360_to_512(270))/10)%36;
-//	src->an im_frame = ((((src->angle512+deg_360_to_512(270))&(512-1))*(36/2))>>8);
-#if 00
-/* [CCWの場合(新)] CWの場合 */
-	src->an im_frame = ((((src->tmp_angleCCW512)&(512-1)))>>6);/*"rw ingx8.png"*/
-	/* 旧 */
-//#else
-/* CCWの場合 */
-	/* 新(まだ作ってない) */
-	//src->an im_frame = ((((src->tmp_angleCCW512)&(512-1)))>>6);/*"rw ingx8.png"*/
-	/*無理矢理旧互換*/
-	{int aaa512;
-		aaa512 = 128+ 512 - src->tmp_angleCCW512;
-		mask512(aaa512);
-		src->yx_an im_frame = (((aaa512))>>(6));
-	}
-#endif
+	src->x256 += ((sin1024((src->tmp_angleCCW1024))*src->speed256)>>8);/*fps_factor*/
+	src->y256 += ((cos1024((src->tmp_angleCCW1024))*src->speed256)>>8);/*fps_factor*/
 	if (SP_DELETE != src->type)
 	{
-		src->type			= TEKI_36_YOUSEI3_1+((((src->tmp_angleCCW512)&(512-1)))>>6);
+		src->type			= TEKI_36_YOUSEI3_1+((((src->tmp_angleCCW1024)&(1024-1)))>>7);
 	}
 }
 
@@ -96,23 +97,20 @@ static void move_meido1(SPRITE *src)
 	敵を追加する
 ---------------------------------------------------------*/
 
-void add_zako_meido1(STAGE_DATA *l)
+global void add_zako_meido1(STAGE_DATA *l)
 {
 	SPRITE *h;
-	h						= sprite_add_gu(ZAKO_TYPE_ATARI16_PNG);
-	add_zako_common(l, h);
-	h->type 				= TEKI_36_YOUSEI3_1;	/*SP_ZAKO*/ /*_12_MEIDO1*/
-//	h->flags				|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK|SP_FLAG_TIME_OVER);
-	h->callback_mover		= move_meido1;
-//	h->callback_loser		= lose_random_item;
-//	h->callback_hit_enemy	= callback_hit_zako;
-//
-	h->tmp_angleCCW512		= deg_360_to_512CCW(0);/* 下向き */ 	/* CCWの場合 */
-//
-	h->speed256 			= t256(0);//t256(0.5);
-	h->time_out 			= (2209);//(100);//20;
+	h						= sprite_add_gu_error();
+	if (NULL!=h)/* 登録できた場合のみ */
+	{
+		add_zako_common(l, h);
+		h->m_Hit256R			= ZAKO_ATARI16_PNG;
+		h->type 				= TEKI_36_YOUSEI3_1;	/*SP_ZAKO*/ /*_12_MEIDO1*/
+		h->callback_mover		= move_meido1;
+	//
+		h->tmp_angleCCW1024 	= (0);/* 下向き */		/* CCWの場合 */
+	//
+		h->speed256 			= t256(0);//t256(0.5);
+		h->time_out 			= (2209);//(100);//20;
+	}
 }
-//	/*h->base.*/h->base_score	= score(25*2)*(1+1/*enemy_rank*/);
-//	/*h->base.*/h->base_hp		= (8*1)+/*(8*enemy_rank)+*/(1/*di fficulty*/<<(2+3));
-//	h->x256 				= t256(GAME_WIDTH/8)*i+t256(10/*-20*/);
-//	h->y256 				= t256(-32)/*-50*/;

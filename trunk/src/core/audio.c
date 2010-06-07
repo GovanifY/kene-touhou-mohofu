@@ -1,12 +1,11 @@
 
-/*---------------------------------------------------------
-	オーディオ マネージャー
----------------------------------------------------------*/
-
 #include "game_main.h"
 
 /*---------------------------------------------------------
-
+	東方模倣風	～ Toho Imitation Style.
+	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	-------------------------------------------------------
+	オーディオ マネージャー
 ---------------------------------------------------------*/
 
 #if (1==USE_DESIGN_TRACK)
@@ -53,7 +52,7 @@ static int use_audio = 0;/*使用不可能*/
 	曲の一時停止
 ---------------------------------------------------------*/
 
-//void pause_music(void)
+//global void pause_music(void)
 //{
 //	if ( 0==use_audio ) return;
 //	Mix_PauseMusic();
@@ -64,7 +63,7 @@ static int use_audio = 0;/*使用不可能*/
 	一時停止した曲の演奏再開
 ---------------------------------------------------------*/
 
-//void resume_music(void)
+//global void resume_music(void)
 //{
 //	if ( 0==use_audio ) return;
 //	Mix_ResumeMusic();
@@ -75,7 +74,7 @@ static int use_audio = 0;/*使用不可能*/
 	曲のフェードアウト
 ---------------------------------------------------------*/
 
-//void fadeout_music(void)
+//global void fadeout_music(void)
 //{
 //	if ( 0==use_audio ) return;
 //	Mix_FadeOutMusic(1280);
@@ -86,7 +85,7 @@ static int use_audio = 0;/*使用不可能*/
 	それまでの曲の演奏停止(廃止/統合)	play_music_num(BGM_00_stop)を使う
 ---------------------------------------------------------*/
 
-//void stop_music(void)
+//global void stop_music(void)
 //{
 //	//if ( 0==use_audio ) return;
 //	if ( music_track != NULL )
@@ -105,8 +104,18 @@ static int use_audio = 0;/*使用不可能*/
 	0==num	でそれまでの曲の演奏停止
 	1～ 	で曲の演奏
 ---------------------------------------------------------*/
+#define CUSTOM_MIXER (1)
+#if (0==CUSTOM_MIXER)
+	#define aaa_Mix_PlayMusic	Mix_PlayMusic
+	#define sdl_mixer_play_channel(aaa,bbb) 	Mix_PlayChannelTimed(aaa,bbb,0,-1)
+	//#define sdl_mixer_play_channel(aaa,bbb)	Mix_PlayChannel(aaa,bbb,0)
+#else
+	extern void sdl_mixer_play_music(Mix_Music *music_track);
+	#define aaa_Mix_PlayMusic(aaa,bbb)	sdl_mixer_play_music(aaa)
+	extern int sdl_mixer_play_channel(int which, Mix_Chunk *chunk);
+#endif
 
-void play_music_num(int num)
+global void play_music_num(int num)
 {
 	if ( 0==use_audio ) return;
 	/* 範囲チェック */
@@ -145,20 +154,21 @@ void play_music_num(int num)
 		/*	5 */	"stage5",	/* 5面道中 */
 		/*	6 */	"stage6",	/* 6面道中 */
 		/*	7 */	"stage7",	/* エンディング(道中) */
-		/*	8 */	"stage8",	/* エキストラステージ1道中 */
-		/*	9 */	"stage9",	/* エキストラステージ2道中 */
-		/* 10 */	"boss1",	/* 1面ボス */
-		/* 11 */	"boss2",	/* 2面ボス */
-		/* 12 */	"boss3",	/* 3面ボス */
-		/* 13 */	"boss4",	/* 4面ボス */
-		/* 14 */	"boss5",	/* 5面ボス */
-		/* 15 */	"boss6",	/* 6面ボス */
-		/* 16 */	"boss7",	/* エキストラステージ1ボス */
-		/* 17 */	"boss8",	/* エキストラステージ2ボス */
-		/* 18 */	"boss9",	/* エキストラステージ3ボス */
-		/* 19 */	"menu3",	/* エンディング(シナリオ) */
-		/* 20 */	"menu2",	/* キーコンフィグ */
-		/* 21 */	"menu1",	/* タイトル画面 */
+		/*	8 */	"stage8",	/* エキストラステージ道中 */
+		/*	9 */	"stage9",	/* ファンタズムステージ道中 */
+		/* 10 */	"menu4",	/* 上海紅茶館 */
+		/* 11 */	"boss1",	/* 1面ボス */
+		/* 12 */	"boss2",	/* 2面ボス */
+		/* 13 */	"boss3",	/* 3面ボス */
+		/* 14 */	"boss4",	/* 4面ボス */
+		/* 15 */	"boss5",	/* 5面ボス */
+		/* 16 */	"boss6",	/* 6面ボス */
+		/* 17 */	"boss7",	/* エキストラステージ1ボス */
+		/* 18 */	"boss8",	/* エキストラステージ2ボス */
+		/* 19 */	"boss9",	/* エキストラステージ3ボス */
+		/* 20 */	"menu3",	/* エンディング(シナリオ) */
+		/* 21 */	"menu2",	/* キーコンフィグ */
+		/* 22 */	"menu1",	/* タイトル画面 */
 		};		// いろいろ追加
 		const char *name_extention[] =
 		{
@@ -179,15 +189,14 @@ void play_music_num(int num)
 				//use_audio = 0;/*使用不可能*/
 				return;
 			}
-		//	strcpy(name, data_dir);
-			strcpy(name, DIRECTRY_NAME_DATA "/sounds/");
+			strcpy(name, DIRECTRY_NAME_DATA_STR "/sounds/");
 			strcat(name, music_file_name[num]);
 			strcat(name, (char *)&name_extention[aaa][0] );
 			music_track = Mix_LoadMUS(name);
 		}
 		while ( NULL == music_track );
 	}
-	Mix_PlayMusic(music_track, -1);
+	aaa_Mix_PlayMusic(music_track, -1);
 }
 
 
@@ -196,13 +205,13 @@ void play_music_num(int num)
 	効果音を予約。トラックは適当に決める。
 ---------------------------------------------------------*/
 #if (0==USE_DESIGN_TRACK)
-void play_voice_auto_track(int req)
+global void play_voice_auto_track(int req)
 {
 	if ( 0==use_audio ) return;
 	#if (0==USE_VSYNC_SOUND)
 	//チャンネルが8までしか用意されていないので8以降はチャンネル自由
-	if (req>=8) Mix_PlayChannel(-1, voice_track[req], 0);
-	else Mix_PlayChannel(req, voice_track[req], 0);
+	if (req>=8) sdl_mixer_play_channel(-1, voice_track[req] );
+	else sdl_mixer_play_channel(req, voice_track[req]);
 	#else
 	if (req<8)/*  0-7 まではトラック指定 */
 	{
@@ -250,7 +259,7 @@ void play_voice_auto_track(int req)
 ---------------------------------------------------------*/
 
 #if (1==USE_DESIGN_TRACK)
-void voice_play(int req, int play_track )
+global void voice_play(int req, int play_track )
 {
 	if ( 0==use_audio ) return;
 	/* 範囲チェック */
@@ -265,7 +274,7 @@ void voice_play(int req, int play_track )
 ---------------------------------------------------------*/
 
 #if (1==USE_DESIGN_TRACK)
-void bullet_play_04_auto(int req)
+global void bullet_play_04_auto(int req)
 {
 	if ( 0==use_audio ) return;
 	/* 範囲チェック */
@@ -285,7 +294,7 @@ void bullet_play_04_auto(int req)
 ---------------------------------------------------------*/
 
 #if (1==USE_VSYNC_SOUND)
-void voice_play_vbl(void)
+global void voice_play_vbl(void)
 {
 	if ( 0==use_audio ) return;
 	/* ----- 設定で効果音再生OFFなら再生しない	*/
@@ -322,7 +331,7 @@ void voice_play_vbl(void)
 		if (NOT_USE_TRACK != request_voice[i])/*使用中?*/
 		{
 			/* 効果音 発音 */
-			Mix_PlayChannel(i/*track*/, voice_track[request_voice[i/*track*/]], 0);
+			sdl_mixer_play_channel(i/*track*/, voice_track[request_voice[i/*track*/]]);
 			request_voice[i] = NOT_USE_TRACK;/*未使用*/
 		}
 	}
@@ -341,7 +350,7 @@ void voice_play_vbl(void)
 			if (NOT_USE_TRACK != request_voice[i])/*使用中?*/
 			{
 				/* 効果音 発音 */
-				Mix_PlayChannel(i/*track*/, voice_track[request_voice[i/*track*/]], 0);
+				sdl_mixer_play_channel(i/*track*/, voice_track[request_voice[i/*track*/]]);
 				request_voice[i] = NOT_USE_TRACK;/*未使用*/
 			}
 		}
@@ -355,7 +364,7 @@ void voice_play_vbl(void)
 	効果音のミキシング音量を変える
 ---------------------------------------------------------*/
 #if 0
-void set_voice_volume(int volume)
+global void set_voice_volume(int volume)
 {
 	#ifdef ENABLE_PSP
 	#else
@@ -372,7 +381,7 @@ void set_voice_volume(int volume)
 	曲のミキシング音量を変える
 ---------------------------------------------------------*/
 
-void set_music_volume(int volume)
+global void set_music_volume(int volume)
 {
 	Mix_VolumeMusic(volume);
 }
@@ -382,7 +391,7 @@ void set_music_volume(int volume)
 	オーディオシステムの終了処理
 ---------------------------------------------------------*/
 
-void exit_audio(void)
+global void exit_audio(void)
 {
 	if ( 0==use_audio ) return;
 	/* 曲の解放 */
@@ -439,10 +448,10 @@ static void voice_load(void)
 	char name[64/*52*/];
 	for (i=0; i<VOICE16_MAX_FILES; i++)
 	{
-	//	strcpy(name, data_dir);
-		strcpy(name, DIRECTRY_NAME_DATA "/sounds/");
+		strcpy(name, DIRECTRY_NAME_DATA_STR "/sounds/");
 		strcat(name, voice_file_name[i]);
-		voice_track[i] = Mix_LoadWAV(name);
+	//	voice_track[i] = Mix_LoadWAV(name);
+		voice_track[i] = Mix_LoadWAV_RW(SDL_RWFromFile(name, "rb"), 1);
 		if ( NULL == voice_track[i] )
 		{
 			//ps pDebugScreenPrintf("Couldn't load: %s\n", name);
@@ -457,7 +466,7 @@ static void voice_load(void)
 	オーディオシステムの初期化処理
 ---------------------------------------------------------*/
 
-void init_audio(void)
+global void init_audio(void)
 {
 	//use_audio = 0;/*使用不可能*/
 	#if 1

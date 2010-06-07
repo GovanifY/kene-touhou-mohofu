@@ -1,10 +1,13 @@
+
 #------------------------------------------------------------------------------
-#  東方模倣風  ～ Toho Imitation Style.  Makefile
+#  東方模倣風 ～ Toho Imitation Style.  Makefile
 #------------------------------------------------------------------------------
 
 TARGET = kene
 
-PSP_EBOOT_TITLE = kene_r30
+PSP_EBOOT_TITLE = kene_r31
+
+#RELESE_DATE = "2010/06/06"
 
 #------------------------------------------------------------------------------
 # PSP setting
@@ -45,6 +48,26 @@ CUSTOM_SDL = 1
 #CUSTOM_SDL = 0
 
 #------------------------------------------------------------------------------
+# Compile option flag (r31時点で間に合わなかった。研究中)
+#------------------------------------------------------------------------------
+# 注意: ここのカテゴリのオプションはr31時点で間に合わなかったのでダミーです。
+# 一応、USE_BUNKAI_KINOU = 1、CUSTOM_231SDL = 1 にすると、
+# 模倣風起動時にSDL のマウスカーソルが表示されなくなるのが確認できます。
+# しかしどこかバグがあるのか、ハングアップ(突然死)が多くなる気がします。不安定です。
+#------------------------------------------------------------------------------
+
+# libSDL.a を分解してコピーする機能。
+# 1 == USE_BUNKAI_KINOU (標準は 1 : コンパイル前に libSDL.a を展開して、objにコピー)
+# 0 == USE_BUNKAI_KINOU (開発中はウザイからoff: off は 0)
+USE_BUNKAI_KINOU = 1
+#USE_BUNKAI_KINOU = 0
+
+# <<てすと>>
+# 0 == CUSTOM_231SDL (標準SDLは0)
+CUSTOM_231SDL = 1
+#CUSTOM_231SDL = 0
+
+#------------------------------------------------------------------------------
 # Custom Lib option flag (カスタマイズ)
 #------------------------------------------------------------------------------
 # 注意: ここのカテゴリのオプションを変更した場合は、SDL_mixer のリコンパイルが必ず必要です。
@@ -56,7 +79,27 @@ CUSTOM_SDL = 1
 CUSTOM_LIB = 1
 #CUSTOM_LIB = 0
 
-# 注意: MP3のon/off(LINK_MP3)は src/custom.mak 内にあります。
+# MP3の設定
+# 注意: MP3の使用可否を変更した場合は、SDL_mixer のリコンパイルが必ず必要です。(設定変更後、make rr↓してからmake↓推奨)
+
+	## 注意: LINK_SMPEG_MP3 と LINK_MAD_MP3 を両方 1 にする事は出来ません。
+	# ok 	LINK_SMPEG_MP3 = 0	LINK_MAD_MP3 = 0	MP3 とか使わない。
+	# ok 	LINK_SMPEG_MP3 = 1	LINK_MAD_MP3 = 0	smpeg の MP3 (～r30) を使う。(不安定かつ、遅い、かつ、ぶちぶちノイズ)
+	# ok 	LINK_SMPEG_MP3 = 0	LINK_MAD_MP3 = 1	libmad の mp3 (r31～)を使う。(安定度は高い、遅いけど...、45fpsぐらいに低下する。)
+	# NG 	LINK_SMPEG_MP3 = 1	LINK_MAD_MP3 = 1	ソースレベルで対応がないので無理、NG。
+
+	## smpeg の MP3 (～r30)
+	# 0 == LINK_SMPEG_MP3:標準設定 [ smpeg の MP3の使用可否 ] (0:使用しない、1:使用する)
+	LINK_SMPEG_MP3 = 0
+	#LINK_SMPEG_MP3 = 1
+
+	## libmad の mp3 (r31～)
+	# 1 == LINK_MAD_MP3:標準設定 [ libmad の MP3の使用可否 ] (0:使用しない、1:使用する)
+	#LINK_MAD_MP3 = 0
+	LINK_MAD_MP3 = 1
+
+	# r31:色々やってみたけど、どうしても smpeg が不安定(突然死が多い)なので、 smpeg は止めて、 libmad にしました。
+	# (もし仮に両方にバグが無いと想定すると)たぶんバッファオーバーランなんじゃないかな？
 
 # 1 == LINK_OGG:標準設定 [ oggの使用可否 ] (0:使用しない、1:使用する)
 # 注意: oggの使用可否を変更した場合は、SDL_mixer のリコンパイルが必ず必要です。
@@ -76,18 +119,26 @@ LINK_LIBTREMOR_LOW_MEM = 1
 #------------------------------------------------------------------------------
 
 ifneq ($(SIMPLE),1)
-	PSP_EBOOT_ICON  = ICON0.PNG
-	PSP_EBOOT_ICON1 = ICON0.PMF
-	PSP_EBOOT_PIC1  = PIC1.PNG
-	PSP_EBOOT_SND0  = SND0.AT3
+	PSP_EBOOT_ICON	 = ICON0.PNG
+	PSP_EBOOT_ICON1  = ICON0.PMF
+	PSP_EBOOT_UNKPNG = ICON1.PNG
+	PSP_EBOOT_PIC1	 = PIC1.PNG
+	PSP_EBOOT_SND0	 = SND0.AT3
 else
-	PSP_EBOOT_ICON  = ICON0.PNG
-	PSP_EBOOT_ICON1 =
-	PSP_EBOOT_PIC1  =
-	PSP_EBOOT_SND0  =
+	PSP_EBOOT_ICON	 = ICON0.PNG
+	PSP_EBOOT_ICON1  = 
+	PSP_EBOOT_UNKPNG = 
+	PSP_EBOOT_PIC1	 = 
+	PSP_EBOOT_SND0	 = 
 endif
 
-EXTRA_TARGETS = mk_dir EBOOT.PBP
+ifneq ($(USE_BUNKAI_KINOU),1)
+	# 0==通常開発
+	EXTRA_TARGETS	 = mk_dir EBOOT.PBP
+else
+	# 1==とりあえず、自動で全部コンパイル出来る筈
+	EXTRA_TARGETS	 = mk_dir SDL_lib_bunkai EBOOT.PBP
+endif
 
 SRC = src
 OBJ = obj
@@ -170,11 +221,11 @@ endif
 #LIBS_org += -lSDL_image	使う
 #LIBS_org += -lpng			使う
 #LIBS_org += -lz			使う
-#LIBS_org += -ljpeg			使う
+#LIBS_org += -ljpeg 		使う
 #LIBS_org += -lSDL_gfx
 #LIBS_org += -lm			使う
 #LIBS_org += $(shell $(SDL_CONFIG) --libs)
-#LIBS_org += -lpsppower		使う
+#LIBS_org += -lpsppower 	使う
 
 
 #------------------- ogg codec
@@ -209,7 +260,8 @@ ifneq ($(CUSTOM_LIB),1)
 		LIBS += -lSDL_mixer
 endif
 
-#ifneq ($(CUSTOM_LIB),1)
+ifneq ($(CUSTOM_231SDL),1)
+	# CUSTOM_231SDL 以外の場合
 	# CUSTOM_LIB 以外の場合
 
 	#### 依存規則２
@@ -220,9 +272,11 @@ endif
 	else
 		# GL使わない場合(位置依存がある。)
 		# libSDL_noGL.a は libSDL.aより必ず先にリンク
+		#SDL231
 		LIBS += -lSDL_noGL
+	#	LIBS += -lSDL_mohou00
 	endif
-#endif
+endif
 
 ifneq ($(CUSTOM_LIB),1)
 	# CUSTOM_LIB 以外の場合
@@ -354,7 +408,9 @@ OBJDIRS += $(OBJ)
 OBJDIRS += $(OBJ)/core
 OBJDIRS += $(OBJ)/core/douchu
 OBJDIRS += $(OBJ)/core/boss
-OBJDIRS += $(OBJ)/core/gu_draw
+OBJDIRS += $(OBJ)/core/tama
+OBJDIRS += $(OBJ)/core/draw
+OBJDIRS += $(OBJ)/core/menu
 OBJDIRS += $(OBJ)/font
 
 # add after the others, in custom.mak
@@ -366,10 +422,14 @@ OBJDIRS += $(OBJ)/font
 #	particle.o
 
 OBJS += $(OBJ)/core/my_math.o
-OBJS += $(OBJ)/core/bullet_object.o
-OBJS += $(OBJ)/core/bullet_system.o
-OBJS += $(OBJ)/core/danmaku.o
-OBJS += $(OBJ)/core/spell_card.o
+OBJS += $(OBJ)/core/tama/bullet_vector.o
+OBJS += $(OBJ)/core/tama/bullet_angle.o
+#OBJS += $(OBJ)/core/tama/bullet_system.o
+#OBJS += $(OBJ)/core/tama/sprite_old.o
+#OBJS += $(OBJ)/core/tama/sprite_SDL.o
+OBJS += $(OBJ)/core/tama/sprite_bullet.o
+OBJS += $(OBJ)/core/tama/danmaku.o
+OBJS += $(OBJ)/core/boss/spell_card.o
 OBJS += $(OBJ)/core/boss/common.o
 #; ボス(本体)
 #OBJS += $(OBJ)/core/boss/boss_08_kene.o
@@ -381,23 +441,28 @@ OBJS += $(OBJ)/core/boss/boss_03_kaguya.o
 OBJS += $(OBJ)/core/boss/boss_02_mima.o
 OBJS += $(OBJ)/core/boss/boss_01_alice.o
 #; ボスのオプション
+OBJS += $(OBJ)/core/boss/option_12_sakuya_baramaki.o
 OBJS += $(OBJ)/core/boss/option_10_sakuya_ryoute.o
 OBJS += $(OBJ)/core/boss/option_09_sakuya_360knife.o
 OBJS += $(OBJ)/core/boss/option_08_sakuya_star.o
 OBJS += $(OBJ)/core/boss/option_07_sakuya_laser.o
 #
+OBJS += $(OBJ)/core/boss/option_11_pache_doll.o
+#
 OBJS += $(OBJ)/core/boss/option_06_aya_momiji02.o
 OBJS += $(OBJ)/core/boss/option_05_aya_momiji01.o
 #
+OBJS += $(OBJ)/core/boss/option_13_kaguya_dolls.o
 OBJS += $(OBJ)/core/boss/option_04_kaguya_tamanoe.o
 OBJS += $(OBJ)/core/boss/option_03_kaguya_houmotu.o
 OBJS += $(OBJ)/core/boss/option_02_mima_hosi.o
 #
 OBJS += $(OBJ)/core/boss/option_01_alice_doll.o
 #; 中ボスもどき
-OBJS += $(OBJ)/core/douchu/chuu_03_rumia.o
-OBJS += $(OBJ)/core/douchu/chuu_02_youkai2.o
-OBJS += $(OBJ)/core/douchu/chuu_01_youkai1.o
+OBJS += $(OBJ)/core/douchu/chuu_boss.o
+#OBJS += $(OBJ)/core/douchu/chuu_03_rumia.o
+#OBJS += $(OBJ)/core/douchu/chuu_02_youkai2.o
+#OBJS += $(OBJ)/core/douchu/chuu_01_youkai1.o
 #; ザコのオプション
 OBJS += $(OBJ)/core/douchu/option_50_homing.o
 #; ザコ
@@ -435,17 +500,14 @@ OBJS += $(OBJ)/core/douchu/game_clear.o
 OBJS += $(OBJ)/core/douchu/clouds.o
 OBJS += $(OBJ)/core/douchu/bakuhatsu.o
 #
-OBJS += $(OBJ)/core/stage_clear.o
 OBJS += $(OBJ)/core/game_core.o
 OBJS += $(OBJ)/core/player.o
 
 OBJS += $(OBJ)/core/bonus.o
 #---
-OBJS += $(OBJ)/core/gu_draw/draw_screen.o
+OBJS += $(OBJ)/core/draw/gu_load_texture.o
+OBJS += $(OBJ)/core/draw/gu_draw_screen.o
 
-OBJS += $(OBJ)/core/sprite_old.o
-#OBJS += $(OBJ)/core/sprite_SDL.o
-OBJS += $(OBJ)/core/sprite_bullet.o
 OBJS += $(OBJ)/core/bg.o
 OBJS += $(OBJ)/core/font.o
 #---
@@ -459,22 +521,30 @@ OBJS += $(OBJ)/core/score_panel.o
 OBJS += $(OBJ)/core/load_stage.o
 
 #---
-OBJS += $(OBJ)/core/menu.o
+OBJS += $(OBJ)/core/menu/title.o
+OBJS += $(OBJ)/core/menu/pause.o
+OBJS += $(OBJ)/core/menu/ask_continue.o
+OBJS += $(OBJ)/core/menu/stage_select.o
+OBJS += $(OBJ)/core/menu/select_player.o
 
-OBJS += $(OBJ)/core/game_over.o
-OBJS += $(OBJ)/core/name_entry.o
+OBJS += $(OBJ)/core/menu/game_over.o
+OBJS += $(OBJ)/core/menu/name_entry.o
 
-OBJS += $(OBJ)/core/option_menu.o
-OBJS += $(OBJ)/core/key_config.o
-OBJS += $(OBJ)/core/music_room.o
+OBJS += $(OBJ)/core/menu/option_menu.o
+OBJS += $(OBJ)/core/menu/key_config.o
+OBJS += $(OBJ)/core/menu/music_room.o
 
 OBJS += $(OBJ)/core/my_file.o
 
 #OBJS += $(OBJ)/core/fps.o
 
-OBJS += $(OBJ)/core/graphics00.o 
+OBJS += $(OBJ)/core/draw/graphics00.o 
 
-OBJS += $(OBJ)/core/scenario_script.o
+#/* スクリプトシステムは分離予定あり */
+OBJS += $(OBJ)/core/draw/scenario_script.o
+#OBJS += $(OBJ)/core/draw/game_script.o
+
+OBJS += $(OBJ)/core/draw/draw_kanji.o
 OBJS += $(OBJ)/font/shinonome16p.o
 
 OBJS += $(OBJ)/core/boot_main.o
@@ -487,7 +557,7 @@ OBJS += $(OBJ)/core/initialize.o
 #------------------------------------------------------------------------------
 ifneq ($(USE_FPU_HACK),1)
 else
-	OBJS += $(OBJ)/core/disable_fpu.o
+	OBJS += $(OBJ)/core/asm_first.o
 	CFLAGS += -DHACK_FPU=1
 endif
 #------------------------------------------------------------------------------
@@ -498,12 +568,29 @@ endif
 # CFLAGS
 #------------------------------------------------------------------------------
 
-INCDIR += $(SRC)/core/.
+#INCDIR += $(SRC)/core/.
+INCDIR += $(SRC)/core/include
 
 #CFLAGS += -O2
 CFLAGS += -G0
 CFLAGS += -Wall
 CFLAGS += -g
+
+CFLAGS += -std=gnu99
+CFLAGS += -Werror
+
+
+#	CFLAGS += -fomit-frame-pointer
+#	CFLAGS += -fno-strict-aliasing
+#	CFLAGS += -Wno-sign-compare
+#	CFLAGS += -Wunused
+#	CFLAGS += -Wpointer-arith
+#	CFLAGS += -Wundef
+#	CFLAGS += -Wformat
+#	CFLAGS += -Wwrite-strings
+#	CFLAGS += -Wdisabled-optimization
+#	CFLAGS += -Wbad-function-cast
+
 
 CFLAGS += -ffast-math
 	# このオプションを指定すると、実行速度を最適化するという観点から、
@@ -583,7 +670,7 @@ $(OBJ)/vfpu/lib_vfpu.a: $(LIB_PSP_MATH_OBJS)
 #$ make
 #Making object tree for kene ...
 #psp-gcc -O3 -Werror -Isrc/core/. -I. -I/pspdev/psp/sdk/include -G0 -Wall -g 
-#-I/usr/local/pspdev/psp/include -I/pspdev/psp/include/SDL  -c src/core/support.c -o
+#-I/usr/local/pspdev/psp/include -I/pspdev/psp/include/SDL	-c src/core/support.c -o
 #obj/core/support.o
 #cc1: warnings being treated as errors
 #src/core/support.c: In function 'blit_scaled':
@@ -612,7 +699,7 @@ $(OBJ)/vfpu/lib_vfpu.a: $(LIB_PSP_MATH_OBJS)
 
 #rc/libtremor/misc.h(209) : warning: implicit declaration of function '_ilog'
 #rc/libtremor/misc.h(209) : warning: implicit declaration of function 'abs'
-#   で warnings
+#	で warnings
 
 # CPPゲームコアの場合c++(ライブラリとgnuプロファイラの扱いを変える)
 #$(OBJ)/core/%.o: $(SRC)/core/%.cpp
@@ -674,7 +761,7 @@ core:
 	@$(RM) -f $(OBJ)/core/*.o
 	@$(RM) -f $(OBJ)/core/douchu/*.o
 	@$(RM) -f $(OBJ)/core/boss/*.o
-	@$(RM) -f $(OBJ)/core/gu_draw/*.o
+	@$(RM) -f $(OBJ)/core/draw/*.o
 
 font:
 	@echo Remove custom font files.
@@ -686,3 +773,36 @@ rr:
 	@$(RM) -f *.elf
 	@$(DELTREE)
 
+
+#------------------------------------------------------------------------------
+# 231copy(テストr31時点ではダミー)
+#------------------------------------------------------------------------------
+# custom.mak に入れると動作しない為、この位置に必要。
+#------------------------------------------------------------------------------
+
+SDL_lib_bunkai:
+	cp $(PSPDEV)/psp/lib/libSDL.a $(OBJ)/SDL231/
+	ar xv $(OBJ)/SDL231/libSDL.a
+	mv *.o $(OBJ)/SDL231/
+	mv $(OBJ)/SDL231/SDL_audio.o $(OBJ)/SDL231/audio/
+	mv $(OBJ)/SDL231/SDL_audiocvt.o $(OBJ)/SDL231/audio/
+	mv $(OBJ)/SDL231/SDL_audiodev.o $(OBJ)/SDL231/audio/
+	mv $(OBJ)/SDL231/SDL_audiomem.o $(OBJ)/SDL231/audio/
+	mv $(OBJ)/SDL231/SDL_mixer.o $(OBJ)/SDL231/audio/
+	mv $(OBJ)/SDL231/SDL_pspaudio.o $(OBJ)/SDL231/audio/
+	mv $(OBJ)/SDL231/SDL_wave.o $(OBJ)/SDL231/audio/
+	mv $(OBJ)/SDL231/SDL_sysmutex.o $(OBJ)/SDL231/thread/
+	mv $(OBJ)/SDL231/SDL_syssem.o $(OBJ)/SDL231/thread/
+	mv $(OBJ)/SDL231/SDL_systhread.o $(OBJ)/SDL231/thread/
+	mv $(OBJ)/SDL231/SDL_thread.o $(OBJ)/SDL231/thread/
+	mv $(OBJ)/SDL231/SDL_blit.o $(OBJ)/SDL231/video/
+	mv $(OBJ)/SDL231/SDL_blit_0.o $(OBJ)/SDL231/video/
+	mv $(OBJ)/SDL231/SDL_blit_1.o $(OBJ)/SDL231/video/
+	mv $(OBJ)/SDL231/SDL_blit_A.o $(OBJ)/SDL231/video/
+	mv $(OBJ)/SDL231/SDL_blit_N.o $(OBJ)/SDL231/video/
+	mv $(OBJ)/SDL231/SDL_bmp.o $(OBJ)/SDL231/video/
+	mv $(OBJ)/SDL231/SDL_pixels.o $(OBJ)/SDL231/video/
+	mv $(OBJ)/SDL231/SDL_RLEaccel.o $(OBJ)/SDL231/video/
+	mv $(OBJ)/SDL231/SDL_surface.o $(OBJ)/SDL231/video/
+	mv $(OBJ)/SDL231/SDL_pspvideo.o $(OBJ)/SDL231/video/
+	mv $(OBJ)/SDL231/SDL_video.o $(OBJ)/SDL231/video/

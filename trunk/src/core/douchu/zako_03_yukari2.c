@@ -2,23 +2,29 @@
 #include "douchu.h"
 
 /*---------------------------------------------------------
-	"紫編隊2",		"GREETER",
+	東方模倣風	～ Toho Imitation Style.
+	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
-	バグあり？？？
+	"紫編隊2",		"GREETER",
 	-------------------------------------------------------
 	５機一列に続がり、編隊飛行してくるザコ敵
 	-------------------------------------------------------
 	ming_greeter
 	rwingx_curver(ming)に似てる
 ---------------------------------------------------------*/
+#if 0/* めも */
+/* ボス共通規格 */
+	#define target_x256 		user_data00 	/* 目標x座標 */
+	#define target_y256 		user_data01 	/* 目標y座標 */
+	#define vvv256				user_data02 	/* 目標座標への到達割合 */
+	#define time_out			user_data03 	/* 制限時間 */
+#endif
 
-//#define tx256		user_data00
-//#define ty256		user_data01
-//#define time_out	user_data02
-#define speed256	user_data03
-#define state		user_data04
+//#define tx256 	user_data00
+//#define ty256 	user_data01
+#define time_out	user_data03
+#define speed256	user_data04
 
-//2#define enemy_rank	user_data05
 #define max_y256	user_data05
 
 
@@ -28,119 +34,83 @@
 
 static void move_yukari2(SPRITE *src)
 {
-	switch (src->state)
+	src->time_out--;
+	if (0 > src->time_out)
 	{
-	case 0: /* nach unten */
+		gamen_gai_nara_zako_osimai(src);/* 画面外ならおしまい */
+	}
+	else
+	{
 		if (src->y256 >= src->max_y256)
 		{
-			src->state=1;
-			src->tmp_angleCCW512 = atan_512(t256(0)-src->y256,t256(GAME_WIDTH/2)-src->x256);
+			src->time_out = (0);
 			if (t256(1.5/*2.0*/) < src->speed256)
 			{	/*減速*/
 				src->speed256 -= t256(0.2);
-			//	src->speed256 = t256(2)/*3+difficulty*/;								// [***090201		変更
+			//	src->speed256 = t256(2)/*3+difficulty*/;						// [***090201		変更
 			}
-			/* CCWの場合 */
-			src->vx256=((sin512((src->tmp_angleCCW512))*src->speed256)>>8);
-			src->vy256=((cos512((src->tmp_angleCCW512))*src->speed256)>>8);
+		//
+			obj_send1->x256 	= (t256(GAME_WIDTH/2)); 		/* 弾源x256 */
+			obj_send1->y256 	= (t256(0));					/* 弾源y256 */
+			tmp_angleCCW1024_jikinerai(obj_send1, src);
+			src->vx256=((sin1024((src->tmp_angleCCW1024))*src->speed256)>>8);		/* CCWの場合 */
+			src->vy256=((cos1024((src->tmp_angleCCW1024))*src->speed256)>>8);
 		}
 		if (ENEMY_LAST_SHOT_LINE256 > src->y256)	/* このラインより下からは敵が撃たない */
 		{
-			//if (src->enemy_rank)
+			//if (2 src->enemy_rank)
 			{
-			//	if (0==(ra_nd()%(105-(src->enemy_rank-2+difficulty)*10)))	// [***090126		若干変更
-			//	if (0==(ra_nd()%(11-(src->enemy_rank-2+difficulty) ))) 	// [***090126		若干変更
-			//	if (0==(ra_nd()%(16-(src->enemy_rank-2+difficulty) ))) 	// [***090126		若干変更
-			//	if ((src->enemy_rank-2+difficulty) >= (ra_nd()&(16-1)))	// [***090126		若干変更
-				if ((/*src->enemy_rank*/2-2+difficulty) >= (ra_nd()&(64-1)))	// [***090126		若干変更
+			//	if (0==(ra_nd()%(105-(src->enemy_rank-2+difficulty)*10)))		// [***090126		若干変更
+			//	if (0==(ra_nd()%(11-(src->enemy_rank-2+difficulty) )))			// [***090126		若干変更
+			//	if (0==(ra_nd()%(16-(src->enemy_rank-2+difficulty) )))			// [***090126		若干変更
+			//	if ((src->enemy_rank-2+difficulty) >= (ra_nd()&(16-1))) 		// [***090126		若干変更
+				if ((difficulty) >= (ra_nd()&(64-1)))	// [***090126		若干変更
 				{
-					bullet_create_aka_maru_jikinerai(src, t256(1)+t256(difficulty)+(/*src->enemy_rank*/2<<6)/*t256(src->enemy_rank/3)*/ );
+					obj_send1->x256 					= src->x256;
+					obj_send1->y256 					= src->y256;
+					br.BULLET_REGIST_speed256			= t256(difficulty)+t256(1.5);				/* 弾速 */
+				//	br.BULLET_REGIST_speed256			= speed256; 				/* 弾速 */
+					br.BULLET_REGIST_angle1024			= ANGLE_JIKI_NERAI_DAN; 	/* 自機狙い弾 */	/* 発射中心角度 / 特殊機能(自機狙い/他) */
+				//	br.BULLET_REGIST_div_angle1024		= (0);						/* ダミー角度(未使用) */
+					br.BULLET_REGIST_bullet_obj_type	= BULLET_MARU8_00_AKA;		/* [赤弾] */ /* 弾グラ */
+					br.BULLET_REGIST_n_way				= (1);						/* [1way] */
+					br.BULLET_REGIST_regist_type		= REGIST_TYPE_00_MULTI_VECTOR;
+					bullet_regist_vector();
 				}
 			}
 		}
-		break;
-	case 1:
-		gamen_gai_nara_osimai(src);/* 画面外ならおしまい */
-		break;
 	}
 	/*似てるがちょっと違う--以下rwingx.cと同じ*/
 	src->x256 += (src->vx256);/*fps_factor*/
 	src->y256 += (src->vy256);/*fps_factor*/
 //
-	src->m_angleCCW512 += 5;/*グラ回転*/
-	mask512(src->m_angleCCW512);
+	src->m_angleCCW1024 += (10);/*グラ回転*/
+	mask1024(src->m_angleCCW1024);
 }
 
-
-#if 0
-	case 0: 	/* 右へ移動中 */
-		if (src->x >= src->clip_right)
-		{	src->state=1;}
-		break;
-	case 1: 	/* 右周りで回転中 */
-		src->tmp_angleCCW512 -= src->turnspeed512;/*fps_factor*/
-		if (src->tmp_angleCCW512 <= deg_360_to_512(180))
-		{
-			src->tmp_angleCCW512 = deg_360_to_512(180);
-			src->state=2;
-			if (0 < src->enemy_rank)
-			{	bullet_create_aka_maru_jikinerai(s, t256(3)+(src->enemy_rank<<7) );}
-		}
-		break;
-	case 2: 	/* 左へ移動中 */
-		if (src->x <= src->clip_left)
-		{	src->state=3;}
-		break;
-	case 3: 	/* 左周りで回転中 */
-		src->tmp_angleCCW512 += src->turnspeed512;/*fps_factor*/
-		if (src->tmp_angleCCW512 >= deg_360_to_512(360) )
-		{
-			src->tmp_angleCCW512 = deg_360_to_512(0);
-			src->state=0/*4*/;
-			if (0 < src->enemy_rank)
-			{	bullet_create_aka_maru_jikinerai(s, t256(3)+(src->enemy_rank<<7) );}
-		}
-		break;
-
-	case 8: 	/* 右へ移動中 */
-		if (src->x > GAME_WIDTH)
-		{	src->flags &= (~(SP_FLAG_VISIBLE));}
-		break;
-#endif
-
-/*---------------------------------------------------------
-	自機狙い弾の角度を計算
----------------------------------------------------------*/
-static int common_angle_nerai512(SPRITE *p, SPRITE *t)
-{
-	#if 1
-	return (atan_512((p->y256-t->y256), (p->x256-t->x256)));
-	/* 偶数弾の場合に自機狙い(簡略版) 弾と自分が大きさが同じならずれない、違うとその分誤差になる */
-	#endif
-}
 
 /*---------------------------------------------------------
 	敵を追加する
 ---------------------------------------------------------*/
 
-void add_zako_yukari2(STAGE_DATA *l)
+global void add_zako_yukari2(STAGE_DATA *l)
 {
 	SPRITE *h;
-	h						= sprite_add_gu(ZAKO_TYPE_ATARI16_PNG);
-	h->type 				= TEKI_61_NIJI_HOSI;
-	add_zako_common(l, h);
-	h->callback_mover		= move_yukari2;
-//
-	h->max_y256 			= (t256(GAME_HEIGHT)-((t256(24)/*s->h128+s->h128*/))-t256(60));
-	h->tmp_angleCCW512 		= common_angle_nerai512(player,h);
-//	h->tmp_angleCCW512		= atan_512(
-//		(t256(GAME_HEIGHT)-((t256(24)/*s->h128+s->h128*/))-t256(60))-h->y256,
-//		t256(GAME_WIDTH/2)-h->x256);
-	h->speed256 			= (t256(2.5/*3.0*/)+((3/*di fficulty*/)<<4) ); /*4*/ /*始めだけは速い*/
-	/* CCWの場合 */
-	h->vx256=((sin512((h->tmp_angleCCW512))*h->speed256)>>8);
-	h->vy256=((cos512((h->tmp_angleCCW512))*h->speed256)>>8);
-//
-	h->state 			= 0;
-	//h->enemy_rank		= 2/*enemy_rank*/;
+	h							= sprite_add_gu_error();
+	if (NULL!=h)/* 登録できた場合のみ */
+	{
+		add_zako_common(l, h);
+		h->m_Hit256R			= ZAKO_ATARI16_PNG;
+		h->type 				= TEKI_61_NIJI_HOSI;
+		h->callback_mover		= move_yukari2;
+	//
+		h->max_y256 			= (t256(GAME_HEIGHT)-((t256(24)/*s->h128+s->h128*/))-t256(60));
+		tmp_angleCCW1024_jikinerai(obj_player, h);
+		h->speed256 			= (t256(2.5/*3.0*/)+((3/*di fficulty*/)<<4) ); /*4*/ /*始めだけは速い*/
+		/* CCWの場合 */
+		h->vx256=((sin1024((h->tmp_angleCCW1024))*h->speed256)>>8);
+		h->vy256=((cos1024((h->tmp_angleCCW1024))*h->speed256)>>8);
+	//
+		h->time_out 			= (60*99);/* テキトー */
+	}
 }

@@ -2,16 +2,30 @@
 #include "douchu.h"
 
 /*---------------------------------------------------------
+	東方模倣風  ～ Toho Imitation Style.
+	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	-------------------------------------------------------
 		"毛玉1",	"BADGUY",
 	-------------------------------------------------------
 	本家毛玉
 ---------------------------------------------------------*/
+#if 0/* めも */
+/* ボス共通規格 */
+	#define target_x256 		user_data00 	/* 目標x座標 */
+	#define target_y256 		user_data01 	/* 目標y座標 */
+	#define vvv256				user_data02 	/* 目標座標への到達割合 */
+	#define time_out			user_data03 	/* 制限時間 */
+#endif
 
-#define tx256		user_data00
-#define ty256		user_data01
-#define time_out	user_data02
-#define speed256	user_data03
-#define state		user_data04
+//
+	#define target_x256 		user_data00
+	#define target_y256 		user_data01
+//
+	#define time_out			user_data03
+//
+	#define speed256			user_data04
+	#define state				user_data05
+//
 
 /*---------------------------------------------------------
 	敵移動
@@ -22,20 +36,25 @@ enum
 //	ST01,
 	ST02,
 	ST03,
+};
+
+static void my_nerai(SPRITE *src)
+{
+	obj_send1->x256 	= (src->target_x256); 					/* 弾源x256 */
+	obj_send1->y256 	= (src->target_y256-t256(64)/*+(20)*/);	/* 弾源y256 */
+	tmp_angleCCW1024_jikinerai(obj_send1, src);
+	src->vx256 = ((sin1024(src->tmp_angleCCW1024)));
+	src->vy256 = ((cos1024(src->tmp_angleCCW1024)));
 }
-;
+
 static void move_kedama1(SPRITE *src)
 {
 	src->time_out--;/*fps_factor*/
 	switch (src->state)
 	{
 	case ST00:	/* 登場する */
-		{	int angle512;
-			angle512 = atan_512(src->ty256-src->y256-t256(64)/*+(20)*/,src->tx256-src->x256);
-			src->vx256 = ((sin512(angle512)));
-			src->vy256 = ((cos512(angle512)));
-		}
-		if ((src->x256 >= player->x256) ||
+		my_nerai(src);
+		if ((src->x256 >= obj_player->x256) ||
 			(src->y256 > t256(GAME_HEIGHT/2) ) || /*(480-80)*/ /*(272-32)*/
 			(0 > src->time_out)
 		 )
@@ -44,8 +63,8 @@ static void move_kedama1(SPRITE *src)
 			src->state++;/* = ST02*/
 			src->time_out	= 64;
 			/* 第二目標は、 */
-			src->tx256		= t256(-100);
-			src->ty256		= t256(0);/*((player->y256)&(128-1))*/
+			src->target_x256		= t256(-100);
+			src->target_y256		= t256(0);/*((obj_player->y256)&(128-1))*/
 			src->speed256	= /*6*/t256(2.5/*5.0*/);/*fps_factor*/
 		}
 		break;/*??? [***090215 追加 */
@@ -54,14 +73,15 @@ static void move_kedama1(SPRITE *src)
 		{
 			if (ENEMY_LAST_SHOT_LINE256 > src->y256)	/* このラインより下からは敵が撃たない */
 			{
-				send1_obj->x256 = src->x256;
-				send1_obj->y256 = src->y256;
-				send1_obj->BULLET_REGIST_speed256			=		t256(1.0);	//t256(1.0)+t256((src->enemy_rank)>>1),
-				send1_obj->BULLET_REGIST_angle512			=		ANGLE_JIKI_NERAI_DAN;
-				send1_obj->BULLET_REGIST_div_angle512		=		(int)(512/24);
-				send1_obj->BULLET_REGIST_bullet_obj_type	=		BULLET_KOME_01_AOI+(src->x256&0x07);
-				send1_obj->BULLET_REGIST_n_way				=		(3+difficulty+difficulty) ;
-				bullet_regist_basic();
+				obj_send1->x256 					= src->x256;
+				obj_send1->y256 					= src->y256;
+				br.BULLET_REGIST_speed256			= t256(1.0);	//t256(1.0)+t256((src->enemy_rank)>>1),
+				br.BULLET_REGIST_angle1024			= ANGLE_JIKI_NERAI_DAN;
+				br.BULLET_REGIST_div_angle1024		= (int)(1024/24);
+				br.BULLET_REGIST_bullet_obj_type	= BULLET_KOME_01_AOI+(src->x256&0x07);
+				br.BULLET_REGIST_n_way				= (3+difficulty+difficulty);
+				br.BULLET_REGIST_regist_type		= REGIST_TYPE_00_MULTI_VECTOR;
+				bullet_regist_vector();
 			}
 		}
 		if (0 > src->time_out)
@@ -70,12 +90,8 @@ static void move_kedama1(SPRITE *src)
 		}
 		break;
 	case ST03:/* 退場 */
-		{	int angle512;
-			angle512=atan_512(src->ty256-src->y256-t256(64)/*+(20)*/, src->tx256-src->x256);
-			src->vx256 = ((sin512(angle512)));
-			src->vy256 = ((cos512(angle512)));
-		}
-		gamen_gai_nara_osimai(src);/* 画面外ならおしまい */
+		my_nerai(src);
+		gamen_gai_nara_zako_osimai(src);/* 画面外ならおしまい */
 		break;/*??? [***090215 追加 */
 	}
 
@@ -83,52 +99,34 @@ static void move_kedama1(SPRITE *src)
 	src->x256+=(((src->vx256)*src->speed256)>>8);
 	src->y256+=(((src->vy256)*src->speed256)>>8);
 //
-	src->m_angleCCW512 += 5;
-	mask512(src->m_angleCCW512);
+	src->m_angleCCW1024 += 10;
+	mask1024(src->m_angleCCW1024);
 }
 
 /*---------------------------------------------------------
 	敵を追加する
 ---------------------------------------------------------*/
 
-void add_zako_kedama1(STAGE_DATA *l)
+global void add_zako_kedama1(STAGE_DATA *l)
 {
 	SPRITE *h;
-	h						= sprite_add_gu(ZAKO_TYPE_ATARI16_PNG);
-	h->type 				= TEKI_59_HAI_KEDAMA;
-	add_zako_common(l, h);
-	h->color32				= 0xaaffffff;		/*白っぽく */
-	h->callback_mover		= move_kedama1;
-//
-	h->state				= ST00;
-	h->time_out 			= 64;
-	/* 第一目標はプレイヤーのいた位置 */
-	h->tx256				= player->x256;
-	h->ty256				= player->y256;
-	h->vx256				= (0);
-	h->vy256				= (0);
-//	h->speed256 			= ((ra_nd()&((256*2)-1)))*(1+difficulty+enemy_rank/3);/*fps_factor*/
-	h->speed256 			= ((ra_nd()&((256*2)-1))) + ((difficulty<<8)+ (/*enemy_rank*/5<<7/**86*2*/) );/*fps_factor*/
-
-
+	h							= sprite_add_gu_error();
+	if (NULL!=h)/* 登録できた場合のみ */
+	{
+		add_zako_common(l, h);
+		h->m_Hit256R			= ZAKO_ATARI16_PNG;
+		h->type 				= TEKI_59_HAI_KEDAMA;
+		h->color32				= MAKE32RGBA(0xff, 0xff, 0xff, 0xaa);		/*白っぽく */
+		h->callback_mover		= move_kedama1;
+	//
+		h->state				= ST00;
+		h->time_out 			= 64;
+		/* 第一目標はプレイヤーのいた位置 */
+		h->target_x256				= obj_player->x256;
+		h->target_y256				= obj_player->y256;
+		h->vx256				= (0);
+		h->vy256				= (0);
+	//	h->speed256 			= ((ra_nd()&((256*2)-1)))*(1+difficulty+enemy_rank/3);/*fps_factor*/
+		h->speed256 			= ((ra_nd()&((256*2)-1))) + ((difficulty<<8)+ (/*enemy_rank*/5<<7/**86*2*/) );/*fps_factor*/
+	}
 }
-//	int enemy_rank	= l->user_y; 3 4 5
-
-
-//	/*src->base.*/s->base_score = score(/*50*/5*2)*(enemy_rank+1);
-//	/*src->base.*/s->base_hp		= (8*(8*8))+(1/*di fficulty*/<<(2+3))/*(1+(di fficulty<<2))*/;/*やわらかすぎ*/
-
-//	h->callback_loser		= lose_random_item;
-//	h->callback_hit_enemy	= callback_hit_zako;
-//	h->y256 				= ((ra_nd()&((32*256)-1))-t256(80));//	(ra_nd()%40-90);
-
-//	h->flags				|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK|SP_FLAG_TIME_OVER);
-//	switch (i&3/*i%5*/)
-//	{
-//	case 0: h->x256 		=				   (ra_nd()&((64*256)-1))/*ra_nd()%40*/; break;
-//	case 1: h->x256 		= t256(GAME_WIDTH)-(ra_nd()&((64*256)-1))/*ra_nd()%40*/; break;
-//	case 2: h->x256 		= t256(200)+	   (ra_nd()&((64*256)-1))/*ra_nd()%40*/; break;
-//	case 3: h->x256 		= t256(90)+ 	   (ra_nd()&((64*256)-1))/*ra_nd()%40*/; break;
-//	case 4: h->x256 		= t256(310)+	   (ra_nd()&((64*256)-1))/*ra_nd()%40*/; break;
-//	}
-

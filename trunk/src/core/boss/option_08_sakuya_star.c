@@ -1,25 +1,36 @@
 
-#include "bullet_object.h"
+#include "game_main.h"
 
 /*---------------------------------------------------------
+	“Œ•û–Í•í•—  ` Toho Imitation Style.
+	ƒvƒƒWƒFƒNƒgƒy[ƒW http://code.google.com/p/kene-touhou-mohofu/
+	-------------------------------------------------------
 	Žq‹Ÿ–‚•ûw ’e–‹
 	-------------------------------------------------------
-	¯Œ^•`‚­‚º
+	B.¯Œ^•`‚­‚º
 	-------------------------------------------------------
 	(–³‘Ê‚É•¡ŽG‚¾‚Á‚½‚Ì‚ÅA
-		ƒŒ[ƒU[‚ðŒ‚‚Â‹@”\‚ÆA
-		¯Œ^‚ð•`‚­‹@”\‚ÆA
-		360ƒiƒCƒt‚ðŒ‚‚Â‹@”\‚ÆA
+		A.ƒŒ[ƒU[‚ðŒ‚‚Â‹@”\‚ÆA
+		B.¯Œ^‚ð•`‚­‹@”\‚ÆA
+		C.360ƒiƒCƒt‚ðŒ‚‚Â‹@”\‚ÆA
 	‚ð•ª—£‚³‚¹‚½)
 ---------------------------------------------------------*/
-
-#define my_angle512 		tmp_angleCCW512 	/* •ÛŽŠp“x[¯Œ^‚ð•`‚­ê‡‚ÉŽg‚¤Šp“x](doll_point_angle512) */
+#if 0/*ƒƒ‚*/
+/* ƒ{ƒX‹¤’Ê‹KŠi */
+	#define target_x256 		user_data00 	/* –Ú•WxÀ•W */
+	#define target_y256 		user_data01 	/* –Ú•WyÀ•W */
+	#define vvv256				user_data02 	/* –Ú•WÀ•W‚Ö‚Ì“ž’BŠ„‡ */
+	#define time_out			user_data03 	/* §ŒÀŽžŠÔ */
+#endif
+//	ƒ{ƒX‹¤’Ê‹KŠi‚Æ“¯‚¶(boss.hƒCƒ“ƒNƒ‹[ƒh‚µ‚Ä‚à‚µ‚È‚­‚Ä‚à‘Î‰ž)
+#ifndef time_out
+	#define time_out			user_data03 	/* §ŒÀŽžŠÔ */
+#endif
+//
+#define my_angle1024		tmp_angleCCW1024	/* •ÛŽŠp“x[¯Œ^‚ð•`‚­ê‡‚ÉŽg‚¤Šp“x] */
 
 #define doll_vx256			vx256
 #define doll_vy256			vy256
-
-
-#define time_out			user_data02 		/* Œo‰ßŽžŠÔ */
 
 
 /*---------------------------------------------------------
@@ -27,59 +38,49 @@
 ---------------------------------------------------------*/
 
 static SPRITE hosi_position_obj;/* ¯Œ^•`‚¢‚Ä‚éÀ•WˆÊ’u‚ð•ÛŽB */
-/*static*/extern void enemy_sp2_bullet_create01(SPRITE *src, int angle512, int time_out/**sd_nnn*/);
+/*static*/extern void bullet_crate_sakuya_hosi_gata(SPRITE *src);
 static void move_doll02(SPRITE *src)
 {
+	check_boss_option_time_out(src);	/* ŽžŠÔŒo‰ß‚ÅI—¹Bƒ{ƒX‚ð“|‚·‚ÆŠF”j‰ó‚³‚ê‚éB */
+//
 	#if 1
 	/* –‚•ûwƒAƒjƒ[ƒVƒ‡ƒ“ */
-	src->m_angleCCW512--;/* ‰E‰ñ‚è */
-	mask512(src->m_angleCCW512);
+	src->m_angleCCW1024--;/* ‰E‰ñ‚è */
+	mask1024(src->m_angleCCW1024);
 	#endif
 //
-	src->time_out--;
 	if ((64*8) < src->time_out)
 	{
 		/* ¯Œ^‚ð•`‚­‚æ */
 		if (0==((src->time_out)&0x0f))
 		{
-			src->my_angle512 += (512*2/5);
-			mask512(src->my_angle512);
+			src->my_angle1024 += (1024*2/5);
+			mask1024(src->my_angle1024);
 			#define DOLL_SPEED10		(4)/*8*/
-			src->doll_vx256 = ((sin512((src->my_angle512))*/*t256*/(DOLL_SPEED10))/*>>8*/);/*fps_factor*/				/* CCW‚Ìê‡ */
-			src->doll_vy256 = ((cos512((src->my_angle512))*/*t256*/(DOLL_SPEED10))/*>>8*/);/*fps_factor*/
+			src->doll_vx256 = ((sin1024((src->my_angle1024))*/*t256*/(DOLL_SPEED10))/*>>8*/);/*fps_factor*/ 			/* CCW‚Ìê‡ */
+			src->doll_vy256 = ((cos1024((src->my_angle1024))*/*t256*/(DOLL_SPEED10))/*>>8*/);/*fps_factor*/
 			#undef DOLL_SPEED10
 		}
 		else
 		{
+			br.BULLET_REGIST_hosi_gata_angle1024		= ((src->my_angle1024))+(((src->time_out)&0x0f)<<4/*3*/);
+			br.BULLET_REGIST_hosi_gata_time_out 		= ((src->time_out)&0x1ff);	//((src->time_out)-(64*8))
+			br.BULLET_REGIST_hosi_gata_add_speed256 	= (((src->time_out>>2)&0x3)+4); 	/* ‰Á‰Á‘¬“x(‚©-‚©‚»‚­‚Ç) */
+		//	br.BULLET_REGIST_hosi_gata_add_speed256 	= (((src->time_out )&0xf)|0x03);	/* ‰Á‰Á‘¬“x(‚©-‚©‚»‚­‚Ç) */
+/*
+0123 3333 4444	0+4
+4567 7777 5555	1+4
+89ab bbbb 6666	2+4
+cdef ffff 7777	3+4
+*/
 			/* CCW‚Ìê‡ */
-			enemy_sp2_bullet_create01(&hosi_position_obj,
-				src->my_angle512,
-			//	t256(0.015),
-			/* —^‚¦‚éŽc‚èŽžŠÔ */	((src->time_out)&0x1ff)//((src->time_out)-(64*8))
-			//	&(((BOSS06_DOLL_DATA *)src->data)->nnn)
-			);
+			bullet_crate_sakuya_hosi_gata(&hosi_position_obj);
 		}
 		// “®ì
 		hosi_position_obj.x256 += (src->doll_vx256);/*fps_factor*/
 		hosi_position_obj.y256 += (src->doll_vy256);/*fps_factor*/
 	}
-	#if 1
-	else
-	if (0 > src->time_out)
-	{
-		src->base_hp		= (0);/* “|‚µ‚½ */
-		src->type = SP_DELETE;/* ‚¨‚µ‚Ü‚¢ */
-	}
-	#endif
 //
-	#if 0
-	//if (data->c->type==SP_DELETE) 		/*‚±‚ê‚Å‚Í‚¤‚Ü‚­‚¢‚©‚È‚¢ê‡‚ª‚ ‚é*/
-	if (0/*FLG_NO_DOLL*/==common_boss_flags)	/* ‹P–é‚ð“|‚·‚ÆŠF”j‰ó‚³‚ê‚éB */
-	{
-		src->base_hp		= (0);/* “|‚µ‚½ */
-		src->type = SP_DELETE;
-	}
-	#endif
 }
 
 
@@ -90,30 +91,33 @@ static void move_doll02(SPRITE *src)
 /*static*/ void add_zako_sakuya_doll_02_star(SPRITE *src)
 {
 	SPRITE *h;
-	h							= sprite_add_gu(ZAKO_TYPE_ATARI16_PNG);
-//	h->type 					= TEKI_51_MAHOJIN1;
-//	h->type 					= SP_MUTEKI;
-	h->type 					= BOSS_16_YOUSEI11;
-	h->base_hp					= (9999);/* “|‚¹‚È‚¢ */
-	h->flags					= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK);
-//	h->color32					= 0x00ffffff;	/*	obj_doll->alpha 		= 0x00;*/
-//	h->color32					= 0x80ff3388;	/*	obj_doll->alpha 		= 0x00;*/ /* g‚Á‚Û‚­ */
-	h->color32					= 0x806633ff;	/*	obj_doll->alpha 		= 0x00;*/ /* g‚Á‚Û‚­ */
-	h->callback_mover			= move_doll02;
-//
-	/* Žq‹Ÿ–‚•ûwA”z’uˆÊ’u */
-	#if 1
-	h->x256 					= (src->x256);
-	h->y256 					= (src->y256)-t256(16);/*ç–é ã•û‚É”z’u*/
-	#endif
-	/* ’e‚ðŒ‚‚¿Žn‚ß‚éˆÊ’u(¯Œ^•`‚«Žn‚ß‚éˆÊ’u) */
-	hosi_position_obj.x256		= (src->x256)+(ra_nd()&0xfff);
-	hosi_position_obj.y256		= (src->y256)+(ra_nd()&0xfff);/* ç–é ‰º•û‚©‚ç•`‚­ */
-//
-	h->time_out 				= ((64*8)+(5*16)+1);
+	h								= sprite_add_gu_error();
+	if (NULL!=h)/* “o˜^‚Å‚«‚½ê‡‚Ì‚Ý */
+	{
+		h->m_Hit256R				= ZAKO_ATARI16_PNG;
+	//	h->type 					= TEKI_51_MAHOJIN1;
+		h->type 					= BOSS_16_YOUSEI11;
+		h->base_hp					= (9999);/* “|‚¹‚È‚¢ */
+		h->flags					= (SP_FLAG_COLISION_CHECK/*|SP_FLAG_VISIBLE*/);
+	//	h->color32					= MAKE32RGBA(0xff, 0xff, 0xff, 0x00);
+	//	h->color32					= MAKE32RGBA(0x88, 0x33, 0xff, 0x80); /* g‚Á‚Û‚­ */
+		h->color32					= MAKE32RGBA(0xff, 0x33, 0x66, 0x80); /* g‚Á‚Û‚­ */
+		h->callback_mover			= move_doll02;
+	//
+		/* Žq‹Ÿ–‚•ûwA”z’uˆÊ’u */
+		#if 1
+		h->x256 					= (src->x256);
+		h->y256 					= (src->y256)-t256(16);/*ç–é ã•û‚É”z’u*/
+		#endif
+		/* ’e‚ðŒ‚‚¿Žn‚ß‚éˆÊ’u(¯Œ^•`‚«Žn‚ß‚éˆÊ’u) */
+		hosi_position_obj.x256		= (src->x256)+(ra_nd()&0xfff);
+		hosi_position_obj.y256		= (src->y256)+(ra_nd()&0xfff);/* ç–é ‰º•û‚©‚ç•`‚­ */
+	//
+		h->time_out 				= ((64*8)+(5*16)+1); 	/* §ŒÀŽžŠÔ */
 
-	/* ¯Œ^‚ð•`‚­€”õ */
-	h->my_angle512				= 0;
-//	h->doll_vx256				= t256(1.0);	/*-t256(0.125)*/ /*t256(1.0)*/
-//	h->doll_vy256				= t256(0.0);	/* t256(2.0)*/ /*t256(0.0)*/
+		/* ¯Œ^‚ð•`‚­€”õ */
+		h->my_angle1024 			= (0);
+	//	h->doll_vx256				= t256(1.0);	/*-t256(0.125)*/ /*t256(1.0)*/
+	//	h->doll_vy256				= t256(0.0);	/* t256(2.0)*/ /*t256(0.0)*/
+	}
 }

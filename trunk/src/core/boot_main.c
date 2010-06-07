@@ -1,9 +1,12 @@
 
+#include "game_main.h"
+
 /*---------------------------------------------------------
+	“Œ•û–Í•í•—  ` Toho Imitation Style.
+	ƒvƒƒWƒFƒNƒgƒy[ƒW http://code.google.com/p/kene-touhou-mohofu/
+	-------------------------------------------------------
 	psp‚Ì‹N“®ƒ‹[ƒ`ƒ““™
 ---------------------------------------------------------*/
-
-#include "game_main.h"
 
 #if 0
 	/* makefile ‚É -Dmain=SDL_main ‚ª‚ ‚éê‡  */
@@ -11,7 +14,9 @@
 	 makefile ‚É -Dmain=SDL_main ‚ª‚ ‚éê‡‚ÍA
 	SDL‚ª—pˆÓ‚µ‚½ƒƒCƒ“ƒ‹[ƒ`ƒ“‚ğg—p‚·‚é‚Ì‚ÅA‚±‚±‚É‚Í
 	‘‚¯‚Ü‚¹‚ñB(CŒ¾Œê‚Ímain()ŠÖ”‚ğ2‚ÂƒŠƒ“ƒNo—ˆ‚Ü‚¹‚ñ)
-	SDL‚ª—pˆÓ‚µ‚½ƒƒCƒ“ƒ‹[ƒ`ƒ“‚ÍA
+	SDL‚ª—pˆÓ‚µ‚½ƒƒCƒ“ƒ‹[ƒ`ƒ“
+	http://psp.jim.sh/svn/filedetails.php?repname=psp&path=%2Ftrunk%2FSDL%2Fsrc%2Fmain%2Fpsp%2FSDL_psp_main.c
+	‚ÍA
 	PSP-1000‚Å‚àversion‚É‚æ‚Á‚Ä‹N“®‚µ‚½‚è‚µ‚È‚©‚Á‚½‚èA
 	PSP-2000‚Í‹N“®‚µ‚È‚©‚Á‚½‚èAC++‚ğg‚¤‚Æ‰½ŒÌ‚©‹N“®‚µ‚½‚è‚µ‚È‚©‚Á‚½‚èA
 	‚ÆFX–â‘è‚ª‘½‚¢‚Ì‚Åg‚í‚È‚¢•û‚ªŒ«–¾‚Å‚·B
@@ -80,10 +85,12 @@ PSP_MAIN_THREAD_STACK_SIZE_KB(32);		/* (ƒvƒƒOƒ‰ƒ€‚ªg—p‚·‚é•Ï”‚Ì)ƒXƒ^ƒbƒN—Ìˆæ‚
 /* 2008”N‚®‚ç‚¢‚ÌŒÃ‚¢ PSPSDK ‚Í -1(©“®) ‚É‘Î‰‚µ‚Ä‚¢‚È‚¢‚Ì‚Å -1 ‚É‚·‚é‚Æƒnƒ“ƒOƒAƒbƒv‚·‚é */
 #endif
 
-//extern int psp_loop;
-/*extern*/ int psp_loop;
+global void (*main_call_func)(void);
+global void (*return_call_func)(void);
 
 /*---------------------------------------------------------
+	[HOME]ƒL[‚ÅI—¹ˆ—•”•ª
+	-------------------------------------------------------
 	[HOME]ƒL[‚ÅI—¹‚·‚é‚½‚ß‚ÌƒR[ƒ‹ƒoƒbƒN‚ğ“o˜^
 	([HOME]ƒL[ƒƒjƒ…[‚ÅAI—¹‚µ‚Ü‚·‚©Hu‚Í‚¢v‚ª‘I‘ğ‚³‚ê‚é‚ÆÀs‚³‚ê‚é•”•ª)
 ---------------------------------------------------------*/
@@ -91,11 +98,11 @@ PSP_MAIN_THREAD_STACK_SIZE_KB(32);		/* (ƒvƒƒOƒ‰ƒ€‚ªg—p‚·‚é•Ï”‚Ì)ƒXƒ^ƒbƒN—Ìˆæ‚
 static int exit_callback(int arg1, int arg2, void *common)
 {
 	/* ƒR[ƒ‹ƒoƒbƒN‘¤‚©‚çAƒƒCƒ“‘¤‚Ìó‘Ô‚ğ‘€ì‚·‚é */
-	psp_loop = ST_PSP_QUIT; 	// [***** ’Ç‰Á:090103
+	main_call_func = NULL;	/* I—¹w¦ */
 	#if 1
 	/* —v‚é‚©‚à */
 	sceKernelDelayThread(1000000);/* ƒR[ƒ‹ƒoƒbƒN‘¤‚ª1•b‘Ò‚Â */
-	psp_loop = ST_PSP_QUIT;/* ‚à‚¤ˆê‰ñI—¹ƒtƒ‰ƒO */
+	main_call_func = NULL;	/* ‚à‚¤ˆê‰ñI—¹w¦ */
 	#endif
 	return (0); 	/* ƒR[ƒ‹ƒoƒbƒN‘¤‚ÌI—¹ */
 }
@@ -105,103 +112,60 @@ static int exit_callback(int arg1, int arg2, void *common)
 
 
 /*---------------------------------------------------------
-	[HOME]ƒL[‚ÅI—¹‚·‚é‚½‚ß‚ÌƒR[ƒ‹ƒoƒbƒN‚ğ“o˜^(ƒR[ƒ‹ƒoƒbƒN‚ğ“o˜^)
+	[HOME]ƒL[—pAƒR[ƒ‹ƒoƒbƒN“o˜^
+	-------------------------------------------------------
+	[HOME]ƒL[‚ÅI—¹‚·‚é‚½‚ß‚ÉƒR[ƒ‹ƒoƒbƒN‚ğ“o˜^‚µ‚Ü‚·B
 ---------------------------------------------------------*/
 
-static int callback_homekey_thread(SceSize args, void *argp)
+/* Thread to create the callbacks and then begin polling */
+static int CallbackThread(SceSize args, void *argp)
 {
 	/* V‹K‚ÉƒR[ƒ‹ƒoƒbƒN‚ğì¬ */
-	int callback_id = sceKernelCreateCallback("exit callback", exit_callback, NULL);
+	int callback_id = sceKernelCreateCallback("Exit Callback", ( int (*)(int, int, void*) )exit_callback, NULL);
 	sceKernelRegisterExitCallback(callback_id); 	/* [HOME]ƒL[—p‚ÌƒR[ƒ‹ƒoƒbƒN‚ğ“o˜^ */
 	sceKernelSleepThreadCB();
 	return (0);
 }
 
 /*---------------------------------------------------------
-	[HOME]ƒL[‚ÅI—¹‚·‚é‚½‚ß‚ÌƒR[ƒ‹ƒoƒbƒN‚ğ“o˜^(ƒXƒŒƒbƒh‚ğì¬)
+	[HOME]ƒL[—pAƒXƒŒƒbƒhì¬
+	-------------------------------------------------------
+	[HOME]ƒL[‚ÅI—¹‚·‚é‚½‚ß‚ÌƒXƒŒƒbƒh‚ğì¬‚µ‚Ü‚·B
 ---------------------------------------------------------*/
 
 /* Sets up the callback thread and returns its thread id */
-static /*int*/void regist_home_key(void)
+static /*int*/void SetupCallbacks(void)
 {
 	/* V‹K‚ÉƒXƒŒƒbƒh‚ğì¬ */
-	int thread_id = sceKernelCreateThread("update thread", callback_homekey_thread, 0x11, 0xFA0, 0, 0); /* ƒXƒŒƒbƒh‚Ì—Dæ“x“™‚ğİ’è */
+	SceUID/*int*/ thread_id;
+	thread_id = 0;/* –œ‚ªˆê³í‚Éì¬‚Å‚«‚È‚¢ê‡‚ğl‚¦‚Ä 0 ‚ğ‘‚­B */
+	thread_id = sceKernelCreateThread("Update Thread", CallbackThread, 0x11, 0xFA0, 0, 0); /* ƒXƒŒƒbƒh‚Ì—Dæ“x“™‚ğİ’è */
 	if (0 <= thread_id) 	/* ƒXƒŒƒbƒh‚ªì¬o—ˆ‚½‚ç */
 	{
 		sceKernelStartThread(thread_id, 0, 0);	/* ƒXƒŒƒbƒhŠJn */
 	}
-	//return (thread_id);
+//	return (thread_id);
 }
 
 /*---------------------------------------------------------
 	game_main()
 ---------------------------------------------------------*/
-extern void common_load_init(void);
-extern void stage_first_init(void);
-extern void shooting_game_core_work(void);
-
-extern void all_menu_init(void);
-extern void all_menu_work(void);
-
-extern void player_opt_init(void);
-extern void player_opt_work(void);
-
-//extern void name_entry_init(void);
-extern void name_entry_work(void);
-//
-extern void stage_clear_work(void);/*stage_clear.c*/
-//
-
-//tern void gameover_init(void);
-extern void gameover_work(void);
-
-//tern void result_init(void);
-extern void result_work(void);
-
-//tern void story_init(void);
-extern void story_work(void);
-
-extern void option_menu_work(void);
-extern void option_menu_init(void);
-
-//tern void key_config_init(void);
-extern void key_config_work(void);
-extern void music_room_work(void);
-
 
 extern void vbl_draw_screen(void);/*support.c*/
 
 static void game_main(void)
 {
-	while (ST_PSP_QUIT != psp_loop)
 	{
-		/*const*/static void (*aaa_call_table[/*16*/(16)])(void) =
+my_loop:
+		if (NULL==main_call_func)
 		{
-			NULL,						/* ST_PSP_QUIT					= 0x0000, pspI—¹ */
-			common_load_init,			/* ST_INIT_GAME_PLAY_common 	= 0x0100, */
-			shooting_game_core_work,	/* ST_WORK_GAME_PLAY */
-			all_menu_init,				/* ST_INIT_MENU */
-
-			all_menu_work,				/* ST_WORK_MENU */
-			player_opt_work,			/* ST_WORK_PLAYER_SELECT */
-			story_work,   				/* <<Œ»İŠJ‚«>> */		/* ST_INIT_NAME_ENTRY */
-			name_entry_work,			/* ST_WORK_NAME_ENTRY */
-
-			stage_first_init,			/* ST_WORK_STAGE_FIRST */
-			stage_clear_work,			/* ST_WORK_STAGE_CLEAR */
-			gameover_work,				/* ST_WORK_GAME_OVER */
-			result_work,				/* ST_WORK_RESULT */
-
-			story_work, 				/* ST_WORK_STORY */
-			option_menu_work,			/* ST_WORK_OPTION_MENU */
-			key_config_work,			/* ST_WORK_KEY_CONFIG */
-			music_room_work,			/* ST_WORK_MUSIC_ROOM */
-		};
-		/* Às */
+			return; 	/* I—¹‚·‚éB */
+		}
 		{
-			(aaa_call_table[(((u8)(psp_loop>>8)))])();
+			main_call_func();	/* Šeˆ—‚ğÀs */
 		}
 		vbl_draw_screen();	/* ‰æ–Ê•`‰æ‚ÆƒL[“ü—Í(–{“–‚Í v-blanc ƒ^ƒCƒ~ƒ“ƒO‚Å) */
+		goto my_loop;
 	}
 }
 
@@ -214,25 +178,24 @@ static void game_main(void)
 extern void disable_FPU_exeptions_in_main(void);	/* FPU—áŠO‚ğ–³Œø‚É‚·‚éB disablefpu.S */
 #endif
 
-extern void game_system_init(void/*int argc, char *argv[]*/);
-extern void game_system_exit(void);
+extern void game_system_init(void); 	/* ƒQ[ƒ€ƒVƒXƒeƒ€‰Šú‰» */
+extern void game_system_exit(void); 	/* ƒQ[ƒ€ƒVƒXƒeƒ€I—¹ */
 extern void game_main(void);
 
 /* ‚±‚±‚Í -Dmain=SDL_main ‚Ìê‡Aƒ}ƒNƒ‚È‚Ì‚Å©“®“I‚É int SDL_main(int argc, char *argv[]) ‚É‚È‚éB‚»‚ê‚ğSDL‘¤‚Ìmain()‚©‚çŒÄ‚ÔB */
-int main(int argc, char *argv[])
+global int main(int argc, char *argv[])
 {
 	#if (1==HACK_FPU)
 	disable_FPU_exeptions_in_main();	/* ‚±‚ÌŠÖ”‚Ímain()’¼‰º‚É‘‚©‚È‚¢‚Æƒ_ƒ‚©‚à‚µ‚ê‚È‚¢($31‚ğ˜M‚é‚Ì‚Å) */
 	#endif
-//	psp_loop = 1;		/* --- ƒ‹[ƒvƒtƒ‰ƒO(0‚ÅI—¹B0ˆÈŠO‚Í‹N“®’†) */
-	regist_home_key();/* [HOME]ƒL[‚ÅI—¹‚·‚é‚½‚ß‚ÌƒR[ƒ‹ƒoƒbƒN‚ğ“o˜^ */
-	game_system_init();/* ƒQ[ƒ€ƒVƒXƒeƒ€‰Šú‰» */
+	SetupCallbacks();		/* regist_home_key [HOME]ƒL[‚ÅI—¹‚·‚é‚½‚ß‚ÌƒR[ƒ‹ƒoƒbƒN‚ğ“o˜^ */
+	game_system_init(); 	/* ƒQ[ƒ€ƒVƒXƒeƒ€‰Šú‰» */
 //
 	scePowerSetClockFrequency(333,333,166);/* psp ‚Ì ƒNƒƒbƒN‚ğ 333MHz ‚É‚·‚é‚æ */
 	game_main();
 	scePowerSetClockFrequency(222,222,111);/* psp ‚Ì ƒNƒƒbƒN‚ğ 222MHz ‚É–ß‚·‚æ */
 //
-	game_system_exit();/* ƒQ[ƒ€ƒVƒXƒeƒ€I—¹ */
+	game_system_exit(); 	/* ƒQ[ƒ€ƒVƒXƒeƒ€I—¹(“à•”‚ÅI—¹‚·‚é) */
 //	sceKernelExitGame();
-	return (0);
+	return (0);/* ƒ_ƒ~[(‚±‚±‚É‚Íâ‘Î‚É—ˆ‚È‚¢) */
 }

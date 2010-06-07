@@ -2,6 +2,9 @@
 #include "douchu.h"
 
 /*---------------------------------------------------------
+	東方模倣風	～ Toho Imitation Style.
+	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	-------------------------------------------------------
 		"おばけ1",		"DRAGER",
 	-------------------------------------------------------
 	突撃おばけ、(かなりうろ覚え、おばけじゃなかったかも？)
@@ -46,11 +49,18 @@
 	ming
 	rwingx_curverに似てる
 ---------------------------------------------------------*/
+#if 0/* めも */
+/* ボス共通規格 */
+	#define target_x256 		user_data00 	/* 目標x座標 */
+	#define target_y256 		user_data01 	/* 目標y座標 */
+	#define vvv256				user_data02 	/* 目標座標への到達割合 */
+	#define time_out			user_data03 	/* 制限時間 */
+#endif
 
-/* 敵の向き tmp_angleCCW512  */
+/* 敵の向き tmp_angleCCW1024  */
 
-#define time_out			user_data02 	/* 経過時間 */
-#define gra_anime_type		user_data06 	/* グラタイプ */
+#define time_out			user_data03 	/* 経過時間 */
+#define gra_anime_type		user_data04 	/* グラタイプ */
 
 
 /*---------------------------------------------------------
@@ -62,7 +72,7 @@ static void move_obake1(SPRITE *src)
 	src->time_out--;
 	if (( 0 > src->time_out ))
 	{
-		gamen_gai_nara_osimai(src);/* 画面外ならおしまい */
+		gamen_gai_nara_zako_osimai(src);/* 画面外ならおしまい */
 	}
 	if (0==((src->time_out)&0x3f))/* 等間隔(テキト－) */
 	{
@@ -70,14 +80,15 @@ static void move_obake1(SPRITE *src)
 		{
 			if (0<difficulty)
 			{
-				send1_obj->x256 = src->x256;
-				send1_obj->y256 = src->y256;
-				send1_obj->BULLET_REGIST_speed256			=	(t256(1.25));
-				send1_obj->BULLET_REGIST_angle512			=	(src->tmp_angleCCW512); 	/*(ANGLE_JIKI_NERAI_DAN)*/
-				send1_obj->BULLET_REGIST_div_angle512		=	(int)(512/(18));			/* 分割角度 */
-				send1_obj->BULLET_REGIST_bullet_obj_type	=	BULLET_KNIFE20_04_AOI;		/* [青ナイフ弾] */
-				send1_obj->BULLET_REGIST_n_way				=	(difficulty+difficulty-1);	/* [1 3 5way] */
-				bullet_regist_basic();
+				obj_send1->x256 = src->x256;
+				obj_send1->y256 = src->y256;
+				br.BULLET_REGIST_speed256			= (t256(1.25));
+				br.BULLET_REGIST_angle1024			= (src->tmp_angleCCW1024);		/*(ANGLE_JIKI_NERAI_DAN)*/
+				br.BULLET_REGIST_div_angle1024		= (int)(1024/(18)); 			/* 分割角度 */
+				br.BULLET_REGIST_bullet_obj_type	= BULLET_KNIFE20_04_AOI;		/* [青ナイフ弾] */
+				br.BULLET_REGIST_n_way				= (difficulty+difficulty-1);	/* [1 3 5way] */
+				br.BULLET_REGIST_regist_type		= REGIST_TYPE_00_MULTI_VECTOR;
+				bullet_regist_vector();
 			}
 		}
 	}
@@ -91,8 +102,8 @@ static void move_obake1(SPRITE *src)
 		if (0==src->gra_anime_type)
 		{
 			/* offset無しは回転 */
-			src->m_angleCCW512 += (5);/*グラ回転*/
-			mask512(src->m_angleCCW512);
+			src->m_angleCCW1024 += (10);/*グラ回転*/
+			mask1024(src->m_angleCCW1024);
 		}
 		else
 		{
@@ -101,67 +112,64 @@ static void move_obake1(SPRITE *src)
 	}
 }
 
-/*---------------------------------------------------------
-	自機狙い弾の角度を計算
----------------------------------------------------------*/
-static int common_angle_nerai512(SPRITE *p, SPRITE *t)
-{
-	#if 1
-	return (atan_512((p->y256-t->y256), (p->x256-t->x256)));
-	/* 偶数弾の場合に自機狙い(簡略版) 弾と自分が大きさが同じならずれない、違うとその分誤差になる */
-	#endif
-}
-
 
 /*---------------------------------------------------------
 	敵を追加する
 ---------------------------------------------------------*/
 
-void add_zako_obake1(STAGE_DATA *l)
+global void add_zako_obake1(STAGE_DATA *l)
 {
 	SPRITE *h;
-	h						= sprite_add_gu(ZAKO_TYPE_ATARI16_PNG);
-	h->type 				= TEKI_28_YOUSEI2_5;
-	add_zako_common(l, h);
-	h->callback_mover		= move_obake1;
-	h->time_out 			= (60);
-//
-	h->tmp_angleCCW512 = common_angle_nerai512(player,h);
-	h->vx256 = ((sin512((h->tmp_angleCCW512))));
-	h->vy256 = ((cos512((h->tmp_angleCCW512))));
-	h->vx256 += h->vx256;
-	h->vy256 += h->vy256;
-	h->gra_anime_type	= (1);	/* 0==回転アニメ、グラタイプ */
-}
-
-
-/*---------------------------------------------------------
-	敵を追加する
----------------------------------------------------------*/
-
-void add_zako_inseki1(STAGE_DATA *l)
-{
-	SPRITE *h;
-	h						= sprite_add_gu(ZAKO_TYPE_ATARI16_PNG);
-	h->type 				= TEKI_61_NIJI_HOSI;
-	add_zako_common(l, h);
-	h->callback_mover		= move_obake1;
-	h->time_out 		= (0x3ff);
-//
-	h->gra_anime_type	= (0);	/* 0==回転アニメ、グラタイプ */
+	h							= sprite_add_gu_error();
+	if (NULL!=h)/* 登録できた場合のみ */
 	{
-		/* 初期位置 */
-		h->x256 = (((u32)l->user_x)<<8);//((rrrr)&0xffff) + t256((GAME_WIDTH-256)/2);
-		h->y256 = -t256(30);
+		add_zako_common(l, h);
+		h->m_Hit256R			= ZAKO_ATARI16_PNG;
+		h->type 				= TEKI_28_YOUSEI2_5;
+		h->callback_mover		= move_obake1;
+		h->time_out 			= (60);
 	//
-	u32 rrrr;
-		rrrr = (ra_nd());
-		h->vx256 = ((rrrr)&0x01ff);/*右方向*/
-		/* 画面右側の場合、左方向へ進む */
-		if ( t256((GAME_WIDTH)/2) < h->x256)
+		tmp_angleCCW1024_jikinerai(obj_player, h);
+		h->vx256 = ((sin1024((h->tmp_angleCCW1024))));
+		h->vy256 = ((cos1024((h->tmp_angleCCW1024))));
+		h->vx256 += h->vx256;
+		h->vy256 += h->vy256;
+		h->gra_anime_type		= (1);	/* 0==回転アニメ、グラタイプ */
+	}
+}
+
+
+/*---------------------------------------------------------
+	敵を追加する
+---------------------------------------------------------*/
+
+global void add_zako_inseki1(STAGE_DATA *l)
+{
+	SPRITE *h;
+	h							= sprite_add_gu_error();
+	if (NULL!=h)/* 登録できた場合のみ */
+	{
+		add_zako_common(l, h);
+		h->m_Hit256R			= ZAKO_ATARI16_PNG;
+		h->type 				= TEKI_61_NIJI_HOSI;
+		h->callback_mover		= move_obake1;
+		h->time_out 			= (0x3ff);
+	//
+		h->gra_anime_type		= (0);	/* 0==回転アニメ、グラタイプ */
 		{
-			h->vx256 = (-(h->vx256));/*左方向*/
+			/* 初期位置 */
+			h->x256 = (((u32)l->user_x)<<8);//((rrrr)&0xffff) + t256((GAME_WIDTH-256)/2);
+			h->y256 = -t256(30);
+		//
+		u32 rrrr;
+			rrrr = (ra_nd());
+			h->vx256 = ((rrrr)&0x01ff);/*右方向*/
+			/* 画面右側の場合、左方向へ進む */
+			if ( t256((GAME_WIDTH)/2) < h->x256)
+			{
+				h->vx256 = (-(h->vx256));/*左方向*/
+			}
+			h->vy256 = ((rrrr>>16)&0x01ff) + t256(1.00);/*下方向*/
 		}
-		h->vy256 = ((rrrr>>16)&0x01ff) + t256(1.00);/*下方向*/
 	}
 }

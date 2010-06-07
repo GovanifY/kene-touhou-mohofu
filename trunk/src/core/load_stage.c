@@ -1,16 +1,12 @@
 
+#include "game_main.h"
+
 /*---------------------------------------------------------
+	東方模倣風  ～ Toho Imitation Style.
+	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	-------------------------------------------------------
 	ステージ敵データー(dat)の読み込み
 ---------------------------------------------------------*/
-
-#include "game_main.h"
-#include "load_stage.h"
-
-/*---------------------------------------------------------
-
----------------------------------------------------------*/
-
-//extern int errno;
 
 STAGE_DATA *stage_data_table = NULL;
 
@@ -19,16 +15,20 @@ STAGE_DATA *stage_data_table = NULL;
 	前回まで確保したメモリがあれば開放する。
 	Initial task, "free"ed the altenative entris.
 ---------------------------------------------------------*/
+//#include <malloc.h>/* free(); */
 
 static void load_stage_free_entry(void)
 {
-	STAGE_DATA *l = stage_data_table;
+	STAGE_DATA *d = stage_data_table;
 	STAGE_DATA *n;
-	while (NULL != l)
+	while (NULL != d)
 	{
-		n = l->next;
-		free (l);
-		l = n;
+		n = d->next;
+		free (d);
+		#if 0
+		d = NULL;/* 念の為要る？ */
+		#endif
+		d = n;
 	}
 	stage_data_table = (STAGE_DATA *)NULL;/* head to set NULL */
 }
@@ -45,33 +45,55 @@ extern void load_bg2_chache(char *filename, int use_alpha);
 /* Do set the entry. */
 static void load_stage_add_entry(
 	u32 time60,
-	char user_command,
 	char *user_string,
+	int user_command,
+	int user_select_gazou,
 	int user_x,
 	int user_y,
 	int user_hp,
-	int user_item16,
+	int user_item8,
 	int user_score
 	)		// オブジェクトの生成
 {
 	STAGE_DATA *new_entry;
-	new_entry					= mmalloc(sizeof(STAGE_DATA));
-//	new_entry->v_time			= (time60*6/*100*1000*/);/* 読み込み後、PSPに都合の良い値に変換(1/10[sec]-> 1/1000000[sec] == 1[nsec] == nano seconds ) */
-//	new_entry->v_time			= (time60*6/*100*1000*/);/* 読み込み後、PSPに都合の良い値に変換(1/10[sec]-> 1/60[sec] ) */
-	new_entry->v_time			= (time60  /*100*1000*/);/* 読み込み後、PSPに都合の良い値に変換(1/10[sec]-> 1/60[sec] ) */
-	new_entry->user_x			= user_x;
-	new_entry->user_y			= user_y;
-	new_entry->user_hp			= user_hp;
-	new_entry->user_item16		= user_item16;
-	new_entry->user_score		= user_score;
-//	new_entry->done 			= 0;
+	new_entry						= my_calloc(sizeof(STAGE_DATA));
+//	new_entry->v_time				= (time60*6/*100*1000*/);/* 読み込み後、PSPに都合の良い値に変換(1/10[sec]-> 1/1000000[sec] == 1[nsec] == nano seconds ) */
+//	new_entry->v_time				= (time60*6/*100*1000*/);/* 読み込み後、PSPに都合の良い値に変換(1/10[sec]-> 1/60[sec] ) */
+	new_entry->v_time				= (time60  /*100*1000*/);/* 読み込み後、PSPに都合の良い値に変換(1/10[sec]-> 1/60[sec] ) */
+	new_entry->user_x				= user_x;
+	new_entry->user_y				= user_y;
+	new_entry->user_hp				= user_hp;
+	new_entry->user_item8			= user_item8;
+	new_entry->user_select_gazou	= user_select_gazou;
+	new_entry->user_score			= user_score;
+//	new_entry->done 				= 0;
 //
-	new_entry->user_1_moji		= user_command;
-	new_entry->user_i_code		= 0;
+	new_entry->user_255_code		= (u8)(user_command&0xff);
+	new_entry->user_i_code			= 0;
 
 	strncpy(new_entry->user_string, user_string, (MAX_PARA1_36-1)/*63*/);
 
 /* ゲーム中は、中間コード形式のコマンドを扱い構文解析はしない。(構文解析はload_stage.cで行う) */
+
+	//	"慧音", 	/*	extra 2 	"BOSS05",*/
+	//	"チルノ",	/*	extra 1 	"BOSS05",*/
+	//	"咲夜", 	/*	stage 6 	"BOSS04",*/ 	// [***090207		追加
+	//	"パチェ",	/*	stage 5 	"BOSS01",*/
+	//	"輝夜", 	/*	stage 4 	"BOSS03",*/
+	//	"未定", 	/*	stage 3 	"BOSS03",*/ 	/* 3面はどうするか未定(永琳? 慧音?) */
+	//	"文",		/*	stage 2 	"BOSS02",*/
+	//	"アリス",	/*	stage 1 	"BOSS01",*/
+
+	//	"中ボス6",
+	//	"小悪魔",	/*	"GFAIRY",*/ 	//		追加
+	//	"鈴仙",
+	//	"てゐ",
+	//	"中ボス2",
+	//	"ルーミア", /*	"GFAIRY",*/ 	//		追加
+//		廃止
+	//	"妖怪2",	/*	"GFAIRY",*/ 	//		追加
+	//	"妖怪1",	/*	"GFAIRY",*/ 	// [***090207		追加
+
 
 //
 	const char *ctype_name[CTYPE_99_MAX] =	/* 現在 32 種類 */
@@ -81,24 +103,9 @@ static void load_stage_add_entry(
 		"QUIT", 	/* ゲーム 全ステージ クリアー */
 		"BG",		/*	"BG_CONTROL"*/		/* ←システムコマンドなので英語にした */
 	//	ボス
-		"慧音", 	/*	extra 2 	"BOSS05",*/
-		"チルノ",	/*	extra 1 	"BOSS05",*/
-		"咲夜", 	/*	stage 6 	"BOSS04",*/ 	// [***090207		追加
-		"パチェ",	/*	stage 5 	"BOSS01",*/
-		"輝夜", 	/*	stage 4 	"BOSS03",*/
-		"未定", 	/*	stage 3 	"BOSS03",*/ 	/* 3面はどうするか未定(永琳? 慧音?) */
-		"文",		/*	stage 2 	"BOSS02",*/
-		"アリス",	/*	stage 1 	"BOSS01",*/
+		"ボス", 	/* 共通化 */
 	/* 特殊敵[中型敵] */
-		"中ボス6",
-		"小悪魔",	/*	"GFAIRY",*/ 	//		追加
-		"鈴仙",
-		"てゐ",
-		"中ボス2",
-		"ルーミア", /*	"GFAIRY",*/ 	//		追加
-//		廃止?
-		"妖怪2",	/*	"GFAIRY",*/ 	//		追加
-		"妖怪1",	/*	"GFAIRY",*/ 	// [***090207		追加
+		"中ボス",
 //
 	/* 魔方陣 */
 		"魔方陣1",	/*	"GROUNDER",*/
@@ -135,10 +142,14 @@ static void load_stage_add_entry(
 
 
 	/* 読み込んだコマンドを中間コード形式に変換する */
-	switch (new_entry->user_1_moji)
+	if ((255)==new_entry->user_255_code)
 	{
-	case 'T':	new_entry->user_i_code=ETYPE_01_SJIS_TEXT;		break;	/* english Text */
-	case 'B':	new_entry->user_i_code=ETYPE_02_LOAD_BG;
+		new_entry->user_i_code = ETYPE_01_SJIS_TEXT;	/* 'T'ext. */
+	}
+	else
+	if ((128)==new_entry->user_255_code)
+	{
+		new_entry->user_i_code = ETYPE_02_LOAD_BG;	/* 'B'ack 'G'round. */		/* Background */
 		#if 000
 	//	if ( 0 == ti ny_strcmp(new_entry->user_string,"0") ) /* ファイル名が０の場合システムコマンド[拡張予定] */
 		if ( '0' == new_entry->user_string[0] ) /* ファイル名の1字目が０の場合システムコマンド[拡張予定] */
@@ -153,8 +164,9 @@ static void load_stage_add_entry(
 				つまり、ここの場所で展開してるんだから、ここの場所load_stage()で処理落ちが酷いという事だよ。 */
 		}
 		#endif
-		break;	/* Background */
-	default:	// add background tiles....
+	}
+	else
+	{
 		{
 			for (new_entry->user_i_code = /*CT YPE_00_unknown+*/(CTYPE_99_MAX-1); /*0*/CTYPE_00_NONE/*CT YPE_00_unknown*/ < new_entry->user_i_code; new_entry->user_i_code--)
 			{
@@ -164,7 +176,6 @@ static void load_stage_add_entry(
 				}
 			} // 0/*CT YPE_00_unknown*/ == aaa );
 		}
-		break;
 	}
 //
 	if (NULL==stage_data_table) 	// 最初の解析行か？
@@ -201,7 +212,7 @@ static char *load_stage_get_int(char *ccc, int *number)
 ne222:
 	return ((char *) NULL);
 }
-#include "my_file.h"
+#include "111_my_file.h"
 
 /*---------------------------------------------------------
 	ステージ読み込み
@@ -227,42 +238,61 @@ ne222:
 //		if (9!=load_stage_number)
 //		#endif //(1==US E_ENDING_DEBUG)
 
+extern void set_default_bullet_clip(void);
+
 extern int select_player;
-extern void bg2_start_stage(void); // [***090209		追加
+extern void bg2_start_stage(void);	// [***090209		追加
 extern void stage_bg_load_texture(void);
+extern void gu_set_bg_u32_clear_color(u32 set_u32_clear_color);
 void load_stage(void)	/*int level*/	/* 元々int */
 {
-	bg2_start_stage();	// [***090209		追加
+	set_default_bullet_clip();		/* 弾幕の範囲を標準に設定 */
+	bg2_start_stage();				// [***090209		追加
 	enemy_set_random_seed(/*set_seed*/);	/* リプレイ対応出来るように、乱数系列の初期化。 */
 //	int level = player_now_stage;
-	player_now_stage++; /*(*level)++*/;
+	player_now_stage++; 				/*(*level)++*/
 	// change music soundtrack
-	play_music_num( /*1+*/	/*level*/player_now_stage/*(*level)*/ );/* n面道中 */
+	play_music_num(player_now_stage);	/* n面道中 */	 /*1+(*level)*/
 //
 //	int load_stage_number = player_now_stage;
 	{
 		{
 			pd_state_flag &= (~(STATE_FLAG_05_IS_BOSS));/*ボスoff*/
 		}
-		draw_side_panel=1/*pd_state_flag |= ST ATE_FLAG_09_IS_PANEL_WINDOW*/;/* パネル表示on */
+		draw_side_panel = 1/*pd_state_flag |= ST ATE_FLAG_09_IS_PANEL_WINDOW*/;/* パネル表示on */
 	}
 //
+	{
+		const u32 bg_color_list[8] =
+		{	/*AABBGGRR*/
+			0xff000000,/*(黒)*/
+			0xff106010,/*1面(緑、魔法の森)*/
+			0xff401010,/*3面(青、迷いの竹林)*/		//	0xff104010,/*3面(緑)*/
+			0xff402020,/*4面(青、永遠亭)*/
+			0xff804010,/*2面(水、妖怪の山、滝)*/	//	0xff802010,/*2面(青)*/		0xff102080,/*2面*/
+			0xff601030,/*5面(青、図書館)*/
+			0xff301060,/*6面(赤、紅魔館)*/			//	0xff601030,/*6面(青)*/
+			0xff000000,/*ending(黒)*/
+		//	0xff601010,/**/
+		};
+		gu_set_bg_u32_clear_color((bg_color_list[player_now_stage&0x07]));
+	}
 	stage_bg_load_texture();
 //
 //
 //	char my_fopen_file_name[128];
-//	sp rintf(my_fopen_file_name,"%s/dat/level%02d.dat", data_dir, /*level*/player_now_stage);
-//	sp rintf(my_fopen_file_name,"%s/dat/stage%01d.txt", data_dir, /*level*/player_now_stage);
-//	sp rintf(my_fopen_file_name, "%s/dat/stage%c.txt", data_dir, ('0'+/*level*/load_stage_number/*player_now_stage*/) );
-//	sp rintf(my_fopen_file_name, DIRECTRY_NAME_DATA "/dat/stage%c.txt", ('0'+/*level*/load_stage_number/*player_now_stage*/) );
-	strcpy(my_fopen_file_name, DIRECTRY_NAME_DATA "/dat/stageZ.txt");
-	my_fopen_file_name[10+DIRECTRY_NAME_LENGTH] = ('0'+player_now_stage);/*level*/ /*load_stage_number*/ /*player_now_stage*/
+//	sp rintf(my_fopen_file_name, DIRECTRY_NAME_DATA_STR "/dat/stage%02d.dat", player_now_stage);
+//	sp rintf(my_fopen_file_name, DIRECTRY_NAME_DATA_STR "/dat/stage%01d.txt", player_now_stage);
+//	sp rintf(my_fopen_file_name, DIRECTRY_NAME_DATA_STR "/dat/stage%c.txt", ('0'+ player_now_stage) );
+//	sp rintf(my_fopen_file_name, DIRECTRY_NAME_DATA_STR "/dat/stage%c.txt", ('0'+ player_now_stage) );
+	strcpy(my_fopen_file_name, DIRECTRY_NAME_DATA_STR "/dat/stageZ.txt");
+	my_fopen_file_name[10+DIRECTRY_NAME_DATA_LENGTH] = get_stage_chr(player_now_stage); /*load_stage_number*/
 
 //	/*FILE*/char *fp;
 	if (NULL==(/*fp =*/my_fopen(/*my_fopen_file_name*/ /*,"r"*/)))
 	{
-	//	error(ERR_FATAL, "can't read stage data %s\nerrno: %d (%s)",my_fopen_file_name,errno,strerror(errno));
-		error(ERR_FATAL, "can't read stage %d data %s\n", /*load_stage_number*/player_now_stage, my_fopen_file_name );
+	//	error(ERR_FATAL, (char*)"can't read stage data %s\nerrno: %d (%s)",my_fopen_file_name,errno,strerror(errno));
+		error(ERR_FATAL, (char*)"can't read stage %d data %s\n", /*load_stage_number*/player_now_stage, my_fopen_file_name );
 	}
 //
 	load_stage_free_entry();	/* 前回まで確保したメモリがあれば、先に開放する。 */
@@ -273,12 +303,13 @@ void load_stage(void)	/*int level*/	/* 元々int */
 		{
 			int end_arg/*=0*/;			/* [だみー]行末 == 引数の取得の中止 */
 			int time60; 				/* 出現時間(1/60秒単位)  */
-			char char_user_command; 	/* １文字コマンド(敵やメッセージ等の種別) */
 			char user_string[128];		/* 文字列(メッセージやファイル名) */
+			int int_user_command;	 	/* １文字コマンド(敵やメッセージ等の種別) */
+			int select_gazou;	 		/* アニメ/画像種類 */
 			int user_x; 				/* 数字パラメーター１(出現Ｘ座標など) */
 			int user_y; 				/* 数字パラメーター２(出現Ｙ座標、敵難度など) */
 			int user_hp; 				/* 数字パラメーター２(出現Ｙ座標、敵難度など) */
-			int user_item16; 			/* 数字パラメーター２(出現Ｙ座標、敵難度など) */
+			int user_item8; 			/* 数字パラメーター２(出現Ｙ座標、敵難度など) */
 			int user_score; 			/* 数字パラメーター２(出現Ｙ座標、敵難度など) */
 			line_num++; 				/* ファイルの実行数 */
 //
@@ -310,33 +341,35 @@ void load_stage(void)	/*int level*/	/* 元々int */
 			#define GOTO_ERR_WARN goto loop
 		#endif
 			/* parth start */	/* Startzeitpunkt holen */
-			ch = load_stage_get_int(ch, &time60);	if (NULL == ch) 			{	GOTO_ERR_WARN;/*continue;*/;	}	/* load int time60 */		/* 時間の取得 */
-													if (','/*'|'*/ != *ch++)	{	GOTO_ERR_WARN;/*continue;*/;	}	/* load '|' */
-			char_user_command = *ch++;																				/* load 1 char commnd */	/* １文字コマンド */	/* Befehl */
-													if (','/*'|'*/ != *ch++)	{	GOTO_ERR_WARN;/*continue;*/;	}	/* load '|' */
-			ch = load_my_file_get_str(ch, user_string, &end_arg/*, '|'*/);
-													if (NULL == ch) 			{	GOTO_ERR_WARN;/*continue;*/;	}	/* load str user_string */
-													if (','/*'|'*/ != *ch++)	{	GOTO_ERR_WARN;/*continue;*/;	}	/* load '|' */
-			ch = load_stage_get_int(ch, &user_x);	if (NULL == ch) 			{	GOTO_ERR_WARN;/*continue;*/;	}	/* load int user_x */
-													if (','/*'|'*/ != *ch++)	{	GOTO_ERR_WARN;/*continue;*/;	}	/* load '|' */
-			ch = load_stage_get_int(ch, &user_y);	if (NULL == ch) 			{	GOTO_ERR_WARN;/*continue;*/;	}	/* load int user_y */
-													if (','/*'|'*/ != *ch++)	{	GOTO_ERR_WARN;/*continue;*/;	}	/* load '|' */
-			ch = load_stage_get_int(ch, &user_hp);		if (NULL == ch) 			{	GOTO_ERR_WARN;/*continue;*/;	}	/* load int user_y */
-														if (','/*'|'*/ != *ch++)	{	GOTO_ERR_WARN;/*continue;*/;	}	/* load '|' */
-			ch = load_stage_get_int(ch, &user_item16);	if (NULL == ch) 			{	GOTO_ERR_WARN;/*continue;*/;	}	/* load int user_y */
-														if (','/*'|'*/ != *ch++)	{	GOTO_ERR_WARN;/*continue;*/;	}	/* load '|' */
-			ch = load_stage_get_int(ch, &user_score);	if (NULL == ch) 			{	GOTO_ERR_WARN;/*continue;*/;	}	/* load int user_y */
+			ch = load_stage_get_int(ch, &time60);							if (NULL == ch) 			{	GOTO_ERR_WARN;/*continue;*/;	}	/* load int time60 */		/* 時間の取得 */
+																			if (','/*'|'*/ != *ch++)	{	GOTO_ERR_WARN;/*continue;*/;	}	/* load '|' */
+			ch = load_my_file_get_str(ch, user_string, &end_arg/*, '|'*/);	if (NULL == ch) 			{	GOTO_ERR_WARN;/*continue;*/;	}	/* load str user_string */
+																			if (','/*'|'*/ != *ch++)	{	GOTO_ERR_WARN;/*continue;*/;	}	/* load '|' */
+			ch = load_stage_get_int(ch, &int_user_command); 				if (NULL == ch) 			{	GOTO_ERR_WARN;/*continue;*/;	}	/* load int user_x */	/* load 1 char commnd */	/* １文字コマンド */
+																			if (','/*'|'*/ != *ch++)	{	GOTO_ERR_WARN;/*continue;*/;	}	/* load '|' */
+			ch = load_stage_get_int(ch, &select_gazou); 					if (NULL == ch) 			{	GOTO_ERR_WARN;/*continue;*/;	}	/* load int user_x */	/* load 1 char commnd */	/* １文字コマンド */
+																			if (','/*'|'*/ != *ch++)	{	GOTO_ERR_WARN;/*continue;*/;	}	/* load '|' */
+			ch = load_stage_get_int(ch, &user_x);							if (NULL == ch) 			{	GOTO_ERR_WARN;/*continue;*/;	}	/* load int user_x */
+																			if (','/*'|'*/ != *ch++)	{	GOTO_ERR_WARN;/*continue;*/;	}	/* load '|' */
+			ch = load_stage_get_int(ch, &user_y);							if (NULL == ch) 			{	GOTO_ERR_WARN;/*continue;*/;	}	/* load int user_y */
+																			if (','/*'|'*/ != *ch++)	{	GOTO_ERR_WARN;/*continue;*/;	}	/* load '|' */
+			ch = load_stage_get_int(ch, &user_hp);							if (NULL == ch) 			{	GOTO_ERR_WARN;/*continue;*/;	}	/* load int user_y */
+																			if (','/*'|'*/ != *ch++)	{	GOTO_ERR_WARN;/*continue;*/;	}	/* load '|' */
+			ch = load_stage_get_int(ch, &user_item8);						if (NULL == ch) 			{	GOTO_ERR_WARN;/*continue;*/;	}	/* load int user_y */
+																			if (','/*'|'*/ != *ch++)	{	GOTO_ERR_WARN;/*continue;*/;	}	/* load '|' */
+			ch = load_stage_get_int(ch, &user_score);						if (NULL == ch) 			{	GOTO_ERR_WARN;/*continue;*/;	}	/* load int user_y */
 			/* do set register entry. */
 			#define MUSIC_CONVERT_TIME (10)
 			/* 追加登録する */
 			load_stage_add_entry(
 				MUSIC_CONVERT_TIME+time60,
-				char_user_command,
 				user_string,
+				int_user_command,
+				select_gazou,
 				user_x,
 				user_y,
 				user_hp,
-				user_item16,
+				user_item8,
 				user_score
 			);
 			entrys++;		/* 有効行数 */
@@ -346,19 +379,19 @@ void load_stage(void)	/*int level*/	/* 元々int */
 			/* Load parth error. */
 		//	static void load_stage_set_error(char *load_filename, int error_line_number)
 		//	{
-		//		error(ERR_WARN, "syntax error in stage data '%s', line no: %d", load_filename, error_line_number);
+		//		error(ERR_WARN, (char*)"syntax error in stage data '%s', line no: %d", load_filename, error_line_number);
 		//	}
 		//	load_stage_set_error(filename, line_num);
-			error(/*ERR_WARN*/ERR_FATAL, "syntax error in stage data '%s', line no: %d", filename, line_num);
+			error(/*ERR_WARN*/ERR_FATAL, (char*)"syntax error in stage data '%s', line no: %d", filename, line_num);
 			goto loop;
 		#endif
 		}
 	}
-	my_fclose (/*fp*/);
+	my_fclose(/*fp*/);
 	//return (entrys);
 	if (0==entrys)		/* 有効行数がなければエラー */
 	{
-		error(/*ERR_WARN*/ERR_FATAL, "no entrys for STAGE%d.TXT",player_now_stage); /*level*/ /*load_stage_number*/
+		error(/*ERR_WARN*/ERR_FATAL, (char*)"no entrys for STAGE%d.TXT",player_now_stage); /*level*/ /*load_stage_number*/
 	}
 	//fps_init();/* ??? auto fps初期化 */
 }

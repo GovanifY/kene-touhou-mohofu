@@ -1,15 +1,18 @@
 
-/*---------------------------------------------------------
-
----------------------------------------------------------*/
-
 #include "game_main.h"
+
+/*---------------------------------------------------------
+	東方模倣風	～ Toho Imitation Style.
+	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	-------------------------------------------------------
+	背景コントロール
+---------------------------------------------------------*/
 
 #define USE_BG_LOAD 0
 
 
 
-/*static*/ int current_bg0_y_scroll_speed256;	/* bg0のスクロール、現在速度 */
+global int current_bg0_y_scroll_speed256;	/* bg0のスクロール、現在速度 */
 static int request_bg0_y_scroll_speed256;	/* bg0のスクロール、予約速度 */
 
 
@@ -22,7 +25,7 @@ extern unsigned int conv_bg_alpha;
 static int current_bg_alpha;
 static int request_bg_alpha;
 
-void set_bg_alpha(int set_bg_alpha)
+global void set_bg_alpha(int set_bg_alpha)
 {
 	request_bg_alpha = set_bg_alpha;
 }
@@ -32,7 +35,6 @@ void set_bg_alpha(int set_bg_alpha)
 
 static void tile_work(void)
 {
-//
 	if (current_bg_alpha == request_bg_alpha) /*最もありそうな可能性を排除*/
 	{
 		;
@@ -47,7 +49,7 @@ static void tile_work(void)
 		{
 			current_bg_alpha += (4)/*6*/;
 			if (245 < current_bg_alpha) 	/* じわじわするので */
-			{	current_bg_alpha = (255); 	}
+			{	current_bg_alpha = (255);	}
 		}
 		/* converted  */
 		u8 aaa = (current_bg_alpha/*>>1*/);
@@ -88,18 +90,15 @@ static void tile_work(void)
 
 ---------------------------------------------------------*/
 
-
-void bg_work_draw(void)
+global void bg2_move_main(void)
 {
-
-
 	{
 		tile_work();
-	//	#if (1 != USE_GU)
+	//	#if (1 != US E_GU)
 		#if 0000
 		tile_draw(draw_bmp/*bg0_bmp*/);
 		#else
-		/* (1 == USE_GU) */
+		/* (1 == US E_GU) */
 //		psp_clear_screen();
 		#endif
 	}
@@ -109,10 +108,8 @@ void bg_work_draw(void)
 
 ---------------------------------------------------------*/
 extern void clouds_destroy(void);
-void bg2_destroy(void)
+global void bg2_destroy(void)
 {
-
-
 	clouds_destroy();
 }
 
@@ -121,7 +118,7 @@ void bg2_destroy(void)
 /*---------------------------------------------------------
 	敵を追加する
 ---------------------------------------------------------*/
-void add_enemy_load_bg(STAGE_DATA *l)
+global void add_enemy_load_bg(STAGE_DATA *l)
 {
 
 
@@ -130,12 +127,10 @@ void add_enemy_load_bg(STAGE_DATA *l)
 /*---------------------------------------------------------
 	ステージ読み込み開始時に、毎回初期化する
 ---------------------------------------------------------*/
-void bg2_start_stage(void)
+global void bg2_start_stage(void)
 {
-
-
 	bg2_destroy();
-//	if (1==use_clouds) {}
+//	if (1==use_clouds)	{}
 	request_bg0_y_scroll_speed256 = current_bg0_y_scroll_speed256 = t256(0.5);/*初期値*/
 }
 
@@ -143,13 +138,9 @@ void bg2_start_stage(void)
 	psp起動時に一度だけ初期化する
 ---------------------------------------------------------*/
 extern void clouds_system_init(void);
-void bg2_system_init(void)
+global void bg2_system_init(void)
 {
-
-
 	/* 画像読み込み用サーフェイス */
-
-
 	clouds_system_init();
 }
 
@@ -164,7 +155,7 @@ enum
 //	BG2_03_BG_SWAP,
 	BG2_03_DESTOROY_CLOUDS,
 };
-void bg2_control(STAGE_DATA *l)
+global void bg2_control(STAGE_DATA *l)
 {
 	short xxx;
 	short yyy;
@@ -186,14 +177,14 @@ void bg2_control(STAGE_DATA *l)
 				t256(0.5), t256(0.5), t256(0.5), t256(0.5) /* - - - - */
 				#else
 				/*拡張*/
-				t256(0.0), t256(0.1), t256(0.2), t256(0.3),/* 0 1 2 3 */
-				t256(0.4), t256(0.5), t256(0.6), t256(0.7),/* 4 5 6 7 */
-				t256(0.8), t256(0.9), t256(1.0), t256(1.5),/* 8 9 J K */
-				t256(2.0), t256(2.5), t256(3.0), t256(4.0) /* L M N O */
+				t256(0.0), t256(0.1), t256(0.2), t256(0.3),/* 0 1 2 3 */	/* 00 01 02 03 */
+				t256(0.4), t256(0.5), t256(0.6), t256(0.7),/* 4 5 6 7 */	/* 04 05 06 07 */
+				t256(0.8), t256(0.9), t256(1.0), t256(1.5),/* 8 9 J K */	/* 08 09 10 11 */
+				t256(2.0), t256(2.5), t256(3.0), t256(4.0) /* L M N O */	/* 12 13 14 15 */
 				#endif
 			};
-		//	new_entry->scroll_speed256/*ctype*/ = speed256_tbl[((new_entry->user_1_moji) & 0x0f)];
-			request_bg0_y_scroll_speed256 = speed256_tbl[((l->user_1_moji) & 0x0f)]; 	/* bg0のスクロール、予約速度を設定 */
+		//	new_entry->scroll_speed256/*ctype*/ = speed256_tbl[((new_entry->user_255_code) & 0x0f)];
+			request_bg0_y_scroll_speed256 = speed256_tbl[((l->user_255_code) & 0x0f)];	/* bg0のスクロール、予約速度を設定 */
 			}
 			#endif
 		}

@@ -1,94 +1,120 @@
 
+#include "game_main.h"
+
 /*---------------------------------------------------------
+	“Œ•û–Í•í•—  ` Toho Imitation Style.
+	ƒvƒƒWƒFƒNƒgƒy[ƒW http://code.google.com/p/kene-touhou-mohofu/
+	-------------------------------------------------------
 	ŠeƒvƒŒƒCƒ„[(—ì–² • –‚—¹ • ƒŒƒ~ƒŠƒA • ƒ`ƒ‹ƒm • —HXq)
 	REIMU(A/B) MARISA(A/B/C) REMILIA CIRNO YUYUKO
 	-------------------------------------------------------
 ---------------------------------------------------------*/
 
-#include "game_main.h"
-#include "player.h"
-#include "scenario_script.h"
+#include "kanji_system.h"
 
 extern int select_player;
 
-static	SPRITE *pd_core;
-	SPRITE *pd_boss;		// [***090305		’Ç‰Á
+enum	/* _player_option_type_ */
+{
+	OPTION_C1 = 0,
+	OPTION_C2,
+	OPTION_C3,
+	OPTION_C4,
+};
+/*---------------------------------------------------------
+	‹¤’ÊƒIƒuƒWƒFƒNƒg
+---------------------------------------------------------*/
+#if 1
+
+global SPRITE *obj_player;
+static SPRITE *obj_maru;		/* › */
+
+static SPRITE *option[4];
+
+global SPRITE *obj_boss;
+
+global SPRITE *obj_send1;
+
+#endif
 
 
-int player_now_stage;		/* */
-int pd_bomber_time; 		/* Use Gu */
+global int player_now_stage;	/* */
+global int pd_bomber_time;		/* Use Gu */
 
-
 //
-	int pd_state_flag;		/* İ’èƒtƒ‰ƒO */	// [***090116		’Ç‰Á
-	int pd_weapon_power;	/* 0x00-0x80  (0-128 ‚Ì129’iŠK==–{‰Æ‚Æ“¯‚¶)   max==128==u129’iŠKv*/
-	int pd_chain_point;
+global int pd_state_flag;		/* İ’èƒtƒ‰ƒO */	// [***090116		’Ç‰Á
+global int pd_weapon_power; 	/* 0x00-0x80  (0-128 ‚Ì129’iŠK==–{‰Æ‚Æ“¯‚¶)   max==128==u129’iŠKv*/
+global int pd_chain_point;
 //
-	u32 pd_my_score;		/* ƒXƒRƒA“¾“_ */
-	u32 pd_graze_point; 	/* ƒOƒŒƒCƒY“¾“_ */
-	int pd_bombs;			/* ƒ{ƒ€” */
-	int pd_zanki;			/* c‚èƒ`ƒƒƒ“ƒX */
+global u32 pd_my_score; 		/* ƒXƒRƒA“¾“_ */
+global u32 pd_graze_point;		/* ƒOƒŒƒCƒY“¾“_ */
+global int pd_bombs;			/* ƒ{ƒ€” */
+global int pd_zanki;			/* c‚èƒ`ƒƒƒ“ƒX */
 //
-	int pd_use_continue;	/* ƒRƒ“ƒeƒBƒjƒ…[‰ñ” */
-	int pd_count_miss;		/* ƒ~ƒX‰ñ” */
-	int pd_used_bomber; 	/* ƒ{ƒ€g—p‰ñ” */
-//	int pd_count_bonus; 	/* ƒXƒyƒ‹ƒJ[ƒhƒ{[ƒiƒX‰ñ” */
+global int pd_use_continue; 	/* ƒRƒ“ƒeƒBƒjƒ…[‰ñ” */
+global int pd_count_miss;		/* ƒ~ƒX‰ñ” */
+global int pd_used_bomber;		/* ƒ{ƒ€g—p‰ñ” */
+//obal int pd_count_bonus;		/* ƒXƒyƒ‹ƒJ[ƒhƒ{[ƒiƒX‰ñ” */
 //
-	int pd_use_kurai_bomb; 	/* ‹ò‚ç‚¢ƒ{ƒ€g—p‰ñ” */
+global int pd_use_kurai_bomb;	/* ‹ò‚ç‚¢ƒ{ƒ€g—p‰ñ” */
 
 
 enum /*_player_state_*/
 {
 	PLAYER_STATE_00_NORMAL,
-	PLAYER_STATE_01_HIT_BOMB,		/* [***090125		’Ç‰Á:PLAYER_STATE_01_HIT_BOMB */
+	PLAYER_STATE_01_HIT_BOMB,	/* [***090125		’Ç‰Á:PLAYER_STATE_01_HIT_BOMB */
 	PLAYER_STATE_02_SAVE_01,
 	PLAYER_STATE_03_SAVE_02,
 	PLAYER_STATE_04_GAME_OUT,
 };
 
-typedef struct
-{
-	int speed256;
-	int state;
-	int time_out;			/* İ’èŠÔ“à‚ÉŒ©‚Â‚¯‚ç‚ê‚È‚¢ê‡‚Í‚¨‚µ‚Ü‚¢ */
-	SPRITE *target_obj; 	/* int target_id */
-} PL_HOMING_DATA;			/* == PL_HLASER_DATA */
+//typedef struct
+//{
+//	int speed256;
+//	int state;
+//	int time_out;			/* İ’èŠÔ“à‚ÉŒ©‚Â‚¯‚ç‚ê‚È‚¢ê‡‚Í‚¨‚µ‚Ü‚¢ */
+//	SPRITE *target_obj; 	/* int target_id */
+//} PL_HOMING_DATA; 		/* == PL_HLASER_DATA */
 
-//	int angleCCW512;
+#define PL_HOMING_DATA_speed256 				user_data00
+#define PL_HOMING_DATA_state					user_data01
+#define PL_HOMING_DATA_time_out 				user_data02 		/* İ’èŠÔ“à‚ÉŒ©‚Â‚¯‚ç‚ê‚È‚¢ê‡‚Í‚¨‚µ‚Ü‚¢ */
+
+//	int angleCCW1024;
 //	int nr; 				/* ‰E‚©¶(ƒz[ƒ~ƒ“ƒO), nr==number */
 
 
-typedef struct
-{
-	int check_x256;
-	int check_y256;
-	int time_out;			/* İ’èŠÔ“à‚ÉŒ©‚Â‚¯‚ç‚ê‚È‚¢ê‡‚Í‚¨‚µ‚Ü‚¢ */
-	SPRITE *target_obj; 	/* int target_id */
-} PL_HOMING_KODOMO_DATA;	/* == PL_HLASER_DATA */
+//typedef struct
+//{
+#define PL_HOMING_KODOMO_DATA_check_x256		user_data00
+#define PL_HOMING_KODOMO_DATA_check_y256		user_data01
+#define PL_HOMING_KODOMO_DATA_time_out			user_data02 		/* İ’èŠÔ“à‚ÉŒ©‚Â‚¯‚ç‚ê‚È‚¢ê‡‚Í‚¨‚µ‚Ü‚¢ */
+//	SPRITE *target_obj; 	/* int target_id */
+//} PL_HOMING_KODOMO_DATA;	/* == PL_HLASER_DATA */
 
-typedef struct
-{
-	int angleCCW512;
-	int add_r512;
-	int radius; 			/* ”¼Œa(radius) */
-} PL_KEKKAI_DATA;
+//typedef struct
+//{
+#define PL_KEKKAI_DATA_angleCCW1024 			user_data00
+#define PL_KEKKAI_DATA_add_r1024				user_data01
+#define PL_KEKKAI_DATA_radius					user_data02 		/* ”¼Œa(radius) */
+//} PL_KEKKAI_DATA;
 
-typedef struct
-{
-	int angleCCW512;				/* ‰º‚ª‚O‚Æ‚µ‚Ä¶‰ñ‚è(‹t‰ñ‚è)‚ÌŠp“x */
-	int anime_wait; 				/* ƒAƒjƒ[ƒVƒ‡ƒ“‘¬“x‚ÌƒJƒEƒ“ƒ^ */
-	int opt_anime_add_id;			/* ƒAƒjƒ[ƒVƒ‡ƒ“•ûŒü‚Ì‰ÁZ’l / ƒIƒvƒVƒ‡ƒ“ID / (ƒŒƒ~ƒŠƒA & ƒ`ƒ‹ƒm)x offset */	/* pos */
-	int opt_shot_interval;			/* ƒIƒvƒVƒ‡ƒ“‚ª”­Ë‚·‚éƒVƒ‡ƒbƒg‚ÌXVŠÔŠu */
+//typedef struct
+//{
+#define PL_OPTION_DATA_angleCCW1024 			user_data00 		/* ‰º‚ª‚O‚Æ‚µ‚Ä¶‰ñ‚è(‹t‰ñ‚è)‚ÌŠp“x */
+#define PL_OPTION_DATA_anime_wait				user_data01 		/* ƒAƒjƒ[ƒVƒ‡ƒ“‘¬“x‚ÌƒJƒEƒ“ƒ^ */
+#define PL_OPTION_DATA_opt_anime_add_id 		user_data02 		/* ƒAƒjƒ[ƒVƒ‡ƒ“•ûŒü‚Ì‰ÁZ’l / ƒIƒvƒVƒ‡ƒ“ID / (ƒŒƒ~ƒŠƒA & ƒ`ƒ‹ƒm)x offset */	/* pos */
+#define PL_OPTION_DATA_opt_shot_interval		user_data03 		/* ƒIƒvƒVƒ‡ƒ“‚ª”­Ë‚·‚éƒVƒ‡ƒbƒg‚ÌXVŠÔŠu */
 //
 	#if 1
 	/* ƒŒƒ~ƒŠƒA & ƒ`ƒ‹ƒm */
 //	int st ate1;					/* ‹¤’Ê‚È‚Ì‚ÅA‚±‚±‚É‚Í—v‚ç‚È‚¢ */
-	int state2;
-	int offset_x256;				/* ‰~‚Ì”¼Œa‚ÆŒ“—p */
-	int offset_y256;
-	int slow_count; 				/* FORMATION_03: Œ¸‘¬—p(D‚«‚ÈˆÊ’u‚É’u‚¯‚é‚æ) */
+#define PL_OPTION_DATA_state2					user_data04
+#define PL_OPTION_DATA_offset_x256				user_data05 		/* ‰~‚Ì”¼Œa‚ÆŒ“—p */
+#define PL_OPTION_DATA_offset_y256				user_data06
+#define PL_OPTION_DATA_slow_count				user_data07 		/* FORMATION_03: Œ¸‘¬—p(D‚«‚ÈˆÊ’u‚É’u‚¯‚é‚æ) */
 	#endif
-} PL_OPTION_DATA;
+//} PL_OPTION_DATA;
 
 #define OPTION_ID_01_LL 	(0x1dff)/*‹Œ-1 0  c 1 1101 (0x01ff) 0001 1111 1111 */
 #define OPTION_ID_02_LM 	(0x1cff)/*‹Œ-1 0  c 1 1100 (0x02ff) 0010 1111 1111 */
@@ -106,7 +132,7 @@ typedef struct
 /* —ì–² “Áê”\—ÍF‹ò‚ç‚¢ƒ{ƒ€‚Ìó•tŠÔ‚ª’·‚¢ */
 /* ƒ`ƒ‹ƒm “Áê”\—ÍF‡H */
 
-#define PLAYERS8				(8)/*5*/
+#define PLAYERS8					(8)/*5*/
 
 #define BASE_OPT_SHOT_INTERVAL0 	(PLAYERS8*0)
 #define BASE_OPT_SHOT_INTERVAL1 	(PLAYERS8*1)
@@ -120,7 +146,10 @@ typedef struct
 #define BASE_STD_BOMB_STRENGTH		(PLAYERS8*8)
 #define BASE_LOW_BOMB_STRENGTH		(PLAYERS8*9)
 //
-#define BASE_MAX					(PLAYERS8*10)		/* Å‘å” */
+#define BASE_OPT_ANIM_TYPE			(PLAYERS8*10)
+#define BASE_OPT_ANIM_SPEED 		(PLAYERS8*11)
+//
+#define BASE_MAX					(PLAYERS8*12)		/* Å‘å” */
 
 static const u8 player_fix_status[BASE_MAX] =
 {/* REIMU(A/B) MARISA(A/B)	REMILIA YUYUKO CIRNO(A/Q) */
@@ -143,7 +172,9 @@ static const u8 player_fix_status[BASE_MAX] =
 	  16,  16,	 8,   8,	4,	12,   9,   9,	 /* BASE_HIT_BOMB_WAIT	   ‹ò‚ç‚¢ƒ{ƒ€‚Ìó•tŠÔ / hit_bomb_wait. */
 	  40,  40,	40,  40,   24,	48,   8,   8,	 /* BASE_STD_BOMB_STRENGTH ’Êíƒ{ƒ€‚Ì‹­‚³ / standard bomb strength. */
 	 192, 192, 255, 255,   96, 160,  96,  96,	 /* BASE_LOW_BOMB_STRENGTH ’á‘¬ƒ{ƒ€‚Ì‹­‚³ / lower bomb strength. */
-
+//
+	   0,	0,	 0,   0,	0,	 1,   1,   1,	 /* BASE_OPT_ANIM_TYPE	   0==‰ñ“], 1==ƒpƒ^[ƒ“ */
+	   2,	2,	 2,   2,	2,	12,   3,   3,	 /* BASE_OPT_ANIM_SPEED    ‰ñ“]/ƒpƒ^[ƒ“‘¬“x */
 };
 //	  5*8,	 5*8,	5*8,	 5*8,	 3*8,	6*8,	 1*8,	1*8,	/* BASE_STD_BOMB_STRENGTH ’Êíƒ{ƒ€‚Ì‹­‚³ / standard bomb strength. */
 //	 30*8,	30*8,  48*8,	48*8,	12*8,  24*8,	12*8,  12*8,	/* BASE_LOW_BOMB_STRENGTH ’á‘¬ƒ{ƒ€‚Ì‹­‚³ / lower bomb strength. */
@@ -246,8 +277,8 @@ static void player_move_shot(SPRITE *src)
 		if (((JIKI_SHOT_01)|SP_GROUP_SHOT_SPECIAL)==src->type)
 		{
 			/* •`‰æ—pƒOƒ‰‰ñ“] */
-			src->m_angleCCW512 += 16;/*deg_360_to_512CCW((10))*/
-			mask512(src->m_angleCCW512);
+			src->m_angleCCW1024 += (32);	/* cv1024r(10) */
+			mask1024(src->m_angleCCW1024);
 		}
 	}
 	if (src->y256 < t256(-10))
@@ -260,6 +291,7 @@ static void player_move_shot(SPRITE *src)
 	}
 }
 
+
 /*---------------------------------------------------------
 	“G‚ğ’T‚·qŠÖ”
 ---------------------------------------------------------*/
@@ -267,39 +299,38 @@ extern SPRITE *sprite_list000_head;
 static SPRITE *search_enemy_by_sprite(void)
 {
 	/* Suche Enemy-Sprite, das noch nicht verfolgt wird, liefert SPRITE-ID oder -1 */
-	SPRITE *s = sprite_list000_head;/* ƒXƒvƒ‰ƒCƒg ƒŠƒXƒg‚Ìæ“ª ‚©‚ç’T‚· */
-	while (NULL != s)/* ƒXƒvƒ‰ƒCƒg ƒŠƒXƒg‚ÌÅŒã‚Ü‚Å’²‚×‚é */
+	SPRITE *h = sprite_list000_head;/* ƒXƒvƒ‰ƒCƒg ƒŠƒXƒg‚Ìæ“ª ‚©‚ç’T‚· */
+	while (NULL != h)/* ƒXƒvƒ‰ƒCƒg ƒŠƒXƒg‚ÌÅŒã‚Ü‚Å’²‚×‚é */
 	{
 		if (
 			#if 1
-			(SP_DELETE != s->type ) && /* íœÏ‚İ‚Í”ò‚Î‚· */
+			(SP_DELETE != h->type ) && /* íœÏ‚İ‚Í”ò‚Î‚· */
 			#endif
-			(0 != (s->type & (SP_GROUP_TEKI/*|SP_GROUP_BOSS*/))/*SP_GROUP_ENEMYS*/) 	/* ƒvƒŒƒCƒ„[‚É‚Æ‚Á‚Ä‚Ì“G(ƒUƒR‚âƒ{ƒX) */
+			(0 != (h->type & (SP_GROUP_TEKI/*|SP_GROUP_BOSS*/))/*SP_GROUP_ENEMYS*/) 	/* ƒvƒŒƒCƒ„[‚É‚Æ‚Á‚Ä‚Ì“G(ƒUƒR‚âƒ{ƒX) */
 		)
 		{
-			if (
+//			if (
 #if 0
-/* SP_FLAG_LOCK_TARGET ‚±‚Ìl‚¦‚ÍŒ‡Š×‚ª‚ ‚é‚È */
-//				(0 == (s->flags & SP_FLAG_LOCK_TARGET)) &&							/* “¯ˆêƒtƒ‰ƒO‚ª–³‚¢“G(•Ê‚Ì—U“±’e‚ªŒ©‚Â‚¯‚Ä‚¢‚È‚¢“G) */
+//				(®) && 						/* “¯ˆêƒtƒ‰ƒO‚ª–³‚¢“G(•Ê‚Ì—U“±’e‚ªŒ©‚Â‚¯‚Ä‚¢‚È‚¢“G) */
 #endif
-				(s->flags & SP_FLAG_VISIBLE)										/* g—p’†‚Ì“G */
-			)
+//				(h->flags & SP_FLAG_VISIBLE)										/* g—p’†‚Ì“G */
+//			)
 			{
 				#if 0/*SDL(¶‹÷À•W)*/
-				if ((s->x256 > 0) && (s->x256 < t256(GAME_WIDTH )-((s->w128+s->w128))) &&
-					(s->y256 > 0) && (s->y256 < t256(GAME_HEIGHT)-((s->h128+s->h128)))) 	/* •\¦‰æ–Ê“à‚Ì“G */
+				if ((h->x256 > 0) && (h->x256 < t256(GAME_WIDTH )-((h->w128+h->w128))) &&
+					(h->y256 > 0) && (h->y256 < t256(GAME_HEIGHT)-((h->h128+h->h128)))) 	/* •\¦‰æ–Ê“à‚Ì“G */
 				#else/*Gu(’†SÀ•W)*/
-				if ((s->x256 > 0) && (s->x256 < t256(GAME_WIDTH ) ) &&
-					(s->y256 > 0) && (s->y256 < t256(GAME_HEIGHT) ))	/* •\¦‰æ–Ê“à‚Ì“G */
+				if ((h->x256 > 0) && (h->x256 < t256(GAME_WIDTH ) ) &&
+					(h->y256 > 0) && (h->y256 < t256(GAME_HEIGHT) ))	/* •\¦‰æ–Ê“à‚Ì“G */
 				#endif
 				{
-					return (s);/*Œ©‚Â‚¯‚½‚æ*/
+					return (h);/*Œ©‚Â‚¯‚½‚æ*/
 				}
 			}
 		}
-		s = s->next;/*Ÿ*/
+		h = h->next;/*Ÿ*/
 	}
-	return (player);/*Œ©‚Â‚©‚ç‚È‚©‚Á‚½*/
+	return (obj_player);/*Œ©‚Â‚©‚ç‚È‚©‚Á‚½*/
 }
 
 
@@ -309,52 +340,49 @@ static SPRITE *search_enemy_by_sprite(void)
 
 static void player_move_parrent_hlaser(SPRITE *src)
 {
-	PL_HOMING_DATA *data;
-	data=(PL_HOMING_DATA *)src->data;
-//
-	if (0==data->state)
+	if (0==src->PL_HOMING_DATA_state)
 	{
 		/* ‰ñ“]‚µ‚È‚ª‚ç³–Ê‚ğŒü‚­B */
 		#if 1
 	//	/* CCW‚Ìê‡ */
-	//	mask512(src->m_angleCCW512/*data->angleCCW512*/);
-		if (256 < src->m_angleCCW512/*data->angleCCW512*/)
-				{	src->m_angleCCW512/*data->angleCCW512*/ -= deg_360_to_512CCW(/*360-*/(8));/*fps_factor*/ }	/* ‰E‰ñ‚è‚É‰ñ“]‚³‚¹‚éB */
-		else	{	src->m_angleCCW512/*data->angleCCW512*/ += deg_360_to_512CCW(/*360-*/(8));/*fps_factor*/ }	/* ¶‰ñ‚è‚É‰ñ“]‚³‚¹‚éB */
-		mask512(src->m_angleCCW512/*data->angleCCW512*/);
+	//	mask1024(src->m_angleCCW1024/*src->PL_HOMING_DATA_angleCCW1024*/);
+		if ( (1024/2) < src->m_angleCCW1024/*src->PL_HOMING_DATA_angleCCW1024*/)
+				{	src->m_angleCCW1024/*src->PL_HOMING_DATA_angleCCW1024*/ -= cv1024r(/*360-*/(8));/*fps_factor*/ }	/* ‰E‰ñ‚è‚É‰ñ“]‚³‚¹‚éB */
+		else	{	src->m_angleCCW1024/*src->PL_HOMING_DATA_angleCCW1024*/ += cv1024r(/*360-*/(8));/*fps_factor*/ }	/* ¶‰ñ‚è‚É‰ñ“]‚³‚¹‚éB */
+		mask1024(src->m_angleCCW1024/*src->PL_HOMING_DATA_angleCCW1024*/);
 		#endif
 		//
-		if ( t256(1.0) < data->speed256 )
+		if ( t256(1.0) < src->PL_HOMING_DATA_speed256 )
 		{
-			data->speed256 -= /*(int)*/t256(0.5);/*Œ¸‘¬*/
+			src->PL_HOMING_DATA_speed256 -= /*(int)*/t256(0.5);/*Œ¸‘¬*/
 		}
 		//
 		#if 1
 		/* CCW‚Ìê‡ */
-		if ((src->m_angleCCW512/*data->angleCCW512*/ >/*=*/ deg_360_to_512CCW((180-8/*4*/)/*266*/)) &&
-			(src->m_angleCCW512/*data->angleCCW512*/ </*=*/ deg_360_to_512CCW((180+8/*4*/)/*274*/))) /* ‚Ù‚Ú³–Ê(180)‚ğŒü‚¢‚½‚ç */
+		if ((src->m_angleCCW1024/*src->PL_HOMING_DATA_angleCCW1024*/ >/*=*/ cv1024r((180-8/*4*/)/*266*/)) &&
+			(src->m_angleCCW1024/*src->PL_HOMING_DATA_angleCCW1024*/ </*=*/ cv1024r((180+8/*4*/)/*274*/))) /* ‚Ù‚Ú³–Ê(180)‚ğŒü‚¢‚½‚ç */
 		{
-			data->state++;// = SH_01;						/* Ÿ‚Ö */
-			src->m_angleCCW512/*data->angleCCW512*/ = deg_360_to_512CCW((180)); /* Œü‚«‚ğ³–Ê(180)‚ÉŒÅ’è‚·‚é */
+			src->PL_HOMING_DATA_state++;// = SH_01; 					/* Ÿ‚Ö */
+			src->m_angleCCW1024/*src->PL_HOMING_DATA_angleCCW1024*/ = cv1024r((180)); /* Œü‚«‚ğ³–Ê(180)‚ÉŒÅ’è‚·‚é */
 		}
 		#endif
 	}
 	else
 	{
 		/* ‘¼‚Ì—U“±ƒ{ƒ€‚ªAŠù‚É“|‚µ‚½‚©H */
-		if (player == data->target_obj) 	/* Œ©‚Â‚©‚ç‚È‚¢(‘¼‚Ì—U“±ƒ{ƒ€‚ª“|‚µ‚Ä‚µ‚Ü‚Á‚½ê‡) */
+		if (obj_player == src->target_obj)	/* Œ©‚Â‚©‚ç‚È‚¢(‘¼‚Ì—U“±ƒ{ƒ€‚ª“|‚µ‚Ä‚µ‚Ü‚Á‚½ê‡) */
 		{
 			/* ƒ^[ƒQƒbƒgŒŸõA“G‚ğ’T‚·B */
-			data->target_obj = search_enemy_by_sprite();
+			src->target_obj = search_enemy_by_sprite();
 		}
 		else	/* ‚Ü‚¾ƒ^[ƒQƒbƒg‚ª¶‚«‚Ä‚é */
 		{
-			if ( t256(12.0) > data->speed256)
+			if ( t256(12.0) > src->PL_HOMING_DATA_speed256)
 			{
-				data->speed256 += /*(int)*/t256(0.5);/*‰Á‘¬*/
+				src->PL_HOMING_DATA_speed256 += /*(int)*/t256(0.5);/*‰Á‘¬*/
 			}
 			SPRITE *target; 	/* Target */
-			target=data->target_obj;
+			target = src->target_obj;
 			#if 0/*SDL(¶‹÷À•W)*/
 			if (//(NULL != target) &&	/* d•¡‚µ‚Ä‚é‚Ì‚Å”rœ */
 				(target->flags&SP_FLAG_VISIBLE) &&
@@ -364,7 +392,7 @@ static void player_move_parrent_hlaser(SPRITE *src)
 				(target->y256 < (t256(GAME_HEIGHT))-((target->h128+target->h128))))
 			#else/*Gu(’†SÀ•W)*/
 			if (//(NULL != target) &&	/* d•¡‚µ‚Ä‚é‚Ì‚Å”rœ */
-				(target->flags&SP_FLAG_VISIBLE) &&
+//				(target->flags&SP_FLAG_VISIBLE) &&
 				(target->x256 > t256(0)) &&
 				(target->x256 < (t256(GAME_WIDTH)) ) &&
 				(target->y256 > t256(0)) &&
@@ -372,56 +400,42 @@ static void player_move_parrent_hlaser(SPRITE *src)
 			#endif
 			{
 				#if (1)/*—U“±(000)*/
-				{int ta512;
+				{int ta1024;
 				#if 1
 				/* CCW‚Ìê‡ */
-				//	ta512=atan_512(target->y256-src->y256,target->x256-src->x256);
-					ta512=atan_512(target->y256-src->y256,target->x256-src->x256);
+					ta1024 = atan_1024(target->y256-src->y256,target->x256-src->x256);
 					#if 0
 					/* ’x‚ê—U“± */
-					/* ì‚Á‚Ä‚È‚¢ */
-					if (data->angleCCW512>ta512)
-					{
-							 if (data->angleCCW512-ta512<deg_360_to_512CCW((175)))	{	data->angleCCW512+=deg_360_to_512CCW((8));/*fps_factor*/} /* hlaser:8, homing:9 */
-						else if (data->angleCCW512-ta512>deg_360_to_512CCW((185)))	{	data->angleCCW512-=deg_360_to_512CCW((8));/*fps_factor*/} /* hlaser:8, homing:9 */
-					}
-					else if (data->angleCCW512<ta512)
-					{
-							 if (ta512-data->angleCCW512<deg_360_to_512CCW((175)))	{	data->angleCCW512-=deg_360_to_512CCW((8));/*fps_factor*/} /* hlaser:8, homing:9 */
-						else if (ta512-data->angleCCW512>deg_360_to_512CCW((185)))	{	data->angleCCW512+=deg_360_to_512CCW((8));/*fps_factor*/} /* hlaser:8, homing:9 */
-					}
+					/* KETM‚Ì‚Íl‚¦•û‚ª•¡G‚È‚Ì‚Å”jŠüA0“x‚©‚ç‚Ì·•ª‚Ål‚¦180“x‚ğ‹«‚É•ªŠò‚·‚ê‚Î“¯“™(1ü‚Í360“x‚µ‚©‚È‚¢‚Ì‚Å) */
 					#else
 					/* ’¼Ú—U“± */
-					src->m_angleCCW512/*data->angleCCW512*/ = ta512;
+					src->m_angleCCW1024/*src->PL_HOMING_DATA_angleCCW1024*/ = ta1024;
 					#endif
 				#endif
 				}
-				mask512(src->m_angleCCW512/*data->angleCCW512*/);
+				mask1024(src->m_angleCCW1024/*src->PL_HOMING_DATA_angleCCW1024*/);
 				#endif/*—U“±(000)*/
 			}
 			else
 			{
-				data->target_obj = player;		/* ‰æ–ÊŠO‚É“¦‚°‚ç‚ê‚½ */
+				src->target_obj = obj_player;		/* ‰æ–ÊŠO‚É“¦‚°‚ç‚ê‚½ */
 			}
 		}
 	}
 	#if 1
 	/* (‘½•ª•K—v‚È‚¢‚¯‚Ç)”O‚Ìˆ×ƒ}ƒXƒN */
-	mask512(src->m_angleCCW512/*data->angleCCW512*/);
+	mask1024(src->m_angleCCW1024/*src->PL_HOMING_DATA_angleCCW1024*/);
 	#endif
 	#if 1
 	/* •\¦—p */
-//	src->m_angleCCW512		= src->m_angleCCW512/*data->angleCCW512*/;
+//	src->m_angleCCW1024 	= src->m_angleCCW1024/*src->PL_HOMING_DATA_angleCCW1024*/;
 	#endif
-	#if 1
-	/* CCW‚Ìê‡ */
-	src->x256 += ((sin512((src->m_angleCCW512/*data->angleCCW512*/))*data->speed256)>>8);/*fps_factor*/
-	src->y256 += ((cos512((src->m_angleCCW512/*data->angleCCW512*/))*data->speed256)>>8);/*fps_factor*/
-	#endif
+	src->x256 += ((sin1024((src->m_angleCCW1024/*src->PL_HOMING_DATA_angleCCW1024*/))*src->PL_HOMING_DATA_speed256)>>8);/*fps_factor*/	/* CCW‚Ìê‡ */
+	src->y256 += ((cos1024((src->m_angleCCW1024/*src->PL_HOMING_DATA_angleCCW1024*/))*src->PL_HOMING_DATA_speed256)>>8);/*fps_factor*/
 	player_weapon_colision_check(src, PLAYER_WEAPON_TYPE_00_SHOT);
 //
-	data->time_out--;/*fps_factor*/
-	if (0 > data->time_out ) /* ŠÔØ‚êH */
+	src->PL_HOMING_DATA_time_out--;/*fps_factor*/
+	if (0 > src->PL_HOMING_DATA_time_out ) /* ŠÔØ‚êH */
 	{
 		src->type = SP_DELETE;		/* ŠÔØ‚ê‚È‚Ì‚Å‚¨‚µ‚Ü‚¢ */
 	}
@@ -435,9 +449,8 @@ static void player_move_parrent_hlaser(SPRITE *src)
 static void player_move_kodomo_hlaser(SPRITE *src)
 {
 	#if 1
-	PL_HOMING_KODOMO_DATA *data=(PL_HOMING_KODOMO_DATA *)src->data;
 	SPRITE *oya;
-	oya = data->target_obj;
+	oya = src->target_obj;
 	if (	(SP_DELETE == oya->type) || 			/* e‚ªÁ‹Ï‚İ‚È‚ç‚Îq‚àÁ‹ */
 		//	((SP_GROUP_JIKI_GET_ITEM|SP_GROUP_SHOT_SPECIAL) != oya->type)			/* (SP_GROUP_JIKI_GET_ITEM|SP_GROUP_SHOT_SPECIAL)ˆÈŠO‚Íe‚Å‚È‚¢‚Ì‚ÅÁ‹ */
 			(0==(SP_GROUP_SHOT_SPECIAL & oya->type))	/* (SP_GROUP_JIKI_GET_ITEM|SP_GROUP_SHOT_SPECIAL)ˆÈŠO‚Íe‚Å‚È‚¢‚Ì‚ÅÁ‹ */
@@ -448,24 +461,24 @@ static void player_move_kodomo_hlaser(SPRITE *src)
 //
 	#if 1
 	/* •\¦—p */
-	src->m_angleCCW512		= oya->m_angleCCW512;/*data->angleCCW512*/
+	src->m_angleCCW1024 	= oya->m_angleCCW1024;/*src->PL_HOMING_KODOMO_DATA_angleCCW1024*/
 	#endif
 	src->x256 = oya->x256;
 	src->y256 = oya->y256;
 
 	/* ”ƒtƒŒ[ƒ€“®‚©‚È‚¢ê‡‚ÍA©“®Á‹‚·‚é */
-	if ((data->check_x256 != src->x256) ||
-		(data->check_y256 != src->y256))
+	if ((src->PL_HOMING_KODOMO_DATA_check_x256 != src->x256) ||
+		(src->PL_HOMING_KODOMO_DATA_check_y256 != src->y256))
 	{
-		data->time_out	= 8;/* “®‚¢‚½‚ç©“®Á‹‚µ‚È‚¢ */
+		src->PL_HOMING_KODOMO_DATA_time_out = 8;/* “®‚¢‚½‚ç©“®Á‹‚µ‚È‚¢ */
 	}
-	data->time_out--;
-	if ( 0 > data->time_out)
+	src->PL_HOMING_KODOMO_DATA_time_out--;
+	if ( 0 > src->PL_HOMING_KODOMO_DATA_time_out)
 	{
 		src->type = SP_DELETE;/*‚¨‚µ‚Ü‚¢*/
 	}
-	data->check_x256 = src->x256;
-	data->check_y256 = src->y256;
+	src->PL_HOMING_KODOMO_DATA_check_x256 = src->x256;
+	src->PL_HOMING_KODOMO_DATA_check_y256 = src->y256;
 	#endif
 }
 
@@ -474,198 +487,130 @@ static void player_move_kodomo_hlaser(SPRITE *src)
 	—ì–²ê—p ’á‘¬ƒ{ƒ€
 ---------------------------------------------------------*/
 
-enum
-{
-	LL_00 = 0,
-	LL_01,
-};
-
 static void move_reimu_musou_fuuin(SPRITE *src)
 {
-	PL_HOMING_DATA *data;
-	data=(PL_HOMING_DATA *)src->data;
-//
 	/* ‘¼‚Ì—U“±ƒ{ƒ€‚ªAŠù‚É“|‚µ‚½‚©H */
-	if (player == data->target_obj) 	/* Œ©‚Â‚©‚ç‚È‚¢(‘¼‚Ì—U“±ƒ{ƒ€‚ª“|‚µ‚Ä‚µ‚Ü‚Á‚½ê‡) */
+	if (obj_player == src->target_obj)	/* Œ©‚Â‚©‚ç‚È‚¢(‘¼‚Ì—U“±ƒ{ƒ€‚ª“|‚µ‚Ä‚µ‚Ü‚Á‚½ê‡) */
 	{
 		/* ƒ^[ƒQƒbƒgŒŸõA“G‚ğ’T‚·B */
-		data->target_obj = search_enemy_by_sprite();
+		src->target_obj = search_enemy_by_sprite();
 	}
 	else	/* ‚Ü‚¾ƒ^[ƒQƒbƒg‚ª¶‚«‚Ä‚é */
 	{
-		if ( t256(3.0) > data->speed256)
+		if ( t256(3.0) > src->PL_HOMING_DATA_speed256)
 		{
-			data->speed256 += /*(int)*/t256(0.5);/*‰Á‘¬*/
+			src->PL_HOMING_DATA_speed256 += /*(int)*/t256(0.5);/*‰Á‘¬*/
 		}
 		SPRITE *target;
-		target=data->target_obj;
-		#if 0/*SDL(¶‹÷À•W)*/
+		target = src->target_obj;
+		#if 1/*Gu(’†SÀ•W)*/
 		if (
-			(target->flags&SP_FLAG_VISIBLE) &&
-			(target->x256 > t256(0)) &&
-			(target->x256 < (t256(GAME_WIDTH))-((target->w128+target->w128))) &&
-			(target->y256 > t256(0)) &&
-			(target->y256 < (t256(GAME_HEIGHT))-((target->h128+target->h128))))
-		#else/*Gu(’†SÀ•W)*/
-		if (
-			(target->flags&SP_FLAG_VISIBLE) &&
+//			(target->flags&SP_FLAG_VISIBLE) &&
 			(target->x256 > t256(0)) &&
 			(target->x256 < (t256(GAME_WIDTH)) ) &&
 			(target->y256 > t256(0)) &&
 			(target->y256 < (t256(GAME_HEIGHT)) ))
 		#endif
 		{
-		#if (1)/*—U“±(000)*/
-			{int ta512;
-		#if 1
+			int ta1024;
 		/* CCW‚Ìê‡ */
-		//		ta512=atan_512(target->y256-src->y256,target->x256-src->x256);
-				ta512 = atan_512(target->y256-src->y256, target->x256-src->x256);
-		//		ta512 = (atan_512(src->ty256-src->y256, src->tx256-src->x256));
-				#if 1
-				/* ’x‚ê—U“± */
-				#if 0/* KETM‚Ì‚Íl‚¦•û‚ª•¡G‚È‚Ì‚Å”jŠüA0“x‚©‚ç‚Ì·•ª‚Ål‚¦180“x‚ğ‹«‚É•ªŠò‚·‚ê‚Î“¯“™(1ü‚Í360“x‚µ‚©‚È‚¢‚Ì‚Å) */
-				/* ì‚Á‚Ä‚È‚¢ */
-			//	if (data->angleCCW512>ta512)
-			//	{
-			//			 if (data->angleCCW512-ta512<deg_360_to_512CCW((175)))	{	data->angleCCW512+=deg_360_to_512CCW((8));/*fps_factor*/} /* hlaser:8, homing:9 */
-			//		else if (data->angleCCW512-ta512>deg_360_to_512CCW((185)))	{	data->angleCCW512-=deg_360_to_512CCW((8));/*fps_factor*/} /* hlaser:8, homing:9 */
-			//	}
-			//	else if (data->angleCCW512<ta512)
-			//	{
-			//			 if (ta512-data->angleCCW512<deg_360_to_512CCW((175)))	{	data->angleCCW512-=deg_360_to_512CCW((8));/*fps_factor*/} /* hlaser:8, homing:9 */
-			//		else if (ta512-data->angleCCW512>deg_360_to_512CCW((185)))	{	data->angleCCW512+=deg_360_to_512CCW((8));/*fps_factor*/} /* hlaser:8, homing:9 */
-			//	}
+			ta1024 = (atan_1024(target->y256-src->y256, target->x256-src->x256));
+			#if 1
+			/* ’x‚ê—U“± */
+			/* KETM‚Ì‚Íl‚¦•û‚ª•¡G‚È‚Ì‚Å”jŠüA0“x‚©‚ç‚Ì·•ª‚Ål‚¦180“x‚ğ‹«‚É•ªŠò‚·‚ê‚Î“¯“™(1ü‚Í360“x‚µ‚©‚È‚¢‚Ì‚Å) */
+		//	const int sabun_aaa = (src->tmp_angleCCW1024-src->m_angleCCW1024);
+			const int sabun_aaa1024 = (ta1024-src->m_angleCCW1024);
+			if (0 > sabun_aaa1024/*(src->tmp_angleCCW1024-src->m_angleCCW1024)*/ )/* 0ƒŒƒWƒXƒ^+‹¤’ÊÅ“K‰» */
+			{	/* –Ú•WŠp“x < §ŒäŠp“x */
+				if ( (1024/2) > sabun_aaa1024/*(src->tmp_angleCCW1024-src->m_angleCCW1024)*/ )/* ‹¤’ÊÅ“K‰» */
+						{	src->m_angleCCW1024 -= 10;	}	/* 180“xˆÈ“à‚È‚ç‹ß‚¢‚Ù‚¤‚©‚ç‰ñ‚é */
+				#if 0	/* È—ª‚µ‚Ä–â‘è‚È‚¢H */
+				else	{	src->m_angleCCW1024 += 10;	}	/* 180“xˆÈã‚È‚ç”½‘Îü‚è‚Ì‚Ù‚¤‚ª‹ß‚¢ */
 				#endif
-			//	const int sabun_aaa = (src->tmp_angleCCW512-src->m_angleCCW512);
-				const int sabun_aaa = (ta512-src->m_angleCCW512);
-				if (0 > sabun_aaa/*(src->tmp_angleCCW512-src->m_angleCCW512)*/ )/* 0ƒŒƒWƒXƒ^+‹¤’ÊÅ“K‰» */
-				{	/* –Ú•WŠp“x < §ŒäŠp“x */
-					if (256 > sabun_aaa/*(src->tmp_angleCCW512-src->m_angleCCW512)*/ )/* ‹¤’ÊÅ“K‰» */
-							{	src->m_angleCCW512 -= 5;	}	/* 180“xˆÈ“à‚È‚ç‹ß‚¢‚Ù‚¤‚©‚ç‰ñ‚é */
-					#if 0	/* È—ª‚µ‚Ä–â‘è‚È‚¢H */
-					else	{	src->m_angleCCW512 += 5;	}	/* 180“xˆÈã‚È‚ç”½‘Îü‚è‚Ì‚Ù‚¤‚ª‹ß‚¢ */
-					#endif
-				}
-				else	/* –Ú•WŠp“x > §ŒäŠp“x */
-				{
-					if (256 > -(sabun_aaa)/*(src->m_angleCCW512-src->tmp_angleCCW512)*/ )
-							{	src->m_angleCCW512 += 5;	}	/* 180“xˆÈ“à‚È‚ç‹ß‚¢‚Ù‚¤‚©‚ç‰ñ‚é */
-					#if 0	/* È—ª‚µ‚Ä–â‘è‚È‚¢H */
-					else	{	src->m_angleCCW512 -= 5;	}	/* 180“xˆÈã‚È‚ç”½‘Îü‚è‚Ì‚Ù‚¤‚ª‹ß‚¢ */
-					#endif
-				}
-				#else
-				/* ’¼Ú—U“± */
-				src->m_angleCCW512/*data->angleCCW512*/ = ta512;
-				#endif
-		#endif
 			}
-			mask512(src->m_angleCCW512/*data->angleCCW512*/);
-		//	tg->x=target->x+((target->w-tg->w)>>1)+ra_nd()%6-3; /* ƒ^[ƒQƒbƒg–Ú•W•\¦ƒ}[ƒJ[ */
-		//	tg->y=target->y+((target->h-tg->h)>>1)+ra_nd()%6-3; /* ƒ^[ƒQƒbƒg–Ú•W•\¦ƒ}[ƒJ[ */
-		#endif/*—U“±(000)*/
+			else	/* –Ú•WŠp“x > §ŒäŠp“x */
+			{
+				if ( (1024/2) > -(sabun_aaa1024)/*(src->m_angleCCW1024-src->tmp_angleCCW1024)*/ )
+						{	src->m_angleCCW1024 += 10;	}	/* 180“xˆÈ“à‚È‚ç‹ß‚¢‚Ù‚¤‚©‚ç‰ñ‚é */
+				#if 0	/* È—ª‚µ‚Ä–â‘è‚È‚¢H */
+				else	{	src->m_angleCCW1024 -= 10;	}	/* 180“xˆÈã‚È‚ç”½‘Îü‚è‚Ì‚Ù‚¤‚ª‹ß‚¢ */
+				#endif
+			}
+			#else
+			/* ’¼Ú—U“± */
+			src->m_angleCCW1024/*src->PL_HOMING_DATA_angleCCW1024*/ = ta1024;
+			#endif
+			mask1024(src->m_angleCCW1024/*src->PL_HOMING_DATA_angleCCW1024*/);
 		}
 		else
 		{
 			/* Ziel wurde anderweitig vernichtet, neues Ziel suchen */
-			data->target_obj = player;		/* ‰æ–ÊŠO‚É“¦‚°‚ç‚ê‚½ */
+			src->target_obj = obj_player;		/* ‰æ–ÊŠO‚É“¦‚°‚ç‚ê‚½ */
 		}
 	}
-
-
 //
-	#if 1
-	/* (‘½•ª•K—v‚È‚¢‚¯‚Ç)”O‚Ìˆ×ƒ}ƒXƒN */
-	mask512(src->m_angleCCW512/*data->angleCCW512*/);
-	#endif
-	#if 1
-	/* •\¦—p */
-//	src->m_angleCCW512		= src->m_angleCCW512/*data->angleCCW512*/;
-	#endif
-
-#define reimu_musou_id time_out
-#if 1
-/* CCW‚Ìê‡ */
-	if((pd_bomber_time&0x0f)==(data->reimu_musou_id&0x0f))
+#define PL_HOMING_DATA_reimu_musou_id PL_HOMING_DATA_time_out
+	if((pd_bomber_time&0x0f)==(src->PL_HOMING_DATA_reimu_musou_id&0x0f))
 	{
-		src->vx256 = ((sin512((src->m_angleCCW512/*data->angleCCW512*/))*data->speed256)>>8);/*fps_factor*/
-		src->vy256 = ((cos512((src->m_angleCCW512/*data->angleCCW512*/))*data->speed256)>>8);/*fps_factor*/
+		src->vx256 = ((sin1024((src->m_angleCCW1024/*src->PL_HOMING_DATA_angleCCW1024*/))*src->PL_HOMING_DATA_speed256)>>8);/*fps_factor*/	/* CCW‚Ìê‡ */
+		src->vy256 = ((cos1024((src->m_angleCCW1024/*src->PL_HOMING_DATA_angleCCW1024*/))*src->PL_HOMING_DATA_speed256)>>8);/*fps_factor*/
 	}
-#endif
 		src->x256 += (src->vx256);/*fps_factor*/
 		src->y256 += (src->vy256);/*fps_factor*/
 	player_weapon_colision_check(src, PLAYER_WEAPON_TYPE_01_BOMB/*PLAYER_WEAPON_TYPE_00_SHOT*/);
 //
-	if (0 >= pd_bomber_time) 	/* ŠÔØ‚ê‚Ìê‡ */
+	if (0 >= pd_bomber_time)	/* ŠÔØ‚ê‚Ìê‡ */
 	{
-		gamen_gai_nara_osimai(src);/* ‰æ–ÊŠO‚È‚ç‚¨‚µ‚Ü‚¢ */
+		gamen_gai_nara_zako_osimai(src);/* ‰æ–ÊŠO‚È‚ç‚¨‚µ‚Ü‚¢ */
 		src->base_weapon_strength--;/* ŠÔØ‚ê‚Ìê‡A‘Ì—Í‚ğŒ¸‚ç‚· */
 	}
 //
 	if (0 > src->base_weapon_strength)	{	src->type = SP_DELETE;	}	/* ‘Ì—ÍØ‚ê‚Å‚¨‚µ‚Ü‚¢ */
 }
-//
-//	if (0 >= pd_bomber_time) {	src->type = SP_DELETE;}/* ŠÔ§ŒÀ‚Å‚¨‚µ‚Ü‚¢ */
-//	data->time_out--;/*fps_factor*/
-//	if (0 > data->time_out ) /* ŠÔØ‚êH */
-//	{
-//		src->type = SP_DELETE;		/* ŠÔØ‚ê‚È‚Ì‚Å‚¨‚µ‚Ü‚¢ */
-//	}
+
 
 /*---------------------------------------------------------
 	ƒvƒŒƒCƒ„[A‚‘¬ƒ{ƒ€‚ÌˆÚ“®(—ì–²)
+
+	Œv‰ñ‚è • ”½Œv‰ñ‚è Œ“—p
 ---------------------------------------------------------*/
 
-/*
-	src->x		ƒV[ƒ‹ƒh‚ÌxÀ•W
-	player->x	ƒvƒŒƒCƒ„[‚ÌxÀ•W
-	player->w/2 ƒvƒŒƒCƒ„[‚Ì‰¡•‚Ì”¼•ª
-	co_s512((data->angle512))	angle‚ÌŠp“x‚ğƒÎ‚É’¼‚µ‚½‚ ‚Æ‚ÌƒRƒTƒCƒ“B‚±‚Ìê‡‚Í40‹‚Ì”{”{‚P‚O*fps‚ÌƒRƒTƒCƒ“B
-	data->radius	‰~‚Ì”¼Œa40
-	src->w/2		ƒV[ƒ‹ƒh‚Ì‰¡•‚Ì”¼•ª
-	ƒvƒŒƒCƒ„[‚ÌxÀ•W{ƒvƒŒƒCƒ„[‚Ì‰¡•‚Ì”¼•ªƒvƒŒƒCƒ„[‚Ì’†SÀ•W
-	‚È‚Ì‚Å
-	ƒV[ƒ‹ƒh‚ÌxÀ•WƒvƒŒƒCƒ„[‚ÌxÀ•W{ƒvƒŒƒCƒ„[‚Ì‰¡•‚Ì”¼•ª{co s(radian((‚S‚O‹*x){speed*fps))~40|ƒV[ƒ‹ƒh‚Ì‰¡•‚Ì”¼•ª
-				   ƒvƒŒƒCƒ„[‚Ì’†SÀ•W{co s(radian((‚S‚O‹*x){speed*fps))~40|ƒV[ƒ‹ƒh‚Ì‰¡•‚Ì”¼•ª
-*/
-// Œv‰ñ‚è • ”½Œv‰ñ‚è Œ“—p
 static void player_move_kekkai(SPRITE *src) /* —ì–² */
 {
-	PL_KEKKAI_DATA *data	= (PL_KEKKAI_DATA *)src->data;
-	data->angleCCW512 += (data->add_r512);	/*fps_factor*/	/*...*/
-	mask512(data->angleCCW512);// if (data->angle>360) {	data->angle-=360;}
+	src->PL_KEKKAI_DATA_angleCCW1024 += (src->PL_KEKKAI_DATA_add_r1024);	/*fps_factor*/	/*...*/
+	mask1024(src->PL_KEKKAI_DATA_angleCCW1024);
 	#if 1
 	/* •`‰æ—pŠp“x(‰º‚ª0“x‚Å¶‰ñ‚è(”½Œv‰ñ‚è)) */
-	src->m_angleCCW512	= (data->angleCCW512);
+	src->m_angleCCW1024 = (src->PL_KEKKAI_DATA_angleCCW1024);
 	#endif
 //
-	/* CCW‚Ìê‡ */
 	#if 0/*SDL(¶‹÷À•W)*/
-	src->x256 = player->x256 + sin512((data->angleCCW512))*data->radius+((player->w128-src->w128));
-	src->y256 = player->y256 + cos512((data->angleCCW512))*data->radius+((player->h128-src->h128));
+	src->x256 = obj_player->x256 + sin1024((src->PL_KEKKAI_DATA_angleCCW1024))*src->PL_KEKKAI_DATA_radius+((obj_player->w128-src->w128));	/* CCW‚Ìê‡ */
+	src->y256 = obj_player->y256 + cos1024((src->PL_KEKKAI_DATA_angleCCW1024))*src->PL_KEKKAI_DATA_radius+((obj_player->h128-src->h128));
 	#else/*Gu(’†SÀ•W)*/
-	src->x256 = player->x256 + sin512((data->angleCCW512))*data->radius;
-	src->y256 = player->y256 + cos512((data->angleCCW512))*data->radius;
+	src->x256 = obj_player->x256 + sin1024((src->PL_KEKKAI_DATA_angleCCW1024))*src->PL_KEKKAI_DATA_radius;	/* CCW‚Ìê‡ */
+	src->y256 = obj_player->y256 + cos1024((src->PL_KEKKAI_DATA_angleCCW1024))*src->PL_KEKKAI_DATA_radius;
 	#endif
-
 //	if (REIMU==select_player)
 	{
-		if (data->radius<255)	{	data->radius += (ra_nd()&1);	}	/* ­‚µ‚¸‚ÂL‚ª‚é‚æ‚¤‚É‚µ‚½ */
-		else					{	src->type = SP_DELETE;			}	/* ‰ñ“]‚ªL‚ª‚Á‚½‚ç‚¨‚µ‚Ü‚¢ */
-	//	src->alpha				= ((int)(255-data->radius))&(256-1);	/* ‚¾‚ñ‚¾‚ñÁ‚¦‚é‚æ‚¤‚É‚µ‚½ */
-	//	src->color32			= ((((255-data->radius))&(0xff))<<24)|0x00ffffff;	/* ‚¾‚ñ‚¾‚ñÁ‚¦‚é‚æ‚¤‚É‚µ‚½ */
-		src->color32			= ((((255-data->radius))&(0xff))<<24)|0x00ffffff;	/* ‚¾‚ñ‚¾‚ñÁ‚¦‚é‚æ‚¤‚É‚µ‚½ */
+		if (src->PL_KEKKAI_DATA_radius<255) 	{	src->PL_KEKKAI_DATA_radius += (ra_nd()&1);	}	/* ­‚µ‚¸‚ÂL‚ª‚é‚æ‚¤‚É‚µ‚½ */
+		else									{	src->type = SP_DELETE;						}	/* ‰ñ“]‚ªL‚ª‚Á‚½‚ç‚¨‚µ‚Ü‚¢ */
+	//	src->alpha				= ((int)(255-src->PL_KEKKAI_DATA_radius))&(256-1);	/* ‚¾‚ñ‚¾‚ñÁ‚¦‚é‚æ‚¤‚É‚µ‚½ */
+	//	src->color32			= ((((255-src->PL_KEKKAI_DATA_radius))&(0xff))<<24)|0x00ffffff; /* ‚¾‚ñ‚¾‚ñÁ‚¦‚é‚æ‚¤‚É‚µ‚½ */
+		src->color32			= ((((255-src->PL_KEKKAI_DATA_radius))&(0xff))<<24)|0x00ffffff; /* ‚¾‚ñ‚¾‚ñÁ‚¦‚é‚æ‚¤‚É‚µ‚½ */
 	}
 //	else //if (YUYUKO==select_player)
 //	{
 
-//		if (pd_bomber_time<=0) {	src->type = SP_DELETE;}/* ŠÔ§ŒÀ‚Å‚¨‚µ‚Ü‚¢ */
+//		if (pd_bomber_time<=0)	{	src->type = SP_DELETE;}/* ŠÔ§ŒÀ‚Å‚¨‚µ‚Ü‚¢ */
 //	}
-	if(0==((data->radius)&7))
+	if ( (ra_nd()&0xff) < pd_bomber_time)
 	{
-		//player_weapon_colision_check_kekkai(src, data->radius);
-		bullets_to_hosi();/* ’e‘S•”A¯ƒAƒCƒeƒ€‚É‚·‚é */
+		if(0==((src->PL_KEKKAI_DATA_radius)&7))
+		{
+			//player_weapon_colision_check_kekkai(src, src->PL_KEKKAI_DATA_radius);
+			bullets_to_hosi();/* ’e‘S•”A¯ƒAƒCƒeƒ€‚É‚·‚é */
+		}
 	}
 	player_weapon_colision_check(src, PLAYER_WEAPON_TYPE_01_BOMB);/* ƒ{ƒ€‚Å“G‚ğ“|‚·‚ ‚½‚è”»’è */
 }
@@ -715,12 +660,14 @@ static void player_move_levarie(SPRITE *src)
 	{
 		static const u8 aaa_sss[16] =
 		{/* REIMU(A/B) MARISA(A/B) REMILIA YUYUKO CIRNO(A/Q) */
-			0, 0, 2, 8, 0, 0,  9,  9,	/* ‰ñ“]‘¬“x */	/* YUYUKO			ˆÈŠO‚Í ‰ñ“] ‚·‚éB */
-			0, 0, 2, 0, 0, 0,  3,  3,	/* Šg‘å‘¬“x */	/* YUYUKO  MARISA_B ˆÈŠO‚Í Šg‘å ‚·‚éB */
+//			0, 0,  4, 16, 0, 0, 18, 18, /* ‰ñ“]‘¬“x */	/* YUYUKO			ˆÈŠO‚Í ‰ñ“] ‚·‚éB */
+			0, 0, 20, 16, 0, 0, 18, 18, /* ‰ñ“]‘¬“x */	/* YUYUKO			ˆÈŠO‚Í ‰ñ“] ‚·‚éB */
+//			0, 0,  2,  0, 0, 0,  3,  3, /* Šg‘å‘¬“x */	/* YUYUKO  MARISA_B ˆÈŠO‚Í Šg‘å ‚·‚éB */
+			0, 0,  0,  0, 0, 0,  3,  3, /* Šg‘å‘¬“x */	/* CIRNO ‚Í Šg‘å ‚·‚éB */
 		};
 		/* •\¦Šp“x(‰º‚ª0“x‚Å¶‰ñ‚è(”½Œv‰ñ‚è)) */
-		src->m_angleCCW512		+= aaa_sss[select_player];
-		mask512((src->m_angleCCW512));
+		src->m_angleCCW1024 	+= aaa_sss[select_player];
+		mask1024((src->m_angleCCW1024));
 		if ( t256(4.0) > src->m_zoom_x256)
 		{
 			src->m_zoom_x256 += aaa_sss[select_player+(PLAYERS8)];
@@ -738,75 +685,80 @@ static void remilia_move_burn_fire(SPRITE *src)
 	#if 1
 	// ‰Á‘¬
 	// x1.10
-//	src->vx256 = ((src->vx256 * t256(1.1))>>8);//co_s512((data->angle512))*p->speed;/*fps_factor*/
-//	src->vy256 = ((src->vx256 * t256(1.1))>>8);//si_n512((data->angle512))*p->speed;/*fps_factor*/
+//	src->vx256 = ((src->vx256 * t256(1.1))>>8);//co_s1024((data->angle1024))*p->speed;/*fps_factor*/
+//	src->vy256 = ((src->vx256 * t256(1.1))>>8);//si_n1024((data->angle1024))*p->speed;/*fps_factor*/
 	// x1.125
-	src->vx256 += ((src->vx256)>>3);//co_s512((data->angle512))*p->speed;/*fps_factor*/
-	src->vy256 += ((src->vy256)>>3);//si_n512((data->angle512))*p->speed;/*fps_factor*/
+	src->vx256 += ((src->vx256)>>3);//co_s1024((data->angle1024))*p->speed;/*fps_factor*/
+	src->vy256 += ((src->vy256)>>3);//si_n1024((data->angle1024))*p->speed;/*fps_factor*/
 	// x1.0625
-//	src->vx256 += ((src->vx256)>>4);//co_s512((data->angle512))*p->speed;/*fps_factor*/
-//	src->vy256 += ((src->vy256)>>4);//si_n512((data->angle512))*p->speed;/*fps_factor*/
+//	src->vx256 += ((src->vx256)>>4);//co_s1024((data->angle1024))*p->speed;/*fps_factor*/
+//	src->vy256 += ((src->vy256)>>4);//si_n1024((data->angle1024))*p->speed;/*fps_factor*/
 	/* •`‰æ‚ªd‚·‚¬‚é‚Ì‚Å‰Á‘¬«”\AáŠ±‘¬‚­( x1.0625¨ x1.125)‚·‚é */
 	//
 	#endif
-	src->x256 += src->vx256;	//	src->vx256;//co_s512((data->angle512))*p->speed;/*fps_factor*/
-	src->y256 += src->vy256;	//	src->vy256;//si_n512((data->angle512))*p->speed;/*fps_factor*/
+	src->x256 += src->vx256;	//	src->vx256;//co_s1024((data->angle1024))*p->speed;/*fps_factor*/
+	src->y256 += src->vy256;	//	src->vy256;//si_n1024((data->angle1024))*p->speed;/*fps_factor*/
 //	if ((src->x256+((src->w128+src->w128)) < t256(0))||(src->x256 > t256(GAME_WIDTH))||
 //		(src->y256+((src->h128+src->h128)) < t256(0)))
 //
 	player_bomber_out_colision_check(src);
 }
 
-
 /* \š‰Šƒ{ƒ€‚Ì‰Š‚Ì•”•ª */
-/*		r_or_l	[xxx_r] l=2, [xxx_l] r=0 ,u=3 ,d=1	*/
+/*		r_or_l	[xxx_r] l=2, [xxx_l] r=0, u=3, d=1	*/
 static void remilia_add_burn_fire(SPRITE *src/*, int ggg*/ /*r_or_l*/)	/* [***090221 ’Ç‰Á */
 {
-	int angCCW512;
-	for (angCCW512=0; angCCW512<512; angCCW512+=128/*10*/)
+	int angCCW1024;
+	for (angCCW1024=0; angCCW1024<(1024); angCCW1024+=(256)/*(20)*/)
 	{
 		int i;
 		for (i=0; i<10; i+=1)
 		{
-			SPRITE *s;
-			s = sprite_add_gu(JIKI_ATARI_ITEM_16);
-			//
-			s->flags			|= (SP_FLAG_VISIBLE|SP_FLAG_TIME_OVER);
-			s->type 			= (/*SP_GROUP_JIKI_GET_ITEM*/JIKI_BOMBER_04|SP_GROUP_SHOT_SPECIAL)/*ƒ{ƒX‚É—LŒø*/;/*(SP_GROUP_JIKI_GET_ITEM|SP_GROUP_SHOT_ZAKO) ƒ{ƒX‚É–³Œø*/
-			s->callback_mover	= remilia_move_burn_fire;
-			s->color32			= 0x64ffffff;		/*	s->alpha			= 0x64 100;*/
-			#if 0/*SDL(¶‹÷À•W)*/
-			s->x256 			= src->x256+((src->w128-s->w128));
-			s->y256 			= src->y256+t256(15);
-			#else/*Gu(’†SÀ•W)*/
-			s->x256 			= src->x256;
-			s->y256 			= src->y256+t256(15);
-			#endif
-			/*data->*/s->base_weapon_strength		= (8*(5));/* d—l•ÏX‚µ‚½ */	/*9*/ /*10*/
+			SPRITE *h;
+			h = sprite_add_gu_error();
+			if (NULL!=h)/* “o˜^‚Å‚«‚½ê‡‚Ì‚İ */
 			{
-			//	int rnd_spd 		= (ra_nd() & 0xff/*angCCW512*/)+256+((angCCW512+32+64) & 0x40);
-			//	int aaa_spd 		= (((angCCW512+32+64) & 0x40));
-			//	int rnd_spd 		= (ra_nd() & 0xff/*angCCW512*/)+256+(aaa_spd+aaa_spd);
-		u16 my_rand;
-			my_rand = ra_nd();
-		int rnd_spd 		= (my_rand & 0xff/*angCCW512*/)+256+(0x40+0x40);
-		int ang_aaa_512;
-			ang_aaa_512 = angCCW512;
-			ang_aaa_512 += ((my_rand>>8) & (0x3f));
-			ang_aaa_512 += ((my_rand) & (0x1f));
-		//	ang_aaa_512 -= (0x1f);
-		//	ang_aaa_512 -= (0x0f);
-			ang_aaa_512 -= (0x2f);
-			mask512(ang_aaa_512);
-			#if 1
-			/* •`‰æ—pŠp“x(‰º‚ª0“x‚Å¶‰ñ‚è(”½Œv‰ñ‚è)) */
-			s->m_angleCCW512		= ang_aaa_512;
-			#endif
-			#if 1
-			/* CCW‚Ìê‡ */
-			s->vx256		= ((sin512((/*data->angle512*/ang_aaa_512))*/*data->speed*/(rnd_spd))>>8);/*fps_factor*/
-			s->vy256		= ((cos512((/*data->angle512*/ang_aaa_512))*/*data->speed*/(rnd_spd))>>8);/*fps_factor*/
-			#endif
+				//
+				h->m_Hit256R		= JIKI_ATARI_ITEM_16;
+//				h->flags			|= (SP_FLAG_VISIBLE|SP_FLAG_TIME_OVER);
+				h->type 			= (/*SP_GROUP_JIKI_GET_ITEM*/JIKI_BOMBER_04|SP_GROUP_SHOT_SPECIAL)/*ƒ{ƒX‚É—LŒø*/;/*(SP_GROUP_JIKI_GET_ITEM|SP_GROUP_SHOT_ZAKO) ƒ{ƒX‚É–³Œø*/
+				h->callback_mover	= remilia_move_burn_fire;
+				h->color32			= MAKE32RGBA(0xff, 0xff, 0xff, 0x64);		/*	h->alpha			= 0x64 100;*/
+				h->base_weapon_strength 	= (8*(5));/* d—l•ÏX‚µ‚½ */	/*9*/ /*10*/
+				{
+			u32 my_rand;
+				my_rand = ra_nd();
+					if (YUYUKO==select_player)
+					{
+						h->x256 			= (u16)((my_rand	)) + t256((GAME_WIDTH -256)/2);
+						h->y256 			= (u16)((my_rand>>16)) + t256((GAME_HEIGHT-256)/2);
+					}
+					else
+					{
+						#if 1/*Gu(’†SÀ•W)*/
+						h->x256 			= src->x256;
+						h->y256 			= src->y256+t256(15);
+						#endif
+					}
+				//	int rnd_spd 		= (ra_nd() & 0xff/*angCCW512*/)+256+((angCCW512+32+64) & 0x40);
+				//	int aaa_spd 		= (((angCCW512+32+64) & 0x40));
+				//	int rnd_spd 		= (ra_nd() & 0xff/*angCCW512*/)+256+(aaa_spd+aaa_spd);
+			int rnd_spd 		= (my_rand & 0xff/*angCCW512*/)+256+(0x40+0x40);
+			int ang_aaa_1024;
+				ang_aaa_1024 = angCCW1024;
+				ang_aaa_1024 += ((my_rand>>8) & (0x7f));
+				ang_aaa_1024 += ((my_rand	) & (0x3f));
+			//	ang_aaa_1024 -= (0x3f);
+			//	ang_aaa_1024 -= (0x1f);
+				ang_aaa_1024 -= (0x5f);
+				mask1024(ang_aaa_1024);
+				#if 1
+				/* •`‰æ—pŠp“x(‰º‚ª0“x‚Å¶‰ñ‚è(”½Œv‰ñ‚è)) */
+				h->m_angleCCW1024		= ang_aaa_1024;
+				#endif
+				h->vx256		= ((sin1024((ang_aaa_1024))*(rnd_spd))>>8);/*fps_factor*/ /* CCW‚Ìê‡ */
+				h->vy256		= ((cos1024((ang_aaa_1024))*(rnd_spd))>>8);/*fps_factor*/
+				}
 			}
 		}
 	}
@@ -830,7 +782,7 @@ static void player_move_tachie(SPRITE *src) 	/* [***100113 ’Ç‰Á */
 	else
 	if ((1/*-1*/) < pd_bomber_time)/* Šg‘å */
 	{
-		/* (24+(1)) , ‚±‚±‚Å‚Ì pd_bomber_time ‚ÍAÅ‘å0x7f‚È‚Ì‚ÅB */
+		/* (24+(1))  A‚±‚±‚Å‚Ì pd_bomber_time ‚ÍAÅ‘å0x7f‚È‚Ì‚ÅB */
 		src->color32		= (pd_bomber_time<<(24+(1)))|0x00ffffff;
 		src->m_zoom_x256	+= (10);
 	}
@@ -847,23 +799,19 @@ static void player_move_tachie(SPRITE *src) 	/* [***100113 ’Ç‰Á */
 
 static void player_move_add_cross_red(SPRITE *src)	/* [***090220 ’Ç‰Á */
 {
-
 	//
 //	if (0x3f==(((int)pd_bomber_time)&0x3f))
 //	if (0x0f==(((int)pd_bomber_time)&0x0f))
 	if (0x0f==(((int)pd_bomber_time)&0x0f))/* ”g“®‚ğŒ‚‚Âƒ^ƒCƒ~ƒ“ƒO */
 	{
-		remilia_add_burn_fire(src);/* ”g“®”­“®(‘ŒûŒ¾—t?) */
+		remilia_add_burn_fire(obj_player);/* ”g“®”­“®(‘ŒûŒ¾—t?) */
 	}
-	#if 0/*SDL(¶‹÷À•W)*/
-	src->x256 = player->x256+((player->w128-src->w128));
-	src->y256 = player->y256+((player->h128-src->h128));
-	#else/*Gu(’†SÀ•W)*/
-	src->x256 = player->x256;
-	src->y256 = player->y256;
+	#if 1/*Gu(’†SÀ•W)*/
+	src->x256 = obj_player->x256;
+	src->y256 = obj_player->y256;
 	#endif
 
-	if (0 >= pd_bomber_time) { src->type = SP_DELETE;}/* ŠÔ§ŒÀ‚Å‚¨‚µ‚Ü‚¢ */
+	if (0 >= pd_bomber_time)	{ src->type = SP_DELETE;}/* ŠÔ§ŒÀ‚Å‚¨‚µ‚Ü‚¢ */
 }
 
 /* ====================================================================================== */
@@ -894,7 +842,7 @@ enum /*_weapon_type_*/	/* •ŠíƒŒƒxƒ‹ */
 	WEAPON_L3,			/* WEAPON_L3(P032-P063) */
 	WEAPON_L4,			/* WEAPON_L4(P064-P127) */
 	WEAPON_L5,			/* WEAPON_L5(P128)		*/
-	WEAPON_L_MAX				/* Å‘å” */
+	WEAPON_L_MAX		/* Å‘å” */
 };
 
 
@@ -936,194 +884,212 @@ enum
 
 static void player_register_shot_object(SPRITE *src, int /*set_*/shot_type)
 {
-	static const s16 r_tbl[REIMU_SHOT_TYPE_MAX][REI04_MAX] =
-	{	/*x_offset256	y_offset256  vx256 status */
-//	/* —U“±ƒVƒ‡ƒbƒg(—ì–² • –‚—¹) */
-/*00*/	{t256(	0), t256(0/*+25*/),  (	0), 0x01},	 /*shot_regist_triple_fuda*/ /*(-24)==(4*(- 6))*/
-//	/* ”ñ—U“±ƒVƒ‡ƒbƒg(—ì–²) */
-/*01*/	{t256(TEST_OFFSET+	0), t256( 20),	(  0), 0x00},	/* ’† ‚Ü‚Á‚·‚® */
-/*02*/	{t256(TEST_OFFSET  -5), t256( 20),	(  0), 0x00},	/* ¶ ‚Ü‚Á‚·‚® */
-/*03*/	{t256(TEST_OFFSET  +5), t256( 20),	(  0), 0x00},	/* ‰E ‚Ü‚Á‚·‚® */
-/*04*/	{t256(TEST_OFFSET  -5), t256(+20),	(-20), 0x00},	/* ¶ ¶ã */
-/*05*/	{t256(TEST_OFFSET  +5), t256(+20),	( 20), 0x00},	/* ‰E ‰Eã */
-/*06*/	{t256(TEST_OFFSET  -5), t256(+20),	(-35), 0x00},	/* ¶ ¶Îã */
-/*07*/	{t256(TEST_OFFSET  +5), t256(+20),	( 35), 0x00},	/* ‰E ‰EÎã */
-//	/* ”ñ—U“±ƒVƒ‡ƒbƒg(—HXq) */
-/*08*/	{t256(TEST_OFFSET -15), t256(-25),	(-25), 0x00},	/* —HXq */					/*(-32)==(4*(- 8))*/
-/*09*/	{t256(TEST_OFFSET +15), t256(-25),	(+25), 0x00},	/* —HXq */					/*( 32)==(4*(  8))*/
-/*0a*/	{t256(TEST_OFFSET -25), t256(-25),	(-50), 0x00},	/* —HXq */					/*(-64)==(4*(-16))*/
-/*0b*/	{t256(TEST_OFFSET +25), t256(-25),	(+50), 0x00},	/* —HXq */					/*( 64)==(4*( 16))*/
-//	/* j(ƒTƒuƒVƒ‡ƒbƒg) */		/* CCW‚Ìê‡ */
-		{t256(	0), t256( -7),	(	0), 0x01},//	deg_360_to_512CCW((180)),					/* –‚—¹ */	/* –‚—¹B */	/* —ì–² */	/* ƒŒƒ~ƒŠƒA • ƒ`ƒ‹ƒm */
-		{t256(	0), t256( -7),	(-108), 0x01},//	deg_360_to_512CCW((180-25)),/*263=270-7*/	/* ƒŒƒ~ƒŠƒA —p */	/* ƒŒƒ~ƒŠƒA • ƒ`ƒ‹ƒm */
-		{t256(	0), t256( -7),	( 108), 0x01},//	deg_360_to_512CCW((180+25)),/*277=270+7*/	/* ƒŒƒ~ƒŠƒA —p */	/* ƒŒƒ~ƒŠƒA • ƒ`ƒ‹ƒm */
-		{t256(	0), t256(-47),	(	5), 0x01},//	deg_360_to_512CCW((181)),					/* —HXq —p */ 	/* —HXq */	/*-48*/
-	};
-//	int shot_type;
-	int shot_status;/*j?*/
-	shot_status = ((r_tbl[shot_type][REI03_status]));
-
-	int is_needle;/*j?*/
-//	is_needle = (shot_type <= NEEDLE_ANGLE_270)?(1/*j*/):(0/*’e*/);
-	is_needle = ((shot_status)&0x01);
-//
-	SPRITE *s;/* shot */
-
-#define OFFS_IS_NEEDLE (select_player+(is_needle<<3))
-
-	s					= sprite_add_gu( BASE_SHOT_ATARI_0a+OFFS_IS_NEEDLE );/* ‚ ‚½‚è”»’è‚Ì‘å‚«‚³ */
-
-//	s->type 			= (/*SP_GROUP_JIKI_GET_ITEM*/JI KI_SHOT_02|SP_GROUP_SHOT_SPECIAL)-shot_status;
-	#if 1
-//	else
-//	if(0x01== shot_status)	/* j */
+	SPRITE *h;/* shot */
+	h					= sprite_add_gu_error();
+	if (NULL!=h)/* “o˜^‚Å‚«‚½ê‡‚Ì‚İ */
 	{
-		s->type 			= (JIKI_SHOT_07|SP_GROUP_SHOT_SPECIAL); 	/*SP_GROUP_JIKI_GET_ITEM*/	/*SP_PL_FIREBALL*/
-	}
-//
-	if (0x00 == shot_status)	/* jˆÈŠO */
-	{
-		if (REIMU_B+1 > select_player)	/* —ì–²? */
+		static const s16 r_tbl[REIMU_SHOT_TYPE_MAX][REI04_MAX] =
+		{	/*x_offset256	y_offset256  vx256 status */
+	//	/* —U“±ƒVƒ‡ƒbƒg(—ì–² • –‚—¹) */
+	/*00*/	{t256(	0), t256(0/*+25*/),  (	0), 0x01},	 /*shot_regist_triple_fuda*/ /*(-24)==(4*(- 6))*/
+	//	/* ”ñ—U“±ƒVƒ‡ƒbƒg(—ì–²) */
+	/*01*/	{t256(TEST_OFFSET+	0), t256( 20),	(  0), 0x00},	/* ’† ‚Ü‚Á‚·‚® */
+	/*02*/	{t256(TEST_OFFSET  -5), t256( 20),	(  0), 0x00},	/* ¶ ‚Ü‚Á‚·‚® */
+	/*03*/	{t256(TEST_OFFSET  +5), t256( 20),	(  0), 0x00},	/* ‰E ‚Ü‚Á‚·‚® */
+	/*04*/	{t256(TEST_OFFSET  -5), t256(+20),	(-20), 0x00},	/* ¶ ¶ã */
+	/*05*/	{t256(TEST_OFFSET  +5), t256(+20),	( 20), 0x00},	/* ‰E ‰Eã */
+	/*06*/	{t256(TEST_OFFSET  -5), t256(+20),	(-35), 0x00},	/* ¶ ¶Îã */
+	/*07*/	{t256(TEST_OFFSET  +5), t256(+20),	( 35), 0x00},	/* ‰E ‰EÎã */
+	//	/* ”ñ—U“±ƒVƒ‡ƒbƒg(—HXq) */
+	/*08*/	{t256(TEST_OFFSET -15), t256(-25),	(-25), 0x00},	/* —HXq */					/*(-32)==(4*(- 8))*/
+	/*09*/	{t256(TEST_OFFSET +15), t256(-25),	(+25), 0x00},	/* —HXq */					/*( 32)==(4*(  8))*/
+	/*0a*/	{t256(TEST_OFFSET -25), t256(-25),	(-50), 0x00},	/* —HXq */					/*(-64)==(4*(-16))*/
+	/*0b*/	{t256(TEST_OFFSET +25), t256(-25),	(+50), 0x00},	/* —HXq */					/*( 64)==(4*( 16))*/
+	//	/* j(ƒTƒuƒVƒ‡ƒbƒg) */		/* CCW‚Ìê‡ */
+			{t256(	0), t256( -7),	(	0), 0x01},//	cv1024r((180)), 				/* –‚—¹ A/B —ì–² ƒŒƒ~ƒŠƒA • ƒ`ƒ‹ƒm */		/*t256( 0), t256( 0),*/
+			{t256(	0), t256( -7),	(-108), 0x01},//	cv1024r((180-25)),/*263=270-7*/ /* ƒŒƒ~ƒŠƒA • ƒ`ƒ‹ƒm */ /*t256( 0), t256( 0),*/
+			{t256(	0), t256( -7),	( 108), 0x01},//	cv1024r((180+25)),/*277=270+7*/ /* ƒŒƒ~ƒŠƒA • ƒ`ƒ‹ƒm */ /*t256( 0), t256( 0),*/
+			{t256(	0), t256(-47),	(	5), 0x01},//	cv1024r((181)), 				/* —HXqê—p */	/*-48*/ /*t256( 0), t256(-40),*/
+		};
+	//	int shot_type;
+		int shot_status;/*j?*/
+		shot_status = ((r_tbl[shot_type][REI03_status]));
+
+		int is_needle;/*j?*/
+	//	is_needle = (shot_type <= NEEDLE_ANGLE_270)?(1/*j*/):(0/*’e*/);
+		is_needle = ((shot_status)&0x01);
+	//
+		#define OFFS_IS_NEEDLE (select_player+(is_needle<<3))
+		const static u8 base_shot_atari[16] =
 		{
-		//	if(0x02== shot_status)	/* —ì–²‚Ì‰ñ“]ƒVƒ‡ƒbƒg */
-			if (REIMU_SHOT_TYPE_00 != shot_type)/* ©“®ƒVƒ‡ƒbƒgˆÈŠOH */
-			{
-				s->type 			= (JIKI_SHOT_01|SP_GROUP_SHOT_SPECIAL); 	/*SP_GROUP_JIKI_GET_ITEM*/
-				/* •`‰æ—pƒOƒ‰‰ñ“] */
-				s->m_angleCCW512 =	(ra_nd() & 0x1ff);/* o‚¾‚µ‚ÌŠp“x‚Íƒ‰ƒ“ƒ_ƒ€‚Å‚È‚¢‚Æ(ƒŒ[ƒU[‚İ‚½‚¢‚È)•Ï‚È‰æ–Ê‚É‚È‚é */
-			}
-		/*	else	{	s->type = ©“®ƒVƒ‡ƒbƒg‚ÍAj‚Æ“¯‚¶; 	}	*/
+		/*0,*/	(4),	/* re a */		//	BASE_SHOT_ATARI_0a,/*4*/		/* —ì–²A */ 	/*	5 */ BASE_SHOT_ATARI_0a,/*4*/
+		/*0,*/	(4),	/* re b */		//	BASE_SHOT_ATARI_0b,/*4*/		/* —ì–²B */ 	/*	5 */ BASE_SHOT_ATARI_0a,/*4*/
+		/*0,*/	(4),	/* ma a */		//	BASE_SHOT_ATARI_0c,/*4*/		/* –‚—¹A */	/*	6 */ BASE_SHOT_ATARI_0b,/*4*/
+		/*0,*/	(4),	/* ma b */		//	BASE_SHOT_ATARI_0d,/*4*/		/* –‚—¹B */	/*	6 */ BASE_SHOT_ATARI_0b,/*4*/
+		/*0,*/	(4),	/* oz / */		//	BASE_SHOT_ATARI_0e,/*4*/		/* –‚—¹C */	/*	7 */ BASE_SHOT_ATARI_0c,/*4*/
+		/*0,*/	(8),	/* yu / */		//	BASE_SHOT_ATARI_0f,/*4*/		/* ƒŒƒ~ƒŠƒA */	/*	9 */ BASE_SHOT_ATARI_0e,/*8*/
+		/*0,*/	(6),	/* ci a */		//	BASE_SHOT_ATARI_0g,/*6*/		/* ƒ`ƒ‹ƒm */	/*	8 */ BASE_SHOT_ATARI_0d,/*6*/
+		/*0,*/	(6),	/* ci q */		//	BASE_SHOT_ATARI_0h,/*8*/		/* —HXq */	/*	6 */ BASE_SHOT_ATARI_0b,/*4*/
+////
+		/*0,*/	(6),	/* re a */		//	BASE_NEEDLE_ATARI_0a,/*6*/		/* —ì–²A */ 	/*	5 */  BASE_NEEDLE_ATARI_0a,/*6*/
+		/*0,*/	(6),	/* re b */		//	BASE_NEEDLE_ATARI_0b,/*6*/		/* —ì–²B */ 	/*	5 */  BASE_NEEDLE_ATARI_0a,/*6*/
+		/*0,*/	(8),	/* ma a */		//	BASE_NEEDLE_ATARI_0c,/*8*/		/* –‚—¹A */	/*	6 */  BASE_NEEDLE_ATARI_0b,/*8*/
+		/*0,*/	(8),	/* ma b */		//	BASE_NEEDLE_ATARI_0d,/*8*/		/* –‚—¹B */	/*	6 */  BASE_NEEDLE_ATARI_0b,/*8*/
+		/*0,*/ (12),	/* oz / */		//	BASE_NEEDLE_ATARI_0e,/*8*/		/* –‚—¹C */	/*	7 */  BASE_NEEDLE_ATARI_0c,/*12*/
+		/*0,*/	(8),	/* yu / */		//	BASE_NEEDLE_ATARI_0f,/*12*/ 	/* ƒŒƒ~ƒŠƒA */	/*	9 */  BASE_NEEDLE_ATARI_0e,/*8*/
+		/*0,*/ (16),	/* ci a */		//	BASE_NEEDLE_ATARI_0g,/*16*/ 	/* ƒ`ƒ‹ƒm */	/*	8 */  BASE_NEEDLE_ATARI_0d,/*16*/
+		/*0,*/ (16),	/* ci q */		//	BASE_NEEDLE_ATARI_0h,/*8*/		/* —HXq */	/*	6 */  BASE_NEEDLE_ATARI_0b,/*8*/
+		};
+		h->m_Hit256R			= ((base_shot_atari[(OFFS_IS_NEEDLE)])<<8);/* ‚ ‚½‚è”»’è‚Ì‘å‚«‚³ */
+
+	//	h->type 			= (/*SP_GROUP_JIKI_GET_ITEM*/JI KI_SHOT_02|SP_GROUP_SHOT_SPECIAL)-shot_status;
+		#if 1
+	//	else
+	//	if(0x01== shot_status)	/* j */
+		{
+			h->type 			= (JIKI_SHOT_07|SP_GROUP_SHOT_SPECIAL); 	/*SP_GROUP_JIKI_GET_ITEM*/	/*SP_PL_FIREBALL*/
 		}
-		else
+	//
+		if (0x00 == shot_status)	/* jˆÈŠO */
 		{
-			s->type 			= (JIKI_SHOT_02|SP_GROUP_SHOT_SPECIAL); 	/*SP_GROUP_JIKI_GET_ITEM*/
-		}
-	}
-//	else
-	#endif
-	#if 0/*SDL(¶‹÷À•W)*/
-	s->x256 			= (src->x256)+((src->w128-src->w128))	+ r_tbl[shot_type][REI00_x_offset]; /*+ x_offs*/
-	s->y256 			= (src->y256)-((src->h128+src->h128))	+ r_tbl[shot_type][REI01_y_offset];/*(20)*/
-	#else/*Gu(’†SÀ•W)*/
-	s->x256 			= (src->x256) + r_tbl[shot_type][REI00_x_offset]; /*+ x_offs*/
-	s->y256 			= (src->y256) + r_tbl[shot_type][REI01_y_offset];/*(20)*/
-	#endif
-	s->callback_mover	= player_move_shot;
-	s->flags			|= (SP_FLAG_VISIBLE|SP_FLAG_TIME_OVER);
-	s->color32			= 0x96ffffff;	/*	s->alpha		= 0x96; 150 ”¼“§–¾‚É‚·‚éB */	/*shot_regist_triplestar*/
-//
-	#define CCC_STRENGTH_L1 	(PLAYERS8* 0)/* WEAPON_L0 */
-	#define CCC_STRENGTH_L2 	(PLAYERS8* 1)/* WEAPON_L1 */
-	#define CCC_STRENGTH_L3 	(PLAYERS8* 2)/* WEAPON_L2 */
-	#define CCC_STRENGTH_L4 	(PLAYERS8* 3)/* WEAPON_L3 */
-	#define CCC_STRENGTH_L5 	(PLAYERS8* 4)/* WEAPON_L4 */
-	#define CCC_STRENGTH_L6 	(PLAYERS8* 5)/* WEAPON_L5 */
-	#define CCC_SPEED			(PLAYERS8* 6)
-	#define DDD_SPEED			(PLAYERS8* 7)
-//
-	#define DDD_STRENGTH_L1 	(PLAYERS8* 8)/* WEAPON_L0 */
-	#define DDD_STRENGTH_L2 	(PLAYERS8* 9)/* WEAPON_L1 */
-	#define DDD_STRENGTH_L3 	(PLAYERS8*10)/* WEAPON_L2 */
-	#define DDD_STRENGTH_L4 	(PLAYERS8*11)/* WEAPON_L3 */
-	#define DDD_STRENGTH_L5 	(PLAYERS8*12)/* WEAPON_L4 */
-	#define DDD_STRENGTH_L6 	(PLAYERS8*13)/* WEAPON_L5 */
-//	#define DDD_MAX 			(PLAYERS8*2)		/* Å‘å” */
-	#define CCC_MAX 			(PLAYERS8*14)		/* Å‘å” */
-	static const u8/*u8*/ ccc_tbl[CCC_MAX] =
-	{/* REIMU(A/B) MARISA(A/B) REMILIA YUYUKO CIRNO(A/Q) */
-//		 5*8, 5*8,	5*8, 5*8,  5*8,16*8,  5*8, 5*8, 	/* WEAPON_L0  strength ƒVƒ‡ƒbƒg‚Ì‹­‚³ */ /* (L1ƒVƒ‡ƒbƒg‚ÍA’e”‚ª­‚È‚¢‚Ì‚Å 5ˆÈ‰º‚É‚µ‚È‚¢) */
-//		 2*8, 3*8,	3*8, 2*8,  4*8,16*8,  5*8, 5*8, 	/* WEAPON_L1  strength ƒVƒ‡ƒbƒg‚Ì‹­‚³ */
-//		 2*8, 3*8,	3*8, 1*8,  4*8,16*8,  5*8, 5*8, 	/* WEAPON_L2  strength ƒVƒ‡ƒbƒg‚Ì‹­‚³ */
-//		 2*8, 3*8,	3*8, 1*8,  4*8,16*8,  5*8, 5*8, 	/* WEAPON_L3  strength ƒVƒ‡ƒbƒg‚Ì‹­‚³ */
-//		 2*8, 3*8,	3*8, 1*8,  4*8,16*8,  5*8, 5*8, 	/* WEAPON_L4  strength ƒVƒ‡ƒbƒg‚Ì‹­‚³ */
-//		 2*8, 3*8,	3*8, 1*8,  4*8,16*8,  5*8, 5*8, 	/* WEAPON_L5  strength ƒVƒ‡ƒbƒg‚Ì‹­‚³ */
-//
-		 5*8, 5*8,	5*8, 5*8,  5*8,16*8,  5*8, 5*8, 	/* WEAPON_L0  strength ƒVƒ‡ƒbƒg‚Ì‹­‚³ */ /* (L1ƒVƒ‡ƒbƒg‚ÍA’e”‚ª­‚È‚¢‚Ì‚Å 5ˆÈ‰º‚É‚µ‚È‚¢) */
-		 2*8, 3*8,	3*8, 3*8,  4*8,16*8,  5*8, 5*8, 	/* WEAPON_L1  strength ƒVƒ‡ƒbƒg‚Ì‹­‚³ */
-		 2*8, 3*8,	3*8, 3*8,  4*8,16*8,  5*8, 5*8, 	/* WEAPON_L2  strength ƒVƒ‡ƒbƒg‚Ì‹­‚³ */
-		 2*8, 3*8,	3*8, 3*8,  4*8,16*8,  5*8, 5*8, 	/* WEAPON_L3  strength ƒVƒ‡ƒbƒg‚Ì‹­‚³ */
-		 2*8, 3*8,	3*8, 3*8,  4*8,16*8,  5*8, 5*8, 	/* WEAPON_L4  strength ƒVƒ‡ƒbƒg‚Ì‹­‚³ */
-		 2*8, 3*8,	3*8, 3*8,  4*8,16*8,  5*8, 5*8, 	/* WEAPON_L5  strength ƒVƒ‡ƒbƒg‚Ì‹­‚³ */
-
-		16,14, 10,12,  9, 4,  8, 8, 	/* speed	ƒVƒ‡ƒbƒg‚Ì‘¬‚³ (’x‚¢•û‚ª‰æ–Êã‚Ì’e”‚ª‘‚¦‚é‚Ì‚Å‹­‚¢B‚½‚¾‚µd‚­‚È‚é) */
-		18,18, 10,10,  3, 4,  3, 3, 	/* speed	j‚Ì‘¬‚³ (’x‚¢•û‚ª‰æ–Êã‚Ì’e”‚ª‘‚¦‚é‚Ì‚Å‹­‚¢B‚½‚¾‚µd‚­‚È‚é) */
-//
-		 4*8, 4*8,	4*8,20*8,  6*8, 8*8,  6*8, 6*8, 	/* WEAPON_L0  strength j‚Ì‹­‚³ */	/*REMILIA, CIRNO,  6 5 ‹­‚·‚¬‚é*/
-		 4*8, 4*8,	4*8,20*8,  6*8, 8*8,  6*8, 6*8, 	/* WEAPON_L1  strength j‚Ì‹­‚³ */	/*REMILIA, CIRNO,  6 5 ‹­‚·‚¬‚é*/
-		 4*8, 4*8,	4*8,20*8,  6*8, 8*8,  6*8, 6*8, 	/* WEAPON_L2  strength j‚Ì‹­‚³ */	/*REMILIA, CIRNO,  6 5 ‹­‚·‚¬‚é*/
-		 4*8, 4*8,	4*8,20*8,  6*8, 8*8,  6*8, 6*8, 	/* WEAPON_L3  strength j‚Ì‹­‚³ */	/*REMILIA, CIRNO,  6 5 ‹­‚·‚¬‚é*/
-		 4*8, 4*8,	4*8,20*8,  6*8, 8*8,  6*8, 6*8, 	/* WEAPON_L4  strength j‚Ì‹­‚³ */	/*REMILIA, CIRNO,  6 5 ‹­‚·‚¬‚é*/
-		 4*8, 4*8,	4*8,20*8,  6*8, 8*8,  6*8, 6*8, 	/* WEAPON_L5  strength j‚Ì‹­‚³ */	/*REMILIA, CIRNO,  6 5 ‹­‚·‚¬‚é*/
-/* [***20090822 REIMU 3 <- 2 (‚Æ‚è‚ ‚¦‚¸jã‚·‚¬‚é‚Ì‚Å) */
-	};
-
-//		 2, 3,	3, 2,  4,16, 5, 5,	/* strength ƒVƒ‡ƒbƒg‚Ì‹­‚³ */
-//		16,14, 10,12,  9, 4, 8, 8,	/* speed	ƒVƒ‡ƒbƒg‚Ì‘¬‚³ (’x‚¢•û‚ª‰æ–Êã‚Ì’e”‚ª‘‚¦‚é‚Ì‚Å‹­‚¢B‚½‚¾‚µd‚­‚È‚é) */
-	//};
-//		 2, 2, 3, 3, 4, 3, 3, 3,	/* strength ƒVƒ‡ƒbƒg‚Ì‹­‚³ */
-//		15,15,12,12,18,12,12,12,	/* speed	ƒVƒ‡ƒbƒg‚Ì‘¬‚³	*/
-/* ‹É’[‚É‹@‘Ì‚Ì«”\‚ª•Î‚é‚Ì‚Í—Ç‚­‚È‚¢B(‹­‚­‚Ä‘¬‚¢‚Ì‚Í‚¸‚é‚¢) */
-	//static const u8 ddd_tbl[DDD_MAX] =
-	//{/* REIMU(A/B) MARISA(A/B) REMILIA YUYUKO CIRNO(A/Q) */
-//		 3, 3, 4, 4, 6, 8, 6, 6,	/* strength j‚Ì‹­‚³ */ 	/*REMILIA, CIRNO,  6 5 ‹­‚·‚¬‚é*/
-/* —ì–²(‹­‚­‚µ‚Ä‚İ‚é [***20090930 ) */
-//		 4, 4, 4,10, 6, 8, 6, 6,	/* strength j‚Ì‹­‚³ */ 	/*REMILIA, CIRNO,  6 5 ‹­‚·‚¬‚é*/
-//		 4, 4, 4,25, 6, 8, 6, 6,	/* strength j‚Ì‹­‚³ */ 	/*REMILIA, CIRNO,  6 5 ‹­‚·‚¬‚é*/
-//		18,18,10,15, 3, 4, 3, 3,	/* speed	j‚Ì‘¬‚³ (’x‚¢•û‚ª‰æ–Êã‚Ì’e”‚ª‘‚¦‚é‚Ì‚Å‹­‚¢B‚½‚¾‚µd‚­‚È‚é) */
-
-
-	/*data->*/s->base_weapon_strength	= ccc_tbl[CCC_STRENGTH_L1+(weapon_level_offset)+(is_needle<<(4+2))];/* 64 == 8[players]*8[line] */
-//	/*data->*/s->base_weapon_strength	= ddd_tbl[DDD_STRENGTH_L1+(weapon_level_offset)];
-
-//
-//	int ok;
-//	ok=0;
-	{
-		#if 0
-	//	if (1==r_tbl[shot_type][REI03_yudo])	/* psp‚Í0ƒŒƒWƒXƒ^‚ª‚ ‚é‚Ì‚Å0‚Æ”äŠr‚µ‚½‚Ù‚¤‚ª‘¬‚¢ */
-		if (0 != r_tbl[shot_type][REI03_yudo])/* ©“®ƒVƒ‡ƒbƒg‚©H */
-		#else
-	//	if ( (REIMU_SHOT_TYPE_01) > shot_type)/* ©“®ƒVƒ‡ƒbƒg‚©H */
-		if ( (REIMU_SHOT_TYPE_00) == shot_type)/* ©“®ƒVƒ‡ƒbƒg‚©H */
-		#endif
-		{
-			SPRITE *target;
-			target = search_enemy_by_sprite();
-			if (target != player)
+			if (REIMU_B+1 > select_player)	/* —ì–²? */
 			{
-				int int_angle512;
-				/*data->*/int_angle512	= atan_512(target->y256-player->y256,target->x256-player->x256);
-			//	if (255 < /*data->*/int_angle512 )/* ã•û180-360“x[/360“x]‚Ì—Ìˆæ‚Ì‚İ’Ç”ö‚·‚é */
-				/* CCW‚Ìê‡ */
-				if ( /*(384)*/(128*3) < ((/*data->*/int_angle512+64+128)&(512-1)) )/* ã•û225-315“x[/360“x]‚Ì—Ìˆæ‚Ì‚İ’Ç”ö‚·‚é */
+			//	if(0x02== shot_status)	/* —ì–²‚Ì‰ñ“]ƒVƒ‡ƒbƒg */
+				if (REIMU_SHOT_TYPE_00 != shot_type)/* ©“®ƒVƒ‡ƒbƒgˆÈŠOH */
 				{
-					#if 1
-					/* CCW‚Ìê‡ */
-					s->vx256	 = sin512((/*angle512*/int_angle512))*/*p->speed*/(16/*ccc_tbl[CCC_SPEED+select_player]*/);/*fps_factor*/
-					s->vy256	 = cos512((/*angle512*/int_angle512))*/*p->speed*/(16/*ccc_tbl[CCC_SPEED+select_player]*/);/*fps_factor*/
-					#endif
-					#if 1
+					h->type 			= (JIKI_SHOT_01|SP_GROUP_SHOT_SPECIAL); 	/*SP_GROUP_JIKI_GET_ITEM*/
 					/* •`‰æ—pƒOƒ‰‰ñ“] */
-				//	s->m_angleCCW512	=	int_angle512;
-					/* •`‰æ—pƒOƒ‰‰ñ“](ƒVƒ‡ƒbƒg‚Íã‚ª³–Ê‚È‚Ì‚ÅA‰ñ“]Šp‚ğŒvZ)[180/360“x]‰ñ‚·B */
-					int_angle512 += deg_360_to_512CCW((180));
-					mask512(int_angle512);
-					s->m_angleCCW512	=	int_angle512;/* ‰º‚ª³–Ê‚ÌŠp“x‚ª•`‰æ—pŠp“x */
-					#endif
-				//	ok=1;/* ©“®’Ç”ö‰Â”\ */
-					return;
+					h->m_angleCCW1024	= (ra_nd() & (1024-1));/* o‚¾‚µ‚ÌŠp“x‚Íƒ‰ƒ“ƒ_ƒ€‚Å‚È‚¢‚Æ(ƒŒ[ƒU[‚İ‚½‚¢‚È)•Ï‚È‰æ–Ê‚É‚È‚é */
+				}
+			/*	else	{	h->type = ©“®ƒVƒ‡ƒbƒg‚ÍAj‚Æ“¯‚¶; 	}	*/
+			}
+			else
+			{
+				h->type 			= (JIKI_SHOT_02|SP_GROUP_SHOT_SPECIAL); 	/*SP_GROUP_JIKI_GET_ITEM*/
+			}
+		}
+	//	else
+		#endif
+		#if 0/*SDL(¶‹÷À•W)*/
+		h->x256 			= (src->x256)+((src->w128-src->w128))	+ r_tbl[shot_type][REI00_x_offset]; /*+ x_offs*/
+		h->y256 			= (src->y256)-((src->h128+src->h128))	+ r_tbl[shot_type][REI01_y_offset];/*(20)*/
+		#else/*Gu(’†SÀ•W)*/
+		h->x256 			= (src->x256) + r_tbl[shot_type][REI00_x_offset]; /*+ x_offs*/
+		h->y256 			= (src->y256) + r_tbl[shot_type][REI01_y_offset];/*(20)*/
+		#endif
+		h->callback_mover	= player_move_shot;
+//		h->flags			|= (SP_FLAG_VISIBLE|SP_FLAG_TIME_OVER);
+		h->color32			= MAKE32RGBA(0xff, 0xff, 0xff, 0x96);	/*	h->alpha		= 0x96; 150 ”¼“§–¾‚É‚·‚éB */	/*shot_regist_triplestar*/
+	//
+		#define CCC_STRENGTH_L1 	(PLAYERS8* 0)/* WEAPON_L0 */
+		#define CCC_STRENGTH_L2 	(PLAYERS8* 1)/* WEAPON_L1 */
+		#define CCC_STRENGTH_L3 	(PLAYERS8* 2)/* WEAPON_L2 */
+		#define CCC_STRENGTH_L4 	(PLAYERS8* 3)/* WEAPON_L3 */
+		#define CCC_STRENGTH_L5 	(PLAYERS8* 4)/* WEAPON_L4 */
+		#define CCC_STRENGTH_L6 	(PLAYERS8* 5)/* WEAPON_L5 */
+		#define CCC_SPEED			(PLAYERS8* 6)
+		#define DDD_SPEED			(PLAYERS8* 7)
+	//
+		#define DDD_STRENGTH_L1 	(PLAYERS8* 8)/* WEAPON_L0 */
+		#define DDD_STRENGTH_L2 	(PLAYERS8* 9)/* WEAPON_L1 */
+		#define DDD_STRENGTH_L3 	(PLAYERS8*10)/* WEAPON_L2 */
+		#define DDD_STRENGTH_L4 	(PLAYERS8*11)/* WEAPON_L3 */
+		#define DDD_STRENGTH_L5 	(PLAYERS8*12)/* WEAPON_L4 */
+		#define DDD_STRENGTH_L6 	(PLAYERS8*13)/* WEAPON_L5 */
+	//	#define DDD_MAX 			(PLAYERS8*2)		/* Å‘å” */
+		#define CCC_MAX 			(PLAYERS8*14)		/* Å‘å” */
+		static const u8/*u8*/ ccc_tbl[CCC_MAX] =
+		{/* REIMU(A/B) MARISA(A/B) REMILIA YUYUKO CIRNO(A/Q) */
+	//		 5*8, 5*8,	5*8, 5*8,  5*8,16*8,  5*8, 5*8, 	/* WEAPON_L0  strength ƒVƒ‡ƒbƒg‚Ì‹­‚³ */ /* (L1ƒVƒ‡ƒbƒg‚ÍA’e”‚ª­‚È‚¢‚Ì‚Å 5ˆÈ‰º‚É‚µ‚È‚¢) */
+	//		 2*8, 3*8,	3*8, 2*8,  4*8,16*8,  5*8, 5*8, 	/* WEAPON_L1  strength ƒVƒ‡ƒbƒg‚Ì‹­‚³ */
+	//		 2*8, 3*8,	3*8, 1*8,  4*8,16*8,  5*8, 5*8, 	/* WEAPON_L2  strength ƒVƒ‡ƒbƒg‚Ì‹­‚³ */
+	//		 2*8, 3*8,	3*8, 1*8,  4*8,16*8,  5*8, 5*8, 	/* WEAPON_L3  strength ƒVƒ‡ƒbƒg‚Ì‹­‚³ */
+	//		 2*8, 3*8,	3*8, 1*8,  4*8,16*8,  5*8, 5*8, 	/* WEAPON_L4  strength ƒVƒ‡ƒbƒg‚Ì‹­‚³ */
+	//		 2*8, 3*8,	3*8, 1*8,  4*8,16*8,  5*8, 5*8, 	/* WEAPON_L5  strength ƒVƒ‡ƒbƒg‚Ì‹­‚³ */
+	//
+			 5*8, 5*8,	5*8, 5*8,  5*8,16*8,  5*8, 5*8, 	/* WEAPON_L0  strength ƒVƒ‡ƒbƒg‚Ì‹­‚³ */ /* (L1ƒVƒ‡ƒbƒg‚ÍA’e”‚ª­‚È‚¢‚Ì‚Å 5ˆÈ‰º‚É‚µ‚È‚¢) */
+			 2*8, 3*8,	3*8, 3*8,  4*8,16*8,  5*8, 5*8, 	/* WEAPON_L1  strength ƒVƒ‡ƒbƒg‚Ì‹­‚³ */
+			 2*8, 3*8,	3*8, 3*8,  4*8,16*8,  5*8, 5*8, 	/* WEAPON_L2  strength ƒVƒ‡ƒbƒg‚Ì‹­‚³ */
+			 2*8, 3*8,	3*8, 3*8,  4*8,16*8,  5*8, 5*8, 	/* WEAPON_L3  strength ƒVƒ‡ƒbƒg‚Ì‹­‚³ */
+			 2*8, 3*8,	3*8, 3*8,  4*8,16*8,  5*8, 5*8, 	/* WEAPON_L4  strength ƒVƒ‡ƒbƒg‚Ì‹­‚³ */
+			 2*8, 3*8,	3*8, 3*8,  4*8,16*8,  5*8, 5*8, 	/* WEAPON_L5  strength ƒVƒ‡ƒbƒg‚Ì‹­‚³ */
+
+			16,14, 10,12,  9, 4,  8, 8, 	/* speed	ƒVƒ‡ƒbƒg‚Ì‘¬‚³ (’x‚¢•û‚ª‰æ–Êã‚Ì’e”‚ª‘‚¦‚é‚Ì‚Å‹­‚¢B‚½‚¾‚µd‚­‚È‚é) */
+			18,18, 10,10,  3, 4,  3, 3, 	/* speed	j‚Ì‘¬‚³ (’x‚¢•û‚ª‰æ–Êã‚Ì’e”‚ª‘‚¦‚é‚Ì‚Å‹­‚¢B‚½‚¾‚µd‚­‚È‚é) */
+	//
+			 4*8, 4*8,	4*8,20*8,  6*8, 8*8,  6*8, 6*8, 	/* WEAPON_L0  strength j‚Ì‹­‚³ */	/*REMILIA, CIRNO,  6 5 ‹­‚·‚¬‚é*/
+			 4*8, 4*8,	4*8,20*8,  6*8, 8*8,  6*8, 6*8, 	/* WEAPON_L1  strength j‚Ì‹­‚³ */	/*REMILIA, CIRNO,  6 5 ‹­‚·‚¬‚é*/
+			 4*8, 4*8,	4*8,20*8,  6*8, 8*8,  6*8, 6*8, 	/* WEAPON_L2  strength j‚Ì‹­‚³ */	/*REMILIA, CIRNO,  6 5 ‹­‚·‚¬‚é*/
+			 4*8, 4*8,	4*8,20*8,  6*8, 8*8,  6*8, 6*8, 	/* WEAPON_L3  strength j‚Ì‹­‚³ */	/*REMILIA, CIRNO,  6 5 ‹­‚·‚¬‚é*/
+			 4*8, 4*8,	4*8,20*8,  6*8, 8*8,  6*8, 6*8, 	/* WEAPON_L4  strength j‚Ì‹­‚³ */	/*REMILIA, CIRNO,  6 5 ‹­‚·‚¬‚é*/
+			 4*8, 4*8,	4*8,20*8,  6*8, 8*8,  6*8, 6*8, 	/* WEAPON_L5  strength j‚Ì‹­‚³ */	/*REMILIA, CIRNO,  6 5 ‹­‚·‚¬‚é*/
+	/* [***20090822 REIMU 3 <- 2 (‚Æ‚è‚ ‚¦‚¸jã‚·‚¬‚é‚Ì‚Å) */
+		};
+
+	//		 2, 3,	3, 2,  4,16, 5, 5,	/* strength ƒVƒ‡ƒbƒg‚Ì‹­‚³ */
+	//		16,14, 10,12,  9, 4, 8, 8,	/* speed	ƒVƒ‡ƒbƒg‚Ì‘¬‚³ (’x‚¢•û‚ª‰æ–Êã‚Ì’e”‚ª‘‚¦‚é‚Ì‚Å‹­‚¢B‚½‚¾‚µd‚­‚È‚é) */
+		//};
+	//		 2, 2, 3, 3, 4, 3, 3, 3,	/* strength ƒVƒ‡ƒbƒg‚Ì‹­‚³ */
+	//		15,15,12,12,18,12,12,12,	/* speed	ƒVƒ‡ƒbƒg‚Ì‘¬‚³	*/
+	/* ‹É’[‚É‹@‘Ì‚Ì«”\‚ª•Î‚é‚Ì‚Í—Ç‚­‚È‚¢B(‹­‚­‚Ä‘¬‚¢‚Ì‚Í‚¸‚é‚¢) */
+		//static const u8 ddd_tbl[DDD_MAX] =
+		//{/* REIMU(A/B) MARISA(A/B) REMILIA YUYUKO CIRNO(A/Q) */
+	//		 3, 3, 4, 4, 6, 8, 6, 6,	/* strength j‚Ì‹­‚³ */ 	/*REMILIA, CIRNO,  6 5 ‹­‚·‚¬‚é*/
+	/* —ì–²(‹­‚­‚µ‚Ä‚İ‚é [***20090930 ) */
+	//		 4, 4, 4,10, 6, 8, 6, 6,	/* strength j‚Ì‹­‚³ */ 	/*REMILIA, CIRNO,  6 5 ‹­‚·‚¬‚é*/
+	//		 4, 4, 4,25, 6, 8, 6, 6,	/* strength j‚Ì‹­‚³ */ 	/*REMILIA, CIRNO,  6 5 ‹­‚·‚¬‚é*/
+	//		18,18,10,15, 3, 4, 3, 3,	/* speed	j‚Ì‘¬‚³ (’x‚¢•û‚ª‰æ–Êã‚Ì’e”‚ª‘‚¦‚é‚Ì‚Å‹­‚¢B‚½‚¾‚µd‚­‚È‚é) */
+
+
+		h->base_weapon_strength = ccc_tbl[CCC_STRENGTH_L1+(weapon_level_offset)+(is_needle<<(4+2))];/* 64 == 8[players]*8[line] */
+	//	h->base_weapon_strength = ddd_tbl[DDD_STRENGTH_L1+(weapon_level_offset)];
+
+	//
+	//	int ok;
+	//	ok=0;
+		{
+			#if 0
+		//	if (1==r_tbl[shot_type][REI03_yudo])	/* psp‚Í0ƒŒƒWƒXƒ^‚ª‚ ‚é‚Ì‚Å0‚Æ”äŠr‚µ‚½‚Ù‚¤‚ª‘¬‚¢ */
+			if (0 != r_tbl[shot_type][REI03_yudo])/* ©“®ƒVƒ‡ƒbƒg‚©H */
+			#else
+		//	if ( (REIMU_SHOT_TYPE_01) > shot_type)/* ©“®ƒVƒ‡ƒbƒg‚©H */
+			if ( (REIMU_SHOT_TYPE_00) == shot_type)/* ©“®ƒVƒ‡ƒbƒg‚©H */
+			#endif
+			{
+				SPRITE *target;
+				target = search_enemy_by_sprite();
+				if (target != obj_player)
+				{
+					int int_angle1024;
+					int_angle1024	= atan_1024(target->y256-obj_player->y256, target->x256-obj_player->x256);
+				//	if (511 < int_angle1024 )/* ã•û180-360“x[/360“x]‚Ì—Ìˆæ‚Ì‚İ’Ç”ö‚·‚é */
+					if ( /*(384)*/(256*3) < (( int_angle1024+128+256)&(1024-1)) )/* ã•û225-315“x[/360“x]‚Ì—Ìˆæ‚Ì‚İ’Ç”ö‚·‚é */	/* CCW‚Ìê‡ */
+					{
+						h->vx256	 = sin1024((int_angle1024))*/*p->speed*/(16/*ccc_tbl[CCC_SPEED+select_player]*/);/*fps_factor*/ /* CCW‚Ìê‡ */
+						h->vy256	 = cos1024((int_angle1024))*/*p->speed*/(16/*ccc_tbl[CCC_SPEED+select_player]*/);/*fps_factor*/
+						#if 1
+						/* •`‰æ—pƒOƒ‰‰ñ“] */
+					//	h->m_angleCCW1024	= int_angle1024;
+						/* •`‰æ—pƒOƒ‰‰ñ“](ƒVƒ‡ƒbƒg‚Íã‚ª³–Ê‚È‚Ì‚ÅA‰ñ“]Šp‚ğŒvZ)[180/360“x]‰ñ‚·B */
+						int_angle1024 += cv1024r((180));
+						mask1024(int_angle1024);
+						h->m_angleCCW1024	= int_angle1024;/* ‰º‚ª³–Ê‚ÌŠp“x‚ª•`‰æ—pŠp“x */
+						#endif
+					//	ok=1;/* ©“®’Ç”ö‰Â”\ */
+						return;
+					}
 				}
 			}
 		}
-	}
-//
-//	if (0==ok)/* ©“®’Ç”ö•s‰ÂH */
-	{	/*ŒÅ—L‚Ìİ’èŠp“x‚ğg‚¤*/
-		s->vx256 = ((/*int_vx*/r_tbl[shot_type][REI02_vx256]))*/*p->speed*/(ccc_tbl[CCC_SPEED+OFFS_IS_NEEDLE/*4*/]);/*fps_factor*/
-		s->vy256 = -(((int)ccc_tbl[CCC_SPEED+OFFS_IS_NEEDLE/*4*/])<<8);/*fps_factor*/ /*p->speed*/
+	//
+	//	if (0==ok)/* ©“®’Ç”ö•s‰ÂH */
+		{	/*ŒÅ—L‚Ìİ’èŠp“x‚ğg‚¤*/
+			h->vx256 = ((/*int_vx*/r_tbl[shot_type][REI02_vx256]))*/*p->speed*/(ccc_tbl[CCC_SPEED+OFFS_IS_NEEDLE]);/*fps_factor*/
+			h->vy256 = -(((int)ccc_tbl[CCC_SPEED+OFFS_IS_NEEDLE])<<8);/*fps_factor*/ /*p->speed*/
+		}
 	}
 }
-//	data->speed 	= ccc_tbl[CCC_SPEED+select_player];
+
 
 /*---------------------------------------------------------
 	ƒvƒŒƒCƒ„[’e(ƒVƒ‡ƒbƒg‚Ì‚İ)¶¬
@@ -1131,25 +1097,25 @@ static void player_register_shot_object(SPRITE *src, int /*set_*/shot_type)
 
 /* —ì–²A (—U“±›Ş—) ©“®ƒVƒ‡ƒbƒg */
 
-static void shot_regist_re_yudou(SPRITE *s) 	/* —ì–²A –‚—¹A */
+static void shot_regist_re_yudou(SPRITE *s) /* —ì–²A –‚—¹A */
 {
 	player_register_shot_object(s, REIMU_SHOT_TYPE_00);/* ©“®ƒVƒ‡ƒbƒg */
 }
 
 static void shot_regist_yu_gggg(SPRITE *s)	/* —HXq */
 {
-	/*shot_regist_needle*/player_register_shot_object(s, NEEDLE_ANGLE_271);/*-48*/	/*t256( 0), t256(-40),*/
+	/*shot_regist_needle*/player_register_shot_object(s, NEEDLE_ANGLE_271);
 }
 
-static void shot_regist_ma_gggg(SPRITE *s)	/* –‚—¹A */	/* –‚—¹B */	/* Œ“(Œ»İƒ_ƒ~[—p) */
+static void shot_regist_ma_gggg(SPRITE *s)	/* –‚—¹A/B */ 	/* Œ“(Œ»İƒ_ƒ~[—p) */
 {
-	/*shot_regist_needle*/player_register_shot_object(s, NEEDLE_ANGLE_270); 		/*t256( 0), t256( 0),*/
+	/*shot_regist_needle*/player_register_shot_object(s, NEEDLE_ANGLE_270);
 }
 
-static void shot_regist_ci_gggg(SPRITE *s)	/* ƒŒƒ~ƒŠƒA */	/* ƒ`ƒ‹ƒm */
+static void shot_regist_ci_gggg(SPRITE *s)	/* ƒŒƒ~ƒŠƒA • ƒ`ƒ‹ƒm */
 {
-	/*shot_regist_needle*/player_register_shot_object(s, NEEDLE_ANGLE_277 ); /*t256( 0), t256( 0),*/
-	/*shot_regist_needle*/player_register_shot_object(s, NEEDLE_ANGLE_263 ); /*t256( 0), t256( 0),*/
+	/*shot_regist_needle*/player_register_shot_object(s, NEEDLE_ANGLE_277 );
+	/*shot_regist_needle*/player_register_shot_object(s, NEEDLE_ANGLE_263 );
 }
 static void shot_regist_ma_lazer(SPRITE *s) /* –‚—¹B ƒŒ[ƒU[ */
 {
@@ -1165,25 +1131,20 @@ static void shot_regist_ma_lazer(SPRITE *s) /* –‚—¹B ƒŒ[ƒU[ */
 ---------------------------------------------------------*/
 
 /* —ì–²A/B ‰ñ“]ƒVƒ‡ƒbƒg */	/* ’ÊíƒVƒ‡ƒbƒg */
-static void shot_regist_1(SPRITE *s)	/* —ì–² */	/* —ì–² • –‚—¹ • ƒ`ƒ‹ƒm • ƒŒƒ~ƒŠƒA */	/* [***090220 ’Ç‰Á */
+static void shot_regist_1(SPRITE *s)	/* —ì–² */	/* —ì–² • –‚—¹ • ƒ`ƒ‹ƒm • ƒŒƒ~ƒŠƒA */
 {
 	player_register_shot_object(s, REIMU_SHOT_TYPE_01); 	/* ’ÊíƒVƒ‡ƒbƒg */
 }
-static void shot_regist_2(SPRITE *s)	/* —ì–² */	/* —ì–² • –‚—¹ • ƒ`ƒ‹ƒm • ƒŒƒ~ƒŠƒA */	/* [***090220 ’Ç‰Á */
+static void shot_regist_2(SPRITE *s)	/* —ì–² */	/* —ì–² • –‚—¹ • ƒ`ƒ‹ƒm • ƒŒƒ~ƒŠƒA */
 {
 	player_register_shot_object(s, REIMU_SHOT_TYPE_02); 	/* ’ÊíƒVƒ‡ƒbƒg */
 	player_register_shot_object(s, REIMU_SHOT_TYPE_03); 	/* ’ÊíƒVƒ‡ƒbƒg */
-//	player_register_shot_object(s, MARISA_SHOT_TYPE_03);	/* ”÷ŠgU */
-//	player_register_shot_object(s, MARISA_SHOT_TYPE_04);	/* ”÷ŠgU */
 }
 static void shot_regist_3(SPRITE *s)	/* —ì–² */	/* –‚—¹ • ƒ`ƒ‹ƒm */
 {
 	player_register_shot_object(s, REIMU_SHOT_TYPE_04); 	/* ’ÊíƒVƒ‡ƒbƒg */
 	player_register_shot_object(s, REIMU_SHOT_TYPE_01); 	/* ’ÊíƒVƒ‡ƒbƒg */
 	player_register_shot_object(s, REIMU_SHOT_TYPE_05); 	/* ’ÊíƒVƒ‡ƒbƒg */
-//	player_register_shot_object(s, MARISA_SHOT_TYPE_03);	/* ”÷ŠgU */	/* REIMU_SHOT_TYPE_02 ‚Ü‚Á‚·‚® */
-//	player_register_shot_object(s, REIMU_SHOT_TYPE_01);
-//	player_register_shot_object(s, MARISA_SHOT_TYPE_04);	/* ”÷ŠgU */	/* REIMU_SHOT_TYPE_03 ‚Ü‚Á‚·‚® */
 }
 static void shot_regist_4(SPRITE *s)	/* —ì–² */	/* –‚—¹ */
 {
@@ -1191,12 +1152,6 @@ static void shot_regist_4(SPRITE *s)	/* —ì–² */	/* –‚—¹ */
 	player_register_shot_object(s, REIMU_SHOT_TYPE_02); 	/* ’ÊíƒVƒ‡ƒbƒg */
 	player_register_shot_object(s, REIMU_SHOT_TYPE_03); 	/* ’ÊíƒVƒ‡ƒbƒg */
 	player_register_shot_object(s, REIMU_SHOT_TYPE_05); 	/* ’ÊíƒVƒ‡ƒbƒg */
-//	player_register_shot_object(s, REIMU_SHOT_TYPE_04);/* ’ÊíƒVƒ‡ƒbƒg */
-//	player_register_shot_object(s, REIMU_SHOT_TYPE_02); 	/* REIMU_SHOT_TYPE_02 ‚Ü‚Á‚·‚® */	/*MARISA_SHOT_TYPE_05*/
-//	player_register_shot_object(s, REIMU_SHOT_TYPE_03); 	/* REIMU_SHOT_TYPE_03 ‚Ü‚Á‚·‚® */	/*MARISA_SHOT_TYPE_06*/
-//	player_register_shot_object(s, REIMU_SHOT_TYPE_05);/* ’ÊíƒVƒ‡ƒbƒg */
-//	player_register_shot_object(s, MARISA_SHOT_TYPE_07);
-//	player_register_shot_object(s, MARISA_SHOT_TYPE_08);
 }
 
 static void shot_regist_5(SPRITE *s)	/* —ì–²B */ /* –‚—¹ */
@@ -1206,10 +1161,6 @@ static void shot_regist_5(SPRITE *s)	/* —ì–²B */ /* –‚—¹ */
 	player_register_shot_object(s, REIMU_SHOT_TYPE_01); 	/* ’ÊíƒVƒ‡ƒbƒg */
 	player_register_shot_object(s, REIMU_SHOT_TYPE_05); 	/* ’ÊíƒVƒ‡ƒbƒg */
 	player_register_shot_object(s, REIMU_SHOT_TYPE_07); 	/* ’ÊíƒVƒ‡ƒbƒg */
-//	player_register_shot_object(s, REIMU_SHOT_TYPE_02); 	/* REIMU_SHOT_TYPE_02 ‚Ü‚Á‚·‚® */	/*MARISA_SHOT_TYPE_05*/
-//	player_register_shot_object(s, REIMU_SHOT_TYPE_03); 	/* REIMU_SHOT_TYPE_03 ‚Ü‚Á‚·‚® */	/*MARISA_SHOT_TYPE_06*/
-//	player_register_shot_object(s, MARISA_SHOT_TYPE_07);
-//	player_register_shot_object(s, MARISA_SHOT_TYPE_08);
 }
 
 /* —ì–²B (j›Ş—) */
@@ -1230,106 +1181,98 @@ static void shot_regist_chou(SPRITE *s) 		/* —HXq */
 /*---------------------------------------------------------
 	ƒvƒŒƒCƒ„[AƒIƒvƒVƒ‡ƒ“‚ÌˆÚ“®§Œä
 ---------------------------------------------------------*/
-static void re_ma_yu_control_option(SPRITE *s, PL_OPTION_DATA *data ) /* —ì–²A–‚—¹	‰¼—HXq */
+static void re_ma_yu_control_option(SPRITE *src) /* —ì–²A–‚—¹	‰¼—HXq */
 {
-	mask512(data->angleCCW512);
+	mask1024(src->PL_OPTION_DATA_angleCCW1024);
 	{
 	#define SSS_LOCATE			(PLAYERS8*0)
 	#define SSS_SPEED			(PLAYERS8*1)
 	#define SSS_MAX 			(PLAYERS8*2)		/* Å‘å” */
 		static const u8 sss_tbl[(SSS_MAX)] =
 		{/* REIMU(A/B) MARISA(A/B) REMILIA YUYUKO CIRNO(A/Q) */
-			7,4,7,7, 3, 3, 3, 3,	/* SSS_LOCATE (YUYUKO==select_player)?(3):(7); */
-			7,7,7,7, 3, 3, 7, 7,	/* SSS_SPEED  (YUYUKO==select_player)?(3):(7); */
+			14*16,8*16,14*16,14*16, 6*16, 6*16, 6*16, 6*16, /* SSS_LOCATE (YUYUKO==select_player)?(3):(7); */
+			14,14,14,14, 6, 6, 14, 14,	/* SSS_SPEED  (YUYUKO==select_player)?(3):(7); */
 		};
-		int vv512;
-		int ss512;
-	//	vv512 = (YUYUKO==select_player)?(3):(7);	/*ra d2deg512(0.1) == 8.1*/
-		vv512 = sss_tbl[SSS_LOCATE+select_player];
-		ss512 = sss_tbl[SSS_SPEED+select_player];
+		int vv1024;
+		int ss1024;
+	//	vv1024 = (YUYUKO==select_player)?(3):(7);	/*ra d2deg512(0.1) == 8.1*/
+		vv1024 = sss_tbl[SSS_LOCATE+select_player];
+		ss1024 = sss_tbl[SSS_SPEED+select_player];
 		if (my_pad & PSP_KEY_SLOW)		/* ‰Ÿ‚·‚Æ‘O•û‚ÉˆÚ“® */
 		{
-			if ((OPTION_ID_03_RM/*1*/&0xff)==(data->opt_anime_add_id&0xff)/*pos*/) /* 1: ‰E‘¤Œn‚ÌƒIƒvƒVƒ‡ƒ“(OPTION_ID_03_RM, OPTION_ID_04_RR ) */
+			if ((OPTION_ID_03_RM/*1*/&0xff)==(src->PL_OPTION_DATA_opt_anime_add_id&0xff)/*pos*/) /* 1: ‰E‘¤Œn‚ÌƒIƒvƒVƒ‡ƒ“(OPTION_ID_03_RM, OPTION_ID_04_RR ) */
 			{
-				if (data->angleCCW512 < /*(288)*/(256+16	-16-64+(7<<4)+((data->opt_anime_add_id&0x100)>>2)-(vv512<<4) )/*272 (256+16)*/ )/*’†ˆÊ(‰E)ˆÊ’u*/
+				if (src->PL_OPTION_DATA_angleCCW1024 < /*(288)*/(256*2+16*2 -16*2-64*2+(14<<4)+((src->PL_OPTION_DATA_opt_anime_add_id&0x100)>>1)-(vv1024) )/*272 (256+16)*/ )/*’†ˆÊ(‰E)ˆÊ’u*/
 				{
-					data->angleCCW512 += ss512;
+					src->PL_OPTION_DATA_angleCCW1024 += ss1024;
 				}
 			}
 			else	/* 0: ¶‘¤Œn‚ÌƒIƒvƒVƒ‡ƒ“ */
 			{
-				if (data->angleCCW512 > /*(224)*/(256-16	+16+64-(7<<4)-((data->opt_anime_add_id&0x100)>>2)+(vv512<<4) )/*240 (256-16)*/ )/*’†ˆÊ(¶)ˆÊ’u*/
+				if (src->PL_OPTION_DATA_angleCCW1024 > /*(224)*/(256*2-16*2 +16*2+64*2-(14<<4)-((src->PL_OPTION_DATA_opt_anime_add_id&0x100)>>1)+(vv1024) )/*240 (256-16)*/ )/*’†ˆÊ(¶)ˆÊ’u*/
 				{
-					data->angleCCW512 -= ss512;
+					src->PL_OPTION_DATA_angleCCW1024 -= ss1024;
 				}
 			}
 		}
 		else	/* •ú‚·‚ÆŒã•û‚ÉˆÚ“® */
 		{
-			if ( (OPTION_ID_03_RM/*1*/&0xff)==(data->opt_anime_add_id&0xff)/*pos*/) /* 1: ‰E‘¤Œn‚ÌƒIƒvƒVƒ‡ƒ“ */
+			if ( (OPTION_ID_03_RM/*1*/&0xff)==(src->PL_OPTION_DATA_opt_anime_add_id&0xff)/*pos*/) /* 1: ‰E‘¤Œn‚ÌƒIƒvƒVƒ‡ƒ“ */
 			{
-				if (data->angleCCW512 > 64+16 +8+32-64+((data->opt_anime_add_id&0x100)>>2) )/*Å¬(‰E)ˆÊ’u*/
+				if (src->PL_OPTION_DATA_angleCCW1024 > 64*2+16*2 +8*2+32*2-64*2+((src->PL_OPTION_DATA_opt_anime_add_id&0x100)>>1) )/*Å¬(‰E)ˆÊ’u*/
 				{
-					data->angleCCW512 -= ss512;
+					src->PL_OPTION_DATA_angleCCW1024 -= ss1024;
 				}
 			}
 			else	/* 0: ¶‘¤Œn‚ÌƒIƒvƒVƒ‡ƒ“ */
 			{
-				if (data->angleCCW512 < 448-16 -8-32+64-((data->opt_anime_add_id&0x100)>>2) )/*Å‘å(¶)ˆÊ’u*/
+				if (src->PL_OPTION_DATA_angleCCW1024 < 448*2-16*2 -8*2-32*2+64*2-((src->PL_OPTION_DATA_opt_anime_add_id&0x100)>>1) )/*Å‘å(¶)ˆÊ’u*/
 				{
-					data->angleCCW512 += ss512;
+					src->PL_OPTION_DATA_angleCCW1024 += ss1024;
 				}
 			}
 		}
 	}
-	#if (0000)
-	if (0==(pd_state_flag&STATE_FLAG_08_OPTION_HIDE))	/* ƒIƒvƒVƒ‡ƒ“‚ªÁ‚¦‚Ä‚ê‚Î */
-	{
-	//	s->type = SP_DELETE;/*‚¨‚µ‚Ü‚¢*/
-	//	s->type = SP_DELETE;/*‚¨‚µ‚Ü‚¢*/
-		s->flags			|= (SP_FLAG_VISIBLE);/*Œ©‚¹‚È‚¢*/
-	}
-	#endif/*0000*/
 	#if 1
-	mask512(data->angleCCW512);/*‚Ë‚ñ‚Ì‚½‚ß*/
+	mask1024(src->PL_OPTION_DATA_angleCCW1024);/*‚Ë‚ñ‚Ì‚½‚ß*/
 	#endif
-//	s->x256 = player->x256+cos512((data->angle512))*(16)/*data->length*/-((s->w)>>1)+((player->w-12-1)*data->opt_anime_add_id)+6;
-//	s->x256 = player->x256+cos512((data->angle512))*(16)/*data->length*/+((/*player->w*/24-12-1)*data->opt_anime_add_id)+6-8;
-//	s->x256 = player->x256+cos512((data->angle512))*(16)/*data->length*/+((/*player->w*/24+11+11)*data->opt_anime_add_id)-11-8;
+//	h->x256 = obj_player->x256+cos512((src->PL_OPTION_DATA_angle512))*(16)/*src->PL_OPTION_DATA_length*/-((h->w)>>1)+((obj_player->w-12-1)*src->PL_OPTION_DATA_opt_anime_add_id)+6;
+//	h->x256 = obj_player->x256+cos512((src->PL_OPTION_DATA_angle512))*(16)/*src->PL_OPTION_DATA_length*/+((/*obj_player->w*/24-12-1)*src->PL_OPTION_DATA_opt_anime_add_id)+6-8;
+//	h->x256 = obj_player->x256+cos512((src->PL_OPTION_DATA_angle512))*(16)/*src->PL_OPTION_DATA_length*/+((/*obj_player->w*/24+11+11)*src->PL_OPTION_DATA_opt_anime_add_id)-11-8;
 // -1 : 		 -11 -8
 //	1 : +24+11+11-11 -8
-//	s->x256 = player->x256+cos512((data->angle512))*(16)/*data->length*/+((/*player->w*/24-6-6)*data->opt_anime_add_id)+6-8;
+//	h->x256 = obj_player->x256+cos512((src->PL_OPTION_DATA_angle512))*(16)/*src->PL_OPTION_DATA_length*/+((/*obj_player->w*/24-6-6)*src->PL_OPTION_DATA_opt_anime_add_id)+6-8;
 // -1 : 		 +6 -8
 //	1 : +24 -6 -6 +6 -8
-//	s->x256 = player->x256+cos512((data->angle512))*(16)/*data->length*/+((/*player->w*/(24)-6-6)*data->opt_anime_add_id)+6-((s->w)>>1)/*(8)*/;
+//	h->x256 = obj_player->x256+cos512((src->PL_OPTION_DATA_angle512))*(16)/*src->PL_OPTION_DATA_length*/+((/*obj_player->w*/(24)-6-6)*src->PL_OPTION_DATA_opt_anime_add_id)+6-((h->w)>>1)/*(8)*/;
 //
-	//	s->x256 = player->x256+cos512((data->angle512))*(16)/*data->length*/+(((int)(data->pos+1)*player->w-s->w)/2)-data->pos*6;
-	//	s->x256 = player->x256+cos512((data->angle512))*(16)/*data->length*/+(((int)(data->opt_anime_add_id+1)*/*player->w*/(24)-s->w)/2)-data->opt_anime_add_id*6; 		//2598187
-	//	s->x256 = player->x256+cos512((data->angle512))*(16)/*data->length*/+ (((24/*player->w*/ /2)-6)*(data->opt_anime_add_id)) -((s->w)>>1) +(24/*player->w*/ /2);	//2598219
+	//	h->x256 = obj_player->x256+cos512((src->PL_OPTION_DATA_angle512))*(16)/*src->PL_OPTION_DATA_length*/+(((int)(src->PL_OPTION_DATA_pos+1)*obj_player->w-h->w)/2)-src->PL_OPTION_DATA_pos*6;
+	//	h->x256 = obj_player->x256+cos512((src->PL_OPTION_DATA_angle512))*(16)/*src->PL_OPTION_DATA_length*/+(((int)(src->PL_OPTION_DATA_opt_anime_add_id+1)*/*player->w*/(24)-h->w)/2)-src->PL_OPTION_DATA_opt_anime_add_id*6; 		//2598187
+	//	h->x256 = obj_player->x256+cos512((src->PL_OPTION_DATA_angle512))*(16)/*src->PL_OPTION_DATA_length*/+ (((24/*obj_player->w*/ /2)-6)*(src->PL_OPTION_DATA_opt_anime_add_id)) -((h->w)>>1) +(24/*player->w*/ /2); //2598219
 
 		/* -1: 6*256  1: 18*256 */
-	//	s->x256 = player->x256+cos512((data->angle512))*(16)/*data->length*/+ (((6)*(2+data->opt_anime_add_id))<<8) -((s->w128)); //2598187 2079061
+	//	h->x256 = obj_player->x256+cos512((src->PL_OPTION_DATA_angle512))*(16)/*src->PL_OPTION_DATA_length*/+ (((6)*(2+src->PL_OPTION_DATA_opt_anime_add_id))<<8) -((h->w128)); //2598187 2079061
 
 	{int hankei;
 	//	hankei = (YUYUKO==select_player)?(32):(16);
 		hankei = (YUYUKO==select_player)?(32):(24);
 		/* CCW‚Ìê‡ */
 		#if 0/*SDL(¶‹÷À•W)*/
-		s->x256 = player->x256+sin512((data->angleCCW512))*(hankei)/*data->length*/+ (18*256)-(((data->opt_anime_add_id&2)<<8)*6) -((s->w128)); // 2079061 (4ƒIƒvƒVƒ‡ƒ“‘Î‰)
+		src->x256 = obj_player->x256+sin1024((src->PL_OPTION_DATA_angleCCW1024))*(hankei)/*src->PL_OPTION_DATA_length*/+ (18*256)-(((src->PL_OPTION_DATA_opt_anime_add_id&2)<<8)*6) -((h->w128)); // 2079061 (4ƒIƒvƒVƒ‡ƒ“‘Î‰)
 		int aaa;
-		aaa = cos512((data->angleCCW512))*(hankei)/*data->length*/+((player->h128-s->h128))-t256(5.0);
+		aaa = cos1024((src->PL_OPTION_DATA_angleCCW1024))*(hankei)/*src->PL_OPTION_DATA_length*/+((obj_player->h128-h->h128))-t256(5.0);
 		aaa = (REIMU_A==select_player)?(-aaa):(aaa);
-		s->y256 = player->y256+aaa;
+		src->y256 = obj_player->y256+aaa;
 		#else/*Gu(’†SÀ•W)*/
-	//	s->x256 = player->x256+sin512((data->angleCCW512))*(hankei)/*data->length*/+ (18*256)-(((data->opt_anime_add_id&2)<<8)*6) ; // 2079061 (4ƒIƒvƒVƒ‡ƒ“‘Î‰)
-		s->x256 = player->x256+sin512((data->angleCCW512))*(20/*hankei*/)/*data->length*/+ (18*256)-(((data->opt_anime_add_id&2)<<8)*6) ; // 2079061 (4ƒIƒvƒVƒ‡ƒ“‘Î‰)
+	//	src->x256 = obj_player->x256+sin1024((src->PL_OPTION_DATA_angleCCW1024))*(hankei)/*src->PL_OPTION_DATA_length*/+ (18*256)-(((src->PL_OPTION_DATA_opt_anime_add_id&2)<<8)*6);			// 2079061 (4ƒIƒvƒVƒ‡ƒ“‘Î‰)
+		src->x256 = obj_player->x256+sin1024((src->PL_OPTION_DATA_angleCCW1024))*(20/*hankei*/)/*src->PL_OPTION_DATA_length*/+ (18*256)-(((src->PL_OPTION_DATA_opt_anime_add_id&2)<<8)*6);	// 2079061 (4ƒIƒvƒVƒ‡ƒ“‘Î‰)
 		int aaa;
-	//	aaa = cos512((data->angleCCW512))*(hankei)/*data->length*/ -t256(5.0);
+	//	aaa = cos1024((src->PL_OPTION_DATA_angleCCW1024))*(hankei)/*src->PL_OPTION_DATA_length*/ -t256(5.0);
 	//	aaa = (REIMU_A==select_player)?(-aaa):(aaa);
-	//	s->y256 = player->y256+aaa;
-		aaa = cos512((data->angleCCW512))*(hankei)/*data->length*/;
+	//	h->y256 = obj_player->y256+aaa;
+		aaa = cos1024((src->PL_OPTION_DATA_angleCCW1024))*(hankei)/*src->PL_OPTION_DATA_length*/;
 		aaa = (REIMU_A==select_player)?(-aaa):(aaa);
-		s->y256 = player->y256+aaa +t256(10.0);
+		src->y256 = obj_player->y256+aaa +t256(10.0);
 		#endif
 	}
 }
@@ -1346,92 +1289,77 @@ static void re_ma_yu_control_option(SPRITE *s, PL_OPTION_DATA *data ) /* —ì–²A–
 //#define BASE_OPT_SHOT_ANIME	(PLAYERS8*3)
 //	 12,  12,	6,	 6,    3,  yuuyko(12),	 CIRNO(3),	 CIRNO(3),	/* ƒIƒvƒVƒ‡ƒ“ƒVƒ‡ƒbƒg‚ÌƒAƒjƒ[ƒVƒ‡ƒ“‘¬“x */
 
-static void animate_option_re_ma_yu(SPRITE *src)
+#define animate_option_oz_ti animate_option_all
+#define animate_option_re_ma_yu animate_option_all
+//static void animate_option_oz_ti(SPRITE *src)
+//static void animate_option_re_ma_yu(SPRITE *src)
+static void animate_option_all(SPRITE *src)
 {
 #if 1
-	if (YUYUKO==select_player)
+	if (0==player_fix_status[BASE_OPT_ANIM_TYPE+select_player])
 	{
-		/*REMILIA_OPTION_DATA*/PL_OPTION_DATA *data=(/*REMILIA_OPTION_DATA*/PL_OPTION_DATA *)src->data;
-		data->anime_wait--;
-		if (data->anime_wait<1)
+		/* •`‰æ—pƒOƒ‰‰ñ“] */
+		/* •`‰æ—pŠp“x(‰º‚ª0“x‚Å¶‰ñ‚è(”½Œv‰ñ‚è)) */
+		src->m_angleCCW1024 += (2+2);/*...‚Æ‚è‚ ‚¦‚¸*/
+		mask1024(src->m_angleCCW1024);
+	}
+	else
+//	if (/*YUYUKO==select_player*/)
+//	if ((CIRNO_A==select_player)||(CIRNO_Q==select_player))
+	{
+		src->PL_OPTION_DATA_anime_wait--;
+		if (src->PL_OPTION_DATA_anime_wait<1)
 		{
-			data->anime_wait=/*(anime_speed)*/(12);/*(12)*/ /*2*/ /*‰A—z‚¾‚Ü‚Í‚ä‚Á‚­‚è‰ñ‚é‚æ*/
-		#if 1
-		//	src->type=((src->type+(data->opt_anime_add_id)+(data->opt_anime_add_id)-1/*data->pos*/)&(8-1)/*%8*/);
-		//	src->type=((src->type+(data->opt_anime_add_id))&(0xfff7)/*%8*/);
+//			src->PL_OPTION_DATA_anime_wait=/*(anime_speed)*/(12);/*(12)*/ /*2*/ /*‰A—z‚¾‚Ü‚Í‚ä‚Á‚­‚è‰ñ‚é‚æ*/	//yuyuko
+//			src->PL_OPTION_DATA_anime_wait=/*(anime_speed)*/(3);/*12*/ /*2*/ /*‰A—z‚¾‚Ü‚Í‚ä‚Á‚­‚è‰ñ‚é‚æ*/		//cirno
+			src->PL_OPTION_DATA_anime_wait=/*(anime_speed)*/(player_fix_status[BASE_OPT_ANIM_SPEED+select_player]);/*12*/ /*2*/ /*‰A—z‚¾‚Ü‚Í‚ä‚Á‚­‚è‰ñ‚é‚æ*/
+		#if 0
+		//	src->type=((src->type+(src->PL_OPTION_DATA_opt_anime_add_id)+(src->PL_OPTION_DATA_opt_anime_add_id)-1/*src->PL_OPTION_DATA_pos*/)&(8-1)/*%8*/);
+		//	src->type=((src->type+(src->PL_OPTION_DATA_opt_anime_add_id))&(0xfff7)/*%8*/);
 			src->type=((src->type+(1))&(0xfff7)/*%8*/);
 		//	if (src->type<0)		{	src->type=7;}
-		#else
+		#endif
+		#if 0
+		//	src->an im_frame=((src->an im_frame+(src->PL_OPTION_DATA_opt_anime_add_id)+(src->PL_OPTION_DATA_opt_anime_add_id)-1/*src->PL_OPTION_DATA_pos*/)&(8-1)/*%8*/);
+			src->an im_frame=((src->an im_frame+(src->PL_OPTION_DATA_opt_anime_add_id))&(8-1)/*%8*/);
+		//	if (src->an im_frame<0) 	{	src->an im_frame=7;}
+		#endif
+			#if 0
+			src->an im_frame++;
+			src->an im_frame &= (8-1);//if (src->an im_frame==8)	{src->an im_frame=0;}
+			#endif
+
+		#if 1
+		//	src->type = ((src->type) & (0xfff8))|((src->type+1) & (8-1));//if (src->an im_frame==8) 	{src->an im_frame=0;}
 			src->type++;
 			src->type &= (0xfff7);//if (src->type==8)	{src->type=0;}
 		#endif
 		}
 	}
-	else
-	{
-		/* •`‰æ—pƒOƒ‰‰ñ“] */
-		/* •`‰æ—pŠp“x(‰º‚ª0“x‚Å¶‰ñ‚è(”½Œv‰ñ‚è)) */
-		src->m_angleCCW512 += (2);/*...‚Æ‚è‚ ‚¦‚¸*/
-		mask512(src->m_angleCCW512);
-	}
 #endif
-}
-
-static void animate_option_oz_ti(SPRITE *src)
-{
-	if ((CIRNO_A==select_player)||(CIRNO_Q==select_player))
-	{
-		/*REMILIA_OPTION_DATA*/PL_OPTION_DATA *data=(/*REMILIA_OPTION_DATA*/PL_OPTION_DATA *)src->data;
-		data->anime_wait--;
-		if (data->anime_wait<1)
-		{
-			data->anime_wait=/*(anime_speed)*/(3);/*12*/ /*2*/ /*‰A—z‚¾‚Ü‚Í‚ä‚Á‚­‚è‰ñ‚é‚æ*/
-		#if 0
-		//	src->an im_frame=((src->an im_frame+(data->opt_anime_add_id)+(data->opt_anime_add_id)-1/*data->pos*/)&(8-1)/*%8*/);
-			src->an im_frame=((src->an im_frame+(data->opt_anime_add_id))&(8-1)/*%8*/);
-		//	if (src->an im_frame<0) 	{	src->an im_frame=7;}
-		#else
-			#if 0
-			src->an im_frame++;
-			src->an im_frame &= (8-1);//if (src->an im_frame==8)	{src->an im_frame=0;}
-			#else
-			src->type = ((src->type) & (0xfff8))|((src->type+1) & (8-1));//if (src->an im_frame==8) {src->an im_frame=0;}
-			#endif
-		#endif
-		}
-	}
-	else
-	{
-		/* •`‰æ—pƒOƒ‰‰ñ“] */
-		/* •`‰æ—pŠp“x(‰º‚ª0“x‚Å¶‰ñ‚è(”½Œv‰ñ‚è)) */
-		src->m_angleCCW512 += (2);/*...‚Æ‚è‚ ‚¦‚¸*/
-		mask512(src->m_angleCCW512);
-	}
 }
 
 
 /*---------------------------------------------------------
-
+	—ì–² 	–‚—¹	‰¼—HXq
 ---------------------------------------------------------*/
 
-static void re_ma_yu_move_option(SPRITE *src)	/* —ì–² 	–‚—¹	‰¼—HXq */
+static void re_ma_yu_move_option(SPRITE *src)
 {
 	/* ƒIƒvƒVƒ‡ƒ“‚ª”ñ•\¦‚Ìê‡A‰½‚à‚µ‚È‚¢B */
-	if (0==(src->flags & ( SP_FLAG_VISIBLE)))	{	return; 	}
+	if (0==(src->flags & ( SP_FLAG_OPTION_VISIBLE)))	{	return; 	}
 //
 	// ƒAƒjƒ[ƒVƒ‡ƒ“
 	animate_option_re_ma_yu(src);
 //
-	/*REMILIA_OPTION_DATA*/PL_OPTION_DATA *data = (/*REMILIA_OPTION_DATA*/PL_OPTION_DATA *)src->data;
-
 	if (pd_state_flag & STATE_FLAG_15_KEY_SHOT)
 	{
 		{
 			{
-				data->opt_shot_interval--;
-				if (data->opt_shot_interval<0)
+				src->PL_OPTION_DATA_opt_shot_interval--;
+				if (src->PL_OPTION_DATA_opt_shot_interval<0)
 				{
-					data->opt_shot_interval=player_fix_status[BASE_OPT_SHOT_INTERVAL0+(weapon_level_offset)];/* (—ì–²	–‚—¹	‰¼—HXq)ƒIƒvƒVƒ‡ƒ“‚ÌƒVƒ‡ƒbƒgŠÔŠu */
+					src->PL_OPTION_DATA_opt_shot_interval=player_fix_status[BASE_OPT_SHOT_INTERVAL0+(weapon_level_offset)];/* (—ì–² –‚—¹	‰¼—HXq)ƒIƒvƒVƒ‡ƒ“‚ÌƒVƒ‡ƒbƒgŠÔŠu */
 					#if 0//1975613
 					static /*const*/ void (*ggg[PLAYERS8])(SPRITE *sss) =
 					{
@@ -1462,7 +1390,7 @@ static void re_ma_yu_move_option(SPRITE *src)	/* —ì–² 	–‚—¹	‰¼—HXq */
 			}
 		}
 	}
-	re_ma_yu_control_option(src, data );
+	re_ma_yu_control_option(src);
 }
 
 /*---------------------------------------------------------
@@ -1470,15 +1398,6 @@ static void re_ma_yu_move_option(SPRITE *src)	/* —ì–² 	–‚—¹	‰¼—HXq */
 ---------------------------------------------------------*/
 
 /* [***090128 [***090220	’Ç‰Á:ƒŒƒ~ƒŠƒA—pƒIƒvƒVƒ‡ƒ“.c3,c4 */
-
-enum	/* _player_option_type_ */
-{
-	OPTION_C1 = 0,
-	OPTION_C2,
-	OPTION_C3,
-	OPTION_C4,
-};
-static SPRITE *option[4];
 
 /*---------------------------------------------------------
 	ƒvƒŒƒCƒ„[AƒIƒvƒVƒ‡ƒ“‚ÌˆÚ“®(ƒŒƒ~ƒŠƒA • ƒ`ƒ‹ƒm)
@@ -1505,36 +1424,26 @@ enum	/* _remilia_formation_ */
 	FORMATION_03: Œ¸‘¬—p(D‚«‚ÈˆÊ’u‚É’u‚¯‚é‚æ) (ƒŒƒ~ƒŠƒA‚Éd‚È‚é‚æ‚¤‚ÉBslow‚ğ‰Ÿ‚·‚Æ’iŠK“I‚Éoption’â~)
 */
 
-
-
-
-
-//#define REMILIA_angle512		angleCCW512
-//#define REMILIA_OPTION_DATA	PL_OPTION_DATA
-
 static void oz_ci_move_option(SPRITE *src) /* ƒŒƒ~ƒŠƒA • ƒ`ƒ‹ƒm	[***090220 ’Ç‰Á */
 {
 	/* ƒIƒvƒVƒ‡ƒ“‚ª”ñ•\¦‚Ìê‡A‰½‚à‚µ‚È‚¢B */
-	if (0==(src->flags & ( SP_FLAG_VISIBLE)))	{	return; }
+	if (0==(src->flags & ( SP_FLAG_OPTION_VISIBLE)))	{	return; }
 //
-	// !--------------------
-	/*REMILIA_OPTION_DATA*/PL_OPTION_DATA *data=(/*REMILIA_OPTION_DATA*/PL_OPTION_DATA *)src->data;
-
-//
-	static int state_zz1=0;
 	/* ƒAƒjƒ[ƒVƒ‡ƒ“ */
 	animate_option_oz_ti(src);
+//
+	static int state_zz1=0;
 	/* UŒ‚x‰‡ */
 	if (pd_state_flag & STATE_FLAG_15_KEY_SHOT)
 	{
 		{
 			{
-				data->opt_shot_interval--;
-				if (data->opt_shot_interval<0)
+				src->PL_OPTION_DATA_opt_shot_interval--;
+				if (src->PL_OPTION_DATA_opt_shot_interval<0)
 				{
-				//	data->opt_shot_interval=(5+3);/* (ƒŒƒ~ƒŠƒA • ƒ`ƒ‹ƒm)ƒIƒvƒVƒ‡ƒ“‚ÌƒVƒ‡ƒbƒgŠÔŠu */
-					data->opt_shot_interval=player_fix_status[BASE_OPT_SHOT_INTERVAL0+(weapon_level_offset)];/* (—ì–²	–‚—¹	‰¼—HXq)ƒIƒvƒVƒ‡ƒ“‚ÌƒVƒ‡ƒbƒgŠÔŠu */
-					switch (data->opt_anime_add_id)
+				//	src->PL_OPTION_DATA_opt_shot_interval=(5+3);/* (ƒŒƒ~ƒŠƒA • ƒ`ƒ‹ƒm)ƒIƒvƒVƒ‡ƒ“‚ÌƒVƒ‡ƒbƒgŠÔŠu */
+					src->PL_OPTION_DATA_opt_shot_interval=player_fix_status[BASE_OPT_SHOT_INTERVAL0+(weapon_level_offset)];/* (—ì–² –‚—¹	‰¼—HXq)ƒIƒvƒVƒ‡ƒ“‚ÌƒVƒ‡ƒbƒgŠÔŠu */
+					switch (src->PL_OPTION_DATA_opt_anime_add_id)
 					{
 					case OPTION_C1:
 					case OPTION_C2:
@@ -1550,18 +1459,18 @@ static void oz_ci_move_option(SPRITE *src) /* ƒŒƒ~ƒŠƒA • ƒ`ƒ‹ƒm	[***090220 ’Ç‰Á
 						if (pd_weapon_power > (96)) 	/* ƒVƒXƒeƒ€‚ª•Ï‚í‚Á‚½‚Ì‚ÅC³‚µ‚Ä‚İ‚é(96==128-32) */
 						{
 							/*shot_regist_needle*/shot_regist_ci_gggg(src); /*t256( 0), t256( 0),*/
-				//			data->opt_shot_interval=(7+3);
+				//			src->PL_OPTION_DATA_opt_shot_interval=(7+3);
 						}
 						else
 						{
 							/*shot_regist_needle*/shot_regist_ma_gggg(src); /*t256( 0), t256( 0),*/
-				//			data->opt_shot_interval=(5+3);
+				//			src->PL_OPTION_DATA_opt_shot_interval=(5+3);
 						}
 						break;
 					case OPTION_C3:
 					case OPTION_C4:
 						/*shot_regist_needle*/shot_regist_ma_gggg(src); /*t256( 0), t256( 0),*/
-				//		data->opt_shot_interval=(5+3);
+				//		src->PL_OPTION_DATA_opt_shot_interval=(5+3);
 						break;
 					}
 				}
@@ -1586,26 +1495,26 @@ static void oz_ci_move_option(SPRITE *src) /* ƒŒƒ~ƒŠƒA • ƒ`ƒ‹ƒm	[***090220 ’Ç‰Á
 	int player_offs_x256;
 	int player_offs_y256;
 	#if 0/*SDL(¶‹÷À•W)*/
-	player_offs_x256 = player->x256+((player->w128-src->w128));
-	player_offs_y256 = player->y256+((player->h128-src->h128));
+	player_offs_x256 = obj_player->x256+((obj_player->w128-src->w128));
+	player_offs_y256 = obj_player->y256+((obj_player->h128-src->h128));
 	#else/*Gu(’†SÀ•W)*/
-	player_offs_x256 = player->x256;
-	player_offs_y256 = player->y256;
+	player_offs_x256 = obj_player->x256;
+	player_offs_y256 = obj_player->y256;
 	#endif
 //	if (1==slow_flag)	/* psp‚Í0ƒŒƒWƒXƒ^‚ª‚ ‚é‚Ì‚Å0‚Æ”äŠr‚µ‚½‚Ù‚¤‚ª‘¬‚¢ */
 	if (0!=slow_flag)	/* ­‚È‚­‚Æ‚à’á‘¬ˆÚ“®‚ÅƒIƒvƒVƒ‡ƒ“‚ª~‚ß‚ç‚ê‚é‚Ì‚ÍƒŒƒ~ƒŠƒA‚Ì‚İ(ƒ`ƒ‹ƒm‚É‚Í‡‚í‚È‚¢) */
 	{
 		/* ƒŒƒ~ƒŠƒA—p */
-		data->slow_count += (1<<2);
-		if ((/*data->*/state_zz1==FORMATION_03) && /* FORMATION_03: Œ¸‘¬—p(D‚«‚ÈˆÊ’u‚É’u‚¯‚é‚æ) */
-			(data->slow_count < ((data->opt_anime_add_id+1)<<(6+2))/* *30 64*/))
+		src->PL_OPTION_DATA_slow_count += (1<<2);
+		if (( state_zz1==FORMATION_03) && /* FORMATION_03: Œ¸‘¬—p(D‚«‚ÈˆÊ’u‚É’u‚¯‚é‚æ) */
+			(src->PL_OPTION_DATA_slow_count < ((src->PL_OPTION_DATA_opt_anime_add_id+1)<<(6+2))/* *30 64*/))
 		{
 			src->x256 = player_offs_x256;
 			src->y256 = player_offs_y256;
 		}
-		else if (/*data->*/state_zz1==FORMATION_02) /* FORMATION_02: ‰æ–ÊŒã•û‚©‚çx‰‡‚·‚é‚æ */
+		else if ( state_zz1==FORMATION_02) /* FORMATION_02: ‰æ–ÊŒã•û‚©‚çx‰‡‚·‚é‚æ */
 		{
-			switch (data->opt_anime_add_id)
+			switch (src->PL_OPTION_DATA_opt_anime_add_id)
 			{
 			#if 0/*SDL(¶‹÷À•W)*/
 			case OPTION_C1: if (src->x256 < t256(170)-((src->w128+src->w128)))	{src->x256 += t256(2.0);} break;	/*fps_factor*/
@@ -1624,15 +1533,15 @@ static void oz_ci_move_option(SPRITE *src) /* ƒŒƒ~ƒŠƒA • ƒ`ƒ‹ƒm	[***090220 ’Ç‰Á
 	else
 	{
 		/* ƒŒƒ~ƒŠƒA—p */
-		if (data->slow_count)
+		if (src->PL_OPTION_DATA_slow_count)
 		{
-			data->slow_count=0;
-			data->state2=0;
+			src->PL_OPTION_DATA_slow_count=0;
+			src->PL_OPTION_DATA_state2=0;
 		}
 	//
 		/* ƒtƒH[ƒ[ƒVƒ‡ƒ“•ÏX */
 		/* OPTION_C1 ‚Ìê‡‚Ì‚İƒL[“ü—Íó‚¯•t‚¯ */
-		if (OPTION_C1==data->opt_anime_add_id) //opt_anime_add_id==1‚É‚æ‚éflagŠÇ—
+		if (OPTION_C1==src->PL_OPTION_DATA_opt_anime_add_id) //opt_anime_add_id==1‚É‚æ‚éflagŠÇ—
 		{
 		//	if (my_pad & PSP_KEY_OPTION)
 		/* (ƒIƒvƒVƒ‡ƒ“ƒL[ƒL[‚ğ—£‚µ‚½uŠÔ‚È‚ç) */
@@ -1656,20 +1565,20 @@ static void oz_ci_move_option(SPRITE *src) /* ƒŒƒ~ƒŠƒA • ƒ`ƒ‹ƒm	[***090220 ’Ç‰Á
 		STATE_FLAG_16_NOT_ALLOW_KEY_CONTROL 			(0x8000)
 	 */
 	pd_my_score 	= pd_state_flag/*spell_card_number*/;
-	pd_graze_point	= /*data->*/state_zz1;
+	pd_graze_point	= state_zz1;
 	#endif
-					/*data->*/state_zz1++;
-					if (/*data->*/state_zz1==(FORMATION_03+1) )
-					{	/*data->*/state_zz1=FORMATION_00;}
+					state_zz1++;
+					if ( state_zz1==(FORMATION_03+1) )
+					{	 state_zz1=FORMATION_00;}
 				//
-					data->state2=0; 								/* OPTION_C1 ‚Ì state2 */
-					((/*REMILIA_OPTION_DATA*/PL_OPTION_DATA *)option[OPTION_C2]->data)->state2=0; /* OPTION_C2 ‚Ì state2 */
-					((/*REMILIA_OPTION_DATA*/PL_OPTION_DATA *)option[OPTION_C3]->data)->state2=0; /* OPTION_C3 ‚Ì state2 */
-					((/*REMILIA_OPTION_DATA*/PL_OPTION_DATA *)option[OPTION_C4]->data)->state2=0; /* OPTION_C4 ‚Ì state2 */
+					src->PL_OPTION_DATA_state2=0;					/* OPTION_C1 ‚Ì state2 */
+					option[OPTION_C2]->PL_OPTION_DATA_state2=0; 	/* OPTION_C2 ‚Ì state2 */
+					option[OPTION_C3]->PL_OPTION_DATA_state2=0; 	/* OPTION_C3 ‚Ì state2 */
+					option[OPTION_C4]->PL_OPTION_DATA_state2=0; 	/* OPTION_C4 ‚Ì state2 */
 				}
 			}
 		}
-		switch (data->state2)
+		switch (src->PL_OPTION_DATA_state2)
 		{
 		case RS00:	/* ‰Šú‰» */
 			{
@@ -1699,66 +1608,62 @@ static void oz_ci_move_option(SPRITE *src) /* ƒŒƒ~ƒŠƒA • ƒ`ƒ‹ƒm	[***090220 ’Ç‰Á
 					{	t256(20),  t256( 20),	t256(25),  t256( 25) }, 				/* 6 FORMATION_00_LOCATE_Y_CIRNO_A: 	  ƒ`ƒ‹ƒm‚Ì’¼Œã‚Éll FORMATION_00_LOCATE_Y_CIRNO */ /* 3: ƒ`ƒ‹ƒm—p */
 					{	t256(20),  t256( 20),	t256(25),  t256( 25) }, 				/* 7 FORMATION_00_LOCATE_Y_CIRNO_Q: 	  ƒ`ƒ‹ƒm‚Ì’¼Œã‚Éll FORMATION_00_LOCATE_Y_CIRNO */ /* 3: ƒ`ƒ‹ƒm—p */
 				};
-				switch (/*data->*/state_zz1)
+				switch ( state_zz1)
 				{
 				case FORMATION_00:	/* FORMATION_00: ƒŒƒ~ƒŠƒA‚Ì’¼‘O‚Él‚Â / ƒ`ƒ‹ƒm‚Ì’¼Œã‚Éll */
-					data->offset_x256=((fff[FORMATION_00_LOCATE_X][(data->opt_anime_add_id)]));
-					data->offset_y256=((fff[select_player/*FORMATION_00_LOCATE_Y*/][(data->opt_anime_add_id)]));	/* ƒvƒŒƒCƒ„[”Ô†‚É‡‚í‚¹‚Ä‚¢‚é–‚É’ˆÓ */
+					src->PL_OPTION_DATA_offset_x256=((fff[FORMATION_00_LOCATE_X][(src->PL_OPTION_DATA_opt_anime_add_id)]));
+					src->PL_OPTION_DATA_offset_y256=((fff[select_player/*FORMATION_00_LOCATE_Y*/][(src->PL_OPTION_DATA_opt_anime_add_id)]));	/* ƒvƒŒƒCƒ„[”Ô†‚É‡‚í‚¹‚Ä‚¢‚é–‚É’ˆÓ */
 					/* ƒŒƒ~ƒŠƒA—p */
 				//	if (REMILIA==select_player)
 				//	{
-				//		data->offset_y256 -= t256(32);/* ‘O•û”z’u */
+				//		src->PL_OPTION_DATA_offset_y256 -= t256(32);/* ‘O•û”z’u */
 				//	}
 					break;
 				case FORMATION_01:	/* FORMATION_01: ƒŒƒ~ƒŠƒA‚Ìü‚è‚ğ‰ñ‚é‚æ */
-					data->offset_x256 = fff[FORMATION_01_RADIUS_R][(data->opt_anime_add_id)];/*40*/ /* ‰~‚Ì”¼Œa‚ÆŒ“—p */
-					data->offset_y256 = fff[FORMATION_01_ADD_R ][(data->opt_anime_add_id)]; 		/* ‰~‚Ì‰ñ“]•ûŒüAŠp“x‰ÁZ’l‚ÆŒ“—p */
-/// 				data->f_angle512=0/*l_angle512*/;
+					src->PL_OPTION_DATA_offset_x256 = fff[FORMATION_01_RADIUS_R][(src->PL_OPTION_DATA_opt_anime_add_id)];/*40*/ /* ‰~‚Ì”¼Œa‚ÆŒ“—p */
+					src->PL_OPTION_DATA_offset_y256 = fff[FORMATION_01_ADD_R ][(src->PL_OPTION_DATA_opt_anime_add_id)]; 		/* ‰~‚Ì‰ñ“]•ûŒüAŠp“x‰ÁZ’l‚ÆŒ“—p */
 					break;
 				case FORMATION_02:	/* FORMATION_02: ‰æ–ÊŒã•û‚©‚çx‰‡‚·‚é‚æ */
-					data->offset_x256=((fff[FORMATION_02_LOCATE_X][(data->opt_anime_add_id)])<<8);
-					data->offset_y256=((fff[FORMATION_02_LOCATE_Y][(data->opt_anime_add_id)])<<8);/*240*/
+					src->PL_OPTION_DATA_offset_x256=((fff[FORMATION_02_LOCATE_X][(src->PL_OPTION_DATA_opt_anime_add_id)])<<8);
+					src->PL_OPTION_DATA_offset_y256=((fff[FORMATION_02_LOCATE_Y][(src->PL_OPTION_DATA_opt_anime_add_id)])<<8);/*240*/
 					break;
 				case FORMATION_03:	/* FORMATION_03: Œ¸‘¬—p(D‚«‚ÈˆÊ’u‚É’u‚¯‚é‚æ) */
 					break;
 				}
 			}
-			data->state2=1; 	/* Ÿ‚Ö */
+			src->PL_OPTION_DATA_state2=1;	/* Ÿ‚Ö */
 			break;
 		case RS01:	/* –Ú•W’n“_‚ÖˆÚ“®’† */
-			#define oz_offset_r 	(data->offset_x256) 	/* FORMATION_01: ‰~‚Ì”¼Œa‚ÆŒ“—p */
-			#define oz_offset_add_r (data->offset_y256) 	/* FORMATION_01: ‰~‚Ì‰ñ“]•ûŒüAŠp“x‰ÁZ’l‚ÆŒ“—p */
+			#define oz_offset_r 	(src->PL_OPTION_DATA_offset_x256)	/* FORMATION_01: ‰~‚Ì”¼Œa‚ÆŒ“—p */
+			#define oz_offset_add_r (src->PL_OPTION_DATA_offset_y256)	/* FORMATION_01: ‰~‚Ì‰ñ“]•ûŒüAŠp“x‰ÁZ’l‚ÆŒ“—p */
 			{
 			int delta_y256=0;				/* delta_y : yÀ•W‚É‚¨‚¯‚é–Ú•W’n“_‚ÆŒ»İ’n‚Ì· */
 			int delta_x256=0;				/* delta_x : xÀ•W‚É‚¨‚¯‚é–Ú•W’n“_‚ÆŒ»İ’n‚Ì· */
-				switch (/*data->*/state_zz1)
+				switch ( state_zz1)
 				{
 				case FORMATION_00:	/* FORMATION_00: ƒŒƒ~ƒŠƒA‚Ì’¼‘O‚Él‚Â / ƒ`ƒ‹ƒm‚Ì’¼Œã‚Éll */
-					delta_y256 = player_offs_y256-src->y256 + data->offset_y256;
-					delta_x256 = player_offs_x256-src->x256 + data->offset_x256;
+					delta_y256 = player_offs_y256-src->y256 + src->PL_OPTION_DATA_offset_y256;
+					delta_x256 = player_offs_x256-src->x256 + src->PL_OPTION_DATA_offset_x256;
 					break;
-				case FORMATION_01:	/* FORMATION_01: ƒŒƒ~ƒŠƒA‚Ìü‚è‚ğ‰ñ‚é‚æ */						//static int l_angle512;
+				case FORMATION_01:	/* FORMATION_01: ƒŒƒ~ƒŠƒA‚Ìü‚è‚ğ‰ñ‚é‚æ */
 #if 0
 					/* ƒŒƒ~ƒŠƒA—p */
 					if (REMILIA==select_player)
 					{
-						/*l_angle512*/data->/*f_*/angle512 += oz_offset_add_r/*data->offset_y*/ /*5==ra d2deg512(0.05)*/;	/*fps_factor*/
-						mask512(/*l_angle512*/data->/*f_*/angle512);	//if (l_angle>M_PI) 	{	l_angle-=2*M_PI;	}
+						/*REMILIA_angle512*/src->PL_OPTION_DATA_angleCCW1024 += oz_offset_add_r;	/*5==ra d2deg512(0.05)*/	/*fps_factor*/
+						mask1024(/*REMILIA_angle512*/src->PL_OPTION_DATA_angleCCW1024);
 					}
 #endif
-#if 1
-/* CCW‚Ìê‡ */
-					delta_x256 = player_offs_x256-src->x256 + (sin512((data->/*REMILIA_angle512*/angleCCW512/*+l_angle512*/))*oz_offset_r);
-					delta_y256 = player_offs_y256-src->y256 + (cos512((data->/*REMILIA_angle512*/angleCCW512/*+l_angle512*/))*oz_offset_r);
-#endif
+					delta_x256 = player_offs_x256-src->x256 + (sin1024((src->PL_OPTION_DATA_angleCCW1024/*REMILIA_angle512*/))*oz_offset_r);		/* CCW‚Ìê‡ */
+					delta_y256 = player_offs_y256-src->y256 + (cos1024((src->PL_OPTION_DATA_angleCCW1024/*REMILIA_angle512*/))*oz_offset_r);
 					break;
 				case FORMATION_02:	/* FORMATION_02: ‰æ–ÊŒã•û‚©‚çx‰‡‚·‚é‚æ */
 					#if 0/*SDL(¶‹÷À•W)*/
-					delta_y256 = (-((src->h128))-src->y256+data->offset_y256);/*240*/
-					delta_x256 = (-((src->w128))-src->x256+data->offset_x256);
+					delta_y256 = (-((src->h128))-src->y256+src->PL_OPTION_DATA_offset_y256);/*240*/
+					delta_x256 = (-((src->w128))-src->x256+src->PL_OPTION_DATA_offset_x256);
 					#else/*Gu(’†SÀ•W)*/
-					delta_y256 = (-src->y256+data->offset_y256);/*240*/
-					delta_x256 = (-src->x256+data->offset_x256);
+					delta_y256 = (-src->y256+src->PL_OPTION_DATA_offset_y256);/*240*/
+					delta_x256 = (-src->x256+src->PL_OPTION_DATA_offset_x256);
 					#endif
 					break;
 				case FORMATION_03:	/* FORMATION_03: Œ¸‘¬—p(D‚«‚ÈˆÊ’u‚É’u‚¯‚é‚æ) */
@@ -1767,13 +1672,10 @@ static void oz_ci_move_option(SPRITE *src) /* ƒŒƒ~ƒŠƒA • ƒ`ƒ‹ƒm	[***090220 ’Ç‰Á
 					break;
 				}
 				{	/* –Ú•W’n“_‚ÉˆÚ“®‚·‚é */
-					int ccc_angle512;
-					/*data->*/ccc_angle512=atan_512(((delta_y256)>>8), ((delta_x256)>>8));
-#if 1
-/* CCW‚Ìê‡ */
-					src->x256 += ((sin512((/*data->*/ccc_angle512))*/*10*/((REMILIA==select_player)?t256(8.0):t256(1.0)))>>8);/*fps_factor*/
-					src->y256 += ((cos512((/*data->*/ccc_angle512))*/*10*/((REMILIA==select_player)?t256(8.0):t256(1.0)))>>8);/*fps_factor*/
-#endif
+					int ccc_angle1024;
+					ccc_angle1024 = atan_1024(((delta_y256)>>8), ((delta_x256)>>8));
+					src->x256 += ((sin1024(( ccc_angle1024))*/*10*/((REMILIA==select_player)?t256(8.0):t256(1.0)))>>8);/*fps_factor*/	/* CCW‚Ìê‡ */
+					src->y256 += ((cos1024(( ccc_angle1024))*/*10*/((REMILIA==select_player)?t256(8.0):t256(1.0)))>>8);/*fps_factor*/
 				}
 #if 1
 				/* ƒŒƒ~ƒŠƒA—p */
@@ -1783,7 +1685,7 @@ static void oz_ci_move_option(SPRITE *src) /* ƒŒƒ~ƒŠƒA • ƒ`ƒ‹ƒm	[***090220 ’Ç‰Á
 					if (( t256(-5) < delta_y256) &&
 						(delta_y256 < t256(5)) )
 					{
-						data->state2=2; 	/* Ÿ‚Ö */
+						src->PL_OPTION_DATA_state2=2;	/* Ÿ‚Ö */
 					}
 				}
 #endif
@@ -1791,24 +1693,21 @@ static void oz_ci_move_option(SPRITE *src) /* ƒŒƒ~ƒŠƒA • ƒ`ƒ‹ƒm	[***090220 ’Ç‰Á
 			break;
 #if 1
 		case RS02:	/* ˆÊ’u‚ÌˆÛ & ”z’uŠ®—¹flag */
-			switch (/*data->*/state_zz1)
+			switch ( state_zz1)
 			{
 			case FORMATION_00:	/* FORMATION_00: ƒŒƒ~ƒŠƒA‚Ì’¼‘O‚Él‚Â / ƒ`ƒ‹ƒm‚Ì’¼Œã‚Éll */
-				src->x256 = player_offs_x256 + data->offset_x256;
-				src->y256 = player_offs_y256 + data->offset_y256;
+				src->x256 = player_offs_x256 + src->PL_OPTION_DATA_offset_x256;
+				src->y256 = player_offs_y256 + src->PL_OPTION_DATA_offset_y256;
 				break;
 			case FORMATION_01:	/* FORMATION_01: ƒŒƒ~ƒŠƒA‚Ìü‚è‚ğ‰ñ‚é‚æ */
-				/*l_angle512*//*f_*/ /*REMILIA_angle512*/data->angleCCW512 += oz_offset_add_r/*data->offset_y*/ /*5==ra d2deg512(0.05)*/;	/*fps_factor*/
-				mask512(/*l_angle512*/ /*f_*/ /*REMILIA_angle512*/ data->angleCCW512);	//if (l_angle>M_PI) 	{	l_angle-=2*M_PI;	}
-#if 1
-/* CCW‚Ìê‡ */
-				src->x256 = player_offs_x256 + sin512((data->angleCCW512/*REMILIA_angle512*/ /*+data->f_angle512*/ /*l_angle512*/))*oz_offset_r;
-				src->y256 = player_offs_y256 + cos512((data->angleCCW512/*REMILIA_angle512*/ /*+data->f_angle512*/ /*l_angle512*/))*oz_offset_r;
-#endif
+				/*REMILIA_angle512*/src->PL_OPTION_DATA_angleCCW1024 += oz_offset_add_r;	/*5==ra d2deg512(0.05)*/	/*fps_factor*/
+				mask1024(/*REMILIA_angle512*/src->PL_OPTION_DATA_angleCCW1024);
+				src->x256 = player_offs_x256 + sin1024((src->PL_OPTION_DATA_angleCCW1024/*REMILIA_angle512*/))*oz_offset_r; /* CCW‚Ìê‡ */
+				src->y256 = player_offs_y256 + cos1024((src->PL_OPTION_DATA_angleCCW1024/*REMILIA_angle512*/))*oz_offset_r;
 				break;
 			case FORMATION_02:	/* FORMATION_02: ‰æ–ÊŒã•û‚©‚çx‰‡‚·‚é‚æ */
-				src->x256 = data->offset_x256;
-				src->y256 = data->offset_y256;
+				src->x256 = src->PL_OPTION_DATA_offset_x256;
+				src->y256 = src->PL_OPTION_DATA_offset_y256;
 				break;
 			case FORMATION_03:	/* FORMATION_03: Œ¸‘¬—p(D‚«‚ÈˆÊ’u‚É’u‚¯‚é‚æ) */
 				src->x256 = player_offs_x256;
@@ -1822,14 +1721,7 @@ static void oz_ci_move_option(SPRITE *src) /* ƒŒƒ~ƒŠƒA • ƒ`ƒ‹ƒm	[***090220 ’Ç‰Á
 }
 //	if (src->flags&SP_FLAG_VISIBLE) /* •\¦‚³‚ê‚Ä‚¢‚ê‚Îã‹L‚Ìˆ—‚ğ‚·‚é‚æB */	{	}
 //
-	#if (0000)
-	if (0==(pd_state_flag&STATE_FLAG_08_OPTION_HIDE))	/* ƒIƒvƒVƒ‡ƒ“‚ªÁ‚¦‚Ä‚ê‚Î */
-	{
-	//	src->type = SP_DELETE;/*‚¨‚µ‚Ü‚¢*/
-	//	src->type = SP_DELETE;/*‚¨‚µ‚Ü‚¢*/
-		src->flags			|= (SP_FLAG_VISIBLE);/*Œ©‚¹‚È‚¢*/
-	}
-	#endif/*0000*/
+
 
 /*---new add-----*/
 
@@ -1847,41 +1739,40 @@ static void player_create_bomber_kekkai_parrent(SPRITE *src)		/* —ì–² */		//ƒV[
 	int ii;//	int i;	/* ”¼ÛŒÀ‚¸‚Â */
 	for (ii=0; ii<(8); ii++)//	for (i=0;i<360/*i<=359*/;i+=45)
 	{
-		SPRITE *s;
-			s				= sprite_add_gu(TAMA_ATARI_04);
-		PL_KEKKAI_DATA *data;
-			data			= mmalloc(sizeof(PL_KEKKAI_DATA));
-			s->data 		= data;
-
-		if (0 == (ii&1))// if (i%90 == 0)
+		SPRITE *h;
+		h				= sprite_add_gu_error();
+	//	if (NULL!=h)/* “o˜^‚Å‚«‚½ê‡‚Ì‚İ */
+		if (NULL==h)return;/* “o˜^‚Å‚«‚½ê‡‚Ì‚İ */
 		{
-			data->add_r512	= (23); 							/* Œv‰ñ‚è */
-			data->radius	= (5)/*(48)*/;	//d->radius=38; 	/*”¼Œa‰Šú’l*/	/* ­‚µ‚¸‚ÂL‚ª‚é‚æ‚¤‚É‚µ‚½ */
+			h->m_Hit256R			= TAMA_ATARI_04;
+			if (0 == (ii&1))// if (i%90 == 0)
+			{
+				h->PL_KEKKAI_DATA_add_r1024 	= ( 46);							/* Œv‰ñ‚è */
+				h->PL_KEKKAI_DATA_radius		= (5);		/*(48)*/	//d->radius=38; 	/*”¼Œa‰Šú’l*/	/* ­‚µ‚¸‚ÂL‚ª‚é‚æ‚¤‚É‚µ‚½ */
+			}
+			else		/* 1‚Â‚¾‚Æ•sˆÀ‚È‚Ì‚Å2‚Âì‚Á‚½B */
+			{
+				h->PL_KEKKAI_DATA_add_r1024 	= (-34);							/* ”½Œv‰ñ‚è */
+				h->PL_KEKKAI_DATA_radius		= (0);		/*(45)*/	//d->radius=35; 	/*”¼Œa‰Šú’l*/	/* ­‚µ‚¸‚ÂL‚ª‚é‚æ‚¤‚É‚µ‚½ */
+			}
+	//		if (YUYUKO==select_player)
+	//		{	/* —HXq */
+	//			h->PL_KEKKAI_DATA_radius		+= 45/*45*/;		/*”¼Œa‰Šú’l*/
+	//			h->type 		= (SP_GROUP_JIKI_GET_ITEM|SP_GROUP_SHOT_ZAKO)/*ƒ{ƒX‚É–³Œø*/;
+	//		}
+	//		else // if (REIMU==select_player)
+			{	/* —ì–² */
+				h->type 				= (ii&(4-1))+(/*SP_GROUP_JIKI_GET_ITEM*/JIKI_BOMBER_04|SP_GROUP_SHOT_SPECIAL)/*ƒ{ƒX‚É—LŒø*/;/*(SP_GROUP_JIKI_GET_ITEM|SP_GROUP_SHOT_ZAKO) ƒ{ƒX‚É–³Œø*/
+			}
+			h->callback_mover			= player_move_kekkai;			/* Œv‰ñ‚è•”½Œv‰ñ‚è */
+		//	h->callback_mover			= player_move_kekkai/*2*/;		/* ”½Œv‰ñ‚è */
+//			h->flags					|= (SP_FLAG_VISIBLE|SP_FLAG_TIME_OVER);
+			h->PL_KEKKAI_DATA_angleCCW1024		= (ii*cv1024r((45)));	/*i*/
+			/* on‚ß‚ÍƒvƒŒƒCƒ„[À•W */
+			h->x256 					= obj_player->x256;
+			h->y256 					= obj_player->y256;
+			h->base_weapon_strength 	= (8*1);	/*5*/	/* [***090214 ’Ç‰Á */
 		}
-		else		/* 1‚Â‚¾‚Æ•sˆÀ‚È‚Ì‚Å2‚Âì‚Á‚½B */
-		{
-			data->add_r512	= (-17);							/* ”½Œv‰ñ‚è */
-			data->radius	= (0)/*(45)*/;	//d->radius=35; 	/*”¼Œa‰Šú’l*/	/* ­‚µ‚¸‚ÂL‚ª‚é‚æ‚¤‚É‚µ‚½ */
-		}
-//		if (YUYUKO==select_player)
-//		{	/* —HXq */
-//			data->radius		+= 45/*45*/;		/*”¼Œa‰Šú’l*/
-//			s->type 		= (SP_GROUP_JIKI_GET_ITEM|SP_GROUP_SHOT_ZAKO)/*ƒ{ƒX‚É–³Œø*/;
-//		}
-//		else // if (REIMU==select_player)
-		{	/* —ì–² */
-			s->type 		= (ii&(4-1))+(/*SP_GROUP_JIKI_GET_ITEM*/JIKI_BOMBER_04|SP_GROUP_SHOT_SPECIAL)/*ƒ{ƒX‚É—LŒø*/;/*(SP_GROUP_JIKI_GET_ITEM|SP_GROUP_SHOT_ZAKO) ƒ{ƒX‚É–³Œø*/
-		}
-		s->callback_mover	= player_move_kekkai;			/* Œv‰ñ‚è•”½Œv‰ñ‚è */
-	//	s->callback_mover	= player_move_kekkai/*2*/;		/* ”½Œv‰ñ‚è */
-		s->flags			|= (SP_FLAG_VISIBLE|SP_FLAG_TIME_OVER);
-	//	data->angle512		= (ii*deg_360_to_512((45)))/*i*/;
-//		data->angleCCW512		= (ii*deg_360_to_512((45)))/*i*/;
-		data->angleCCW512		= (ii*deg_360_to_512CCW((45)))/*i*/;
-		/* on‚ß‚ÍƒvƒŒƒCƒ„[À•W */
-		s->x256 			= player->x256;//+co_s512(((ii*deg_360_to_512(45))/*i*/))*d->radius+((player->w-s->w)>>1);
-		s->y256 			= player->y256;//+si_n512(((ii*deg_360_to_512(45))/*i*/))*d->radius+((player->h-s->h)>>1); /* Œv‰ñ‚è */
-		/*data->*/s->base_weapon_strength		= (8*1)/*5*/;/* [***090214 ’Ç‰Á */
 	}
 }
 
@@ -1894,80 +1785,187 @@ static void player_create_bomber_levarie_parrent(SPRITE *src)
 {
 	pd_state_flag	|= STATE_FLAG_02_BOMB_AUTO_GET_ITEM;	/*ƒ{ƒ€‚É‚æ‚é©“®ûW‰Â”\*/
 	int jjj;		jjj=0;
-	int angCCW512; angCCW512 = (0);/* 0 ƒ`ƒ‹ƒm—p(b’è“I)*/
+	int angCCW1024; angCCW1024 = (0);/* 0 ƒ`ƒ‹ƒm—p(b’è“I)*/
 	int iii;
 	for (iii=0; iii<(18*3)/*16*/; iii++)
 	{
-		SPRITE *s;
-		s					= sprite_add_gu(BASE_BOMBER_ATARI_0a+select_player);
-//
-		jjj++;if (4==jjj)
+		SPRITE *h;
+		h					= sprite_add_gu_error();
+	//
+	//	if (NULL!=h)/* “o˜^‚Å‚«‚½ê‡‚Ì‚İ */
+		if (NULL==h)return;/* “o˜^‚Å‚«‚½ê‡‚Ì‚İ */ 	/*‚¤[‚ñHHH*/
 		{
-			jjj=0;
-		}
-//		s->type 		= (/*SP_GROUP_JIKI_GET_ITEM*/JIKI_BOMBER_04|SP_GROUP_SHOT_ZAKO)/*ƒ{ƒX‚É–³Œø*/;/*(SP_GROUP_JIKI_GET_ITEM|SP_GROUP_SHOT_SPECIAL)*/ /*ƒ{ƒX‚É—LŒø*/
-		s->type 		= (/*SP_GROUP_JIKI_GET_ITEM*/JIKI_BOMBER_04|SP_GROUP_SHOT_SPECIAL)/*ƒ{ƒX‚É—LŒø*/ /*(SP_GROUP_JIKI_GET_ITEM|SP_GROUP_SHOT_ZAKO) ƒ{ƒX‚É–³Œø*/;
-		s->type += jjj;
-//
-
-		s->flags			|= (SP_FLAG_VISIBLE|SP_FLAG_TIME_OVER);
-		s->callback_mover	= player_move_levarie;
-		#if 0
-		{
-			static const u16 player_fix_status_ggg[8] =
-			{/* REIMU(A/B) MARISA(A/B) REMILIA YUYUKO CIRNO(A/Q) */
-				256, 256, 256, 256, 32, 256, 32, 32,	/* •`‰æ—pƒ{ƒ€‚Ì‰ŠúƒTƒCƒY / size of bomb at first. */
+			const static u8 base_bomber_atari[8] =
+			{
+				  (2),	//	BASE_BOMBER_ATARI_0a,/*4*/		/* —ì–²A */ 	/*	5 */	/*0,*/	 /* re a */  //  BASE_BOMBER_ATARI_0a,/*4*/
+				  (2),	//	BASE_BOMBER_ATARI_0b,/*4*/		/* —ì–²B */ 	/*	5 */	/*0,*/	 /* re b */  //  BASE_BOMBER_ATARI_0a,/*4*/
+				 (16),	//	BASE_BOMBER_ATARI_0c,/*16*/ 	/* –‚—¹A */	/*	6 */	/*0,*/	 /* ma a */  //  BASE_BOMBER_ATARI_0b,/*16*/
+				 (16),	//	BASE_BOMBER_ATARI_0d,/*16*/ 	/* –‚—¹B */	/*	6 */	/*0,*/	 /* ma b */  //  BASE_BOMBER_ATARI_0b,/*16*/
+				 (16),	//	BASE_BOMBER_ATARI_0e,/*16*/ 	/* –‚—¹C */	/*	7 */	/*0,*/	 /* oz / */  //  BASE_BOMBER_ATARI_0c,/*16*/
+				  (4),	//	BASE_BOMBER_ATARI_0f,/*16*/ 	/* ƒŒƒ~ƒŠƒA */	/*	9 */	/*0,*/	 /* yu / */  //  BASE_BOMBER_ATARI_0e,/*4*/
+				 (32),	//	BASE_BOMBER_ATARI_0g,/*32*/ 	/* ƒ`ƒ‹ƒm */	/*	8 */	/*0,*/	 /* ci a */  //  BASE_BOMBER_ATARI_0d,/*32*/
+				 (32),	//	BASE_BOMBER_ATARI_0h,/*4*/		/* —HXq */	/*	6 */	/*0,*/	 /* ci q */  //  BASE_BOMBER_ATARI_0b,/*16*/
 			};
-			s->m_zoom_x256		= player_fix_status_ggg[select_player]/*8*/;/* 64 == (1/4) */
-		}
-		#else
-		if (YUYUKO!=select_player)
-		{
-			s->m_zoom_x256		= 1+(ra_nd()&(64-1));	/* •`‰æ—pƒ{ƒ€‚Ì‰ŠúƒTƒCƒY / size of bomb at first. */
-		}
-		#endif
+			h->m_Hit256R			= ((base_bomber_atari[select_player])<<8);
+			//
+			jjj++;
+			jjj &= 0x03;	//	if (4==jjj) 	{	jjj=0;	}
+	//		h->type 		= (/*SP_GROUP_JIKI_GET_ITEM*/JIKI_BOMBER_04|SP_GROUP_SHOT_ZAKO)/*ƒ{ƒX‚É–³Œø*/;/*(SP_GROUP_JIKI_GET_ITEM|SP_GROUP_SHOT_SPECIAL)*/ /*ƒ{ƒX‚É—LŒø*/
+			h->type 		= (/*SP_GROUP_JIKI_GET_ITEM*/JIKI_BOMBER_04|SP_GROUP_SHOT_SPECIAL)/*ƒ{ƒX‚É—LŒø*/ /*(SP_GROUP_JIKI_GET_ITEM|SP_GROUP_SHOT_ZAKO) ƒ{ƒX‚É–³Œø*/;
+			h->type += jjj;
+	//
 
-		/*data->*/s->base_weapon_strength		= player_fix_status[BASE_STD_BOMB_STRENGTH+select_player] /*k_strength*/ /*5*/ /*15-k-k*/;/* [***090214 ’Ç‰Á */
-		/* MARISA‚Í‹­‚¢‚ªŠgU‚µ‚Ä‚µ‚Ü‚¤‚Ì‚Å‚ ‚½‚ç‚È‚¢B  */
-		/* ƒ`ƒ‹ƒm‚Í“–‚Ä‚â‚·‚¢‚Ì‚Å‚»‚Ì•ªã‚­‚µ‚È‚¢‚Æ‹­‚·‚¬‚¿‚á‚¤B  */
-//		data->angle512		= angCCW512;
-		int d_speed256;
-		#if 0
-		if (0==(iii&(2-1)/*%2*/))
-		{			/*d->*/d_speed256	= t256(1.0);	c->alpha	= 150;	}
-		else	{	/*d->*/d_speed256	= t256(1.2);	c->alpha	= 180;	}
-		#else
-		/*d->*/d_speed256	= t256(1.0)+(iii<<3);
-		#endif
-#if 1
-/* CCW‚Ìê‡ */
-		s->vx256		= ((sin512((/*angle512*/angCCW512))*/*p->speed*/(d_speed256))>>8);/*fps_factor*/
-		s->vy256		= ((cos512((/*angle512*/angCCW512))*/*p->speed*/(d_speed256))>>8);/*fps_factor*/
-#endif
-//
-		#if 0/*SDL(¶‹÷À•W)*/
-		s->x256 			= src->x256+((src->w128-s->w128));
-		s->y256 			= src->y256+((src->h128-s->h128));
-		#else/*Gu(’†SÀ•W)*/
-		s->x256 			= src->x256;
-		s->y256 			= src->y256;
-		#endif
-		/* ƒMƒƒƒXƒgƒhƒŠ[ƒ€(‚à‚Ç‚«)BƒXƒ^[ƒ_ƒXƒgƒŒƒ”ƒ@ƒŠƒG‚Æˆá‚¢‹ßÚ«”\‚Í–³‚¢B */
-		if (YUYUKO==select_player)	/* —HXq */
-		{
-			s->x256 		+= ((s->vx256)<<5);
-			s->y256 		+= ((s->vy256)<<5);
-//			/* —HXq ‹­‚·‚¬‚é‚©‚ç‚È`(Œø‰Êã‚¢‚ªŒø‰Ê‚ ‚é‚Ì‚ào—ˆ‚é‚æ‚¤‚ÉƒVƒXƒeƒ€Œ©’¼‚µ‚½‚Ù‚¤‚ª‚¢‚¢‚©‚à) */
+//			h->flags			|= (SP_FLAG_VISIBLE|SP_FLAG_TIME_OVER);
+			h->callback_mover	= player_move_levarie;
+			#if 0
+			{
+				static const u16 player_fix_status_ggg[8] =
+				{/* REIMU(A/B) MARISA(A/B) REMILIA YUYUKO CIRNO(A/Q) */
+					256, 256, 256, 256, 32, 256, 32, 32,	/* •`‰æ—pƒ{ƒ€‚Ì‰ŠúƒTƒCƒY / size of bomb at first. */
+				};
+				h->m_zoom_x256		= player_fix_status_ggg[select_player]/*8*/;/* 64 == (1/4) */
+			}
+			#else
+			if (YUYUKO!=select_player)
+			{
+				h->m_zoom_x256		= 1+(ra_nd()&(64-1));	/* •`‰æ—pƒ{ƒ€‚Ì‰ŠúƒTƒCƒY / size of bomb at first. */
+			}
+			#endif
+
+			h->base_weapon_strength 	= player_fix_status[BASE_STD_BOMB_STRENGTH+select_player] /*k_strength*/ /*5*/ /*15-k-k*/;/* [***090214 ’Ç‰Á */
+			/* MARISA‚Í‹­‚¢‚ªŠgU‚µ‚Ä‚µ‚Ü‚¤‚Ì‚Å‚ ‚½‚ç‚È‚¢B  */
+			/* ƒ`ƒ‹ƒm‚Í“–‚Ä‚â‚·‚¢‚Ì‚Å‚»‚Ì•ªã‚­‚µ‚È‚¢‚Æ‹­‚·‚¬‚¿‚á‚¤B  */
+			int d_speed256;
+			#if 0
+			if (0==(iii&(2-1)/*%2*/))
+			{			/*d->*/d_speed256	= t256(1.0);	c->alpha	= 150;	}
+			else	{	/*d->*/d_speed256	= t256(1.2);	c->alpha	= 180;	}
+			#else
+			/*d->*/d_speed256	= t256(1.0)+(iii<<3);
+			#endif
+			h->vx256			= ((sin1024((angCCW1024))*(d_speed256))>>8);/*fps_factor*/	/* CCW‚Ìê‡ */
+			h->vy256			= ((cos1024((angCCW1024))*(d_speed256))>>8);/*fps_factor*/
+	//
+			#if 0/*SDL(¶‹÷À•W)*/
+			h->x256 			= src->x256+((src->w128-h->w128));
+			h->y256 			= src->y256+((src->h128-h->h128));
+			#else/*Gu(’†SÀ•W)*/
+			h->x256 			= src->x256;
+			h->y256 			= src->y256;
+			#endif
+			/* ƒMƒƒƒXƒgƒhƒŠ[ƒ€(‚à‚Ç‚«)BƒXƒ^[ƒ_ƒXƒgƒŒƒ”ƒ@ƒŠƒG‚Æˆá‚¢‹ßÚ«”\‚Í–³‚¢B */
+			if (YUYUKO==select_player)	/* —HXq */
+			{
+				h->x256 		+= ((h->vx256)<<5);
+				h->y256 		+= ((h->vy256)<<5);
+	//			/* —HXq ‹­‚·‚¬‚é‚©‚ç‚È`(Œø‰Êã‚¢‚ªŒø‰Ê‚ ‚é‚Ì‚ào—ˆ‚é‚æ‚¤‚ÉƒVƒXƒeƒ€Œ©’¼‚µ‚½‚Ù‚¤‚ª‚¢‚¢‚©‚à) */
+			}
+			#if 1
+			/* •`‰æ—pŠp“x(‰º‚ª0“x‚Å¶‰ñ‚è(”½Œv‰ñ‚è)) */
+			h->m_angleCCW1024		= angCCW1024;
+			#endif
+		//	angCCW1024 += (int)((1024)/16); // 22.5“x/360, 2xƒÎ/16 /* 0.392699081698724154810 */
+			angCCW1024 += (int)((1024)/18); // 20.0“x/360, 2xƒÎ/18 /* 0.349065850398865915384 */
 		}
-		#if 1
-		/* •`‰æ—pŠp“x(‰º‚ª0“x‚Å¶‰ñ‚è(”½Œv‰ñ‚è)) */
-		s->m_angleCCW512		= angCCW512;
-		#endif
-	//	angCCW512 += (int)((512)/16); // 22.5“x/360, ƒÎ/8 /* 0.392699081698724154810 */
-		angCCW512 += (int)((512)/18); // 20.0“x/360, ƒÎ/9 /* 0.349065850398865915384 */
 	}
 }
 
+
+/*---------------------------------------------------------
+	–‚•„uƒXƒ^[ƒ_ƒXƒgƒŒƒ”ƒ@ƒŠƒGv
+	-------------------------------------------------------
+	[ƒvƒŒƒCƒ„[ƒV[ƒ‹ƒh]ƒ{ƒ€¶¬(–‚—¹ A)
+	-------------------------------------------------------
+	ƒXƒ^[ƒ_ƒXƒgƒŒƒ”ƒ@ƒŠƒG(3x8==Œv24ŒÂ¯‚ªo‚é)
+	‚Í‚W•ûŒü‚É¯‚ªo‚éB¯‚ÌF‚ÍAŒˆ‚Ü‚Á‚Ä‚¢‚éB
+
+		¶ã	ã		‰Eã
+		(Ô0)	(Â2)	(—Î1)
+
+		¶				‰E
+		(—Î1)			(Â2)
+
+		¶‰º	‰º		‰E‰º
+		(Â2)	(Ô0)	(—Î1)
+
+	Ô==0
+	—Î==1
+	Â==2
+
+	-------------------------------------------------------
+	ˆê•ûŒü‚Å‚ÍA‚R‚Â¯‚ªo‚éB‰æ‘œ‚Ì¶ãÀ•W‚ğ(x,y)‚Æ‚·‚é‚ÆA
+
+	‘å¯=”¼“§–¾AÀ•W(x,y)
+	’†¯=”¼“§–¾AÀ•W(x,y)
+	¬¯=•s“§–¾AÀ•W(x+64,y+64)	// 64 ‚Í ƒeƒLƒg[‚Èˆê’è’lB
+									// psp‚Ìê‡‚ÍA‰æ–Ê‚ª‹·‚¢‚Ì‚Å48‚ª‘Ã“–H
+	---------------------------------------------------------*/
+
+static void player_create_bomber_star_dust_levarie_parrent(SPRITE *src)
+{
+	pd_state_flag	|= STATE_FLAG_02_BOMB_AUTO_GET_ITEM;	/*ƒ{ƒ€‚É‚æ‚é©“®ûW‰Â”\*/
+//
+	int angCCW1024; angCCW1024 = (0);/* 0 ƒ`ƒ‹ƒm—p(b’è“I)*/
+	int iii;
+	for (iii=0; iii<(8)/*16*/; iii++)/*‚W•ûŒü*/
+	{
+		int kkk;
+		for (kkk=0; kkk<(3)/*16*/; kkk++)/*3ƒTƒCƒY*/
+		{
+			SPRITE *h;
+			h					= sprite_add_gu_error();
+		//	if (NULL!=h)/* “o˜^‚Å‚«‚½ê‡‚Ì‚İ */
+			if (NULL==h)return;/* “o˜^‚Å‚«‚½ê‡‚Ì‚İ */ 	/*‚¤[‚ñHHH*/
+			{
+			//	h->m_Hit256R			= ((16)<<8);//((base_bomber_atari[select_player])<<8);
+				h->m_Hit256R			= ((32)<<8);//((base_bomber_atari[select_player])<<8);
+				const static u32 color_mask32[8] =
+				{	//         RED   GREEN BLUE  ALPHA
+					MAKE32RGBA(0xff, 0x00, 0x00, 0x7f), 	//	  ‰º(Ô0)
+					MAKE32RGBA(0x00, 0xff, 0x00, 0x7f), 	//	‰E‰º(—Î1)
+					MAKE32RGBA(0x00, 0x00, 0xff, 0x7f), 	//	‰E	(Â2)
+					MAKE32RGBA(0x00, 0xff, 0x00, 0x7f), 	//	‰Eã(—Î1)
+					MAKE32RGBA(0x00, 0x00, 0xff, 0x7f), 	//	  ã(Â2)
+					MAKE32RGBA(0xff, 0x00, 0x00, 0x7f), 	//	¶ã(Ô0)
+					MAKE32RGBA(0x00, 0xff, 0x00, 0x7f), 	//	¶	(—Î1)
+					MAKE32RGBA(0x00, 0x00, 0xff, 0x7f), 	//	¶‰º(Â2)
+				};
+				h->color32					= (color_mask32[iii]);
+		//		h->type 					= (/*SP_GROUP_JIKI_GET_ITEM*/JIKI_BOMBER_04|SP_GROUP_SHOT_ZAKO)/*ƒ{ƒX‚É–³Œø*/;/*(SP_GROUP_JIKI_GET_ITEM|SP_GROUP_SHOT_SPECIAL)*/ /*ƒ{ƒX‚É—LŒø*/
+				h->type 					= (/*SP_GROUP_JIKI_GET_ITEM*/JIKI_BOMBER_04|SP_GROUP_SHOT_SPECIAL)/*ƒ{ƒX‚É—LŒø*/ /*(SP_GROUP_JIKI_GET_ITEM|SP_GROUP_SHOT_ZAKO) ƒ{ƒX‚É–³Œø*/;
+		//
+	//			h->flags					|= (SP_FLAG_VISIBLE|SP_FLAG_TIME_OVER);
+				h->callback_mover			= player_move_levarie;
+				h->m_zoom_x256				= (0x100<<(kkk));	/* •`‰æ—pƒ{ƒ€‚Ì‰ŠúƒTƒCƒY / size of bomb at first. */
+				h->base_weapon_strength 	= player_fix_status[BASE_STD_BOMB_STRENGTH+select_player] /*k_strength*/ /*5*/ /*15-k-k*/;/* [***090214 ’Ç‰Á */
+				{
+//					const int d_speed256	= t256(1.5);	/* ‘¬“xˆê’è */
+					const int d_speed256	= t256(1.5);	/* ‘¬“xˆê’è */
+					h->vx256			= ((sin1024((angCCW1024))*(d_speed256))>>8);/*fps_factor*/	/* CCW‚Ìê‡ */
+					h->vy256			= ((cos1024((angCCW1024))*(d_speed256))>>8);/*fps_factor*/
+				}//
+				#if 1/*Gu(’†SÀ•W)*/
+				{
+				//	const int aaa111	= ((0==kkk)?(t256(48)):(0));	/* ‘¬“xˆê’è */
+					h->x256 			= src->x256;//+(aaa111);
+					h->y256 			= src->y256;//+(aaa111);
+				}
+				if (0==kkk)
+				{
+					h->x256 			+= (t256(48));
+					h->y256 			+= (t256(48));
+					h->color32			|= (MAKE32RGBA(0, 0, 0, 0xff)); 	/*	h->alpha			= 0xff 255;*/
+				}
+				#endif
+				#if 1
+				/* •`‰æ—pŠp“x(‰º‚ª0“x‚Å¶‰ñ‚è(”½Œv‰ñ‚è)) */
+				h->m_angleCCW1024		= angCCW1024;
+				#endif
+			}
+		}
+		angCCW1024 += (int)((1024)/8);	// 45.0“x/360, 64
+	}
+}
 /*---------------------------------------------------------
 	ƒvƒŒƒCƒ„[—§‚¿ŠG¶¬
 	(—HXq)[—HXqƒ{ƒ€‚Ìî–{‘Ì]
@@ -1975,22 +1973,26 @@ static void player_create_bomber_levarie_parrent(SPRITE *src)
 
 static void player_create_bomber_tachie(SPRITE *src)
 {
-	SPRITE *s;
-	s					= sprite_add_gu(JIKI_ATARI_ITEM_80);
-	s->flags			|= (/*SP_FLAG_VISIBLE|*/SP_FLAG_TIME_OVER);
-	s->color32			= 0xffffffff;		/*	s->alpha			= 0xff;*/
-	s->callback_mover	= player_move_tachie;
-	s->type 			= (JIKI_BOMBER_00|SP_GROUP_SHOT_ZAKO);	/*SP_GROUP_JIKI_GET_ITEM*/ /*JI KI_SHOT_00*/	/* ƒ{ƒX‚Ì’¼ÚUŒ‚‚Í‹Ö~ */	/*(SP_GROUP_JIKI_GET_ITEM|SP_GROUP_SHOT_ZAKO) ƒ{ƒX‚É–³Œø*/
-	/* —§‚¿ŠG‰ŠúˆÊ’u */
-	s->x256 			= -t256(150);	// (200)	/*0*/  /*(src->x256)+((src->w128-s->w128))*/;
-	s->y256 			=  t256(150);	// (100)	/*GAME_HEIGHT+1*/ /*(src->y256)+((src->h128-s->h128))*/;
-//
-	/* •`‰æ—pŠp“x */
-//	s->m_angleCCW512		= (128);
-	s->m_angleCCW512		= (0);
-//
-/*???*/ 	/*data->*/s->base_weapon_strength		= (1/*8*1*/);		/* î–{‘Ì ‚Ì‹­‚³ */
-//
+	SPRITE *h;
+	h					= sprite_add_gu_error();
+	if (NULL!=h)/* “o˜^‚Å‚«‚½ê‡‚Ì‚İ */	/*(?)*/
+	{
+		h->m_Hit256R			= JIKI_ATARI_ITEM_80;
+//		h->flags				|= (/*SP_FLAG_VISIBLE|*/SP_FLAG_TIME_OVER);
+		h->color32				= MAKE32RGBA(0xff, 0xff, 0xff, 0xff);		/*	h->alpha			= 0xff;*/
+		h->callback_mover		= player_move_tachie;
+		h->type 				= (JIKI_BOMBER_00|SP_GROUP_SHOT_ZAKO);	/*SP_GROUP_JIKI_GET_ITEM*/ /*JI KI_SHOT_00*/	/* ƒ{ƒX‚Ì’¼ÚUŒ‚‚Í‹Ö~ */	/*(SP_GROUP_JIKI_GET_ITEM|SP_GROUP_SHOT_ZAKO) ƒ{ƒX‚É–³Œø*/
+		/* —§‚¿ŠG‰ŠúˆÊ’u */
+		h->x256 				= -t256(150);	// (200)	/*0*/  /*(src->x256)+((src->w128-h->w128))*/;
+		h->y256 				=  t256(150);	// (100)	/*GAME_HEIGHT+1*/ /*(src->y256)+((src->h128-h->h128))*/;
+	//
+		/* •`‰æ—pŠp“x */
+	//	h->m_angleCCW1024		= (256);
+		h->m_angleCCW1024		= (0);
+	//
+	/*???*/ 	h->base_weapon_strength 	= (1/*8*1*/);		/* î–{‘Ì ‚Ì‹­‚³ */
+	//
+	}
 }
 
 /*---------------------------------------------------------
@@ -2000,21 +2002,25 @@ static void player_create_bomber_tachie(SPRITE *src)
 static void player_create_bomber_cross_red_parrent(SPRITE *src) /* ƒŒƒ~ƒŠƒA */ /* [***090220 ’Ç‰Á */
 {
 	pd_state_flag		|= STATE_FLAG_02_BOMB_AUTO_GET_ITEM;	/*ƒ{ƒ€‚É‚æ‚é©“®ûW‰Â”\*/
-	SPRITE *s;
-	s					= sprite_add_gu(JIKI_ATARI_ITEM_16);
-	s->flags			|= (/*SP_FLAG_VISIBLE|*/SP_FLAG_TIME_OVER);
-	s->flags			&= (~(SP_FLAG_VISIBLE));	/*”ñ•\¦*/
-	s->color32			= 0xdcffffff;		/*	s->alpha			= 0xdc;*/
-	s->callback_mover	= player_move_add_cross_red;
-//	s->type 			= (SP_GROUP_JIKI_GET_ITEM|SP_GROUP_SHOT_ZAKO);/* ƒ{ƒX‚Ì’¼ÚUŒ‚‚Í‹Ö~ */		/*(SP_GROUP_JIKI_GET_ITEM|SP_GROUP_SHOT_ZAKO) ƒ{ƒX‚É–³Œø*/
-	s->type 			= (/*•\¦‚µ‚È‚¢*/SP_GROUP_ETC_DUMMY_REMILIA/*SP_GROUP_JIKI_GET_ITEM|SP_GROUP_SHOT_ZAKO*/);/* ƒ{ƒX‚Ì’¼ÚUŒ‚‚Í‹Ö~ */		/*(SP_GROUP_JIKI_GET_ITEM|SP_GROUP_SHOT_ZAKO) ƒ{ƒX‚É–³Œø*/
-	#if 0/*SDL(¶‹÷À•W)*/
-	s->x256 			= (src->x256)+((src->w128-s->w128));
-	s->y256 			= (src->y256)+((src->h128-s->h128));
-	#else/*Gu(’†SÀ•W)*/
-	s->x256 			= (src->x256);
-	s->y256 			= (src->y256);
-	#endif
+	SPRITE *h;
+	h						= sprite_add_gu_error();
+	if (NULL!=h)/* “o˜^‚Å‚«‚½ê‡‚Ì‚İ */	/* ‚¤[‚ñ... */
+	{
+		h->m_Hit256R		= JIKI_ATARI_ITEM_16;
+//		h->flags			|= (/*SP_FLAG_VISIBLE|*/SP_FLAG_TIME_OVER);
+//		h->flags			&= (~(SP_FLAG_VISIBLE));	/*”ñ•\¦*/
+//		h->color32			= MAKE32RGBA(0xff, 0xff, 0xff, 0xdc);		/*	h->alpha			= 0xdc;*/	/*”ñ•\¦*/
+		h->callback_mover	= player_move_add_cross_red;
+	//	h->type 			= (SP_GROUP_JIKI_GET_ITEM|SP_GROUP_SHOT_ZAKO);/* ƒ{ƒX‚Ì’¼ÚUŒ‚‚Í‹Ö~ */		/*(SP_GROUP_JIKI_GET_ITEM|SP_GROUP_SHOT_ZAKO) ƒ{ƒX‚É–³Œø*/
+		h->type 			= (/*•\¦‚µ‚È‚¢*/SP_GROUP_ETC_DUMMY_REMILIA/*SP_GROUP_JIKI_GET_ITEM|SP_GROUP_SHOT_ZAKO*/);/* ƒ{ƒX‚Ì’¼ÚUŒ‚‚Í‹Ö~ */		/*(SP_GROUP_JIKI_GET_ITEM|SP_GROUP_SHOT_ZAKO) ƒ{ƒX‚É–³Œø*/
+		#if 0/*SDL(¶‹÷À•W)*/
+		h->x256 			= (src->x256)+((src->w128-h->w128));
+		h->y256 			= (src->y256)+((src->h128-h->h128));
+		#else/*Gu(’†SÀ•W)*/
+		h->x256 			= t256(GAME_NOT_VISIBLE480);//(src->x256);	/*”ñ•\¦*/
+//		h->y256 			= (src->y256);	/*”ñ•\¦*/
+		#endif
+	}
 }
 
 
@@ -2025,80 +2031,69 @@ static void player_create_bomber_cross_red_parrent(SPRITE *src) /* ƒŒƒ~ƒŠƒA */ /
 
 static void player_add_hlaser(SPRITE *src)
 {
-	int j;
-	j=(ra_nd()&(2-1));//for (j=0;j<2;j++)
+	int j;	j=(ra_nd()&(2-1));//for (j=0;j<2;j++)
 	{
-		SPRITE *s_old;	s_old = NULL;
-		SPRITE *s;		s = NULL;
+		SPRITE *h_old;	h_old = NULL;
+		SPRITE *h;		h = NULL;
 		//#define hlaser_NUM_OF_ENEMIES (24)
 		#define hlaser_NUM_OF_ENEMIES (12)		/* [***090128		”¼•ª‚É‚µ‚Ä‚İ‚é */
 		int i;
 		for (i=0; i<hlaser_NUM_OF_ENEMIES; i++)
 		#undef hlaser_NUM_OF_ENEMIES
 		{
-			s_old = s;
-			s				= sprite_add_gu(JIKI_ATARI_ITEM_16);
-//			s->type 		= (SP_GROUP_JIKI_GET_ITEM|SP_GROUP_SHOT_SPECIAL)/*ƒ{ƒX‚É—LŒø*/ /*SP_PL_HLASER*/;
-			s->type 		= (/*SP_GROUP_JIKI_GET_ITEM*/JIKI_BOMBER_01|SP_GROUP_SHOT_SPECIAL)/*ƒ{ƒX‚É—LŒø*/ /*SP_PL_HLASER*/;
+			h_old = h;
+			h					= sprite_add_gu_error();
+	//	if (NULL!=h)/* “o˜^‚Å‚«‚½ê‡‚Ì‚İ */	/* ‹­§“o˜^ */
+		if (NULL==h)return;/* “o˜^‚Å‚«‚½ê‡‚Ì‚İ */
+/* ‚¤[‚ñ... */
+			h->m_Hit256R		= JIKI_ATARI_ITEM_16;
+//			h->type 			= (SP_GROUP_JIKI_GET_ITEM|SP_GROUP_SHOT_SPECIAL)/*ƒ{ƒX‚É—LŒø*/ /*SP_PL_HLASER*/;
+			h->type 			= (/*SP_GROUP_JIKI_GET_ITEM*/JIKI_BOMBER_01|SP_GROUP_SHOT_SPECIAL)/*ƒ{ƒX‚É—LŒø*/ /*SP_PL_HLASER*/;
 			#if 0/*SDL(¶‹÷À•W)*/
-			s->x256 		= (src->x256) + ((src->w128)) - t256(5);
-			s->y256 		= (src->y256) + ((src->h128)) + t256(15);
+			h->x256 			= (src->x256) + ((src->w128)) - t256(5);
+			h->y256 			= (src->y256) + ((src->h128)) + t256(15);
 			#else/*Gu(’†SÀ•W)*/
-		//	s->x256 		= src->x256 - t256(5);
-		//	s->y256 		= src->y256 + t256(15);
-			s->x256 		= src->x256;
-			s->y256 		= src->y256;
+		//	h->x256 			= src->x256 - t256(5);
+		//	h->y256 			= src->y256 + t256(15);
+			h->x256 			= src->x256;
+			h->y256 			= src->y256;
 			#endif
-		//	s->flags		|= (SP_FLAG_VISIBLE/*|SP_FLAG_TIME_OVER*/);
-			s->flags			&= (~(SP_FLAG_VISIBLE));	/*”ñ•\¦*/
+		//	h->flags			|= (SP_FLAG_VISIBLE/*|SP_FLAG_TIME_OVER*/);
+//			h->flags			&= (~(SP_FLAG_VISIBLE));	/*”ñ•\¦*/
 			if (0==i)
 			{
-				s->callback_mover	= player_move_parrent_hlaser;
-				PL_HOMING_DATA *data;
-				data				= mmalloc(sizeof(PL_HOMING_DATA));
-				s->data 			= data;
-//				s->m_angleCCW512/*data->angleCCW512*/	= deg_360_to_512CCW(0);
-				s->m_angleCCW512/*data->angleCCW512*/	= (j&1)?(deg_360_to_512CCW(  0+10)):(deg_360_to_512CCW(360-10));
-				data->speed256		= t256(12.0);
-				/*data->*/s->base_weapon_strength		= player_fix_status[BASE_LOW_BOMB_STRENGTH+select_player]/*6*/;/*’á‘¬ƒ{ƒ€‚Ì‹­‚³*/
-				data->time_out/*range*/ 				= (100);	/*(200)*/
-				data->state 		= 0;
-				data->target_obj	= player;	/* (data->target_obj==player)==Œ©‚Â‚©‚ç‚È‚¢ */
+				h->callback_mover	= player_move_parrent_hlaser;
+//				h->m_angleCCW1024						= cv1024r(0);
+				h->m_angleCCW1024						= (j&1)?(cv1024r(  0+10)):(cv1024r(360-10));
+				h->PL_HOMING_DATA_speed256				= t256(12.0);
+				h->base_weapon_strength 				= player_fix_status[BASE_LOW_BOMB_STRENGTH+select_player]/*6*/;/*’á‘¬ƒ{ƒ€‚Ì‹­‚³*/
+				h->PL_HOMING_DATA_time_out/*range*/ 	= (100);	/*(200)*/
+				h->PL_HOMING_DATA_state 				= 0;
+				h->target_obj							= obj_player;	/* (h->target_obj==obj_player)==Œ©‚Â‚©‚ç‚È‚¢ */
 			}
 			else
 			{
-				s->callback_mover	= player_move_kodomo_hlaser/*NULL*/;
-				PL_HOMING_KODOMO_DATA *data;
-				data				= mmalloc(sizeof(PL_HOMING_KODOMO_DATA));
-				s->data 			= data;
-			//	s->data 			= NULL;
-				data->target_obj	= s_old;
-				data->time_out		= 8;
+				h->callback_mover	= player_move_kodomo_hlaser/*NULL*/;
+				h->target_obj		= h_old;
+				h->PL_HOMING_KODOMO_DATA_time_out		= 8;
 			}
 		}
 	}
 }
 
-
 static void player_move_add_bomber_hlaser(SPRITE *src)
 {
-
 //	if (0==(((int)pd_bomber_time)&0x3f))
 	if (0==(((int)pd_bomber_time)&0x0f))
 	{
 		/* ƒVƒiƒŠƒI‚É‚Í—U“±’e‚ğ’Ç‰Á‚µ‚È‚¢ */
 		if (0==(pd_state_flag & STATE_FLAG_06_IS_SCRIPT))
 		{
-			player_add_hlaser(player);
+			player_add_hlaser(obj_player);
 		}
 	}
-	#if 0
-	src->an im_frame	= (((int)pd_bomber_time>>4)&0x03);/*"bomber_slow.png"*/
-	src->x256			= (player->x256)+((player->w128-src->w128));
-	src->y256			= (player->y256)+((player->h128-src->h128));
-	#endif
 //
-	if (0 >= pd_bomber_time) {	src->type = SP_DELETE;}/* ŠÔ§ŒÀ‚Å‚¨‚µ‚Ü‚¢ */
+	if (0 >= pd_bomber_time)	{	src->type = SP_DELETE;}/* ŠÔ§ŒÀ‚Å‚¨‚µ‚Ü‚¢ */
 }
 
 /* ’á‘¬ƒ{ƒ€‚Ìe */
@@ -2107,34 +2102,28 @@ static void player_create_bomber_homing_parrent(SPRITE *src)	/* player_move_add_
 	pd_state_flag		|= STATE_FLAG_02_BOMB_AUTO_GET_ITEM;	/* ƒ{ƒ€‚É‚æ‚é©“®ûW‰Â”\ */
 //
 	SPRITE *h;
-	h					= sprite_add_gu(JIKI_ATARI_ITEM_16);
-//	h->flags			|= (SP_FLAG_VISIBLE/*|SP_FLAG_TIME_OVER*/);
-	h->flags			&= (~(SP_FLAG_VISIBLE));	/*”ñ•\¦*/
-	h->data 			= 0/*d*/;
-//	h->anim_frame		= 0;
-	h->color32			= 0xdcffffff;	/*	c->alpha			= 0x80 0xdc;*/
-	h->callback_mover	= player_move_add_bomber_hlaser;
-//	h->type 			= (SP_GROUP_JIKI_GET_ITEM|SP_GROUP_SHOT_SPECIAL)/*ƒ{ƒX‚É—LŒø*/; /* ’á‘¬ƒ{ƒ€‚àƒ{ƒX‚É—LŒø‚Æ‚·‚é */	/*(SP_GROUP_JIKI_GET_ITEM|SP_GROUP_SHOT_ZAKO) ƒ{ƒX‚É–³Œø*/
-	h->type 			= (/*•\¦‚µ‚È‚¢*/SP_GROUP_ETC_DUMMY_SLOW_BOMB/*SP_GROUP_JIKI_GET_ITEM|SP_GROUP_SHOT_SPECIAL*/)/*ƒ{ƒX‚É—LŒø*/;	/* ’á‘¬ƒ{ƒ€‚àƒ{ƒX‚É—LŒø‚Æ‚·‚é */	/*(SP_GROUP_JIKI_GET_ITEM|SP_GROUP_SHOT_ZAKO) ƒ{ƒX‚É–³Œø*/
-	#if 1/*Gu(’†SÀ•W)*/
-	h->x256 			= src->x256;
-	h->y256 			= src->y256;
-	#endif
+	h						= sprite_add_gu_error();
+	if (NULL!=h)/* “o˜^‚Å‚«‚½ê‡‚Ì‚İ */	/* ‚¤[‚ñ... */
+	{
+		h->m_Hit256R		= JIKI_ATARI_ITEM_16;
+	//	h->flags			|= (SP_FLAG_VISIBLE/*|SP_FLAG_TIME_OVER*/);
+//		h->flags			&= (~(SP_FLAG_VISIBLE));	/*”ñ•\¦*/
+//		h->color32			= MAKE32RGBA(0xff, 0xff, 0xff, 0xdc);	/*	c->alpha			= 0x80 0xdc;*/	/*”ñ•\¦*/
+		h->callback_mover	= player_move_add_bomber_hlaser;
+	//	h->type 			= (SP_GROUP_JIKI_GET_ITEM|SP_GROUP_SHOT_SPECIAL)/*ƒ{ƒX‚É—LŒø*/; /* ’á‘¬ƒ{ƒ€‚àƒ{ƒX‚É—LŒø‚Æ‚·‚é */	/*(SP_GROUP_JIKI_GET_ITEM|SP_GROUP_SHOT_ZAKO) ƒ{ƒX‚É–³Œø*/
+		h->type 			= (/*•\¦‚µ‚È‚¢*/SP_GROUP_ETC_DUMMY_SLOW_BOMB/*SP_GROUP_JIKI_GET_ITEM|SP_GROUP_SHOT_SPECIAL*/)/*ƒ{ƒX‚É—LŒø*/;	/* ’á‘¬ƒ{ƒ€‚àƒ{ƒX‚É—LŒø‚Æ‚·‚é */	/*(SP_GROUP_JIKI_GET_ITEM|SP_GROUP_SHOT_ZAKO) ƒ{ƒX‚É–³Œø*/
+		#if 1/*Gu(’†SÀ•W)*/
+		h->x256 			= t256(GAME_NOT_VISIBLE480);//src->x256;	/*”ñ•\¦*/
+//		h->y256 			= src->y256;	/*”ñ•\¦*/
+		#endif
 //
-	#if 1
-	/* ƒ{ƒ€’†••œŠˆ’†A—LŒø‚É‚·‚é‚ÆAd•¡‚·‚éB */
-	/* “Áê‹@”\ */
-	bullets_to_hosi();/* ’e‘S•”A¯ƒAƒCƒeƒ€‚É‚·‚é */
-	#endif
+		#if 1
+		/* ƒ{ƒ€’†••œŠˆ’†A—LŒø‚É‚·‚é‚ÆAd•¡‚·‚éB */
+		/* “Áê‹@”\ */
+		bullets_to_hosi();/* ’e‘S•”A¯ƒAƒCƒeƒ€‚É‚·‚é */
+		#endif
+	}
 }
-
-/*---------------------------------------------------------
-	—ì–²ê—p ’á‘¬ƒ{ƒ€
----------------------------------------------------------*/
-
-/*---------------------------------------------------------
-	—ì–²ê—p ’á‘¬ƒ{ƒ€
----------------------------------------------------------*/
 
 /*---------------------------------------------------------
 	—ì–²ê—p ’á‘¬ƒ{ƒ€
@@ -2152,35 +2141,40 @@ static void reimu_add_hlaser(SPRITE *src)
 		for (i=0; i<(16)/*hlaser_NUM_OF_ENEMIES*/; i++)
 		{
 			SPRITE *h;
-			h				= sprite_add_gu(JIKI_ATARI_ITEM_16);
-//			h->type 		= (SP_GROUP_JIKI_GET_ITEM|SP_GROUP_SHOT_SPECIAL)/*ƒ{ƒX‚É—LŒø*/ /*SP_PL_HLASER*/;
-			h->type 		= (/*SP_GROUP_JIKI_GET_ITEM*/JIKI_BOMBER_01|SP_GROUP_SHOT_SPECIAL)/*ƒ{ƒX‚É—LŒø*/ /*SP_PL_HLASER*/;
-			#if 0/*SDL(¶‹÷À•W)*/
-			h->x256 		= (src->x256) + ((src->w128)) - t256(5);
-			h->y256 		= (src->y256) + ((src->h128)) + t256(15);
-			#else/*Gu(’†SÀ•W)*/
-		//	h->x256 		= src->x256 - t256(5);
-		//	h->y256 		= src->y256 + t256(15);
-			h->x256 		= src->x256;
-			h->y256 		= src->y256;
-			#endif
-		//	h->flags		|= (SP_FLAG_VISIBLE/*|SP_FLAG_TIME_OVER*/);
-			h->flags			&= (~(SP_FLAG_VISIBLE));	/*”ñ•\¦*/
-//			if (0==i)
+			h						= sprite_add_gu_error();
+			if (NULL!=h)/* “o˜^‚Å‚«‚½ê‡‚Ì‚İ */
 			{
-				h->callback_mover	= move_reimu_musou_fuuin;
-				PL_HOMING_DATA *data;
-				data				= mmalloc(sizeof(PL_HOMING_DATA));
-				h->data 			= data;
-//				h->m_angleCCW512/*data->angleCCW512*/	= deg_360_to_512CCW(0);
-//				h->m_angleCCW512/*data->angleCCW512*/	= (0/*j&1*/)?(deg_360_to_512CCW(  0+10)):(deg_360_to_512CCW(360-10));
-				h->m_angleCCW512/*data->angleCCW512*/	= (i<<5);
-				data->speed256		= t256(1.2);
-				/*data->*/h->base_weapon_strength		= player_fix_status[BASE_LOW_BOMB_STRENGTH+select_player]/*6*/;/*’á‘¬ƒ{ƒ€‚Ì‹­‚³*/
-			//	data->time_out/*range*/ 				= (100);	/*(200)*/
-				data->reimu_musou_id					= (i);	/*(200)*/
-				data->state 		= 0;
-				data->target_obj	= player;	//b->target_obj/*target_id*/	= /*-1*/NULL;
+				h->m_Hit256R		= JIKI_ATARI_ITEM_16;
+	//			h->type 			= (SP_GROUP_JIKI_GET_ITEM|SP_GROUP_SHOT_SPECIAL)/*ƒ{ƒX‚É—LŒø*/ /*SP_PL_HLASER*/;
+				h->type 			= (/*SP_GROUP_JIKI_GET_ITEM*/JIKI_BOMBER_01|SP_GROUP_SHOT_SPECIAL)/*ƒ{ƒX‚É—LŒø*/ /*SP_PL_HLASER*/;
+				#if 0/*SDL(¶‹÷À•W)*/
+				h->x256 			= (src->x256) + ((src->w128)) - t256(5);
+				h->y256 			= (src->y256) + ((src->h128)) + t256(15);
+				#else/*Gu(’†SÀ•W)*/
+			//	h->x256 			= src->x256 - t256(5);
+			//	h->y256 			= src->y256 + t256(15);
+				h->x256 			= src->x256;
+				h->y256 			= src->y256;
+				#endif
+			//	h->flags			|= (SP_FLAG_VISIBLE/*|SP_FLAG_TIME_OVER*/);
+//				h->flags			&= (~(SP_FLAG_VISIBLE));	/*”ñ•\¦*/
+	//			if (0==i)
+				{
+					h->callback_mover	= move_reimu_musou_fuuin;
+	//				h->m_angleCCW1024	= cv1024r(0);
+	//				h->m_angleCCW1024	= (0/*j&1*/)?(cv1024r(	0+10)):(cv1024r(360-10));
+					h->m_angleCCW1024	= (i<<6);
+					#if 0
+					/* (‘½•ª•K—v‚È‚¢‚¯‚Ç)”O‚Ìˆ×ƒ}ƒXƒN */
+					mask1024(src->m_angleCCW1024/*src->PL_HOMING_DATA_angleCCW1024*/);
+					#endif
+					h->PL_HOMING_DATA_speed256				= t256(1.2);
+					h->base_weapon_strength 				= player_fix_status[BASE_LOW_BOMB_STRENGTH+select_player]/*6*/;/*’á‘¬ƒ{ƒ€‚Ì‹­‚³*/
+				//	h->PL_HOMING_DATA_time_out/*range*/ 	= (100);	/*(200)*/
+					h->PL_HOMING_DATA_reimu_musou_id		= (i);	/*(200)*/
+					h->PL_HOMING_DATA_state 				= (0);
+					h->target_obj							= obj_player;			/* h->target_obj == obj_player;‚İ‚Â‚©‚ç‚È‚¢ */
+				}
 			}
 		}
 	}
@@ -2196,7 +2190,7 @@ static void reimu_create_bomber_homing_parrent(SPRITE *src) 	/* reimu_move_add_b
 {
 	pd_state_flag		|= STATE_FLAG_02_BOMB_AUTO_GET_ITEM;	/* ƒ{ƒ€‚É‚æ‚é©“®ûW‰Â”\ */
 //
-	reimu_add_hlaser(player);
+	reimu_add_hlaser(obj_player);
 //
 	#if 1
 	/* ƒ{ƒ€’†••œŠˆ’†A—LŒø‚É‚·‚é‚ÆAd•¡‚·‚éB */
@@ -2204,49 +2198,11 @@ static void reimu_create_bomber_homing_parrent(SPRITE *src) 	/* reimu_move_add_b
 	bullets_to_hosi();/* ’e‘S•”A¯ƒAƒCƒeƒ€‚É‚·‚é */
 	#endif
 }
-	#if 0
-	SPRITE *h;
-	h					= sprite_add_gu(JIKI_ATARI_ITEM_16);
-//	h->flags			|= (SP_FLAG_VISIBLE/*|SP_FLAG_TIME_OVER*/);
-	h->flags			&= (~(SP_FLAG_VISIBLE));	/*”ñ•\¦*/
-	h->data 			= 0/*d*/;
-//	h->anim_frame		= 0;
-	h->color32			= 0xdcffffff;	/*	c->alpha			= 0x80 0xdc;*/
-	h->callback_mover	= reimu_move_add_bomber_hlaser;
-//	h->type 			= (SP_GROUP_JIKI_GET_ITEM|SP_GROUP_SHOT_SPECIAL)/*ƒ{ƒX‚É—LŒø*/; /* ’á‘¬ƒ{ƒ€‚àƒ{ƒX‚É—LŒø‚Æ‚·‚é */	/*(SP_GROUP_JIKI_GET_ITEM|SP_GROUP_SHOT_ZAKO) ƒ{ƒX‚É–³Œø*/
-	h->type 			= (/*•\¦‚µ‚È‚¢*/SP_GROUP_ETC_DUMMY_SLOW_BOMB/*SP_GROUP_JIKI_GET_ITEM|SP_GROUP_SHOT_SPECIAL*/)/*ƒ{ƒX‚É—LŒø*/;	/* ’á‘¬ƒ{ƒ€‚àƒ{ƒX‚É—LŒø‚Æ‚·‚é */	/*(SP_GROUP_JIKI_GET_ITEM|SP_GROUP_SHOT_ZAKO) ƒ{ƒX‚É–³Œø*/
-	#if 1/*Gu(’†SÀ•W)*/
-	h->x256 			= src->x256;
-	h->y256 			= src->y256;
-	#endif
-
-	src->x256			= (player->x256)+((player->w128-src->w128));
-	src->y256			= (player->y256)+((player->h128-src->h128));
-	#endif
-//
 
 
 /*---------------------------------------------------------
 	ƒvƒŒƒCƒ„[ƒL[‘€ì
 ---------------------------------------------------------*/
-	#if 0
-	/*
-		šu(‹ò‚ç‚¢ƒ{ƒ€ó•tŠúŠÔ’†‚É)ƒ{ƒX‚Æ‘Š‘Å‚¿‚·‚é‚Æƒnƒ“ƒOƒAƒbƒvvƒoƒO(`r29)‘Îô
-	*/
-	/* ‰½‚©•Ï‚Èd—l(KETM)‚¾‚ÈA‚±‚ñ‚È‚Ì—v‚ç‚È‚¢‹C‚ª‚·‚éB
-	ƒoƒO‚É‹ß‚¢d—l(ŒÀ‚è‚È‚­d—lƒoƒO)‚¾‚ËB
-	À‘•‚ÆİŒv‚ğ•ª‚¯‚È‚¢‚©‚ç‚±‚¤‚È‚é‚ñ‚¾‚æ‚È‚ B
-	KETM‚Íƒvƒ‰ƒCƒIƒŠƒeƒB[‚Å‚ ‚½‚è”»’è‚ğ‚·‚é‚Æ‚©FX“‚¢ˆ‚à‚ ‚éB
-	(‚»‚ñ‚È–‚µ‚½‚çA“¯‚¶KETM‚Å‚àƒvƒ‰ƒCƒIƒŠƒeƒB[‚Ì‡˜‚·‚çA•Ï‚¦‚ç‚ê‚È‚­‚È‚Á‚¿‚á‚¤(d—l•ÏX‚Å‚«‚È‚¢)‚Å‚µ‚åH
-	•’Ê‚ÍA‚»‚ñ‚È–³’ƒ‚ÈİŒv‚Í‚µ‚È‚¢B)
-	*/
-	/* GAME OVER ’†‚Í pd_state_flag ‚ğ STATE_FLAG_16_NOT_ALLOW_KEY_CONTROL ‚Å‘Îˆ‚·‚éB */
-	//if player is invisible (state gameover) allow no keycontrol
-	if ((0==(s1->flags&SP_FLAG_VISIBLE)))
-	{
-		return;/* •\¦‚µ‚È‚¢ê‡‚Í‘€ì–³ŒøB */
-	}
-	#endif
 
 //static int /*bomb_wait*/d->bomber_time;		/* ƒ{ƒ€‚Ì—LŒøŠÔ */	//Ÿ‚Ìƒ{ƒ€‚ğo‚¹‚é‚Ü‚Å‚ÌŠÔ
 
@@ -2299,23 +2255,23 @@ static void player_keycontrol(SPRITE *s1)
 //					set_bg_alpha(100);/* ‰æ–Ê‚ğˆÃ‚­‚·‚é */
 //					set_bg_alpha(127);/* ‰æ–Ê‚ğˆÃ‚­‚·‚é */
 					/* —§‚¿ŠG */
-					player_create_bomber_tachie(player);
+					player_create_bomber_tachie(obj_player);
 					//
 					static /*const*/ void (*regist_call_table[/*16*/(PLAYERS8*2)])(SPRITE *src) =
 					{
-						player_create_bomber_kekkai_parrent,			reimu_create_bomber_homing_parrent, 		/* —ì–² A */
-						player_create_bomber_kekkai_parrent,			player_create_bomber_homing_parrent,		/* —ì–² B */
-						player_create_bomber_levarie_parrent,			player_create_bomber_homing_parrent,		/* –‚—¹ A */
-						player_create_bomber_levarie_parrent,			player_create_bomber_homing_parrent,		/* –‚—¹ B */
-						player_create_bomber_cross_red_parrent, 		player_create_bomber_homing_parrent,		/* ƒŒƒ~ƒŠƒA */
-						player_create_bomber_levarie_parrent,			player_create_bomber_cross_red_parrent, 	/* —HXq */
-						player_create_bomber_levarie_parrent,			player_create_bomber_homing_parrent,		/* ƒ`ƒ‹ƒm A */
-						player_create_bomber_levarie_parrent,			player_create_bomber_homing_parrent,		/* ƒ`ƒ‹ƒm Q */
+						player_create_bomber_kekkai_parrent,					reimu_create_bomber_homing_parrent, 		/* —ì–² A */
+						player_create_bomber_kekkai_parrent,					player_create_bomber_homing_parrent,		/* —ì–² B */
+						player_create_bomber_star_dust_levarie_parrent, 		player_create_bomber_homing_parrent,		/* –‚—¹ A */
+						player_create_bomber_levarie_parrent,					player_create_bomber_homing_parrent,		/* –‚—¹ B */
+						player_create_bomber_cross_red_parrent, 				player_create_bomber_homing_parrent,		/* ƒŒƒ~ƒŠƒA */
+						player_create_bomber_levarie_parrent,					player_create_bomber_cross_red_parrent, 	/* —HXq */
+						player_create_bomber_levarie_parrent,					player_create_bomber_homing_parrent,		/* ƒ`ƒ‹ƒm A */
+						player_create_bomber_levarie_parrent,					player_create_bomber_homing_parrent,		/* ƒ`ƒ‹ƒm Q */
 					};
 						int index_aaa;
 						index_aaa = ((select_player)+(select_player)+((my_pad & PSP_KEY_SLOW)?1:0));
 					{
-						(regist_call_table[(index_aaa)])(player);
+						(regist_call_table[(index_aaa)])(obj_player);
 					}
 //	/* ’á‘¬ƒ{ƒ€ */			pd_bomber_time = 200/*320*/ /*400*/ /*800*/;	/* ƒ{ƒ€‚Ì—LŒøŠÔ(İ’è–³“GŠÔ)[¦‚Pd—l‚ª•Ï‚í‚Á‚½‚Ì‚Å”¼•ª‚É‚µ‚½] */
 //	/* —ì–² */				pd_bomber_time = 180/*200*/;	/* ƒ{ƒ€‚Ì—LŒøŠÔ(İ’è–³“GŠÔ) */	/* ‚±‚¿‚ç‚Íƒ{ƒX—LŒø(UŒ‚Œ^) */
@@ -2340,15 +2296,16 @@ static void player_keycontrol(SPRITE *s1)
 					//	#define USER_BOMOUT_WAIT (30)
 					pd_save_timer		= pd_bomber_time + USER_BOMOUT_WAIT;/*À¿–³“GŠÔ*/
 					/*	À¿–³“GŠÔ == (İ’è–³“GŠÔ + USER_BOMOUT_WAIT)B 	À¿–³“GŠÔ == İ’è–³“GŠÔ ‚¾‚ÆA‚í‚©‚è‚É‚­‚¢‚Ì‚ÅáŠ±‚Ì—]—T‚ª•K—vB */
-					s1->color32 		= 0x50ffffff;	/*	s1->alpha			= 0x50;*/	/* ”¼“§–¾ */
-					pd_core->color32	= 0x50ffffff;	/*	pd_core->alpha		= 0x50;*/	/* ”¼“§–¾ */
+					s1->color32 		= MAKE32RGBA(0xff, 0xff, 0xff, 0x50);	/*	s1->alpha			= 0x50;*/	/* ”¼“§–¾ */
+					obj_maru->color32	= MAKE32RGBA(0xff, 0xff, 0xff, 0x50);	/*	obj_maru->alpha 	= 0x50;*/	/* ”¼“§–¾ */
 					if (PLAYER_STATE_01_HIT_BOMB==pd_player_status)/* ‹ò‚ç‚¢ƒ{ƒ€ó•t’† */
 					{
 						pd_use_kurai_bomb++;/* ‹ò‚ç‚¢ƒ{ƒ€¬Œ÷ */
 					}
 					pd_player_status	= PLAYER_STATE_03_SAVE_02;
 				//
-					script_message_window_clear();/*ƒXƒNƒŠƒvƒgƒƒbƒZ[ƒW‰æ–Ê‚ğÁ‚·*/
+					kanji_window_clear(); 	/* Š¿šƒEƒBƒ“ƒhƒE‚Ì“à—e‚ğÁ‚·B */
+					home_cursor();			/* ƒJ[ƒ\ƒ‹‚ğƒz[ƒ€ƒ|ƒWƒVƒ‡ƒ“‚ÖˆÚ“® */
 					{
 						msg_time = pd_bomber_time;	/*(60*5)*/
 						typedef struct
@@ -2365,7 +2322,7 @@ static void player_keycontrol(SPRITE *s1)
 	{"g•„u•s–ééƒfƒrƒ‹v" 			"\n"},	{"–¯–¿uƒAƒNƒ}ƒNƒƒXv" 			"\n"},
 	{"€•„uƒMƒƒƒXƒgƒŠƒhƒŠ[ƒ€v"		"\n"},	{"–»•„u–¢ì¬UŒ‚v"				"\n"},	/* dream cast. ghastly dream(—dX–²). ghastly dream(—ì–²). */
 	{"èÅ•„uƒAƒCƒXƒrƒ…ƒŒƒbƒgv" 		"\n"},	{"•X•„uƒIƒ“ƒUƒƒbƒNv" 			"\n"},	/* èÅ(‚ ‚ç‚ê): ‰J‚ª“€‚Á‚½‚èA—n‚¯‚©‚¯‚½á‚ªÄ‚Ñ“€‚Á‚Ä~‚éB */
-	{"èÂ•„uƒAƒ^ƒCƒTƒCƒLƒ‡[ƒlv"		"\n"},	{"‘š“¥uƒtƒ~ƒtƒ~ƒLƒbƒNv"			"\n"},	/* èÂ(‚İ‚¼‚ê): ‰J‚Æá‚ª¬‚´‚Á‚Ä~‚éB‘“âu */
+	{"Å‹­uƒAƒ^ƒC‚ÌŒv"				"\n"},	{"Å‹­uƒAƒ^ƒC‚ÌƒLƒbƒNv"			"\n"},	/* èÂ•„ ‘š“¥ èÂ(‚İ‚¼‚ê): ‰J‚Æá‚ª¬‚´‚Á‚Ä~‚éB */
 						};
 						print_kanji000(/*SDL_Surface *drawmap,*/ /*SDL_Rect *rect*/ /*0,*/
 							my_aaa_resource[index_aaa].spell_str_name, //	aaa_str[(spell_card_number&15)],
@@ -2376,7 +2333,6 @@ static void player_keycontrol(SPRITE *s1)
 			}
 		}
 	}
-
 //
 	if (PLAYER_STATE_01_HIT_BOMB==pd_player_status) return;/* ‹ò‚ç‚¢ƒ{ƒ€ó•t’† */
 //
@@ -2414,9 +2370,9 @@ static void player_keycontrol(SPRITE *s1)
 /* ‰Ô‰f’Ë‰ï˜b‰½‚½‚çƒTƒCƒg http://ambriel.hp.infoseek.co.jp/th9/  Šî–{«”\”äŠr ˆÚ“®‘¬“x(‚‘¬ƒ‚[ƒh)
 														[51200/xxxF]
 200/50		50F •¶										0x0400[1024.000000000000000000000000000000]3.63636363636363636363636363636364
-200/55		55F [–‚—¹] ƒ~ƒXƒeƒBƒA (ƒƒfƒB , l‹G) 	0x03a3[ 930.909090909090909090909090909091]3.63636363636363636363636363636364
+200/55		55F [–‚—¹] ƒ~ƒXƒeƒBƒA (ƒƒfƒB,  l‹G) 	0x03a3[ 930.909090909090909090909090909091]3.63636363636363636363636363636364
 200/58		58F [ƒ`ƒ‹ƒm]								0x0373[ 882.758620689655172413793103448276]3.44827586206896551724137931034483
-200/61		61F (—éå , ƒ‹ƒiƒT) ‚Ä‚î					0x0347[ 839.344262295081967213114754098361]3.27868852459016393442622950819672		[REMILIA]
+200/61		61F (—éå,	ƒ‹ƒiƒT) ‚Ä‚î					0x0347[ 839.344262295081967213114754098361]3.27868852459016393442622950819672		[REMILIA]
 200/65		65F ƒŠƒŠƒJ									0x0314[ 787.692307692307692307692307692308]3.07692307692307692307692307692308
 200/67		67F ¬’¬									0x02fc[ 764.179104477611940298507462686567]2.98507462686567164179104477611940
 200/68		68F [—ì–²] ç–é 							0x02f1[ 752.941176470588235294117647058824]2.94117647058823529411764705882353
@@ -2429,8 +2385,8 @@ static void player_keycontrol(SPRITE *s1)
 200/83		83F 	[ƒ`ƒ‹ƒm]							0x0269[ 616.867469879518072289156626506024]2.40963855421686746987951807228916
 200/85		85F 	ç–é								0x025a[ 602.352941176470588235294117647059]2.35294117647058823529411764705882
 200/91		91F 	[–‚—¹]							0x0233[ 562.637362637362637362637362637363]2.19780219780219780219780219780220
-200/109 	109F	(—éå , ƒ‹ƒiƒT) 					0x01d6[ 469.724770642201834862385321100917]1.83486238532110091743119266055046		[REMILIA]
-200/114 	114F	(ƒƒfƒB , l‹G) 					0x01c1[ 449.122807017543859649122807017544]1.75438596491228070175438596491228
+200/109 	109F	(—éå,	ƒ‹ƒiƒT) 					0x01d6[ 469.724770642201834862385321100917]1.83486238532110091743119266055046		[REMILIA]
+200/114 	114F	(ƒƒfƒB,  l‹G) 					0x01c1[ 449.122807017543859649122807017544]1.75438596491228070175438596491228
 200/124 	124F	ƒŠƒŠƒJ ¬’¬ 						0x019d[ 412.903225806451612903225806451613]1.61290322580645161290322580645161
 200/130 	130F	—d–²								0x018a[ 393.846153846153846153846153846154]1.53846153846153846153846153846154
 200/136 	136F	ƒƒ‹ƒ‰ƒ“ [—ì–²] 					0x0178[ 376.470588235294117647058823529412]1.47058823529411764705882352941176
@@ -2481,7 +2437,7 @@ static void player_keycontrol(SPRITE *s1)
 	else if (s1->y256 > t256(GAME_HEIGHT)-((s1->h128+s1->h128)))	{	s1->y256 = t256(GAME_HEIGHT)-((s1->h128+s1->h128)); 	}/* ‰ºƒ`ƒFƒbƒN */
 	#else/*Gu(’†SÀ•W)*/
 //		 if (s1->x256 < t256(0))				{	s1->x256 = t256(0); 			}/* ¶ƒ`ƒFƒbƒN */
-//	else if (s1->x256 > t256(GAME_WIDTH)  ) 	{	s1->x256 = t256(GAME_WIDTH) ;	}/* ‰Eƒ`ƒFƒbƒN */
+//	else if (s1->x256 > t256(GAME_WIDTH)  ) 	{	s1->x256 = t256(GAME_WIDTH);	}/* ‰Eƒ`ƒFƒbƒN */
 //		 if (s1->y256 < t256(0))				{	s1->y256 = t256(0); 			}/* ãƒ`ƒFƒbƒN */
 //	else if (s1->y256 > t256(GAME_HEIGHT) ) 	{	s1->y256 = t256(GAME_HEIGHT);	}/* ‰ºƒ`ƒFƒbƒN */
 		 if (s1->x256 < t256(0))				{	s1->x256 = t256(0); 			}/* ¶ƒ`ƒFƒbƒN */
@@ -2492,18 +2448,19 @@ static void player_keycontrol(SPRITE *s1)
 	/* ƒRƒAˆÚ“® */
 	{
 		SPRITE *s2;
-		s2 = pd_core;
-		if (is_slow)	{	s2->type		&= (~(0x08));/*s2->flags		|= ( (SP_FLAG_VISIBLE));*/	}	/* ›A•\¦ */
-		else			{	s2->type		|= ( (0x08));/*s2->flags		&= (~(SP_FLAG_VISIBLE));*/	}	/* ›A”ñ•\¦ */
+		s2 = obj_maru;
 		#if 0/*SDL(¶‹÷À•W)*/
 		s2->x256 = s1->x256+((s1->w128-s2->w128))	-(t256( 1));	/* -(t256( 1)) ‚Æ‚è‚ ‚¦‚¸ */
 		s2->y256 = s1->y256-((s2->h128+s2->h128))	+(t256(20));	/* +(t256(20)) ‚Æ‚è‚ ‚¦‚¸ */
 		#else/*Gu(’†SÀ•W)*/
 	//	s2->x256 = s1->x256 -(t256( 1));	/* -(t256( 1)) ‚Æ‚è‚ ‚¦‚¸ */
 	//	s2->y256 = s1->y256 +(t256(20));	/* +(t256(20)) ‚Æ‚è‚ ‚¦‚¸ */
+	//	s2->x256 = (is_slow)?(s1->x256 +(t256((31-5)/2))):(t256(GAME_NOT_VISIBLE480));	/* -(t256( 1)) ‚Æ‚è‚ ‚¦‚¸ */	/* ƒRƒAƒIƒtƒZƒbƒg */
 		s2->x256 = s1->x256 +(t256((31-5)/2));	/* -(t256( 1)) ‚Æ‚è‚ ‚¦‚¸ */	/* ƒRƒAƒIƒtƒZƒbƒg */
 		s2->y256 = s1->y256 +(t256((31-5)/2));	/* +(t256(20)) ‚Æ‚è‚ ‚¦‚¸ */	/* ƒRƒAƒIƒtƒZƒbƒg */
 		#endif
+		if (is_slow)	{	s2->type		&= (~(0x08));/*s2->flags		|= ( (SP_FLAG_VISIBLE));*/	}	/* ›A•\¦ */
+		else			{	s2->type		|= ( (0x08));/*s2->flags		&= (~(SP_FLAG_VISIBLE));*/	}	/* ›A”ñ•\¦ */
 	}
 	/* MAX‚ÌƒAƒCƒeƒ€©“®ûW */
 	if (my_pad & PSP_KEY_UP/*PSP_CTRL_UP*/) 	/* ’FÎ‚ßã‚Å‚à‰ñû‰Â”\ */ /*&& (s1->y>0)*/
@@ -2594,35 +2551,46 @@ static void player_keycontrol(SPRITE *s1)
 		ƒvƒŒƒCƒ„[ƒAƒjƒ[ƒVƒ‡ƒ“ŠÖ˜Aˆ—
 	---------------------------------------------------------*/
 	{static int anime_delay;
-		/*pd_*/anime_delay -= 1/*fps_fa_ctor*/;
-		if (0 > /*pd_*/anime_delay)
+		anime_delay -= 1;	/*fps_fa_ctor*/
+		if (0 > anime_delay)
 		{
-			/*pd_*/anime_delay = player_fix_status[BASE_SPEED_ANIME+select_player]/*2*/;
+			anime_delay = player_fix_status[BASE_SPEED_ANIME+select_player];/*2*/
 			//
-			static int auto_anime_frame = 4/*5*/;
-				 if (my_pad & PSP_KEY_LEFT/*PSP_CTRL_LEFT*/)	{	if (auto_anime_frame>0	)	 auto_anime_frame--; }
-			else if (my_pad & PSP_KEY_RIGHT/*PSP_CTRL_RIGHT*/)	{	if (auto_anime_frame</*7*/8/*10*/) auto_anime_frame++; }
+			static int auto_anime_frame = (4);/*5*/
+				 if (my_pad & PSP_KEY_LEFT/*PSP_CTRL_LEFT*/)	{	if ( (0) < auto_anime_frame )	{auto_anime_frame--;} }
+			else if (my_pad & PSP_KEY_RIGHT/*PSP_CTRL_RIGHT*/)	{	if ( (8) > auto_anime_frame )	{auto_anime_frame++;} }
 			else
 			{
 				if (auto_anime_frame>4/*5*/) auto_anime_frame--;
 				if (auto_anime_frame<4/*5*/) auto_anime_frame++;
 			}
+			#if 1
 			{
 				int now_anime_frame;
 				static int auto_aniime;
 				auto_aniime++;
 				auto_aniime&=3;
-					 if (4==auto_anime_frame)	{	now_anime_frame = (auto_anime_frame + auto_aniime); }
-				else if (4<auto_anime_frame)	{	now_anime_frame = (auto_anime_frame + 3);			}
-				else							{	now_anime_frame = (auto_anime_frame );				}
-			//	s1->an im_frame = (now_anime_frame);
-				s1->type = (SP_GROUP_JIKI_GET_ITEM)|(now_anime_frame);
+					 if (4==auto_anime_frame)	{	now_anime_frame = (auto_anime_frame + auto_aniime); }	/* ’†S1-4 */
+				else if (4<auto_anime_frame)	{	now_anime_frame = (auto_anime_frame + (3) + (8) );	}	/* ‰E‘¤1-4 */	/* +(8) == ƒIƒvƒVƒ‡ƒ“ƒCƒ“ƒ^[ƒŠ[ƒu */
+				else							{	now_anime_frame = (auto_anime_frame );				}	/* ¶‘¤1-4 */
+				s1->type = (JIKI_PLAYER_00_LEFT)+(now_anime_frame);
 			}
+			#else
+			{
+				static int auto_aniime;
+				auto_aniime++;
+				auto_aniime&=3;
+				s1->type = (JIKI_PLAYER_00_LEFT)+(auto_anime_frame );
+					 if (4==auto_anime_frame)	{	s1->type += ( auto_aniime); }	/* ’†S1-4 */
+				else if (4<auto_anime_frame)	{	s1->type += ( 3+8); 		}	/* ‰E‘¤1-4 */
+			//	else							{					}	/* ¶‘¤1-4 */
+			}
+			#endif
 		}
 	}
 /*
-0 1 2 3 4 5 6  7  8
-0 1 2 3 4 8 9 10 11
+0 1 2 3 4 5 6  7  8  :: auto_anime_frame[0 to 8]
+0 1 2 3 4 8 9 10 11  :: now_anime_frame [0 to 11]
 		5
 		6
 		7
@@ -2645,12 +2613,12 @@ static void check_weapon_level(void)
 	#if 0//1968661
 	/* ‚¢‚ë‚¢‚ëŠæ’£‚Á‚Ä‚İ‚½‚ªAŒ³‚Ì’²®(6,11,61,86)‚Í’N“¾(?)‚È‚Ì‚Å•Ï‚¦‚é(2”{‚ğ’´‚¦‚é’l‚Ì’²®‚ÍˆÓ–¡–³‚¢‹C‚ª‚ª‚·‚é) */
 	u8 pd_weapon;	pd_weapon = pd_weapon_power;
-		 if (pd_weapon < (	8)) {	weapon_level_offset = (WEAPON_L0<<3);	}	/* WEAPON_L0(P000-P008) */	/* 6*/
-	else if (pd_weapon < ( 16)) {	weapon_level_offset = (WEAPON_L1<<3);	}	/* WEAPON_L1(P008-P015) */	/*11*/
-	else if (pd_weapon < ( 32)) {	weapon_level_offset = (WEAPON_L2<<3);	}	/* WEAPON_L2(P016-P031) */	/*61*/
-	else if (pd_weapon < ( 64)) {	weapon_level_offset = (WEAPON_L3<<3);	}	/* WEAPON_L3(P032-P063) */	/*86*/
-	else if (pd_weapon < (128)) {	weapon_level_offset = (WEAPON_L4<<3);	}	/* WEAPON_L4(P064-P127) */
-	else						{	weapon_level_offset = (WEAPON_L5<<3);	}	/* WEAPON_L5(P128)		*/	/*max==P128==u129’iŠKv*/
+		 if (pd_weapon < (	8)) 	{	weapon_level_offset = (WEAPON_L0<<3);	}	/* WEAPON_L0(P000-P008) */	/* 6*/
+	else if (pd_weapon < ( 16)) 	{	weapon_level_offset = (WEAPON_L1<<3);	}	/* WEAPON_L1(P008-P015) */	/*11*/
+	else if (pd_weapon < ( 32)) 	{	weapon_level_offset = (WEAPON_L2<<3);	}	/* WEAPON_L2(P016-P031) */	/*61*/
+	else if (pd_weapon < ( 64)) 	{	weapon_level_offset = (WEAPON_L3<<3);	}	/* WEAPON_L3(P032-P063) */	/*86*/
+	else if (pd_weapon < (128)) 	{	weapon_level_offset = (WEAPON_L4<<3);	}	/* WEAPON_L4(P064-P127) */
+	else							{	weapon_level_offset = (WEAPON_L5<<3);	}	/* WEAPON_L5(P128)		*/	/*max==P128==u129’iŠKv*/
 	weapon_level_offset += select_player;
 	#endif
 	#if 1//1968181
@@ -2694,8 +2662,8 @@ static void check_weapon_level(void)
 		for (jj=(0); jj<(4); jj++)/* ƒIƒvƒVƒ‡ƒ“‚Í4‚Â */
 		{
 			if ( (pd_weapon > ((0x08)<<jj)/*jjj_tbl[jj]*/)) 	/* ’š“x2”{‚¾‚Æ‚±‚ñ‚ÈŠ´‚¶‚ÅŠÈ—ª‰»‚Å‚«‚éB */
-					{	option[jj]->flags	|= ( (SP_FLAG_VISIBLE));	}	// ‰Â‹ƒtƒ‰ƒO‚ÌOn(‰Â‹)
-			else	{	option[jj]->flags	&= (~(SP_FLAG_VISIBLE));	option[jj]->y256=t256(GAME_HEIGHT+1);	}	// ‰Â‹ƒtƒ‰ƒO‚ÌOFF(•s‰Â‹)
+					{	option[jj]->flags	|= ( (SP_FLAG_OPTION_VISIBLE)); 	}	// ‰Â‹ƒtƒ‰ƒO‚ÌOn(‰Â‹)
+			else	{	option[jj]->flags	&= (~(SP_FLAG_OPTION_VISIBLE)); 	option[jj]->y256=t256(GAME_HEIGHT+1);	}	// ‰Â‹ƒtƒ‰ƒO‚ÌOFF(•s‰Â‹)
 		}
 	}
 	#endif
@@ -2896,11 +2864,18 @@ static void player_colision_check_graze(SPRITE *src)
 		}
 		/* ƒvƒŒƒCƒ„[ƒXƒvƒ‰ƒCƒg‚ª’e‚ÉG‚ê‚Ä‚¢‚é‚© */
 		{
-
-			SPRITE *s2;
-			s2 = pd_core;
 			/* (ƒOƒŒƒCƒY’†‚È‚çƒRƒA‚Æ“G’e‚Ì‚ ‚½‚è”»’è‚ğ‚·‚é) */
-			ttt = sprite_collision_check_444(s2, SP_GROUP_BULLETS);/* ’e–‹ê—p(’e–‹) */
+			#if 1
+			/* ƒRƒA‚Å”»’è */
+			ttt = sprite_collision_check_444(obj_maru, SP_GROUP_BULLETS);/* ’e–‹ê—p(’e–‹) */
+			#else
+			/* ©‹@‚Å”»’è */
+			int chache_m_Hit256R;
+			chache_m_Hit256R	= src->m_Hit256R;/* ©‹@‚Ì‚ ‚½‚è”»’èƒTƒCƒY */
+			src->m_Hit256R		= obj_maru->m_Hit256R;/* ›‚Ì‚ ‚½‚è”»’èƒTƒCƒY */
+			ttt = sprite_collision_check_444(src, SP_GROUP_BULLETS);/* ’e–‹ê—p(’e–‹) */
+			src->m_Hit256R		= chache_m_Hit256R;/* –ß‚· */
+			#endif
 			if (NULL != ttt)	{	player_set_pichuun();	}
 		}
 	}
@@ -2914,26 +2889,33 @@ static void player_colision_check_graze(SPRITE *src)
 /*---------------------------------------------------------
 	ƒvƒŒƒCƒ„[ƒ‹[ƒv‚ğ”²‚¯‚éˆ—
 ---------------------------------------------------------*/
-void player_loop_quit(void)
+global void player_loop_quit(void)
 {
 	pd_state_flag		|= STATE_FLAG_14_GAME_LOOP_QUIT;
 	#if (0000)
-	pd_state_flag		&= (~STATE_FLAG_08_OPTION_HIDE);	/* ƒIƒvƒVƒ‡ƒ“‚ğÁ‚· */
+	option[0]->flags	&= (~SP_FLAG_OPTION_VISIBLE);	/* ƒIƒvƒVƒ‡ƒ“‚ğÁ‚· */
+	option[1]->flags	&= (~SP_FLAG_OPTION_VISIBLE);	/* ƒIƒvƒVƒ‡ƒ“‚ğÁ‚· */
+	option[2]->flags	&= (~SP_FLAG_OPTION_VISIBLE);	/* ƒIƒvƒVƒ‡ƒ“‚ğÁ‚· */
+	option[3]->flags	&= (~SP_FLAG_OPTION_VISIBLE);	/* ƒIƒvƒVƒ‡ƒ“‚ğÁ‚· */
 	#endif/*0000*/
 //
 	pd_save_timer		= (150);	/* 150	 120‚Å‚ÍáŠ±’Z‚¢ 100 */
 	pd_player_status	= PLAYER_STATE_04_GAME_OUT;/* GAME_OUT’† */
-	#if (00)
-	player->flags			&= (~(SP_FLAG_VISIBLE));	/* ©‹@A”ñ•\¦ */
-	pd_core->flags	&= (~(SP_FLAG_VISIBLE));	/* ›A”ñ•\¦ */
-//	pd_core->alpha	= 0x00; 		// ›‚ğÁ‚·‚½‚ß‚É“ü‚ê‚½‚¯‚ÇˆÓ–¡–³‚©‚Á‚½‚©‚à‚µ‚ê‚È‚¢B	// ƒQ[ƒ€ƒI[ƒo[‚Ì›‚Ì•\¦ˆ—
-	#endif
 }
+	#if (00)
+	obj_player->flags	&= (~(SP_FLAG_VISIBLE));	/* ©‹@A”ñ•\¦ */
+	obj_maru->flags 	&= (~(SP_FLAG_VISIBLE));	/* ›A”ñ•\¦ */
+//	obj_maru->alpha 	= 0x00; 		// ›‚ğÁ‚·‚½‚ß‚É“ü‚ê‚½‚¯‚ÇˆÓ–¡–³‚©‚Á‚½‚©‚à‚µ‚ê‚È‚¢B	// ƒQ[ƒ€ƒI[ƒo[‚Ì›‚Ì•\¦ˆ—
+	#endif
+
+	/* ƒIƒvƒVƒ‡ƒ“‚ª”ñ•\¦‚Ìê‡A‰½‚à‚µ‚È‚¢B */
+//	if (0==(src->flags & ( SP_FLAG_OPTION_VISIBLE)))	{	return; 	}
+
 
 /*---------------------------------------------------------
 	ƒvƒŒƒCƒ„[•œŠˆˆ—
 ---------------------------------------------------------*/
-void player_few_muteki(void)
+global void player_few_muteki(void)
 {
 	pd_save_timer		= (40); 					// –³“GŠÔ 		/*120*/ /*150-120*/
 	pd_player_status	= PLAYER_STATE_02_SAVE_01;	// –³“Gó‘ÔH
@@ -2943,16 +2925,14 @@ static void player_fukkatsu(SPRITE *s1)
 {
 	player_few_muteki();/* ƒXƒe[ƒWŠJn‚Ì‚İáŠ±‚Ì–³“Gó‘Ô‚ÉƒZƒbƒg */
 	#if (00)
-	player->flags			|= ( (SP_FLAG_VISIBLE));	/* ©‹@A•\¦ */
+	obj_player->flags			|= ( (SP_FLAG_VISIBLE));			/* ©‹@A•\¦ */
 	#endif
-	player->color32 		= 0x50ffffff;				/* ©‹@A”¼“§–¾ */	/*	s1->alpha			= 0x50;*/
+	obj_player->color32 		= MAKE32RGBA(0xff, 0xff, 0xff, 0x50);						/* ©‹@A”¼“§–¾ */	/*	s1->alpha			= 0x50;*/
 //
-
-
-//	pd_core->flags	|= ( (SP_FLAG_VISIBLE));	/* ›A•\¦ */
-	pd_core->color32	= 0x50ffffff;				/* ›A”¼“§–¾ */	/*	pd_core->alpha	= 0x50;*/
+//	obj_maru->flags |= ( (SP_FLAG_VISIBLE));						/* ›A•\¦ */
+	obj_maru->color32	= MAKE32RGBA(0xff, 0xff, 0xff, 0x50);								/* ›A”¼“§–¾ */	/*	obj_maru->alpha = 0x50;*/
 	pd_bombs			= option_config[OPTION_CONFIG_01_BOMB]; 	/* ƒ{ƒ€Š”‚Ì‰Šú‰» */	/*player_fix_status[BASE_BOMBS+select_player]*/  /*3*/
-	pd_chain_point	= (0);										/* ƒm[ƒ~ƒXƒ{[ƒiƒX‚Ì‰Šú‰» */	// pd_chain_point(ƒm[ƒ~ƒXƒ{[ƒiƒX)‚Ì‰Šú‰» // ‚Ç‚ê‚¾‚¯˜A‘±(ƒm[ƒ~ƒX)‚Åwepon_up‚ğæ‚Á‚½‚©
+	pd_chain_point		= (0);										/* ƒm[ƒ~ƒXƒ{[ƒiƒX‚Ì‰Šú‰» */	// pd_chain_point(ƒm[ƒ~ƒXƒ{[ƒiƒX)‚Ì‰Šú‰» // ‚Ç‚ê‚¾‚¯˜A‘±(ƒm[ƒ~ƒX)‚Åwepon_up‚ğæ‚Á‚½‚©
 //
 	check_weapon_level();/* [pd_weapon_power‚ª•ÏX‚³‚ê‚½ê‡‚É•K‚¸s‚¤Œãƒ`ƒFƒbƒN] */
 }
@@ -3075,7 +3055,10 @@ static void player_explode(SPRITE *s1)
 
 		/* Œ»İƒIƒvƒVƒ‡ƒ“‘‚¦‚·‚¬‚ÄAŒã”¼d‚­‚È‚éƒoƒO‚ª‚ ‚éB */
 		#if (0000)
-		pd_state_flag		&= (~STATE_FLAG_08_OPTION_HIDE);	/* ƒIƒvƒVƒ‡ƒ“‚ğÁ‚· */
+		option[0]->flags	&= (~SP_FLAG_OPTION_VISIBLE);	/* ƒIƒvƒVƒ‡ƒ“‚ğÁ‚· */
+		option[1]->flags	&= (~SP_FLAG_OPTION_VISIBLE);	/* ƒIƒvƒVƒ‡ƒ“‚ğÁ‚· */
+		option[2]->flags	&= (~SP_FLAG_OPTION_VISIBLE);	/* ƒIƒvƒVƒ‡ƒ“‚ğÁ‚· */
+		option[3]->flags	&= (~SP_FLAG_OPTION_VISIBLE);	/* ƒIƒvƒVƒ‡ƒ“‚ğÁ‚· */
 		#endif/*0000*/
 		pd_count_miss++;	/* ƒ~ƒX‰ñ” */
 		/* cƒ`ƒƒƒ“ƒXŒ¸‚ç‚· */
@@ -3110,7 +3093,6 @@ static void player_move_other(SPRITE *s1)
 	pd_save_timer--;
 	if (2 > pd_save_timer)/* Ÿ‚Ìó‘Ô‚ÉˆÚs */
 	{
-
 		switch (pd_player_status)
 		{
 		case PLAYER_STATE_01_HIT_BOMB:/* ‹ò‚ç‚¢ƒ{ƒ€ó•t’† */			// [***090125		’Ç‰Á
@@ -3135,8 +3117,8 @@ static void player_move_other(SPRITE *s1)
 
 		case PLAYER_STATE_03_SAVE_02:/*ƒvƒŒƒCƒ„[•œŠˆ’†‚Q*/
 			pd_player_status	= PLAYER_STATE_00_NORMAL;
-			s1->color32 		= 0xffffffff;					/*	s1->alpha			= 0xff;*/
-			pd_core->color32	= 0xffffffff;		/* ›A */	/*	pd_core->alpha	= 0xff;*/
+			s1->color32 		= MAKE32RGBA(0xff, 0xff, 0xff, 0xff);					/*	s1->alpha			= 0xff;*/
+			obj_maru->color32	= MAKE32RGBA(0xff, 0xff, 0xff, 0xff);		/* ›A */	/*	obj_maru->alpha = 0xff;*/
 			break;
 
 		case PLAYER_STATE_04_GAME_OUT:/* GAME_OUT’† */
@@ -3151,11 +3133,11 @@ static void player_move_other(SPRITE *s1)
 			{
 				pd_use_continue++;	/* ƒRƒ“ƒeƒBƒjƒ…[‰ñ” */
 			//	render_continue(/*now_max_continue*/);
-				psp_loop = (ST_INIT_MENU|ST_MENU_SUB_ASK_CONTINUE);
+				main_call_func = ask_continue_menu_start;
 			}
 			else
 			{
-				psp_loop = (ST_WORK_GAME_OVER|0);
+				main_call_func = gameover_start;
 			}
 			break;
 		}
@@ -3227,7 +3209,7 @@ static void any_player_move(SPRITE *s1)
 			#if (1==USE_BOSS_NOT_BOMBER)
 			if (0 != player_hit_enemy_group)/*(???)*/			/* ƒ{ƒ€’†‚ÍA ƒUƒR“G ‚É‚ ‚½‚Á‚Ä€‚È‚È‚¢ */
 			#else /*(0==USE_BOSS_NOT_BOMBER)*/
-			if (0 != pd_save_timer){;}else/*(???)*/ 			/* ƒ{ƒ€’†‚ÍA ƒ{ƒX/ƒUƒR“G ‚É‚ ‚½‚Á‚Ä€‚È‚È‚¢ */
+			if (0 != pd_save_timer) 	{;} 	else/*(???)*/			/* ƒ{ƒ€’†‚ÍA ƒ{ƒX/ƒUƒR“G ‚É‚ ‚½‚Á‚Ä€‚È‚È‚¢ */
 			#endif
 			{
 				player_colision_check_enemy(s1);/*SP_GROUP_ENEMYS*/  // 	/, /*(SP_GROUP_TEKI)*/player_hit_enemy_group
@@ -3246,15 +3228,15 @@ static void any_player_move(SPRITE *s1)
 extern void player_init_extend_score(void);
 #endif
 //extern int zanki;
-void player_continue_value(void)
+global void player_continue_value(void)
 {
 	pd_zanki				= (1+option_config[OPTION_CONFIG_00_PLAYER]);	/*pd_base_zanki*/	/*((zanki&0x03)+2)*/ /*player_fix_status[BASE_LIVES+select_player]*/
-	pd_my_score 		= score(0);
+	pd_my_score 			= score(0);
 	pd_state_flag			&= (~STATE_FLAG_14_GAME_LOOP_QUIT); 	/* •œ‹A */
 	#if (1==USE_EXTEND_CHECK)
 	player_init_extend_score();
 	#endif
-	player_fukkatsu(player);/* ƒIƒvƒVƒ‡ƒ“‚ğ’Ç‰Á‚æ‚èŒã */
+	player_fukkatsu(obj_player);/* ƒIƒvƒVƒ‡ƒ“‚ğ’Ç‰Á‚æ‚èŒã */
 }
 
 /*---------------------------------------------------------
@@ -3262,207 +3244,204 @@ void player_continue_value(void)
 	—ì–²	–‚—¹	—HXq
 ---------------------------------------------------------*/
 
-static void option_create_re_ma_yu(SPRITE *src)
+static void option_create_re_ma_yu( SPRITE *h,int jj)
 {
-	PL_OPTION_DATA *data;		/* —ì–²‚Ì‚ğ—¬—p‚µ‚Ä‚Ü‚·B */
+			h->type 				= (JIKI_OPTION_00_00/*|S P_MUTEKI*/);
+		//
+			h->callback_mover		= re_ma_yu_move_option;
+		//	h->PL_OPTION_DATA_length			= 11;
+			static const int iii_tbl[4] =
+			{
+				OPTION_ID_02_LM,	/*-1*/ /*;*/ /*0*/
+				OPTION_ID_03_RM,	/* 1*/ /*;*/
+				OPTION_ID_01_LL,	/*-1*/ /*;*/ /*0*/
+				OPTION_ID_04_RR 	/* 1*/ /*;*/
+			};
+			h->PL_OPTION_DATA_opt_anime_add_id/*pos*/			= iii_tbl[jj]/*-1*/;/*0*/
+			static const /*int*/s16 ccc_tbl[4] =
+			{
+				cv1024r((270)), 	/*deg_360_to_512(180)*/ /*;*/ /*-ra d2deg512(M_PI)*/
+				cv1024r(( 90)), 	/*deg_360_to_512(  0)*/ /*;*/
+				cv1024r((270)), 	/*deg_360_to_512(180)*/ /*;*/ /*-ra d2deg512(M_PI)*/
+				cv1024r(( 90))		/*deg_360_to_512(  0)*/ /*;*/
+			};
+			h->PL_OPTION_DATA_angleCCW1024						= ccc_tbl[jj];
+}
+
+static void option_create_oz_ci( SPRITE *h,int jj)	/* ƒŒƒ~ƒŠƒA • ƒ`ƒ‹ƒm [***090220 ’Ç‰Á */
+{
+//			h->type 				= (JIKI_OPTION_00_00/*|S P_MUTEKI*/)+kk; kk += (16);/* ƒIƒvƒVƒ‡ƒ“ƒCƒ“ƒ^[ƒŠ[ƒu */ /*8*/
+			h->type 				= (JIKI_OPTION_00_00/*|S P_MUTEKI*/)+(jj<<4); /* ƒIƒvƒVƒ‡ƒ“ƒCƒ“ƒ^[ƒŠ[ƒu */ /*8*/
+		//
+			h->callback_mover		= oz_ci_move_option;
+			static const /*int*/s16 aaa_tbl[4] =
+			{
+				cv1024r(360-(45*5)),	/*cv1024r(45*1)*/ /*1024*1/8*/ /*;*/ /*ƒ`ƒ‹ƒm*/
+				cv1024r(360-(45*7)),	/*cv1024r(45*5)*/ /*1024*5/8*/ /*;*/ /*ƒ`ƒ‹ƒm*/
+				cv1024r(360-(45*1)),	/*cv1024r(45*3)*/ /*1024*3/8*/ /*;*/ /*ƒ`ƒ‹ƒm*/
+				cv1024r(360-(45*3)) 	/*cv1024r(45*7)*/ /*1024*7/8*/ /*;*/ /*ƒ`ƒ‹ƒm*/
+			};
+			h->PL_OPTION_DATA_angleCCW1024/*REMILIA_angle1024*/ = aaa_tbl[jj];
 //
-	int jj;
-	for (jj=0; jj<4; jj++)
-	{
-		SPRITE *s;
-		s						= sprite_add_gu( TAMA_TYPE_BULLET_DUMMY );	/*+ REIMU MARISA YUYUKO */
-		option[(OPTION_C1+jj)]	= s;
-	//	s->flags				|= (SP_FLAG_VISIBLE);
-		s->flags				&= (~(SP_FLAG_VISIBLE));			/* ‰Â‹ƒtƒ‰ƒO‚ÌOFF(•s‰Â‹) */
-		s->flags				&= (~(SP_FLAG_COLISION_CHECK)); 	/* ‚ ‚½‚è”»’è‚ÌOFF(–³“G) */
-
-		s->type 				= (JIKI_OPTION_00_00/*|S P_MUTEKI*/);
-	//	s->anim_frame			= 0;
-	//
-		s->callback_mover		= re_ma_yu_move_option;
-		data					= mmalloc(sizeof(PL_OPTION_DATA));
-		s->data 				= data;
-/*???*/ 		/*data->*/s->base_weapon_strength	= (1/*8*5*/);/* [***090214 ’Ç‰Á */
-	//	data->length			= 11;
-		#if 0/*SDL(¶‹÷À•W)*/
-		s->x256 				= src->x256+((src->w128-s->w128))-t256(11)/*data->length*/;
-		s->y256 				= src->y256+((src->h128-s->h128));
-		#else/*Gu(’†SÀ•W)*/
-	//	s->x256 				= src->x256-t256(11)/*data->length*/;
-	//	s->y256 				= src->y256;
-		s->x256 				= src->x256/*(???)*/;
-		s->y256 				= src->y256/*(???)*/;
-		#endif
-		data->anime_wait		= 0;
-		static const int iii_tbl[4] =
-		{
-		/*data->opt_anime_add_id*/ /*pos*/		/*=*/ OPTION_ID_02_LM,	/*-1*/ /*;*/ /*0*/
-		/*data->opt_anime_add_id*/ /*pos*/		/*=*/ OPTION_ID_03_RM,	/* 1*/ /*;*/
-		/*data->opt_anime_add_id*/ /*pos*/		/*=*/ OPTION_ID_01_LL,	/*-1*/ /*;*/ /*0*/
-		/*data->opt_anime_add_id*/ /*pos*/		/*=*/ OPTION_ID_04_RR	/* 1*/ /*;*/
-		};
-		data->opt_anime_add_id/*pos*/			= iii_tbl[jj]/*-1*/;/*0*/
-		static const /*int*/s16 ccc_tbl[4] =
-		{
-		/*data->angleCCW512=*/	deg_360_to_512CCW((270)),	/*deg_360_to_512(180)*/ /*;*/ /*-ra d2deg512(M_PI)*/
-		/*data->angleCCW512=*/	deg_360_to_512CCW(( 90)),	/*deg_360_to_512(  0)*/ /*;*/
-		/*data->angleCCW512=*/	deg_360_to_512CCW((270)),	/*deg_360_to_512(180)*/ /*;*/ /*-ra d2deg512(M_PI)*/
-		/*data->angleCCW512=*/	deg_360_to_512CCW(( 90))	/*deg_360_to_512(  0)*/ /*;*/
-		};
-		data->angleCCW512						= ccc_tbl[jj];
-	//	data->state 							= 0;
-		data->opt_shot_interval 				= 0;
-	}
+		//	h->PL_OPTION_DATA_next					= obj_player;
+			h->PL_OPTION_DATA_state2				= 0;
+			h->PL_OPTION_DATA_offset_x256			= t256(0);
+			h->PL_OPTION_DATA_offset_y256			= t256(0);
+			h->PL_OPTION_DATA_opt_anime_add_id		= (OPTION_C1+jj);
+		//	h->PL_OPTION_DATA_ccc_angle512			= cv1024r((0));
+			h->PL_OPTION_DATA_slow_count			= 0;
 }
-
-static void option_create_oz_ci(SPRITE *src)	/* ƒŒƒ~ƒŠƒA • ƒ`ƒ‹ƒm [***090220 ’Ç‰Á */
+static void option_create(void) /* ƒŒƒ~ƒŠƒA • ƒ`ƒ‹ƒm [***090220 ’Ç‰Á */
 {
-	/*REMILIA_OPTION_DATA*/PL_OPTION_DATA *data;
 	int jj;
-	int kk;
-	kk=0;
 	for (jj=0; jj<4; jj++)
 	{
-		SPRITE *s;
-		s						= sprite_add_gu( TAMA_TYPE_BULLET_DUMMY );
-		option[(OPTION_C1+jj)]	= s;
-	//	s->flags				|= (SP_FLAG_VISIBLE);
-		s->flags				&= (~(SP_FLAG_VISIBLE));			/* ‰Â‹ƒtƒ‰ƒO‚ÌOFF(•s‰Â‹) */
-		s->flags				&= (~(SP_FLAG_COLISION_CHECK)); 	/* ‚ ‚½‚è”»’è‚ÌOFF(–³“G) */
-
-		s->type 				= (JIKI_OPTION_00_00/*|S P_MUTEKI*/)+kk; kk+=8/*PLAYERS8*/;
-	//	s->anim_frame			= 0;
-	//
-		s->callback_mover		= oz_ci_move_option;
-		/* ƒŒƒ~ƒŠƒA‚ÌƒIƒvƒVƒ‡ƒ“‚Í”¼“§–¾‚Á‚Û‚¢ */
-		if (REMILIA==select_player)
+		SPRITE *h;
+		h						= sprite_add_gu_error();
+	//	if (NULL!=h)/* “o˜^‚Å‚«‚½ê‡‚Ì‚İ */	/* ‹­§“o˜^ */		/* d—lƒoƒO(?) */
 		{
-		//	s->color32			= 0x96ffffff;	/*	s->alpha			= 0x96; */	/* –¾‚é‰ß‚¬‚é */
-			s->color32			= 0x80ffffff;	/*	s->alpha			= 0x80;*/	/* ”¼“§–¾ */
-		//	s->color32			= 0x50ffffff;	/*	s->alpha			= 0x50;*/	/* ˆÃ‚ç‰ß‚¬‚é */
+			option[(OPTION_C1+jj)]	= h;
+
+			#if 0/*SDL(¶‹÷À•W)*/
+			h->x256 					= obj_player->x256+((src->w128-h->w128));
+			h->y256 					= obj_player->y256+((src->h128-h->h128))+t256(20);
+			h->x256 					= obj_player->x256+((src->w128-h->w128))-t256(11)/*h->PL_OPTION_DATA_length*/;
+			h->y256 					= obj_player->y256+((src->h128-h->h128));
+			#else/*Gu(’†SÀ•W)*/
+		//	h->x256 					= obj_player->x256;
+		//	h->y256 					= obj_player->y256+t256(20);
+		//	h->x256 					= obj_player->x256-t256(11)/*h->PL_OPTION_DATA_length*/;
+		//	h->y256 					= obj_player->y256;
+		//	h->x256 					= obj_player->x256/*+t256((31-5)/2)*/;	/* ƒ_ƒ~[ƒIƒtƒZƒbƒg */
+		//	h->y256 					= obj_player->y256/*+t256((31-5)/2)*/;	/* ƒ_ƒ~[ƒIƒtƒZƒbƒg */
+			h->x256 					= obj_player->x256/*(???)*/;
+			h->y256 					= obj_player->y256/*(???)*/;
+			#endif
+
+			h->m_Hit256R			= TAMA_ATARI_BULLET_DUMMY;
+		//	h->flags				|= (SP_FLAG_OPTION_VISIBLE);
+			h->flags				&= (~(SP_FLAG_OPTION_VISIBLE)); 	/* ‰Â‹ƒtƒ‰ƒO‚ÌOFF(•s‰Â‹) */
+			h->flags				&= (~(SP_FLAG_COLISION_CHECK)); 	/* ‚ ‚½‚è”»’è‚ÌOFF(–³“G) */
+
+	/*???*/ h->base_weapon_strength 				= (1/*8*5*/);/* [***090214 ’Ç‰Á */
+			h->PL_OPTION_DATA_opt_shot_interval 	= 0;
+		//	h->PL_OPTION_DATA_state 				= 0;
+		//	h->PL_OPTION_DATA_state1				= 0;///
+			h->PL_OPTION_DATA_anime_wait			= 0;
+			/* ƒŒƒ~ƒŠƒA‚ÌƒIƒvƒVƒ‡ƒ“‚Í”¼“§–¾‚Á‚Û‚¢ */
+			if (REMILIA==select_player)
+			{
+			//	h->color32			= MAKE32RGBA(0xff, 0xff, 0xff, 0x96);	/*	h->alpha			= 0x96; */	/* –¾‚é‰ß‚¬‚é */
+				h->color32			= MAKE32RGBA(0xff, 0xff, 0xff, 0x80);	/*	h->alpha			= 0x80;*/	/* ”¼“§–¾ */
+			//	h->color32			= MAKE32RGBA(0xff, 0xff, 0xff, 0x50);	/*	h->alpha			= 0x50;*/	/* ˆÃ‚ç‰ß‚¬‚é */
+			}
+
+			switch (select_player)
+			{
+			case CIRNO_A:/*‚Æ‚è‚ ‚¦‚¸*/
+			case CIRNO_Q:/*‚Æ‚è‚ ‚¦‚¸*/
+			case REMILIA:		option_create_oz_ci(h,jj);		break;/* [***090220 ’Ç‰Á */
+			default:
+			#if 0
+			case YUYUKO:/*‚Æ‚è‚ ‚¦‚¸*/
+			case REIMU_A:/**/
+			case REIMU_B:/**/
+			case MARISA_A:
+			case MARISA_B:
+			#endif
+								option_create_re_ma_yu(h,jj);	break;
+			}
 		}
-		data					= mmalloc(sizeof(/*REMILIA_OPTION_DATA*/PL_OPTION_DATA));
-		s->data 				= data;
-		static const /*int*/s16 aaa_tbl[4] =
-		{
-		/*data->REMILIA_angle512=*/ deg_360_to_512CCW(360-(45*5)),	/*deg_360_to_512(45*1)*/ /*M_PI*2*1/8*/ /*;*/ /*ƒ`ƒ‹ƒm*/
-		/*data->REMILIA_angle512=*/ deg_360_to_512CCW(360-(45*7)),	/*deg_360_to_512(45*5)*/ /*M_PI*2*5/8*/ /*;*/ /*ƒ`ƒ‹ƒm*/
-		/*data->REMILIA_angle512=*/ deg_360_to_512CCW(360-(45*1)),	/*deg_360_to_512(45*3)*/ /*M_PI*2*3/8*/ /*;*/ /*ƒ`ƒ‹ƒm*/
-		/*data->REMILIA_angle512=*/ deg_360_to_512CCW(360-(45*3))	/*deg_360_to_512(45*7)*/ /*M_PI*2*7/8*/ /*;*/ /*ƒ`ƒ‹ƒm*/
-		};
-		data->angleCCW512/*REMILIA_angle512*/	= aaa_tbl[jj];
-	//	data->next					= player;
-	//	data->st ate1				= 0;///
-		data->state2				= 0;
-		data->offset_x256			= t256(0);
-		data->offset_y256			= t256(0);
-/*???*/ 		/*data->*/s->base_weapon_strength	= (1/*8*5*/);
-		data->anime_wait			= 0;
-		data->opt_shot_interval 	= 0;
-		data->opt_anime_add_id		= (OPTION_C1+jj);
-	//	data->ccc_angle512			= deg_360_to_512((0));
-		data->slow_count			= 0;
-		#if 0/*SDL(¶‹÷À•W)*/
-		s->x256 					= src->x256+((src->w128-s->w128));
-		s->y256 					= src->y256+((src->h128-s->h128))+t256(20);
-		#else/*Gu(’†SÀ•W)*/
-	//	s->x256 					= src->x256;
-	//	s->y256 					= src->y256+t256(20);
-		s->x256 					= src->x256/*+t256((31-5)/2)*/; 	/* ƒ_ƒ~[ƒIƒtƒZƒbƒg */
-		s->y256 					= src->y256/*+t256((31-5)/2)*/; 	/* ƒ_ƒ~[ƒIƒtƒZƒbƒg */
-		#endif
 	}
 }
-
-/*---------------------------------------------------------
-	ƒvƒŒƒCƒ„[A¶€”»’è—pƒRƒA‚Ì’Ç‰Á
-	›‚Ì’Ç‰Á
----------------------------------------------------------*/
-
-static SPRITE *player_add_maru_core(SPRITE *s1)
-{
-	SPRITE *s2;
-	s2						= sprite_add_gu(BASE_CORE_ATARI_0a+select_player);
-	s2->type				= (JIKI_CORE_00_REIMU_A+select_player);
-	#if 1/*Gu(’†SÀ•W)*/
-	s2->x256				= (s1->x256)+t256((31-5)/2);	/* ƒRƒAƒIƒtƒZƒbƒg */
-	s2->y256				= (s1->y256)+t256((31-5)/2);	/* ƒRƒAƒIƒtƒZƒbƒg */
-	#endif
-
-//	s2->callback_mover		= NULL/*player_move_core*/;
-	#if (00)
-//	s2->flags				|= ( (SP_FLAG_VISIBLE));/* ›•\¦ */
-	s2->flags				&= (~(SP_FLAG_VISIBLE));/* ›”ñ•\¦ */
-	#endif
-	return (s2);
-}
-
 /*---------------------------------------------------------
 	ƒvƒŒƒCƒ„[‰Šú‰»
 ---------------------------------------------------------*/
+extern void sprite_initialize_position(SPRITE *h);
 extern int boss_hp_dec_by_frame;/*ƒ{ƒXUŒ‚Œ¸­’lAƒtƒŒ[ƒ€’PˆÊ*/
 extern int practice_mode;
 extern void select_jiki_load_surface(void);
-void player_init(void)
+extern void boss_effect_sprite_add(void);
+global void player_init(void)
 {
 	select_jiki_load_surface();
-	player					= sprite_add_gu( JIKI_ATARI_ITEM_16 );		/* [***090220 ’Ç‰Á */
-	player->type			= (SP_GROUP_JIKI_GET_ITEM);
-	player->flags			|= (SP_FLAG_VISIBLE|SP_FLAG_COLISION_CHECK);
-	player->callback_mover	= any_player_move;
+	obj_player					= sprite_add_gu_error();		/* [***090220 ’Ç‰Á */
+//	if (NULL!=h)/* “o˜^‚Å‚«‚½ê‡‚Ì‚İ */	/* ‹­§“o˜^ */		/* d—lƒoƒO(?) */
+	obj_player->m_Hit256R		= JIKI_ATARI_ITEM_16;
+	obj_player->type			= (SP_GROUP_JIKI_GET_ITEM);
+	obj_player->flags			|= (SP_FLAG_COLISION_CHECK/*|SP_FLAG_VISIBLE*/);
+	obj_player->callback_mover	= any_player_move;
 	#if 1/*Gu(’†SÀ•W)*/
-	player->x256			= (t256(GAME_WIDTH/2));
-	player->y256			= (t256(GAME_HEIGHT));
+	obj_player->x256			= (t256(GAME_WIDTH/2));
+	obj_player->y256			= (t256(GAME_HEIGHT));
 	#endif
 //
-	pd_use_continue 	= 0;	/* ƒRƒ“ƒeƒBƒjƒ…[‰ñ” */
-	pd_count_miss		= 0;	/* ƒ~ƒX‰ñ” */
-	pd_used_bomber		= 0;	/* ƒ{ƒ€g—p‰ñ” */
-	pd_use_kurai_bomb	= 0; 	/* ‹ò‚ç‚¢ƒ{ƒ€g—p‰ñ” */
-//	pd_count_bonus		= 0;	/* ƒXƒyƒ‹ƒJ[ƒhƒ{[ƒiƒX‰ñ” */
+	/* ƒvƒŒƒCƒ„[A¶€”»’è—pƒRƒA(obj_maru == ›)‚Ì’Ç‰Á */
+	{
+	//	SPRITE *s2;
+	//	s2 = obj_maru;
+		obj_maru					= sprite_add_gu_error();
+	//	if (NULL!=h)/* “o˜^‚Å‚«‚½ê‡‚Ì‚İ */	/* ‹­§“o˜^ */		/* d—lƒoƒO(?) */
+		{
+			obj_maru->type				= (JIKI_CORE_00_REIMU_A+select_player);
+			{
+				const static u8 base_core_atari[8] =
+				{
+					(1),	/* —ì–²A */ 	//	BASE_CORE_ATARI_0a,/*6*/		/* —ì–²A */ 	/*	5 */	BASE_CORE_ATARI_0a,/*6*/
+					(1),	/* —ì–²B */ 	//	BASE_CORE_ATARI_0b,/*6*/		/* —ì–²B */ 	/*	5 */	BASE_CORE_ATARI_0a,/*6*/
+					(2),	/* –‚—¹A */	//	BASE_CORE_ATARI_0c,/*8*/		/* –‚—¹A */	/*	6 */	BASE_CORE_ATARI_0b,/*8*/
+					(2),	/* –‚—¹B */	//	BASE_CORE_ATARI_0d,/*8*/		/* –‚—¹B */	/*	6 */	BASE_CORE_ATARI_0b,/*8*/
+					(2),	/* ƒŒƒ~ƒŠƒA */	//	BASE_CORE_ATARI_0e,/*8*/		/* –‚—¹C */	/*	7 */	BASE_CORE_ATARI_0c,/*12*/
+					(2),	/* —HXq */	//	BASE_CORE_ATARI_0f,/*12*/		/* ƒŒƒ~ƒŠƒA */	/*	9 */	BASE_CORE_ATARI_0e,/*8*/
+					(1),	/* ƒ`ƒ‹ƒmA */	//	BASE_CORE_ATARI_0g,/*16*/		/* ƒ`ƒ‹ƒm */	/*	8 */	BASE_CORE_ATARI_0d,/*16*/
+					(1),	/* ƒ`ƒ‹ƒmQ */	//	BASE_CORE_ATARI_0h,/*8*/		/* —HXq */	/*	6 */	BASE_CORE_ATARI_0b,/*8*/
+				};
+				//	if (NULL!=h)/* “o˜^‚Å‚«‚½ê‡‚Ì‚İ */	/* ‹­§“o˜^ */
+				obj_maru->m_Hit256R 		= ((base_core_atari[select_player])<<8);
+			}
+		}
+	}
 //
-//
-	pd_bomber_time		= 0;	/*==bomb_wait*/
-	pd_graze_point		= 0;
-//
+//	#if (0==US E_BOSS_COMMON_MALLOC)
+//	obj_boss				= NULL;
+//	#else
+//----[BOSS]
+	{ 	SPRITE *h;
+		h								= sprite_add_gu_error();
+	//	if (NULL!=h)/* “o˜^‚Å‚«‚½ê‡‚Ì‚İ */	/* ‹­§“o˜^ */		/* d—lƒoƒO(?) */
+		obj_boss = h;
+		sprite_initialize_position(h);
+	}
+//	#endif
+	{
+		boss_effect_sprite_add();
+		boss_effect_initialize_position();
+	}
 
+//
+	pd_use_continue 		= 0;	/* ƒRƒ“ƒeƒBƒjƒ…[‰ñ” */
+	pd_count_miss			= 0;	/* ƒ~ƒX‰ñ” */
+	pd_used_bomber			= 0;	/* ƒ{ƒ€g—p‰ñ” */
+	pd_use_kurai_bomb		= 0;	/* ‹ò‚ç‚¢ƒ{ƒ€g—p‰ñ” */
+//	pd_count_bonus			= 0;	/* ƒXƒyƒ‹ƒJ[ƒhƒ{[ƒiƒX‰ñ” */
+//
+	pd_bomber_time			= 0;	/*==bomb_wait*/
+	pd_graze_point			= 0;
+//
 	pd_state_flag			= STATE_FLAG_00_NONE;
 //	if (MARISA==select_player)		{	pd_state_flag		|= STATE_FLAG_04_IS_MARISA; 	}	/* –‚—¹‚Íí‚É©“®ûW */
 //
-	boss_hp_dec_by_frame = 0;/*ƒ{ƒXUŒ‚Œ¸­’lAƒtƒŒ[ƒ€’PˆÊ*/
-//
-	#if (0==USE_BOSS_COMMON_MALLOC)
-	pd_boss 			= NULL;
-	#else
-//----[BOSS]
-	{SPRITE *sakuya;
-		sakuya								= sprite_add_gu(ZAKO_TYPE_ATARI16_PNG);
-	//	pd_boss = sakuya;/*‹P–é–{l*/
-		pd_boss 						= sakuya;/*‹P–é–{l*/
-	}
-	#endif
-	pd_core 			= player_add_maru_core(player); 	/* ›‚Ì’Ç‰Á */
 
+
+//
+	boss_hp_dec_by_frame	= 0;/*ƒ{ƒXUŒ‚Œ¸­’lAƒtƒŒ[ƒ€’PˆÊ*/
+//
 	weapon_level_offset 	= select_player + (/*0==•ŠíƒŒƒxƒ‹*/0<<3);
 	/* —ûKƒ‚[ƒh‚Ìê‡‚Íƒtƒ‹ƒpƒ[‚Ån‚ß‚é(‚»‚Ì‘ã‚í‚èƒNƒŠƒAŒã‚ÌƒCƒxƒ“ƒg‚ªŒ©‚ê‚È‚¢) */
-	pd_weapon_power 	= (0==practice_mode)?(0):(MAX_POWER_IS_128);
+	pd_weapon_power 		= (0==practice_mode)?(0):(MAX_POWER_IS_128);
 //
 	/* ƒIƒvƒVƒ‡ƒ“‚ğ’Ç‰Á */
-	switch (select_player)
-	{
-	case CIRNO_A:/*‚Æ‚è‚ ‚¦‚¸*/
-	case CIRNO_Q:/*‚Æ‚è‚ ‚¦‚¸*/
-	case REMILIA:		option_create_oz_ci(player);		break;/* [***090220 ’Ç‰Á */
-	default:
-	#if 0
-	case YUYUKO:/*‚Æ‚è‚ ‚¦‚¸*/
-	case REIMU_A:/**/
-	case REIMU_B:/**/
-	case MARISA_A:
-	case MARISA_B:
-	#endif
-						option_create_re_ma_yu(player); 	break;
-	}
+	option_create();
 //
 	now_max_continue		= DEFAULT_MAX_CONTINUE;/*(3)*/
 //
@@ -3470,12 +3449,9 @@ void player_init(void)
 	player_continue_value();
 	#else
 //	pd_zanki				= /*pd_base_zanki*/ player_fix_status[BASE_LIVES+select_player];
-//	pd_my_score 		= score(0);
-//	player_fukkatsu(player);/* ƒIƒvƒVƒ‡ƒ“‚ğ’Ç‰Á‚æ‚èŒã */
+//	pd_my_score 			= score(0);
+//	player_fukkatsu(obj_player);/* ƒIƒvƒVƒ‡ƒ“‚ğ’Ç‰Á‚æ‚èŒã */
 	#endif
-
-
-
 }
 
 /*---------------------------------------------------------
@@ -3489,17 +3465,13 @@ void player_init(void)
 //extern void player_loop_quit(void);
 extern int	now_max_continue;
 
-/*static*/ void lose_boss(SPRITE *src)
+global /*static*/ void lose_boss(SPRITE *src)
 {
 	bakuhatsu_add_circle(src, 1);	/* pl ayer_set_destoroy_boss(); B02_BOSS_DESTROY ‚ª•K—v */
 //
 	{
-
-
-	//	pd_bo ssmode=B02_BOSS_DESTROY;
+	//	pd_bo ssmode = B02_BOSS_DESTROY;
 //		pd_state_flag |= ST ATE_FLAG_11_IS_BOSS_DESTROY;
-
-
 		#if 1
 		/* ƒoƒO‚ÅƒAƒCƒeƒ€o‚È‚¢(???) */
 	//	if (pd_state_flag&STATE_FLAG_09_IS_WIN_BOSS)		/* UŒ‚‚Å“|‚µ‚½ê‡‚Ì‚İ */
@@ -3537,10 +3509,6 @@ extern int	now_max_continue;
 	src->callback_mover 		= common_99_keitai;/* ‹¤’Êƒ{ƒX‘Ş”ğ(Œ‚”jŒã‚É‰æ–ÊŠO‚Éƒ{ƒX‚ª“¦‚°‚é) */
 	#endif
 //
-	/* ‹P–é/ƒAƒŠƒX‚ğ“|‚·‚ÆŠF”j‰ó‚³‚ê‚éB */
-	#if 1
-	common_boss_flags		= (0)/*FLG_ALL_CAST*/;
-	#endif
 //
 	#if (0)
 	pd_save_timer		= /*pd_bomber_time*/255 + USER_BOMOUT_WAIT/*(30)*/;/*À¿–³“GŠÔ*/
@@ -3560,11 +3528,15 @@ extern int	now_max_continue;
 	#endif
 
 	#if 1
-	draw_boss_hp_value	= 0;/* ‚æ‚­‚í‚©‚ñ‚È‚¢ */
+	src->base_hp = 0;
+	boss_life_value = 0;
 	#endif
-//	s1->color32 		= 0x50ffffff;	//	s1->alpha			= 0x50; 	/* ”¼“§–¾ */
-//	pd_core->color32	= 0x50ffffff;	//	pd_core->alpha	= 0x50; 	/* ”¼“§–¾ */
-	boss_effect_term();
+	#if 1
+	draw_boss_hp_value	= 0;/* ‚æ‚­‚í‚©‚ñ‚È‚¢ */	/* ‹P–é/ƒAƒŠƒX‚ğ“|‚·‚ÆŠF”j‰ó‚³‚ê‚éB */
+	#endif
+//	s1->color32 		= MAKE32RGBA(0xff, 0xff, 0xff, 0x50);	//	s1->alpha		= 0x50; 	/* ”¼“§–¾ */
+//	obj_maru->color32	= MAKE32RGBA(0xff, 0xff, 0xff, 0x50);	//	obj_maru->alpha = 0x50; 	/* ”¼“§–¾ */
+	boss_effect_initialize_position();
 
 	/*---------------------------------------------------------
 		ƒ{ƒX“Áêˆ—
@@ -3581,8 +3553,6 @@ extern int	now_max_continue;
 //		voice_play(VOICE03_BOSS_HAKAI, TRACK01_EXPLODE);/*—\”õ(‚¤‚é‚³‚¢)*/
 //
 		{
-
-
 			pd_state_flag &= (~(STATE_FLAG_13_DRAW_BOSS_GAUGE));/*off*/
 //			pd_state_flag		&= (~(STATE_FLAG_03_SCORE_AUTO_GET_ITEM));		/* I‚í‚è */
 			if (0==practice_mode)/* —ûKƒ‚[ƒh‚Å‚Íƒ{ƒXŒãƒCƒxƒ“ƒg‚ÍŒ©‚ê‚È‚¢‚æB */
