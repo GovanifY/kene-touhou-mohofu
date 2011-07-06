@@ -42,8 +42,8 @@ static void move_kaguya_doll(SPRITE *src)
 	src->rotate_angle1024 += (2);
 	mask1024(src->rotate_angle1024);
 	#define HANKEI_45_DOT (45)				/* ”¼Œa */
-	src->x256 = src->xcenter256 + ((sin1024((src->rotate_angle1024))*(HANKEI_45_DOT))); 	/*CCW*/
-	src->y256 = src->ycenter256 + ((cos1024((src->rotate_angle1024))*(HANKEI_45_DOT)));
+	src->cx256 = src->xcenter256 + ((sin1024((src->rotate_angle1024))*(HANKEI_45_DOT))); 	/*CCW*/
+	src->cy256 = src->ycenter256 + ((cos1024((src->rotate_angle1024))*(HANKEI_45_DOT)));
 	#undef HANKEI_45_DOT
 	src->color32		= (src->color32 & 0x00ffffff) | ((src->time_out<<(23))&0xff000000);
 }
@@ -77,8 +77,8 @@ void add_zako_kaguya_houmotsu(SPRITE *src)
 			h->callback_loser		= lose_kaguya_doll;
 			h->callback_hit_enemy	= callback_hit_zako;
 	//
-			h->xcenter256			= (src->x256);
-			h->ycenter256			= (src->y256);
+			h->xcenter256			= (src->cx256);
+			h->ycenter256			= (src->cy256);
 	//
 			h->base_hp				= ((8*1024)-1); 	/* 8192==(8*1024) */
 			h->base_score			= adjust_score_by_difficulty(score( 400000));	/* 40–œ */

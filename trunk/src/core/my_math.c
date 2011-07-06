@@ -2,7 +2,7 @@
 #include "game_main.h"
 
 /*---------------------------------------------------------
-	東方模倣風  ～ Toho Imitation Style.
+	東方模倣風	～ Toho Imitation Style.
 	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 ---------------------------------------------------------*/
@@ -11,13 +11,8 @@
 //#include <malloc.h>
 
 /*---------------------------------------------------------
-	math.h 1949649 1948897
+	math.h
 ---------------------------------------------------------*/
-
-//#if (1==USE_SIN_TABLE)
-//	/* この配列もCPU内蔵の命令キャッシュに乗る(とおもう)よ。 */
-//	global int sin_tbl 512[SINTABLE_SIZE];
-//#endif
 
 /* この関数はCPU内蔵の命令キャッシュに乗るよ(てい。というか乗ってるはず)。 */
 //extern int at an_512( int y, int x );
@@ -60,41 +55,21 @@ global void set_rnd_seed(int set_seed)
 
 
 /*---------------------------------------------------------
-	この関数はただの初期化。命令キャッシュに乗らない(はずだ)よ。
----------------------------------------------------------*/
-
-global void init_math(void)
-{
-	#if (1==USE_SIN_TABLE)
-	unsigned int i;
-	for (i=0; i<SINTABLE_SIZE; i++)
-	{
-	//	sin_tbl 512[i] = (int)(sinf( (i*(GU_PI*2) / SINTABLE_SIZE) )*256/**65536.0*/ );
-	//	sin_tbl 512[i] = (int)(sin( (i*(GU_PI*2) / SINTABLE_SIZE) )*256/**65536.0*/ );
-	//	sin_tbl 512[i] = (int)(vfpu_sinf( (i*(GU_PI*2) / SINTABLE_SIZE) )*256/**65536.0*/ );
-
-	//	sin_tbl 512[i] = (int)(vfpu_sini( (i*(GU_PI*2)*2 / (GU_PI)*SINTABLE_SIZE) )*256/**65536.0*/ );
-	//	sin_tbl 512[i] = (int)(vfpu_sini( (i*(2*2) / SINTABLE_SIZE) )*256/**65536.0*/ );
-
-	//	sin_tbl 512[i] = (int)(vfpu_sin1024( (i*(2) ) )*256/**65536.0*/ );
-		sin_tbl 512[i] = (int)(int256_sin1024( (i+i) ) );
-	}
-	#endif
-}
-
-
-/*---------------------------------------------------------
 	キー入力関連の処理(汎用)
 ---------------------------------------------------------*/
 
-global int pad_config[KEY_NUM12_MAX];
 
+global int pad_config[KEY_NUM12_MAX];
 
 extern void save_screen_shot(void);
 global u32	my_pad; 		/*今回入力*/
 global u32	my_pad_alter;	/*前回入力*/
 global s16	my_analog_x;	/* アナログ量、補正済み */
 global s16	my_analog_y;	/* アナログ量、補正済み */
+
+
+
+
 static int	use_analog; 	/* アナログ使用フラグ(0:使用しない、1:使用する) */
 
 global void psp_pad_init(void)
@@ -115,11 +90,11 @@ global void psp_pad_init(void)
 		SceCtrlData pad;
 		sceCtrlReadBufferPositive(&pad, 1);
 		/* 起動時にアナログ入力があった場合、故障していると判断しアナログ入力無効。 */
-		if (pad.Lx < 64/*70*/)			{	use_analog = 0;		}
-		else if (pad.Lx > 192/*185*/)	{	use_analog = 0;		}
+		if (pad.Lx < 64/*70*/)			{	use_analog = 0; 	}
+		else if (pad.Lx > 192/*185*/)	{	use_analog = 0; 	}
 		//
-		if (pad.Ly < 64/*70*/)			{	use_analog = 0;		}
-		else if (pad.Ly > 192/*185*/)	{	use_analog = 0;		}
+		if (pad.Ly < 64/*70*/)			{	use_analog = 0; 	}
+		else if (pad.Ly > 192/*185*/)	{	use_analog = 0; 	}
 		#if (0)
 		if (0 == use_analog)
 		{
@@ -128,7 +103,6 @@ global void psp_pad_init(void)
 		#endif
 	}
 }
-
 
 
 global void do_input_vbl(void)
@@ -313,14 +287,14 @@ global void error(int errorlevel, char *msg, ...)
 	vsprintf(msgbuf, msg, argptr);
 	va_end(argptr);
 
-	switch (errorlevel)
+//	sw itch (errorlevel)
 	{
-	//case ERR_DEBUG:	if (debug)	{ fprintf(stdout,"DEBUG: %s\n",msgbuf); } break;
-	//case ERR_INFO:		fprintf(stdout,"INFO: %s\n",msgbuf); break;
+	//ca se ERR_DEBUG:	if (debug)	{ fprintf(stdout,"DEBUG: %s\n",msgbuf); } break;
+	//ca se ERR_INFO:		fprintf(stdout,"INFO: %s\n",msgbuf); break;
 
 	#if 0
 	/*デバッグ用*/
-	case ERR_WARN:	//fprintf(stdout,"WARNING: %s\n",msgbuf);
+	//ca se ERR_WARN:	//fprintf(stdout,"WARNING: %s\n",msgbuf);
 		pspDebugScreenSetXY(2,3);
 		pspDebugScreenPrintf("WARNING");
 		hit_any_key();
@@ -340,9 +314,9 @@ global void error(int errorlevel, char *msg, ...)
 			}
 			hit_any_key();
 		}
-		break;
+		//br eak;
 	#endif
-	case ERR_FATAL: //	fprintf(stdout,"FATAL: %s\n",msgbuf);
+	//ca se ERR_FATAL: //	fprintf(stdout,"FATAL: %s\n",msgbuf);
 		pspDebugScreenSetXY(2,3);
 		pspDebugScreenPrintf("FATAL ERROR");
 		hit_any_key();
@@ -352,7 +326,7 @@ global void error(int errorlevel, char *msg, ...)
 		pspDebugScreenPrintf("%s",	msgbuf	);
 		hit_any_key();
 		sceKernelExitGame();	//if (errorlevel==ERR_FATAL) exit(1);/*exit(1)はpspで使えないので注意*/
-		break;
+		//br eak;
 	}
 }
 

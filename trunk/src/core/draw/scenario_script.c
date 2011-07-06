@@ -133,8 +133,7 @@ enum
 
 typedef struct _scenario_script
 {
-	int i_code; 		/* Interprited Code. / Intermediate Language, Command 中間言語 */
-//	int owattayo;		// 終わったかどうか
+	int i_code; 		/* Interprited Code. / Intermediate Language, Command 中間言語 / 終わったかどうか */	//	int owattayo;
 	int douji_chain;	// 同時実行かどうか
 						// 0=違うよ 1=1つ目 2=2つ目
 	int time_out;		/* 0:初回, それ以外初回ではない  各スクリプトコマンドごとの初期化判定 */
@@ -151,22 +150,19 @@ typedef struct _scenario_script
 
 typedef struct /*_script_sprite*/
 {
-	int/*int*/ x;		/* x座標だよ */
-	int/*int*/ y;		/* y座標だよ */
-	int x256;						/* 精度確保用(256固定小数点形式) */
-	int y256;						/* 精度確保用(256固定小数点形式) */
+	int cx256;			/* objの中心座標, 精度確保用(256固定小数点形式) */ 	//	int/*int*/ x;		/* x座標だよ */
+	int cy256;			/* objの中心座標, 精度確保用(256固定小数点形式) */ 	//	int/*int*/ y;		/* y座標だよ */
 //[4]
-	int w;							/* 幅 */			//	int cw; 	/* 中心座標(幅) */
-	int h;							/* 高さ */			//	int ch; 	/* 中心座標(高さ) */
+	int w;				/* objの幅 */			//	int cw; 	/* 中心座標(幅) */
+	int h;				/* objの高さ */			//	int ch; 	/* 中心座標(高さ) */
 //
-	int target_x;					/* 目標座標 */
-	int target_y;					/* 目標座標 */
+	int target_x256;	/* 目標座標 */
+	int target_y256;	/* 目標座標 */
 //[8]
-	int move_wait;					/* 動きがあったときの制御用 */
-	int angle1024;					/* 正確な方向 */	//	int r_course;	/* 大体の方向 */
+	int set_speed;		/* 移動速度 */		//	int move_wait;		/* 動きがあったときの制御用 */
+	int angle1024;		/* 正確な方向 */	//	int r_course;	/* 大体の方向 */
 //[12]
-	SDL_Surface *img;				/* Images */
-	int set_speed;					/* 移動速度 */
+	SDL_Surface *img;	/* Images */
 //
 //	u8 alpha255;				/* alpha値 */
 //	u8 flags;					/* 0:非表示, 1:表示, 2:tachie_window(2nd screen)に表示	ここでは表示させるかどうかだけ */
@@ -194,8 +190,8 @@ static S_SCRIPT *loading_script_list;			/* 命令収集用 */
 #define SPRITE_tachie_l (29&1)/*-3*/
 #define SPRITE_tachie_r (30&1)/*-2*/
 //#define SPRITE_tachie_m (31)/*-1*/
-#define SPRITE_MAX		(2/*32*/)
-static SCRIPT_SPRITE *std_obj[SPRITE_MAX/*32*/ /*20*/]; 		/* 汎用スプライト */
+#define SCRIPT_TACHIE_OBJ_MAX		(2/*32*/)
+static SCRIPT_SPRITE *std_obj[SCRIPT_TACHIE_OBJ_MAX/*32*/ /*20*/];		/* 汎用スプライト */
 //static SCRIPT_SPRITE *tachie_r;
 //static SCRIPT_SPRITE *tachie_l;
 //
@@ -304,7 +300,7 @@ static void swap_my_sprite(S_SCRIPT *ssc)
 	if (-1==num)		{	return; 		}
 //	else if (-2==num)	{	tmp=std_obj[SPRITE_tachie_r/*32-2*/];	}	/* right */
 //	else if (-3==num)	{	tmp=std_obj[SPRITE_tachie_l/*32-3*/];	}	/* left */
-	else				{	tmp=std_obj[(num)&(SPRITE_MAX-1)];	}	/* 汎用スプライト */
+	else				{	tmp=std_obj[(num)&(SCRIPT_TACHIE_OBJ_MAX-1)];	}	/* 汎用スプライト */
 	if (NULL==tmp)		{	return; 		}
 
 	SDL_FreeSurface(tmp->img);
@@ -334,7 +330,7 @@ static /*SCRIPT_SPRITE **/void load_my_sprite(S_SCRIPT *ssc)
 	xx			= ssc->para2;
 	yy			= ssc->para3;
 //
-	sc_sp_num =(sc_sp_num&(SPRITE_MAX-1));
+	sc_sp_num &= ((SCRIPT_TACHIE_OBJ_MAX-1));
 	if (NULL != std_obj[sc_sp_num]) 	{	remove_script_sprite(std_obj[sc_sp_num]); }
 	SCRIPT_SPRITE *tmp;
 	tmp 				= my_calloc(sizeof(SCRIPT_SPRITE));
@@ -356,9 +352,9 @@ static /*SCRIPT_SPRITE **/void load_my_sprite(S_SCRIPT *ssc)
 //	tmp->an im_count	= 0;
 	/*tmp->alpha255 	= 255;*/	/*tmp->color32		= MAKE32RGBA(0xff, 0xff, 0xff, 0xff);*/
 //	tmp->flags			= 0;
-	tmp->move_wait		= 0;
-	tmp->x				= xx/*rect->x*/;
-	tmp->y				= yy/*rect->y*/;
+//	tmp->move_wait		= 0;
+	tmp->cx256			= (xx<<8);	/*rect->x*/
+	tmp->cy256			= (yy<<8);	/*rect->y*/
 //	tmp->x				= rect->x-(rect->w*tmp->w);
 //	tmp->y				= rect->y-(tmp->h);
 //	tmp->x				= xx-(0*tmp->w);
@@ -386,8 +382,8 @@ static /*SCRIPT_SPRITE **/void load_my_sprite(S_SCRIPT *ssc)
 //static void set_sprite_speed( int num, int speed_aaa)
 //{
 //	SCRIPT_SPRITE *tmp;
-//	tmp=std_obj[(num)&(SPRITE_MAX-1)];		/* 汎用スプライト */
-//	//std_obj[((num)&(SPRITE_MAX-1))].set_speed = speed_aaa;
+//	tmp=std_obj[(num)&(SCRIPT_TACHIE_OBJ_MAX-1)];		/* 汎用スプライト */
+//	//std_obj[((num)&(SCRIPT_TACHIE_OBJ_MAX-1))].set_speed = speed_aaa;
 //	tmp->set_speed = speed_aaa;
 //}
 static int do_move_script_sprite(S_SCRIPT *ssc)/*, int speed_aaa, int alpha255*/	/*,ssc->para4*/
@@ -403,18 +399,20 @@ static int do_move_script_sprite(S_SCRIPT *ssc)/*, int speed_aaa, int alpha255*/
 	y = ssc->para3;
 //
 	SCRIPT_SPRITE *my_std_obj;
-	my_std_obj = std_obj[((num)&(SPRITE_MAX-1))];	/* 汎用スプライト */
+	my_std_obj = std_obj[((num)&(SCRIPT_TACHIE_OBJ_MAX-1))];	/* 汎用スプライト */
 //
 	if (0 == ssc->time_out/*inits*/)	/* 初回のみ行う */
 	{
 		ssc->time_out = 1;/*初回ではない*/
 		/* あらかじめ移動完了位置を算出しておく */
-		my_std_obj->target_x	= my_std_obj->x + x;		/* 移動完了座標 */
-		my_std_obj->target_y	= my_std_obj->y + y;		/* 移動完了座標 */
-		my_std_obj->x256		= ((my_std_obj->x)<<8); 	/* 精度確保用 */
-		my_std_obj->y256		= ((my_std_obj->y)<<8); 	/* 精度確保用 */
+		my_std_obj->target_x256 = my_std_obj->cx256 + (x<<8);		/* 移動完了座標 */
+		my_std_obj->target_y256 = my_std_obj->cy256 + (y<<8);		/* 移動完了座標 */
+//		my_std_obj->cx256		= ((my_std_obj->cx256)/*<<8*/);		/* 精度確保用 */
+//		my_std_obj->cy256		= ((my_std_obj->cy256)/*<<8*/);		/* 精度確保用 */
 		/* 移動方向を決める */
-		my_std_obj->angle1024	= atan_1024(y,x);
+	//	my_std_obj->angle1024	= at an_1024(y,x);
+		my_std_obj->angle1024	= atan_65536(y,x);
+		my_std_obj->angle1024	>>= (6);
 	//	my_std_obj->color32 	= ((alpha255)<<8);	/* 色 */
 	//	my_std_obj->alpha		= ((alpha255)<<8);	/* 色 */
 		if ('f'==color32_str[2])
@@ -445,26 +443,26 @@ static int do_move_script_sprite(S_SCRIPT *ssc)/*, int speed_aaa, int alpha255*/
 		/* CWの場合 */
 	//	my_std_obj->x += ((cos512(my_std_obj->angle512)*speed)/10);
 	//	my_std_obj->y += ((sin512(my_std_obj->angle512)*speed)/10);
-	//	my_std_obj->x256 += ((cos512(my_std_obj->angle512)*speed256)>>8);	/* 精度確保用 */
-	//	my_std_obj->y256 += ((sin512(my_std_obj->angle512)*speed256)>>8);	/* 精度確保用 */
+	//	my_std_obj->cx256 += ((cos512(my_std_obj->angle512)*speed256)>>8);	/* 精度確保用 */
+	//	my_std_obj->cy256 += ((sin512(my_std_obj->angle512)*speed256)>>8);	/* 精度確保用 */
 		#else
 		/* CCWの場合 */
-		my_std_obj->x256 += ((sin1024(my_std_obj->angle1024)*speed256)>>8); /* 精度確保用 */
-		my_std_obj->y256 += ((cos1024(my_std_obj->angle1024)*speed256)>>8); /* 精度確保用 */
+		my_std_obj->cx256 += ((sin1024(my_std_obj->angle1024)*speed256)>>8); /* 精度確保用 */
+		my_std_obj->cy256 += ((cos1024(my_std_obj->angle1024)*speed256)>>8); /* 精度確保用 */
 		#endif
 	}
 //
-	my_std_obj->x	= (t256_floor(my_std_obj->x256));		/* 精度確保用 */
-	my_std_obj->y	= (t256_floor(my_std_obj->y256));		/* 精度確保用 */
+//	my_std_obj->cx256	= (/*t256_floor*/(my_std_obj->cx256));		/* 精度確保用 */
+//	my_std_obj->cy256	= (/*t256_floor*/(my_std_obj->cy256));		/* 精度確保用 */
 	/* 大体の方向: なので ４５度回転してずらして、上位２ビットが大まかな方向 */
 	#if 0
 	/* CWの場合 */
 	switch ((((my_std_obj->angle512+64/*deg_360_to_512(45)*/) & 0x180 )))/*my_std_obj->r_course*/
 	{	/* 移動完了座標に等しいかはみ出したら、完了とする。 */
-	case (0<<7)/* 1:→(512_0) */:	if (my_std_obj->x >= my_std_obj->target_x)	{	goto move_complete; 	}	break;
-	case (1<<7)/* 2:↓(512_1) */:	if (my_std_obj->y <= my_std_obj->target_y)	{	goto move_complete; 	}	break;
-	case (2<<7)/* 3:←(512_2) */:	if (my_std_obj->x <= my_std_obj->target_x)	{	goto move_complete; 	}	break;
-	case (3<<7)/* 0:↑(512_3) */:	if (my_std_obj->y >= my_std_obj->target_y)	{	goto move_complete; 	}	break;
+	case (0<<7)/* 1:→(512_0) */:	if (my_std_obj->cx256 >= my_std_obj->target_x256)	{	goto move_complete; 	}	break;
+	case (1<<7)/* 2:↓(512_1) */:	if (my_std_obj->cy256 <= my_std_obj->target_y256)	{	goto move_complete; 	}	break;
+	case (2<<7)/* 3:←(512_2) */:	if (my_std_obj->cx256 <= my_std_obj->target_x256)	{	goto move_complete; 	}	break;
+	case (3<<7)/* 0:↑(512_3) */:	if (my_std_obj->cy256 >= my_std_obj->target_y256)	{	goto move_complete; 	}	break;
 	}
 	#else
 	/* CCWの場合 */
@@ -475,17 +473,17 @@ static int do_move_script_sprite(S_SCRIPT *ssc)/*, int speed_aaa, int alpha255*/
 //	case (1<<7)/* 1:→(512_0) */:	if (my_std_obj->x >= my_std_obj->target_x)	{	goto move_complete; 	}	break;
 //	case (2<<7)/* 0:↑(512_3) */:	if (my_std_obj->y >= my_std_obj->target_y)	{	goto move_complete; 	}	break;
 //	case (3<<7)/* 3:←(512_2) */:	if (my_std_obj->x <= my_std_obj->target_x)	{	goto move_complete; 	}	break;
-	case (1<<8)/* 2:↓(1024_1) */:	if (my_std_obj->y <= my_std_obj->target_y)	{	goto move_complete; 	}	break;
-	case (0<<8)/* 1:→(1024_0) */:	if (my_std_obj->x >= my_std_obj->target_x)	{	goto move_complete; 	}	break;
-	case (3<<8)/* 0:↑(1024_3) */:	if (my_std_obj->y >= my_std_obj->target_y)	{	goto move_complete; 	}	break;
-	case (2<<8)/* 3:←(1024_2) */:	if (my_std_obj->x <= my_std_obj->target_x)	{	goto move_complete; 	}	break;
+	case (1<<8)/* 2:↓(1024_1) */:	if (my_std_obj->cy256 <= my_std_obj->target_y256)	{	goto move_complete; 	}	break;
+	case (0<<8)/* 1:→(1024_0) */:	if (my_std_obj->cx256 >= my_std_obj->target_x256)	{	goto move_complete; 	}	break;
+	case (3<<8)/* 0:↑(1024_3) */:	if (my_std_obj->cy256 >= my_std_obj->target_y256)	{	goto move_complete; 	}	break;
+	case (2<<8)/* 3:←(1024_2) */:	if (my_std_obj->cx256 <= my_std_obj->target_x256)	{	goto move_complete; 	}	break;
 	}
 	#endif
 	return (0);/*移動中*/
 move_complete:
 	/* 移動完了した場合は、正確な座標に修正する。 */
-	my_std_obj->x = my_std_obj->target_x;
-	my_std_obj->y = my_std_obj->target_y;
+	my_std_obj->cx256 = my_std_obj->target_x256;
+	my_std_obj->cy256 = my_std_obj->target_y256;
 	return (1);/*移動完了*/
 }
 
@@ -826,7 +824,7 @@ static SDL_Surface *bg_story_window_surface;			/* スクリプトにおける背景 */
 static void aaa_script_reset(void)
 {
 	int i;
-	for (i=0; i<SPRITE_MAX/*20*/; i++)
+	for (i=0; i<SCRIPT_TACHIE_OBJ_MAX/*20*/; i++)
 	{
 		remove_script_sprite(std_obj[i]);
 	}
@@ -976,8 +974,8 @@ static void draw_my_sprite(SCRIPT_SPRITE *std_obj_nnn_/*int nnn*/)
 				src_r.y = (0);
 				src_r.w = std_obj_nnn_->w;
 				src_r.h = std_obj_nnn_->h;
-				dst_r.x = std_obj_nnn_->x;
-				dst_r.y = std_obj_nnn_->y;
+				dst_r.x = (t256_floor(std_obj_nnn_->cx256));
+				dst_r.y = (t256_floor(std_obj_nnn_->cy256));
 				SDL_BlitSurface(std_obj_nnn_->img, &src_r, sdl_screen[SDL_00_VIEW_SCREEN], &dst_r);
 			}
 			/* 動き/アニメーション */
@@ -1013,7 +1011,7 @@ static void s_draw_the_script(void)
 	欠陥があるので描画後にしか出来ない。
 ---- やりたいこと ----
 	1フレームでは終わらない処理があったときのためにこのコマンドからの命令には全て
-	終わったことを知らせる引数を付けておくこと。=> owattayoに代入で終了。
+	該当コマンド終了の場合、中間コード sc->i_code = I_CODE_DONE;に代入で終了。
 	常にchainを確認し、0以外の値が入っていたら次の関数も実行する(nextを辿る)。
 ---------------------------------------------------------*/
 
@@ -1042,7 +1040,7 @@ static /*int*/void work_the_script(void)
 			//	&& (I_CODE_JUMP != ssc->i_code)/*廃止*/
 				)
 			{
-				ssc->i_code = I_CODE_DONE;	/*ssc->owattayo = 1;*/
+				ssc->i_code = I_CODE_DONE;
 				ssc = ssc->next;
 			}
 			if (NULL == ssc->next)
@@ -1076,29 +1074,29 @@ static /*int*/void work_the_script(void)
 //			case I_CODE_CUR_POP:		/* カーソル位置、復元 */
 //				cursor_x = cursor_x_chached;
 //				cursor_y = cursor_y_chached;
-//				ssc->i_code = I_CODE_DONE;	/*ssc->owattayo = 1;*/
+//				ssc->i_code = I_CODE_DONE;
 //				break;
 //			case I_CODE_CUR_PUSH:		/* カーソル位置、記憶 */
 //				cursor_x_chached = cursor_x;
 //				cursor_y_chached = cursor_y;
-//				ssc->i_code = I_CODE_DONE;	/*ssc->owattayo = 1;*/
+//				ssc->i_code = I_CODE_DONE;
 //				break;
 			case I_CODE_CUR_HOME:		/* カーソルの初期化 */
 				home_cursor();				/* カーソルをホームポジションへ移動 */
-				ssc->i_code = I_CODE_DONE;	/*ssc->owattayo = 1;*/
+				ssc->i_code = I_CODE_DONE;
 				break;
 			// [テキスト表示/クリック待ち]
 			case I_CODE_CLICK:
 				if (0 == shot_ositenai)
-				{	ssc->i_code = I_CODE_DONE;	/*ssc->owattayo = 1;*/	}
+				{	ssc->i_code = I_CODE_DONE;	}
 				break;
 			case I_CODE_BG_WRITE_TEXT:
 				//set_write_text(1);		/* BGウィンドウに漢字の文字を描く様に設定する。 */
-				ssc->i_code = I_CODE_DONE;	/*ssc->owattayo = 1;*/
+				ssc->i_code = I_CODE_DONE;
 				break;
 			case I_CODE_TEXT_WRITE_TEXT:
 				//set_write_text(0);		/* メッセージウィンドウに漢字の文字を描く様に設定する。 */
-				ssc->i_code = I_CODE_DONE;	/*ssc->owattayo = 1;*/
+				ssc->i_code = I_CODE_DONE;
 				break;
 			case I_CODE_TEXT:
 			{	static int tmp_all[16/*15*/];	/* ご自由にお使いください。 */
@@ -1130,14 +1128,14 @@ static /*int*/void work_the_script(void)
 							{
 								home_cursor();				/* カーソルをホームポジションへ移動 */
 							}
-						//	else	{	;	}	//cursor_continue = 1;	/* カーソル継続 */
+						//			//cursor_continue = 1;	/* カーソル継続 */
 							if (0x00 != (ssc->para3 & 0x04))	/* 0レジスタと比較 */
 							{
 								kanji_window_clear();	/* メッセージウィンドウの内容を消す。 */
 							//	msg_window_init();/*???*/		/* ウィンドウ初期化 */
 							}
-						//	else	{	;	}
-							ssc->i_code = I_CODE_DONE;	/*ssc->owattayo = 1;*/
+						//
+							ssc->i_code = I_CODE_DONE;
 							tmp_all[(ssc->douji_chain)] = 0;
 						}
 					}
@@ -1165,49 +1163,49 @@ static /*int*/void work_the_script(void)
 			case I_CODE_BG_LOAD:
 			//	bg_story_window_surface = load_local01(ssc->para0, bg_story_window_surface);//, 0 ssc->para1);
 			//	SD L_SetColorKey(bg_story_window_surface, SD L_SRCCOLORKEY|SD L_RLEACCEL, 0x00000000);
-			//	ssc->i_code = I_CODE_DONE;	/*ssc->owattayo = 1;*/
+			//	ssc->i_code = I_CODE_DONE;
 				{	int aaa;
 					aaa = load_my_bg(ssc);
 					if (0!=aaa)
 					{
-						ssc->i_code = I_CODE_DONE;	/*ssc->owattayo = 1;*/
+						ssc->i_code = I_CODE_DONE;
 					}
 				}
 				break;
 			case I_CODE_OBJ_LOAD:	/* 汎用絵  立ち絵L	立ち絵R */
 				load_my_sprite(ssc);
-				ssc->i_code = I_CODE_DONE;	/*ssc->owattayo = 1;*/
+				ssc->i_code = I_CODE_DONE;
 				break;
 			case I_CODE_OBJ_MOVE:
 				{	int aaa;
 					aaa = do_move_script_sprite(ssc);
 					if (0!=aaa)
 					{
-						ssc->i_code = I_CODE_DONE;	/*ssc->owattayo = 1;*/
+						ssc->i_code = I_CODE_DONE;
 					}
 				}
 				break;
 //			case I_CODE_OBJ_SPEED:
 //				set_sprite_speed(/*ssc->para0,*/ssc->para1/*num*/, ssc->para2/*setspeed*/  /*,ssc->para3,ssc->para4*/);
-//				ssc->i_code = I_CODE_DONE;	/*ssc->owattayo = 1;*/
+//				ssc->i_code = I_CODE_DONE;
 //				break;
 			case I_CODE_OBJ_SWAP:
 				swap_my_sprite(ssc);
-				ssc->i_code = I_CODE_DONE;	/*ssc->owattayo = 1;*/
+				ssc->i_code = I_CODE_DONE;
 				break;
-			case I_CODE_SCREEN_BG:			is_bg					= ssc->para1;	check_is_bg();	ssc->i_code = I_CODE_DONE;	/*ssc->owattayo = 1;*/	break;
-			case I_CODE_SCREEN_TEXT:		draw_script_screen		= ssc->para1;	ssc->i_code = I_CODE_DONE;	/*ssc->owattayo = 1;*/	break;
-			case I_CODE_SCREEN_PANEL:		draw_side_panel 		= ssc->para1;	ssc->i_code = I_CODE_DONE;	/*ssc->owattayo = 1;*/
+			case I_CODE_SCREEN_BG:			is_bg					= ssc->para1;	check_is_bg();	ssc->i_code = I_CODE_DONE;	break;
+			case I_CODE_SCREEN_TEXT:		draw_script_screen		= ssc->para1;					ssc->i_code = I_CODE_DONE;	break;
+			case I_CODE_SCREEN_PANEL:		draw_side_panel 		= ssc->para1;					ssc->i_code = I_CODE_DONE;
 				#if 1
 				/* 本当は要らないが、現状では使いにくいのでパネル切り替え時に細工する。 */
 				/* スキップモード、強制的に無効(スキップしない)。 */
 				script_skip_mode = 0;/*off*/
 				#endif
-																																		break;
-			case I_CODE_BGM:				play_music_num( (ssc->para1) ); 		ssc->i_code = I_CODE_DONE;	/*ssc->owattayo = 1;*/	break;
-			case I_CODE_BGM_VOLUME: 		set_music_volume( (ssc->para1) );		ssc->i_code = I_CODE_DONE;	/*ssc->owattayo = 1;*/	break;
-			case I_CODE_BOSS_LOAD:			script_boss_load( (ssc->para1) );		ssc->i_code = I_CODE_DONE;	/*ssc->owattayo = 1;*/	break;
-			case I_CODE_BOSS_START: 		script_boss_start( /*(ssc->para1)*/ );		ssc->i_code = I_CODE_DONE;	/*ssc->owattayo = 1;*/	break;
+																												break;
+			case I_CODE_BGM:				play_music_num( (ssc->para1) ); 		ssc->i_code = I_CODE_DONE;	break;
+			case I_CODE_BGM_VOLUME: 		set_music_volume( (ssc->para1) );		ssc->i_code = I_CODE_DONE;	break;
+			case I_CODE_BOSS_LOAD:			script_boss_load( (ssc->para1) );		ssc->i_code = I_CODE_DONE;	break;
+			case I_CODE_BOSS_START: 		script_boss_start( /*(ssc->para1)*/ );	ssc->i_code = I_CODE_DONE;	break;
 			}
 		}
 //		if (0 == ssc->owattayo) 	{	n9++;	}		/* 継続フラグ */
@@ -1295,7 +1293,6 @@ static void static_do_script_work_main(void)
 /*
 	ちゃんと動作と描画が分離できてれば、SDL描画が重いなら、Gu化しなくても
 	シナリオ描画部分だけフレームスキップ(30fpsとか)だって出来るんだけど。
-
 */
 
 /*---------------------------------------------------------
@@ -1304,16 +1301,10 @@ static void static_do_script_work_main(void)
 
 static void do_script_terminate(void)
 {
-			draw_script_screen = 0; /* せりふウィンドウ表示フラグ off */
-
-//				load_script_free();
-//				aaa_script_reset();
-
-		load_script_free();
-		aaa_script_reset();
-	//	is_bg = 0;/* (描画と分離できない)バグ修正 */
-
-
+	draw_script_screen = 0; /* せりふウィンドウ表示フラグ off */
+	load_script_free();
+	aaa_script_reset();
+//	is_bg = 0;/* (描画と分離できない)バグ修正 */
 }
 
 
@@ -1328,8 +1319,8 @@ global void script_move_main(void)
 		{
 			do_script_terminate();
 			{
-				pd_state_flag &= (~(STATE_FLAG_06_IS_SCRIPT));/*off*/
-				pd_state_flag |= STATE_FLAG_12_END_SCRIPT;	/*pd_bo ssmode=B08_START;*/ /*	pd_bo ssmode=B09_STAGE_LOAD;*/
+				pd.state_flag &= (~(STATE_FLAG_06_IS_SCRIPT));/*off*/
+				pd.state_flag |= STATE_FLAG_12_END_SCRIPT;	/*pd_bo ssmode=B08_START;*/ /*	pd_bo ssmode=B09_STAGE_LOAD;*/
 			}
 		}
 		/*else	{	draw_the_script();}*/
@@ -1365,7 +1356,7 @@ static int aaa_script_start(void)	/* シナリオファイル名と背景ファイル名 */	/*, c
 //	std_obj[SPRITE_tachie_r]			= NULL;
 //	std_obj[SPRITE_tachie_l]			= NULL;
 	int i;
-	for (i=0; i<SPRITE_MAX/*20*/; i++)
+	for (i=0; i<SCRIPT_TACHIE_OBJ_MAX/*20*/; i++)
 	{
 		std_obj[i]		= NULL;
 	}
@@ -1385,9 +1376,9 @@ global void script_ivent_load(void/*int mode*/)
 		#define DIRECTRY_NAME_OFFSET	(DIRECTRY_NAME_DATA_LENGTH + DIRECTRY_NAME_TEXT_LENGTH)
 		strcpy(my_fopen_file_name, DIRECTRY_NAME_DATA_STR DIRECTRY_NAME_TEXT_STR "Z/sZ1" DIRECTRY_NAME_KAKUCHOUSI_TEXT_STR);
 		my_fopen_file_name[DIRECTRY_NAME_OFFSET+0] = ('0'+select_player);
-		my_fopen_file_name[DIRECTRY_NAME_OFFSET+3] = get_stage_chr(player_now_stage);
+		my_fopen_file_name[DIRECTRY_NAME_OFFSET+3] = get_stage_chr(pd.player_now_stage);
 	//
-		if (/*STATE_FLAG_05_IS_BOSS == */(pd_state_flag & STATE_FLAG_05_IS_BOSS))
+		if (/*STATE_FLAG_05_IS_BOSS == */(pd.state_flag & STATE_FLAG_05_IS_BOSS))
 		{
 			;// my_fopen_file_name[DIRECTRY_NAME_OFFSET+4] = '1';
 		}
@@ -1400,11 +1391,11 @@ global void script_ivent_load(void/*int mode*/)
 	load_script_free();
 	if (0 == aaa_script_start())		// ファイルがない場合はイベントを飛ばす, /*NULL,*/ (GAME_WIDTH) /*380*/
 	{
-		pd_state_flag |= STATE_FLAG_12_END_SCRIPT;		/*pd_bo ssmode=B09_STAGE_LOAD;*/
+		pd.state_flag |= STATE_FLAG_12_END_SCRIPT;		/*pd_bo ssmode=B09_STAGE_LOAD;*/
 	}
 	else
 	{
-		pd_state_flag |= STATE_FLAG_06_IS_SCRIPT;	/*on*/		/*pd_bo ssmode=B00_NONE;*/ /*B06_AFTER_EVENT*/
+		pd.state_flag |= STATE_FLAG_06_IS_SCRIPT;	/*on*/		/*pd_bo ssmode=B00_NONE;*/ /*B06_AFTER_EVENT*/
 		#if 0
 		/* シナリオ中にボムが発生してしまう。バグがあるので。 */
 		pd_bomber_time = 0;
@@ -1413,8 +1404,8 @@ global void script_ivent_load(void/*int mode*/)
 
 //	load_script_free();
 //	if (0 == aaa_script_start(file_name)), /*NULL,*/ 380
-//			{	pd_state_flag |= STATE_FLAG_12_END_SCRIPT;		/*pd_bo ssmode=B08_START;*/ }
-//	else	{	pd_state_flag |= STATE_FLAG_06_IS_SCRIPT;		/*pd_bo ssmode=B00_NONE;*/ /*B03_BEFORE_EVENT*/ }
+//			{	pd.state_flag |= STATE_FLAG_12_END_SCRIPT;		/*pd_bo ssmode=B08_START;*/ }
+//	else	{	pd.state_flag |= STATE_FLAG_06_IS_SCRIPT;		/*pd_bo ssmode=B00_NONE;*/ /*B03_BEFORE_EVENT*/ }
 }
 
 

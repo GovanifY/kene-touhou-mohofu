@@ -50,7 +50,7 @@ extern void png_free_my_image(my_image *image);
 /*---------------------------------------------------------
 	ƒwƒ‹ƒp[ŠÖ”‚Í“‡‚·‚×‚«H
 ---------------------------------------------------------*/
-extern void trans_format16(u32 *pixsrc, u16 *pixdst, int trans_size);
+extern void trans_format8888to5650(u32 *pixsrc, u16 *pixdst, int trans_size);
 
 
 #endif /* _GRAPHICS_00_H_ */

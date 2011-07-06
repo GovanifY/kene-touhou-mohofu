@@ -2,7 +2,7 @@
 #include "game_main.h"
 
 /*---------------------------------------------------------
-	東方模倣風  ～ Toho Imitation Style.
+	東方模倣風	～ Toho Imitation Style.
 	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	もみじ弾幕
@@ -24,10 +24,10 @@ static void move_aya_momiji_oya(SPRITE *src)
 	if ((0 > src->time_out))
 	{
 		add_zako_aya_5_momiji(src); 	/* 5方向もみじ小弾を生成 */
-		src->type = SP_DELETE;
+		src->jyumyou = JYUMYOU_NASI;
 	}
-	src->x256 += (/*data->v*/src->vx256);/*fps_factor*/
-	src->y256 += (/*data->v*/src->vy256);/*fps_factor*/
+	src->cx256 += (/*data->v*/src->vx256);/*fps_factor*/
+	src->cy256 += (/*data->v*/src->vy256);/*fps_factor*/
 //
 	/* 親が画面外なら分裂しない */
 	gamen_gai_nara_zako_osimai(src);/* 画面外ならおしまい */
@@ -56,7 +56,7 @@ static void move_aya_momiji_oya(SPRITE *src)
 			h->callback_mover		= move_aya_momiji_oya;
 		//	h->callback_loser		= NULL;
 	//		h->callback_hit_enemy	= callback_hit_zako;/*???*/
-			h->m_angleCCW1024		= (angle1024);
+			h->rotationCCW1024		= (angle1024);
 	//
 	//		h->base_score			= score(25*2);/*ダミー*/
 			h->base_hp				= (9999);/*倒せない*/
@@ -64,8 +64,8 @@ static void move_aya_momiji_oya(SPRITE *src)
 			h->time_out 			= ((30+15)/*+1*/);
 			{
 				/* 初期位置 */
-				h->x256 			= src->x256;
-				h->y256 			= src->y256;
+				h->cx256 			= src->cx256;
+				h->cy256 			= src->cy256;
 			}
 			#if 1/*???*/
 			h->MOMIJI_KODOMO_next_angle1024 	= (angle1024);

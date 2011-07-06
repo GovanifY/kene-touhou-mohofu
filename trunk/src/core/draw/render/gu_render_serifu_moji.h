@@ -43,7 +43,7 @@ static void gu_draw_serifu_screen(void)
 	unsigned int i;
 	#define SCRIPT_FONT_SCREEN_TEXTURE_OFFSET_X 	(0) /* [テクスチャオフセット] */
 	#define SCRIPT_FONT_SCREEN_TEXTURE_OFFSET_Y 	(1+8) /* [テクスチャオフセット※1] */
-	#define SCRIPT_FONT_SCREEN_TEXTURE_SIZE_X		(1+4+47/*70*/) /* [テクスチャサイズ] */
+	#define SCRIPT_FONT_SCREEN_TEXTURE_SIZE_Y		(1+4+47/*70*/) /* [テクスチャサイズ] */
 	#define FONT_SCREEN_MARGIN_010		(10)	/* [フォント端マージン] */
 	/* [※1] ((16/2)[dots]+1[dots](Gu干渉ライン)) */
 	/* 8[ライン(depth_32bit_int)]==16[ライン(depth_16bit_short)] */
@@ -94,9 +94,9 @@ static void gu_draw_serifu_screen(void)
 		vertices[(i)].y = (FONT_SCREEN_MARGIN_010)+(SCRIPT_WINDOW_Y_POSITION_182);/*+(0)*/
 		vertices[(i)].z = 0;
 		vertices[(i)+1].u = (j+w_size99);
-		vertices[(i)+1].v = 1+(SCRIPT_FONT_SCREEN_TEXTURE_OFFSET_Y)+(SCRIPT_FONT_SCREEN_TEXTURE_SIZE_X);/*272*/ /*320*/
+		vertices[(i)+1].v = 1+(SCRIPT_FONT_SCREEN_TEXTURE_OFFSET_Y)+(SCRIPT_FONT_SCREEN_TEXTURE_SIZE_Y);/*272*/ /*320*/
 		vertices[(i)+1].x = (FONT_SCREEN_MARGIN_010)+(SCRIPT_WINDOW_X_POSITION_020)+(j+w_size99);/**480/512*/
-		vertices[(i)+1].y = (FONT_SCREEN_MARGIN_010)+(SCRIPT_WINDOW_Y_POSITION_182)+(SCRIPT_FONT_SCREEN_TEXTURE_SIZE_X);/*272*/
+		vertices[(i)+1].y = (FONT_SCREEN_MARGIN_010)+(SCRIPT_WINDOW_Y_POSITION_182)+(SCRIPT_FONT_SCREEN_TEXTURE_SIZE_Y);/*272*/
 		vertices[(i)+1].z = 0;
 		i += 2;
 		j += SLICE_64_SIZE32;

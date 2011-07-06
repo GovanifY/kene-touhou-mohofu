@@ -34,11 +34,13 @@ static void gu_draw_bg_eientei(void)
 	unsigned /*int*/short blendlevel = (((conv_bg_alpha &  0xf0) << 8) | 0x0fff);
 //(conv_bg_alpha)
 		#else
-	unsigned int blendlevel = (((spr->alpha & 0xff) << 24) | 0x00ffffff);
+/*32bit‚Ì‚Ä‚·‚Æ*/
+//	unsigned int blendlevel = (((spr->alpha & 0xff) << 24) | 0x00ffffff);
+	unsigned int blendlevel = (((conv_bg_alpha & 0xff) << 24) | 0x00ffffff);
 		#endif
 	#endif
 
-//	val1 = (player->x256>>8);
+//	val1 = (player->cx256>>8);
 		#if 1
 		val3_256 -= (current_bg0_y_scroll_speed256);
 	//	val3--;

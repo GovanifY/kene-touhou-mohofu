@@ -17,12 +17,12 @@ static void move_bakuhatsu(SPRITE *src)
 	src->base_time_out--;
 	if (0 < src->base_time_out)
 	{
-		src->x256 += src->vx256;
-		src->y256 += src->vy256;
+		src->cx256 += src->vx256;
+		src->cy256 += src->vy256;
 	}
 	else
 	{
-		src->type = SP_DELETE;
+		src->jyumyou = JYUMYOU_NASI;
 	}
 }
 
@@ -45,8 +45,8 @@ global void bakuhatsu_add_type_ddd(SPRITE *src, int type)
 			h->flags			&= (~(SP_FLAG_COLISION_CHECK)); 	/* ‚ ‚½‚è”»’è‚ÌOFF(–³“G) */
 
 			#if 1
-			h->x256 			= (src->x256);
-			h->y256 			= (src->y256);
+			h->cx256 			= (src->cx256);
+			h->cy256 			= (src->cy256);
 			#endif
 			h->color32			= MAKE32RGBA(0xff, 0xff, 0xff, 0x66);	/*	s->alpha			= 0x80;*/
 			//
@@ -65,7 +65,7 @@ global void bakuhatsu_add_type_ddd(SPRITE *src, int type)
 				h->vx256	= (0);
 				h->vy256	= (0);
 			}
-			h->type 			= SP_MUTEKI;
+			h->type 			= SP_FRONT_YUKI/*(SP_DUMMY_MUTEKI)*/;
 			h->callback_mover	= move_bakuhatsu;
 		}
 	}
@@ -84,8 +84,8 @@ global void bakuhatsu_add_circle(SPRITE *src, int mode)
 	for (i=0; i</*64*/(64)/*25*/; i+=8)
 	{
 		j += (ra_nd()&(/*64*/512-1));
-		obj_send1->x256 = src->x256+((sin1024(j))*i);
-		obj_send1->y256 = src->y256+((cos1024(j))*i);
+		obj_send1->cx256 = src->cx256+((sin1024(j))*i);
+		obj_send1->cy256 = src->cy256+((cos1024(j))*i);
 //
 		bakuhatsu_add_type_ddd(obj_send1,
 		//	BAKUHATSU_ZAKO04/*BAKUHATSU_FIRE08*/ | ((1==mode)?(ra_nd()&((64-1)<<8)):(0)));	/* psp‚Í0ƒŒƒWƒXƒ^‚ª‚ ‚é‚Ì‚Å0‚Æ”äŠr‚µ‚½‚Ù‚¤‚ª‘¬‚¢ */

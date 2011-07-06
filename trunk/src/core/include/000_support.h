@@ -69,12 +69,12 @@
 	//# /* カスタムライブラリを使う */
 	#include <SDL/SDL.h>//#include "SDL.h"
 	#include "SDL_image.h"
-	#include <SDL/SDL_mixer.h>//#include "SDL_mixer.h"
+//	#include <SD L/SD L_mixer.h>//#include "SD L_mixer.h"
 #else
 	//# /* 標準ライブラリを使う */
 	#include <SDL/SDL.h>
 	#include <SDL/SDL_image.h>
-	#include <SDL/SDL_mixer.h>/*#include "SDL_mixer.h"*/
+//	#include <SD L/SD L_mixer.h>/*#include "SD L_mixer.h"*/
 #endif
 
 	//
@@ -229,7 +229,7 @@ R8G8B8A8フォーマットで色を設定する事になりますが、PSPはリトルエンディアンのCPUを
 /* x位置が480の場合(==481ドット目) Scissorが働くので必ず表示しない */
 #define GAME_NOT_VISIBLE480 	(PSP_WIDTH480)
 
-#if 1
+#if (1)
 	/* ソフトウェアーで Zソート */
 	#define USE_ZBUFFER 	(0)
 #else
@@ -237,10 +237,10 @@ R8G8B8A8フォーマットで色を設定する事になりますが、PSPはリトルエンディアンのCPUを
 	#define USE_ZBUFFER 	(1)
 #endif
 
-#if 1
+#if (0)
 	/* 単純拡大 */
 	#define USE_ZOOM_XY 	(0)
-#else
+#else/*てすと*/
 	/* 縦横拡大 */
 	#define USE_ZOOM_XY 	(1)
 #endif
@@ -278,10 +278,10 @@ R8G8B8A8フォーマットで色を設定する事になりますが、PSPはリトルエンディアンのCPUを
 	#define rad2deg1024(x)		( (int)((x)*((1024.0)/(T_GU_M_PI*2))/*+1024*/)&(1024-1) )
 
 	/* １周が4096度の単位系(deg4096)を１周が２πの単位系(radian)へ変換。及び逆変換。 */
-	#define deg4096_2rad(x) 	(((T_GU_M_PI*2)/(4096.0))*(x))
+//	#define deg4096_2rad(x) 	(((T_GU_M_PI*2)/(4096.0))*(x))
 	//#define rad2deg4096(x)	( (int)((x)*((4096.0)/(T_GU_M_PI*2))+4096)%4096 )
 	//#define rad2deg4096(x)	( (int)((x)*((4096.0)/(T_GU_M_PI*2))+4096)&(4096-1) )
-	#define rad2deg4096(x)		( (int)((x)*((4096.0)/(T_GU_M_PI*2))/*+4096*/)&(4096-1) )
+//	#define rad2deg4096(x)		( (int)((x)*((4096.0)/(T_GU_M_PI*2))/*+4096*/)&(4096-1) )
 
 	/* １周が65536度の単位系(deg65536)を１周が２πの単位系(radian)へ変換。及び逆変換。 */
 	#define deg65536_2rad(x)	(((T_GU_M_PI*2)/(65536.0))*(x))
@@ -315,6 +315,7 @@ R8G8B8A8フォーマットで色を設定する事になりますが、PSPはリトルエンディアンのCPUを
 //#endif
 
 /* １周の範囲内にクリッピング */
+#define mask256(aaa)	{aaa &= (256-1);}/* pspでは unsigned char にキャストするのとコードは大抵同じになる。 */
 //#define mask512(aaa)	{aaa &= (512-1);}/*模倣風でr31現在、無い筈*/
 #define mask1024(aaa)	{aaa &= (1024-1);}/*標準精度弾*/
 //#define mask4096(aaa) {aaa &= (4096-1);}/*模倣風でr31現在、無い筈*/
@@ -358,24 +359,28 @@ intで値を保持して、使う度に変換、逆変換した方が、ずっと速い。
 //	#define SINTABLE_MASK512	(SINTABLE_SIZE512-1)
 	#define SINTABLE_SIZE1024	1024
 	#define SINTABLE_MASK1024	(SINTABLE_SIZE1024-1)
+	#define SINTABLE_SIZE65536	65536
+	#define SINTABLE_MASK65536	(SINTABLE_SIZE65536-1)
 
 //	#define OFFS_SIN512 		(0)
 //	#define OFFS_COS512 		((SINTABLE_SIZE512/4)-1)/*127 90*/
 	#define OFFS_SIN1024		(0)
 	#define OFFS_COS1024		((SINTABLE_SIZE1024/4)-1)/*255 90*/
+	#define OFFS_SIN65536		(0)
+	#define OFFS_COS65536		((SINTABLE_SIZE65536/4)-1)/*255 90*/
 //	extern int at an_512(int y, int x);
 	extern int atan_1024(int y, int x);
 	extern int atan_65536(int y, int x);
-	#if (1==USE_SIN_TABLE)
-	//	extern int sin_tbl 512[SINTABLE_SIZE];
-	//	#define cos512(x)		(sin_tbl 512[(((x)+OFFS_COS512)&(512-1))])
-	//	#define sin512(x)		(sin_tbl 512[(((x)			 )&(512-1))])
-	#else
+	#if 1
 		#include "psp_vfpu.h"
 	//	#define cos512(x)		((int)(int256_sin1024((((x+x)+OFFS_COS512+OFFS_COS512)&(1024-1)))))
 	//	#define sin512(x)		((int)(int256_sin1024((((x+x)						 )&(1024-1)))))
 		#define cos1024(x)		((int)(int256_sin1024((((x)+OFFS_COS1024)&(1024-1)))))
 		#define sin1024(x)		((int)(int256_sin1024((((x) 			)&(1024-1)))))
+		#define cos65536(x) 	((int)(int256_sin1024((((x)+OFFS_COS65536)&(65536-1))>>6)))
+		#define sin65536(x) 	((int)(int256_sin1024((((x) 			 )&(65536-1))>>6)))
+	//	#define cos65536(x) 	((int)(int256_sin65536((((x)+OFFS_COS65536)&(65536-1)) )))
+	//	#define sin65536(x) 	((int)(int256_sin65536((((x)			 )&(65536-1)) )))
 	#endif
 #endif
 

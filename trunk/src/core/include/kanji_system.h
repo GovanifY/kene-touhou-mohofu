@@ -19,28 +19,25 @@ extern int print_kanji000(const char *str, int color_type, int wait);
 */
 #define STR_CODE_NO_ENTER (0x10)
 
+
 /*---------------------------------------------------------
-	メッセージウィンドウの内容を消す。
+
 ---------------------------------------------------------*/
 
+/* メッセージウィンドウの内容を消す。 */
+/* 画面消す */
 extern void kanji_window_clear(void);
+/* 指定行を1行消す */
+extern void kanji_window_clear_line(unsigned int line_num);
 
-/*---------------------------------------------------------
-	カーソルをホームポジションへ移動
----------------------------------------------------------*/
-
+/* カーソルをホームポジションへ移動 */
 extern void home_cursor(void);
 
+/* カーソルを指定位置へ移動 */
+extern void set_cursor(unsigned int set_x, unsigned int set_y);
+
 /* 外部からメッセージウィンドウに漢字を描画する場合のリセット */
-extern void script_message_window_clear(void);
-
-
-
-
-/*---------------------------------------------------------
-
----------------------------------------------------------*/
-
+//extern void sc ript_message_window_clear(void);
 
 
 #endif /* _KANJI_SYSTEM_H_ */

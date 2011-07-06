@@ -8,7 +8,7 @@
 /*---------------------------------------------------------
 	画面描画(起動時専用)
 ---------------------------------------------------------*/
-
+#if 1//仕様変更でダメ
 void draw_loading_screen_test(void)
 {
 	#if 1//(1==US E_GU)
@@ -59,19 +59,55 @@ void draw_loading_screen_test(void)
 //
 	/* -- BG背景 画面を描画 */
 //	if (1==dr aw_bg_screen) /* pspは0レジスタがあるので0と比較したほうが速い */
-	if (NULL != callback_gu_draw_haikei)	//if (0!=dr aw_bg_screen)
-	{
-		/* -- BG 画面を描画 */
-		gu_blit_haikei_maho_jiki();
-	}
+//	if (NULL != callback_gu_draw_haikei)	//if (0!=dr aw_bg_screen)
+//	{
+//		/* -- BG 画面を描画 */
+//		gu_blit_render_screen_01();/* 仕様変更 */
+//	}
 //
+/* -- プライオリティー＃11．SDL 画面を描画 */
+	#if (1)
+	sceGuScissor(0, 0, PSP_WIDTH480, PSP_HEIGHT272);	/* 描画範囲を設定する */
+		#if (0)
+		/*ちょっとゲーム中SDL抜いてみるテスト*/
+		if (NULL == callback_gu_draw_haikei)	//if (0!=dr aw_bg_screen)
+		#endif /*(000)*/
+	{
+	//	sceGuTexFunc(GU_TFX_MODULATE, GU_TCC_RGBA);/* 半透明 */
+	//	sceGuTexFunc(GU_TFX_MODULATE, GU_TCC_RGB);
+		sceGuTexFunc(GU_TFX_REPLACE, GU_TCC_RGB);/*???*/		/*勝手にdou ble buffer???*/
+	//
+	//	sceGuBlendFunc(GU_ADD, GU_SRC_ALPHA, GU_ONE_MINUS_SRC_ALPHA, 0, 0);
+
+	//	sceGuBlendFunc(GU_ADD, GU_SRC_ALPHA, GU_ONE_MINUS_SRC_ALPHA, 0, 0);
+	//	sceGuBlendFunc(GU_SUBTRACT, GU_SRC_ALPHA, GU_ONE_MINUS_SRC_ALPHA, 0, 0);
+	//	sceGuBlendFunc(GU_ADD, GU_SRC_COLOR, GU_DST_COLOR, 0, 0);
+	//	sceGuBlendFunc(GU_ADD, GU_FIX, GU_FIX, 0x7f007f7f, 0x3f3f3f00);
+	//	sceGuBlendFunc(GU_ADD, GU_FIX, GU_FIX, 0x7f7f7f7f, 0x7f7f7f7f);
+	//	sceGuBlendFunc(GU_ADD, GU_FIX, GU_ONE_MINUS_SRC_ALPHA, (conv_bg_alpha), 0xffffffff);
+		sceGuBlendFunc(GU_ADD, GU_SRC_ALPHA, GU_ONE_MINUS_SRC_ALPHA, 0, 0);
+
+	//	sceGuBlendFunc(GU_ADD, GU_FIX, GU_FIX, 0, 0);
+	//	sceGuBlendFunc(GU_MIN, GU_FIX, GU_FIX, 0xffffffff, 0xffffffff);
+	//	sceGuBlendFunc(GU_MIN, GU_FIX, GU_FIX, 0, 0);
+	//	sceGuBlendFunc(GU_ADD, GU_FIX, GU_FIX, 0x7f7f7f7f, 0x7f7f7f7f);
+	//
+		sceGuTexMode(/*GU_PSM_5551*/SDL_GU_PSM_0000/*GU_PSM_5650*/, 0, 0, 0/*0 swizzle*/);
+	//	sceGuTexMode(/*GU_PSM_5551*/GU_PSM_5551/*GU_PSM_5650*/, 0, 0, 0/*0 swizzle*/);
+		sceGuTexImage(0, 512, 512, 512, render_image);
+		sceGuTexFilter(GU_NEAREST, GU_NEAREST);/*くっきり拡大画面*/
+		gu_draw_sdl_screen();
+		sceGuTexFilter(GU_LINEAR, GU_LINEAR);/*ぼやぼや拡大画面*/
+	}
+	sceGuScissor(0, 0, GAME_WIDTH, GAME_HEIGHT);	/* 描画範囲を設定する */
+	#endif /*(000)*/
+//
+
 
 	sceGuScissor(0, 0, PSP_WIDTH480, PSP_HEIGHT272);	/* 描画範囲を設定する */
 //
 	/* -- 開発デバッグフォント */
-	#if (1==DEBUG)
-	TDebugDisp();
-	#endif // (1==DEBUG)
+	//TDebugDisp();
 
 	#if (1==USE_ZBUFFER)
 	sceGuDisable(GU_DEPTH_TEST);
@@ -95,3 +131,4 @@ void draw_loading_screen_test(void)
 //
 	//fps_newframe();
 }
+#endif

@@ -13,6 +13,15 @@
 	テクスチャをロードする
 ---------------------------------------------------------*/
 
+/*---------------------------------------------------------
+	制限: この swizzle 変換ルーチンは、
+		幅が 16dots 未満(8, 4, 2, 1)の場合と、
+		高さが 8dots 未満(7, 6, 5, 4, 3, 2, 1)の場合は、
+	変換できない。
+	しかしながら、そういう場合はsizzleしないか、
+	あるいは幅を16dotsにしてswizzleしmask描画した方が描画が速い。
+---------------------------------------------------------*/
+
 //#define USE_T128_SWIZZLE 0
 //#if 1//(1==USE_COLOR_16_AND_32)
 #if (1==USE_COLOR_16_AND_32)
@@ -132,6 +141,8 @@ static void convert_swizzle
 	msize = (/*w*/my_map_TW128/*512*/ * /*h*/my_map_TH128/*512*/) * /*bpp*/4;
 	#endif
 
+#if (0==USE_32BIT_DRAW_MODE)
+/*16bit mode*/
 #if (1==USE_COLOR_16_AND_32)
 	/* --- PSP で簡易16ビット色を指定した場合は16bitに落とす */
 	#if (1==USE_SDL_image)
@@ -153,7 +164,7 @@ static void convert_swizzle
 		pixdst = (u16 *)/*convert_works*/gulist/*pclass->bitmap[num]->pixels*/;
 		pixsrc = (u32 *)nonalign;
 
-		trans_format16(pixsrc, pixdst, (msize));
+		trans_format8888to5650(pixsrc, pixdst, (msize));
 
 	//	unsigned short *pixsrc2;
 	//	pixsrc2 = (unsigned short *)pclass->bitmap[num]->pixels;
@@ -181,6 +192,7 @@ static void convert_swizzle
 		// 512*2 because swizzle operates in bytes, and each pixel in a 16-bit texture is 2 bytes
 	}
 	else/* 32bit mode */
+#endif
 #endif
 	{
 		/* --- 32bit色 通常モード */

@@ -39,65 +39,90 @@ void vfpu_quaternion_sample_linear(ScePspQuatMatrix *qout, ScePspQuatMatrix *a, 
 void vfpu_quaternion_to_matrix(ScePspQuatMatrix *q, ScePspFMatrix4 *m);
 #endif
 
+//								--aabbggrr (ABGR8888)
+#define MY_COLOR_ARGB888_WHITE	0xffffffff
+#define MY_COLOR_ARGB888_BLUE	0xffff7f7f
+#define MY_COLOR_ARGB888_GREEN	0xff7fff7f
+#define MY_COLOR_ARGB888_RED	0xff7f7fff
+
 typedef struct
 {
-	/*float*/unsigned char u;
-	/*float*/unsigned char v;
-	unsigned int color;
-	/*float*/signed char x;
-	/*float*/signed char y;
-	/*float*/signed char z;
+	/*float*/unsigned char u;	/* 0(左端) ... 255(右端) */ 		/* テクスチャ(u,v)座標 */
+	/*float*/unsigned char v;	/* 0(上端) ... 255(下端) */
+	unsigned int color; 		/* 0x00000000 ... 0xffffffff */ 	/* 頂点カラー(ARGB8888) */
+	/*float*/signed char x; 	/* -128 ... 0(中心) ... 127 */		/* 頂点(x,y,z)座標 */
+	/*float*/signed char y; 	/* -128 ... 0(中心) ... 127 */
+	/*float*/signed char z; 	/* -128 ... 0(中心) ... 127 */
 } Vertex_cube;
-		Vertex_cube 	__attribute__((aligned(16))) cube_polygon_model[(12*3)] =
+static Vertex_cube 	__attribute__((aligned(16))) cube_polygon_model[(12*3)] =
 {
-	/* u	v	 aabbggrr */
-	{  0,	0, 0xffffffff,-127,-127, 127}, // #0	// 0	/* 青 */
-	{255, 255, 0xffff7f7f, 127, 127, 127}, // #2	// 5	/* 青 青 */
-	{255,	0, 0xffffffff,-127, 127, 127}, // #1	// 4[]
-
-	{  0,	0, 0xffffffff,-127,-127, 127}, // #0	// 0
-	{  0, 255, 0xffffffff, 127,-127, 127}, // #3	// 1
-	{255, 255, 0xffff7f7f, 127, 127, 127}, // #2	// 5	/* 青 青 */
+	/* テクスチャは画像サイズに対して(0...255, 0...255)の(u,v)座標で指定する。*/
+	/* (u,v)座標はテクスチャの貼り付ける位置を指定する。 */
+	/* 画像サイズが512, 64で(u,v)が(  0,  0)なら、画像位置は(  0,  0) */
+	/* 画像サイズが512, 64で(u,v)が(127,127)なら、画像位置は(255, 31) */
+	/* 画像サイズが512, 64で(u,v)が(255,255)なら、画像位置は(511, 63) */
 //
-	{  0,	0, 0xffffffff,-127,-127,-127}, // #4	// 3[]	/* 青白 */
-	{255, 255, 0xffffffff, 127, 127,-127}, // #6	// 6
-	{255,	0, 0xffffffff, 127,-127,-127}, // #5	// 2
-
-	{  0,	0, 0xffffffff,-127,-127,-127}, // #4	// 3[]
-	{  0, 255, 0xffffffff,-127, 127,-127}, // #7	// 7
-	{255, 255, 0xffffffff, 127, 127,-127}, // #6	// 6
+	/* 画像サイズが256,256で(u,v)が(  0,  0)なら、画像位置は(  0,  0) */
+	/* 画像サイズが256,256で(u,v)が(127,127)なら、画像位置は(127,127) */
+	/* 画像サイズが256,256で(u,v)が(255,255)なら、画像位置は(255,255) */
+	/* つまり画像サイズが256,256なら、dot by dot、画像位置==(u,v) になる。 */
 //
-	{  0,	0, 0xffffffff, 127,-127,-127}, // #5	// 0	/* 緑 */
-	{255, 255, 0xff7fff7f, 127, 127, 127}, // #2	// 7	/* 緑 緑 */
-	{255,	0, 0xffffffff, 127,-127, 127}, // #3	// 3
-
-	{  0,	0, 0xffffffff, 127,-127,-127}, // #5	// 0
-	{  0, 255, 0xffffffff, 127, 127,-127}, // #6	// 4
-	{255, 255, 0xff7fff7f, 127, 127, 127}, // #2	// 7	/* 緑 緑 */
+	/* 頂点に色を付けるという事は、つまり(法線という意味ではなくて)グーロシェーディングで補完されるという事。 */
+	/* このハードウェアー補完は描画モード(色の解像度16bitとか)に関係なく常に32bitで行われるのできれい。 */
 //
-	{  0,	0, 0xffffffff,-127,-127,-127}, // #4	// 0[]	/* 白 */
-	{255, 255, 0xffffffff,-127, 127, 127}, // #1	// 7[]
-	{255,	0, 0xffffffff,-127, 127,-127}, // #7	// 3
-
-	{  0,	0, 0xffffffff,-127,-127,-127}, // #4	// 0[]
-	{  0, 255, 0xffffffff,-127,-127, 127}, // #0	// 4
-	{255, 255, 0xffffffff,-127, 127, 127}, // #1	// 7[]
+	/* この辺から解かるように、Gu内部には色32bit(8888)の描画エンジンしか無い。 */
+	/* 色の解像度16bitとか(5650,5551,4444)やclutの描画モードの場合は「外部(つまりvram)転送時」(つまり描画時)に色変換している。  */
+	/* 「Guからみたvramのアドレスが変わる事で速度低下するペナルティー >>> 描画時の色変換速度」 なので、16bitやclutの方が結果的に描画が速い。 */
 //
-	{  0,	0, 0xffffffff,-127, 127,-127}, // #7	// 0	/* 赤 */
-	{255, 255, 0xff7f7fff, 127, 127, 127}, // #2	// 2	/* 赤 赤 */
-	{255,	0, 0xffffffff, 127, 127,-127}, // #6	// 1
+	/* テクスチャの位置 				頂点の位置座標 */
+	/* u	v  色(ABGR8888) 		     x    y    z   */
+	{  0,	0, MY_COLOR_ARGB888_WHITE,-127,-127, 127}, // #0	// 0	/* 青 */
+	{255, 255, MY_COLOR_ARGB888_BLUE,  127, 127, 127}, // #2	// 5	/* 青 青 */
+	{255,	0, MY_COLOR_ARGB888_WHITE,-127, 127, 127}, // #1	// 4[]
 
-	{  0,	0, 0xffffffff,-127, 127,-127}, // #7	// 0
-	{  0, 255, 0xffffffff,-127, 127, 127}, // #1	// 3[]
-	{255, 255, 0xff7f7fff, 127, 127, 127}, // #2	// 2	/* 赤 赤 */
+	{  0,	0, MY_COLOR_ARGB888_WHITE,-127,-127, 127}, // #0	// 0
+	{  0, 255, MY_COLOR_ARGB888_WHITE, 127,-127, 127}, // #3	// 1
+	{255, 255, MY_COLOR_ARGB888_BLUE,  127, 127, 127}, // #2	// 5	/* 青 青 */
 //
-	{  0,	0, 0xffffffff,-127,-127,-127}, // #4	// 4[]	/* 赤白 */
-	{255, 255, 0xffffffff, 127,-127, 127}, // #3	// 6
-	{255,	0, 0xffffffff,-127,-127, 127}, // #0	// 7
+	{  0,	0, MY_COLOR_ARGB888_WHITE,-127,-127,-127}, // #4	// 3[]	/* 青白 */
+	{255, 255, MY_COLOR_ARGB888_WHITE, 127, 127,-127}, // #6	// 6
+	{255,	0, MY_COLOR_ARGB888_WHITE, 127,-127,-127}, // #5	// 2
 
-	{  0,	0, 0xffffffff,-127,-127,-127}, // #4	// 4[]
-	{  0, 255, 0xffffffff, 127,-127,-127}, // #5	// 5
-	{255, 255, 0xffffffff, 127,-127, 127}, // #3	// 6
+	{  0,	0, MY_COLOR_ARGB888_WHITE,-127,-127,-127}, // #4	// 3[]
+	{  0, 255, MY_COLOR_ARGB888_WHITE,-127, 127,-127}, // #7	// 7
+	{255, 255, MY_COLOR_ARGB888_WHITE, 127, 127,-127}, // #6	// 6
+//
+	{  0,	0, MY_COLOR_ARGB888_WHITE, 127,-127,-127}, // #5	// 0	/* 緑 */
+	{255, 255, MY_COLOR_ARGB888_GREEN, 127, 127, 127}, // #2	// 7	/* 緑 緑 */
+	{255,	0, MY_COLOR_ARGB888_WHITE, 127,-127, 127}, // #3	// 3
+
+	{  0,	0, MY_COLOR_ARGB888_WHITE, 127,-127,-127}, // #5	// 0
+	{  0, 255, MY_COLOR_ARGB888_WHITE, 127, 127,-127}, // #6	// 4
+	{255, 255, MY_COLOR_ARGB888_GREEN, 127, 127, 127}, // #2	// 7	/* 緑 緑 */
+//
+	{  0,	0, MY_COLOR_ARGB888_WHITE,-127,-127,-127}, // #4	// 0[]	/* 白 */
+	{255, 255, MY_COLOR_ARGB888_WHITE,-127, 127, 127}, // #1	// 7[]
+	{255,	0, MY_COLOR_ARGB888_WHITE,-127, 127,-127}, // #7	// 3
+
+	{  0,	0, MY_COLOR_ARGB888_WHITE,-127,-127,-127}, // #4	// 0[]
+	{  0, 255, MY_COLOR_ARGB888_WHITE,-127,-127, 127}, // #0	// 4
+	{255, 255, MY_COLOR_ARGB888_WHITE,-127, 127, 127}, // #1	// 7[]
+//
+	{  0,	0, MY_COLOR_ARGB888_WHITE,-127, 127,-127}, // #7	// 0	/* 赤 */
+	{255, 255, MY_COLOR_ARGB888_RED,   127, 127, 127}, // #2	// 2	/* 赤 赤 */
+	{255,	0, MY_COLOR_ARGB888_WHITE, 127, 127,-127}, // #6	// 1
+
+	{  0,	0, MY_COLOR_ARGB888_WHITE,-127, 127,-127}, // #7	// 0
+	{  0, 255, MY_COLOR_ARGB888_WHITE,-127, 127, 127}, // #1	// 3[]
+	{255, 255, MY_COLOR_ARGB888_RED,   127, 127, 127}, // #2	// 2	/* 赤 赤 */
+//
+	{  0,	0, MY_COLOR_ARGB888_WHITE,-127,-127,-127}, // #4	// 4[]	/* 赤白 */
+	{255, 255, MY_COLOR_ARGB888_WHITE, 127,-127, 127}, // #3	// 6
+	{255,	0, MY_COLOR_ARGB888_WHITE,-127,-127, 127}, // #0	// 7
+
+	{  0,	0, MY_COLOR_ARGB888_WHITE,-127,-127,-127}, // #4	// 4[]
+	{  0, 255, MY_COLOR_ARGB888_WHITE, 127,-127,-127}, // #5	// 5
+	{255, 255, MY_COLOR_ARGB888_WHITE, 127,-127, 127}, // #3	// 6
 
 };
 
@@ -120,6 +145,28 @@ static	int nnn;
 //	/*int*/float val_y;
 //	/*int*/float val_z;
 //	/*int*/float val_w;
+
+
+#if (1==TEST_AUTO_ROT)
+static void test_auto_rot_aaaa(void)
+{
+	vfpu_quaternion_copy(&p9_qa, &p9_qb);
+//	vfpu_quaternion_from_euler(&p9_qb,
+//		vfpu_randf(0.0f, 360.0f),
+//		vfpu_randf(0.0f, 360.0f),
+//		vfpu_randf(0.0f, 360.0f));
+	vfpu_quaternion_from_euler512_int(&p9_qb,
+	//	(int)vfpu_randf(0.0f, 512.0f),
+	//	(int)vfpu_randf(0.0f, 512.0f),
+	//	(int)vfpu_randf(0.0f, 512.0f));
+		((vfpu_rand_8888(0, 255))&(512-1)),
+		((vfpu_rand_8888(0, 255))&(512-1)),
+		((vfpu_rand_8888(0, 255))&(512-1)));
+//	vfpu_quaternion_exp(&p9_qb, &p9_qb);
+	vfpu_quaternion_ln(&p9_qb, &p9_qb);
+}
+#endif
+
 static void gu_init_vfpu(void)
 {
 	// vfpu has a random number generator,
@@ -155,7 +202,7 @@ static void gu_init_vfpu(void)
 //	vfpu_quaternion_from_euler(&p9_qb, vfpu_randf(0.0f, 360.0f), vfpu_randf(0.0f, 360.0f), vfpu_randf(0.0f, 360.0f));	vfpu_quaternion_ln(&p9_qb, &p9_qb);
 
 	nnn = 0;
-
+	test_auto_rot_aaaa();
 
 //	val_x = 0;
 //	val_y = 0;
@@ -178,22 +225,7 @@ static void gu_draw_bg_3D_test01(void)
 		if (nnn >= (5*60) ) /* 300==(5[sec]*60[flame])*/
 		{
 			nnn = 0;
-		#if (1==TEST_AUTO_ROT)
-			vfpu_quaternion_copy(&p9_qa, &p9_qb);
-		//	vfpu_quaternion_from_euler(&p9_qb,
-		//		vfpu_randf(0.0f, 360.0f),
-		//		vfpu_randf(0.0f, 360.0f),
-		//		vfpu_randf(0.0f, 360.0f));
-			vfpu_quaternion_from_euler512_int(&p9_qb,
-			//	(int)vfpu_randf(0.0f, 512.0f),
-			//	(int)vfpu_randf(0.0f, 512.0f),
-			//	(int)vfpu_randf(0.0f, 512.0f));
-				((vfpu_rand_8888(0, 255))&(512-1)),
-				((vfpu_rand_8888(0, 255))&(512-1)),
-				((vfpu_rand_8888(0, 255))&(512-1)));
-		//	vfpu_quaternion_exp(&p9_qb, &p9_qb);
-			vfpu_quaternion_ln(&p9_qb, &p9_qb);
-		#endif
+			test_auto_rot_aaaa();
 		}
 
 #if 0

@@ -289,11 +289,8 @@ static void ask_continue_menu_local_work(void)
 		{
 			menu_item_my_obj[i].x256			= t256(0);
 			menu_item_my_obj[i].y256			= t256(0);
-
 			menu_item_my_obj[i].MENU_DATA_i0_256	= ((my_menu_resource[i].x_offset)<<8);
-//			int jjj = ((menu_item_my_obj[i]->SDL_h128)>>7)+5;
-			int jjj = 5+16;
-			menu_item_my_obj[i].MENU_DATA_i1_256	= (((PSP_HEIGHT272/2+40) -((jjj)*((MENU_ITEM_99_MAX)>>1)) +(i*(jjj)))<<8);
+			menu_item_my_obj[i].MENU_DATA_i1_256	= (((PSP_HEIGHT272/2+40) -(((5+16))*((MENU_ITEM_99_MAX)>>1)) +(i*((5+16))))<<8);
 			menu_item_my_obj[i].MENU_DATA_i2		= 0;
 			menu_item_my_obj[i].MENU_DATA_i3		= 0;
 		}

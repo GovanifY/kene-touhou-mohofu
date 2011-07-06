@@ -2,7 +2,7 @@
 #include "game_main.h"
 
 /*---------------------------------------------------------
-	東方模倣風  ～ Toho Imitation Style.
+	東方模倣風	～ Toho Imitation Style.
 	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	ファイル関連処理
@@ -373,7 +373,7 @@ global void ini_load(void)
 		{
 		//	CONFIG_LOAD_ITEM( (char *)my_config_title[i],				option_config[i]	);
 			tmp = ini_load_item(/*fp,*/ (char *)my_config_title[i], NULL);
-			if (-1 != tmp)	{	option_config[i] = tmp;	}
+			if (-1 != tmp)	{	option_config[i] = tmp; }
 			else			{	goto error00/*return (-1)*/;	}
 		}
 	}
@@ -428,7 +428,7 @@ error00:
 					}
 					else/* エラー */
 					{
-						ng2=1;
+						ng2 = 1;
 					}
 				}
 			/*	else // 直前の ini_load_item() でエラーが起きた場合に初期化するので このelse無効。 */
@@ -436,7 +436,7 @@ error00:
 				if (0!=ng2)
 				{
 					high_score_table[j][i].final_stage = (6-i); 	/* 到達ステージ */
-					static const int init_score_tbl[5]=
+					static const int init_score_tbl[5] =
 					{
 						score(100000000),	//	score(70000000),		//score(50000000),
 						score( 50000000),	//	score(60000000),		//score(4000000),
@@ -496,8 +496,8 @@ static void write_buf(/*FILE *fp*/SceUID fd, char *str_buf)
 //	fprintf(fp, "%s%c\n", str_buf,	k);
 	char *str_buf_head;
 	str_buf_head = str_buf;
-	int len;
-	len=0;
+	unsigned int len;
+	len = 0;
 	while (0!=(*str_buf))
 	{
 		len++;
@@ -512,46 +512,70 @@ static void write_buf(/*FILE *fp*/SceUID fd, char *str_buf)
 global void ini_save(void)
 {
 //	FILE *fp;
-	char filename[128/*64 50*/];
-	strcpy(filename, "./" FILE_NAME_SETTING_TXT);
-//	fp = fopen(filename, "w");
-	SceUID fd = sceIoOpen(filename, PSP_O_WRONLY | PSP_O_CREAT | PSP_O_TRUNC, 0777);
+//	char buf[64/*50*/];
+	char buf[128/*64 50*/];
+	strcpy(buf, "./" FILE_NAME_SETTING_TXT);
+//	fp = fopen(buf, "w");
+	SceUID fd = sceIoOpen(buf, PSP_O_WRONLY | PSP_O_CREAT | PSP_O_TRUNC, 0777);
 //	if (fd < 0)
 //	{
 //		/*"セーブデータがない。"*/
 //	}
 //	if ( NULL == fp)	{	return; 	}
 //
-	char buf[64/*50*/];
+
+	/* 何故か巧く行かない */
+	#define USE_MEMO (0)
+	#if (1==USE_MEMO)
+	//---------------------------
+	strcpy(buf,
+		"; 東方模倣風(r32) configuration file.\n"
+		";---------------------------\n"
+		"\n"
+		"; キーコンフィグ設定\n"
+	);
+	write_buf(/*fp,*/fd, buf);
+	#endif	/* (USE_MEMO) */
+	//
 	{
-		int i;
+		unsigned int i;
 		for (i=0; i<KEY_NUM12_MAX; i++)
 		{
 			sprintf(buf,
 				"K0%c,%d",
 				('a'+i),
 				pad_config[i]);
-				write_buf(/*fp,*/fd, buf);
+			write_buf(/*fp,*/fd, buf);
 		}
 	}
+	//---------------------------
+	#if (1==USE_MEMO)
+	strcpy(buf, "; オプション設定\n" );
+	write_buf(/*fp,*/fd, buf);
+	#endif	/* (USE_MEMO) */
 	option_config[OPTION_CONFIG_04_CURRENT_DIFFICULTY]	= difficulty;
 	option_config[OPTION_CONFIG_05_CURRENT_PLAYER]		= select_player;
 
 	{
-		int i;
+		unsigned int i;
 		for (i=0; i<OPTION_CONFIG_08_MAX; i++)
 		{
 			sprintf(buf,
 				"%s,%d",
 				my_config_title[i],
 				option_config[i]);
-				write_buf(/*fp,*/fd, buf);
+			write_buf(/*fp,*/fd, buf);
 		}
 	}
+	//---------------------------
+	#if (1==USE_MEMO)
+	strcpy(buf, "; 夢の記録\n" );
+	write_buf(/*fp,*/fd, buf);
+	#endif	/* (USE_MEMO) */
 	/* high_score save */
-	{int j;
+	{unsigned int j;
 		for (j=0; j<MAX_8_SAVE_PLAYERS; j++)
-		{	int i;
+		{	unsigned int i;
 			for (i=0; i<5; i++)
 			{
 				sprintf(buf,

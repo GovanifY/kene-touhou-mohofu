@@ -2,7 +2,7 @@
 #include "boss.h"
 
 /*---------------------------------------------------------
-	東方模倣風  ～ Toho Imitation Style.
+	東方模倣風	～ Toho Imitation Style.
 	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	咲夜 ばら撒き弾 オプション
@@ -28,7 +28,7 @@
 	#define target_x256 		user_data00 	/* 目標x座標 */
 	#define target_y256 		user_data01 	/* 目標y座標 */
 	#define vvv256				user_data02 	/* 目標座標への到達割合 */
-	#define time_out			user_data03 	/* 制限時間 */
+	#define boss_time_out		user_data03 	/* 制限時間 */
 #endif
 
 
@@ -52,13 +52,13 @@ static void lose_sakuya_baramaki(SPRITE *src)
 
 static void move_sakuya_baramaki(SPRITE *src)
 {
-	check_boss_option_time_out(src); 	/* 時間経過で終了。ボスを倒すと皆破壊される。 */
+	check_boss_option_time_out(src);	/* 時間経過で終了。ボスを倒すと皆破壊される。 */
 //
 	#define AO_OR_AKA	(src->target_x256&1)/* [青赤情報] */
 //
 	/*	旧作 & 咲夜風、回転ショット */
 	{
-		if (0 == ((src->time_out)&0x07))	/* 次のショットを撃つまでの間隔、時間。 */
+		if (0 == ((src->boss_time_out)&0x07))	/* 次のショットを撃つまでの間隔、時間。 */
 		{
 			if (0 < src->vvv256 )
 			{
@@ -67,8 +67,8 @@ static void move_sakuya_baramaki(SPRITE *src)
 		//
 			src->shot_angle1024 += ((AO_OR_AKA)?(-(1024/18)):((1024/18)));	/* ショットを撃つ方向を、回転させる。 */
 		//
-			obj_send1->x256 					= (src->x256)+t256(20.0);/* 6.0[dots]右 */
-			obj_send1->y256 					= (src->y256)+t256(14.0);/* 4.0[dots]下 */
+			obj_send1->cx256 					= (src->cx256)+t256(20.0);/* 6.0[dots]右 */
+			obj_send1->cy256 					= (src->cy256)+t256(14.0);/* 4.0[dots]下 */
 			br.BULLET_REGIST_speed256			= (t256(1.5))+(((difficulty)<<6));		/* 弾速 */
 			br.BULLET_REGIST_angle1024			= (src->shot_angle1024);				/* */
 			br.BULLET_REGIST_div_angle1024		= (int)(1024/160);						/* 密着弾 */
@@ -80,13 +80,13 @@ static void move_sakuya_baramaki(SPRITE *src)
 	}
 	#if 1
 	/* 魔方陣アニメーション */
-//	src->m_angleCCW1024--;/* 右回り */
-	src->m_angleCCW1024 += (((AO_OR_AKA)<<2)-2);
-	mask1024(src->m_angleCCW1024);
+//	src->rotationCCW1024--;/* 右回り */
+	src->rotationCCW1024 += (((AO_OR_AKA)<<2)-2);
+	mask1024(src->rotationCCW1024);
 	#endif
-	if (0x1ff > src->time_out)
+	if (0x1ff > src->boss_time_out)
 	{
-		src->color32		= (src->color32 & 0x00ffffff) | ((src->time_out<<(23))&0xff000000);
+		src->color32		= (src->color32 & 0x00ffffff) | ((src->boss_time_out<<(23))&0xff000000);
 	}
 	/* オプション位置、移動 */
 	/* 目標を設定し、誘導移動 */
@@ -116,8 +116,8 @@ void add_zako_sakuya_baramaki(SPRITE *src)
 			h->callback_loser		= lose_sakuya_baramaki;
 			h->callback_hit_enemy	= callback_hit_zako;
 	//
-			h->x256 				= ((src->x256) & 0xfffffffe);/* [青赤情報]インターリーブ用ビットを1ビット確保 */
-			h->y256 				= (src->y256);
+			h->cx256 				= ((src->cx256) & 0xfffffffe);/* [青赤情報]インターリーブ用ビットを1ビット確保 */
+			h->cy256 				= (src->cy256);
 			h->vvv256				= t256(1.0);
 		//
 			{
@@ -126,8 +126,8 @@ void add_zako_sakuya_baramaki(SPRITE *src)
 					(-90),		(-120), 	(+120), 	(+90),	// x0, x1, x2, x3
 					(+90),		(0),		(0),		(+90),	// y0, y1, y2, y3
 				};
-				h->target_x256	= (h->x256)+((locate_xy_table[i  ])<<8) + (i&1);/* [青赤情報]をインターリーブ */
-				h->target_y256	= (h->y256)+((locate_xy_table[i+4])<<8);
+				h->target_x256	= (h->cx256)+((locate_xy_table[i  ])<<8) + (i&1);/* [青赤情報]をインターリーブ */
+				h->target_y256	= (h->cy256)+((locate_xy_table[i+4])<<8);
 			}
 	//
 			h->base_hp				= (8192-1);
@@ -143,7 +143,7 @@ void add_zako_sakuya_baramaki(SPRITE *src)
 		//	h->base_score			= adjust_score_by_difficulty(score( 500000));	/* 50万 (計300万==6x50万) */
 			}
 			h->shot_angle1024		= (0);
-			h->time_out 			= (0x03ff); 	/* 制限時間 */
+			h->boss_time_out		= (0x03ff); 	/* 制限時間 */
 		}
 	}
 }

@@ -15,7 +15,7 @@
 /* スコアキャッシュのデーター形式 */
 typedef struct
 {
-	int time_out8888;	/* 表示時間 / 表示アルファ値 */
+	u32 time_out_color8888; /* 表示時間 / 表示アルファ値 */
 	int number; 	/* 表示文字番号(0 ... 9) [一桁の数字] */
 	int x256;		/* 表示 x 座標(256固定小数点形式) */
 	int y256;		/* 表示 y 座標(256固定小数点形式) */
@@ -33,7 +33,7 @@ void clear_score_chache(void)
 	int i;
 	for (i=0; i<MAX_SCORE_CHACHE; i++)
 	{
-		score_number_chache[i].time_out8888 = SCORE_DELETE;
+		score_number_chache[i].time_out_color8888 = SCORE_DELETE;
 	}
 }
 
@@ -46,7 +46,7 @@ static void regist_score(int number, u32 color8888, int x256, int y256)
 	if (t256((GAME_WIDTH-8)/*(380)*/) < x256)	{ return; } 	/* (8)? (あまり横なら描かない) */
 	if (t256((GAME_HEIGHT-8)/*(380)*/) < y256)	{ return; } 	/* (6)? (あまり下なら描かない) */
 //
-	static int index=0; 	/* 登録出来そうな位置 */
+	static int index = 0;	/* 登録出来そうな位置 */
 //	int iii;
 //	iii = 0;	/* 最大登録数まで全部探す */
 //	do
@@ -54,15 +54,15 @@ static void regist_score(int number, u32 color8888, int x256, int y256)
 		index++;
 		index &= (MAX_SCORE_CHACHE-1);
 		/* 使用中 */
-//		if (SCORE_DELETE < score_number_chache[index].time_out8888)
+//		if (SCORE_DELETE < score_number_chache[index].time_out_color8888)
 //		{
 //			;	/* 登録できないので次を探す。 */
 //		}
 //		/* 未使用 */
-//		else //if (1 > score_number_chache[index].time_out8888)
+//		else //if (1 > score_number_chache[index].time_out_color8888)
 		{
 			/* キャッシュに登録する */
-			score_number_chache[index].time_out8888 = color8888;//(127*2);/*	60*2*2 =:= 2 [sec]*/
+			score_number_chache[index].time_out_color8888 = color8888;//(127*2);/*	60*2*2 =:= 2 [sec]*/
 			score_number_chache[index].number	= number;
 			score_number_chache[index].x256 	= x256;
 			score_number_chache[index].y256 	= y256;
@@ -79,10 +79,10 @@ static void regist_score(int number, u32 color8888, int x256, int y256)
 
 static void bonus_info_shered_add_score10_value(SPRITE *src, s32 score_value)
 {
-	int y256;	y256 = src->y256;
+	int y256;	y256 = src->cy256;
 	if (t256((0)) > y256)	{ return; }
 //
-	int x256;	x256 = src->x256;
+	int x256;	x256 = src->cx256;
 	int jjj;
 	u32 color8888;
 	int i;
@@ -107,7 +107,7 @@ static void bonus_info_shered_add_score10_value(SPRITE *src, s32 score_value)
 
 void bonus_info_any_score_nodel(SPRITE *src/*int x, int y*/, u32 score_num_pts)
 {
-	player_add_score(score_num_pts);
+	player_dummy_add_score(score_num_pts);
 	bonus_info_shered_add_score10_value(src, (s32)score_num_pts);
 }
 

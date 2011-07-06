@@ -85,195 +85,202 @@ static MENU_RESOURCE my_menu_resource[MENU_ITEM_99_MAX] =
 	#define FPS_MENU_FACTOR15	(3/*2*/)
 //#endif
 
-/* メニューの状態。 MENU_STATE */
-enum
-{
-	MENU_STATE_00_FADE_IN_MENU = 0,
-	MENU_STATE_01_WORK_MENU,
-	MENU_STATE_02_FADE_OUT,
-	MENU_STATE_03_FININSH,
-	MENU_STATE_04_MAX
-};
 
+//extern void adjust_start_time(u32 pause_time);
 
 /*---------------------------------------------------------
 
 ---------------------------------------------------------*/
-
-//extern void adjust_start_time(u32 pause_time);
-extern void gamecore_term(void);
-
-static u8 my_ppp_loop;
-extern int now_max_continue;
-static void pause_menu_local_work(void)
+static void pause_work_draw(void)
 {
 	{
-	//	static int www=10;
-		switch ((u8)(my_ppp_loop))
+		static int angle1024/*=0*/;
+		angle1024 += (FPS_MENU_FACTOR15+FPS_MENU_FACTOR15);
+		mask1024(angle1024);
+		int i;
+		for (i=0; i<MENU_ITEM_99_MAX; i++)
 		{
-		case MENU_STATE_00_FADE_IN_MENU:		/* Increasing menu_brite, fade menu in */
-			menu_brite += FPS_MENU_FACTOR8;
-			if (255 <= (menu_brite) )
+			if (i==active_item) /* 選択された */
 			{
-				menu_brite = 255;
-				my_ppp_loop++;// MENU_STATE_01_WORK_MENU;
+				menu_item_my_obj[i].MENU_DATA_i2 = 12;	/* ゆれ幅を 12 にする */
 			}
-			break;
-		case MENU_STATE_01_WORK_MENU:			/* fadein complete */
-		{
-			if (0==my_pad_alter)/* さっき何も押されてなかった場合にキーチェック(原作準拠) */
+			else	/* 選択されてない */
 			{
-				if (my_pad & (PSP_KEY_DOWN|PSP_KEY_UP|PSP_KEY_PAUSE|PSP_KEY_RIGHT))
+				if ((menu_item_my_obj[i].MENU_DATA_i2) && (0==menu_item_my_obj[i].MENU_DATA_i3))
 				{
-					voice_play(VOICE02_MENU_SELECT, TRACK01_EXPLODE);
-				}
-				if (my_pad & PSP_KEY_DOWN)
-				{
-					if (active_item == MENU_ITEM_99_MAX-1)
-					{	active_item = 0;	}
-					else
-					{
-						active_item++;
-					}
-				//	www=FPS_MENU_FACTOR10;
-				}
-				else if (my_pad & PSP_KEY_UP)
-				{
-					if (0 == active_item)
-					{	active_item = MENU_ITEM_99_MAX-1;	}
-					else
-					{
-						active_item--;
-					}
-				//	www=FPS_MENU_FACTOR10;
-				}
-				/* セレクトキーを押した場合、クイックリスタート。("始めから")  (原作のキーボードショートカット機能) */
-				if (my_pad & PSP_KEY_SELECT)					/* [select]ボタンで("始めから") */
-				{
-					/*pause_menu.*/active_item	= MENU_ITEM_01_RETRY_GAME;
-					my_ppp_loop++;// MENU_STATE_02_FADE_OUT;
-				}
-				/* ポーズキーを押した場合、ポーズ解除。 */
-				if (my_pad & PSP_KEY_PAUSE) 				/* [start]ボタンでポーズ解除 */
-				{
-					/*pause_menu.*/active_item	= MENU_ITEM_00_CONTINUE_GAME;
-					my_ppp_loop++;// MENU_STATE_02_FADE_OUT;
-				}
-				/* ボスデバッグ用 */
-				#if 0/*(1==DEBUG_MODE)*/
-				if (my_pad & PSP_KEY_RIGHT)
-				{
-					now_max_continue = 90;/*test*/	/* ランキングにさせない */
-//					pd_my_score=8;/*test*/
-//					pd_zanki=8;/*test*/
-				//	pd_bombs=8;/*test*/
-				//	#if 0
-				//	/* ボスチェック用 */
-				//	pd_weapon_power=MAX_POWER_IS_128;/*test*/
-				//	#endif
-				}
-				#endif
-				if (my_pad & PSP_KEY_SHOT_OK)
-				{
-					voice_play(VOICE01_MENU_OK/*VOICE02_MENU_SELECT*/, TRACK01_EXPLODE);
-					my_ppp_loop++;// MENU_STATE_02_FADE_OUT;/* メニュー消去準備 */
+					menu_item_my_obj[i].MENU_DATA_i2--;
+					menu_item_my_obj[i].MENU_DATA_i3 = 3;
 				}
 			}
+			if (menu_item_my_obj[i].MENU_DATA_i3)
+			{	menu_item_my_obj[i].MENU_DATA_i3--;}
+			menu_item_my_obj[i].x256 = (menu_item_my_obj[i].MENU_DATA_i0_256)+(cos1024((angle1024))*menu_item_my_obj[i].MENU_DATA_i2);
+		//	menu_item_my_obj[i].y256 = (menu_item_my_obj[i].MENU_DATA_i1_256)+(sin1024((angle1024))*menu_item_my_obj[i].MENU_DATA_i2);
+			menu_item_my_obj[i].y256 = (menu_item_my_obj[i].MENU_DATA_i1_256);
+		//	{
+		//		menu_item_my_obj[i].menu_brite	= menu_brite;
+		//	}
 		}
-			break;
-		case MENU_STATE_02_FADE_OUT:	/* selection done, decreasing menu_brite, fade menu out */
-			menu_brite -= FPS_MENU_FACTOR8;
-			if (0 >= (menu_brite) )
-			{
-				menu_brite	= 0;
-				my_ppp_loop++;// MENU_STATE_03_FININSH;
-			}
-			break;
-		case MENU_STATE_03_FININSH: 	/* fadout fininshed, menu done */
-			SDL_SetAlpha(sdl_screen[SDL_01_BACK_SCREEN],SDL_SRCALPHA,255);
-			psp_pop_screen();
+	}
+	//		sp rite_work_SDL(SP_GROUP_PAUSE_S P_ME NU_TEXT);/*SP_GROUP_TEXTS*/
+	//		pause_sp rite_display();/*SP_GROUP_TEXTS*/
+	/* 描画 */
+	psp_pop_screen();
+	{			/*static*/ SDL_Rect rect_locate_offset; 	/* 表示位置 */
+		int i;
+		for (i=0; i<MENU_ITEM_99_MAX; i++)
+		{
+			rect_locate_offset.x = ((menu_item_my_obj[i].x256)>>8);
+			rect_locate_offset.y = ((menu_item_my_obj[i].y256)>>8);
+		//	SDL_SetAlpha(	menu_item_surface[i], SDL_SRCALPHA, /*bg_alpha_aaa*/(255));
+			SDL_SetAlpha(	menu_item_surface[i], SDL_SRCALPHA, /*bg_alpha_aaa*/(menu_brite));
+			SDL_BlitSurface(menu_item_surface[i], NULL,sdl_screen[SDL_00_VIEW_SCREEN],&rect_locate_offset);
+		}
+	}
+}
 
-//			{	int i;
-//				for (i=0; i<MENU_ITEM_99_MAX; i++)
-//				{
-//					//SDL_FreeSurface(menu_item_surface[i]);
-//				}
-//			}
-			if (MENU_ITEM_00_CONTINUE_GAME == active_item)
-			{
-		//	case 0: /* Continue Game */
-				#if 1/*Gu化完了したら要らなくなる*/
-				{
-					psp_clear_screen(); 	/* [PAUSE] 復帰時にSDL画面を消す。 */
-				}
-				#endif
-				main_call_func = pause_out_call_func;
-				//adjust_start_time(pause_start_time);
-			}
-			else
-			if (MENU_ITEM_01_RETRY_GAME == active_item)
-		//	case 1: /* Retry Game */
-			{
-				gamecore_term();
-				msg_time = (0);/* 必要(?) */
-				main_call_func = stage_first_init;	/* 始めから */
-			}
-			else
-		//	if (MENU_ITEM_02_QUIT_GAME == active_item)
-			{
-		//	case 2: /* Quit Game */
-				gamecore_term();
-				main_call_func = title_menu_start;	/* タイトルメニューへ移動 */
-			}
-		//	www=FPS_MENU_FACTOR10;
-			return;
-		}
-//
+
+/*---------------------------------------------------------
+	fadout fininshed, menu done
+---------------------------------------------------------*/
+extern void gamecore_term(void);
+static void pause_menu_local_workMENU_STATE_03_FININSH(void)
+{
+	SDL_SetAlpha(sdl_screen[SDL_01_BACK_SCREEN],SDL_SRCALPHA,255);
+	psp_pop_screen();
+//	{	int i;
+//		for (i=0; i<MENU_ITEM_99_MAX; i++)
+//		{
+//			//SDL_FreeSurface(menu_item_surface[i]);
+//		}
+//	}
+	if (MENU_ITEM_00_CONTINUE_GAME == active_item)/* Continue Game */
+	{
+		#if 1/*Gu化完了したら要らなくなる*/
 		{
-			static int angle1024/*=0*/;
-			angle1024 += (FPS_MENU_FACTOR15+FPS_MENU_FACTOR15);
-			mask1024(angle1024);
-			int i;
-			for (i=0; i<MENU_ITEM_99_MAX; i++)
-			{
-				if (i==active_item) /* 選択された */
-				{
-					menu_item_my_obj[i].MENU_DATA_i2 = 12;	/* ゆれ幅を 12 にする */
-				}
-				else	/* 選択されてない */
-				{
-					if ((menu_item_my_obj[i].MENU_DATA_i2) && (0==menu_item_my_obj[i].MENU_DATA_i3))
-					{
-						menu_item_my_obj[i].MENU_DATA_i2--;
-						menu_item_my_obj[i].MENU_DATA_i3 = 3;
-					}
-				}
-				if (menu_item_my_obj[i].MENU_DATA_i3)
-				{	menu_item_my_obj[i].MENU_DATA_i3--;}
-				menu_item_my_obj[i].x256 = (menu_item_my_obj[i].MENU_DATA_i0_256)+(cos1024((angle1024))*menu_item_my_obj[i].MENU_DATA_i2);
-			//	menu_item_my_obj[i].y256 = (menu_item_my_obj[i].MENU_DATA_i1_256)+(sin1024((angle1024))*menu_item_my_obj[i].MENU_DATA_i2);
-				menu_item_my_obj[i].y256 = (menu_item_my_obj[i].MENU_DATA_i1_256);
-			//	{
-			//		menu_item_my_obj[i].menu_brite	= menu_brite;
-			//	}
-			}
+			psp_clear_screen(); 	/* [PAUSE] 復帰時にSDL画面を消す。 */
 		}
-//		sp rite_work_SDL(SP_GROUP_PAUSE_S P_ME NU_TEXT);/*SP_GROUP_TEXTS*/
-//		pause_sp rite_display();/*SP_GROUP_TEXTS*/
-		/* 描画 */
-		psp_pop_screen();
-		{			/*static*/ SDL_Rect rect_locate_offset; 	/* 表示位置 */
-			int i;
-			for (i=0; i<MENU_ITEM_99_MAX; i++)
+		#endif
+		main_call_func = pause_out_call_func;
+		//adjust_start_time(pause_start_time);
+	}
+	else
+	if (MENU_ITEM_01_RETRY_GAME == active_item)/* Retry Game */
+	{
+		gamecore_term();
+		msg_time = (0);/* 必要(?) */
+		main_call_func = stage_first_init;	/* 始めから */
+	}
+	else
+//	if (MENU_ITEM_02_QUIT_GAME == active_item)/* Quit Game */
+	{
+		gamecore_term();
+		main_call_func = title_menu_start;	/* タイトルメニューへ移動 */
+	}
+//	www=FPS_MENU_FACTOR10;
+//	return;
+}
+
+
+/*---------------------------------------------------------
+	selection done, decreasing menu_brite, fade menu out
+---------------------------------------------------------*/
+
+static void pause_menu_local_workMENU_STATE_02_FADE_OUT(void)
+{
+	menu_brite -= FPS_MENU_FACTOR8;
+	if (0 >= (menu_brite) )
+	{
+		menu_brite	= 0;
+		main_call_func = pause_menu_local_workMENU_STATE_03_FININSH;//my_ppp_loop++;// MENU_STATE_03_FININSH;
+	}
+	pause_work_draw();
+}
+
+
+/*---------------------------------------------------------
+	fadein complete
+---------------------------------------------------------*/
+extern int now_max_continue;
+static void pause_menu_local_workMENU_STATE_01_WORK_MENU(void)
+{
+	{
+		if (0==my_pad_alter)/* さっき何も押されてなかった場合にキーチェック(原作準拠) */
+		{
+			if (my_pad & (PSP_KEY_DOWN|PSP_KEY_UP|PSP_KEY_PAUSE|PSP_KEY_RIGHT))
 			{
-				rect_locate_offset.x = ((menu_item_my_obj[i].x256)>>8);
-				rect_locate_offset.y = ((menu_item_my_obj[i].y256)>>8);
-			//	SDL_SetAlpha(	menu_item_surface[i], SDL_SRCALPHA, /*bg_alpha_aaa*/(255));
-				SDL_SetAlpha(	menu_item_surface[i], SDL_SRCALPHA, /*bg_alpha_aaa*/(menu_brite));
-				SDL_BlitSurface(menu_item_surface[i], NULL,sdl_screen[SDL_00_VIEW_SCREEN],&rect_locate_offset);
+				voice_play(VOICE02_MENU_SELECT, TRACK01_EXPLODE);
+			}
+			if (my_pad & PSP_KEY_DOWN)
+			{
+				if (active_item == MENU_ITEM_99_MAX-1)
+				{	active_item = 0;	}
+				else
+				{
+					active_item++;
+				}
+			//	www=FPS_MENU_FACTOR10;
+			}
+			else if (my_pad & PSP_KEY_UP)
+			{
+				if (0 == active_item)
+				{	active_item = MENU_ITEM_99_MAX-1;	}
+				else
+				{
+					active_item--;
+				}
+			//	www=FPS_MENU_FACTOR10;
+			}
+			/* セレクトキーを押した場合、クイックリスタート。("始めから")  (原作のキーボードショートカット機能) */
+			if (my_pad & PSP_KEY_SELECT)					/* [select]ボタンで("始めから") */
+			{
+				/*pause_menu.*/active_item	= MENU_ITEM_01_RETRY_GAME;
+				main_call_func = pause_menu_local_workMENU_STATE_02_FADE_OUT;//my_ppp_loop++;// MENU_STATE_02_FADE_OUT;
+			}
+			/* ポーズキーを押した場合、ポーズ解除。 */
+			if (my_pad & PSP_KEY_PAUSE) 				/* [start]ボタンでポーズ解除 */
+			{
+				/*pause_menu.*/active_item	= MENU_ITEM_00_CONTINUE_GAME;
+				main_call_func = pause_menu_local_workMENU_STATE_02_FADE_OUT;//my_ppp_loop++;// MENU_STATE_02_FADE_OUT;
+			}
+			/* ボスデバッグ用 */
+			#if 0/*(1==DEBUG_MODE)*/
+			if (my_pad & PSP_KEY_RIGHT)
+			{
+				now_max_continue = 90;/*test*/	/* ランキングにさせない */
+//				pd_game_score=8;/*test*/
+//				pd_zanki=8;/*test*/
+			//	pd_bombs=8;/*test*/
+			//	#if 0
+			//	/* ボスチェック用 */
+			//	pd_weapon_power=MAX_POWER_IS_128;/*test*/
+			//	#endif
+			}
+			#endif
+			if (my_pad & PSP_KEY_SHOT_OK)
+			{
+				voice_play(VOICE01_MENU_OK/*VOICE02_MENU_SELECT*/, TRACK01_EXPLODE);
+				main_call_func = pause_menu_local_workMENU_STATE_02_FADE_OUT;//my_ppp_loop++;// MENU_STATE_02_FADE_OUT;/* メニュー消去準備 */
 			}
 		}
 	}
+	pause_work_draw();
+}
+
+
+/*---------------------------------------------------------
+	Increasing menu_brite, fade menu in
+---------------------------------------------------------*/
+
+static void pause_menu_local_workMENU_STATE_00_FADE_IN_MENU(void)
+{
+	menu_brite += FPS_MENU_FACTOR8;
+	if (255 <= (menu_brite) )
+	{
+		menu_brite = 255;
+		main_call_func = pause_menu_local_workMENU_STATE_01_WORK_MENU;
+	}
+	pause_work_draw();
 }
 
 
@@ -281,50 +288,56 @@ static void pause_menu_local_work(void)
 
 ---------------------------------------------------------*/
 
-//	int res_num,//		RES09_PAUSE_MENU,
-//	MENU *m,		&pause_menu,
 //static u32 pause_start_time = 0;
 
+extern void set_core_game_time_MAX(void);
 /*static*/global void pause_menu_start(void)
 {
-	#if 1
-	/* てすと、構造的問題 */
-	//if (RES09_PAUSE_MENU==res_num)
-	//	int set_fade_out_flag,
-	//if (0!=/*pause_filter_flag*/(1)/*1 構造的問題*/)
+	if (
+			(7==pd.player_now_stage)	/* スタッフロール1 */
+		|| (10==pd.player_now_stage)	/* スタッフロール2 */
+	)
 	{
-		psp_pause_filter(); 	/* ポーズフィルター予定 */
+		set_core_game_time_MAX();
+		main_call_func = pause_out_call_func;
+	//	return;
 	}
-	#endif
+	else
 	{
-		psp_push_screen();
-	}
-//
-	int i;
-	for (i=0; i<MENU_ITEM_99_MAX; i++)
-	{
-		menu_item_surface[i] = NULL;
-		menu_item_surface[i] = font_render( (char *)my_menu_resource[i].str_name, FONT16R);
-//		SDL_SetColorKey(menu_item_surface[i], (SDL_SRCCOLORKEY|SDL_RLEACCEL), 0x00000000);
-//		/* カラーキー(抜き色、透明色)は黒 */
+		#if 1
+		/* てすと、構造的問題 */
+		//if (RES09_PAUSE_MENU==res_num)
+		//	int set_fade_out_flag,
+		//if (0!=/*pause_filter_flag*/(1)/*1 構造的問題*/)
 		{
-			menu_item_my_obj[i].x256			= t256(0);
-			menu_item_my_obj[i].y256			= t256(0);
-
-			menu_item_my_obj[i].MENU_DATA_i0_256	= ((my_menu_resource[i].x_offset)<<8);
-//			int jjj = ((menu_item_my_obj[i]->SDL_h128)>>7)+5;
-			int jjj = 5+16;
-			menu_item_my_obj[i].MENU_DATA_i1_256	= (((PSP_HEIGHT272/2/*-20*/) -((jjj)*((MENU_ITEM_99_MAX)>>1)) +(i*(jjj)))<<8);
-			menu_item_my_obj[i].MENU_DATA_i2		= 0;
-			menu_item_my_obj[i].MENU_DATA_i3		= 0;
+			psp_pause_filter(); 	/* ポーズフィルター予定 */
 		}
+		#endif
+		{
+			psp_push_screen();
+		}
+	//
+		int i;
+		for (i=0; i<MENU_ITEM_99_MAX; i++)
+		{
+			menu_item_surface[i] = NULL;
+			menu_item_surface[i] = font_render( (char *)my_menu_resource[i].str_name, FONT16R);
+	//		SDL_SetColorKey(menu_item_surface[i], (SDL_SRCCOLORKEY|SDL_RLEACCEL), 0x00000000);
+	//		/* カラーキー(抜き色、透明色)は黒 */
+			{
+				menu_item_my_obj[i].x256			= t256(0);
+				menu_item_my_obj[i].y256			= t256(0);
+				menu_item_my_obj[i].MENU_DATA_i0_256	= ((my_menu_resource[i].x_offset)<<8);
+				menu_item_my_obj[i].MENU_DATA_i1_256	= (((PSP_HEIGHT272/2/*-20*/) -(((5+16))*((MENU_ITEM_99_MAX)>>1)) +(i*((5+16))))<<8);
+				menu_item_my_obj[i].MENU_DATA_i2		= 0;
+				menu_item_my_obj[i].MENU_DATA_i3		= 0;
+			}
+		}
+	//
+		active_item 		= MENU_ITEM_00_CONTINUE_GAME;/*"CONTINUE GAME"*/
+		menu_brite			= (0);
+	//	fade_out_flag		= (0)/*set_fade_out_flag*/;/*構造的問題*/
+	//	pause_start_time	= psp_get_uint32_ticks();
+		main_call_func = pause_menu_local_workMENU_STATE_00_FADE_IN_MENU;//my_ppp_loop = MENU_STATE_00_FADE_IN_MENU;
 	}
-//
-	active_item 		= MENU_ITEM_00_CONTINUE_GAME;/*"CONTINUE GAME"*/
-	menu_brite			= (0);
-//	fade_out_flag		= (0)/*set_fade_out_flag*/;/*構造的問題*/
-//	pause_start_time	= psp_get_uint32_ticks();
-
-	my_ppp_loop = MENU_STATE_00_FADE_IN_MENU;
-	main_call_func = pause_menu_local_work;
 }

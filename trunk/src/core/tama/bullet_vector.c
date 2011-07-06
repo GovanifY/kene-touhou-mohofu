@@ -61,6 +61,38 @@
 
 ---------------------------------------------------------*/
 
+
+/*---------------------------------------------------------
+	©‹@(src)‘_‚Ά’e‚Μp“x‚π(dest‚Ι)vZ
+---------------------------------------------------------*/
+
+static void s_tmp_angleCCW1024_src_nerai_auto(SPRITE *src, SPRITE *dest)
+{
+	if (ANGLE_JIKI_NERAI_DAN==dest->tmp_angleCCW1024)
+	{
+		/*s_*/tmp_angleCCW1024_src_nerai(src, dest);
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*---------------------------------------------------------
+
+---------------------------------------------------------*/
+
+
+
+
 global BULLET_REGIST br;
 
 #define callback_2nd_regist 	callback_loser	/* ‚Qnd“o^ */
@@ -145,7 +177,7 @@ static void callback_2nd_regist(SPRITE *src)
 //typedef struct
 //{
 #define KURUKURU_KNIFE_DATA_speed_2nd_256		user_data00
-#define KURUKURU_KNIFE_DATA_height				user_data02
+//#define KURUKURU_KNIFE_DATA_height256 		user_data02
 //} KURUKURU_KNIFE_DATA;
 
 
@@ -203,11 +235,36 @@ static void move_bullet_vector(SPRITE *src)
 {
 	if (t256(1.00)!=(src->BASE_add_speed256))
 	{
-		src->vx256 = ((src->vx256*src->BASE_add_speed256)>>8);/* ‰Α‘¬/Έ‘¬ */
-		src->vy256 = ((src->vy256*src->BASE_add_speed256)>>8);/* ‰Α‘¬/Έ‘¬ */
+		#if (0)
+	//	src->vx256 = ((src->vx256*src->BASE_add_speed256)>>8);/* ‰Α‘¬/Έ‘¬ */	// •‰‚Μκ‡ƒ_ƒB
+		#else
+		const int vx256_speed = (src->vx256*src->BASE_add_speed256);
+		if (0 < vx256_speed) /* ³‚Μκ‡ */
+		{
+			src->vx256 = ((vx256_speed)>>8);/* ‰Α‘¬/Έ‘¬ */
+		}
+		else /* •‰‚Μκ‡ */
+		{
+			src->vx256 = -((-vx256_speed)>>8);/* ‰Α‘¬/Έ‘¬ */
+		}
+		#endif
+		//
+		#if (1)/* «‰e‹Ώ‚ª‚³‚µ‚Δ‚Θ‚Ά‚Μ‚Ε... */
+		src->vy256 = ((src->vy256*src->BASE_add_speed256)>>8);/* ‰Α‘¬/Έ‘¬ */	// •‰‚Μκ‡ƒ_ƒB
+		#else
+		const int vy256_speed = (src->vy256*src->BASE_add_speed256);
+		if (0 < vy256_speed) /* ³‚Μκ‡ */
+		{
+			src->vy256 = ((vy256_speed)>>8);/* ‰Α‘¬/Έ‘¬ */
+		}
+		else /* •‰‚Μκ‡ */
+		{
+			src->vy256 = -((-vy256_speed)>>8);/* ‰Α‘¬/Έ‘¬ */
+		}
+		#endif
 	}
-	src->x256 += (src->vx256);		/*fps_factor*/
-	src->y256 += (src->vy256);		/*fps_factor*/
+	src->cx256 += (src->vx256); 	/*fps_factor*/
+	src->cy256 += (src->vy256); 	/*fps_factor*/
 //
 //	gamen_gai_nara_osimai(src);/* ‰ζ–ΚO‚Θ‚η‚¨‚µ‚ά‚Ά */
 
@@ -233,7 +290,7 @@ static void move_bullet_vector(SPRITE *src)
 
 #if 1
 //static int angle_jikinerai512_auto(SPRITE *p, SPRITE *t, int angle512);
-static void s_tmp_angleCCW1024_jikinerai_auto(SPRITE *p, SPRITE *t/*, int angle512*/);
+static void s_tmp_angleCCW1024_src_nerai_auto(SPRITE *src, SPRITE *t/*, int angle512*/);
 static void move_bullet_sakuya_linear_yuudou(SPRITE *src)
 {
 	src->base_time_out--;
@@ -260,8 +317,8 @@ static void move_bullet_sakuya_linear_yuudou(SPRITE *src)
 		}
 	//	if (240/*1*/ < data->y_sum256)
 		{	/* ·•ª == (’e‚Μ»έΐ•W - ’e‚Μ—U“±ΐ•W) */
-			int x_sa256 = (src->x256 - src->target_x256);
-			int y_sa256 = (src->y256 - src->target_y256);
+			int x_sa256 = (src->cx256 - src->target_x256);
+			int y_sa256 = (src->cy256 - src->target_y256);
 			/* ‚ ‚ι’φ“xA—U“±ΐ•W‚Μ‹ί‚­‚ά‚Ε‚«‚½‚η */
 			if (t256(2.0) > abs(x_sa256))
 			{
@@ -273,29 +330,30 @@ static void move_bullet_sakuya_linear_yuudou(SPRITE *src)
 			/* ‰ΑZ·•ª == (’e‚Μ·•ªΐ•W * —U“±”δ—¦) */
 			int aaa_x256 = ((x_sa256 * src->BULLET_YUUDOU_DATA_hiritu256)>>8);	/*fps_factor*/
 			int aaa_y256 = ((y_sa256 * src->BULLET_YUUDOU_DATA_hiritu256)>>8);	/*fps_factor*/
-			src->x256 = src->target_x256 + (aaa_x256);	/*fps_factor*/
-			src->y256 = src->target_y256 + (aaa_y256);	/*fps_factor*/
+			src->cx256 = src->target_x256 + (aaa_x256); /*fps_factor*/
+			src->cy256 = src->target_y256 + (aaa_y256); /*fps_factor*/
 		}
 	}
 	else
 	if (0+2048==src->base_time_out) 			/* ‘_‚Ά’e‚Ι•Οg‚·‚ι */
 	{
-	//	src->type			= BULLET_MARU8_00_AKA+(1);
 		src->type			= BULLET_KNIFE20_07_MIDORI;/* (Β¨—ΞƒiƒCƒt‚Ι•Οg) */
 		src->BULLET_SP1_DATA_angle1024 = ANGLE_JIKI_NERAI_DAN;
+		SPRITE *zzz_player;
+		zzz_player = &obj00[FIX_OBJ_00_PLAYER];
 		{
 			src->tmp_angleCCW1024			= src->BULLET_SP1_DATA_angle1024;
-			s_tmp_angleCCW1024_jikinerai_auto(obj_player, src);
+			s_tmp_angleCCW1024_src_nerai_auto(zzz_player, src);
 			src->BULLET_SP1_DATA_angle1024	= src->tmp_angleCCW1024;
 		}
 		mask1024(src->BULLET_SP1_DATA_angle1024);
-		src->m_angleCCW1024 = src->BULLET_SP1_DATA_angle1024;
+		src->rotationCCW1024 = src->BULLET_SP1_DATA_angle1024;
 		src->vx256 = (0);	/*fps_factor*/
 		src->vy256 = (0);	/*fps_factor*/
 		/* —U“±ΐ•W‚ΝƒvƒƒCƒ„[‚ΜΚ’u•t‹ί */
 		/* ‚Ζ‚θ‚ ‚¦‚ΈA‰Ό‘Ξ‰B‹­§“I‚Ιέ’θ‚µ‚Ώ‚α‚¤ */
-		src->target_x256	= (obj_player->x256+t256(32/2)/*•‚Μ”Ό•ª*/);		/*fps_factor*/
-		src->target_y256	= (obj_player->y256+t256(16/2)/*‚‚³‚Μ”Ό•ª*/);	/*fps_factor*/
+		src->target_x256	= (zzz_player->cx256+t256(32/2)/*•‚Μ”Ό•ª*/);	/*fps_factor*/
+		src->target_y256	= (zzz_player->cy256+t256(16/2)/*‚‚³‚Μ”Ό•ª*/); /*fps_factor*/
 		src->BULLET_YUUDOU_DATA_hiritu256		= t256(1.0);	/* (2.5==5*0.5) */
 	}
 //
@@ -327,35 +385,12 @@ static void move_bullet_sakuya_hosi_gata(SPRITE *src)
 		}
 	}
 	//move_bullet_vector(src);
-	src->x256 += (src->vx256);		/*fps_factor*/
-	src->y256 += (src->vy256);		/*fps_factor*/
+	src->cx256 += (src->vx256); 	/*fps_factor*/
+	src->cy256 += (src->vy256); 	/*fps_factor*/
 //	gamen_gai_nara_osimai(src);/* ‰ζ–ΚO‚Θ‚η‚¨‚µ‚ά‚Ά */
 }
 
-/*---------------------------------------------------------
-	©‹@‘_‚Ά’e‚Μp“x‚πvZ
----------------------------------------------------------*/
-static void s_tmp_angleCCW1024_jikinerai(SPRITE *p, SPRITE *t)
-{
-	#if 1
-	t->tmp_angleCCW1024 =	(atan_1024((p->y256-t->y256), (p->x256-t->x256)));
-	/* ‹τ”’e‚Μκ‡‚Ι©‹@‘_‚Ά(Θ—ª”Ε) ’e‚Ζ©•ª‚ª‘ε‚«‚³‚ª“―‚¶‚Θ‚η‚Έ‚κ‚Θ‚ΆAα‚¤‚Ζ‚»‚Μ•ªλ·‚Ι‚Θ‚ι */
-	#endif
-}
-//static int angle_jikinerai1024_auto(SPRITE *p, SPRITE *t, int angle1024)
-//{
-//	if (ANGLE_JIKI_NERAI_DAN==angle1024)	{	angle1024	= angle_jikinerai1024(p,t);}
-//	return (angle1024);
-//}
-static void s_tmp_angleCCW1024_jikinerai_auto(SPRITE *p, SPRITE *t/*, int angle1024*/)
-{
-	if (ANGLE_JIKI_NERAI_DAN==t->tmp_angleCCW1024/*angle1024*/)
-	{
-		s_tmp_angleCCW1024_jikinerai(p, t);
-	//	angle1024 = t->tmp_angleCCW1024;
-	}
-//	return (angle1024);
-}
+
 
 /*---------------------------------------------------------
 
@@ -393,7 +428,7 @@ static void enemy_stop_bullet2_move(SPRITE *src)
 	if (TOMARI_DAN_LIMIT_00_576 < src->base_time_out)
 	{
 		/* ‚‚Β(‘ε’e‚Ι•Οg) */
-		src->type		= BULLET_MARU8_00_AKA + (( src->base_time_out>>3)&0x07);		/*x(•Οg‚·‚ι‚Μ‚Ε)*/
+		src->type		= BULLET_MARU8_00_SIRO + (( src->base_time_out>>3)&0x07);		/*x(•Οg‚·‚ι‚Μ‚Ε)*/
 	}
 	else
 	if (TOMARI_DAN_LIMIT_01_512 < src->base_time_out)
@@ -420,13 +455,13 @@ static void enemy_stop_bullet2_move(SPRITE *src)
 		if ( 0x20000000 > src->color32) 	/*	( 0x20 > src->alpha)	*/
 		{
 			src->color32 = 0x00ffffff;		/*	src->alpha = 0x00;	*/
-			src->type = SP_DELETE;
+			src->jyumyou = JYUMYOU_NASI;
 		}
 	}
 	/* “Α•Κ‚Ι‚‚½‚Θ‚Ά’eA‚Μκ‡ */
 	if (ANGLE_NO_SHOT_DAN == src->TOMARI_DAN_next_angle1024 )
 	{	/* ƒXƒNƒ[ƒ‹‚·‚ι */
-		src->y256 += t256(1.0); 	//	my_adjust_y(s,pd);
+		src->cy256 += t256(1.0);	//	my_adjust_y(s,pd);
 	}
 	move_bullet_vector(src);
 }
@@ -449,29 +484,29 @@ static void bullet_move_hazumi_dan(SPRITE *src)
 	{
 		/*src->HAZUMI_DAN_DATA_sum256*/src->vy256 += src->HAZUMI_DAN_DATA_delta256; /* •β³’l */
 	}
-//	s->y256 += src->HAZUMI_DAN_DATA_sum256; 		/* ΟZd—Ν‰Α‘¬“x */
+//	s->cy256 += src->HAZUMI_DAN_DATA_sum256;		/* ΟZd—Ν‰Α‘¬“x */
 //	mono_angle_move(s,(BULLET_ANGLE_DATA *)d);
-	src->y256 += src->vy256;
-	src->x256 += src->vx256;
+	src->cy256 += src->vy256;
+	src->cx256 += src->vx256;
 
 	/* ‰΅‚Μ•Η */
-	if ((src->x256 < t256(0))||(src->x256 > t256(GAME_WIDTH)))
+	if ((src->cx256 < t256(0))||(src->cx256 > t256(GAME_WIDTH)))
 	{
 		#if 1
 		src->vx256 = -(src->vx256);
 	//	rot_90_angle512(d); 	/*	’µ‚Λ•Τ‚ι */
 		#else
-		src->type = SP_DELETE;		/*	Α‚¦‚ι */
+		src->jyumyou = JYUMYOU_NASI;		/*	Α‚¦‚ι */
 		#endif
 	}
 	/* ° */
-	else if (src->y256 > t256(GAME_HEIGHT))
+	else if (src->cy256 > t256(GAME_HEIGHT))
 	{
 		/* έ’θ’µ‚Λ‚ι‰ρ” */
 		if (0!=src->HAZUMI_DAN_DATA_bound_counts)
 		{
 			src->HAZUMI_DAN_DATA_bound_counts--;	/* ’µ‚Λ‚ι‰ρ”‚πΈ‚η‚· */
-			src->type		= BULLET_MARU8_00_AKA+4+(src->HAZUMI_DAN_DATA_bound_counts);		// [***090116		α±•ΟX
+			src->type		= BULLET_MARU8_00_SIRO+4+(src->HAZUMI_DAN_DATA_bound_counts);		// [***090116		α±•ΟX
 		//	src->HAZUMI_DAN_DATA_sum256 	= -src->HAZUMI_DAN_DATA_sum256; 	/* d—Ν‰Α‘¬“x */
 			#if 0
 			src->HAZUMI_DAN_DATA_speed256	= -src->HAZUMI_DAN_DATA_speed256;		/* ‘¬“x */
@@ -485,14 +520,14 @@ static void bullet_move_hazumi_dan(SPRITE *src)
 		}
 		else
 		{
-			src->type = SP_DELETE;		/*	Α‚¦‚ι */
+			src->jyumyou = JYUMYOU_NASI;		/*	Α‚¦‚ι */
 		}
 	}
 	#if 1
 	/* “Vδ */
-	else if (src->y256 < 0)
+	else if (src->cy256 < 0)
 	{
-		src->type = SP_DELETE;		/*	Α‚¦‚ι */
+		src->jyumyou = JYUMYOU_NASI;		/*	Α‚¦‚ι */
 	}
 	#endif
 }
@@ -506,7 +541,7 @@ static void bullet_move_gravity(SPRITE *src)
 {
 	src->vy256 += src->GRAVITY_BULLET_DATA_delta256;
 //	data->speed256 += data->delta256;
-//	src->y256 += data->speed256;
+//	src->cy256 += data->speed256;
 	move_bullet_vector(src);
 }
 
@@ -524,10 +559,10 @@ static void bullet_move_kurukuru_knife(SPRITE *src)
 	src->base_time_out--;
 	if ( 0 > src->base_time_out)
 	{
-		if (((src->x256 < t256(0))||(src->x256 > t256(GAME_WIDTH))||
-			 (src->y256 < t256(0))||(src->y256 > t256(GAME_HEIGHT))))
+		if (((src->cx256 < t256(0))||(src->cx256 > t256(GAME_WIDTH))||
+			 (src->cy256 < t256(0))||(src->cy256 > t256(GAME_HEIGHT))))
 		{
-			src->type = SP_DELETE;/* ‰ζ–ΚO‚Ιo‚½‚η‚¨‚µ‚ά‚Ά */
+			src->jyumyou = JYUMYOU_NASI;/* ‰ζ–ΚO‚Ιo‚½‚η‚¨‚µ‚ά‚Ά */
 		}
 	}
 	else
@@ -545,14 +580,16 @@ static void bullet_move_kurukuru_knife(SPRITE *src)
 		//	src->KURUKURU_KNIFE_DATA_target 		= 1;
 			src->base_time_out						= (250);
 			src->type								= BULLET_KNIFE20_07_MIDORI;/* (Β¨—ΞƒiƒCƒt‚Ι•Οg) */
-			src->tmp_angleCCW1024 = atan_1024(
-				#if 1/*Gu(’†Sΐ•W)*/
-				(obj_player->y256)-(src->y256)+(src->KURUKURU_KNIFE_DATA_height*256),
-				(obj_player->x256)-(src->x256)
-				#endif
-			);
+			#if 1/* ‚ν‚΄‚Ζ‘_‚ν‚Θ‚Ά */
+			u32 ra_nd32 = ra_nd();
+			SPRITE *zzz_player;
+			zzz_player = &obj00[FIX_OBJ_00_PLAYER];
+			obj_send1->cx256	= (zzz_player->cx256)+((ra_nd32<<8)&0x1fff)-t256(16);
+			obj_send1->cy256	= (zzz_player->cy256)+((ra_nd32  )&0x0fff)-t256(8);
+			#endif
+			/*s_*/tmp_angleCCW1024_src_nerai(obj_send1, src);
 			mask1024(src->tmp_angleCCW1024);/*‚Λ‚ρ‚Μ‚½‚ί*/
-			src->m_angleCCW1024 = ((src->tmp_angleCCW1024));	/* •\¦p“x */
+			src->rotationCCW1024 = ((src->tmp_angleCCW1024));	/* •\¦p“x */
 		}
 		/*data->*/src->vx256 = ((sin1024((src->tmp_angleCCW1024))*(src->KURUKURU_KNIFE_DATA_speed_2nd_256))>>8);/*fps_factor*/
 		/*data->*/src->vy256 = ((cos1024((src->tmp_angleCCW1024))*(src->KURUKURU_KNIFE_DATA_speed_2nd_256))>>8);/*fps_factor*/
@@ -566,13 +603,13 @@ static void bullet_move_kurukuru_knife(SPRITE *src)
 	//	src->KURUKURU_KNIFE_DATA_aaa_speed256 -= t256(0.02*2);/*2”{‚Ι‚µ‚½‚Μ‚Ε’Òελ‡‚ν‚Ή*/
 //		src->KURUKURU_KNIFE_DATA_aaa_speed256 -= t256(0.04);	/* ƒiƒCƒt‘¬“xAΈ‘¬’θ” */
 	//	src->KURUKURU_KNIFE_DATA_aaa_speed256 -= 1/*t256(0.04)*/; /* ƒiƒCƒt‘¬“xAΈ‘¬’θ” */
-		src->m_angleCCW1024 += (64);
-		mask1024(src->m_angleCCW1024);/*‚Λ‚ρ‚Μ‚½‚ί*/
+		src->rotationCCW1024 += (64);
+		mask1024(src->rotationCCW1024);/*‚Λ‚ρ‚Μ‚½‚ί*/
 //		/*data->*/src->vx256 = ((sin512((src->knife_tmp_angle512/*data->aaa_angle512*/))*(src->KURUKURU_KNIFE_DATA_aaa_speed256))>>8);/*fps_factor*/
 //		/*data->*/src->vy256 = ((cos512((src->knife_tmp_angle512/*data->aaa_angle512*/))*(src->KURUKURU_KNIFE_DATA_aaa_speed256))>>8);/*fps_factor*/
 	}
-	src->x256 += (src->vx256);		/*fps_factor*/
-	src->y256 += (src->vy256);		/*fps_factor*/
+	src->cx256 += (src->vx256); 	/*fps_factor*/
+	src->cy256 += (src->vy256); 	/*fps_factor*/
 //
 }
 
@@ -593,21 +630,23 @@ static void bullet_move_kurukuru_knife(SPRITE *src)
 //	int br.BULLET_REGIST_speed256,
 //	int br.BULLET_REGIST_angle1024,
 //	int BULLET_REGIST_jyuryoku_dan_delta256,
-//	int br.BULLET_REGIST_bullet_obj_type	/* ’eƒOƒ‰ */	/*BULLET_MARU8_00_AKA+(7)*/ 	/*(BULLET_KNIFE20_05_AKA)*/
+//	int br.BULLET_REGIST_bullet_obj_type	/* ’eƒOƒ‰ */	/*(BULLET_KNIFE20_05_AKA)*/
 
 /*bullet_create_sakuya_no_rot_knife*/
 static void s_bullet_create_jyuryoku_dan(void)
 {
 	SPRITE *h;			/*Ϋ’e‚W(Τ‚q‚f‚a—Ξα‰©Β)*/
-	h					= sprite_add_only_bullet_error();/*Β’e*/
+	h					= sprite_add_444only_bullet_error();/*Β’e*/
 	if (NULL != h)
 	{
-		h->m_Hit256R		= TAMA_ATARI_MARU16_PNG;
 		h->type 			= (br.BULLET_REGIST_bullet_obj_type);/*BULLET_MARU8_07_AOI*/  /*S P_BULLET*/ /*SP_LASER*/
+		reflect_sprite_spec444(h, OBJ_BANK_SIZE_00_TAMA);
+		h->m_Hit256R		= TAMA_ATARI_MARU16_PNG;
+		//
 		h->callback_mover	= bullet_move_gravity;	/*enemy_fall_knife_move*/
 		#if 1/*Gu(’†Sΐ•W)*/
-		h->x256 			= /*src*/obj_send1->x256;
-		h->y256 			= /*src*/obj_send1->y256;
+		h->cx256			= /*src*/obj_send1->cx256;
+		h->cy256			= /*src*/obj_send1->cy256;
 		#endif
 	//
 		/*angle512			= angle_jikinerai512_auto(obj_player, src, angle512);*/
@@ -629,27 +668,28 @@ static void s_bullet_create_jyuryoku_dan(void)
 
 global void bullet_crate_sakuya_linear_yuudou(SPRITE *src)
 {
-	int j;
+	const unsigned int knife_color = BULLET_KNIFE20_04_AOI+((ra_nd()&(4-1)));	/* ƒiƒCƒt‚ΜF‚Νƒ‰ƒ“ƒ_ƒ€ */
+	unsigned int j;
 	for (j=(0); j<(8); j++)
 	{
 		SPRITE *h;
-		h						= sprite_add_only_bullet_error();
+		h						= sprite_add_444only_bullet_error();
 		if (NULL != h)
 		{
+			h->type 			= (knife_color);/*S P_BULLET*/ /*SP_LASER*/
+			reflect_sprite_spec444(h, OBJ_BANK_SIZE_00_TAMA);
 			h->m_Hit256R		= TAMA_ATARI_MARU16_PNG;
-			const unsigned int aaa = ((ra_nd()&(4-1))); 	/* ƒiƒCƒt‚ΜF‚Νƒ‰ƒ“ƒ_ƒ€ */
-		//	h->type 			= BULLET_MARU8_00_AKA+4+(aaa);/*S P_BULLET*/ /*SP_LASER*/
-			h->type 			= BULLET_KNIFE20_04_AOI+(aaa);/*S P_BULLET*/ /*SP_LASER*/
+		//
 			h->callback_mover	= move_bullet_sakuya_linear_yuudou;
 			#if 1/*Gu(’†Sΐ•W)*/
-			h->x256 			= src->x256;
-			h->y256 			= src->y256;
+			h->cx256			= src->cx256;
+			h->cy256			= src->cy256;
 			#endif
 			h->base_time_out	= 2048+20+(40+1);		/*data->timer		= 0;*/
 
 			int angle1024		= src->tmp_angleCCW1024+((j-4)*84); 	/* 85.333 == cv1024r(30) */
 			mask1024(angle1024);
-			h->m_angleCCW1024 = angle1024;
+			h->rotationCCW1024 = angle1024;
 			h->vx256 = ((sin1024((angle1024))*t256(1.0))>>8);/*fps_factor*/
 			h->vy256 = ((cos1024((angle1024))*t256(1.0))>>8);/*fps_factor*/
 
@@ -677,15 +717,17 @@ global void bullet_crate_sakuya_linear_yuudou(SPRITE *src)
 global /*static*/ void bullet_crate_sakuya_hosi_gata(SPRITE *src)
 {		/*Ϋ’e‚W(Τ‚q‚f‚a—Ξα‰©Β)*/
 	SPRITE *h;
-	h					= sprite_add_only_bullet_error();
+	h					= sprite_add_444only_bullet_error();
 	if (NULL != h)
 	{
+		h->type 			= BULLET_MARU8_01_AKA+(0);/*S P_BULLET*/
+		reflect_sprite_spec444(h, OBJ_BANK_SIZE_00_TAMA);
 		h->m_Hit256R		= TAMA_ATARI_MARU16_PNG;
-		h->type 			= BULLET_MARU8_00_AKA+(0);/*S P_BULLET*/
+	//
 		h->callback_mover	= move_bullet_sakuya_hosi_gata;
 		#if 1/*Gu(’†Sΐ•W)*/
-		h->x256 			= src->x256;
-		h->y256 			= src->y256;
+		h->cx256			= src->cx256;
+		h->cy256			= src->cy256;
 		#endif
 		h->vx256			= (0);
 		h->vy256			= (0);
@@ -737,19 +779,23 @@ global /*static*/ void bullet_crate_sakuya_hosi_gata(SPRITE *src)
 static void s_bullet_create_tomari2_dan(void)
 {
 	SPRITE *h;
-	h					= sprite_add_only_bullet_error();	/*Ϋ’e‚W(Τ‚q‚f‚a—Ξα‰©Β)*/	/*¬Τ’e TAMA_TYPE_KUGEL_PNG */
+	h					= sprite_add_444only_bullet_error();	/*Ϋ’e‚W(Τ‚q‚f‚a—Ξα‰©Β)*/	/*¬Τ’e TAMA_TYPE_KUGEL_PNG */
 	if (NULL != h)
 	{
+		h->type 			= BULLET_MARU8_01_AKA+(0);/*S P_BULLET*/
+		reflect_sprite_spec444(h, OBJ_BANK_SIZE_00_TAMA);
 		h->m_Hit256R		= TAMA_ATARI_MARU16_PNG;
-		h->type 			= BULLET_MARU8_00_AKA+(0);/*S P_BULLET*/
+	//
 		h->callback_mover	= enemy_stop_bullet2_move;
 		#if 1/*Gu(’†Sΐ•W)*/
-		h->x256 			= /*src*/obj_send1->x256;
-		h->y256 			= /*src*/obj_send1->y256;
+		h->cx256			= /*src*/obj_send1->cx256;
+		h->cy256			= /*src*/obj_send1->cy256;
 		#endif
 		{
 			/*src*/obj_send1->tmp_angleCCW1024	= br.BULLET_REGIST_angle1024;
-			s_tmp_angleCCW1024_jikinerai_auto(obj_player, /*src*/obj_send1);
+			SPRITE *zzz_player;
+			zzz_player = &obj00[FIX_OBJ_00_PLAYER];
+			s_tmp_angleCCW1024_src_nerai_auto(zzz_player, /*src*/obj_send1);
 			br.BULLET_REGIST_angle1024				= /*src*/obj_send1->tmp_angleCCW1024;
 		}
 	//	data->angle512		= (angle512);
@@ -794,16 +840,18 @@ static void s_bullet_create_tomari2_dan(void)
 static void s_bullet_create_sakuya_222kurukuru_knife(void)
 {/* x, y*/
 	SPRITE *h;
-	h					= sprite_add_only_bullet_error();/*‘S•ϋόƒiƒCƒt(Β)*/
+	h					= sprite_add_444only_bullet_error();/*‘S•ϋόƒiƒCƒt(Β)*/
 	if (NULL != h)
 	{
-		h->m_Hit256R		= TAMA_ATARI_KNIFE18_PNG;
 		h->type 			= /*BULLET_KNIFE20_07_MIDORI*/BULLET_KNIFE20_04_AOI;/*BULLET_KNIFE20_04_AOI*/	/* (Β¨—ΞƒiƒCƒt‚Ι•Οg) */		/*S P_BULLET*/ /*SP_LASER*/
+		reflect_sprite_spec444(h, OBJ_BANK_SIZE_00_TAMA);
+		h->m_Hit256R		= TAMA_ATARI_KNIFE18_PNG;
+	//
 		h->callback_mover	= bullet_move_kurukuru_knife;
 
 		#if 1/*Gu(’†Sΐ•W)*/
-		h->x256 			= obj_send1->x256;
-		h->y256 			= obj_send1->y256;/*x*/
+		h->cx256			= obj_send1->cx256;
+		h->cy256			= obj_send1->cy256;/*x*/
 		#endif
 		h->base_time_out	= (300);
 	//	h->knife_tmp_angle512/*data->aaa_angle512*/ 	= (br.BULLET_REGIST_angle512);
@@ -817,7 +865,7 @@ static void s_bullet_create_sakuya_222kurukuru_knife(void)
 		h->vx256			= (0);
 		h->vy256			= (0);
 	//	h->KURUKURU_KNIFE_DATA_target			= 0;
-		h->KURUKURU_KNIFE_DATA_height			= (br.BULLET_REGIST_sakuya_kurukurku_knife_height);
+//		h->KURUKURU_KNIFE_DATA_height256			= (br.BU LLET_REGIST_sakuya_kurukurku_knife_height);
 	}
 }
 
@@ -832,7 +880,7 @@ static void s_bullet_create_sakuya_222kurukuru_knife(void)
 static void bullet_create_oodama22(SPRITE *src)
 {
 	SPRITE *h;
-	h					= sprite_add_only_bullet_error();  /* ‘ε’e(Τ) •\¦•”•ª*/
+	h					= sprite_add_444only_bullet_error();  /* ‘ε’e(Τ) •\¦•”•ª*/
 	if (NULL != h)
 	{
 	//	angle512			= angle_jikinerai512_auto(obj_player, src, angle512);
@@ -841,12 +889,14 @@ static void bullet_create_oodama22(SPRITE *src)
 		int angle1024;
 		angle1024			= (src->TOMARI_DAN_next_angle1024);
 	//
+		h->type 			= BULLET_OODAMA32_00_AOI+((((angle1024>>7)&(0x03))));
+		reflect_sprite_spec444(h, OBJ_BANK_SIZE_00_TAMA);
 		h->m_Hit256R		= TAMA_ATARI_OODAMA_08_PNG;
-		h->type 			= BULLET_OODAMA32_00_SIROI+((((angle1024>>7)&(0x03))));
+	//
 		h->callback_mover	= move_bullet_vector;	/* (—v‰Α‘¬‹@”\) */
 		#if 1/*Gu(’†Sΐ•W)*/
-		h->x256 			= src->x256;
-		h->y256 			= src->y256;
+		h->cx256			= src->cx256;
+		h->cy256			= src->cy256;
 		#endif
 	//
 		int speed256;
@@ -883,15 +933,17 @@ static void bullet_create_oodama22(SPRITE *src)
 static void s_bullet_create_hazumi_dan(void)
 {
 	SPRITE *h;			/*Ϋ’e‚W(Τ‚q‚f‚a—Ξα‰©Β)*/
-	h					= sprite_add_only_bullet_error();/*—Ξ‰©’e*/
+	h					= sprite_add_444only_bullet_error();/*—Ξ‰©’e*/
 	if (NULL != h)
 	{
+		h->type 			= BULLET_MARU8_00_SIRO+(4+br.BULLET_REGIST_jyuryoku_dan_bound_counts);/*S P_BULLET*/ /*SP_LASER*/
+		reflect_sprite_spec444(h, OBJ_BANK_SIZE_00_TAMA);
 		h->m_Hit256R		= TAMA_ATARI_MARU16_PNG;
-		h->type 			= BULLET_MARU8_00_AKA+(4+br.BULLET_REGIST_jyuryoku_dan_bound_counts);/*S P_BULLET*/ /*SP_LASER*/
+	//
 		h->callback_mover	= bullet_move_hazumi_dan;
 		#if 1/*Gu(’†Sΐ•W)*/
-		h->x256 			= /*src*/obj_send1->x256;
-		h->y256 			= /*src*/obj_send1->y256;
+		h->cx256			= /*src*/obj_send1->cx256;
+		h->cy256			= /*src*/obj_send1->cy256;
 		#endif
 		/*angle512			= angle_jikinerai512_auto(obj_player, src, angle512);*/
 		mask1024(br.BULLET_REGIST_angle1024);
@@ -943,11 +995,24 @@ static void s_bullet_regist_multi_angle(void)
 {
 	{
 		obj_send1->tmp_angleCCW1024 		= br.BULLET_REGIST_angle1024;
-		s_tmp_angleCCW1024_jikinerai_auto(obj_player, obj_send1/*src*/ ); /*ANGLE_JIKI_NERAI_DAN???(original)*/ /* ο”’e‚Μκ‡‚Ι©‹@‘_‚Ά */
+		SPRITE *zzz_player;
+		zzz_player = &obj00[FIX_OBJ_00_PLAYER];
+		s_tmp_angleCCW1024_src_nerai_auto(zzz_player, obj_send1/*src*/ ); /*ANGLE_JIKI_NERAI_DAN???(original)*/ /* ο”’e‚Μκ‡‚Ι©‹@‘_‚Ά */
 		br.BULLET_REGIST_angle1024	= obj_send1->tmp_angleCCW1024;
 	}
 	int i_angle1024;
-	i_angle1024 		= br.BULLET_REGIST_angle1024-((br.BULLET_REGIST_n_way+2)*((br.BULLET_REGIST_div_angle1024>>1)/*(int)(1024/48)*/)); /* 48•ª„’e */ // /* ƒΞ/24 0.13089969389957471827 */
+	i_angle1024 		= br.BULLET_REGIST_angle1024;
+//	i_angle1024 		-= ((br.BULLET_REGIST_n_way+2)*((br.BULLET_REGIST_div_angle1024>>1)/*(int)(1024/48)*/)); /* 48•ª„’e */ // /* ƒΞ/24 0.13089969389957471827 */
+	i_angle1024 		-= ((br.BULLET_REGIST_n_way-1)*((br.BULLET_REGIST_div_angle1024>>1)/*(int)(1024/48)*/)); /* 48•ª„’e */ // /* ƒΞ/24 0.13089969389957471827 */
+/*
+way 	•β³p“x
+1		-0/2
+2		-1/2
+3		-2/2
+4		-3/2
+5		-4/2
+*/
+
 	/* ”O‚ΜΧƒ}ƒXƒN */
 //	mask1024(i_angle1024);
 //
@@ -956,19 +1021,21 @@ static void s_bullet_regist_multi_angle(void)
 	{
 		SPRITE *h;
 		// frame‚Νƒtƒ[ƒ€”-1 /*char *filename, int frame,*/
-		h					= sprite_add_only_bullet_error(); /*_MING32_PNG*/
+		h					= sprite_add_444only_bullet_error(); /*_MING32_PNG*/
 		if (NULL != h)
 		{
-			h->m_Hit256R		= TAMA_ATARI_COMMON16_PNG;
 			h->type 			= (br.BULLET_REGIST_bullet_obj_type);/*BULLET_UROKO14_01_AKA+*/ /*S P_BULLET*/
+			reflect_sprite_spec444(h, OBJ_BANK_SIZE_00_TAMA);
+			h->m_Hit256R		= TAMA_ATARI_COMMON16_PNG;
+		//
 			h->callback_mover	= move_bullet_vector;
 			#if 1/*Gu(’†Sΐ•W)*/
-			h->x256 			= /*src*/obj_send1->x256;
-			h->y256 			= /*src*/obj_send1->y256;
+			h->cx256			= /*src*/obj_send1->cx256;
+			h->cy256			= /*src*/obj_send1->cy256;
 			#endif
 			i_angle1024 		+= br.BULLET_REGIST_div_angle1024;	/*(2)*((int)(1024/48))*/ /* ƒΞ/12 0.26179938779914943654 */
 			mask1024(i_angle1024);
-			h->m_angleCCW1024		= i_angle1024;		/* •`‰ζ—pp“x(‰Ί‚ª0“x‚Ε¶‰ρ‚θ(”½v‰ρ‚θ)) */
+			h->rotationCCW1024		= i_angle1024;		/* •`‰ζ—pp“x(‰Ί‚ª0“x‚Ε¶‰ρ‚θ(”½v‰ρ‚θ)) */
 			regist_vector(h, br.BULLET_REGIST_speed256, i_angle1024);
 		}
 	}

@@ -2,7 +2,7 @@
 #include "game_main.h"
 
 /*---------------------------------------------------------
-	東方模倣風  ～ Toho Imitation Style.
+	東方模倣風	～ Toho Imitation Style.
 	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	ゲームシステム初期化処理、関連
@@ -24,7 +24,7 @@ extern void kanji_system_init(void);/* 組み込み */
 extern void kanji_system_exit(void);/* 外す */
 
 extern void init_imglist(void);
-extern void init_math(void);
+//extern void init_math(void);
 extern void ini_load(void); 	// [***090110
 extern void ini_save(void); 	// [***090115
 extern void bg2_system_init(void);
@@ -36,7 +36,7 @@ extern void old_menu_system_init(void);
 extern int continue_stage;
 void game_system_init(void)
 {
-	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO /*| SDL_INIT_JOYSTICK*/ );
+	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO ); /*| SDL_INIT_JOYSTICK*/
 	SDL_InitSubSystem(SDL_INIT_AUDIO);
 
 	/* ----- */
@@ -54,7 +54,7 @@ void game_system_init(void)
 
 	/* ----- ゲーム本体初期化 */
 	init_audio();
-	init_math();/*keyboard_clear();*/
+//	init_math();/*keyboard_clear();*/
 	init_imglist();
 //
 	story_script_system_init();/* 組み込み */
@@ -68,7 +68,7 @@ void game_system_init(void)
 	#endif
 //
 	#if (1)/*Guで描く前に必要な初期化*/
-	pd_bomber_time = 0;
+	pd.bomber_time = 0;
 	#endif
 //
 	#if 1//(1==US E_GU)
@@ -85,12 +85,12 @@ void game_system_init(void)
 	bg2_system_init();
 	/* ゲームコア game_core_init(); */
 	continue_stage					= (1-1);	/* (0) */
-//	practice_mode					= 0;
-//	volume							= 0;
-//	zanki							= 2;
+//	pr actice_mode					= 0;
+//	vo lume 						= 0;
+//	za nki							= 2;
 	old_menu_system_init();
 //
-	play_music_num(BGM_22_menu01);
+	play_music_num(BGM_23_menu01);
 	main_call_func = title_menu_start;	/* タイトルメニューへ移動 */
 }
 

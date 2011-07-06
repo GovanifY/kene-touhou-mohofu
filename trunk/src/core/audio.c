@@ -8,6 +8,27 @@
 	オーディオ マネージャー
 ---------------------------------------------------------*/
 
+	#include "./../SDL_mixer/music_mixer.h"/*何故かこちら*/
+
+//#ifdef ENABLE_PSP
+	//# /* カスタムライブラリを使う */
+//	#include <SDL/SDL.h>//#include "SDL.h"
+//	#include "SDL_image.h"
+	//#include <SDL/SDL_mixer.h>//#include "SD L_mixer.h"
+	//#include "./../SDL_mixer/SDL_SDL_audio.h"
+	//#include "./../SDL_mixer/000SDL_mixer.h"
+	/*???*/
+//#else
+	//# /* 標準ライブラリを使う */
+//	#include <SDL/SDL.h>
+//	#include <SDL/SDL_image.h>
+	//#include <SDL/SDL_mixer.h>/*#include "SD L_mixer.h"*/
+	//#include "./../SDL_mixer/SDL_SDL_audio.h"
+	//#include "./../SDL_mixer/000SDL_mixer.h"/*何故かこちら*/
+	//#include "./../SDL_mixer/music_mixer_external.h"/*何故かこちら*/
+//	#include "./../SDL_mixer/music_mixer.h"/*何故かこちら*/
+//#endif
+
 #if (1==USE_DESIGN_TRACK)
 	/* 原理上 処理落ち は少なくなるが、きちんと効果音設計(トラック設定)しないとまともに鳴らない。 */
 	#define USE_VSYNC_SOUND 	(1)
@@ -166,9 +187,11 @@ global void play_music_num(int num)
 		/* 17 */	"boss7",	/* エキストラステージ1ボス */
 		/* 18 */	"boss8",	/* エキストラステージ2ボス */
 		/* 19 */	"boss9",	/* エキストラステージ3ボス */
-		/* 20 */	"menu3",	/* エンディング(シナリオ) */
-		/* 21 */	"menu2",	/* キーコンフィグ */
-		/* 22 */	"menu1",	/* タイトル画面 */
+		/* 20 */	"boss10",	/* 隠しボス */
+		/* 20 */	"boss0",	/* 隠しボス */
+		/* 21 */	"menu3",	/* エンディング(シナリオ) */
+		/* 22 */	"menu2",	/* キーコンフィグ */
+		/* 23 */	"menu1",	/* タイトル画面 */
 		};		// いろいろ追加
 		const char *name_extention[] =
 		{
@@ -443,6 +466,8 @@ static void voice_load(void)
 		"se_n.wav", 	/* 13 */	//	"_shot.wav",	/* 13 */	"ボスショット3",
 		"se_o.wav", 	/* 14 */	//	"e_shot01.wav", /* 14 */	"ボスショット4",
 		"se_q.wav", 	/* 16 */	//	"qupiin.wav"	/* 16 */	"ボスショット5",
+	//
+		"se_r.wav", 	/* 16 */	//	"wiin.wav"		/* 17 */	"ボス溜め1",
 	};		//いろいろ追加
 	int i;
 	char name[64/*52*/];

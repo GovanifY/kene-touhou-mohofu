@@ -75,98 +75,25 @@ void vbl_draw_screen(void)
 	if (NULL != callback_gu_draw_haikei)	//if (0!=dr aw_bg_screen)
 	{
 		/* -- BG 画面を描画 */
-		/* -- プライオリティー＃２～＃５ 画面を描画 */
-		gu_blit_haikei_maho_jiki();
+		/* -- プライオリティー＃２～＃10 画面を描画 */
+		gu_blit_render_screen_01();
+		/*
+			プライオリティー＃２．BG 画面を描画
+			プライオリティー＃３．背景障害物を描画
+			プライオリティー＃４．魔方陣を描画
+			プライオリティー＃５．ポリゴンライン面を描画(未作成)
+			プライオリティー＃６．自機を描画(A)
+			プライオリティー＃６．自機を描画(B)
+			プライオリティー＃７．ラインテスト画面を描画
+			プライオリティー＃８．敵を描画
+			プライオリティー＃９．ITEMを描画
+			プライオリティー＃10．敵弾を描画
+			プライオリティー＃11．(仮)パネルベースを描画
+		*/
 	}
 //
-/* -- プライオリティー＃６ラインテスト画面を描画 */
-	#if (1==LINE_TEST)
-	if (NULL != callback_gu_draw_haikei)	//if (0!=dr aw_bg_screen)
-	{
-		/* -- ラインテスト画面を描画 */
-		gu_blit_lines();
-	}
-	#endif /*(000)*/
-	#if 000
-//	sceGuScissor(0, 0, PSP_WIDTH480, PSP_HEIGHT272);	/* 描画範囲を設定する */
-//	[ 旧SDL画面描画 ]
-//	sceGuScissor(0, 0, GAME_WIDTH, GAME_HEIGHT);	/* 描画範囲を設定する */
-	#endif
-//
-/* -- プライオリティー＃８．敵を描画 */
-	/* ☆ 敵面エフェクト */
-	/* ザコ(敵面エフェクト) */
-	/* ボス(敵面エフェクト) */
-	#if (1)
-	{
-		gu_set_texture(TEX_04_TEKI);	/* テクスチャをセット */
-		#if (1)
-		/*bullet_transfer_object();*/
-		{
-			TGameScreen_ClearSprite();
-		//	common_transfer_objects(sprite_list000_head, TEX_04_TEKI, S P_GROUP_BULLETS, obj_status_table+0);
-			#if 0000/* 別で設定 */
-			my_resource[TEX_04_TEKI].object_table_head = (obj_status_table+(OBJ_BANK_11_ZAKO_STAGE1*OBJ_BANK_SIZE));
-			#endif
-			common_transfer_objects(sprite_list000_head, TEX_04_TEKI, (SP_GROUP_TEKI/*|SP_GROUP_BOSS*/) );
-		}
-		s_blit_all_objects();/*PRIORITY_05_BULLETS*/
-		#else
-		blit_bullet_all();
-		#endif /*(000)*/
-	}
-	#endif /*(000)*/
-//
-/* -- プライオリティー＃９．ITEMを描画 */
-//	/* その他の自機素材(アイテム面エフェクト) */
-	#if (1)
-	{
-		gu_set_texture(TEX_06_BULLET);	/* テクスチャをセット */
-		#if (1)
-		/*bullet_transfer_object();*/
-		{
-			TGameScreen_ClearSprite();
-		//	common_transfer_objects(sprite_list444_head, TEX_06_BULLET, S P_GROUP_BULLETS, obj_status_table+0);
-			my_resource[TEX_06_BULLET].object_table_head = (obj_status_table+(OBJ_BANK_01_ITEM*OBJ_BANK_SIZE));
-			common_transfer_444objects(/*sprite_list444_head,*/ TEX_06_BULLET, SP_GROUP_ITEMS );
-		}
-		s_blit_all_objects();/*PRIORITY_05_BULLETS*/
-		#else
-		blit_bullet_all();
-		#endif /*(000)*/
-	}
-	#endif /*(000)*/
-//
-/* -- プライオリティー＃１０．敵弾を描画 */
-	/* ☆ 弾幕面エフェクト */
-	#if (1)
-	/*
-		VRAMが使えないと、タイミングの関係でめんどくさい？
-	*/
-	/* 0==リリース, 1==開発中 */
-//	#define KAIHATSU_MODE (0)
-//	#if (0==KAIHATSU_MODE)
-//	if (shooting_game_core_work == main_call_func)/* game_coreの場合のみ弾幕描画(continue画面とかでは描かない) */
-//	#endif
-	{
-	//	gu_set_texture(TEX_06_BULLET);	/* テクスチャをセット */
-		#if (1)
-		/* 弾幕リストは分割する予定 なので専用に書き換える予定 */
-		/*bullet_transfer_object();*/
-		{
-			TGameScreen_ClearSprite();
-		//	common_transfer_objects(sprite_list444_head, TEX_06_BULLET, S P_GROUP_BULLETS, obj_status_table+0);
-			my_resource[TEX_06_BULLET].object_table_head = (obj_status_table+(OBJ_BANK_00_TAMA*OBJ_BANK_SIZE));
-			common_transfer_444objects(/*sprite_list444_head,*/ TEX_06_BULLET, SP_GROUP_BULLETS );
-		}
-		s_blit_all_objects();/*PRIORITY_05_BULLETS*/
-		#else
-		blit_bullet_all();
-		#endif /*(000)*/
-	}
-	#endif /*(000)*/
-//
-/* -- プライオリティー＃７．SDL 画面を描画 */
+
+/* -- プライオリティー＃15．SDL 画面を描画 */
 	#if (1)
 	sceGuScissor(0, 0, PSP_WIDTH480, PSP_HEIGHT272);	/* 描画範囲を設定する */
 		#if (0)
@@ -205,7 +132,7 @@ void vbl_draw_screen(void)
 //
 
 
-/* -- プライオリティー＃１１．フロント面を描画 */
+/* -- プライオリティー＃20．フロント面を描画 */
 	/* ☆ フロント面エフェクト */
 //	/* 自分のあたり判定位置表示用コア(フロント面エフェクト) */
 //	/* 小爆発 / ザコ消滅爆発(フロント面エフェクト) */
@@ -216,13 +143,19 @@ void vbl_draw_screen(void)
 	{
 		gu_set_texture(TEX_07_FRONT);	/* テクスチャをセット */
 		/*front_transfer_object();*/
+#if 1/*システムのフロント面描画(雑魚として登録したもの)*/
 		{
-			TGameScreen_ClearSprite();
-		//	common_transfer_objects(sprite_list000_head, TEX_07_FRONT, SP_GROUP_FRONT, obj_status_table+0);
+		//	common_transfer_objects(sprite_list000_head, TEX_07_FRONT, SP_GROUP07_FRONT, obj_status_table+0);
 			my_resource[TEX_07_FRONT].object_table_head = (obj_status_table+(OBJ_BANK_02_FRONT_BANK0*OBJ_BANK_SIZE));
-			common_transfer_objects(sprite_list000_head, TEX_07_FRONT, SP_GROUP_FRONT );
+#if 1/*システムのフロント面描画(雑魚として登録したもの)*/
+		//	common_transfer_objects_clc_blit(/*sprite_list000_head,*/ TEX_07_FRONT, SP_GROUP07_FRONT );
+			/* 自機c直接描画(フロント面) */
+			common_transfer_objects111(/*sprite_list000_head,*/ TEX_07_FRONT, SP_GROUP07_FRONT );
+#endif
 		}
-		/* FRONT 面を間借りして、スコア表示 */
+#endif
+	//	s_blit_all_objects();/*PRIORITY_06_FRONT*/
+		/* プライオリティー＃21．FRONT 面を間借りして、スコア表示 */
 		/*
 			game_coreの場合のみ 描画 /
 			(continue画面とかでは描かない) /
@@ -232,14 +165,14 @@ void vbl_draw_screen(void)
 		{
 			gu_draw_score_chache();/* / 現在作成中でスペカ時間経過が中にあるので対策 */
 		}
-		s_blit_all_objects();/*PRIORITY_06_FRONT*/
+	//	s_blit_all_objects();/*PRIORITY_06_FRONT*/
 	}
 
 
 
-	/* プライオリティー＃１２．☆ フロント面エフェクト(テクスチャ共用) */
+	/* プライオリティー＃22．☆ フロント面エフェクト(テクスチャ共用) */
 	//{
-	if (0 != pd_bomber_time)
+	if (0 != pd.bomber_time)
 	{
 		gu_draw_front_spell_logo();
 	}
@@ -248,7 +181,7 @@ void vbl_draw_screen(void)
 //
 	sceGuScissor(0, 0, PSP_WIDTH480, PSP_HEIGHT272);	/* 描画範囲を設定する */
 //
-/* -- プライオリティー＃１３．パネル面を描画 */
+/* -- プライオリティー＃23．パネル面を描画 */
 	#if (1)
 	if (0 != draw_side_panel)
 	{
@@ -257,7 +190,7 @@ void vbl_draw_screen(void)
 	}
 	#endif /*(000)*/
 //
-	/* -- プライオリティー＃１４．スクリプト画面を描画 */
+	/* -- プライオリティー＃24．スクリプト画面を描画 */
 //	xxxif (1==dr aw_script_screen)		/* pspは0レジスタがあるので0と比較したほうが速い */
 	{
 		#define FLAG_DRAW_SERIFU (0x01)/* せりふ文字の描画指示 */
@@ -284,10 +217,8 @@ void vbl_draw_screen(void)
 			if (use_draw_FONT&FLAG_DRAW_SUPEKA) 	{	gu_draw_supeka_screen();	}
 		}
 	}
-	/* -- プライオリティー＃１５．開発デバッグフォント */
-	#if (1==DEBUG)
-	TDebugDisp();
-	#endif // (1==DEBUG)
+	/* -- プライオリティー＃25．開発デバッグフォント */
+	//TDebugDisp();
 
 	#if (1==USE_ZBUFFER)
 	sceGuDisable(GU_DEPTH_TEST);

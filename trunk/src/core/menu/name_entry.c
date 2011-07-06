@@ -312,8 +312,8 @@ static void yume_no_kiroku_local_work(void)
 	{
 		/* 移動 */
 		{
-		//	sp rite_work_SDL(SP_GROUP_PAUSE_S P_ME NU_TEXT);/*SP_GROUP_ETC*/
-		//	pause_sp rite_display();/*SP_GROUP_ETC*/
+		//	sp rite_work_SDL(SP_GROUP_PAUSE_S P_ME NU_TEXT);/*SP_GROUP07_FRONT*/
+		//	pause_sp rite_display();/*SP_GROUP07_FRONT*/
 			move_result();
 		}
 		/* 描画 */
@@ -370,7 +370,7 @@ extern int select_player;
 	ハイスコア名前入力、登録画面
 ---------------------------------------------------------*/
 
-global int last_score;
+global u32 last_score;
 
 
 static char *entry;
@@ -612,7 +612,7 @@ global void name_entry_start(void)
 	}
 	/* 新たにランクインしたスコア位置へ挿入 */
 	high_score_table[select_player][my_rank].score			= last_score;
-	high_score_table[select_player][my_rank].final_stage	= player_now_stage;/**/
+	high_score_table[select_player][my_rank].final_stage	= pd.player_now_stage;/**/
 //
 	entry = high_score_table[select_player][my_rank].name;
 	entry[0] = ' ';

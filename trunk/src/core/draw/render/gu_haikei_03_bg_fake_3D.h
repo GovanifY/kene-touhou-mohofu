@@ -62,11 +62,35 @@ static void gu_draw_bg_fake3D(void)
 
 //(conv_bg_alpha)
 		#else
-	u32 blendlevel = (((spr->alpha & 0xff) << 24) | 0x00ffffff);
+//	u32 blendlevel = (((spr->alpha & 0xff) << 24) | 0x00ffffff);
+			/* 32bit‚Ì‚Ä‚·‚Æ */
+		/*ARGB4444*/
+//	unsigned /*int*/short blendlevel = (((spr->alpha & 0xf0) << 8) | 0x0fff);
+//	unsigned /*int*/short blendlevel = ((( 0xf0) << 8) | 0x0fff);
+//	unsigned /*int*/short blendlevel = (((conv_bg_alpha &  0xf0) << 8) | 0x0fff);
+
+//	u16 b00 =(conv_bg_alpha & 0xf0);
+//	u16 b_1 = (b00&0x80)?(0xf0):(b00|0x80); 	u16 blendlevel_2 = ((b_1)|(b_1>>4));	blendlevel_2 = ((blendlevel_2)|(blendlevel_2<<8));
+//	u16 b_2 = (b00);							u16 blendlevel_1 = ((b_2)|(b_2>>4));	blendlevel_1 = ((blendlevel_1)|(blendlevel_1<<8));
+//	u16 b_3 = (b00&0x80)?(b00&0x7f):(0x00); 	u16 blendlevel_0 = ((b_3)|(b_3>>4));	blendlevel_0 = ((blendlevel_0)|(blendlevel_0<<8));
+
+	const u32 u32_b_tbl[3][8] =
+	{
+		{	0xcccccccc,0xcccccccc,0xdddddddd,0xdddddddd,	0xeeeeeeee,0xeeeeeeee,0xffffffff,0xffffffff,	},
+		{	0x88888888,0x99999999,0xaaaaaaaa,0xbbbbbbbb,	0xcccccccc,0xdddddddd,0xeeeeeeee,0xffffffff,	},
+		{	0x88888888,0x88888888,0x88888888,0x88888888,	0x88888888,0x88888888,0x88888888,0x88888888,	},
+	};
+	u8 baa = ((conv_bg_alpha & 0xe0)>>5);
+	int blendlevel_0;
+	int blendlevel_1;
+	int blendlevel_2;
+	blendlevel_0 = u32_b_tbl[0][baa];
+	blendlevel_1 = u32_b_tbl[1][baa];
+	blendlevel_2 = u32_b_tbl[2][baa];
 		#endif
 	#endif
 
-//	val1 = (player->x256>>8);
+//	val1 = (player->cx256>>8);
 		#if 1
 		val3_256 -= (current_bg0_y_scroll_speed256);
 	//	val3--;

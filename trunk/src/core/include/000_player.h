@@ -86,28 +86,36 @@ enum /*_select_player_*/		// [***090203		追加
 
 #define STATE_FLAG_14_GAME_LOOP_QUIT				(0x2000)
 #define STATE_FLAG_15_KEY_SHOT						(0x4000)
-#define STATE_FLAG_16_NOT_ALLOW_KEY_CONTROL 		(0x8000)
+//#define STATE_FLAG_16_NOT_ALLOW_KEY_CONTROL 		(0x8000)/* 廃止? */
 
 
+
+typedef struct _player_spec_
+{
+	int state_flag; 	/* 設定フラグ */	// [***090116		追加
+	int weapon_power;	/* 0x00-0x80  (0-128 の129段階==本家と同じ)   max==128==「129段階」*/
+	int chain_point;
+	int player_now_stage; /* */
 //
-extern	int pd_state_flag;		/* 設定フラグ */	// [***090116		追加
-extern	int pd_weapon_power;	/* 0x00-0x80  (0-128 の129段階==本家と同じ)   max==128==「129段階」*/
-extern	int pd_chain_point;
+	u32 game_score; 	/* スコア得点 */
+	u32 graze_point;	/* グレイズ得点 */
+	int bombs;			/* ボム数 */
+	int zanki;			/* 残りチャンス */
 //
-extern	u32 pd_my_score;		/* スコア得点 */
-extern	u32 pd_graze_point; 	/* グレイズ得点 */
-extern	int pd_bombs;			/* ボム数 */
-extern	int pd_zanki;			/* 残りチャンス */
+	int bomber_time;		/* Use Gu */
+//	int difficulty;
 //
+//	/* 集計システム */
+	int use_continue;	/* コンティニュー回数 */
+	int count_miss; 	/* ミス回数 */
+	int used_bomber;	/* ボム使用回数 */
+	int use_kurai_bomb; /* 喰らいボム成功回数 */
+	int count_bonus;	/* スペルカードボーナス回数 */
+//
+	int laser_mode; 	/* てすと(レーザーモード 0:off, 1:on) */
+} PLAYER_SPEC;
+extern PLAYER_SPEC pd;
 
-extern	int pd_use_continue;	/* コンティニュー回数 */
-extern	int pd_count_miss;		/* ミス回数 */
-extern	int pd_used_bomber; 	/* ボム使用回数 */
-extern	int pd_use_kurai_bomb;	/* 喰らいボム成功回数 */
-extern	int pd_count_bonus; 	/* スペルカードボーナス回数 */
-
-
-extern	int pd_bomber_time;
 /* 127 かと思っていたけど、128みたい(つまり129段階) */
 //#define MAX_POWER_IS_128 (127)/* 0x00-0x7f  (0-127 の128段階) */
 //#define MAX_POWER_IS_128 (128)/* 0x00-0x80  (0-128 の129段階) */

@@ -2,7 +2,7 @@
 #include "game_main.h"
 
 /*---------------------------------------------------------
-	“Œ•û–Í•í•—  ` Toho Imitation Style.
+	“Œ•û–Í•í•—	` Toho Imitation Style.
 	ƒvƒƒWƒFƒNƒgƒy[ƒW http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	’e–‹
@@ -24,13 +24,13 @@
 
 static void move_aya_doll_last_burrets(SPRITE *src)
 {
-	obj_send1->x256 					= (src->x256);		/* ’eŒ¹x256 */
-	obj_send1->y256 					= (src->y256);		/* ’eŒ¹y256 */
-	br.BULLET_REGIST_speed256			= (t256(0.75)+(ra_nd()&0xff));				/* ’e‘¬ */
-	br.BULLET_REGIST_angle1024			= ((ra_nd()&(1024-1))); 					/* src->tmp_angleCCW1024 */
-	br.BULLET_REGIST_div_angle1024		= (int)(1024/23);							/* Šp“x (1024/27) (1024/24) */
-	br.BULLET_REGIST_bullet_obj_type	= BULLET_KOME_02_AKA+(difficulty&0x02); 	/* [Ô•Ä’e] */
-	br.BULLET_REGIST_n_way				= (1+difficulty);							/* [7way] [8way] */
+	obj_send1->cx256 					= (src->cx256);		/* ’eŒ¹x256 */
+	obj_send1->cy256 					= (src->cy256);		/* ’eŒ¹y256 */
+	br.BULLET_REGIST_speed256			= (t256(0.75)+(ra_nd()&0xff));					/* ’e‘¬ */
+	br.BULLET_REGIST_angle1024			= ((ra_nd()&(1024-1))); 						/* src->tmp_angleCCW1024 */
+	br.BULLET_REGIST_div_angle1024		= (int)(1024/23);								/* Šp“x (1024/27) (1024/24) */
+	br.BULLET_REGIST_bullet_obj_type	= BULLET_KOME_01_AKA+((difficulty&0x02)<<1);	/* [Ô(0x01)/—Î(0x05)•Ä’e] */
+	br.BULLET_REGIST_n_way				= (1+difficulty);								/* [7way] [8way] */
 	br.BULLET_REGIST_regist_type		= REGIST_TYPE_00_MULTI_VECTOR;
 	bullet_regist_vector();
 }
@@ -45,7 +45,7 @@ static void move_bullet_momiji(SPRITE *src)
 	if ((0 > src->time_out))
 	{
 		move_aya_doll_last_burrets(src);
-		src->type = SP_DELETE;	/* ‚¨‚µ‚Ü‚¢ */
+		src->jyumyou = JYUMYOU_NASI;	/* ‚¨‚µ‚Ü‚¢ */
 	}
 	else
 	{
@@ -71,8 +71,8 @@ static void move_bullet_momiji(SPRITE *src)
 	//	mono_angle_move(src,(BULLET_ANGLE_DATA *)data);
 		src->vx256 = ((sin1024((src->MOMIJI_KODOMO_DATA_angle1024))*src->MOMIJI_KODOMO_DATA_speed256)>>8);/*fps_factor*/
 		src->vy256 = ((cos1024((src->MOMIJI_KODOMO_DATA_angle1024))*src->MOMIJI_KODOMO_DATA_speed256)>>8);/*fps_factor*/
-		src->x256 += (src->vx256);/*fps_factor*/
-		src->y256 += (src->vy256);/*fps_factor*/
+		src->cx256 += (src->vx256);/*fps_factor*/
+		src->cy256 += (src->vy256);/*fps_factor*/
 	}
 }
 
@@ -101,8 +101,8 @@ static void move_bullet_momiji(SPRITE *src)
 			h->time_out 			= (50); 	/* 200Žõ–½ */
 			{
 				/* ‰ŠúˆÊ’u */
-				h->x256 			= src->x256;
-				h->y256 			= src->y256;
+				h->cx256 			= src->cx256;
+				h->cy256 			= src->cy256;
 			}
 		//
 			h->MOMIJI_KODOMO_DATA_angle222_1024 	= (angle1024);

@@ -2,7 +2,7 @@
 #include "game_main.h"
 
 /*---------------------------------------------------------
-	東方模倣風  ～ Toho Imitation Style.
+	東方模倣風	～ Toho Imitation Style.
 	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	子供魔方陣 弾幕
@@ -20,10 +20,10 @@
 	#define target_x256 		user_data00 	/* 目標x座標 */
 	#define target_y256 		user_data01 	/* 目標y座標 */
 	#define vvv256				user_data02 	/* 目標座標への到達割合 */
-	#define time_out			user_data03 	/* 制限時間 */
+	#define boss_time_out		user_data03 	/* 制限時間 */
 #endif
-#ifndef time_out
-	#define time_out			user_data03 	/* 制限時間 */
+#ifndef boss_time_out
+	#define boss_time_out		user_data03 	/* 制限時間 */
 #endif
 
 /*---------------------------------------------------------
@@ -36,13 +36,13 @@ static void move_doll03(SPRITE *src)
 //
 	#if 1
 	/* 魔方陣アニメーション */
-	src->m_angleCCW1024--;/* 右回り */
-	mask1024(src->m_angleCCW1024);
+	src->rotationCCW1024--;/* 右回り */
+	mask1024(src->rotationCCW1024);
 	#endif
 //
-	if ((64*8) < src->time_out)
+	if ((64*8) < src->boss_time_out)
 	{
-		if (0==((src->time_out)&(64-1)))/* 64回に1回発弾する */
+		if (0==((src->boss_time_out)&(64-1)))/* 64回に1回発弾する */
 		{
 			static int count_jjj;
 			count_jjj++;
@@ -54,8 +54,8 @@ static void move_doll03(SPRITE *src)
 					魔方陣用
 					全方向に青ナイフ弾を撃つ
 				---------------------------------------------------------*/
-				obj_send1->x256 = (src->x256)+t256(8.0);/* 8.0[dots]右 */
-				obj_send1->y256 = (src->y256)+t256(4.0);/* 4.0[dots]下 */
+				obj_send1->cx256 = (src->cx256)+t256(8.0);/* 8.0[dots]右 */
+				obj_send1->cy256 = (src->cy256)+t256(4.0);/* 4.0[dots]下 */
 				br.BULLET_REGIST_speed256			= (t256(1.2));					/*(speed256)*/
 				br.BULLET_REGIST_angle1024			= (0);							/* 弾源角度 */
 				br.BULLET_REGIST_div_angle1024		= (int)(1024/(18)); 			/* 分割角度([360/360]度を18分割) */
@@ -90,9 +90,9 @@ static void move_doll03(SPRITE *src)
 		h->callback_mover			= move_doll03;
 		/* 子供魔方陣、配置位置 */
 		#if 1
-		h->x256 					= src->x256;
-		h->y256 					= src->y256-t256(16);/*咲夜 上方に配置*/
+		h->cx256 					= src->cx256;
+		h->cy256 					= src->cy256-t256(16);/*咲夜 上方に配置*/
 		#endif
-		h->time_out 				= (64*8)+(16*64); 	/* 制限時間 */	/* 16[弾]撃つ */
+		h->boss_time_out				= (64*8)+(16*64);	/* 制限時間 */	/* 16[弾]撃つ */
 	}
 }

@@ -71,6 +71,7 @@ extern void bonus_info_any_score_nodel(SPRITE *src/*int x, int y*/, u32 score_nu
 extern void bullets_to_hosi(void);
 
 /* スコア加算する場合は、カンスト チェックがあるので、必ずここを使う */
+extern void player_dummy_add_score(u32 score_num_pts);
 extern void player_add_score(u32 score_num_pts);
 #if (1==USE_EXTEND_CHECK)
 extern void player_check_extend_score(void);/* エクステンドチェック */

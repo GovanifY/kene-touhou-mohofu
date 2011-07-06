@@ -151,7 +151,7 @@ static void add_all_teki(STAGE_DATA *l)
 extern STAGE_DATA *stage_data_table;
 
 extern int select_player;
-extern int practice_mode;
+//extern int pr actice_mode;
 
 global int difficulty = RANK_EASY;		/*	RANK_NORMAL*/
 
@@ -167,6 +167,10 @@ static void init_stage_start_time(void)
 {
 //	stage_start_time = psp_get_uint32_ticks();
 	game_v_time = 0;
+}
+/*static*/global void set_core_game_time_MAX(void)
+{
+	game_v_time = 65535;/* 適当に大きな値[flame](65535[flame]==約18[分]==18.xxx x 60 x 60 ) */
 }
 
 global void hold_game_time(void)/* ゲーム時間の一時停止(咲夜、新規格イベント(構想中)等、使う) */
@@ -184,30 +188,32 @@ global void continue_game_time(void)/* ゲーム時間の動作開始 */
 ---------------------------------------------------------*/
 extern int continue_stage;
 
+extern void sprite_test_debug_init(void);/* r32:とりあえずバグあるのを無理やり回避(?) */
 extern void set_rnd_seed(int set_seed);
 extern /*int*/void load_stage(void/*int level*/);
 extern void player_init(void);
-extern void player_few_muteki(void);
+extern void player_load_stage_muteki(void);
 extern void score_panel_init(void);
 global void common_load_init(void)
 {
-	set_rnd_seed(player_now_stage); 	/* 乱数系列の初期化 */
+	set_rnd_seed(pd.player_now_stage);	/* 乱数系列の初期化 */
 //
 	/* Load next stage */
 	load_stage();//if (0==load_stage(/*level*/))	{	error(ERR_WARN, "no entrys for level %d",level);}
 	// ロード中は処理落ちしているので、ロード後に時間を再作成する。
 	init_stage_start_time();
 //
-	player_few_muteki();/* ステージ開始時のみ若干の無敵状態にセット */
+	player_load_stage_muteki();/* ステージ開始時のみ若干の無敵状態にセット */
 //
-	kanji_window_clear(); 	/* 漢字ウィンドウの内容を消す。 */
+	kanji_window_clear();	/* 漢字ウィンドウの内容を消す。 */
 	home_cursor();			/* カーソルをホームポジションへ移動 */
 	continue_game_time();/* ゲーム時間の動作開始 */
-			#if 1/*Gu化完了したら要らなくなる*/
-			{
-				psp_clear_screen(); /* [PAUSE] 復帰時にSDL画面を消す。 */
-			}
-			#endif
+	#if 1/*Gu化完了したら要らなくなる*/
+	{
+		psp_clear_screen(); /* [PAUSE] 復帰時にSDL画面を消す。 */
+	}
+	#endif
+	sprite_test_debug_init();/* r32:とりあえずバグあるのを無理やり回避(?) */
 	main_call_func = shooting_game_core_work;
 }
 
@@ -223,12 +229,12 @@ global void stage_first_init(void)
 	//sprite_controller_remove_all();
 //
 	player_init();/* 初回のみ設定 */
-//	player_few_muteki();/* ステージ開始時のみ若干の無敵状態にセット */
+//	player_load_stage_muteki();/* ステージ開始時のみ若干の無敵状態にセット */
 //
-	kanji_window_clear(); 	/* 漢字ウィンドウの内容を消す。 */
+	kanji_window_clear();	/* 漢字ウィンドウの内容を消す。 */
 	home_cursor();			/* カーソルをホームポジションへ移動 */
 //
-	player_now_stage/*data->now_stage*/ /*level*/	= continue_stage/*+1-1*/ /*1*/;
+	pd.player_now_stage/*data->now_stage*/ /*level*/	= continue_stage/*+1-1*/ /*1*/;
 //
 	main_call_func = common_load_init;
 }
@@ -242,7 +248,7 @@ global void incliment_scene(void)
 	{
 		/*ボス戦闘後イベント*/
 	//	if (B09_STAGE_LOAD==pd_bo ssmode) // 9:stage読み込み
-		if (/*STATE_FLAG_05_IS_BOSS == */(pd_state_flag & STATE_FLAG_05_IS_BOSS))
+		if (/*STATE_FLAG_05_IS_BOSS == */(pd.state_flag & STATE_FLAG_05_IS_BOSS))
 		{
 			main_call_func = stage_clear_result_screen_start;	/* ステージクリアー時のリザルト画面 */
 		}
@@ -250,7 +256,7 @@ global void incliment_scene(void)
 		else
 	//	if (B08_START == pd_bo ssmode) // 8:ボス曲を鳴らし、1ボスとの戦闘へ。
 		{
-			pd_state_flag |= (STATE_FLAG_05_IS_BOSS|STATE_FLAG_13_DRAW_BOSS_GAUGE);
+			pd.state_flag |= (STATE_FLAG_05_IS_BOSS|STATE_FLAG_13_DRAW_BOSS_GAUGE);
 		}
 	}
 }
@@ -262,7 +268,7 @@ extern void script_ivent_load(void);
 	/*
 		★「(喰らいボム受付期間中に)ボスと相打ちするとハングアップ」バグ(～r29)対策
 	*/
-	if (0 < /*bomb_wait*/pd_bomber_time)		/* ボムウェイト処理 */
+	if (0 < /*bomb_wait*/pd.bomber_time)		/* ボムウェイト処理 */
 	{
 		return;/* ボム発動中は待機 */
 	}
@@ -273,29 +279,29 @@ extern void script_ivent_load(void);
 		★「(喰らいボム受付期間中に)ボスと相打ちするとハングアップ」バグ(～r29)対策
 	*/
 	/* キー入力無効中(==復活中) は、敵あたり判定はない */
-	if (0==(pd_state_flag & (/*STATE_FLAG_06_IS_SCRIPT|*/STATE_FLAG_16_NOT_ALLOW_KEY_CONTROL)))
+	if (0==(pd.state_flag & (/*STATE_FLAG_06_IS_SCRIPT|*/STATE_FLAG_16_NOT_ALLOW_KEY_CONTROL)))
 	{
 		return;/* ボム発動中は待機 */
 	}
 	#endif
 //	if (pd_bo ssmode==B05_BEFORE_LOAD)		// [***090313	追加
 //	if (pd_bo ssmode==B07_AFTER_LOAD)		// [***090313	追加
-	if (pd_state_flag & (STATE_FLAG_10_IS_LOAD_SCRIPT)) 	// [***090313	追加
+	if (pd.state_flag & (STATE_FLAG_10_IS_LOAD_SCRIPT)) 	// [***090313	追加
 	{
-		pd_state_flag &= (~(STATE_FLAG_10_IS_LOAD_SCRIPT));/*off*/
+		pd.state_flag &= (~(STATE_FLAG_10_IS_LOAD_SCRIPT));/*off*/
 		script_ivent_load(/*0 1*/);
 	}
 
-//	if (pd_state_flag & (ST ATE_FLAG_11_IS_BOSS_DESTROY))
+//	if (pd.state_flag & (ST ATE_FLAG_11_IS_BOSS_DESTROY))
 //	{
-//		pd_state_flag &= (~(ST ATE_FLAG_11_IS_BOSS_DESTROY));/*off*/
+//		pd.state_flag &= (~(ST ATE_FLAG_11_IS_BOSS_DESTROY));/*off*/
 //		boss_destroy_aaa();
 //	}
 	/* スクリプトが終わった？ */
-	if (pd_state_flag & (STATE_FLAG_12_END_SCRIPT))
+	if (pd.state_flag & (STATE_FLAG_12_END_SCRIPT))
 	{
-		pd_state_flag &= (~(STATE_FLAG_12_END_SCRIPT));/*off*/	/*	pd_bo ssmode=B00_NONE;*/
-	//	pd_state_flag &= (~(STATE_FLAG_12_END_SCRIPT));/*off*/	/*	pd_bo ssmode=B00_NONE;*/	/*B01_BA TTLE*/
+		pd.state_flag &= (~(STATE_FLAG_12_END_SCRIPT));/*off*/	/*	pd_bo ssmode=B00_NONE;*/
+	//	pd.state_flag &= (~(STATE_FLAG_12_END_SCRIPT));/*off*/	/*	pd_bo ssmode=B00_NONE;*/	/*B01_BA TTLE*/
 		incliment_scene();
 	}
 }
@@ -335,7 +341,7 @@ my_game_core_loop:
 			game_v_time++;//=(psp_get_uint32_ticks()-stage_start_time);
 		}
 	//
-		if (pd_state_flag & STATE_FLAG_14_GAME_LOOP_QUIT)
+		if (pd.state_flag & STATE_FLAG_14_GAME_LOOP_QUIT)
 		{
 			;	/* GAMEOUT中 */
 		}
@@ -392,7 +398,7 @@ my_game_core_loop:
 				追い出した意味が無くなります。(インライン展開される)
 			 */
 		//	if (B00_NONE != pd_bo ssmode)
-			if (pd_state_flag & (STATE_FLAG_10_IS_LOAD_SCRIPT|STATE_FLAG_12_END_SCRIPT))/*|ST ATE_FLAG_11_IS_BOSS_DESTROY*/
+			if (pd.state_flag & (STATE_FLAG_10_IS_LOAD_SCRIPT|STATE_FLAG_12_END_SCRIPT))/*|ST ATE_FLAG_11_IS_BOSS_DESTROY*/
 			{
 				my_special();/* 注意：static関数にしない */
 			}
@@ -404,17 +410,13 @@ my_game_core_loop:
 		#endif
 //
 		/*
-			動作させる。
-			動作と描画は違う概念なのできちんと分離する事。
+			動作(移動)させる。
+			動作(移動)と描画は違う概念なのできちんと分離する事。
 			もし、処理が遅くなって、描画をフレームスキップさせる場合でも、
-			動作はフレームスキップさせない。
+			動作(移動)はフレームスキップさせない。
 		*/
 		bg2_move_main();
-		//controller_work();
-//		sprite_work222(SP_GROUP_ALL_SDL_WORK_TYPE);/*弾幕用*/
-//		sprite_work000(SP_GROUP_ALL_SDL_WORK_TYPE);
-		sprite_move_main_SDL_222();/*gu汎用*/	/*SP_GROUP_ALL_SDL_CORE_TYPE*/
-		sprite_move_main_Gu_444();/*弾幕専用*/	/*SP_GROUP_ALL_SDL_CORE_TYPE*/
+		sprite_move_all();	/* スプライトオブジェクトの移動処理 */
 		/* 描画 */
 //		sprite_display222(SP_GROUP_ALL_SDL_DRAW_TYPE);/*弾幕用*/
 //		sprite_display000((SP_GROUP_ALL_SDL_DRAW_TYPE & (~SP_GROUP_TEKI)));
@@ -422,8 +424,8 @@ my_game_core_loop:
 	//	pause_sprite_display();/* SDL表示(現状SP_GROUP_PAUSE_S P_ME NU_TEXTのみSDL描画) */
 	//	draw_SDL_score_chache();/* SDL描画 */
 		// この辺は速度低下するのでコールバックにすべき
-		if ((pd_state_flag & STATE_FLAG_06_IS_SCRIPT))	{	script_move_main();	}	/*STATE_FLAG_06_IS_SCRIPT==*/
-		if (0!=draw_side_panel) 						{	score_display();	}	/*ST ATE_FLAG_09_IS_PANEL_WINDOW==*/	/*(pd_state_flag & ST ATE_FLAG_09_IS_PANEL_WINDOW)*/
+		if ((pd.state_flag & STATE_FLAG_06_IS_SCRIPT))	{	script_move_main(); 	}	/*STATE_FLAG_06_IS_SCRIPT==*/
+		if (0!=draw_side_panel) 						{	score_display();		}	/*ST ATE_FLAG_09_IS_PANEL_WINDOW==*/	/*(pd.state_flag & ST ATE_FLAG_09_IS_PANEL_WINDOW)*/
 //
 
 	// ハングアップ対策：常にポーズ可能に変更する。(2010-02-11)
@@ -433,7 +435,7 @@ my_game_core_loop:
 		{
 			if (my_pad & PSP_KEY_PAUSE)/* 今ポーズが押されたら */
 			{
-			//	if (0==(pd_state_flag & STATE_FLAG_06_IS_SCRIPT))/*たまにうまくいかない事がある*/
+			//	if (0==(pd.state_flag & STATE_FLAG_06_IS_SCRIPT))/*たまにうまくいかない事がある*/
 				{
 					main_call_func			= pause_menu_start;
 					pause_out_call_func 	= shooting_game_core_work;/* ポーズ復帰後の戻り先を決める */

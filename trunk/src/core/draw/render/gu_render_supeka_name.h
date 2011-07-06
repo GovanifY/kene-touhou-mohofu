@@ -29,8 +29,8 @@ static void gu_draw_supeka_screen(void)
 	unsigned int j;
 	unsigned int i;
 	#define SUPEKA_FONT_SCREEN_TEXTURE_OFFSET_X 	(0) /* [テクスチャオフセット] */
-	#define SUPEKA_FONT_SCREEN_TEXTURE_OFFSET_Y 	(1+8) /* [テクスチャオフセット※1] */
-	#define SUPEKA_FONT_SCREEN_TEXTURE_SIZE_X		(18) /* [テクスチャサイズ] 70 */
+	#define SUPEKA_FONT_SCREEN_TEXTURE_OFFSET_Y 	(1+8+18) /* [テクスチャオフセット※1] */
+	#define SUPEKA_FONT_SCREEN_TEXTURE_SIZE_Y		(18) /* [テクスチャサイズ] 70 */
 	/* [※1] ((16/2)[dots]+1[dots](Gu干渉ライン)) */
 	/* 8[ライン(depth_32bit_int)]==16[ライン(depth_16bit_short)] */
 	#if 0
@@ -80,9 +80,9 @@ static void gu_draw_supeka_screen(void)
 		vertices[(i)].y = (SUPEKA_WINDOW_Y_POSITION_182);/*+(0)*/
 		vertices[(i)].z = 0;
 		vertices[(i)+1].u = (j+SUPEKA_w_size99);
-		vertices[(i)+1].v = 1+(SUPEKA_FONT_SCREEN_TEXTURE_OFFSET_Y)+(SUPEKA_FONT_SCREEN_TEXTURE_SIZE_X);// /*272*/ /*320*/
+		vertices[(i)+1].v = 1+(SUPEKA_FONT_SCREEN_TEXTURE_OFFSET_Y)+(SUPEKA_FONT_SCREEN_TEXTURE_SIZE_Y);// /*272*/ /*320*/
 		vertices[(i)+1].x = (SUPEKA_WINDOW_X_POSITION_020)+(j+SUPEKA_w_size99);/**480/512*/
-		vertices[(i)+1].y = (SUPEKA_WINDOW_Y_POSITION_182)+(SUPEKA_FONT_SCREEN_TEXTURE_SIZE_X);/*272*/
+		vertices[(i)+1].y = (SUPEKA_WINDOW_Y_POSITION_182)+(SUPEKA_FONT_SCREEN_TEXTURE_SIZE_Y);/*272*/
 		vertices[(i)+1].z = 0;
 		i += 2;
 		j += SLICE_64_SIZE32;

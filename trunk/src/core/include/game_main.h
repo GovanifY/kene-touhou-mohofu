@@ -54,10 +54,6 @@
 //#define USE_MEM_CLEAR (0)
 #define USE_MEM_CLEAR (1)
 
-/*廃止*/	/* 0:使わない。1:使う。 1:エンディングデバッグ機能。0:この機能OFF */
-/*廃止*/	//#define US E_ENDING_DEBUG (1)
-/*廃止*/	//#define MA X_STAGE6_FOR_CHECK (6/*5*/)
-
 /* 0:使わない。1:使う。 1:キーコンフィグ使う。0:キーコンフィグ機能OFF */
 //#define USE_KEY_CONFIG (0)
 #define USE_KEY_CONFIG (1)
@@ -82,13 +78,18 @@
 */
 
 
-
-/* 0:しない。 1:する。 現ver r31では 0 固定。既に 1 にできない。廃止予定。 */
-#define USE_SIN_TABLE (0)
-
 /* 0:しない。 1:する。 パーサー(設定読み込み時の字句解析)についてのデバッグ機能。 */
 #define USE_PARTH_DEBUG (0)
 
+
+
+
+/* 0:しない。 1:する。 もやもやエフェクトについてのデバッグ機能。 */
+//#define USE_DEBUG_PAUSE_FILTER (1)
+#define USE_DEBUG_PAUSE_FILTER (0)
+
+
+#define USE_32BIT_DRAW_MODE (0)
 
 #include "000_support.h"	/* (一番最初にインクルード) */
 
@@ -98,30 +99,43 @@
 ---------------------------------------------------------*/
 
 /* 色設定 */
-#define USE_PSP_5551	0
-//#define USE_PSP_5551	1
-#if (1==USE_PSP_5551)
-	#define SDL_GU_PSM_0000 		GU_PSM_5551
-	/*(PSPSDKの場合5-5-5-1)*/
-	/*(pspのSDLでは特殊な操作しない限り5-5-5-0) */
-	/* 5-5-5-1*/
-	#define PSP_DEPTH16 			(16)
-	#define SDL_5551_15 			(15)
-	#define PSP_SCREEN_FORMAT_RMASK (0x001f)
-	#define PSP_SCREEN_FORMAT_GMASK (0x03e0)
-	#define PSP_SCREEN_FORMAT_BMASK (0x7c00)
-	#define PSP_SCREEN_FORMAT_AMASK (0x8000)
-	#define PSP_SCREEN_FORMAT_LMASK (0x7bde)
+#if (0==USE_32BIT_DRAW_MODE)
+	#define USE_PSP_5551	0
+	//#define USE_PSP_5551	1
+	#if (1==USE_PSP_5551)
+		#define SDL_GU_PSM_0000 		GU_PSM_5551
+		/*(PSPSDKの場合5-5-5-1)*/
+		/*(pspのSDLでは特殊な操作しない限り5-5-5-0) */
+		/* 5-5-5-1*/
+		#define PSP_DEPTH16 			(16)
+		#define SDL_5551_15 			(15)
+		#define PSP_SCREEN_FORMAT_RMASK (0x001f)
+		#define PSP_SCREEN_FORMAT_GMASK (0x03e0)
+		#define PSP_SCREEN_FORMAT_BMASK (0x7c00)
+		#define PSP_SCREEN_FORMAT_AMASK (0x8000)
+		#define PSP_SCREEN_FORMAT_LMASK (0x7bde)
+	#else
+		#define SDL_GU_PSM_0000 		GU_PSM_5650
+		/* 5-6-5-0 */
+		#define PSP_DEPTH16 			(16)
+		#define SDL_5551_15 			(16)
+		#define PSP_SCREEN_FORMAT_RMASK (0x001f)
+		#define PSP_SCREEN_FORMAT_GMASK (0x07e0)
+		#define PSP_SCREEN_FORMAT_BMASK (0xf800)
+		#define PSP_SCREEN_FORMAT_AMASK (0x0000)
+		#define PSP_SCREEN_FORMAT_LMASK (0xf7de)
+	#endif
 #else
-	#define SDL_GU_PSM_0000 		GU_PSM_5650
-	/* 5-6-5-0 */
-	#define PSP_DEPTH16 			(16)
-	#define SDL_5551_15 			(16)
-	#define PSP_SCREEN_FORMAT_RMASK (0x001f)
-	#define PSP_SCREEN_FORMAT_GMASK (0x07e0)
-	#define PSP_SCREEN_FORMAT_BMASK (0xf800)
-	#define PSP_SCREEN_FORMAT_AMASK (0x0000)
-	#define PSP_SCREEN_FORMAT_LMASK (0xf7de)
+		/* 色32bitモード */
+		#define SDL_GU_PSM_0000 		GU_PSM_8888
+		/* 5-6-5-0 */
+		#define PSP_DEPTH16 			(32)
+		#define SDL_5551_15 			(32)
+		#define PSP_SCREEN_FORMAT_RMASK (0x000000ff)
+		#define PSP_SCREEN_FORMAT_GMASK (0x0000ff00)
+		#define PSP_SCREEN_FORMAT_BMASK (0x00ff0000)
+		#define PSP_SCREEN_FORMAT_AMASK (0xff000000)
+		#define PSP_SCREEN_FORMAT_LMASK (0xfefefefe)
 #endif
 
 enum
@@ -230,8 +244,8 @@ enum
 	KEY_NUM12_MAX			/* 最大数 */
 };
 
-extern u32 my_pad;		/*今回入力*/
-extern u32 my_pad_alter; /*前回入力*/
+extern u32 my_pad;			/*今回入力*/
+extern u32 my_pad_alter;	/*前回入力*/
 
 
 //#define IS_KEY BOARD_PULLED ((0==my_pad)&&(my_pad^my_pad_alter))/* 何かキーを離されたら */
@@ -300,11 +314,10 @@ extern int pad_config[KEY_NUM12_MAX];
 #include "000_sprite_system.h"
 //#include "bullet_system.h"
 
-extern SPRITE *obj_player;
-extern SPRITE *obj_boss;
+//extern SPRITE *ob j_player;
+extern SPRITE *global_obj_boss;
 extern SPRITE *obj_send1;
 
-extern int player_now_stage;
 
 extern int difficulty;
 

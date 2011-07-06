@@ -2,7 +2,7 @@
 #include "game_main.h"
 
 /*---------------------------------------------------------
-	東方模倣風  ～ Toho Imitation Style.
+	東方模倣風	～ Toho Imitation Style.
 	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	子供魔方陣 弾幕
@@ -19,11 +19,11 @@
 	#define target_x256 		user_data00 	/* 目標x座標 */
 	#define target_y256 		user_data01 	/* 目標y座標 */
 	#define vvv256				user_data02 	/* 目標座標への到達割合 */
-	#define time_out			user_data03 	/* 制限時間 */
+	#define boss_time_out		user_data03 	/* 制限時間 */
 #endif
 //	ボス共通規格と同じ(boss.hインクルードしてもしなくても対応)
-#ifndef time_out
-	#define time_out			user_data03 	/* 制限時間 */
+#ifndef boss_time_out
+	#define boss_time_out		user_data03 	/* 制限時間 */
 #endif
 //
 #define my_difficulty		user_data04 		/* 難易度調整用 */
@@ -31,13 +31,6 @@
 #define my_angle1024		tmp_angleCCW1024	/* 保持角度[レーザーの撃つ向きを維持する角度] */
 
 
-enum
-{
-//--- 星型以前
-	DS00 = 0,
-	DS02,
-	DS03,
-};
 /*---------------------------------------------------------
 
 ---------------------------------------------------------*/
@@ -46,21 +39,21 @@ static void move_doll01_laser(SPRITE *src)
 {
 	check_boss_option_time_out(src);	/* 時間経過で終了。ボスを倒すと皆破壊される。 */
 //
-	if (0x00==(src->time_out&0x10f))/* */
+	if (0x00==(src->boss_time_out&0x10f))/* */
 	{
 		/* CCWの場合 */
-		obj_send1->x256 							= (src->x256)+t256(8.0);/* 8.0[dots]右 */
-		obj_send1->y256 							= (src->y256)+t256(4.0);/* 4.0[dots]下 */
-		br.BULLET_REGIST_speed256					= ((src->time_out&0xff)/*>>4*/<<3/*1/10*/)/**256*/;
+		obj_send1->cx256 							= (src->cx256)+t256(8.0);/* 8.0[dots]右 */
+		obj_send1->cy256 							= (src->cy256)+t256(4.0);/* 4.0[dots]下 */
+		br.BULLET_REGIST_speed256					= ((src->boss_time_out&0xff)/*>>4*/<<3/*1/10*/)/**256*/;
 		br.BULLET_REGIST_tomari2_dan_delta256		= t256(0.02);
 	//
 		br.BULLET_REGIST_regist_type				= REGIST_TYPE_03_TOMARI;
-		const int aaa = (src->my_angle1024)+(src->time_out+src->time_out);
-		br.BULLET_REGIST_angle1024	= src->my_angle1024;				br.BULLET_REGIST_tomari2_dan_next_angle1024 	= aaa+cv1024r((180+  0));	bullet_regist_vector(); //ra d2deg512((src->time_out)>>7/*/100*/)
-		br.BULLET_REGIST_angle1024	= src->my_angle1024-cv1024r((120)); br.BULLET_REGIST_tomari2_dan_next_angle1024 	= aaa+cv1024r((180+120));	bullet_regist_vector(); //ra d2deg512((src->time_out)>>7/*/100*/)
-		br.BULLET_REGIST_angle1024	= src->my_angle1024+cv1024r((120)); br.BULLET_REGIST_tomari2_dan_next_angle1024 	= aaa+cv1024r((180-120));	bullet_regist_vector(); //ra d2deg512((src->time_out)>>7/*/100*/)
+		const int aaa = (src->my_angle1024)+(src->boss_time_out+src->boss_time_out);
+		br.BULLET_REGIST_angle1024	= src->my_angle1024;				br.BULLET_REGIST_tomari2_dan_next_angle1024 	= aaa+cv1024r((180+  0));	bullet_regist_vector(); //ra d2deg512((src->boss_time_out)>>7/*/100*/)
+		br.BULLET_REGIST_angle1024	= src->my_angle1024-cv1024r((120)); br.BULLET_REGIST_tomari2_dan_next_angle1024 	= aaa+cv1024r((180+120));	bullet_regist_vector(); //ra d2deg512((src->boss_time_out)>>7/*/100*/)
+		br.BULLET_REGIST_angle1024	= src->my_angle1024+cv1024r((120)); br.BULLET_REGIST_tomari2_dan_next_angle1024 	= aaa+cv1024r((180-120));	bullet_regist_vector(); //ra d2deg512((src->boss_time_out)>>7/*/100*/)
 	}
-	if (0x100==(src->time_out&0x103))/* */
+	if (0x100==(src->boss_time_out&0x103))/* */
 	{
 		src->my_difficulty--;
 		if (0 > src->my_difficulty)
@@ -68,21 +61,20 @@ static void move_doll01_laser(SPRITE *src)
 			src->my_difficulty = (1+3-difficulty);/* luna,は1/4回, hard は1/8回, norma1/12回, easyは1/16回,  */
 		//
 			voice_play(VOICE16_BOSS_KYUPIN, TRACK04_TEKIDAN);
-			obj_send1->x256 = (src->x256)+t256(8.0);/* 8.0[dots]右 */
-			obj_send1->y256 = (src->y256)+t256(4.0);/* 4.0[dots]下 */
-				//	br.BULLET_REGIST_div_angle1024		= (0);						/* ダミー角度(未使用) */
+			obj_send1->cx256 = (src->cx256)+t256(8.0);/* 8.0[dots]右 */
+			obj_send1->cy256 = (src->cy256)+t256(4.0);/* 4.0[dots]下 */
+					br.BULLET_REGIST_div_angle1024		= cv1024r(120); 			/* 角度 */
 					br.BULLET_REGIST_bullet_obj_type	= BULLET_HARI32_00_AOI; 	/* [ 弾] */
-					br.BULLET_REGIST_n_way				= (1);						/* [1way] */
+					br.BULLET_REGIST_n_way				= (3);						/* [3way] */
 					br.BULLET_REGIST_regist_type		= REGIST_TYPE_00_MULTI_VECTOR;
-			{int i;
+			{unsigned int i;
 				for (i=t256(5); i<t256(9); i+=t256(1))
 				{
 					/* CCWの場合 */
 					br.BULLET_REGIST_speed256			= (i);						/* 弾速 */
 					//
-					br.BULLET_REGIST_angle1024			= src->my_angle1024;					bullet_regist_vector();
-					br.BULLET_REGIST_angle1024			= src->my_angle1024-cv1024r(120);		bullet_regist_vector();
-					br.BULLET_REGIST_angle1024			= src->my_angle1024+cv1024r(120);		bullet_regist_vector();
+					br.BULLET_REGIST_angle1024			= src->my_angle1024;
+					bullet_regist_vector();
 				}
 			}
 			/* deg_360_to_512(8.59) 8.59436717317284029518323968680208	PI*2/41.8879008478638666666666666666667 ra d2deg512(0.15)*/
@@ -118,12 +110,12 @@ static void move_doll01_laser(SPRITE *src)
 		h->color32				= MAKE32RGBA(0xff, 0x88, 0xaa, 0x80);	/*	obj_doll->alpha 		= 0x00;*/ /* 紫っぽく */
 		/* 子供魔方陣、配置位置 */
 		#if 1
-		h->x256 				= (src->x256);
-		h->y256 				= (src->y256)-t256(16);/*咲夜 上方に配置*/
+		h->cx256 				= (src->cx256);
+		h->cy256 				= (src->cy256)-t256(16);/*咲夜 上方に配置*/
 		#endif
 		h->my_angle1024 		= (0);
 		h->my_difficulty		= (0);	/* 難易度調整用 */
 	//
-		h->time_out 			= (0x0800); 	/* 制限時間 */
+		h->boss_time_out		= (0x0800); 	/* 制限時間 */
 	}
 }

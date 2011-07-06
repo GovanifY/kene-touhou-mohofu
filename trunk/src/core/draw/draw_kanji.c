@@ -2,7 +2,7 @@
 #include "game_main.h"
 
 /*---------------------------------------------------------
-	東方模倣風  ～ Toho Imitation Style.
+	東方模倣風	～ Toho Imitation Style.
 	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	漢字ウィンドウ処理
@@ -11,7 +11,6 @@
 #include "kanji_system.h"
 
 #include "111_my_file.h"/*is_kanji_1st()*/
-
 
 
 #define FONT_WIDTH			(8)
@@ -74,7 +73,11 @@ static int font_color_number;
 /*
 	文字を描画する描画先のテクスチャー
 */
+		#if (0==USE_32BIT_DRAW_MODE)
 extern UINT16 *kanji_window_screen_image;						/* メッセージウィンドウ(画像) */
+		#else
+extern UINT32 *kanji_window_screen_image;						/* メッセージウィンドウ(画像) */
+		#endif
 
 
 #if (0)
@@ -95,11 +98,13 @@ extern UINT16 *kanji_window_screen_image;						/* メッセージウィンドウ(画像) */
 	STR_LIMIT_MAX_X_WIDTH	横に並べられる文字のドット数
 */
 
-//#define BG_FONT_HAIKEI_LENGTH ((512*4))	/* 4[laster](半分)	*/
-#define BG_FONT_HAIKEI_LENGTH ((512*8)) 	/* 8[laster](16x16ドットフォントは(width==16x16==横256)なので、横512換算で8[laster]分) */
 
-//#define BG_FONT_HAIKEI_OFFSET ((512*16*2))	/* 16[laster] */
-#define BG_FONT_HAIKEI_OFFSET ((512*10*2))		/* 10[laster]==(8+1+1) */
+	//#define BG_FONT_HAIKEI_LENGTH ((512*4))	/* 4[laster](半分)	*/
+	#define BG_FONT_HAIKEI_LENGTH ((512*8)) 	/* 8[laster](16x16ドットフォントは(width==16x16==横256)なので、横512換算で8[laster]分) */
+
+	//#define BG_FONT_HAIKEI_OFFSET ((512*16))	/* 16[laster] */
+	#define BG_FONT_HAIKEI_OFFSET ((512*10))		/* 10[laster]==(8+1+1) */
+//	#define BG_FONT_HAIKEI_OFFSET_U16 ((BG_FONT_HAIKEI_OFFSET*2))		/* 10[laster]==(8+1+1) */
 
 static void s_draw_shinonome_moji(
 	int x,
@@ -147,12 +152,12 @@ static void s_draw_shinonome_moji(
 			}
 			if (bit & bitcnt)
 			{
-				#if 1
+				#if (0==USE_32BIT_DRAW_MODE)
 				/*
 					いまいち良くわかんない(が、とりあえず動く)。
 					アドレスはバイト単位なので u8 ポインタでＣ言語に計算させてる。
 					(short なら2で割るとか、int なら4で割るとか)
-					変える場合は、定数(BG_FONT_HAIKEI_OFFSET等)や変数(dy,y,他)も変えないとダメ。
+					変える場合は、定数(BG_FONT_HAIKEI_OFFSET_U16等)や変数(dy,y,他)も変えないとダメ。
 				*/
 			//	s_getpixel16
 			volatile u8 *src_p = (u8 *)(/*font_bg_bitmap_surface_image*/kanji_window_screen_image)	/*surface*/
@@ -164,8 +169,28 @@ static void s_draw_shinonome_moji(
 					+ (((dy+y))*(512*2))/*surface->pitch*/
 					+ (dx+dx)
 					+ (x+x)
-					+ (BG_FONT_HAIKEI_OFFSET);	/* 512[dot]x 2[bytes](short) */
+					+ (BG_FONT_HAIKEI_OFFSET*2);	/* 512[dot]x 2[bytes](short) */
 				*(u16 *)dst_p = (u32)(*(u16 *)src_p);
+				#else
+				/*
+					いまいち良くわかんない(が、とりあえず動く)。
+					アドレスはバイト単位なので u8 ポインタでＣ言語に計算させてる。
+					(short なら2で割るとか、int なら4で割るとか)
+					変える場合は、定数(BG_FONT_HAIKEI_OFFSET_U16等)や変数(dy,y,他)も変えないとダメ。
+				*/
+			//	s_getpixel16
+			volatile u8 *src_p = (u8 *)(/*font_bg_bitmap_surface_image*/kanji_window_screen_image)	/*surface*/
+					+ (dy * (2*512/*font_bg_bitmap_surface_pitch*/))		/*surface*/
+					+ (dx+dx+dx+dx)
+					+ (haikei_offset+haikei_offset+haikei_offset+haikei_offset);
+			//	putpixel16
+			volatile u8 *dst_p = (u8 *)(kanji_window_screen_image)/*surface->pixels*/
+					+ (((dy+y))*(2*512*2))/*surface->pitch*/
+					+ (dx+dx+dx+dx)
+					+ (x+x+x+x)
+					+ (BG_FONT_HAIKEI_OFFSET*4);	/* 512[dot]x 2[bytes](short) */
+			//	*(u16 *)dst_p = (u32)(*(u16 *)src_p);
+				*(u32 *)dst_p = (u32)(*(u16 *)src_p);
 				#endif
 			}
 		}
@@ -271,31 +296,100 @@ static int my_string_offset;/*=0*/
 }
 
 /*---------------------------------------------------------
+	カーソルを指定位置へ移動
+---------------------------------------------------------*/
+/*static*/global void set_cursor(unsigned int set_x, unsigned int set_y)
+{
+	cursor_x = set_x;
+	cursor_y = set_y;
+}
+
+/*---------------------------------------------------------
 	カーソルをホームポジションへ移動
 ---------------------------------------------------------*/
 /*static*/global void home_cursor(void)
 {
-	cursor_x = 0;
-	cursor_y = 0;
+	#if 1
+	cursor_x = (0);
+	cursor_y = (0);
+	#else
+	set_cursor(0, 0);
+	#endif
 }
 
 /*---------------------------------------------------------
 	メッセージウィンドウの内容を消す。
 ---------------------------------------------------------*/
 
+/*static*/global void kanji_window_clear_line(unsigned int line_num)
+{
+//	#define TEST_OFFSET (/*0*/512*10/2) /* 10 [laster? ] */
+	#define TEST_OFFSET (0) 	/* put_pixel使うから(0) */
+		#if (0==USE_32BIT_DRAW_MODE)
+				#if 0
+		line_num *= (512*(16+2)*(1/*3 2[行]*/)/**16*/ *2/*[short]==2[byte]の分*/ );
+	{
+	//	u8 *p = (u8 *)kanji_window_screen_image/*surface->pixels*/;//+y*(512*2)/*surface->pitch*/+x+x;	/* 512[dot]x 2[bytes](short) */
+		unsigned int dx;
+		for (dx=(/*0*/TEST_OFFSET); dx<(TEST_OFFSET)+(512*(16+2)*(1/*3 2[行]*/)/**16*/); dx++)
+		{
+			u8 *p = (u8 *)kanji_window_screen_image/*surface->pixels*/+/*y*(512*2)*/ /*surface->pitch*/+dx+dx+(BG_FONT_HAIKEI_OFFSET*2)+line_num;	/* 512[dot]x 2[bytes](short) */
+			*(u16 *)p = 0/*pixel*/;
+		}
+	}
+				#endif
+	{
+	//	u8 *p = (u8 *)kanji_window_screen_image/*surface->pixels*/;//+y*(512*2)/*surface->pitch*/+x+x;	/* 512[dot]x 2[bytes](short) */
+		u16 *p16;	/* VRAMが16bitモード */
+		p16 = kanji_window_screen_image;
+		p16 += (BG_FONT_HAIKEI_OFFSET); 							/* 註:16bitポインタとしての値、つまり(unsigned shortだから)2倍[byte]される。 */
+		p16 += (line_num * (512*(16+2)*(1/*3 2[行]*/)/**16*/)); 	/* 註:16bitポインタとしての値、つまり(unsigned shortだから)2倍[byte]される。 */
+		unsigned int dx;
+		for (dx=(0); dx<(0)+(512*(16+2)*(1/*3 2[行]*/)/**16*/); dx++)
+		{
+		//	(*p16) = (0xffff)/*pixel*/;/* てすと(描いてる所白くなる) */
+			(*p16) = (0x0000)/*pixel*/;/* 黒(16bit) */
+			p16++;
+		}
+	}
+		#else
+		line_num *= (512*(16+2)*(1/*3 2[行]*/)/**16*/ *4/*[int]==4[byte]の分*/ );
+	{
+	//	u8 *p = (u8 *)kanji_window_screen_image/*surface->pixels*/;//+y*(512*2)/*surface->pitch*/+x+x;	/* 512[dot]x 2[bytes](short) */
+		unsigned int dx;
+		for (dx=(/*0*/TEST_OFFSET); dx<(TEST_OFFSET)+(512*(16+2)*(1/*3 2[行]*/)/**16*/); dx++)
+		{
+			u8 *p = (u8 *)kanji_window_screen_image/*surface->pixels*/+/*y*(512*2)*/ /*surface->pitch*/+dx+dx+dx+dx+(BG_FONT_HAIKEI_OFFSET*4)+line_num+line_num;	/* 512[dot]x 2[bytes](short) */
+			*(u32 *)p = 0/*pixel*/;
+		}
+	}
+		#endif
+}
 /*static*/global void kanji_window_clear(void)
 {
 //	#define TEST_OFFSET (/*0*/512*10/2) /* 10 [laster? ] */
 	#define TEST_OFFSET (0) 	/* put_pixel使うから(0) */
+		#if (0==USE_32BIT_DRAW_MODE)
 	{
 	//	u8 *p = (u8 *)kanji_window_screen_image/*surface->pixels*/;//+y*(512*2)/*surface->pitch*/+x+x;	/* 512[dot]x 2[bytes](short) */
 		int dx;
 		for (dx=(/*0*/TEST_OFFSET); dx<(TEST_OFFSET)+(512*(16+2)*(3/*3 2[行]*/)/**16*/); dx++)
 		{
-			u8 *p = (u8 *)kanji_window_screen_image/*surface->pixels*/+/*y*(512*2)*/ /*surface->pitch*/+dx+dx+(BG_FONT_HAIKEI_OFFSET);	/* 512[dot]x 2[bytes](short) */
+			u8 *p = (u8 *)kanji_window_screen_image/*surface->pixels*/+/*y*(512*2)*/ /*surface->pitch*/+dx+dx+(BG_FONT_HAIKEI_OFFSET*2);	/* 512[dot]x 2[bytes](short) */
 			*(u16 *)p = 0/*pixel*/;
 		}
 	}
+		#else
+	{
+	//	u8 *p = (u8 *)kanji_window_screen_image/*surface->pixels*/;//+y*(512*2)/*surface->pitch*/+x+x;	/* 512[dot]x 2[bytes](short) */
+		int dx;
+		for (dx=(/*0*/TEST_OFFSET); dx<(TEST_OFFSET)+(512*(16+2)*(3/*3 2[行]*/)/**16*/); dx++)
+		{
+			u8 *p = (u8 *)kanji_window_screen_image/*surface->pixels*/+/*y*(512*2)*/ /*surface->pitch*/+dx+dx+dx+dx+(BG_FONT_HAIKEI_OFFSET*4);	/* 512[dot]x 4[bytes](int) */
+			*(u32 *)p = 0/*pixel*/;
+		}
+	}
+		#endif
 }
 			//	ccc_putpixel16(dx);//, 0, /*0xaaaa*/(0x0000)/*dot color16 */);
 		//	*(u16 *)p = 0xaa55;
@@ -307,7 +401,7 @@ static int my_string_offset;/*=0*/
 		int kk;
 		for (kk=0; kk<(BG_FONT_HAIKEI_LENGTH)/*6*/; kk++)
 		{
-			(*(kanji_window_screen_image+kk)) = (*(font_bg_bitmap_surface_image+kk));/*BG_FONT_HAIKEI_OFFSET*/
+			(*(kanji_window_screen_image+kk)) = (*(font_bg_bitmap_surface_image+kk));/*BG_FONT_HAIKEI_OFFSET_U16*/
 		}
 	}
 	#endif
@@ -339,6 +433,8 @@ global /*static*/ void script_message_window_clear(void)
 //{
 //
 //}
+
+
 /*---------------------------------------------------------
 	shift jis文字 漢字かなまじり書体の文字列を描画する
 	 (wait指定で、frame毎に一文字描画。 wait0で、続きを全描画)
@@ -399,7 +495,7 @@ global /*static*/ int print_kanji000(const char *str, int color_type, int wait)
 					{
 						my_string_offset += 2;
 						cursor_x = 999;/* 適当に大きな値を指定して改行させる */
-					//	cursor_x=0;
+					//	cursor_x = 0;
 					//	cursor_y++;
 					}
 				}
@@ -416,7 +512,7 @@ global /*static*/ int print_kanji000(const char *str, int color_type, int wait)
 				#define STR_LIMIT_MAX_X_WIDTH ((int)((300/*(rect->w)*/)/FONT_WIDTH)+2)
 				if ( (STR_LIMIT_MAX_X_WIDTH-1) < cursor_x)
 				{
-					cursor_x=0;
+					cursor_x = 0;
 					cursor_y++;
 					#define MAX_cursor_y (2)
 					if (MAX_cursor_y < cursor_y)
@@ -453,6 +549,7 @@ global /*static*/ int print_kanji000(const char *str, int color_type, int wait)
 	return (terminate_this_frame);		/* 0:continue, 1:end */
 }
 
+
 /*---------------------------------------------------------
 
 ---------------------------------------------------------*/
@@ -460,10 +557,18 @@ global /*static*/ int print_kanji000(const char *str, int color_type, int wait)
 #include "graphics00.h"
 global void kanji_system_init(void)/* 組み込み */
 {
-	/* メッセージ表示用RAM確保 */	/* 現在表示が16bit色なので(32bit色表示なら変わる) */
-	/* 背景用に10[laster]余分に確保 */
-//	kanji_window_screen_image	= (UINT16 *)malloc((512*(10+64)*2));	/* (10+ 64)[laster] */
-	kanji_window_screen_image	= (UINT16 *)malloc((512*(10+128)*2));	/* (10+128)[laster] */
+	#if (0==USE_32BIT_DRAW_MODE)
+		/* メッセージ表示用RAM確保 */	/* 現在表示が16bit色なので(32bit色表示なら変わる) */
+		/* 背景用に10[laster]余分に確保 */
+	//	kanji_window_screen_image	= (UINT16 *)malloc((512*(10+64)*2));	/* (10+ 64)[laster] */
+		kanji_window_screen_image	= (UINT16 *)malloc((512*(10+128)*2));	/* (10+128)[laster] */
+	#else
+		/* 色32bitモード */
+		/* メッセージ表示用RAM確保 */	/* 現在表示が16bit色なので(32bit色表示なら変わる) */
+		/* 背景用に10[laster]余分に確保 */
+	//	kanji_window_screen_image	= (UINT16 *)malloc((512*(10+64)*2));	/* (10+ 64)[laster] */
+		kanji_window_screen_image	= (UINT32 *)malloc((2*512*(10+128)*2)); /* (10+128)[laster] */
+	#endif
 //
 	{
 	/* 文字背景用画像を文字描画ワークの先頭に読み込み、画像をコピーしてから、開放する。 */
@@ -479,7 +584,7 @@ global void kanji_system_init(void)/* 組み込み */
 	//	font_bg_bitmap_surface			= SDL_DisplayFormat(font_bg_bitmap_surface);/*サーフェスを表示フォーマットに変換する。*/
 	//	font_bg_bitmap_surface_pitch	= font_bg_bitmap_surface->pitch;
 		#endif
-		#if 1
+		#if (0==USE_32BIT_DRAW_MODE)
 		{
 			/* 現在表示が16bit色なので、32->16変換する。(32bit色表示なら変わる) */
 		//	/*static*/ UINT16 *font_bg_bitmap_surface_image;
@@ -488,15 +593,36 @@ global void kanji_system_init(void)/* 組み込み */
 			u16 *pixdst;
 			pixsrc = (void *)((font_bg_bitmap_surface->pixels));
 			pixdst = (kanji_window_screen_image);
-			trans_format16(pixsrc, pixdst, (BG_FONT_HAIKEI_LENGTH));
+			trans_format8888to5650(pixsrc, pixdst, (BG_FONT_HAIKEI_LENGTH));
+		}
+		#else
+		{
+			/* 現在表示が16bit色なので、32->16変換する。(32bit色表示なら変わる) */
+		//	/*static*/ UINT16 *font_bg_bitmap_surface_image;
+		//	font_bg_bitmap_surface_image	= font_bg_bitmap_surface->pixels;
+			u32 *pixsrc;
+			u32 *pixdst;
+			pixsrc = (void *)((font_bg_bitmap_surface->pixels));
+			pixdst = (kanji_window_screen_image);
+			{
+				int kk;
+				for (kk=0; kk<(BG_FONT_HAIKEI_LENGTH); kk++)
+				{
+				//	(*(kanji_window_screen_image+kk)) = (*(/*font_bg_bitmap_surface_image*/(u32 *)(font_bg_bitmap_surface->pixels)+kk));/*BG_FONT_HAIKEI_OFFSET_U16*/
+					/* --- 16bit色に 減色して保持 (color key 使用不可) */
+					*pixdst =  ((*pixsrc));
+					pixdst++;
+					pixsrc++;
+				}
+			}
 		}
 		#endif
 		/* 文字背景用画像を開放する。 */
 	//	SDL_FreeSurface(font_bg_bitmap_surface);
 		png_free_my_image(font_bg_bitmap_surface);
 	}
-
 }
+
 
 /*---------------------------------------------------------
 	終了時に開放する部分...何だけど、

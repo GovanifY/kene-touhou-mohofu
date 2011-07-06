@@ -85,7 +85,8 @@ enum
 	#define boss_base_danmaku_type				user_data10
 	#define boss_base_danmaku_time_out			user_data11
 	#define boss_base_danmaku_test				user_data12
-	#define boss_base_state001					user_data13
+//	#define boss_base_resurved000				user_data13/*(r32)現在、未使用。*/
+//	#define bo ss_base_state001 				user_data13/*廃止*/
 #endif
 
 
@@ -99,11 +100,11 @@ extern POINT256 bullet_clip_max;	/* 弾の範囲(最大値) */
 #if 1
 enum
 {
-	REGIST_TYPE_00_MULTI_VECTOR,		/* 多方向弾 */
-	REGIST_TYPE_01_HAZUMI,		/* 重力弾01 輝夜、最終形態で投げてくるかなり無茶な弾。 */
-	REGIST_TYPE_02_GRAVITY02,	/* 重力弾02 */
-	REGIST_TYPE_03_TOMARI,		/*	弾 */
-	REGIST_TYPE_04_KURU_KURU,	/*	弾 */
+	REGIST_TYPE_00_MULTI_VECTOR,	/* 多方向弾 */
+	REGIST_TYPE_01_HAZUMI,			/* 重力弾01 輝夜、最終形態で投げてくるかなり無茶な弾。 */
+	REGIST_TYPE_02_GRAVITY02,		/* 重力弾02 */
+	REGIST_TYPE_03_TOMARI,			/*	弾 */
+	REGIST_TYPE_04_KURU_KURU,		/*	弾 */
 	REGIST_TYPE_99_MAX,
 };
 
@@ -113,15 +114,19 @@ extern void bullet_regist_angle(void);
 /* ベクトル弾の場合 */
 typedef struct _bullet_regist_
 {
-	int BULLET_REGIST_speed256; 							//		/* aa */
-	int BULLET_REGIST_angle1024;							//		/* bb */
-	int BULLET_REGIST_div_angle1024;						//		/* cc */
-	int BULLET_REGIST_bullet_obj_type;						//		/* dd */
+// 弾幕の受け渡し設定
+	int BULLET_REGIST_speed256; 					/* aa */
+	int BULLET_REGIST_angle1024;					/* bb */
+	int BULLET_REGIST_div_angle1024;				/* cc */
+	int BULLET_REGIST_bullet_obj_type;				/* dd */
 
-	int BULLET_REGIST_n_way;								//		/* ee */
-	int BULLET_REGIST_sakuya_kurukurku_knife_height;		//		/* ff */
+	int BULLET_REGIST_n_way;						/* ee */
+	int BULLET_REGIST_speed_offset; 				/* ff */
 
-	int BULLET_REGIST_regist_type;							/* 登録方式 */
+	int BULLET_REGIST_regist_type;					/* 登録方式 */
+// 弾幕リストに登録する場合の設定
+//	int BULLET_REGIST_start_number; 				/* 開始番号 */
+//	int BULLET_REGIST_max_size; 					/* サイズ */
 } BULLET_REGIST;
 extern BULLET_REGIST br;
 #endif
@@ -146,7 +151,7 @@ extern BULLET_REGIST br;
 //	int BULLET_REGIST_bullet_obj_type;				//		/* dd */	<同じ>
 //
 //	int BULLET_REGIST_n_way;						//		/* ee */	<同じ>
-#define BULLET_REGIST_speed_offset			BULLET_REGIST_sakuya_kurukurku_knife_height 	//		/* ff */	<未定>
+//#define BU LLET_REGIST_sakuya_kurukurku_knife_height			BULLET_REGIST_speed_offset	//		/* ff */	<未定>
 //
 //	int BULLET_REGIST_regist_type;					/* 登録方式 */		<同じ>
 //} BULLET_REGIST;
@@ -183,76 +188,6 @@ extern void lose_random_item(SPRITE *src);
 
 #ifndef _SPELL_CARD_H_
 #define _SPELL_CARD_H_
-//	SPELL_CARD_00_OFF = 0,
-enum
-{
-// 咲夜 6面
-	SPELL_CARD_00_sakuya_000 = 0,	/* "形態変更" */
-	SPELL_CARD_01_sakuya_aaa,		/* 第一形態: 左右に動いて小弾撃ち */
-	SPELL_CARD_02_sakuya_bbb,		/* 第二形態: 全方位、豆まき */
-	SPELL_CARD_03_sakuya_ccc,		/* 第三形態: 垂直ナイフが落ちてくるよ */
-	SPELL_CARD_04_sakuya_ddd,		/* 第四形態: 魔方陣生成 */
-	SPELL_CARD_05_sakuya_eee,		/* 第五形態: (黄色マスカット弾) */
-//	SPELL_CARD_06_sakuya_fff,		/* 第六形態: (黄色マスカット弾) */
-//	SPELL_CARD_07_sakuya_ggg,		/* 第七形態: (分散魔方陣)追加計画中 */
-//	SPELL_CARD_08_sakuya_hhh,		/* 第八形態: (時止めナイフ)追加計画中 */
-	SPELL_CARD_09_sakuya_iii,		/* 第九形態: 最終形態(その1) */
-	SPELL_CARD_10_sakuya_jjj,		/* 第10形態: 最終形態(その2) */
-	SPELL_CARD_11_sakuya_kkk,		/* 第11形態: 最終形態(その3) */
-// パチェ 5面
-	SPELL_CARD_00_pache_000,
-	SPELL_CARD_11_pache_bbb,
-	SPELL_CARD_12_pache_ccc,
-	SPELL_CARD_13_pache_ddd,
-	SPELL_CARD_14_pache_eee,
-	SPELL_CARD_15_pache_fff,
-	SPELL_CARD_16_pache_ggg,
-	SPELL_CARD_17_pache_hhh,
-//	SPELL_CARD_18_pache_iii,
-//	SPELL_CARD_19_pache_jjj,
-// 文 4面
-	SPELL_CARD_00_aya_000,
-	SPELL_CARD_11_aya_bbb,
-	SPELL_CARD_12_aya_ccc,
-	SPELL_CARD_13_aya_ddd,
-	SPELL_CARD_14_aya_eee,
-	SPELL_CARD_15_aya_fff,
-	SPELL_CARD_16_aya_ggg,
-	SPELL_CARD_17_aya_hhh,
-	SPELL_CARD_18_aya_iii,
-	SPELL_CARD_19_aya_jjj,
-// 輝夜 3面
-	SPELL_CARD_00_kaguya_000,
-	SPELL_CARD_11_kaguya_bbb,
-	SPELL_CARD_12_kaguya_ccc,
-	SPELL_CARD_13_kaguya_ddd,
-	SPELL_CARD_14_kaguya_eee,
-	SPELL_CARD_15_kaguya_fff,
-	SPELL_CARD_16_kaguya_ggg,
-	SPELL_CARD_17_kaguya_hhh,
-// 未定 2面
-	SPELL_CARD_00_mima_000,
-	SPELL_CARD_11_mima_bbb,
-	SPELL_CARD_12_mima_ccc,
-	SPELL_CARD_13_mima_ddd,
-	SPELL_CARD_14_mima_eee,
-	SPELL_CARD_15_mima_fff,
-	SPELL_CARD_16_mima_ggg,
-	SPELL_CARD_17_mima_hhh,
-// アリス 1面
-	SPELL_CARD_00_alice_000,
-	SPELL_CARD_11_alice_bbb,
-	SPELL_CARD_12_alice_ccc,
-	SPELL_CARD_13_alice_ddd,
-	SPELL_CARD_14_alice_eee,
-//	SPELL_CARD_15_alice_fff,
-//	SPELL_CARD_16_alice_ggg,
-//	SPELL_CARD_17_alice_hhh,
-//	SPELL_CARD_18_alice_iii,
-//	SPELL_CARD_19_alice_jjj,
-//
-	SPELL_CARD_MAX	/* 最大数 */
-};
 
 //------------ スペカ関連
 
@@ -273,7 +208,7 @@ enum
 {
 	SPELL_CARD_MODE_00_OFF = 0, 		/* スペカを使用しない(通常攻撃等)。(スペカが撃てるかどうか判断) */
 	SPELL_CARD_MODE_01_IDO_JYUNNBI, 	/* 撃てる場合。発弾位置まで移動 */
-	SPELL_CARD_MODE_02_TAIHI,		/* 中。 */
+	SPELL_CARD_MODE_02_TAIHI,			/* 中。 */
 	SPELL_CARD_MODE_03_HATUDAN, 		/* 発弾中。 */
 };
 
@@ -283,10 +218,9 @@ extern int spell_card_boss_state;		/* 負値になればボススペカモードに入らない */
 extern int spell_card_boss_timer;		/* [共用]制限時間 */
 
 extern int spell_card_number;			/* [共用]スペカ番号 */
-extern int spell_card_max;				/* [共用]スペカ番号最大限界値 */
 
 /* 出現時x座標 */
-#define BOSS_XP256	(t256(GAME_WIDTH/2)-(t256(32/2)))/*sakuya->w128*/
+#define BOSS_XP256		(t256(GAME_WIDTH/2))	/* 中心座標なので */
 
 
 //------------ "回"みたいなマークのエフェクト

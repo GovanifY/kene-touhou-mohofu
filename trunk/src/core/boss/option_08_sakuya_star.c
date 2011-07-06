@@ -2,7 +2,7 @@
 #include "game_main.h"
 
 /*---------------------------------------------------------
-	東方模倣風  ～ Toho Imitation Style.
+	東方模倣風	～ Toho Imitation Style.
 	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	子供魔方陣 弾幕
@@ -20,11 +20,11 @@
 	#define target_x256 		user_data00 	/* 目標x座標 */
 	#define target_y256 		user_data01 	/* 目標y座標 */
 	#define vvv256				user_data02 	/* 目標座標への到達割合 */
-	#define time_out			user_data03 	/* 制限時間 */
+	#define boss_time_out		user_data03 	/* 制限時間 */
 #endif
 //	ボス共通規格と同じ(boss.hインクルードしてもしなくても対応)
-#ifndef time_out
-	#define time_out			user_data03 	/* 制限時間 */
+#ifndef boss_time_out
+	#define boss_time_out		user_data03 	/* 制限時間 */
 #endif
 //
 #define my_angle1024		tmp_angleCCW1024	/* 保持角度[星型を描く場合に使う角度] */
@@ -45,14 +45,14 @@ static void move_doll02(SPRITE *src)
 //
 	#if 1
 	/* 魔方陣アニメーション */
-	src->m_angleCCW1024--;/* 右回り */
-	mask1024(src->m_angleCCW1024);
+	src->rotationCCW1024--;/* 右回り */
+	mask1024(src->rotationCCW1024);
 	#endif
 //
-	if ((64*8) < src->time_out)
+	if ((64*8) < src->boss_time_out)
 	{
 		/* 星型を描くよ */
-		if (0==((src->time_out)&0x0f))
+		if (0==((src->boss_time_out)&0x0f))
 		{
 			src->my_angle1024 += (1024*2/5);
 			mask1024(src->my_angle1024);
@@ -63,10 +63,10 @@ static void move_doll02(SPRITE *src)
 		}
 		else
 		{
-			br.BULLET_REGIST_hosi_gata_angle1024		= ((src->my_angle1024))+(((src->time_out)&0x0f)<<4/*3*/);
-			br.BULLET_REGIST_hosi_gata_time_out 		= ((src->time_out)&0x1ff);	//((src->time_out)-(64*8))
-			br.BULLET_REGIST_hosi_gata_add_speed256 	= (((src->time_out>>2)&0x3)+4); 	/* 加加速度(か-かそくど) */
-		//	br.BULLET_REGIST_hosi_gata_add_speed256 	= (((src->time_out )&0xf)|0x03);	/* 加加速度(か-かそくど) */
+			br.BULLET_REGIST_hosi_gata_angle1024		= ((src->my_angle1024))+(((src->boss_time_out)&0x0f)<<4/*3*/);
+			br.BULLET_REGIST_hosi_gata_time_out 		= ((src->boss_time_out)&0x1ff); //((src->boss_time_out)-(64*8))
+			br.BULLET_REGIST_hosi_gata_add_speed256 	= (((src->boss_time_out>>2)&0x3)+4);	/* 加加速度(か-かそくど) */
+		//	br.BULLET_REGIST_hosi_gata_add_speed256 	= (((src->boss_time_out )&0xf)|0x03);	/* 加加速度(か-かそくど) */
 /*
 0123 3333 4444	0+4
 4567 7777 5555	1+4
@@ -77,8 +77,8 @@ cdef ffff 7777	3+4
 			bullet_crate_sakuya_hosi_gata(&hosi_position_obj);
 		}
 		// 動作
-		hosi_position_obj.x256 += (src->doll_vx256);/*fps_factor*/
-		hosi_position_obj.y256 += (src->doll_vy256);/*fps_factor*/
+		hosi_position_obj.cx256 += (src->doll_vx256);/*fps_factor*/
+		hosi_position_obj.cy256 += (src->doll_vy256);/*fps_factor*/
 	}
 //
 }
@@ -106,14 +106,14 @@ cdef ffff 7777	3+4
 	//
 		/* 子供魔方陣、配置位置 */
 		#if 1
-		h->x256 					= (src->x256);
-		h->y256 					= (src->y256)-t256(16);/*咲夜 上方に配置*/
+		h->cx256					= (src->cx256);
+		h->cy256					= (src->cy256)-t256(16);/*咲夜 上方に配置*/
 		#endif
 		/* 弾を撃ち始める位置(星型描き始める位置) */
-		hosi_position_obj.x256		= (src->x256)+(ra_nd()&0xfff);
-		hosi_position_obj.y256		= (src->y256)+(ra_nd()&0xfff);/* 咲夜 下方から描く */
+		hosi_position_obj.cx256 	= (src->cx256)+(ra_nd()&0xfff);
+		hosi_position_obj.cy256 	= (src->cy256)+(ra_nd()&0xfff);/* 咲夜 下方から描く */
 	//
-		h->time_out 				= ((64*8)+(5*16)+1); 	/* 制限時間 */
+		h->boss_time_out			= ((64*8)+(5*16)+1);	/* 制限時間 */
 
 		/* 星型を描く準備 */
 		h->my_angle1024 			= (0);

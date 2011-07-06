@@ -8,20 +8,15 @@
 ---------------------------------------------------------*/
 
 
-
-
 /*---------------------------------------------------------
-
----------------------------------------------------------*/
-
-
-	/* ☆ フロント面エフェクト(テクスチャ共用) */
-/*---------------------------------------------------------
+	☆ フロント面エフェクト(テクスチャ共用)
+	-------------------------------------------------------
 	自分がボム(スペカ)撃った場合に出る。文字のロゴ
 	Border Power of Spiritual 霊歌で力を発揮する境界
 	-------------------------------------------------------
-	[ 横文字 ] / [ 縦文字 ] に関しては uvスクロール を使ってます。
-	ってゆーか本物も実装方式は uvスクロール だと思うよ。
+	[ 横文字 ] / [ 縦文字 ] に関しては uvスクロール(テクスチャスクロール) を使ってます。
+	ってゆーか本物も(Direct 3Dで uvスクロール は簡単に出来るので)
+	実装方式は uvスクロール だと思うよ。
 ---------------------------------------------------------*/
 
 static void gu_draw_front_spell_logo(void)
@@ -31,8 +26,7 @@ static void gu_draw_front_spell_logo(void)
 	#define SL_24V (12*2)	/* 画面丁度。((12-1)*32 == 352 == 480[pspの画面描画幅]-128[パネル幅]) [32slice] */
 
 	Vertex_uvcxyz_C32* vertices;
-	vertices = (Vertex_uvcxyz_C32*)sceGuGetMemory((SL_24V+SL_20V)*sizeof(Vertex_uvcxyz_C32));	/* GPUが間に合わないのでちゃんと確保 */
-	/* 注:こちらは最前面なので省略するとGPU転送が間に合わない */
+	vertices = (Vertex_uvcxyz_C32*)sceGuGetMemory((SL_24V+SL_20V)*sizeof(Vertex_uvcxyz_C32));	/* [ 横文字 + 縦文字 ] 分確保 */
 //
 	/* --- 半透明合成値 */
 	#if (1==USE_VCOLOR)
@@ -60,14 +54,14 @@ static void gu_draw_front_spell_logo(void)
 #define TEX_STR_Y_HIGH_217		(200)/*217*/
 /* Border Power of Spiritual 文字のテクスチャ位置(下側) */
 #define TEX_STR__Y_LOW_255		(255)
-/* Border Power of Spiritual を描画する文字の高さ(スライス幅64以内にしないと、大幅に速度低下すると思う) */
+/* Border Power of Spiritual 文字の高さ(スライス幅64以内にしないと、大幅に速度低下すると思う) */
 #define SPELL_LOGO_HEIGHT_64	(64)/*40*/
 /* --- [ 横文字 ] --- */
 /* SPELL_LOGO_LOCATE_Y01_160: 画面左上からの yオフセット(距離) */
 #define SPELL_LOGO_LOCATE_Y01_160 (160)
 #define SPELL_LOGO_LOCATE_Y02_200 (SPELL_LOGO_LOCATE_Y01_160+SPELL_LOGO_HEIGHT_64)
 	x5 = 0;
-	x4 = (/*val5*/(pd_bomber_time) /*& 0xff*/);
+	x4 = (/*val5*/(pd.bomber_time) /*& 0xff*/);
 	for (j=0; j<SL_24V; j+=2)
 	{
 		vertices[j].x = x5;
@@ -87,8 +81,8 @@ static void gu_draw_front_spell_logo(void)
 		#if (1==USE_VCOLOR)
 		vertices[j+1].color = SL_BLENDLEVEL;
 		#endif
-		x5 +=  32/*36*/;/*上/下縁側*/
-		x4 +=  32/*64*/;/*テクスチャ*/
+		x5 += (32);/* 上/下縁側 */
+		x4 += (32);/* テクスチャ */
 	}
 
 /* --- [ 縦文字 ] --- */
@@ -97,7 +91,7 @@ static void gu_draw_front_spell_logo(void)
 #define SPELL_LOGO_LOCATE_X02_240 (SPELL_LOGO_LOCATE_X01_200+SPELL_LOGO_HEIGHT_64)
 #define y5 x5
 	y5 = 0; 	//	x4 = (val5 & 0xff);
-	for (/*j=0*/; j<SL_24V+SL_20V; j+=2)	/* GPU転送が間に合わないので、ちゃんと確保(jは途中から) */
+	for (/*j=0*/; j<SL_24V+SL_20V; j+=2)	/* 続きから(jは途中から) */
 	{
 		vertices[j].x = SPELL_LOGO_LOCATE_X01_200;
 		vertices[j].y = y5;
@@ -116,15 +110,15 @@ static void gu_draw_front_spell_logo(void)
 		#if (1==USE_VCOLOR)
 		vertices[j+1].color = SL_BLENDLEVEL;
 		#endif
-		y5 +=  32/*36*/;/*上/下縁側*/
-		x4 +=  32/*64*/;/*テクスチャ*/
+		y5 += (32);/* 上/下縁側 */
+		x4 += (32);/* テクスチャ */
 	}
 	#if 0
 	sceGuDrawArray(GU_TRIANGLE_STRIP, TEXTURE_FLAGS5650_C32, (SL_24V), NULL, vertices); 			/* [ 横文字 ] */
 	sceGuDrawArray(GU_TRIANGLE_STRIP, TEXTURE_FLAGS5650_C32, (SL_20V), NULL, &vertices[SL_24V]);	/* [ 縦文字 ] */
 	#else
-	/* 注意：カリング有効の場合、同等になります：裏側ポリゴンが描かれない事を利用したハック */
-	sceGuDrawArray(GU_TRIANGLE_STRIP, TEXTURE_FLAGS5650_C32, (SL_24V+SL_20V), NULL, vertices);		/* [ 横文字 ] */		/* [ 縦文字 ] */
+	/* 注意：カリング有効の場合、同等になります：裏側ポリゴンが描かれない事を利用したハック。(描かれない==(描画前に処理を撥ねるので)速度低下しない) */
+	sceGuDrawArray(GU_TRIANGLE_STRIP, TEXTURE_FLAGS5650_C32, (SL_24V+SL_20V), NULL, vertices);		/* [ 横文字 + 縦文字 ] */
 	#endif
 }
 // 1 3 5 7 9

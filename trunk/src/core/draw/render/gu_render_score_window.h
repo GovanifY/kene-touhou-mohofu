@@ -76,5 +76,3 @@ static void gu_draw_side_panel(void)
 //
 	}
 }
-
-

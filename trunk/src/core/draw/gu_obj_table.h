@@ -9,15 +9,24 @@ static VIRTUAL_OBJ_STATE obj_status_table[(OBJ_BANK_MAX*OBJ_BANK_SIZE)/*(6*8*8)*
 {
 /* [OBJ_BANK_00_TAMA] */
 //1
-	{  0, 9, 10,10},// BULLET_00_HOSI_TEN,
-	{ 64, 9,  7,10},// BULLET_KOME_01_AOI,
-	{ 72, 9,  7,10},// BULLET_KOME_02_AKA,
-	{ 80, 9,  7,10},// BULLET_KOME_03_YUKARI,
-	{ 88, 9,  7,10},// BULLET_KOME_04_MIDORI,
-	{ 96, 9,  7,10},// BULLET_KOME_05_KIIRO,
-	{104, 9,  7,10},// BULLET_KOME_06_dummy,
-	{112, 9,  7,10},// BULLET_KOME_07_dummy,
+	{  0, 9, 10,10},//白 BULLET_00_HOSI_TEN,
+	{ 11, 9, 10,10},//赤	BULLET_MARU10_01_AKA,		BULLET_MARU10_00_AOI,
+	{ 22, 9, 10,10},//紫	BULLET_MARU10_02_YUKARI,	BULLET_MARU10_01_MIDORI,
+	{ 33, 9, 10,10},//青	BULLET_MARU10_03_AOI,		BULLET_MARU10_02_MIDORI,
+	{ 44, 9, 10,10},//水	BULLET_MARU10_04_MIZU_IRO,	BULLET_MARU10_03_MIDORI,
+	{ 55, 9, 10,10},//緑	BULLET_MARU10_05_MIDORI,	BULLET_MARU10_00_AOI,// BULLET_MARU8_08_dummy,
+	{ 66, 9, 10,10},//黄	BULLET_MARU10_06_KI_IRO,	BULLET_MARU10_01_MIDORI,// BULLET_MARU8_09_dummy,
+	{ 77, 9, 10,10},//橙	BULLET_MARU10_07_DAI_DAI,	BULLET_MARU10_02_MIDORI,// BULLET_MARU8_10_dummy,
 //2
+	{ 88, 9,  7,10},//白	BULLET_KOME_00_SIRO,		BULLET_MARU10_03_MIDORI,// BULLET_MARU8_11_dummy,
+	{ 96, 9,  7,10},//赤	BULLET_KOME_01_AKA, 		BULLET_KOME_01_AOI,
+	{104, 9,  7,10},//紫	BULLET_KOME_02_YUKARI,		BULLET_KOME_02_AKA,
+	{112, 9,  7,10},//青	BULLET_KOME_03_AOI, 		BULLET_KOME_03_YUKARI,
+	{120, 9,  7,10},//水	BULLET_KOME_04_MIZU_IRO,	BULLET_KOME_04_MIDORI,
+	{120,48,  7,10},//緑	BULLET_KOME_05_MIDORI,		BULLET_KOME_05_KIIRO,
+	{120,59,  7,10},//黄	BULLET_KOME_06_KI_IRO,		BULLET_KOME_06_dummy,
+	{120,70,  7,10},//橙	BULLET_KOME_07_07_DAI_DAI,	BULLET_KOME_07_dummy,
+//3
 	{  0, 0,  8, 8},// BULLET_MARU8_00_AKA
 	{  9, 0,  8, 8},// BULLET_MARU8_01_YUKARI,
 	{ 18, 0,  8, 8},// BULLET_MARU8_02_AOI,
@@ -26,7 +35,7 @@ static VIRTUAL_OBJ_STATE obj_status_table[(OBJ_BANK_MAX*OBJ_BANK_SIZE)/*(6*8*8)*
 	{ 45, 0,  8, 8},// BULLET_MARU8_05_MIDORI,
 	{ 54, 0,  8, 8},// BULLET_MARU8_06_KIIRO,
 	{ 63, 0,  8, 8},// BULLET_MARU8_07_AOI,
-//3
+//4
 	{ 25,64, 12,12},// BULLET_MARU12_00_SIRO,
 	{ 38,64, 12,12},// BULLET_MARU12_01_AKA,
 	{ 51,64, 12,12},// BULLET_MARU12_02_AOI,
@@ -35,16 +44,6 @@ static VIRTUAL_OBJ_STATE obj_status_table[(OBJ_BANK_MAX*OBJ_BANK_SIZE)/*(6*8*8)*
 	{ 51,77, 12,12},// BULLET_MARU12_05_DAIDAI, 	//	{117, 0,  8, 8},// BULLET_MARU8_13_dummy,
 	{104,48,  7,14},// BULLET_CAP16_04_KOME_SIROI	/* [青白米弾] */
 	{112,48,  7,14},// BULLET_CAP16_05_TUTU_SIROI	/* [青白実包弾] */
-//4
-	{ 11, 9, 10,10},// BULLET_MARU10_00_AOI,
-	{ 22, 9, 10,10},// BULLET_MARU10_01_MIDORI,
-	{ 33, 9, 10,10},// BULLET_MARU10_02_MIDORI,
-	{ 44, 9, 10,10},// BULLET_MARU10_03_MIDORI,
-	{ 72, 0,  8, 8},// BULLET_MARU8_08_dummy,
-	{ 81, 0,  8, 8},// BULLET_MARU8_09_dummy,
-	{ 90, 0,  8, 8},// BULLET_MARU8_10_dummy,
-	{ 99, 0,  8, 8},// BULLET_MARU8_11_dummy,
-
 //5
 	{  0,33, 15,14},// BULLET_UROKO14_00_AOI,
 	{ 16,33, 15,14},// BULLET_UROKO14_01_AKA,
@@ -77,10 +76,10 @@ static VIRTUAL_OBJ_STATE obj_status_table[(OBJ_BANK_MAX*OBJ_BANK_SIZE)/*(6*8*8)*
 	{  6,64,  5,32},// BULLET_HARI32_01_AKA
 	{ 12,64,  5,32},// BULLET_HARI32_02_KIIRO
 	{ 18,64,  5,32},// BULLET_HARI32_03_DAIDAI
-	{  0,96, 31,31},// BULLET_OODAMA32_00_SIROI,
-	{ 32,96, 31,31},// BULLET_OODAMA32_01_AOI,
-	{ 64,96, 31,31},// BULLET_OODAMA32_02_AKA,
-	{ 96,96, 31,31},// BULLET_OODAMA32_03_YUKARI,
+	{  0,96, 31,31},// BULLET_OODAMA32_00_AOI,
+	{ 32,96, 31,31},// BULLET_OODAMA32_01_AKA,
+	{ 64,96, 31,31},// BULLET_OODAMA32_02_KIIRO,
+	{ 96,96, 31,31},// BULLET_OODAMA32_03_MIDORI,
 
 
 
@@ -172,15 +171,15 @@ static VIRTUAL_OBJ_STATE obj_status_table[(OBJ_BANK_MAX*OBJ_BANK_SIZE)/*(6*8*8)*
 	{163,  0,  6,  6},//	JIKI_CORE_07_YUYUKO
 	{170,  0,  6,  6},//	JIKI_CORE_06_CHIRNO_A
 	{177,  0,  6,  6},//	JIKI_CORE_06_CHIRNO_Q
-// [2]
-	{  0,  0,  1,  1},//	CORE_HIDE_10_REIMU_A,
-	{  0,  0,  1,  1},//	CORE_HIDE_11_REIMU_B,
-	{  0,  0,  1,  1},//	CORE_HIDE_12_MARISA_A,
-	{  0,  0,  1,  1},//	CORE_HIDE_13_MARISA_B,
-	{  0,  0,  1,  1},//	CORE_HIDE_14_MARISA_C,
-	{  0,  0,  1,  1},//	CORE_HIDE_15_REMILIA,
-	{  0,  0,  1,  1},//	CORE_HIDE_16_CHIRNO,
-	{  0,  0,  1,  1},//	CORE_HIDE_17_YUYUKO,
+// [2] ポーズメニュー用
+	{  0,  0,  1,  1},//	CORE_HIDE_10_REIMU_A,		// "続ける" "CONTINUE GAME"
+	{  0,  0,  1,  1},//	CORE_HIDE_11_REIMU_B,		// "始めから" "RESTART GAME"
+	{  0,  0,  1,  1},//	CORE_HIDE_12_MARISA_A,		// "メニューに戻る" "QUIT GAME"
+	{  0,  0,  1,  1},//	CORE_HIDE_13_MARISA_B,		//
+	{  0,  0,  1,  1},//	CORE_HIDE_14_MARISA_C,		//
+	{  0,  0,  1,  1},//	CORE_HIDE_15_REMILIA,		//
+	{  0,  0,  1,  1},//	CORE_HIDE_16_CHIRNO,		//
+	{  0,  0,  1,  1},//	CORE_HIDE_17_YUYUKO,		//
 // [3]//	/* 小爆発 / ザコ消滅爆発(フロント面エフェクト) */
 	{  0,  0,  8,  8},//	J,
 	{  0,  0,  8,  8},//	J,
@@ -200,52 +199,52 @@ static VIRTUAL_OBJ_STATE obj_status_table[(OBJ_BANK_MAX*OBJ_BANK_SIZE)/*(6*8*8)*
 	{  0,  0,  8,  8},//	J,
 	{  0,  0,  8,  8},//	J,
 // [5]
-	{241,  0, 14, 14},//	SPELL_SQUERE_,	/* [□] */
-	{  0,  0,  1,  1},//	SP_GROUP_ETC_DUMMY_REMILIA,
-	{  0,  0,  1,  1},//	SP_GROUP_ETC_DUMMY_SLOW_BOMB,
-	{  0,  0,  8,  8},//	J,
-	{  0,  0,  8,  8},//	J,
-	{  0,  0,  8,  8},//	J,
-	{  0,  0,  8,  8},//	J,
-	{  0,  0,  8,  8},//	J,
+	{  0, 17, 14, 14},//	SPELL_SQUERE_,	/* [□] */
+	{  0, 32,  1,  1},//	SP_DUMMY_MUTEKI, FRONT 面なのであたり判定なし。それから表示されない。S P_GROUP_ETC_DUMMY_REMILIA,
+	{219,  0,  4,  4},//	SP_FRONT_YUKI, FRONT 面なのであたり判定なし。(とりあえず仮で)雪みたいな表示。S P_GROUP_ETC_DUMMY_SLOW_BOMB,
+	{129, 18, 32, 10},//	J,"MAX"32x10ローマ文字,
+	{192,128, 32, 10},//	J,"Easy"32x10ローマ文字,
+	{192,139, 40, 10},//	J,"Normal"40x10ローマ文字,
+	{192,150, 32, 10},//	J,"Hard"32x10ローマ文字,
+	{192,161, 48, 10},//	J,"Lunatic"48x10ローマ文字,
 // [6]
-	{  0,  0,  8,  8},//	J,
-	{  0,  0,  8,  8},//	J,
-	{  0,  0,  8,  8},//	J,
-	{ 34,  7,  8, 10},//	"0"8x10ローマ数字,
-	{ 43,  7,  8, 10},//	"1"8x10ローマ数字,
-	{ 52,  7,  8, 10},//	"2"8x10ローマ数字,
-	{ 61,  7,  8, 10},//	"3"8x10ローマ数字,
-	{ 70,  7,  8, 10},//	"4"8x10ローマ数字,
+	{192,172, 40, 10},//	J,"Extra"40x10ローマ文字,
+	{218, 18, 32, 10},//	J,"Time:"32x10ローマ文字,
+	{193, 18, 24, 10},//	J,"fps"24x10ローマ文字,
+	{129,  7,  8, 10},//	"0"8x10ローマ数字,
+	{138,  7,  8, 10},//	"1"8x10ローマ数字,
+	{147,  7,  8, 10},//	"2"8x10ローマ数字,
+	{156,  7,  8, 10},//	"3"8x10ローマ数字,
+	{165,  7,  8, 10},//	"4"8x10ローマ数字,
 // [7]
-	{ 79,  7,  8, 10},//	"5"8x10ローマ数字,
-	{ 88,  7,  8, 10},//	"6"8x10ローマ数字,
-	{ 97,  7,  8, 10},//	"7"8x10ローマ数字,
-	{106,  7,  8, 10},//	"8"8x10ローマ数字,
-	{115,  7,  8, 10},//	"9"8x10ローマ数字,
-	{124,  7, 39, 10},//	"enemy"39x10ローマ文字,
-	{ 34,  0,  8,  6},//	"〇"8x6漢字,
-	{ 43,  0,  8,  6},//	"一"8x6漢字,
+	{174,  7,  8, 10},//	"5"8x10ローマ数字,
+	{183,  7,  8, 10},//	"6"8x10ローマ数字,
+	{192,  7,  8, 10},//	"7"8x10ローマ数字,
+	{201,  7,  8, 10},//	"8"8x10ローマ数字,
+	{210,  7,  8, 10},//	"9"8x10ローマ数字,
+	{192,183, 39, 10},//	"enemy"39x10ローマ文字,
+	{129,  0,  8,  6},//	"〇"8x6漢字,
+	{138,  0,  8,  6},//	"一"8x6漢字,
 // [8]
-	{ 52,  0,  8,  6},//	"二"8x6漢字,
-	{ 61,  0,  8,  6},//	"三"8x6漢字,
-	{ 70,  0,  8,  6},//	"四"8x6漢字,
-	{ 79,  0,  8,  6},//	"五"8x6漢字,
-	{ 88,  0,  8,  6},//	"六"8x6漢字,
-	{ 97,  0,  8,  6},//	"七"8x6漢字,
-	{106,  0,  8,  6},//	"八"8x6漢字,
-	{115,  0,  8,  6},//	"九"8x6漢字,
+	{147,  0,  8,  6},//	"二"8x6漢字,
+	{156,  0,  8,  6},//	"三"8x6漢字,
+	{165,  0,  8,  6},//	"四"8x6漢字,
+	{174,  0,  8,  6},//	"五"8x6漢字,
+	{183,  0,  8,  6},//	"六"8x6漢字,
+	{192,  0,  8,  6},//	"七"8x6漢字,
+	{201,  0,  8,  6},//	"八"8x6漢字,
+	{210,  0,  8,  6},//	"九"8x6漢字,
 
-/* [OBJ_BANK_08_PANEL] */
+/* [OBJ_BANK_08_TITLE] */
 
-/* --- パネル --- */
-/* [OBJ_BANK_03_PANEL_dummy] */ 	/*[予定]*/
+/* --- タイトル画面用バンク --- */
+/* [OBJ_BANK_03_TITLE_dummy] */ 	/*[予定]*/
 // [1]
-	{  0,  0,  8,  8},//	J,
-	{  0,  0,  8,  8},//	J,
-	{  0,  0,  8,  8},//	J,
-	{  0,  0,  8,  8},//	J,
-	{  0,  0,  8,  8},//	J,
+	{  0,  0,  8,  8},//	J,"東"logo
+	{  0,  0,  8,  8},//	J,"方"logo
+	{  0,  0,  8,  8},//	J,"模"logo
+	{  0,  0,  8,  8},//	J,"倣"logo
+	{  0,  0,  8,  8},//	J,"風"logo
 	{  0,  0,  8,  8},//	J,
 	{  0,  0,  8,  8},//	J,
 	{  0,  0,  8,  8},//	J,
@@ -772,14 +771,14 @@ static VIRTUAL_OBJ_STATE obj_status_table[(OBJ_BANK_MAX*OBJ_BANK_SIZE)/*(6*8*8)*
 	{ 96, 32, 31, 31},//	JIKI_PLAYER_07_MID, 	/* 中心4 */
 
 // [6]
-	{  0,112, 15, 15},//	JIKI_OPTION_01_00,/* 未使用 */
-	{  0,112, 15, 15},//	JIKI_OPTION_01_01,/* 未使用 */
-	{  0,112, 15, 15},//	JIKI_OPTION_01_02,/* 未使用 */
-	{  0,112, 15, 15},//	JIKI_OPTION_01_03,/* 未使用 */
-	{  0,112, 15, 15},//	JIKI_OPTION_01_04,/* 未使用 */
-	{  0,112, 15, 15},//	JIKI_OPTION_01_05,/* 未使用 */
-	{  0,112, 15, 15},//	JIKI_OPTION_01_06,/* 未使用 */
-	{  0,112, 15, 15},//	JIKI_OPTION_01_07,/* 未使用 */
+	{ 32, 96, 15, 15},//	JIKI_OPTION_01_00,/* 同じ */
+	{ 48, 96, 15, 15},//	JIKI_OPTION_01_01,/* 同じ */
+	{ 64, 96, 15, 15},//	JIKI_OPTION_01_02,/* 同じ */
+	{ 80, 96, 15, 15},//	JIKI_OPTION_01_03,/* 同じ */
+	{ 96, 96, 15, 15},//	JIKI_OPTION_01_04,/* 同じ */
+	{112, 96, 15, 15},//	JIKI_OPTION_01_05,/* 同じ */
+	{  0, 96, 15, 15},//	JIKI_OPTION_01_06,/* 同じ */
+	{ 16, 96, 15, 15},//	JIKI_OPTION_01_07,/* 同じ */
 
 // [2]				//	右へ移動のアニメーション	[中心→右側1→右側2→右側3→右側4→右側4→右側4→...]
 	{  0, 64, 31, 31},//	JIKI_PLAYER_08_RIGHT,	/* 右側1 */ 	/* 中より右 */
@@ -792,14 +791,14 @@ static VIRTUAL_OBJ_STATE obj_status_table[(OBJ_BANK_MAX*OBJ_BANK_SIZE)/*(6*8*8)*
 	{  0,  0, 31, 31},//	JIKI_ETC_03,		/* --- 未使用 --- */
 
 // [7]
-	{  0,112, 15, 15},//	JIKI_OPTION_02_00,/* 未使用 */
-	{  0,112, 15, 15},//	JIKI_OPTION_02_01,/* 未使用 */
-	{  0,112, 15, 15},//	JIKI_OPTION_02_02,/* 未使用 */
-	{  0,112, 15, 15},//	JIKI_OPTION_02_03,/* 未使用 */
-	{  0,112, 15, 15},//	JIKI_OPTION_02_04,/* 未使用 */
-	{  0,112, 15, 15},//	JIKI_OPTION_02_05,/* 未使用 */
-	{  0,112, 15, 15},//	JIKI_OPTION_02_06,/* 未使用 */
-	{  0,112, 15, 15},//	JIKI_OPTION_02_07,/* 未使用 */
+	{ 64, 96, 15, 15},//	JIKI_OPTION_02_00,/* 同じ */
+	{ 80, 96, 15, 15},//	JIKI_OPTION_02_01,/* 同じ */
+	{ 96, 96, 15, 15},//	JIKI_OPTION_02_02,/* 同じ */
+	{112, 96, 15, 15},//	JIKI_OPTION_02_03,/* 同じ */
+	{  0, 96, 15, 15},//	JIKI_OPTION_02_04,/* 同じ */
+	{ 16, 96, 15, 15},//	JIKI_OPTION_02_05,/* 同じ */
+	{ 32, 96, 15, 15},//	JIKI_OPTION_02_06,/* 同じ */
+	{ 48, 96, 15, 15},//	JIKI_OPTION_02_07,/* 同じ */
 
 // [3]
 	{161,  0, 94,149},//	JIKI_BOMBER_00, 	/* ボンバー発動時の立ち絵 */
@@ -812,14 +811,14 @@ static VIRTUAL_OBJ_STATE obj_status_table[(OBJ_BANK_MAX*OBJ_BANK_SIZE)/*(6*8*8)*
 	{ 47,112, 46, 37},//	JIKI_BOMBER_07, 	/* 黄札4 / 星4 / 十字炎4 / 蝶4 / ⑨ */
 
 // [8]
-	{  0,112, 15, 15},//	JIKI_OPTION_03_00,/* 未使用 */
-	{  0,112, 15, 15},//	JIKI_OPTION_03_01,/* 未使用 */
-	{  0,112, 15, 15},//	JIKI_OPTION_03_02,/* 未使用 */
-	{  0,112, 15, 15},//	JIKI_OPTION_03_03,/* 未使用 */
-	{  0,112, 15, 15},//	JIKI_OPTION_03_04,/* 未使用 */
-	{  0,112, 15, 15},//	JIKI_OPTION_03_05,/* 未使用 */
-	{  0,112, 15, 15},//	JIKI_OPTION_03_06,/* 未使用 */
-	{  0,112, 15, 15},//	JIKI_OPTION_03_07,/* 未使用 */
+	{ 96, 96, 15, 15},//	JIKI_OPTION_03_00,/* 同じ */
+	{112, 96, 15, 15},//	JIKI_OPTION_03_01,/* 同じ */
+	{  0, 96, 15, 15},//	JIKI_OPTION_03_02,/* 同じ */
+	{ 16, 96, 15, 15},//	JIKI_OPTION_03_03,/* 同じ */
+	{ 32, 96, 15, 15},//	JIKI_OPTION_03_04,/* 同じ */
+	{ 48, 96, 15, 15},//	JIKI_OPTION_03_05,/* 同じ */
+	{ 64, 96, 15, 15},//	JIKI_OPTION_03_06,/* 同じ */
+	{ 80, 96, 15, 15},//	JIKI_OPTION_03_07,/* 同じ */
 
 // [4]
 	{  0,151,197,104},//	JIKI_SHOT_00,		/* 長炎3 / [幽々子ボムの扇本体] */

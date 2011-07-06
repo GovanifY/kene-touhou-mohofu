@@ -2,7 +2,7 @@
 #include "game_main.h"
 
 /*---------------------------------------------------------
-	東方模倣風  ～ Toho Imitation Style.
+	東方模倣風	～ Toho Imitation Style.
 	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	輝夜 オプション
@@ -13,7 +13,7 @@
 	#define target_x256 		user_data00 	/* 目標x座標 */
 	#define target_y256 		user_data01 	/* 目標y座標 */
 	#define vvv256				user_data02 	/* 目標座標への到達割合 */
-	#define time_out			user_data03 	/* 制限時間 */
+	#define boss_time_out		user_data03 	/* 制限時間 */
 #endif
 //	ボス共通規格と同じ(boss.hインクルードしてもしなくても対応)
 #ifndef target_x256
@@ -22,8 +22,8 @@
 #ifndef target_y256
 	#define target_y256 		user_data01
 #endif
-#ifndef time_out
-	#define time_out			user_data03 	/* 制限時間 */
+#ifndef boss_time_out
+	#define boss_time_out		user_data03 	/* 制限時間 */
 #endif
 //
 
@@ -52,12 +52,12 @@ static void move_kaguya_doll(SPRITE *src)
 //
 	{
 		/*	旧作 & 咲夜風、回転ショット */
-		if (0 == ((src->time_out)&0x07))	/* 次のショットを撃つまでの間隔、時間。 */
+		if (0 == ((src->boss_time_out)&0x07))	/* 次のショットを撃つまでの間隔、時間。 */
 		{
 //			src->shot_angle1024 += (1024/18);	/* ショットを撃つ方向を、回転させる。 */
 //		//
-//			obj_send1->x256 					= (src->x256)+t256(6.0);/* 6.0[dots]右 */
-//			obj_send1->y256 					= (src->y256)+t256(4.0);/* 4.0[dots]下 */
+//			obj_send1->cx256 					= (src->cx256)+t256(6.0);/* 6.0[dots]右 */
+//			obj_send1->cy256 					= (src->cy256)+t256(4.0);/* 4.0[dots]下 */
 //			br.BULLET_REGIST_speed256			= (t256(1.5))+(((difficulty)<<6));	/* 弾速 */
 //			br.BULLET_REGIST_angle1024			= (src->shot_angle1024);			/* */
 //			br.BULLET_REGIST_div_angle1024		= (int)(1024/160);					/* 密着弾 */
@@ -68,14 +68,14 @@ static void move_kaguya_doll(SPRITE *src)
 		{
 			src->shot_angle1024 -= (16);		/* cv1024r(10)*/
 //
-				obj_send1->x256 						= (src->x256);
-				obj_send1->y256 						= (src->y256);
+				obj_send1->cx256 						= (src->cx256);
+				obj_send1->cy256 						= (src->cy256);
 				br.BULLET_REGIST_speed256				= t256(1.0);//t256(1+difficulty)/*(3+difficulty)*/ /*(4+difficulty)*/;
 //				br.BULLET_REGIST_angle1024				= (src->shot_angle1024&(256-1))+512+128;// /*deg512_2rad*/( (doll_data->br_angle512&(256-1) )+deg_360_to_512(90) );
 				br.BULLET_REGIST_angle1024				= (src->shot_angle1024&(256-1))-512-128;// /*deg512_2rad*/( (doll_data->br_angle512&(256-1) )+deg_360_to_512(90) );
 			//	br.BULLET_REGIST_jyuryoku_dan_delta256	= ((ra_nd()&0x03)+1);//t256(0.04)/*10*/
 				br.BULLET_REGIST_jyuryoku_dan_delta256	= ((ra_nd()&0x03)+2);//t256(0.04)
-				br.BULLET_REGIST_bullet_obj_type		= (BULLET_MARU8_00_AKA+(7));	/* 弾グラ */
+				br.BULLET_REGIST_bullet_obj_type		= (BULLET_MARU8_03_AOI);	/* 弾グラ */
 				br.BULLET_REGIST_regist_type			= REGIST_TYPE_02_GRAVITY02;
 				bullet_regist_vector();
 		}
@@ -86,10 +86,10 @@ static void move_kaguya_doll(SPRITE *src)
 	src->rotate_angle1024 += (2);
 	mask1024(src->rotate_angle1024);
 	#define HANKEI_45_DOT (45)				/* 半径 */
-	src->x256 = src->target_x256 + ((sin1024((src->rotate_angle1024))*(HANKEI_45_DOT))); 	/*CCW*/
-	src->y256 = src->target_y256 + ((cos1024((src->rotate_angle1024))*(HANKEI_45_DOT)));
+	src->cx256 = src->target_x256 + ((sin1024((src->rotate_angle1024))*(HANKEI_45_DOT)));	/*CCW*/
+	src->cy256 = src->target_y256 + ((cos1024((src->rotate_angle1024))*(HANKEI_45_DOT)));
 	#undef HANKEI_45_DOT
-	src->color32		= (src->color32 & 0x00ffffff) | ((src->time_out<<(23))&0xff000000);
+	src->color32		= (src->color32 & 0x00ffffff) | ((src->boss_time_out<<(23))&0xff000000);
 }
 
 
@@ -120,8 +120,8 @@ void add_zako_kaguya_dolls(SPRITE *src)
 			h->callback_loser		= lose_kaguya_doll;
 			h->callback_hit_enemy	= callback_hit_zako;
 	//
-			h->target_x256			= (src->x256);
-			h->target_y256			= (src->y256);
+			h->target_x256			= (src->cx256);
+			h->target_y256			= (src->cy256);
 	//
 			h->base_hp				= ((8*1024)-1); 	/* 8192==(8*1024) */
 			{
@@ -138,7 +138,7 @@ void add_zako_kaguya_dolls(SPRITE *src)
 		//
 			h->rotate_angle1024 	= i_angle1024;
 			h->shot_angle1024		= (0);
-			h->time_out 			= (0x01ff); 	/* 制限時間 */
+			h->boss_time_out			= (0x01ff); 	/* 制限時間 */
 		}
 	}
 }

@@ -1,8 +1,9 @@
 
 #include "game_main.h"
+#include "spell_card_value.h"/*スペカ撃つ場合に必要*/
 
 /*---------------------------------------------------------
-	東方模倣風  ～ Toho Imitation Style.
+	東方模倣風	～ Toho Imitation Style.
 	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	パチェ人形
@@ -14,11 +15,11 @@
 	#define target_x256 		user_data00 	/* 目標x座標 */
 	#define target_y256 		user_data01 	/* 目標y座標 */
 	#define vvv256				user_data02 	/* 目標座標への到達割合 */
-	#define time_out			user_data03 	/* 制限時間 */
+	#define boss_time_out		user_data03 	/* 制限時間 */
 #endif
 //	ボス共通規格と同じ(boss.hインクルードしてもしなくても対応)
-#ifndef time_out
-	#define time_out			user_data03 	/* 制限時間 */
+#ifndef boss_time_out
+	#define boss_time_out		user_data03 	/* 制限時間 */
 #endif
 //
 //----[ZAKO]
@@ -71,18 +72,24 @@ static void move_doll01(SPRITE *src)
 				radius = ((sin1024(cc1024))>>2)+16; /* 80==16+64 */
 			}
 		/*CCW*/
-			src->x256 = (obj_boss)->x256 + (/*(short)*/((sin1024((aa_angle1024))*radius)));
-			src->y256 = (obj_boss)->y256 + (/*(short)*/((cos1024((aa_angle1024))*radius)));
+//			SPRITE *obj_boss;
+//			obj_boss = &obj00[FIX_OBJ_08_BOSS];
+			src->cx256 = (global_obj_boss)->cx256 + (/*(short)*/((sin1024((aa_angle1024))*radius)));
+			src->cy256 = (global_obj_boss)->cy256 + (/*(short)*/((cos1024((aa_angle1024))*radius)));
 		}
 	}
-	if (SPELL_CARD_00_pache_000 < spell_card_number)
+	#if 0
+//	if ((SPELL_CARD_00E_pache_000+3) < spell_card_number)/*+3はnormal,hard,lunatic分 */
+	#else
+	if ((SPELL_CARD_11E_pache_bbb-1) < spell_card_number)/*-1は直前*/
+	#endif
 	{
 		if (0==(ra_nd()&(0xff)))
 		{
 			/* ショット */
 		//	b05_fire_flags &= (~(doll_data->identity_bit));/* off */
-			obj_send1->x256 					= (src->x256);
-			obj_send1->y256 					= (src->y256);
+			obj_send1->cx256 					= (src->cx256);
+			obj_send1->cy256 					= (src->cy256);
 			br.BULLET_REGIST_speed256			= (t256(1.5)+(difficulty<<6));
 			br.BULLET_REGIST_angle1024			= ANGLE_JIKI_NERAI_DAN;
 			br.BULLET_REGIST_div_angle1024		= (int)(1024/64);
@@ -105,52 +112,60 @@ static void move_doll02(SPRITE *src)
 //
 	cc1024 += (2);
 
-	switch (src->DOLL_DATA_state222)
+	if (0==src->DOLL_DATA_state222)
 	{
-	case 0:
-		src->x256 = (obj_boss)->x256 + (((src->DOLL_DATA_fix_angle1024))<<6);
-		src->y256 = (obj_boss)->y256 - t256(16);
+		{
+//			SPRITE *obj_boss;
+//			obj_boss = &obj00[FIX_OBJ_08_BOSS];
+			src->cx256 = (global_obj_boss)->cx256 + (((src->DOLL_DATA_fix_angle1024))<<6);
+			src->cy256 = (global_obj_boss)->cy256 - t256(16);
+		}
 	//	if (0==(com mon_boss_flags & FLG_MINI_DOLL))
 		{
 			src->DOLL_DATA_state222++;
 		}
-		break;
-	case 1:
+	}
+	else
+	if (1==src->DOLL_DATA_state222)
+	{
 		/* 下過ぎ(下過ぎると上が空きすぎるし、下に近すぎる) */
-		if (t256(28)/*offset*/ < src->y256)
+		if (t256(28)/*offset*/ < src->cy256)
 		{
-			src->y256 -= t256(1.414);/*fps_factor*/
+			src->cy256 -= t256(1.414);/*fps_factor*/
 		}
 		/* 適正範囲内(t256(25)ぐらい)、次へ */
-		if (t256(22)/*offset*/ < src->y256)
+		if (t256(22)/*offset*/ < src->cy256)
 		{
 			src->DOLL_DATA_state222++;
 		}
 		/* 上過ぎ(上過ぎると弾が落ちてこない) */
 		else
 		{
-			src->y256 += t256(1.414);/*fps_factor*/
+			src->cy256 += t256(1.414);/*fps_factor*/
 		}
-		break;
-	case 2:
+	}
+	else
+//	if (2==src->DOLL_DATA_state222)
+	{
 		{	src->DOLL_DATA_bwait--;}
 		if (src->DOLL_DATA_bwait <= 0)
 		{
 			src->DOLL_DATA_bwait = 5+(3-difficulty)*5;
 			src->shot_angle1024 -= (16);		/* cv1024r(10)*/
 //
-				obj_send1->x256 						= (src->x256);
-				obj_send1->y256 						= (src->y256);
+				obj_send1->cx256 						= (src->cx256);
+				obj_send1->cy256 						= (src->cy256);
+			//
+				const unsigned char u8_ra_nd03 = (ra_nd()&0x03);
 				br.BULLET_REGIST_speed256				= t256(1.0);//t256(1+difficulty)/*(3+difficulty)*/ /*(4+difficulty)*/;
 //				br.BULLET_REGIST_angle1024				= (src->shot_angle1024&(256-1))+512+128;// /*deg512_2rad*/( (doll_data->br_angle512&(256-1) )+deg_360_to_512(90) );
 				br.BULLET_REGIST_angle1024				= (src->shot_angle1024&(256-1))-512-128;// /*deg512_2rad*/( (doll_data->br_angle512&(256-1) )+deg_360_to_512(90) );
-			//	br.BULLET_REGIST_jyuryoku_dan_delta256	= ((ra_nd()&0x03)+1);//t256(0.04)/*10*/
-				br.BULLET_REGIST_jyuryoku_dan_delta256	= ((ra_nd()&0x03)+2);//t256(0.04)
-				br.BULLET_REGIST_bullet_obj_type		= (BULLET_MARU8_00_AKA+(7));	/* 弾グラ */
+			//	br.BULLET_REGIST_jyuryoku_dan_delta256	= (u8_ra_nd03+1);//t256(0.04)/*10*/
+				br.BULLET_REGIST_jyuryoku_dan_delta256	= (u8_ra_nd03+2);//t256(0.04)
+				br.BULLET_REGIST_bullet_obj_type		= (BULLET_MARU8_02_YUKARI+u8_ra_nd03);	/* 弾グラ */
 				br.BULLET_REGIST_regist_type			= REGIST_TYPE_02_GRAVITY02;
 				bullet_regist_vector();
 		}
-		break;
 	}
 }
 
@@ -204,7 +219,7 @@ global void add_zako_pache_dolls(SPRITE *src)
 			h->DOLL_DATA_fix_angle1024	= jj_angle1024;
 			jj_angle1024 += (AA_OFS85);
 			h->DOLL_DATA_state222		= (0);
-			h->time_out 				= (0x01ff); 	/* 制限時間 */
+			h->boss_time_out				= (0x01ff); 	/* 制限時間 */
 		}
 	}
 }

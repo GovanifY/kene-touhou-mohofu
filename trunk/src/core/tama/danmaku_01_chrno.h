@@ -24,11 +24,14 @@
 ---------------------------------------------------------*/
 static void danmaku_create_10_cirno_misogi(SPRITE *src)
 {
-	if (64==((src->boss_base_danmaku_time_out)))
+//	if ((64-1)==((src->boss_base_danmaku_time_out)))
+	if ((DANMAKU_0070_TIME-1)==((src->boss_base_danmaku_time_out)))
 	{
-		tmp_angleCCW65536_jikinerai(obj_player, src);/*自機ねらい角作成*/
+		SPRITE *zzz_player;
+		zzz_player = &obj00[FIX_OBJ_00_PLAYER];
+		tmp_angleCCW65536_src_nerai(zzz_player, src);/*自機ねらい角作成*/
 	}
-	else
+//	else
 //	if (0x40==((src->boss_base_danmaku_time_out)&0xc7))/* 8回(修正1-2-3-4-5-6-7弾:0wayは撃たないので撃つのは7回) */
 	if (0x00==((src->boss_base_danmaku_time_out)&0x07))/* 8回(修正1-2-3-4-5-6-7弾:0wayは撃たないので撃つのは7回) */
 	{
@@ -42,17 +45,18 @@ static void danmaku_create_10_cirno_misogi(SPRITE *src)
 		n_way = ((/*16*/7-((src->boss_base_danmaku_time_out)>>3))&7)+(1)+(difficulty>>1);
 		if (n_way)
 		{
-			obj_send1->x256 					= (src->x256);				/* 弾源x256 */
-			obj_send1->y256 					= (src->y256);				/* 弾源y256 */
+				/* 中心座標なので、オフセットなし==ボス中心から弾出す。 */
+			obj_send1->cx256 					= (src->cx256);				/* 弾源x256 */
+			obj_send1->cy256 					= (src->cy256);				/* 弾源y256 */
 		//
 			br.BULLET_REGIST_speed256			= (t256(2.0));				/* 弾速(2.5) */
 			br.BULLET_REGIST_angle65536 		= (src->tmp_angleCCW65536)-(n_way*65536/128);
 			br.BULLET_REGIST_div_angle65536 	= (int)(65536/(64));		/* 分割角度(1024[360/360度]を 64 分割) */	/* 1周をn分割した角度 */
-			br.BULLET_REGIST_bullet_obj_type	= BULLET_KOME_01_AOI;		/* [青米弾] になってるのは現在 氷弾 のグラが無いから */
+			br.BULLET_REGIST_bullet_obj_type	= BULLET_KOME_03_AOI;		/* [青米弾] になってるのは現在 氷弾 のグラが無いから */
 			br.BULLET_REGIST_n_way				= n_way;/* [nway] */
-			br.BULLET_REGIST_speed_offset		= (6);/*てすと*/
+			br.BULLET_REGIST_speed_offset		= t256(6);/*てすと*/
 		//	br.BULLET_REGIST_regist_type		= REGIST_TYPE_00_MULTI_VECTOR;/*現在種類が無い*/
-			bullet_regist_angle();/* bullet_regist_vector(); より若干シンプルな為、引数に互換がない。 */
+			bullet_regist_angle();
 		}
 	}
 }
@@ -64,6 +68,7 @@ static void danmaku_create_10_cirno_misogi(SPRITE *src)
 #if 0
 #endif
 
+
 /*---------------------------------------------------------
 	紅2面ボス チルノ	通常攻撃1(3/3)	自機狙い収束弾
 	-------------------------------------------------------
@@ -71,25 +76,6 @@ static void danmaku_create_10_cirno_misogi(SPRITE *src)
 #if 0
 #endif
 
-
-
-
-
-#if 1/* 角度弾を直接扱うので、本来 bullet_angle.c に入るべきもの。 */
-
-/*
-	角度弾では、ベクトル移動をしない。
-	代わりに基点座標として使う。
-*/
-#define tx256				vx256/* 基点座標x */
-#define ty256				vy256/* 基点座標y */
-
-#define radius256			user_data01 	/* 半径 */
-#define speed256			user_data02 	/* 加減速 */
-#define tra256				user_data03 	/* 加減速調整 */
-//#define mask				user_data04 	/* 画面外消去判定や反射機能 */
-
-#endif
 
 /*---------------------------------------------------------
 	パーフェクトフリーズの研究
@@ -124,10 +110,19 @@ static void danmaku_create_10_cirno_misogi(SPRITE *src)
 //
 	上記実験が 8分割なので、2弾目の角度は、16 分割離れた先の、16 分割程度の乱数値(0-4095)が良いと思われる。
 	( 8分割 == 16分割(固定値) + 16分割(乱数値) )
-
+	-------------------------------------------------------
+	★ 要修正:
+	パーフェクトフリーズの後追い弾(青丸)はやり直したら全然違った。
+	普通は止まって避けるから判らなかった。(っていうかワザワザ動く人居ないかと)
+	なんか動きながら避けると、構造がわかる。
+	ランダムとかじゃなくて、(８方向弾を)「三セット」(同時っぽく)撃って来るみたい。
+	(自機狙わない)自機狙い偶数弾。
+	初回時に自機狙い角a, b, cを作成(?)。
+	aとbとcは独立。
 ---------------------------------------------------------*/
 
-#define KOTEITI_7777	(7777)
+//#define KOTEITI_7777	(7777<<6)
+#define KOTEITI_7777	(497728)
 
 /*---------------------------------------------------------
 	パーフェクトフリーズ(枠つき12丸弾を全弾減速させる)
@@ -143,14 +138,14 @@ static void exchange_damnaku_chiruno_gensoku(void)
 	for (ii=0; ii<SPRITE_444POOL_MAX; ii++ )/* 全部調べる。 */
 	{
 		SPRITE *s;
-		s = &sprite_444pool[ii];
+		s = &obj44[ii];
 	//	if (check_type == (s->type) )	/* 矢印の青弾か赤弾なら */
-		if ((BULLET_MARU12_00_SIRO & 0xfff8) == (s->type & 0xfff8) )	/* 枠つき12丸弾なら */
+		if (is_tama_grouip08(BULLET_MARU12_00_SIRO) == is_tama_grouip08(s->type) )	/* 枠つき12丸弾なら */
 		{
 		//	s_change_meirin_yajirusi_one(s);
-		//	s->tra256						= (-6); 		/* (-5.12==98%)調整減速弾 x 1.0 */
-		//	s->tra256						= (-12);		/* (-5.12==98%)調整減速弾 x 2.0 */	/* -12==少し戻る */
-			s->tra256						= (-9); 		/* (-5.12==98%)調整減速弾 x 1.5 */
+		//	s->tra65536 					= t256(-6); 		/* (-5.12==98%)調整減速弾 x 1.0 */
+		//	s->tra65536 					= t256(-12);		/* (-5.12==98%)調整減速弾 x 2.0 */	/* -12==少し戻る */
+			s->tra65536 					= t256(-9); 		/* (-5.12==98%)調整減速弾 x 1.5 */
 		}
 	}
 }
@@ -166,33 +161,18 @@ static void exchange_damnaku_chiruno_tomeru(void)
 {
 //	int check_type;
 //	check_type = br.BULLET_REGIST_bullet_obj_type;/* 調べるタイプを受け取る */
-	int add_angle = 0;
 	int ii;
 	for (ii=0; ii<SPRITE_444POOL_MAX; ii++ )/* 全部調べる。 */
 	{
 		SPRITE *s;
-		s = &sprite_444pool[ii];
+		s = &obj44[ii];
 	//	if (check_type == (s->type) )	/* 矢印の青弾か赤弾なら */
-		if ((BULLET_MARU12_00_SIRO & 0xfff8) == (s->type & 0xfff8) )	/* 枠つき12丸弾なら */
+		if (is_tama_grouip08(BULLET_MARU12_00_SIRO) == is_tama_grouip08(s->type) )	/* 枠つき12丸弾なら */
 		{
-		//	s_change_meirin_yajirusi_one(s);
-			/* 弾の現在座標を、新基点座標とする。 */
-			s->tx256 = (s->x256);		/* 基点座標にセット */
-			s->ty256 = (s->y256);		/* 基点座標にセット */
-			s->radius256 = t256(0); 	/* 基点座標になったので半径は 0 にする。 */
-			/*	*/
-			s->tra256						= (0);		/* 調整加速弾 */
-			s->speed256 					= (0);		/* 弾速 */
-			#if 0
-		//	s->m_angleCCW1024				= (ra_nd()&((1024)-1)); 			/* 向き */	/* 向きは乱数でない気がする */
-			#else
-			/* 少なくとも乱数よりは本物に近い。 が、全然違う。 */
-			/* 加算固定値(KOTEITI_7777)以外の要因として、弾幕リストのサイズでループする為、弾幕リストのサイズを */
-			/* 現在の 1024 から、本物と同じ 640 に減らせば、似る可能性はある。 */
-			add_angle += (KOTEITI_7777);
-			s->m_angleCCW1024				= (add_angle>>6);			/* 向き */
-			#endif
+			s->tra65536 					= t256(0);		/* 調整加速弾 */
+			s->speed65536					= t256(0);		/* 弾速 */
 			s->type 						= (BULLET_MARU12_00_SIRO);
+			reflect_sprite_spec444(s, OBJ_BANK_SIZE_00_TAMA);	/* 弾グラと弾あたり判定を変更する。 */
 		}
 	}
 }
@@ -211,22 +191,38 @@ static void exchange_damnaku_chiruno_saikasoku(void)
 {
 //	int check_type;
 //	check_type = br.BULLET_REGIST_bullet_obj_type;/* 調べるタイプを受け取る */
+	int add_angle = 0;
 	int jj = 0;
 	int ii;
 	for (ii=0; ii<SPRITE_444POOL_MAX; ii++ )/* 全部調べる。 */
 	{
 		SPRITE *s;
-		s = &sprite_444pool[ii];
+		s = &obj44[ii];
 	//	if (check_type == (s->type) )	/* 矢印の青弾か赤弾なら */
-		if ((BULLET_MARU12_00_SIRO & 0xfff8) == (s->type & 0xfff8) )	/* 枠つき12丸弾なら */
+		if (is_tama_grouip08(BULLET_MARU12_00_SIRO) == is_tama_grouip08(s->type) )	/* 枠つき12丸弾なら */
 		{
+		//	s_change_meirin_yajirusi_one(s);
+			/* 弾の現在座標を、新基点座標とする。 */
+			s->tx256 = (s->cx256);		/* 基点座標にセット */
+			s->ty256 = (s->cy256);		/* 基点座標にセット */
+			s->radius256 = t256(0); 	/* 基点座標になったので半径は 0 にする。 */
+			/*	*/
+			#if 0
+		//	s->rotationCCW1024				= (ra_nd()&((1024)-1)); 			/* 向き */	/* 向きは乱数でない気がする */
+			#else
+			/* 少なくとも乱数よりは本物に近い。 が、全然違う。 */
+			/* 加算固定値(KOTEITI_7777)以外の要因として、弾幕リストのサイズでループする為、弾幕リストのサイズを */
+			/* 現在の 1024 から、本物と同じ 640 に減らせば、似る可能性はある。 */
+			add_angle += (KOTEITI_7777);
+			s->rotationCCW1024				= (add_angle>>6);			/* 向き */
+			#endif
 			jj++;
 		//	jj &= 0x07; 	// 2 3 4 5	6 7 8 9
 			jj &= 0x03; 	// 3 4 5 6
 		//	s_change_meirin_yajirusi_one(s);
-		//	s->tra256						= (6);		/* 調整加速弾 */
-		//	s->tra256						= (jj)+2;	/* (2 ... 9) 調整加速弾 */
-			s->tra256						= (jj)+3;	/* (3 ... 6) 調整加速弾 */
+		//	s->tra65536 					= t256(6);		/* 調整加速弾 */
+		//	s->tra65536 					= (jj<<8)+t256(2);	/* (2 ... 9) 調整加速弾 */
+			s->tra65536 					= (jj<<8)+t256(3);	/* (3 ... 6) 調整加速弾 */
 			/* (1は遅すぎたので除外) 9 だと速過ぎるかも */
 		}
 	}
@@ -320,13 +316,16 @@ static void danmaku_create_13_perfect_freeze(SPRITE *src)
 			#else
 			br.BULLET_REGIST_n_way					= (1+difficulty);	/* 模倣風なので、難易度調整 */		/* [2way] */	/* 1フレームに2弾 */
 			#endif
-		//	br.BULLET_REGIST_speed_offset			= (-5); 		/* (-5) (-3)調整減速弾 */	/* この方式になるか検討中 */
-			br.BULLET_REGIST_speed_offset			= (0);/*てすと*/
+		//	br.BULLET_REGIST_speed_offset			= t256(-5); 		/* (-5) (-3)調整減速弾 */	/* この方式になるか検討中 */
+			br.BULLET_REGIST_speed_offset			= t256(0);/*てすと*/
 		//	br.BULLET_REGIST_regist_type			= REGIST_TYPE_00_MULTI_VECTOR;		/* 現在これしかないが要る */
 			{
-				obj_send1->x256 					= (src->x256)+t256(25.0);				/* 弾源x256 */
-				obj_send1->y256 					= (src->y256)+t256(16.0);				/* 弾源y256 */
-			//	obj_send1->m_angleCCW1024			= (src->m_angleCCW1024);				/* 弾源y256 */
+				/* 中心座標なので、オフセットなし==ボス中心から弾出す。 */
+			//	obj_send1->cx256 					= (src->cx256)+t256(25.0);				/* 弾源x256 */
+			//	obj_send1->cy256 					= (src->cy256)+t256(16.0);				/* 弾源y256 */
+				obj_send1->cx256 					= (src->cx256);				/* 弾源x256 */
+				obj_send1->cy256 					= (src->cy256);				/* 弾源y256 */
+			//	obj_send1->rotationCCW1024			= (src->rotationCCW1024);				/* 弾源y256 */
 				bullet_regist_angle();	/* 角度弾として登録 */
 			}
 		}
@@ -343,22 +342,32 @@ static void danmaku_create_13_perfect_freeze(SPRITE *src)
 	//	if (0x00==((src->boss_base_danmaku_time_out)&0x03))
 		if (0x00==((ra_nd16)&0x0c00)) /* 25%の確率 */
 		{
+			#if 1/* 1:いちいち作成するっぽい。 */
+			{
+				SPRITE *zzz_player;
+				zzz_player = &obj00[FIX_OBJ_00_PLAYER];
+				tmp_angleCCW65536_src_nerai(zzz_player, src);/*自機ねらい角作成*/
+			}
+			#endif
 			int aaa_angle65536;
 			aaa_angle65536 = src->tmp_angleCCW65536;/*自機ねらい角*/
 			aaa_angle65536 -= (int)((65536*8)/(32));/* 弾目が自機狙い */
 			br.BULLET_REGIST_speed256				= (t256(2.5));		/* 弾速 */	/* (ra_nd16>>7) == 乱数(0-511) */
 		//	br.BULLET_REGIST_angle65536 			= (0/65536);				/* 下向き */
-			br.BULLET_REGIST_angle65536 			= (aaa_angle65536)+(ra_nd16&0x03ff); 			/* 下向き */
+			br.BULLET_REGIST_angle65536 			= (aaa_angle65536)+(ra_nd16&0x03ff);			/* 下向き */
 			br.BULLET_REGIST_div_angle65536 		= (65536/16);				/* 分割角度([360/360]度を16分割) */ 	/* (ra_nd16>>4) == 乱数(0-4095) */
 			br.BULLET_REGIST_bullet_obj_type		= BULLET_MARU10_03_AOI;
 			br.BULLET_REGIST_n_way					= (8);										/* [8way] */
-		//	br.BULLET_REGIST_speed_offset			= (-5); 		/* (-5) (-3)調整減速弾 */	/* この方式になるか検討中 */
-			br.BULLET_REGIST_speed_offset			= (0);/*てすと*/
+		//	br.BULLET_REGIST_speed_offset			= t256(-5); 		/* (-5) (-3)調整減速弾 */	/* この方式になるか検討中 */
+			br.BULLET_REGIST_speed_offset			= t256(0);/*てすと*/
 		//	br.BULLET_REGIST_regist_type			= REGIST_TYPE_00_MULTI_VECTOR;		/* 現在これしかないが要る */
 			{
-				obj_send1->x256 					= (src->x256)+t256(25.0);				/* 弾源x256 */
-				obj_send1->y256 					= (src->y256)+t256(16.0);				/* 弾源y256 */
-			//	obj_send1->m_angleCCW1024			= (src->m_angleCCW1024);				/* 弾源y256 */
+				/* 中心座標なので、オフセットなし==ボス中心から弾出す。 */
+			//	obj_send1->cx256 					= (src->cx256)+t256(25.0);				/* 弾源x256 */
+			//	obj_send1->cy256 					= (src->cy256)+t256(16.0);				/* 弾源y256 */
+				obj_send1->cx256 					= (src->cx256);				/* 弾源x256 */
+				obj_send1->cy256 					= (src->cy256);				/* 弾源y256 */
+			//	obj_send1->rotationCCW1024			= (src->rotationCCW1024);				/* 弾源y256 */
 				bullet_regist_angle();	/* 角度弾として登録 */
 			}
 		}
@@ -382,15 +391,83 @@ static void danmaku_create_13_perfect_freeze(SPRITE *src)
 		exchange_damnaku_chiruno_saikasoku();/*再加速*/
 	}
 	#else
-	switch((src->boss_base_danmaku_time_out))
-	{
-	case (7<<6):	exchange_damnaku_chiruno_gensoku();/*減速開始*/ 	break;
-	case (6<<6):	exchange_damnaku_chiruno_tomeru();/*全てストップ*/
-					tmp_angleCCW65536_jikinerai(obj_player, src);/*自機ねらい角作成*/
-					break;
-	case (5<<6):	exchange_damnaku_chiruno_saikasoku();/*再加速*/ 	break;
-	}
+	if ((7<<6)==(src->boss_base_danmaku_time_out))	{	exchange_damnaku_chiruno_gensoku();/*減速開始*/ 	}
+	else
+	if ((6<<6)==(src->boss_base_danmaku_time_out))	{	exchange_damnaku_chiruno_tomeru();/*全てストップ*/	}
+	else
+	if ((5<<6)==(src->boss_base_danmaku_time_out))	{	exchange_damnaku_chiruno_saikasoku();/*再加速*/ 	}
 	#endif
 
 }
 #endif
+					#if 0/* 0:いちいち作成するっぽい。 */
+					{
+						SPRITE *zzz_player;
+						zzz_player = &obj00[FIX_OBJ_00_PLAYER];
+						tmp_angleCCW65536_src_nerai(zzz_player, src);/*自機ねらい角作成*/
+					}
+					#endif
+
+
+
+/*---------------------------------------------------------
+	雪符「ダイアモンドブリザード」
+	-------------------------------------------------------
+	チルノの周りで氷弾をばら撒く
+	微妙に減速弾っぽい。
+		1.チルノの周り離れた位置から発弾。(ランダム?)
+		2.ある程度まで広がる。
+		3.微減速弾。
+---------------------------------------------------------*/
+
+static void danmaku_create_16_diamond_blizzard(SPRITE *src)
+{
+	if (0==((src->boss_base_danmaku_time_out)&0x1f))
+	{
+	//	voice_play(VOICE14_BOSS_KOUGEKI_01, TRACK04_TEKIDAN);
+		bullet_play_04_auto(VOICE16_BOSS_KYUPIN);
+	//	voice_play(VOICE16_BOSS_KYUPIN, TRACK04_TEKIDAN);
+	}
+//	if (0==((src->boss_base_danmaku_time_out)&0x07))
+	{
+	//	voice_play(VOICE14_BOSS_KOUGEKI_01, TRACK04_TEKIDAN);
+	//	bullet_play_04_auto(VOICE14_BOSS_KOUGEKI_01);
+		{
+			const u32 ra_nd32 = (ra_nd()/*&0xffff*/);
+		//	obj_send1->cx256 					= (src->cx256)-t256(64)+(ra_nd32&0x7f00);				/* 弾源x256 */
+		//	obj_send1->cy256 					= (src->cy256)-t256(32)+((ra_nd32>>8)&0x3f00);			/* 弾源y256 */
+		/* 中心座標なので、オフセットなし==ボス中心から弾出す。 */
+			obj_send1->cx256 					= (src->cx256)-t256(64)+(ra_nd32&0x7f00);				/* 弾源x256 */
+			obj_send1->cy256 					= (src->cy256)-t256(32)+((ra_nd32>>8)&0x3f00);			/* 弾源y256 */
+		//
+		//	br.BULLET_REGIST_speed256			= (t256(1.0));				/* 弾速(2.5) */
+			br.BULLET_REGIST_speed256			= (t256(0.0));				/* 弾速(2.5) */
+			br.BULLET_REGIST_angle65536 		= (ra_nd32);
+		//	br.BULLET_REGIST_div_angle65536 	= (int)(65536/(64));		/* 分割角度(1024[360/360度]を 64 分割) */	/* 1周をn分割した角度 */
+			br.BULLET_REGIST_div_angle65536 	= (ra_nd32);				/* 分割角度(1024[360/360度]を 64 分割) */	/* 1周をn分割した角度 */
+			br.BULLET_REGIST_bullet_obj_type	= BULLET_KOME_03_AOI;		/* [青米弾] になってるのは現在 氷弾 のグラが無いから */
+		//	br.BULLET_REGIST_n_way				= (1);/* [nway] */
+			br.BULLET_REGIST_n_way				= (3);/* [nway] */
+		//	br.BULLET_REGIST_speed_offset		= t256(6);/* (6)...つええ てすと*/
+			br.BULLET_REGIST_speed_offset		= t256(2);/* てすと*/
+		//	br.BULLET_REGIST_regist_type		= REGIST_TYPE_00_MULTI_VECTOR;/*現在種類が無い*/
+			bullet_regist_angle();
+		}
+	}
+}
+
+/*
+	最強「エターナルフォースブリザード」
+	(Eternal Force Blizzard, EFB)
+
+	エターナルフォースブリザード
+		一瞬で相手の周囲の大気ごと氷結させる
+		相手は死ぬ
+
+	2ちゃんねるのニュース速報板のスレッド(通称VIP)で考え出された魔法(必殺技？)
+	あまりのクォリティの高さに様々なAAが作られる。
+	また、多くの閲覧者に自分も過去に同じような事を考えていたと言うトラウマを呼び覚まさせた。
+
+*/
+
+

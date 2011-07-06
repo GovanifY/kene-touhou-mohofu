@@ -2,7 +2,7 @@
 #include "game_main.h"
 
 /*---------------------------------------------------------
-	東方模倣風  ～ Toho Imitation Style.
+	東方模倣風	～ Toho Imitation Style.
 	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	キーコンフィグ
@@ -115,8 +115,8 @@ static void key_config_local_work(void)
 #define MAX_MENU_02 			(2)
 #define MAX_DEFAULT_MAP_04		(4)
 
-	static int key_setting[KEY_CONFIG_MENU_MAX]; 						// 数字=ボタン変数
-	static const int const_pad_setting[KEY_CONFIG_MENU_MAX/*11*/] =		// 数字=機能定数
+	static int key_setting[KEY_CONFIG_MENU_MAX];						// 数字=ボタン変数
+	static const int const_pad_setting[KEY_CONFIG_MENU_MAX/*11*/] = 	// 数字=機能定数
 	{	// 数字 = 機能定数 並び。	[[ 選択する並び順序 ]]
 		PSP_KEY_NONE,			//	KINOU_00_NONE,
 		PSP_KEY_SELECT, 		//	KINOU_01_SELECT,
@@ -150,7 +150,7 @@ static void key_config_local_work(void)
 	switch ((u8)(my_ppp_loop))
 	{
 	case (KEY_CONFIG_STATE_00_INIT):
-		play_music_num(BGM_21_menu02);
+		play_music_num(BGM_22_menu02);
 		load_SDL_bg(BG_TYPE_02_key_config);
 		#if 0
 		//	システム(PSPのハードウェア)順
@@ -270,7 +270,7 @@ static void key_config_local_work(void)
 						voice_play(VOICE02_MENU_SELECT, TRACK01_EXPLODE);/*テキトー*/
 					}
 					else
-					if (my_pad & PSP_KEY_RIGHT)	// 右ボタン入力
+					if (my_pad & PSP_KEY_RIGHT) // 右ボタン入力
 					{
 						key_setting_default_type++;
 						key_setting_default_type &= (4-1);
@@ -287,13 +287,13 @@ static void key_config_local_work(void)
 				else
 				if (KEY_CONFIG_MENU_13_QUIT == menu_cursor1)	// 項目[ QUIT ] を選んでいる場合
 				{
-					if (my_pad & PSP_KEY_BOMB_CANCEL) 	// キャンセルボタン入力
+					if (my_pad & PSP_KEY_BOMB_CANCEL)	// キャンセルボタン入力
 					{
 						voice_play(VOICE04_SHIP_HAKAI, TRACK03_SHORT_MUSIC/*TRACK01_EXPLODE*/);/* 自機死に音は、なるべく重ねない */
 						my_ppp_loop++;// = (KEY_CONFIG_STATE_06_FADE_INIT);
 					}
 					else
-					if (my_pad & PSP_KEY_SHOT_OK) 	// ショットボタン入力
+					if (my_pad & PSP_KEY_SHOT_OK)	// ショットボタン入力
 					{
 						int saiteigen_exsist;	// 存在確認用。0で存在しない。存在しないとメニューを抜けれない。
 						saiteigen_exsist = 0;
@@ -360,7 +360,7 @@ static void key_config_local_work(void)
 							if ((KINOU_00_NONE) > menu_cursor2) 	{	menu_cursor2 = (KINOU_13_MAX-1); }
 						}
 						else
-						if (my_pad & PSP_KEY_RIGHT)			// 右ボタン入力
+						if (my_pad & PSP_KEY_RIGHT) 		// 右ボタン入力
 						{
 							menu_cursor2++;
 							if ((KINOU_13_MAX-1) < menu_cursor2)	{	menu_cursor2 = KINOU_00_NONE; }
@@ -431,7 +431,7 @@ static void key_config_local_work(void)
 		}
 		break;
 	case (KEY_CONFIG_STATE_06_FADE_INIT):
-		play_music_num(BGM_22_menu01);
+		play_music_num(BGM_23_menu01);
 		load_SDL_bg(BG_TYPE_00_title_bg);
 		bg_alpha_aaa		= (0);
 		my_ppp_loop++;// = (KEY_CONFIG_STATE_07_FADE_OUT);

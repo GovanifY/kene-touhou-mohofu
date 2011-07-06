@@ -2,7 +2,7 @@
 #include "game_main.h"
 
 /*---------------------------------------------------------
-	東方模倣風  ～ Toho Imitation Style.
+	東方模倣風	～ Toho Imitation Style.
 	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	pspの起動ルーチン等
@@ -33,15 +33,15 @@
 	PSP module info section
 ---------------------------------------------------------*/
 #if 0
-PSP_THREAD_ATTR_VFPU VFPUの利用を有効にします
-PSP_THREAD_ATTR_USER ユーザモードでスレッドを起動します。親スレッドがユーザモードの場合は、特に指定しなくともユーザモードで起動されます。
-SP_THREAD_ATTR_USBWLAN USB/WlanAPIで使われています。通常、指定することはありません
-PSP_THREAD_ATTR_VSH VSHAPIで使われています。通常、指定することはありません。
-PSP_THREAD_ATTR_SCRATCH_SRAM スクラッチパッドの利用を許可します。FW1.0では使われておらず、特に指定しなくとも自由に利用が可能です。
-PSP_THREAD_ATTR_NO_FILLSTACK スレッド起動時にスタックを0xFFで埋めないように指定します。
-PSP_THREAD_ATTR_CLEAR_STACK スレッド終了時にスタックをゼロクリアします。
-THREAD_ATTR_USER PSP_THREAD_ATTR_USERの別名です
-THREAD_ATTR_VFPU PSP_THREAD_ATTR_VFPUの別名です
+PSP_THREAD_ATTR_VFPU			VFPUの利用を有効にします。
+PSP_THREAD_ATTR_USER			ユーザモードでスレッドを起動します。親スレッドがユーザモードの場合は、特に指定しなくともユーザモードで起動されます。
+SP_THREAD_ATTR_USBWLAN			USB/WlanAPIで使われています。通常、指定することはありません。
+PSP_THREAD_ATTR_VSH 			VSHAPIで使われています。通常、指定することはありません。
+PSP_THREAD_ATTR_SCRATCH_SRAM	スクラッチパッドの利用を許可します。FW1.0では使われておらず、特に指定しなくとも自由に利用が可能です。
+PSP_THREAD_ATTR_NO_FILLSTACK	スレッド起動時にスタックを0xFFで埋めないように指定します。
+PSP_THREAD_ATTR_CLEAR_STACK 	スレッド終了時にスタックをゼロクリアします。
+THREAD_ATTR_USER				PSP_THREAD_ATTR_USERの別名です。
+THREAD_ATTR_VFPU				PSP_THREAD_ATTR_VFPUの別名です。
 enum PspThreadAttributes
 {
 	/** Enable VFPU access for the thread. */
@@ -65,23 +65,23 @@ enum PspThreadAttributes
 #endif
 
 //PSP_MODULE_INFO("Cube Sample", 0x0000, 1, 1);
-PSP_MODULE_INFO("KENE", 0x0000, 0, 4);	/* PSPのOSに教えてあげる名前。ユーザーモードで起動する。 */
-PSP_MAIN_THREAD_ATTR(			/* このプログラムが使うOS資源。*/
-	PSP_THREAD_ATTR_VFPU |			/* VFPUを使う */
-//	PSP_THREAD_ATTR_SCRATCH_SRAM |	/* SCRATCH_SRAM 使う(指定しないほうが望ましい) */
+PSP_MODULE_INFO("KENE", 0x0000, 0, 4);		/* PSPのOSに教えてあげる名前。ユーザーモードで起動する。 */
+PSP_MAIN_THREAD_ATTR(						/* このプログラムが使うOS資源。*/
+	PSP_THREAD_ATTR_VFPU |					/* VFPUを使う */
+//	PSP_THREAD_ATTR_SCRATCH_SRAM |			/* SCRATCH_SRAM 使う(指定しないほうが望ましい) */
 	/*	SCRATCH_SRAM は指定しなくてもデフォルトで使用可能である。
 		FW ver 1.00には無いので互換性を考慮するなら無くて構わない */
-//	PSP_THREAD_ATTR_NO_FILLSTACK |	/* 開始時にスタックを 0xFF で埋めつくさない。 */
+//	PSP_THREAD_ATTR_NO_FILLSTACK |			/* 開始時にスタックを 0xFF で埋めつくさない。 */
 	/* 0xffで埋めてくれた方が、バグ出しには都合が良いのでこのオプションは指定しない。 */
 	PSP_THREAD_ATTR_CLEAR_STACK |
 	/* 終了時にこのプログラムが使ったスタック(変数領域)をOSに消してもらう。 */
-	THREAD_ATTR_USER |			/* ユーザーモードで起動する。(kernel系コールを使わない。) */
-//	PSP_THREAD_ATTR_USBWLAN |	/* USB WLAN API使わない */
-//	PSP_THREAD_ATTR_VSH |		/* VSH API使わない(dark-alex氏でないので VSH使いませんが、何か) */
+	THREAD_ATTR_USER |						/* ユーザーモードで起動する。(kernel系コールを使わない。) */
+//	PSP_THREAD_ATTR_USBWLAN |				/* USB WLAN API使わない */
+//	PSP_THREAD_ATTR_VSH |					/* VSH API使わない(dark-alex氏でないので VSH使いませんが、何か) */
 	0);
 
-PSP_MAIN_THREAD_STACK_SIZE_KB(32);		/* (プログラムが使用する変数の)スタック領域のサイズ */
-										/* ここが大きいとmallocできる量がその分減る */
+PSP_MAIN_THREAD_STACK_SIZE_KB(32);			/* (プログラムが使用する変数の)スタック領域のサイズ */
+											/* ここが大きいとmallocできる量がその分減る */
 /* 2008年ぐらいの古い PSPSDK は -1(自動) に対応していないので -1 にするとハングアップする */
 #endif
 
@@ -100,6 +100,7 @@ static int exit_callback(int arg1, int arg2, void *common)
 	/* コールバック側から、メイン側の状態を操作する */
 	main_call_func = NULL;	/* 終了指示 */
 	#if 1
+	/* 本来 main_call_func は セマフォ管理すべきかも。sceKernelCreateSema()?? だけどしてない。 */
 	/* 要るかも */
 	sceKernelDelayThread(1000000);/* コールバック側が1秒待つ */
 	main_call_func = NULL;	/* もう一回終了指示 */
@@ -199,3 +200,90 @@ global int main(int argc, char *argv[])
 //	sceKernelExitGame();
 	return (0);/* ダミー(ここには絶対に来ない) */
 }
+
+#if 0
+/*---------------------------------------------------------
+	dummy signal
+	-------------------------------------------------------
+	うーん...
+---------------------------------------------------------*/
+#include <signal.h>
+#ifndef _SIGNAL_H_
+#define _SIGNAL_H_
+
+#include "_ansi.h"
+#include <sys/signal.h>
+
+_BEGIN_STD_C
+
+typedef int sig_atomic_t;		/* Atomic entity type (ANSI) */
+
+#define SIG_DFL ((_sig_func_ptr)0)		/* Default action */
+#define SIG_IGN ((_sig_func_ptr)1)		/* Ignore action */
+#define SIG_ERR ((_sig_func_ptr)-1) 	/* Error return */
+
+struct _reent;
+
+_sig_func_ptr _EXFUN(_signal_r, (struct _reent *, int, _sig_func_ptr));
+int _EXFUN(_raise_r, (struct _reent *, int));
+
+#ifndef _REENT_ONLY
+_sig_func_ptr _EXFUN(signal, (int, _sig_func_ptr));
+int _EXFUN(raise, (int));
+#endif
+
+_END_STD_C
+
+#endif /* _SIGNAL_H_ */
+
+global _sig_func_ptr signal(int aaa, _sig_func_ptr bbb)
+{
+	return (SIG_DFL);
+}
+#endif
+
+
+
+#if 0
+/*---------------------------------------------------------
+	dummy SDL's signal
+	-------------------------------------------------------
+	うーん...
+	-------------------------------------------------------
+---------------------------------------------------------*/
+#define NO_SIGNAL_H
+/* Public functions */
+int SDL_QuitInit(void)
+{
+#ifndef NO_SIGNAL_H
+		void (*ohandler)(int);
+
+		/* Both SIGINT and SIGTERM are translated into quit interrupts */
+		ohandler = signal(SIGINT,  SDL_HandleSIG);
+		if ( ohandler != SIG_DFL )
+				signal(SIGINT, ohandler);
+		ohandler = signal(SIGTERM, SDL_HandleSIG);
+		if ( ohandler != SIG_DFL )
+				signal(SIGTERM, ohandler);
+#endif /* NO_SIGNAL_H */
+
+		/* That's it! */
+		return(0);
+}
+
+#ifdef NO_SIGNAL_H
+
+/* No signals on this platform, nothing to do.. */
+
+void SDL_InstallParachute(void)
+{
+		return;
+}
+
+void SDL_UninstallParachute(void)
+{
+		return;
+}
+#endif /* NO_SIGNAL_H */
+
+#endif

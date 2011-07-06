@@ -12,7 +12,7 @@
 	専用ルーチンに分岐する予定(2009-11-13現在)です。
 ---------------------------------------------------------*/
 
-static void render_object_use_rot_zoom(/*TGameScreen *pclass,*/ TGameSprite *spr)
+static void render_object_use_rot_zoom(SPRITE *spr)
 {
 	/* --- 表示スイッチ */
 //	if (spr->used ==  0/*FA LSE*/) return;
@@ -25,12 +25,9 @@ static void render_object_use_rot_zoom(/*TGameScreen *pclass,*/ TGameSprite *spr
 	{
 		/* 角度は0-1023度 */
 		unsigned int rotation_angle1024;
-	//	rotation_angle512	= ((spr->rotation_1024z) / (128/*65536/512*/)); 	/* 角度は0-65535度なので0-511度へ変換。 */
-		rotation_angle1024	= ((spr->rotation_1024z) /*>> (7)*/);				/* 角度は0-1023度 */
-		#if (1==USE_SIN_TABLE)
-		sin_angle = (sin_tbl 512[/*rot_sin*/((/*OFFS_SIN512+*/rotation_angle512)&(512-1))]/*<<8*/);
-		cos_angle = (sin_tbl 512[/*rot_cos*/((	OFFS_COS512+  rotation_angle512)&(512-1))]/*<<8*/);
-		#else
+	//	rotation_angle512	= ((spr->rotationCCW1024) / (128/*65536/512*/));	/* 角度は0-65535度なので0-511度へ変換。 */
+		rotation_angle1024	= ((spr->rotationCCW1024) /*>> (7)*/);				/* 角度は0-1023度 */
+		#if 1
 	//	sin_angle = (int)(int256_sin1024(/*rot_sin*/((/*OFFS_SIN512+*/			  rotation_angle512+rotation_angle512)&(1024-1)))/*<<8*/);
 	//	cos_angle = (int)(int256_sin1024(/*rot_cos*/((	OFFS_COS512+OFFS_COS512+  rotation_angle512+rotation_angle512)&(1024-1)))/*<<8*/);
 		sin_angle = (int)(int256_sin1024(/*rot_sin*/((/*OFFS_SIN1024+*/ 		  rotation_angle1024)&(1024-1)))/*<<8*/);
@@ -51,7 +48,7 @@ static void render_object_use_rot_zoom(/*TGameScreen *pclass,*/ TGameSprite *spr
 			#endif
 		#else
 //	unsigned int blendlevel = (((spr->alpha & 0xff) << 24) | 0x00ffffff);
-	unsigned int blendlevel = (spr->color8888);
+	unsigned int blendlevel = (spr->color32);
 		#endif
 	#endif
 
@@ -82,8 +79,10 @@ static void render_object_use_rot_zoom(/*TGameScreen *pclass,*/ TGameSprite *spr
 	unsigned int/*short*/ pos = 0;
 	unsigned int/*short*/ w_size;
 	w_size	= SLICE_64_SIZE;
-	unsigned int/*short*/ x_pos = ((spr->x256>>8));
-	unsigned int/*short*/ y_pos = ((spr->y256>>8));
+//	unsigned int/*short*/ x_pos = ((spr->cx256>>8));
+//	unsigned int/*short*/ y_pos = ((spr->cy256>>8));
+	unsigned int/*short*/ x_pos = ((spr->cx256>>8)-(spr->w >> 1));/* 中心座標から画像サイズの半分を引き、左上座標を計算 */
+	unsigned int/*short*/ y_pos = ((spr->cy256>>8)-(spr->h >> 1));/* 中心座標から画像サイズの半分を引き、左上座標を計算 */
 	i = 0;
 	for (; i<count4; )
 	{
@@ -133,19 +132,21 @@ static void render_object_use_rot_zoom(/*TGameScreen *pclass,*/ TGameSprite *spr
 		/* --- 回転拡大処理 */
 		int center_x;
 		int center_y;
-		center_x = ((spr->x256>>8)		) + (spr->w >> 1);/*/2*/
-		center_y = ((spr->y256>>8)		) + (spr->h >> 1);/*/2*/
+//		center_x = ((spr->cx256>>8)		) + (spr->w >> 1);/*/2*/
+//		center_y = ((spr->cy256>>8)		) + (spr->h >> 1);/*/2*/
+		center_x = ((spr->cx256>>8)		) ;/*/2*/
+		center_y = ((spr->cy256>>8)		) ;/*/2*/
 		#if (1==USE_ZOOM_XY)
 		int zoom_x256;
 		int zoom_y256;
-	//	zoom_x256 = (spr->zoom_x256) * ((65536/256));	/* 拡大率は0-256倍なので0-65536倍へ変換。 */
-	//	zoom_y256 = (spr->zoom_y256) * ((65536/256));	/* 拡大率は0-256倍なので0-65536倍へ変換。 */
-		zoom_x256 = (spr->zoom_x256) /*<< (8)*/;		/* 拡大率は0-256倍なので0-65536倍へ変換。 */
-		zoom_y256 = (spr->zoom_y256) /*<< (8)*/;		/* 拡大率は0-256倍なので0-65536倍へ変換。 */
+	//	zoom_x256 = (spr->m_zoom_x256) * ((65536/256)); /* 拡大率は0-256倍なので0-65536倍へ変換。 */
+	//	zoom_y256 = (spr->m_zoom_y256) * ((65536/256)); /* 拡大率は0-256倍なので0-65536倍へ変換。 */
+		zoom_x256 = (spr->m_zoom_x256) /*<< (8)*/;		/* 拡大率は0-256倍なので0-65536倍へ変換。 */
+		zoom_y256 = (spr->m_zoom_y256) /*<< (8)*/;		/* 拡大率は0-256倍なので0-65536倍へ変換。 */
 		#else //(0==USE_ZOOM_XY)
 		int zoom_xy256;
-	//	zoom_xy256 = (spr->zoom_xy256) * ((65536/256)); /* 拡大率は0-256倍なので0-65536倍へ変換。 */
-		zoom_xy256 = (spr->zoom_xy256) /*<< (8)*/;		/* 拡大率は0-256倍なので0-65536倍へ変換。 */
+	//	zoom_xy256 = (spr->m_zoom_xy256) * ((65536/256)); /* 拡大率は0-256倍なので0-65536倍へ変換。 */
+		zoom_xy256 = (spr->m_zoom_xy256) /*<< (8)*/;		/* 拡大率は0-256倍なので0-65536倍へ変換。 */
 		#endif/* (1==USE_ZOOM_XY) */
 		unsigned int j;
 		for (j=0; j<4; j++)

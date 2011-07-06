@@ -5,7 +5,7 @@
 ---------------------------------------------------------*/
 
 /* --- 汎用スプライトを一枚スクリーンに貼り付ける */
-static void render_object_no_rot_zoom(/*TGameScreen *pclass,*/ TGameSprite *spr)
+static void render_object_no_rot_zoom(SPRITE *spr)
 {
 	/* --- 表示スイッチ */
 //	if (spr->used ==  0/*FA LSE*/) return;
@@ -24,7 +24,7 @@ static void render_object_no_rot_zoom(/*TGameScreen *pclass,*/ TGameSprite *spr)
 			#endif
 		#else
 //	unsigned int blendlevel = (((spr->alpha & 0xff) << 24) | 0x00ffffff);
-	unsigned int blendlevel = (spr->color8888);
+	unsigned int blendlevel = (spr->color32);
 		#endif
 	#endif
 
@@ -57,8 +57,8 @@ static void render_object_no_rot_zoom(/*TGameScreen *pclass,*/ TGameSprite *spr)
 	unsigned int/*short*/ pos = 0;
 	unsigned int/*short*/ w_size;
 	w_size	= SLICE_64_SIZE;
-	unsigned int/*short*/ x_pos = ((spr->x256>>8));
-	unsigned int/*short*/ y_pos = ((spr->y256>>8));
+	unsigned int/*short*/ x_pos = ((spr->cx256>>8)-(spr->w >> 1));/* 中心座標から画像サイズの半分を引き、左上座標を計算 */
+	unsigned int/*short*/ y_pos = ((spr->cy256>>8)-(spr->h >> 1));/* 中心座標から画像サイズの半分を引き、左上座標を計算 */
 	for (; i<count2; )
 	{
 	//	if ((i1+1) < count)

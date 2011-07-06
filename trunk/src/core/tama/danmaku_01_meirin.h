@@ -50,8 +50,11 @@ static void danmaku_create_0a_houka_kenran(SPRITE *src)
 	};
 
 	//
-			obj_send1->x256 					= (src->x256)+t256(25.0);				/* 弾源x256 */
-			obj_send1->y256 					= (src->y256)+t256(16.0);				/* 弾源y256 */
+				/* 中心座標なので、オフセットなし==ボス中心から弾出す。 */
+	//		obj_send1->cx256 					= (src->cx256)+t256(25.0);				/* 弾源x256 */
+	//		obj_send1->cy256 					= (src->cy256)+t256(16.0);				/* 弾源y256 */
+			obj_send1->cx256 					= (src->cx256);				/* 弾源x256 */
+			obj_send1->cy256 					= (src->cy256);				/* 弾源y256 */
 //
 //	if ((0x10)==((src->boss_base_danmaku_time_out)&0x1f))/* (16回に1回)(128なら計8回) */
 	if ((0x40)==((src->boss_base_danmaku_time_out)&0x7f))/* (16回に1回)(128なら計8回) */
@@ -62,15 +65,17 @@ static void danmaku_create_0a_houka_kenran(SPRITE *src)
 		#endif
 	//
 		{
-			tmp_angleCCW65536_jikinerai(obj_player, src);/*自機狙い角作成*/
+			SPRITE *zzz_player;
+			zzz_player = &obj00[FIX_OBJ_00_PLAYER];
+			tmp_angleCCW65536_src_nerai(zzz_player, src);/*自機狙い角作成*/
 			br.BULLET_REGIST_speed256			= (t256(1.75)); 									/* 弾速 */	/* 3.5 2.5 2.0*/
 			br.BULLET_REGIST_angle65536 		= (src->tmp_angleCCW65536); 								/* 自機狙い弾 */
 			br.BULLET_REGIST_div_angle65536 	= houga_tbl[HOUGA_12_RED_DIV_ANGLE+difficulty]; 	/*(int)(1024/(48))*/	/* 分割角度(1024[360/360度]を 48 分割) */	/* 1周をn分割した角度 */
-			br.BULLET_REGIST_bullet_obj_type	= BULLET_KOME_02_AKA;								/* [赤色米弾] */
+			br.BULLET_REGIST_bullet_obj_type	= BULLET_KOME_01_AKA;								/* [赤色米弾] */
 			br.BULLET_REGIST_n_way				= houga_tbl[HOUGA_08_RED_NUMS+difficulty];			/*(48)*/				/* [48way] */	/* 発弾数 */
-			br.BULLET_REGIST_speed_offset		= (0);/*てすと*/
+			br.BULLET_REGIST_speed_offset		= t256(0);/*てすと*/
 		//	br.BULLET_REGIST_regist_type		= REGIST_TYPE_00_MULTI_VECTOR;/*現在種類が無い*/
-			bullet_regist_angle();/* bullet_regist_vector(); より若干シンプルな為、引数に互換がない。 */
+			bullet_regist_angle();
 		}
 	}
 //	if ((0x02)==((src->boss_base_danmaku_time_out)&0x03))/* (2回に1回)(8回毎に発弾) */
@@ -79,17 +84,17 @@ static void danmaku_create_0a_houka_kenran(SPRITE *src)
 		static int aaa_angle65536;
 		br.BULLET_REGIST_speed256			= (t256(1.75)); 										/* 弾速 */		/*3.5 2.5 2.0*/
 		br.BULLET_REGIST_div_angle65536 	= houga_tbl[HOUGA_04_YEL_DIV_ANGLE+difficulty]; 		/*(int)(1024/(6))*/ 	/* 分割角度(1024[360/360度]を 6 分割) */	/* 1周をn分割した角度 */
-		br.BULLET_REGIST_bullet_obj_type	= BULLET_KOME_05_KIIRO; 								/* [黄色米弾] */
+		br.BULLET_REGIST_bullet_obj_type	= BULLET_KOME_06_KI_IRO;								/* [黄色米弾] */
 		br.BULLET_REGIST_n_way				= houga_tbl[HOUGA_00_YEL_NUMS+difficulty];				/*(6)*/ 				/* [1way] */	/* 発弾数 */
-		br.BULLET_REGIST_speed_offset		= (0);/*てすと*/
+		br.BULLET_REGIST_speed_offset		= t256(0);/*てすと*/
 	//	br.BULLET_REGIST_regist_type		= REGIST_TYPE_00_MULTI_VECTOR;/*現在種類が無い*/
 //
 		// 順回り(下CCWだから、左回りCCW)
 		br.BULLET_REGIST_angle65536 		= ((/*0+*/(aaa_angle65536))&(65536-1)); 				/* 発射中心角度 / 特殊機能(自機狙い/他) */
-		bullet_regist_angle();/* bullet_regist_vector(); より若干シンプルな為、引数に互換がない。 */
+		bullet_regist_angle();
 		// 逆回り(下CCWだから、右回りCW)
 		br.BULLET_REGIST_angle65536 		= ((65536-(aaa_angle65536))&(65536-1)); 				/* 発射中心角度 / 特殊機能(自機狙い/他) */
-		bullet_regist_angle();/* bullet_regist_vector(); より若干シンプルな為、引数に互換がない。 */
+		bullet_regist_angle();
 		// 回転量
 		aaa_angle65536 += houga_tbl[HOUGA_16_YEL_ROTATE_ANGLE+difficulty];							/*(1024/(6*8))*/		/* 角度(1024[360/360度]を 48分割) */
 	}
@@ -118,7 +123,52 @@ static const s8 step_tbl[(4+4)] =
 ---------------------------------------------------------*/
 #if 1
 
-extern void exchange_damnaku_check_type(void);
+//extern void exchange_damnaku_check_type(void);
+/*---------------------------------------------------------
+
+---------------------------------------------------------*/
+
+static void s_change_meirin_yajirusi_one(SPRITE *h)
+{
+	/* 現在の弾座標を、基点座標にする。 */
+	h->tx256 = h->cx256;/*fps_factor*/
+	h->ty256 = h->cy256;/*fps_factor*/
+	//
+//	h->type 						= (BULLET_KUNAI12_00_AOI+1);/* 青弾→赤弾に変身 */
+//	h->speed256 					= t256(0.5);		/* 速度 */	/* 初速(打ち出し速度) */
+//	h->speed256 					= t256(0.0)+((h->radius256)>>5);	/* 半径が大きい程、初速が速い */	/* 初速(打ち出し速度) */
+//	h->speed256 					= t256(0.0)+((h->radius256)>>6);	/* 半径が大きい程、初速が速い */	/* 初速(打ち出し速度) */
+	h->speed65536					= ((t256(0.0)+((h->radius256)>>6))<<8); /* 半径が大きい程、初速が速い */	/* 初速(打ち出し速度) */
+	h->radius256					= t256(0);/* 半径 */
+	h->tra65536 					= t256(1.0);		/* 調整加速弾 */
+	const int ao_aka_tbl[(2)]	=
+	{
+	//	 (1024/2)+(1024/32),/* 180/360ちょい回転 */ 	/* 青 */
+	//	-(1024/2)-(1024/32),/* 180/360ちょい回転 */ 	/* 赤 */
+		 (1024/2)+(1024/24),/* 180/360ちょい回転 */ 	/* 青 */
+		-(1024/2)-(1024/24),/* 180/360ちょい回転 */ 	/* 赤 */
+	};
+//	h->rotationCCW1024				+= (1024/2)+(1024/16);/* 180/360ちょい回転 */
+//	h->rotationCCW1024				+= (1024/2)+(1024/32);/* 180/360ちょい回転 */
+	h->rotationCCW1024				+= ao_aka_tbl[((br.BULLET_REGIST_bullet_obj_type)&1)];/* 180/360ちょい回転 */
+	mask1024(h->rotationCCW1024);
+}
+//global void exchange_damnaku_check_type(void)
+static void s_exchange_damnaku_check_type(void)
+{
+	int check_type;
+	check_type = br.BULLET_REGIST_bullet_obj_type;/* 調べるタイプを受け取る */
+	int ii;
+	for (ii=0; ii<SPRITE_444POOL_MAX; ii++ )/* 全部調べる。 */
+	{
+		SPRITE *s;
+		s = &obj44[ii];
+		if (check_type == (s->type) )	/* 矢印の青弾か赤弾なら */
+		{
+			s_change_meirin_yajirusi_one(s);
+		}
+	}
+}
 
 static void danmaku_create_12_aya_merin_test(SPRITE *src)
 {
@@ -153,12 +203,15 @@ a	1010
 			int check_type = BULLET_KUNAI12_00_AOI+1-((src->boss_base_danmaku_time_out>>5)&1);	/*+(0&1)*/	/*(BULLET_KUNAI12_01_AKA-1)*/
 			br.BULLET_REGIST_bullet_obj_type		= check_type;
 			br.BULLET_REGIST_n_way					= (24);//step_tbl[(difficulty+4)];/*(32)*/
-			br.BULLET_REGIST_speed_offset			= (-5); 		/* (-5) (-3)調整減速弾 */	/* この方式になるか検討中 */
+			br.BULLET_REGIST_speed_offset			= -t256(5); 		/* (-5) (-3)調整減速弾 */	/* この方式になるか検討中 */
 		//	br.BULLET_REGIST_regist_type			= REGIST_TYPE_00_MULTI_VECTOR;		/* 現在これしかないが要る */
 			{
-				obj_send1->x256 					= (src->x256)+t256(25.0);				/* 弾源x256 */
-				obj_send1->y256 					= (src->y256)+t256(16.0);				/* 弾源y256 */
-			//	obj_send1->m_angleCCW1024			= (src->m_angleCCW1024);				/* 弾源y256 */
+				/* 中心座標なので、オフセットなし==ボス中心から弾出す。 */
+			//	obj_send1->cx256 					= (src->cx256)+t256(25.0);				/* 弾源x256 */
+			//	obj_send1->cy256 					= (src->cy256)+t256(16.0);				/* 弾源y256 */
+				obj_send1->cx256 					= (src->cx256);				/* 弾源x256 */
+				obj_send1->cy256 					= (src->cy256);				/* 弾源y256 */
+			//	obj_send1->rotationCCW1024			= (src->rotationCCW1024);				/* 弾源y256 */
 				bullet_regist_angle();	/* 角度弾として登録 */
 			}
 		}
@@ -170,7 +223,36 @@ a	1010
 		/* 変身可能な弾の条件を設定 */
 		br.BULLET_REGIST_bullet_obj_type		= BULLET_KUNAI12_00_AOI+1-((src->boss_base_danmaku_time_out>>5)&1); /*+(0&1)*/	/*(BULLET_KUNAI12_01_AKA-1)*/
 		/* 今画面にある弾を全部調べて、弾を変身させる。 */
-		exchange_damnaku_check_type();
+		s_exchange_damnaku_check_type();
+	}
+	/* 雨 */
+	if (0x30>((src->boss_base_danmaku_time_out)&0xff))/* (256回に ??回) */
+	{
+		if (0==((src->boss_base_danmaku_time_out)&0x03))	// 4カウントに1回上に8way弾を撃つ
+		{
+				/* 中心座標なので、オフセットなし==ボス中心から弾出す。 */
+			obj_send1->cx256 						= (src->cx256);
+			obj_send1->cy256 						= (src->cy256);
+		//	obj_send1->cx256 						= (src->cx256)+t256(25.0);
+		//	obj_send1->cy256 						= (src->cy256)+t256(50.0);
+			//
+			unsigned int j;
+			for (j=(0); j<(8); j++)
+			{
+				/* ショット */
+			//	b05_fire_flags &= (~(doll_data->identity_bit));/* off */
+				br.BULLET_REGIST_speed256				= (t256(1.5)+(difficulty<<6));
+				br.BULLET_REGIST_angle1024				= (1024/4)+(1024/8)+(j<<5)+((src->boss_base_danmaku_time_out>>2)&0x3f);
+//				br.BULLET_REGIST_div_angle1024			= (int)(1024/64);
+//	//			br.BULLET_REGIST_bullet_obj_type		= BULLET_CAP16_04_KOME_SIROI;			/* [青白米弾] */	/* 弾グラ */
+	//			br.BULLET_REGIST_n_way					= (8);					/*(4-difficulty)*/
+//	//			br.BULLET_REGIST_regist_type			= REGIST_TYPE_02_GRAVITY02;
+				br.BULLET_REGIST_jyuryoku_dan_delta256	= ((ra_nd()&0x03)+2);//t256(0.04)
+				br.BULLET_REGIST_bullet_obj_type		= (BULLET_KOME_00_SIRO); 	/* 弾グラ */
+				br.BULLET_REGIST_regist_type			= REGIST_TYPE_02_GRAVITY02;
+				bullet_regist_vector();
+			}
+		}
 	}
 }
 #endif

@@ -5,7 +5,7 @@
 
 TARGET = kene
 
-PSP_EBOOT_TITLE = kene_r31
+PSP_EBOOT_TITLE = kene_r32_debug
 
 #RELESE_DATE = "2010/06/06"
 
@@ -18,9 +18,6 @@ PSP_LARGE_MEMORY = 1
 
 # よくわかんない 滝汗; が3.71以降(つまりpsp-2000拡張メモリ)対応ってこと(らしい)
 PSP_FW_VERSION = 371
-
-# (gnu標準の) libc を使わないで、(PSPSDKが用意したpsp用の) libpsplibc を使う。
-USE_PSPSDK_LIBC = 1
 
 #------------------------------------------------------------------------------
 # Compile option flag (主にデバッグ用)
@@ -170,6 +167,8 @@ PSPSDK = $(shell psp-config --pspsdk-path)
 
 LIBDIR =
 LDFLAGS =
+
+#LDFLAGS += -Wl,-Map=mohoufu.map
 
 #------------------- for debug
 
@@ -328,6 +327,18 @@ endif
 LIBS += -lz
 
 #LIBS += -lm
+
+
+#-------------------
+# libc 関連
+#-------------------
+
+# (gnu標準の) libc を使わないで、(PSPSDKが用意したpsp用の) libpsplibc を使う。
+#USE_PSPSDK_LIBC = 1
+#とりあえずコンパイルできない環境がありそうな気がするので止めとく。(-lcと同時にリンクしてる為)
+
+# うーん正直言ってnewlibとlibpsplibc両方リンクしてるのは良くないのですがSDLの都合で。(主に signal(); )
+# (r32)とりあえずnewlibのみで。(libpsplibc使わない)
 LIBS += -lc
 
 # smpeg は C++ ですが、libstdc++.a は使いません。
@@ -406,6 +417,7 @@ LIBS += -lpsprtc
 
 OBJDIRS += $(OBJ)
 OBJDIRS += $(OBJ)/core
+OBJDIRS += $(OBJ)/core/jiki
 OBJDIRS += $(OBJ)/core/douchu
 OBJDIRS += $(OBJ)/core/boss
 OBJDIRS += $(OBJ)/core/tama
@@ -439,7 +451,8 @@ OBJS += $(OBJ)/core/boss/boss_05_pache.o
 OBJS += $(OBJ)/core/boss/boss_04_aya.o
 OBJS += $(OBJ)/core/boss/boss_03_kaguya.o
 OBJS += $(OBJ)/core/boss/boss_02_mima.o
-OBJS += $(OBJ)/core/boss/boss_01_alice.o
+#OBJS += $(OBJ)/core/boss/boss_01_alice.o	# 模倣風標準機能ですべて対処出来るので固有機能はなし。
+OBJS += $(OBJ)/core/boss/boss_move.o
 #; ボスのオプション
 OBJS += $(OBJ)/core/boss/option_12_sakuya_baramaki.o
 OBJS += $(OBJ)/core/boss/option_10_sakuya_ryoute.o
@@ -447,6 +460,7 @@ OBJS += $(OBJ)/core/boss/option_09_sakuya_360knife.o
 OBJS += $(OBJ)/core/boss/option_08_sakuya_star.o
 OBJS += $(OBJ)/core/boss/option_07_sakuya_laser.o
 #
+OBJS += $(OBJ)/core/boss/option_15_pache_laser.o
 OBJS += $(OBJ)/core/boss/option_11_pache_doll.o
 #
 OBJS += $(OBJ)/core/boss/option_06_aya_momiji02.o
@@ -457,6 +471,7 @@ OBJS += $(OBJ)/core/boss/option_04_kaguya_tamanoe.o
 OBJS += $(OBJ)/core/boss/option_03_kaguya_houmotu.o
 OBJS += $(OBJ)/core/boss/option_02_mima_hosi.o
 #
+OBJS += $(OBJ)/core/boss/option_14_alice_doll_type_b.o
 OBJS += $(OBJ)/core/boss/option_01_alice_doll.o
 #; 中ボスもどき
 OBJS += $(OBJ)/core/douchu/chuu_boss.o
@@ -466,34 +481,35 @@ OBJS += $(OBJ)/core/douchu/chuu_boss.o
 #; ザコのオプション
 OBJS += $(OBJ)/core/douchu/option_50_homing.o
 #; ザコ
+OBJS += $(OBJ)/core/douchu/zako.o
 #	/* 魔方陣[A/B] */
-OBJS += $(OBJ)/core/douchu/zako_11_mahoujin.o
+#OBJS += $(OBJ)/core/douchu/zako_11_mahoujin.o
 #	/* 竜巻 陰陽玉 */
-OBJS += $(OBJ)/core/douchu/zako_10_inyou1.o
-OBJS += $(OBJ)/core/douchu/zako_11_tatsumaki1.o
+#OBJS += $(OBJ)/core/douchu/zako_10_inyou1.o
+#OBJS += $(OBJ)/core/douchu/zako_11_tatsumaki1.o
 #	/* 妖怪 */
-OBJS += $(OBJ)/core/douchu/zako_12_kakomi1.o
-OBJS += $(OBJ)/core/douchu/zako_04_aka_kedama.o
+#OBJS += $(OBJ)/core/douchu/zako_12_kakomi1.o
+#OBJS += $(OBJ)/core/douchu/zako_04_aka_kedama.o
 #	/* 毛玉 */
-OBJS += $(OBJ)/core/douchu/zako_03_yukari2.o
-OBJS += $(OBJ)/core/douchu/zako_06_midori_kedama1.o
-OBJS += $(OBJ)/core/douchu/zako_07_midori_kedama2.o
-OBJS += $(OBJ)/core/douchu/zako_08_kedama1.o
-OBJS += $(OBJ)/core/douchu/zako_09_kedama2.o
+#OBJS += $(OBJ)/core/douchu/zako_03_yukari2.o
+#OBJS += $(OBJ)/core/douchu/zako_06_midori_kedama1.o
+#OBJS += $(OBJ)/core/douchu/zako_07_midori_kedama2.o
+#OBJS += $(OBJ)/core/douchu/zako_08_kedama1.o
+#OBJS += $(OBJ)/core/douchu/zako_09_kedama2.o
 #	/* [C妖精]その他ザコ */
-OBJS += $(OBJ)/core/douchu/zako_01_obake1.o
-OBJS += $(OBJ)/core/douchu/zako_02_obake2.o
-OBJS += $(OBJ)/core/douchu/zako_05_karasu1.o
+#OBJS += $(OBJ)/core/douchu/zako_01_obake1.o
+#OBJS += $(OBJ)/core/douchu/zako_02_obake2.o
+#OBJS += $(OBJ)/core/douchu/zako_05_karasu1.o
 #	/* [B妖精]中妖精 */
-OBJS += $(OBJ)/core/douchu/zako_13_meido1.o
-OBJS += $(OBJ)/core/douchu/zako_14_meido2.o
-OBJS += $(OBJ)/core/douchu/zako_15_meido3.o
-OBJS += $(OBJ)/core/douchu/zako_16_meido4.o
+#OBJS += $(OBJ)/core/douchu/zako_13_meido1.o
+#OBJS += $(OBJ)/core/douchu/zako_14_meido2.o
+#OBJS += $(OBJ)/core/douchu/zako_15_meido3.o
+#OBJS += $(OBJ)/core/douchu/zako_16_meido4.o
 #	/* [A妖精]小妖精 */
-OBJS += $(OBJ)/core/douchu/zako_17_ao_yousei1.o
-OBJS += $(OBJ)/core/douchu/zako_18_ao_yousei2.o
-OBJS += $(OBJ)/core/douchu/zako_19_ao_yousei3.o
-OBJS += $(OBJ)/core/douchu/zako_20_ao_yousei4.o
+#OBJS += $(OBJ)/core/douchu/zako_17_ao_yousei1.o
+#OBJS += $(OBJ)/core/douchu/zako_18_ao_yousei2.o
+#OBJS += $(OBJ)/core/douchu/zako_19_ao_yousei3.o
+#OBJS += $(OBJ)/core/douchu/zako_20_ao_yousei4.o
 #; 敵以外だが敵扱い
 OBJS += $(OBJ)/core/douchu/kanji_text.o
 OBJS += $(OBJ)/core/douchu/game_clear.o
@@ -501,22 +517,24 @@ OBJS += $(OBJ)/core/douchu/clouds.o
 OBJS += $(OBJ)/core/douchu/bakuhatsu.o
 #
 OBJS += $(OBJ)/core/game_core.o
-OBJS += $(OBJ)/core/player.o
 
-OBJS += $(OBJ)/core/bonus.o
+OBJS += $(OBJ)/core/jiki/jiki.o
+OBJS += $(OBJ)/core/jiki/jiki_option.o
+OBJS += $(OBJ)/core/jiki/jiki_shot.o
+OBJS += $(OBJ)/core/jiki/jiki_bomber.o
+
+OBJS += $(OBJ)/core/jiki/bonus_item.o
 #---
 OBJS += $(OBJ)/core/draw/gu_load_texture.o
 OBJS += $(OBJ)/core/draw/gu_draw_screen.o
+OBJS += $(OBJ)/core/draw/score_panel.o
+
 
 OBJS += $(OBJ)/core/bg.o
 OBJS += $(OBJ)/core/font.o
 #---
-
 OBJS += $(OBJ)/core/audio.o
-
 #---
-OBJS += $(OBJ)/core/score_panel.o
-
 #OBJS += $(OBJ)/core/tiny_strcmp.o
 OBJS += $(OBJ)/core/load_stage.o
 
@@ -524,8 +542,8 @@ OBJS += $(OBJ)/core/load_stage.o
 OBJS += $(OBJ)/core/menu/title.o
 OBJS += $(OBJ)/core/menu/pause.o
 OBJS += $(OBJ)/core/menu/ask_continue.o
-OBJS += $(OBJ)/core/menu/stage_select.o
-OBJS += $(OBJ)/core/menu/select_player.o
+OBJS += $(OBJ)/core/menu/select_stage.o
+OBJS += $(OBJ)/core/menu/select_jiki.o
 
 OBJS += $(OBJ)/core/menu/game_over.o
 OBJS += $(OBJ)/core/menu/name_entry.o
@@ -571,26 +589,62 @@ endif
 #INCDIR += $(SRC)/core/.
 INCDIR += $(SRC)/core/include
 
-#CFLAGS += -O2
+##	CFLAGS += -O2
+	# 模倣風では、ここで指定しない。(このオプションは最適化の設定)
+
 CFLAGS += -G0
 CFLAGS += -Wall
+	# Warning があればすべて出力。
+	# 模倣風では -Werror なので Warning扱いは、エラー扱いにして即コンパイル中止。
 CFLAGS += -g
 
 CFLAGS += -std=gnu99
+	# 1999年の GNU 規格に沿った C言語コード とする。(暗黙の省略とか、voidポインタの扱いとか...)
+
 CFLAGS += -Werror
+	# Warning が発生した場合、エラー扱いにしてコンパイル中止。
 
 
-#	CFLAGS += -fomit-frame-pointer
+##	CFLAGS += -fomit-frame-pointer
+	# 模倣風では、ここで指定しない。 フレームポインタはプロファイラが使えなくなるので、後で設定。
+
+
+# C/C++言語で式の型に対する最適化の設定 h ttp://www.radiumsoftware.com/0304.html
+#	CFLAGS += -fstrict-aliasing
+	# このオプションを「指定した場合に」速度向上のためにメモリアクセスの最適化をする。(キャストに注意しないと動かない可能性あり、速い)
+	# -O2 -O3 では自動的に適用される。
 #	CFLAGS += -fno-strict-aliasing
-#	CFLAGS += -Wno-sign-compare
-#	CFLAGS += -Wunused
-#	CFLAGS += -Wpointer-arith
-#	CFLAGS += -Wundef
-#	CFLAGS += -Wformat
-#	CFLAGS += -Wwrite-strings
-#	CFLAGS += -Wdisabled-optimization
-#	CFLAGS += -Wbad-function-cast
+	# このオプションを「指定しない場合に」速度向上のためにメモリアクセスの最適化をする。(安全側、遅い)
+# 何も指定しない場合は -O2 -O3 なら「-fstrict-aliasing」(キャストに注意しないと動かない可能性あり、速い)
+##### 以下GCCの説明文
+	# コンパイルされている言語に適用可能な別名規則（aliasing rule）のうち
+	# 最も厳密なものをコンパイラが前提することを許します。
+	# これによって、 C（およびC++）では式の型に基く最適化を動作させることになります。
+	# 例えば、ある型のオブジェクトが別の型のオブジェクトと同一アドレスに位置することは、
+	# それら2つの型がほとんど同一でない限り、ないものと仮定されます。
+	# 例えば、 unsigned intがintの別名となることはあっても、 void*やdoubleの別名となることはありえません。
+	# また、文字型は他の任意の型の別名になりえます。 以下のようなコードに特に注意してください.
+	# 最後に書き込みが行われた共用体メンバとは異なるメンバから
+	# 読み込みを行う習慣（「type-punning」と呼ばれる） は一般的に見られます。
+	# `-fstrict-aliasing'を指定した場合でも、メモリが共用体型を通してアクセスされる場合にはtype-punningは許されます。
 
+
+
+# 全部調べた訳じゃないけど、どういう場合に Warning扱い にするかの設定。(たぶん) 
+	# 模倣風では -Werror なので Warning扱いは、エラー扱いにして即コンパイル中止。
+	CFLAGS += -Wno-sign-compare
+	CFLAGS += -Wunused
+	CFLAGS += -Wpointer-arith
+	CFLAGS += -Wundef
+	CFLAGS += -Wformat
+	CFLAGS += -Wwrite-strings
+	CFLAGS += -Wdisabled-optimization
+	CFLAGS += -Wbad-function-cast
+
+
+#	CFLAGS += -ftracer
+#	CFLAGS += -fstrength-reduce
+#	CFLAGS += -ffast-math
 
 CFLAGS += -ffast-math
 	# このオプションを指定すると、実行速度を最適化するという観点から、
@@ -599,17 +653,17 @@ CFLAGS += -ffast-math
 	# 浮動小数点値がNaN になることはないという仮定を行なう。 
 
 
-#CFLAGS += -funroll-all-loops
-#CFLAGS += -pipe
-#CFLAGS += -falign-functions
-#CFLAGS += -falign-jumps
-#CFLAGS += -falign-loops
-#CFLAGS += -falign-labels
-#CFLAGS += -freorder-blocks
-#CFLAGS += -fprefetch-loop-arrays
+#	CFLAGS += -funroll-all-loops
+#	CFLAGS += -pipe
+#	CFLAGS += -falign-functions
+#	CFLAGS += -falign-jumps
+#	CFLAGS += -falign-loops
+#	CFLAGS += -falign-labels
+#	CFLAGS += -freorder-blocks
+#	CFLAGS += -fprefetch-loop-arrays
 
 CFLAGS += -I/usr/local/pspdev/psp/include
-CFLAGS += -I/pspdev/psp/include/SDL
+OPTION_CFLAGS += -I/pspdev/psp/include/SDL
 
 
 # http://www.sra.co.jp/wingnut/gcc/gcc-j.html
@@ -633,8 +687,20 @@ else
 endif
 
 # $(shell $(SDL_CONFIG) --cflags) 
-#CXXFLAGS = $(CFLAGS) -fno-exceptions -fno-rtti -fsingle-precision-constant -mno-check-zero-division -ffast-math
-#CXXFLAGS = $(CFLAGS) -fno-exceptions -fno-rtti
+###
+#CXXFLAGS += $(CFLAGS)
+#CXXFLAGS += -fno-exceptions
+#CXXFLAGS += -fno-rtti
+#CXXFLAGS += -fsingle-precision-constant
+#CXXFLAGS += -mno-check-zero-division
+#CXXFLAGS += -ffast-math
+###
+#CXXFLAGS += $(CFLAGS)
+#CXXFLAGS += -fno-exceptions
+#CXXFLAGS += -fno-rtti
+###
+#CXXFLAGS += -fno-builtin-printf
+###
 #ASFLAGS = $(CFLAGS)
 
 CXXFLAGS += $(CFLAGS)
@@ -716,11 +782,15 @@ $(OBJ)/$(LIBTREMOR_DIR)/%.o: $(SRC)/$(LIBTREMOR_DIR)/%.c
 
 # Cゲームコアの場合(ライブラリとgnuプロファイラの扱いを変える)
 $(OBJ)/core/%.o: $(SRC)/core/%.c
-	psp-gcc -O3 -Werror $(CFLAGS) $(CORE_CFLAGS) -c $< -o $@
+	psp-gcc -O3 -Werror $(CFLAGS) $(OPTION_CFLAGS) $(CORE_CFLAGS) -c $< -o $@
 
 # 旧pngの場合
 #$(OBJ)/png/%.o: $(SRC)/png/%.c
 #	psp-gcc -O2 -Werror $(CFLAGS) $(LIB_CFLAGS) -c $< -o $@
+
+# SDL_mixerの場合
+$(OBJ)/SDL_mixer/%.o: $(SRC)/SDL_mixer/%.c
+	psp-gcc -O3 -Werror $(CFLAGS) $(LIB_CFLAGS) -c $< -o $@
 
 # その他のライブラリの場合
 $(OBJ)/%.o: $(SRC)/%.c
@@ -754,14 +824,42 @@ mk_dir:
 	@$(MD) -p $(subst //,\,$(sort $(OBJDIRS)))
 	@$(RM) -f PARAM.SFO
 
-DELTREE = @$(RM) -f -rd obj
+DELTREE_OBJ_ALL 	= @$(RM) -f -rd $(OBJ)
+DELTREE_SDL_MIXER	= @$(RM) -f -rd $(OBJ)/SDL_mixer
+DELTREE_OBJ_CORE	= @$(RM) -f -rd $(OBJ)/core
+DELTREE_OBJ_JIKI	= @$(RM) -f -rd $(OBJ)/core/jiki
 
+# SDL mixer のみ、リコンパイル用。
+mixer:
+	@echo Remove SDL mixer files.
+	@$(DELTREE_SDL_MIXER)
+
+# ゲームコアのみ、リコンパイル用。
 core:
 	@echo Remove shooting core files.
-	@$(RM) -f $(OBJ)/core/*.o
-	@$(RM) -f $(OBJ)/core/douchu/*.o
-	@$(RM) -f $(OBJ)/core/boss/*.o
-	@$(RM) -f $(OBJ)/core/draw/*.o
+	@$(DELTREE_OBJ_CORE)
+
+# ゲームコア自機のみ、リコンパイル用。 
+jiki:
+	@echo Remove shooting core jiki files.
+	@$(DELTREE_OBJ_JIKI)
+
+# あたり判定デバッグ機能、リコンパイル用。(game_main.hで設定)
+a:
+	@echo Remove atari debug files.
+	@$(RM) -f $(OBJ)/core/jiki/jiki.o
+	@$(RM) -f $(OBJ)/core/jiki/jiki_shot.o
+	@$(RM) -f $(OBJ)/core/jiki/jiki_bomber.o
+	@$(RM) -f $(OBJ)/core/my_math.o
+	@$(RM) -f $(OBJ)/core/sprite_bullet.o
+	@$(RM) -f $(OBJ)/core/score_panel.o
+
+#	@$(RM) -f $(OBJ)/core/*.o
+#	@$(RM) -f $(OBJ)/core/boss/*.o
+#	@$(RM) -f $(OBJ)/core/douchu/*.o
+#	@$(RM) -f $(OBJ)/core/draw/*.o
+#	@$(RM) -f $(OBJ)/core/menu/*.o
+#	@$(RM) -f $(OBJ)/core/tama/*.o
 
 font:
 	@echo Remove custom font files.
@@ -771,7 +869,7 @@ rr:
 	@echo Remove all temporaly files.
 	@$(RM) -f PARAM.SFO
 	@$(RM) -f *.elf
-	@$(DELTREE)
+	@$(DELTREE_OBJ_ALL)
 
 
 #------------------------------------------------------------------------------
@@ -783,6 +881,38 @@ rr:
 SDL_lib_bunkai:
 	cp $(PSPDEV)/psp/lib/libSDL.a $(OBJ)/SDL231/
 	ar xv $(OBJ)/SDL231/libSDL.a
+	rm -f arch.o
+	rm -f SDL_active.o
+	rm -f SDL_cdrom.o
+	rm -f SDL_cpuinfo.o
+	rm -f SDL_cursor.o
+	rm -f SDL_events.o
+	rm -f SDL_expose.o
+	rm -f SDL_gamma.o
+	rm -f SDL_getenv.o
+	rm -f SDL_joystick.o
+	rm -f SDL_keyboard.o
+	rm -f SDL_loadso.o
+	rm -f SDL_mixer_m68k.o
+	rm -f SDL_mixer_MMX.o
+	rm -f SDL_mixer_MMX_VC.o
+	rm -f SDL_mouse.o
+	rm -f SDL_pspevents.o
+	rm -f SDL_pspgl.o
+	rm -f SDL_pspmouse.o
+	rm -f SDL_quit.o
+	rm -f SDL_resize.o
+	rm -f SDL_stretch.o
+	rm -f SDL_syscdrom.o
+	rm -f SDL_syscond.o
+	rm -f SDL_sysjoystick.o
+	rm -f SDL_systimer.o
+	rm -f SDL_timer.o
+	rm -f SDL_yuv.o
+	rm -f SDL_yuv_mmx.o
+	rm -f SDL_yuv_sw.o
+	rm -f SDL_error.o
+	rm -f SDL_fatal.o
 	mv *.o $(OBJ)/SDL231/
 	mv $(OBJ)/SDL231/SDL_audio.o $(OBJ)/SDL231/audio/
 	mv $(OBJ)/SDL231/SDL_audiocvt.o $(OBJ)/SDL231/audio/

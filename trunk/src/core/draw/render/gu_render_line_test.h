@@ -18,29 +18,28 @@ static void gu_blit_lines(void)
 	int cos_angle;
 	{
 		/* 角度は0-65535度 */
-		static unsigned int rotation_angle65535;
-		rotation_angle65535 += 50;
+		static unsigned int rotation_angle65536;
+		rotation_angle65536 += (3);/*50*/
 	//
 		/* 角度は0-1023度 */
 		unsigned int rotation_angle1024;
 	//	rotation_angle512	= ((spr->rotation_1024z) / (128/*65536/512*/)); 	/* 角度は0-65535度なので0-511度へ変換。 */
 	//	rotation_angle1024	= ((spr->rotation_1024z) /*>> (7)*/);
-	//	rotation_angle512	= ((rotation_angle65535) >> (7));
-		rotation_angle1024	= ((rotation_angle65535) >> (6));
-		#if (1==USE_SIN_TABLE)
-		sin_angle = (sin_tbl 512[/*rot_sin*/((/*OFFS_SIN+*/rotation_angle512)&(512-1))]/*<<8*/);
-		cos_angle = (sin_tbl 512[/*rot_cos*/((	OFFS_COS+  rotation_angle512)&(512-1))]/*<<8*/);
-		#else
+	//	rotation_angle512	= ((rotation_angle65536) >> (7));
+		rotation_angle1024	= ((rotation_angle65536) >> (6));
+		#if 1
 	//	sin_angle = (int)(int256_sin1024(/*rot_sin*/((/*OFFS_SIN512+*/				rotation_angle512+rotation_angle512)&(1024-1)))/*<<8*/);
 	//	cos_angle = (int)(int256_sin1024(/*rot_cos*/((	OFFS_COS512+OFFS_COS512+	rotation_angle512+rotation_angle512)&(1024-1)))/*<<8*/);
 		sin_angle = (int)(int256_sin1024(/*rot_sin*/((/*OFFS_SIN1024+*/ 			rotation_angle1024)&(1024-1)))/*<<8*/);
 		cos_angle = (int)(int256_sin1024(/*rot_cos*/((	OFFS_COS1024+				rotation_angle1024)&(1024-1)))/*<<8*/);
 		#endif
 	}
-	int boss_center_x = ((boss_x256)>>8)+(16);
-	int boss_center_y = ((boss_y256)>>8)+(24);
-	int player_center_x = ((player->x256)>>8)+(16);
-	int player_center_y = ((player->y256)>>8)+(24);
+	int boss_center_x = ((boss_x256)>>8);/*+(16)*/
+	int boss_center_y = ((boss_y256)>>8);/*+(24)*/
+	SPRITE *zzz_player;
+	zzz_player = &obj00[FIX_OBJ_00_PLAYER];
+	int player_center_x = ((zzz_player->cx256)>>8);/*+(16)*/
+	int player_center_y = ((zzz_player->cy256)>>8);/*+(24)*/
 
 	/* --  を描画 */
 	/* テクスチャーがあるとテクスチャー優先でフラットポリゴンが描画出来ないので */
@@ -58,8 +57,8 @@ static void gu_blit_lines(void)
 		int e1y;		e1y = (boss_center_y);	/* (回転中心)仮にボスの座標y */
 		int p1x;		p1x = 0/*30*/;			/* (回転オフセット)レーザーオフセット距離x */
 		int p1y;		p1y = 64;				/* (回転オフセット)レーザーオフセット距離y */
-		int p2w;		p2w = 8;				/* レーザー幅の半分 */
-		int p2h;		p2h = 256;				/* レーザー長さ */
+		int p2w;		p2w = (8);				/* レーザー幅の半分 */
+		int p2h;		p2h = (256);				/* レーザー長さ */
 		/* [下CCW]下が 0度で反時計回りの角度系 */
 		int ifx;
 		int ify;

@@ -2,7 +2,7 @@
 #include "game_main.h"
 
 /*---------------------------------------------------------
-	東方模倣風  ～ Toho Imitation Style.
+	東方模倣風	～ Toho Imitation Style.
 	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	ステージ敵データー(dat)の読み込み
@@ -103,7 +103,7 @@ static void load_stage_add_entry(
 		"QUIT", 	/* ゲーム 全ステージ クリアー */
 		"BG",		/*	"BG_CONTROL"*/		/* ←システムコマンドなので英語にした */
 	//	ボス
-		"ボス", 	/* 共通化 */
+		"ボス", 	/* 共通化(ボススクリプト起動) */
 	/* 特殊敵[中型敵] */
 		"中ボス",
 //
@@ -139,8 +139,6 @@ static void load_stage_add_entry(
 		"青妖精4",	/*	"SPLASH",*/ 	//		追加
 	};
 //
-
-
 	/* 読み込んだコマンドを中間コード形式に変換する */
 	if ((255)==new_entry->user_255_code)
 	{
@@ -225,18 +223,6 @@ ne222:
 	後の対応が悪いと、後まで処理落ちするので、
 	後の対策が必須です。（無駄な時間待ち等）
 ---------------------------------------------------------*/
-		//
-//		#if (1==US E_ENDING_DEBUG)
-//		if (MA X_STAGE6_FOR_CHECK == player_now_stage/*continue_stage*/)
-//		{
-//		//	if (B07_AFTER_LOAD==pd_bo ssmode)
-//			if ((STATE_FLAG_10_IS_LOAD_SCRIPT|ST ATE_FLAG_11_IS_BOSS_DESTROY)==(pd_state_flag&(STATE_FLAG_10_IS_LOAD_SCRIPT|ST ATE_FLAG_11_IS_BOSS_DESTROY)))
-//			{
-//				load_stage_number=9;/*エンディングデバッグ用*/
-//			}
-//		}
-//		if (9!=load_stage_number)
-//		#endif //(1==US E_ENDING_DEBUG)
 
 extern void set_default_bullet_clip(void);
 
@@ -250,16 +236,16 @@ void load_stage(void)	/*int level*/	/* 元々int */
 	bg2_start_stage();				// [***090209		追加
 	enemy_set_random_seed(/*set_seed*/);	/* リプレイ対応出来るように、乱数系列の初期化。 */
 //	int level = player_now_stage;
-	player_now_stage++; 				/*(*level)++*/
+	pd.player_now_stage++;				/*(*level)++*/
 	// change music soundtrack
-	play_music_num(player_now_stage);	/* n面道中 */	 /*1+(*level)*/
+	play_music_num(pd.player_now_stage);	/* n面道中 */	 /*1+(*level)*/
 //
 //	int load_stage_number = player_now_stage;
 	{
 		{
-			pd_state_flag &= (~(STATE_FLAG_05_IS_BOSS));/*ボスoff*/
+			pd.state_flag &= (~(STATE_FLAG_05_IS_BOSS));/*ボスoff*/
 		}
-		draw_side_panel = 1/*pd_state_flag |= ST ATE_FLAG_09_IS_PANEL_WINDOW*/;/* パネル表示on */
+		draw_side_panel = 1/*pd.state_flag |= ST ATE_FLAG_09_IS_PANEL_WINDOW*/;/* パネル表示on */
 	}
 //
 	{
@@ -275,7 +261,7 @@ void load_stage(void)	/*int level*/	/* 元々int */
 			0xff000000,/*ending(黒)*/
 		//	0xff601010,/**/
 		};
-		gu_set_bg_u32_clear_color((bg_color_list[player_now_stage&0x07]));
+		gu_set_bg_u32_clear_color((bg_color_list[pd.player_now_stage&0x07]));
 	}
 	stage_bg_load_texture();
 //
@@ -286,13 +272,13 @@ void load_stage(void)	/*int level*/	/* 元々int */
 //	sp rintf(my_fopen_file_name, DIRECTRY_NAME_DATA_STR "/dat/stage%c.txt", ('0'+ player_now_stage) );
 //	sp rintf(my_fopen_file_name, DIRECTRY_NAME_DATA_STR "/dat/stage%c.txt", ('0'+ player_now_stage) );
 	strcpy(my_fopen_file_name, DIRECTRY_NAME_DATA_STR "/dat/stageZ.txt");
-	my_fopen_file_name[10+DIRECTRY_NAME_DATA_LENGTH] = get_stage_chr(player_now_stage); /*load_stage_number*/
+	my_fopen_file_name[10+DIRECTRY_NAME_DATA_LENGTH] = get_stage_chr(pd.player_now_stage); /*load_stage_number*/
 
 //	/*FILE*/char *fp;
 	if (NULL==(/*fp =*/my_fopen(/*my_fopen_file_name*/ /*,"r"*/)))
 	{
 	//	error(ERR_FATAL, (char*)"can't read stage data %s\nerrno: %d (%s)",my_fopen_file_name,errno,strerror(errno));
-		error(ERR_FATAL, (char*)"can't read stage %d data %s\n", /*load_stage_number*/player_now_stage, my_fopen_file_name );
+		error(ERR_FATAL, (char*)"can't read stage %d data %s\n", /*load_stage_number*/pd.player_now_stage, my_fopen_file_name );
 	}
 //
 	load_stage_free_entry();	/* 前回まで確保したメモリがあれば、先に開放する。 */
@@ -304,11 +290,11 @@ void load_stage(void)	/*int level*/	/* 元々int */
 			int end_arg/*=0*/;			/* [だみー]行末 == 引数の取得の中止 */
 			int time60; 				/* 出現時間(1/60秒単位)  */
 			char user_string[128];		/* 文字列(メッセージやファイル名) */
-			int int_user_command;	 	/* １文字コマンド(敵やメッセージ等の種別) */
-			int select_gazou;	 		/* アニメ/画像種類 */
+			int int_user_command;		/* １文字コマンド(敵やメッセージ等の種別) */
+			int select_gazou;			/* アニメ/画像種類 */
 			int user_x; 				/* 数字パラメーター１(出現Ｘ座標など) */
 			int user_y; 				/* 数字パラメーター２(出現Ｙ座標、敵難度など) */
-			int user_hp; 				/* 数字パラメーター２(出現Ｙ座標、敵難度など) */
+			int user_hp;				/* 数字パラメーター２(出現Ｙ座標、敵難度など) */
 			int user_item8; 			/* 数字パラメーター２(出現Ｙ座標、敵難度など) */
 			int user_score; 			/* 数字パラメーター２(出現Ｙ座標、敵難度など) */
 			line_num++; 				/* ファイルの実行数 */
@@ -319,7 +305,7 @@ void load_stage(void)	/*int level*/	/* 元々int */
 			#if 0
 			/* '\n'が悪いのか巧くいかない(???) */
 			if ('\n'==(*ch))		{	goto loop;/*continue;*/ }	/* 改行のみの行は空行なのでやらないでとばす */
-			while (isspace(*ch)) 	{	ch++;					}	/* 空白やTABを除去 */
+			while (isspace(*ch))	{	ch++;					}	/* 空白やTABを除去 */
 			#else
 			{my_isspace:;
 				if (' '>=(*ch))
@@ -333,32 +319,29 @@ void load_stage(void)	/*int level*/	/* 元々int */
 			}
 			#endif
 			/* ';'で始まる行はコメント行なので、次の行まで飛ばす。 */
-//			if (';'==(*ch))		{	goto loop;/*continue;*/ }	/* ';'で始まる行はコメントなのでやらないでとばす */
+//			if (';'==(*ch)) 	{	goto loop;/*continue;*/ }	/* ';'で始まる行はコメントなのでやらないでとばす */
 			//
 		#if (1==USE_PARTH_DEBUG)
+			/*continue;*/;
 			#define GOTO_ERR_WARN goto err_warn
 		#else
 			#define GOTO_ERR_WARN goto loop
 		#endif
-			/* parth start */	/* Startzeitpunkt holen */
-			ch = load_stage_get_int(ch, &time60);							if (NULL == ch) 			{	GOTO_ERR_WARN;/*continue;*/;	}	/* load int time60 */		/* 時間の取得 */
-																			if (','/*'|'*/ != *ch++)	{	GOTO_ERR_WARN;/*continue;*/;	}	/* load '|' */
-			ch = load_my_file_get_str(ch, user_string, &end_arg/*, '|'*/);	if (NULL == ch) 			{	GOTO_ERR_WARN;/*continue;*/;	}	/* load str user_string */
-																			if (','/*'|'*/ != *ch++)	{	GOTO_ERR_WARN;/*continue;*/;	}	/* load '|' */
-			ch = load_stage_get_int(ch, &int_user_command); 				if (NULL == ch) 			{	GOTO_ERR_WARN;/*continue;*/;	}	/* load int user_x */	/* load 1 char commnd */	/* １文字コマンド */
-																			if (','/*'|'*/ != *ch++)	{	GOTO_ERR_WARN;/*continue;*/;	}	/* load '|' */
-			ch = load_stage_get_int(ch, &select_gazou); 					if (NULL == ch) 			{	GOTO_ERR_WARN;/*continue;*/;	}	/* load int user_x */	/* load 1 char commnd */	/* １文字コマンド */
-																			if (','/*'|'*/ != *ch++)	{	GOTO_ERR_WARN;/*continue;*/;	}	/* load '|' */
-			ch = load_stage_get_int(ch, &user_x);							if (NULL == ch) 			{	GOTO_ERR_WARN;/*continue;*/;	}	/* load int user_x */
-																			if (','/*'|'*/ != *ch++)	{	GOTO_ERR_WARN;/*continue;*/;	}	/* load '|' */
-			ch = load_stage_get_int(ch, &user_y);							if (NULL == ch) 			{	GOTO_ERR_WARN;/*continue;*/;	}	/* load int user_y */
-																			if (','/*'|'*/ != *ch++)	{	GOTO_ERR_WARN;/*continue;*/;	}	/* load '|' */
-			ch = load_stage_get_int(ch, &user_hp);							if (NULL == ch) 			{	GOTO_ERR_WARN;/*continue;*/;	}	/* load int user_y */
-																			if (','/*'|'*/ != *ch++)	{	GOTO_ERR_WARN;/*continue;*/;	}	/* load '|' */
-			ch = load_stage_get_int(ch, &user_item8);						if (NULL == ch) 			{	GOTO_ERR_WARN;/*continue;*/;	}	/* load int user_y */
-																			if (','/*'|'*/ != *ch++)	{	GOTO_ERR_WARN;/*continue;*/;	}	/* load '|' */
-			ch = load_stage_get_int(ch, &user_score);						if (NULL == ch) 			{	GOTO_ERR_WARN;/*continue;*/;	}	/* load int user_y */
-			/* do set register entry. */
+			/* データーの値が悪い場合はエラー */
+			#define CHECK_ERROR_VALUE			if (NULL == ch) 	{	GOTO_ERR_WARN;	}
+			/* データーの区切りに ',' が無い場合はエラー */
+			#define CHECK_ERROR_VALUE_KUGIRI	CHECK_ERROR_VALUE	if (',' != *ch++)	{	GOTO_ERR_WARN;	}
+			/* parth start. 構文解析開始 */
+			ch = load_stage_get_int(ch, &time60);					CHECK_ERROR_VALUE_KUGIRI	/* load int time60. */	/* 出現時間[フレーム(1/60秒)単位]の取得 */
+			ch = load_my_file_get_str(ch, user_string, &end_arg);	CHECK_ERROR_VALUE_KUGIRI	/* load str user_string. */ 	/*, '|'*/
+			ch = load_stage_get_int(ch, &int_user_command); 		CHECK_ERROR_VALUE_KUGIRI	/* load 1 char commnd. １文字コマンド */
+			ch = load_stage_get_int(ch, &select_gazou); 			CHECK_ERROR_VALUE_KUGIRI	/* load graphics select. */
+			ch = load_stage_get_int(ch, &user_x);					CHECK_ERROR_VALUE_KUGIRI	/* load int user_x. 出現x座標 */
+			ch = load_stage_get_int(ch, &user_y);					CHECK_ERROR_VALUE_KUGIRI	/* load int user_y. 出現y座標 */
+			ch = load_stage_get_int(ch, &user_hp);					CHECK_ERROR_VALUE_KUGIRI	/* load int user_hp. 体力 */
+			ch = load_stage_get_int(ch, &user_item8);				CHECK_ERROR_VALUE_KUGIRI	/* load int user_. 出現アイテム */
+			ch = load_stage_get_int(ch, &user_score);				CHECK_ERROR_VALUE			/* load int user_. 撃破時の獲得スコア[(1/10単位)] */
+			/* do set register entry. 読み込み成功したデーターを、追加登録する。 */
 			#define MUSIC_CONVERT_TIME (10)
 			/* 追加登録する */
 			load_stage_add_entry(
@@ -391,7 +374,7 @@ void load_stage(void)	/*int level*/	/* 元々int */
 	//return (entrys);
 	if (0==entrys)		/* 有効行数がなければエラー */
 	{
-		error(/*ERR_WARN*/ERR_FATAL, (char*)"no entrys for STAGE%d.TXT",player_now_stage); /*level*/ /*load_stage_number*/
+		error(/*ERR_WARN*/ERR_FATAL, (char*)"no entrys for STAGE%d.TXT", pd.player_now_stage); /*level*/ /*load_stage_number*/
 	}
 	//fps_init();/* ??? auto fps初期化 */
 }

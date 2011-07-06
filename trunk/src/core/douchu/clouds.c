@@ -26,7 +26,7 @@ static int used_clouds;
 	#define target_x256 		user_data00 	/* 目標x座標 */
 	#define target_y256 		user_data01 	/* 目標y座標 */
 	#define vvv256				user_data02 	/* 目標座標への到達割合 */
-	#define time_out			user_data03 	/* 制限時間 */
+	#define boss_time_out		user_data03 	/* 制限時間 */
 #endif
 //typedef struct
 //{
@@ -40,18 +40,14 @@ static int used_clouds;
 
 static void clouds_mover(SPRITE *src)
 {
-	src->y256 += src->CLOUDS_DATA_speed_base256;/*fps_factor*/
-	src->y256 += src->CLOUDS_DATA_speed_rand256;/*fps_factor*/
-	if (src->y256 > t256(GAME_HEIGHT))
+	src->cy256 += src->CLOUDS_DATA_speed_base256;/*fps_factor*/
+	src->cy256 += src->CLOUDS_DATA_speed_rand256;/*fps_factor*/
+	if (src->cy256 > t256(GAME_HEIGHT))
 	{
-		#if 0/*SDL(左隅座標)*/
-		src->y256			-= (t256(GAME_HEIGHT)+((src->w128+src->w128)));
+		#if 1/*Gu(中心座標)*/
+		src->cy256			-= (t256(GAME_HEIGHT));
 		src->CLOUDS_DATA_speed_rand256 = (ra_nd()&((128)-1));
-		src->x256			= (ra_nd()&((256*256)-1))+(ra_nd()&((128*256)-1))-((src->w128+src->w128));	/*(ra_nd()%GAME_WIDTH)*/
-		#else/*Gu(中心座標)*/
-		src->y256			-= (t256(GAME_HEIGHT));
-		src->CLOUDS_DATA_speed_rand256 = (ra_nd()&((128)-1));
-		src->x256			= (ra_nd()&((256*256)-1))+(ra_nd()&((128*256)-1));							/*(ra_nd()%GAME_WIDTH)*/
+		src->cx256			= (ra_nd()&((256*256)-1))+(ra_nd()&((128*256)-1));							/*(ra_nd()%GAME_WIDTH)*/
 		#endif
 		//c->alpha			= bg_alpha;
 //		src->alpha			= 200;/*遅すぎる([60-50fps -> [40-30]fps)*/
@@ -124,11 +120,11 @@ global void add_clouds(STAGE_DATA *l)
 			used_clouds++;
 		//
 			h->m_Hit256R		= (1/*test*/);
-			h->x256 			=  (ra_nd()&((256*256)-1))+(ra_nd()&((128*256)-1)); 	/*(ra_nd()%GAME_WIDTH)*/ /*((w3[i]->w)<<8)*/
-			h->y256 			= -64-(ra_nd()&((256*256)-1));							/*(ra_nd()%GAME_HEIGHT)*/
+			h->cx256 			=  (ra_nd()&((256*256)-1))+(ra_nd()&((128*256)-1)); 	/*(ra_nd()%GAME_WIDTH)*/ /*((w3[i]->w)<<8)*/
+			h->cy256 			= -64-(ra_nd()&((256*256)-1));							/*(ra_nd()%GAME_HEIGHT)*/
 			h->flags			&= (~(SP_FLAG_COLISION_CHECK));/*あたり判定なし*/
 //			h->flags			|= (SP_FLAG_VISIBLE);
-			h->type 			= SP_MUTEKI;
+			h->type 			= SP_FRONT_YUKI/*(SP_DUMMY_MUTEKI)*/;
 			h->color32			= MAKE32RGBA(0xff, 0xff, 0xff, 0x3f);	/*bg_alpha*/	//	h->alpha	= /*0*/0xff/*bg_alpha*/;
 			h->callback_mover	= clouds_mover;
 			h->CLOUDS_DATA_speed_base256			= (l->user_y);	/*t256(0.5)-*/	/*1.0*/
@@ -165,7 +161,7 @@ global void clouds_destroy(void)
 		while ( 0 < i )
 		{
 			i--;
-			w3[i]->type = SP_DELETE;
+			w3[i]->jyumyou = JYUMYOU_NASI;
 		}
 		used_clouds = 0;
 	}

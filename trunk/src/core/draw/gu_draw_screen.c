@@ -16,58 +16,12 @@
 /*---------------------------------------------------------
 	デバッグ用テスト設定(実験中など)
 ---------------------------------------------------------*/
-#define LINE_TEST	(0)
-#define DEBUG		(0)
+#define LINE_TEST	(1)
+
 
 /*---------------------------------------------------------
 
 ---------------------------------------------------------*/
-
-
-/* 管理するオブジェクト */
-enum
-{
-	OBJ_BANK_00_TAMA = 0,
-	OBJ_BANK_01_ITEM,
-	OBJ_BANK_02_FRONT_BANK0,
-//	OBJ_BANK_07_FRONT_BANK1,
-//	OBJ_BANK_07_FRONT_BANK2,
-	OBJ_BANK_03_PANEL_dummy,	/*[予定]*/
-//	OBJ_BANK_09_EFFECT, 		/*[予定]*/
-//
-	OBJ_BANK_01_REIMU_A,
-	OBJ_BANK_02_REIMU_B,
-	OBJ_BANK_03_MARISA_A,
-	OBJ_BANK_04_MARISA_B,
-	OBJ_BANK_05_REMILIA,
-	OBJ_BANK_06_YUYUKO,
-	OBJ_BANK_07_CIRNO_A,
-	OBJ_BANK_08_CIRNO_Q,
-//
-	OBJ_BANK_21_BOSS_STAGE1,
-	OBJ_BANK_22_BOSS_STAGE2,
-	OBJ_BANK_23_BOSS_STAGE3,
-	OBJ_BANK_24_BOSS_STAGE4,
-	OBJ_BANK_25_BOSS_STAGE5,
-	OBJ_BANK_26_BOSS_STAGE6,
-	OBJ_BANK_11_ZAKO_STAGE1,//OBJ_BANK_27_BOSS_STAGE7_dummy,
-	OBJ_BANK_28_BOSS_STAGE8,
-//
-//	OBJ_BANK_11_ZAKO_STAGE1,
-//	OBJ_BANK_12_ZAKO_STAGE2,
-//	OBJ_BANK_13_ZAKO_STAGE3,
-//	OBJ_BANK_14_ZAKO_STAGE4,
-//	OBJ_BANK_15_ZAKO_STAGE5,
-//	OBJ_BANK_16_ZAKO_STAGE6,
-//	OBJ_BANK_17_ZAKO_STAGE7_dummy,
-//	OBJ_BANK_18_ZAKO_STAGE8,
-//
-	OBJ_BANK_MAX
-};
-#define 	OBJ_BANK_SIZE (8*8)
-
-
-
 
 typedef struct
 {
@@ -138,7 +92,11 @@ static UINT16 *render_image;
 static UINT16 *render_image_back;
 //static UINT16 *render_image_tex;
 
+		#if (0==USE_32BIT_DRAW_MODE)
 /*static*/ UINT16 *kanji_window_screen_image;
+		#else
+/*static*/ UINT32 *kanji_window_screen_image;
+		#endif
 
 
 /*---------------------------------------------------------
@@ -156,7 +114,6 @@ unsigned int conv_bg_alpha;
 	スクリーン管理
 ---------------------------------------------------------*/
 
-static	TGameSprite  gu_sprite_pool[MAX_TRANS_GU_SPRITE];
 
 static VIRTUAL_OBJ_STATE obj_status_table[(OBJ_BANK_MAX*OBJ_BANK_SIZE)/*(6*8*8)*/];
 
@@ -171,7 +128,7 @@ static VIRTUAL_OBJ_STATE obj_status_table[(OBJ_BANK_MAX*OBJ_BANK_SIZE)/*(6*8*8)*
 	{NULL, 256, 256, 256,	0, 0, &obj_status_table[0], (char*)DIRECTRY_NAME_DATA_STR "/teki/teki10_256.png"},	//	//	TEX_04_TEKI,				/* ボス/ザコ敵 */
 //	{NULL, 256, 256, 512,	0, 0, &obj_status_table[0], (char*)DIRECTRY_NAME_DATA_STR "/bg/back0_256.png"}, 	//	//	TEX_05_ITEM,				/* アイテム/漢字スコア */
 	{NULL, 128, 128, 128,	0, 0, &obj_status_table[0], (char*)DIRECTRY_NAME_DATA_STR "/teki/bullet0.png"}, 	//		TEX_06_BULLET,				/* 敵弾 */
-	{NULL, 256, 256, 256,	0, 0, &obj_status_table[0], (char*)DIRECTRY_NAME_DATA_STR "/teki/front256.png"},		//		TEX_07_FRONT,				/* 自機当たり表示/爆発/[コンティニュー文字(bank00)/メニュー文字(bank01)/メニュー文字(bank02)] */
+	{NULL, 256, 256, 256,	0, 0, &obj_status_table[0], (char*)DIRECTRY_NAME_DATA_STR "/teki/front256.png"},	//		TEX_07_FRONT,				/* 自機当たり表示/爆発/[コンティニュー文字(bank00)/メニュー文字(bank01)/メニュー文字(bank02)] */
 //	{NULL, 256, 256, 512,	0, 0, &obj_status_table[0], (char*)DIRECTRY_NAME_DATA_STR "/bg/back0_256.png"}, 	//	//	TEX_08_SCORE_PANEL, 		/* スコアパネル/スコアフォント文字 */
 //	{NULL, 256, 256, 512,	0, 0, &obj_status_table[0], (char*)DIRECTRY_NAME_DATA_STR "/bg/back0_256.png"}, 	//	//	TEX_09_TACHIE,				/* 立ち絵 */
 //	{NULL, 256, 256, 512,	0, 0, &obj_status_table[0], (char*)DIRECTRY_NAME_DATA_STR "/bg/back0_256.png"}, 	//	//	TEX_10_MESSAGE, 			/* メッセージ固定文字 */
@@ -272,6 +229,8 @@ void psp_pause_filter(void)
 	gu_save_screen();/* vramからSDL画面に強制コピー */
 	#endif
 	if (SDL_MUSTLOCK(sdl_screen[SDL_00_VIEW_SCREEN]))	{	SDL_LockSurface(sdl_screen[SDL_00_VIEW_SCREEN]);	}	/* ロック */
+	#if (0!=USE_DEBUG_PAUSE_FILTER)
+	#else
 	u16 *src;	src = render_image;
 	{
 		int jj;
@@ -315,6 +274,7 @@ void psp_pause_filter(void)
 			src += (512-480+128);/* 残り */
 		}
 	}
+	#endif /* (USE_DEBUG_PAUSE_FILTER) */
 	//#define psp_push_screen(aaa) psp_move_screen( SDL_00_VIEW_SCREEN, SDL_01_BACK_SCREEN )
 	/* 将来Guで描いた場合。ハードウェアー機能で、置き換えられるので今のうちにまとめとく */
 	//SDL_FillRect(sdl_screen[SDL_00_VIEW_SCREEN], NULL, 0/*SD L_MapRGB(sdl_screen[SDL_00_VIEW_SCREEN]->format,0,0,0)*/);
@@ -336,6 +296,7 @@ static void gu_draw_bg_fake3D(void);
 static void gu_draw_bg_2D(void);
 static void gu_draw_bg_eientei(void);
 static void gu_draw_bg_3D_test01(void);
+static void gu_draw_bg_3D_test02(void);
 
 
 /*extern*/global void *callback_gu_draw_haikei_modosu;	/* (スペカ時から通常時へ)戻す用 */
@@ -345,7 +306,7 @@ global void (*callback_gu_draw_haikei)(void);//unsigned int dr aw_bg_screen;
 void stage_bg_load_texture(void)
 {
 //	strcpy(filename, DIRECTRY_NAME_DATA_STR "/bg/backZ_256.png");
-	my_resource[TEX_00_BACK_GROUND].file_name[8+DIRECTRY_NAME_DATA_LENGTH] = get_stage_chr(player_now_stage);
+	my_resource[TEX_00_BACK_GROUND].file_name[8+DIRECTRY_NAME_DATA_LENGTH] = get_stage_chr(pd.player_now_stage);
 	TGameTexture_Load_Surface( TEX_00_BACK_GROUND );
 //
 //	{NULL, 256, 256, 256,	0, 0, &obj_status_table[0], DIRECTRY_NAME_DATA_STR "/bg/back0_256.png"},		//		TEX_00_BACK_GROUND = 0, 	/* 3D背景1 */
@@ -353,7 +314,7 @@ void stage_bg_load_texture(void)
 //	{NULL, 256, 256, 256,	0, 0, &obj_status_table[0], DIRECTRY_NAME_DATA_STR "/teki/boss00_256.png"}, 	//	//	TEX_04_TEKI,				/* ボス/ザコ敵 */
 //
 //	my_resource[TEX_04_TEKI].file_name[10+DIRECTRY_NAME_DATA_LENGTH] = ('0'+0/*player_now_stage*/);
-	my_resource[TEX_04_TEKI].file_name[10+DIRECTRY_NAME_DATA_LENGTH] = get_stage_chr(player_now_stage);
+	my_resource[TEX_04_TEKI].file_name[10+DIRECTRY_NAME_DATA_LENGTH] = get_stage_chr(pd.player_now_stage);
 	my_resource[TEX_04_TEKI].file_name[11+DIRECTRY_NAME_DATA_LENGTH] = ('0');
 	TGameTexture_Load_Surface( TEX_04_TEKI );
 //
@@ -370,8 +331,8 @@ void stage_bg_load_texture(void)
 		gu_draw_bg_fake3D,		/*6面"紅魔館 大廊下"*/
 		gu_draw_bg_3D_test01,	/*ending*/
 //
-		gu_draw_bg_fake3D,		/*extra1面*/
-		gu_draw_bg_fake3D,		/*extra*/
+		gu_draw_bg_fake3D,		/* extra1面 */
+		gu_draw_bg_3D_test02,	/* phantazm1面 */
 		gu_draw_bg_fake3D,		/*extra*/
 		gu_draw_bg_fake3D,		/*extra*/
 		gu_draw_bg_2D,			/*extra*/
@@ -379,8 +340,8 @@ void stage_bg_load_texture(void)
 		gu_draw_bg_2D,			/*extra*/
 		gu_draw_bg_2D,			/*extra*/
 	};
-	callback_gu_draw_haikei = aaa[player_now_stage&0x0f];// 	dr aw_bg_screen = 1;
-//	callback_gu_draw_haikei = aaa[player_now_stage&0x07];// 	dr aw_bg_screen = 1;
+	callback_gu_draw_haikei = aaa[pd.player_now_stage&0x0f];//	dr aw_bg_screen = 1;
+//	callback_gu_draw_haikei = aaa[pd.player_now_stage&0x07];//	dr aw_bg_screen = 1;
 //	callback_gu_draw_haikei = callback_gu_draw_haikei_all;//	dr aw_bg_screen = 1;
 	callback_gu_draw_haikei_modosu = callback_gu_draw_haikei;
 }
@@ -394,12 +355,12 @@ void stage_boss_load_texture(void)
 //	{NULL, 256, 256, 256,	0, 0, &obj_status_table[0], DIRECTRY_NAME_DATA_STR "/teki/teki10_256.png"}, 	//	//	TEX_04_TEKI,				/* ボス/ザコ敵 */
 //	{NULL, 256, 256, 256,	0, 0, &obj_status_table[0], DIRECTRY_NAME_DATA_STR "/teki/boss00_256.png"}, 	//	//	TEX_04_TEKI,				/* ボス/ザコ敵 */
 //
-	my_resource[TEX_04_TEKI].file_name[10+DIRECTRY_NAME_DATA_LENGTH] = get_stage_chr(player_now_stage);
+	my_resource[TEX_04_TEKI].file_name[10+DIRECTRY_NAME_DATA_LENGTH] = get_stage_chr(pd.player_now_stage);
 	my_resource[TEX_04_TEKI].file_name[11+DIRECTRY_NAME_DATA_LENGTH] = ('1');
 	TGameTexture_Load_Surface( TEX_04_TEKI );
 //
 //	my_resource[TEX_04_TEKI].object_table_head = (obj_status_table+(OBJ_BANK_21_BOSS_STAGE1*OBJ_BANK_SIZE));
-	my_resource[TEX_04_TEKI].object_table_head = (obj_status_table+((OBJ_BANK_21_BOSS_STAGE1-1)*OBJ_BANK_SIZE)+(player_now_stage<<6));
+	my_resource[TEX_04_TEKI].object_table_head = (obj_status_table+((OBJ_BANK_21_BOSS_STAGE1-1)*OBJ_BANK_SIZE)+(pd.player_now_stage<<6));
 }
 
 static void gu_init_vfpu(void);
@@ -416,10 +377,16 @@ void psp_video_init01(void)
 	}
 	#endif
 //static UINT16 *bullet_image;
+	#if 0/* 上手くいかない */
+	SDL_Surface *loading_surface;
+	#endif
 	{
 	//	#define dummy_SDL_VRAM_SCREEN	vram_screen
 	//	/*static*/ SDL_Surface *dummy_SDL_VRAM_SCREEN;
 	//	dummy_SDL_VRAM_SCREEN =
+		#if 0/* 上手くいかない */
+		loading_surface =
+		#endif
 		SDL_SetVideoMode(
 			PSP_WIDTH480,
 			PSP_HEIGHT272,
@@ -487,8 +454,11 @@ void psp_video_init01(void)
 		if (SDL_MUSTLOCK(sdl_screen[SDL_02_TEX_SCREEN]))	{	SDL_UnlockSurface(sdl_screen[SDL_02_TEX_SCREEN]); }
 	#endif
 #endif
-
-
+	#if 0/* 不可能 */
+	/* ローディング画面テスト */
+	load_SDL_bg(BG_TYPE_03_music_room);
+	SDL_Flip(loading_surface/*sdl_screen[SDL_00_VIEW_SCREEN]*/ /*SDL_VRAM_SCREEN*/);
+	#endif
 	//# /* カスタムライブラリかGuを使う場合 */
 
 #if (1==USE_16BIT_BLIT)
@@ -674,28 +644,31 @@ void psp_video_init01(void)
 	(初期化してすぐに読もうとしても一番始めの入力が読めない、少し時間が経てば読める)
 	*/
 //	draw_loading222();
+
+	#if 1/* テスト */
+	/* ローディング画面テスト */
+	load_SDL_bg(BG_TYPE_01_name_regist);
+	psp_pop_screen();
+	//SDL_Flip(loading_surface/*sdl_screen[SDL_00_VIEW_SCREEN]*/ /*SDL_VRAM_SCREEN*/);
+	draw_loading_screen_test();//仕様変更でダメ
+	//
+//	sceGuSync(0, 0);/* (ここまで Gu) */
+//	sceDisplayWaitVblankStart();/*vsync*/
+//	sceGuSwapBuffers();
+//	draw_loading_screen_test();//仕様変更でダメ
+//	blit_direct_vram_loading_screen();
+	#endif
+
 }
 
 void psp_video_init02(void)
 {
 	//static TGameTexture *TGameTexture_Create(void)
 	{
-		unsigned int i;
 		/* --- 汎用スプライトマネージャの初期化 */
-		for (i=0; i<MAX_TRANS_GU_SPRITE; i++)
-		{
-//			gu_sprite_pool[i].texture_id	= 0/*-1*/;
-		//	gu_sprite_pool[i].Texture_ptr	= NULL;
-			gu_sprite_pool[i].used			= (0);/*FA LSE*/
-			#if (1==USE_ZOOM_XY)
-			gu_sprite_pool[i].zoom_x256 	= (256);/*t256(1.0)*/
-			gu_sprite_pool[i].zoom_y256 	= (256);/*t256(1.0)*/
-			#else //(0==USE_ZOOM_XY)
-			gu_sprite_pool[i].zoom_xy256	= (256);/*t256(1.0)*/
-			#endif/* (1==USE_ZOOM_XY) */
-			gu_sprite_pool[i].rotation_1024z	= (0);/*t256(0.0)*/
-		}
+
 		/* --- テクスチャマネージャの初期化 */
+		unsigned int i;
 		for (i=0; i<TEXTURE_MAX; i++)
 		{
 		//	my_resource[i].my_texture = NULL;
@@ -733,10 +706,10 @@ void psp_video_init02(void)
 //
 
 	/* --- ローディング画面 */
-	player_now_stage		= 0;
-	stage_bg_load_texture();
+	pd.player_now_stage 	= 0;
+//	stage_bg_load_texture();//仕様変更で無意味
 	#if 1
-	draw_loading_screen_test();
+//	draw_loading_screen_test();//仕様変更でダメ
 	#endif
 //	draw_loading_screen_test222();
 //	sceKernelDelayThread(5000000);/* 5[秒]何もしないで待つ */
@@ -796,18 +769,22 @@ void psp_video_init02(void)
 	}
 }
 #endif
-/*static*/ /*extern*/void trans_format16(u32 *pixsrc, u16 *pixdst, int trans_length)
-{
-	int kk;
-	for (kk=0; kk<(trans_length); kk++)
+		#if (0==USE_32BIT_DRAW_MODE)
+	/*static*/ /*extern*/void trans_format8888to5650(u32 *pixsrc, u16 *pixdst, int trans_length)
 	{
-	//	(*(kanji_window_screen_image+kk)) = (*(/*font_bg_bitmap_surface_image*/(u32 *)(font_bg_bitmap_surface->pixels)+kk));/*BG_FONT_HAIKEI_OFFSET*/
-		/* --- 16bit色に 減色して保持 (color key 使用不可) */
-		*pixdst = MAKECOL16(GETR32(*pixsrc), GETG32(*pixsrc), GETB32(*pixsrc));
-		pixdst++;
-		pixsrc++;
+		int kk;
+		for (kk=0; kk<(trans_length); kk++)
+		{
+		//	(*(kanji_window_screen_image+kk)) = (*(/*font_bg_bitmap_surface_image*/(u32 *)(font_bg_bitmap_surface->pixels)+kk));/*BG_FONT_HAIKEI_OFFSET*/
+			/* --- 16bit色に 減色して保持 (color key 使用不可) */
+			*pixdst = MAKECOL16(GETR32(*pixsrc), GETG32(*pixsrc), GETB32(*pixsrc));
+			pixdst++;
+			pixsrc++;
+		}
 	}
-}
+		#else
+		/* 色32bitモード */
+		#endif
 
 #include "gu_load_texture.h"
 
@@ -840,7 +817,7 @@ static void trans_texture(void)
 {
 	MY_DIB_SURFACE *texture_cache_ptr;
 	//	texture_cache_ptr = NULL/*0*/;
-	//	texture_cache_ptr = gu_sprite_pool[i].Texture_ptr;
+	//	texture_cache_ptr = gu_bbb_sprite_pool[0].Texture_ptr;
 		texture_cache_ptr = my_texture[texture_cacheId];
 		/* - テクスチャ転送コマンド */
 		sceGuBlendFunc(GU_ADD, GU_SRC_ALPHA, GU_ONE_MINUS_SRC_ALPHA, 0, 0);
@@ -866,172 +843,18 @@ static void trans_texture(void)
 }
 #endif
 
-//	/*extern*/ int debug_view_objs;
-/*TGameSprite *aaa_Sprites*/ /*void*/ /*TGameScreen *pclass*/
-static void s_blit_all_objects(void)
-{
-//	TGameSprite *aaa_Sprites;
-//	aaa_Sprites=gu_sprite_pool;
-//const TGameScreen *pclass =g_scr;
 
-//	debug_view_objs=0;
-	/* --- 汎用スプライト描画 */
-	//for (i=0; i<MAX_TRANS_GU_SPRITE; i++)
-	offs_t i;
-	i = MAX_TRANS_GU_SPRITE;
-	do
-	{
-		i--;/*註：先引き*/
-		/* --- 汎用スプライトの描画 */
-		if (gu_sprite_pool[i].used == 1/*TR UE*/)
-		{
-		//	if ( gu_sprite_pool[i].texture_id	!= 127/*-1*/)
-		//	if ( gu_sprite_pool[i].Texture_ptr != NULL)
-			{
-//				debug_view_objs++;
-				/* --- テクスチャの転送が必要なら */
-#if 000
-				{
-					if (( gu_sprite_pool[i].texture_id	!= texture_cacheId) /*||
-						( gu_sprite_pool[i].Texture_ptr != texture_cache_ptr)*/)
-					{
-						texture_cacheId   = gu_sprite_pool[i].texture_id;
-						trans_texture();
-					}
-				}
-#endif
-				{
-					//if (gu_sprite_pool[i].Texture_ptr != NULL)
-					{
-						if (( gu_sprite_pool[i]./*->*/rotation_1024z == 0/*.0*/) &&
-							#if (1==USE_ZOOM_XY)
-							( gu_sprite_pool[i]./*->*/zoom_x256 == 256/*1.0*/) &&
-							( gu_sprite_pool[i]./*->*/zoom_y256 == 256/*1.0*/)
-							#else //(0==USE_ZOOM_XY)
-							( gu_sprite_pool[i]./*->*/zoom_xy256 == 256/*1.0*/)
-							#endif/* (1==USE_ZOOM_XY) */
-						)
-						{
-							/* 回転拡大縮小なし、単純矩形コピー */
-							render_object_no_rot_zoom( &gu_sprite_pool[i]);
-						}
-						else
-						{
-							/* 回転拡大縮小あり */
-							render_object_use_rot_zoom( &gu_sprite_pool[i]);
-						}
-					}
-				}
-			}
-		}
-	} while (0 != i);
-}
 
 /*---------------------------------------------------------
 
 ---------------------------------------------------------*/
-
-static	int ggg_SpriteSerial;
-
-/*---------------------------------------------------------
-	インクリメントで汎用スプライトを渡す
----------------------------------------------------------*/
-
-TGameSprite *TGameScreen_GetSpriteSerial(void/*TGameScreen *pclass*/)
-{
-	if (/*pclass*/ggg_SpriteSerial < MAX_TRANS_GU_SPRITE)
-	{
-		/*pclass*/ggg_SpriteSerial++;
-	}
-	return (/*pclass*/ &gu_sprite_pool[(/*pclass*/ggg_SpriteSerial - 1)]);
-}
-
-/*---------------------------------------------------------
-	汎用スプライトの全クリア
----------------------------------------------------------*/
-
-void TGameScreen_ClearSprite(void/*TGameScreen *pclass*/)
-{
-	int i;
-	for (i=0; i<MAX_TRANS_GU_SPRITE; i++)
-	{
-		/*pclass*/gu_sprite_pool[i]./*->*/used =  0/*FA LSE*/;
-	}
-	/*pclass*/ggg_SpriteSerial = 0;
-}
-
-/*---------------------------------------------------------
-
----------------------------------------------------------*/
-extern SPRITE *sprite_list000_head;
+//extern SPRITE *sprite_list000_head;
 //extern SPRITE *sprite_list444_head;
 
 #include "gu_obj_table.h"
 
-/* ヘッドストック */
-//enum
-//{
-//	ST00_TEX_03_JIKI =0,
-//	MAX_HEAD_STOCK
-//};
-//static VIRTUAL_OBJ_STATE *my_head_stock[MAX_HEAD_STOCK];
 
-static void common_transfer_objects(
-	SPRITE *sss,
-	int num,
-	int obj_group)//, VIRTUAL_OBJ_STATE *head_obj_status_table)
-{
-	VIRTUAL_OBJ_STATE *head_obj_status_table;
-	head_obj_status_table = my_resource[num].object_table_head;
-//
-	TGameSprite *obj;
-//	SPRITE *sss = sprite_list000_head;/* リスト式スプライトで、リストの先頭 から探す */
-	while (NULL != sss)/* リスト式スプライトで、リストの最後まで調べる */
-	{
-		if (/*S P_BULLET*/obj_group/*S P_GROUP_BULLETS*/ & sss->type)
-		{
-			/* --- オブジェクトポインタ受け取り */
-			obj 				= TGameScreen_GetSpriteSerial();
-			obj->used			= 1;					/*TR UE*/
-		//	obj->alpha			= sss->alpha;			/* α値(0xff==255 で不透明、0 で透明) */
-			obj->color8888		= sss->color32; 		/* α値(0xff==255 で不透明、0 で透明) */
-//			obj->texture_id 	= TEX_06_BULLET;//sss->m_texture_id;
-
-			/* --- オブジェクト表示設定 */
-			obj->x256			= ((int)sss->x256); 	/*>>8*/ /*/(2 *256)*/  /*+(56)*/ /*+ 80*/
-			obj->y256			= ((int)sss->y256); 	/*>>8*/ /*/(2 *256)*/  /*+ 16*/
-		//	if (sss->m_PosCenter == 1/*TR UE*/)
-		//	{
-		//		obj->x -= (sss->w / 2);
-		//		obj->y -= (sss->h / 2);
-		//	}
-			{
-				int tama_index = (SP_GROUP_SUB_TYPE_128 & sss->type);
-				obj->w			= head_obj_status_table[tama_index].w;		/*((sss->w128)>>7)*/
-				obj->h			= head_obj_status_table[tama_index].h;		/*((sss->h128)>>7)*/
-				obj->tx 		= head_obj_status_table[tama_index].u;		/*1*/	//sss->texture_x;
-				obj->ty 		= head_obj_status_table[tama_index].v;		//sss->texture_y;
-			}
-			#if (1==USE_ZOOM_XY)
-			obj->zoom_x256	= sss->m_zoom_xy256;		/* 拡大率 0x100==256 が x1.0倍 */
-			obj->zoom_y256	= sss->m_zoom_xy256;		/* 拡大率 0x100==256 が x1.0倍 */
-			#else //(0==USE_ZOOM_XY)
-		//	obj->zoom_xy256 = 256;//sss->m_zoom_xy256;		/* 拡大率 0x100==256 が x1.0倍 */
-			obj->zoom_xy256 = sss->m_zoom_x256; 			//sss->m_zoom_xy256;	/* 拡大率 0x100==256 が x1.0倍 */
-			#endif/* (1==USE_ZOOM_XY) */
-			/* 描画用角度(下が0度で左回り(反時計回り)) */
-			obj->rotation_1024z = (sss->m_angleCCW1024/*<<(6)*/);	/*m_RollZ*/ 	/* 角度は0-1023度 */	/* 角度は0-65535度 */
-//
-			#if (1==USE_ZBUFFER)
-			obj->priority	= sss->m_priority;			/*aaa*/ 	/* 表示優先順位 */
-			#endif/* (1==USE_ZBUFFER) */
-		//	s->type = SP_DELETE;
-		}
-		sss = sss->next;/*次*/
-	}
-}
-
-static void common_transfer_444objects(
+static void common_transfer_objects_clc_blit(
 //	SPRITE *sss,
 	int num,
 	int obj_group)//, VIRTUAL_OBJ_STATE *head_obj_status_table)
@@ -1039,62 +862,200 @@ static void common_transfer_444objects(
 	VIRTUAL_OBJ_STATE *head_obj_status_table;
 	head_obj_status_table = my_resource[num].object_table_head;
 //
-	TGameSprite *obj;
 //	SPRITE *sss = sprite_list000_head;/* リスト式スプライトで、リストの先頭 から探す */
 //	while (NULL != sss)/* リスト式スプライトで、リストの最後まで調べる */
 	int ii;
-	for (ii=0; ii<SPRITE_444POOL_MAX; ii++ )/* 全部調べる。 */
+	for (ii=0; ii<SPRITE_333POOL_MAX; ii++ )/* 全部調べる。 */
 	{
 		SPRITE *sss;
-		sss = &sprite_444pool[ii];
+		sss = &obj33[ii];
 	//
-		#if 1/* 要らない気がする(てすとちう) */
-		if (sss->type != SP_DELETE ) /* 削除済みは飛ばす */
-		#endif
+	//	#if 1/* 要らない気がする(てすとちう) */
+	//	if (sss->type != SP_DELETE ) /* 削除済みは飛ばす */
+	//	#endif
+		if (JYUMYOU_NASI < sss->jyumyou)/* あれば */
 		{
-		if (/*S P_BULLET*/obj_group/*S P_GROUP_BULLETS*/ & sss->type)
-		{
-			/* --- オブジェクトポインタ受け取り */
-			obj 				= TGameScreen_GetSpriteSerial();
-			obj->used			= 1;					/*TR UE*/
-		//	obj->alpha			= sss->alpha;			/* α値(0xff==255 で不透明、0 で透明) */
-			obj->color8888		= sss->color32; 		/* α値(0xff==255 で不透明、0 で透明) */
-//			obj->texture_id 	= TEX_06_BULLET;//sss->m_texture_id;
-
-			/* --- オブジェクト表示設定 */
-			obj->x256			= ((int)sss->x256); 	/*>>8*/ /*/(2 *256)*/  /*+(56)*/ /*+ 80*/
-			obj->y256			= ((int)sss->y256); 	/*>>8*/ /*/(2 *256)*/  /*+ 16*/
-		//	if (sss->m_PosCenter == 1/*TR UE*/)
-		//	{
-		//		obj->x -= (sss->w / 2);
-		//		obj->y -= (sss->h / 2);
-		//	}
+			if (/*S P_BULLET*/obj_group/*S P_GROUP_BULLETS*/ & sss->type)
 			{
-				int tama_index = (SP_GROUP_SUB_TYPE_128 & sss->type);
-				obj->w			= head_obj_status_table[tama_index].w;		/*((sss->w128)>>7)*/
-				obj->h			= head_obj_status_table[tama_index].h;		/*((sss->h128)>>7)*/
-				obj->tx 		= head_obj_status_table[tama_index].u;		/*1*/	//sss->texture_x;
-				obj->ty 		= head_obj_status_table[tama_index].v;		//sss->texture_y;
+				{
+					int tama_index = (SP_GROUP_SUB_TYPE_128 & sss->type);
+					sss->w			= head_obj_status_table[tama_index].w;
+					sss->h			= head_obj_status_table[tama_index].h;
+					sss->tx 		= head_obj_status_table[tama_index].u;		//sss->texture_x;
+					sss->ty 		= head_obj_status_table[tama_index].v;		//sss->texture_y;
+				}
+				/* --- 汎用スプライト描画 */
+//				debug_view_objs++;
+				{
+					//if (sss->Texture_ptr != NULL)
+					{
+						if (( sss->rotationCCW1024 == 0/*.0*/) &&
+							#if (1==USE_ZOOM_XY)
+							( sss->m_zoom_x256 == 256/*1.0*/) &&
+							( sss->m_zoom_y256 == 256/*1.0*/)
+							#else //(0==USE_ZOOM_XY)
+							( sss->m_zoom_xy256 == 256/*1.0*/)
+							#endif/* (1==USE_ZOOM_XY) */
+						)
+						{
+							/* 回転拡大縮小なし、単純矩形コピー */
+							render_object_no_rot_zoom(sss);
+						}
+						else
+						{
+							/* 回転拡大縮小あり */
+							render_object_use_rot_zoom(sss);
+						}
+					}
+				}
 			}
-			#if (1==USE_ZOOM_XY)
-			obj->zoom_x256	= sss->m_zoom_xy256;		/* 拡大率 0x100==256 が x1.0倍 */
-			obj->zoom_y256	= sss->m_zoom_xy256;		/* 拡大率 0x100==256 が x1.0倍 */
-			#else //(0==USE_ZOOM_XY)
-		//	obj->zoom_xy256 = 256;//sss->m_zoom_xy256;		/* 拡大率 0x100==256 が x1.0倍 */
-			obj->zoom_xy256 = sss->m_zoom_x256; 			//sss->m_zoom_xy256;	/* 拡大率 0x100==256 が x1.0倍 */
-			#endif/* (1==USE_ZOOM_XY) */
-			/* 描画用角度(下が0度で左回り(反時計回り)) */
-			obj->rotation_1024z = (sss->m_angleCCW1024/*<<(6)*/);	/*m_RollZ*/ 	/* 角度は0-1023度 */	/* 角度は0-65535度 */
-//
-			#if (1==USE_ZBUFFER)
-			obj->priority	= sss->m_priority;			/*aaa*/ 	/* 表示優先順位 */
-			#endif/* (1==USE_ZBUFFER) */
-		//	s->type = SP_DELETE;
-		}
 //		sss = sss->next;/*次*/
 		}
 	}
 }
+
+
+/* 直接描画 */
+static void common_transfer_objects111(
+//	SPRITE *sss,
+	int num,
+	int obj_group)//, VIRTUAL_OBJ_STATE *head_obj_status_table)
+{
+	VIRTUAL_OBJ_STATE *head_obj_status_table;
+	head_obj_status_table = my_resource[num].object_table_head;
+//
+	int ii;
+	for (ii=0; ii<SPRITE_111POOL_MAX/*SPRITE_111JIKI_POOL_MAX*/; ii++ )/* 全部調べる。 */
+	{
+		SPRITE *sss;
+		sss = &obj00[ii];
+	//
+	//	#if 1/* 要らない気がする(てすとちう) */
+	//	if (sss->type != SP_DELETE ) /* 削除済みは飛ばす */
+	//	#endif
+		if (JYUMYOU_NASI < sss->jyumyou)/* あれば */
+		{
+			if (/*S P_BULLET*/obj_group/*S P_GROUP_BULLETS*/ & sss->type)
+			{
+				{
+					int tama_index = (SP_GROUP_SUB_TYPE_128 & sss->type);
+					sss->w			= head_obj_status_table[tama_index].w;
+					sss->h			= head_obj_status_table[tama_index].h;
+					sss->tx 		= head_obj_status_table[tama_index].u;		//sss->texture_x;
+					sss->ty 		= head_obj_status_table[tama_index].v;		//sss->texture_y;
+				}
+				/* --- 汎用スプライトの描画 */
+//				debug_view_objs++;
+				{
+					//if (sss->Texture_ptr != NULL)
+					{
+						if (( sss->rotationCCW1024 == 0/*.0*/) &&
+							#if (1==USE_ZOOM_XY)
+							( sss->m_zoom_x256 == 256/*1.0*/) &&
+							( sss->m_zoom_y256 == 256/*1.0*/)
+							#else //(0==USE_ZOOM_XY)
+							( sss->m_zoom_xy256 == 256/*1.0*/)
+							#endif/* (1==USE_ZOOM_XY) */
+						)
+						{
+							/* 回転拡大縮小なし、単純矩形コピー */
+							render_object_no_rot_zoom(sss);
+						}
+						else
+						{
+							/* 回転拡大縮小あり */
+							render_object_use_rot_zoom(sss);
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+
+/*---------------------------------------------------------
+
+---------------------------------------------------------*/
+
+#if 1
+/*
+バンク設定を反映させる
+*/
+global void reflect_sprite_spec444(SPRITE *sss, unsigned int bank_offset)
+{
+//	int num = TEX_06_BULLET;
+	VIRTUAL_OBJ_STATE *head_obj_status_table;
+//	my_resource[TEX_06_BULLET].object_table_head = (obj_status_table+(OBJ_BANK_00_TAMA*OBJ_BANK_SIZE));
+//	my_resource[TEX_06_BULLET].object_table_head = (obj_status_table+(OBJ_BANK_01_ITEM*OBJ_BANK_SIZE));
+//	head_obj_status_table = my_resource[TEX_06_BULLET/*num*/].object_table_head;
+	head_obj_status_table = (obj_status_table+(bank_offset));
+	{
+		int tama_index = (SP_GROUP_SUB_TYPE_128 & sss->type);
+		sss->w			= head_obj_status_table[tama_index].w;
+		sss->h			= head_obj_status_table[tama_index].h;
+		sss->tx 		= head_obj_status_table[tama_index].u;		//sss->texture_x;
+		sss->ty 		= head_obj_status_table[tama_index].v;		//sss->texture_y;
+	}
+}
+#endif
+
+
+
+/* 直接描画 */
+static void common_transfer_444objects_new444(
+//	SPRITE *sss,
+//TEX_06_BULLET int num,
+	int obj_group)//, VIRTUAL_OBJ_STATE *head_obj_status_table)
+{
+	int ii;
+	for (ii=0; ii<SPRITE_444POOL_MAX; ii++ )/* 全部調べる。 */
+	{
+		SPRITE *sss;
+		sss = &obj44[ii];
+	//
+	//	#if 1/* 要らない気がする(てすとちう) */
+	//	if (sss->type != SP_DELETE ) /* 削除済みは飛ばす */
+	//	#endif
+		if (JYUMYOU_NASI < sss->jyumyou)/* あれば */
+		{
+			if (/*S P_BULLET*/obj_group/*S P_GROUP_BULLETS*/ & sss->type)
+			{
+				/* --- 汎用スプライトの描画 */
+				{
+//					debug_view_objs++;
+					/* --- テクスチャの転送が必要なら */
+					{
+						//if (obj->Texture_ptr != NULL)
+						{
+							if (( sss->rotationCCW1024 == 0/*.0*/) &&
+								#if (1==USE_ZOOM_XY)
+								( sss->m_zoom_x256 == 256/*1.0*/) &&
+								( sss->m_zoom_y256 == 256/*1.0*/)
+								#else //(0==USE_ZOOM_XY)
+								( sss->m_zoom_xy256 == 256/*1.0*/)
+								#endif/* (1==USE_ZOOM_XY) */
+							)
+							{
+								/* 回転拡大縮小なし、単純矩形コピー */
+								render_object_no_rot_zoom(sss);
+							}
+							else
+							{
+								/* 回転拡大縮小あり */
+								render_object_use_rot_zoom(sss);
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	//	s_blit_all_objects();/*PRIORITY_05_BULLETS*/
+}
+
+
+
 
 
 #if 1
@@ -1115,7 +1076,12 @@ static int draw_boss_hp_value_set;
 
 static void check_draw_boss_hp_value(void)
 {
-	SPRITE *h = obj_boss;
+//			SPRITE *obj_boss;
+//			obj_boss = &obj00[FIX_OBJ_08_BOSS];
+			SPRITE *h;
+//			h = &obj00[FIX_OBJ_08_BOSS];
+//	SPRITE *h = global_obj_boss;
+			h = global_obj_boss;
 	if (NULL == h)
 	{
 		return;/* ボスが無い場合は何もしない */
@@ -1136,8 +1102,8 @@ static void check_draw_boss_hp_value(void)
 	}
 	#endif
 //
-	boss_x256 = (h->x256);/*(???)141477*/
-	boss_y256 = (h->y256);/*(???)141477*/
+	boss_x256 = (h->cx256);/*(???)141477*/
+	boss_y256 = (h->cy256);/*(???)141477*/
 // 0001 1111 1110 0000;  >>=(2+3);	0000 0000 1111 1111; 0xff;
 
 //	draw_boss_hp_value_set = ((boss_life_value & 0x03fc)>>2);/* ボスhp描画値 */
@@ -1152,11 +1118,16 @@ static void check_draw_boss_hp_value(void)
 
 static void set_boss_gauge(void)
 {
-	SPRITE *h = obj_boss;
+//			SPRITE *obj_boss;
+//			obj_boss = &obj00[FIX_OBJ_08_BOSS];
+			SPRITE *h;
+//			h = &obj00[FIX_OBJ_08_BOSS];
+//	SPRITE *h = global_obj_boss;
+			h = global_obj_boss;
 //
 	#if 1/*ボス時間経過*/
 //	if ()
-//	if ((STATE_FLAG_05_IS_BOSS|0) == (pd_state_flag&(STATE_FLAG_05_IS_BOSS|STATE_FLAG_06_IS_SCRIPT)))
+//	if ((STATE_FLAG_05_IS_BOSS|0) == (pd.state_flag&(STATE_FLAG_05_IS_BOSS|STATE_FLAG_06_IS_SCRIPT)))
 	{
 		/* (とりあえず)スペカモード時のみ時間経過 */
 	//	if (SPELL_CARD_MODE_00_OFF/*off*/ != spell_card_mode)/*on時のみ*/
@@ -1236,85 +1207,63 @@ static void set_boss_gauge(void)
 		{
 			strcpy(buffer, "00");
 			dec_print_format( (boss_timer_value), 2, (char *)buffer);
-			es_panel[2] = (buffer[0]&0x0f);
-			es_panel[3] = (buffer[1]&0x0f);
+			es_panel[2] = (buffer[0]&0x0f); 	/* 残りスペカ時間10の桁 */
+			es_panel[3] = (buffer[1]&0x0f); 	/* 残りスペカ時間1の桁 */
 		}
 	#endif
 	//	残りライフ表示
-		es_panel[1] = ((boss_life_value>>(10+3))&0x0f);
-		es_panel[0] = (10);/*"enemy"*/
+		es_panel[1] = ((boss_life_value>>(10+3))&0x0f); 	/* ボス体力目安 */
+		es_panel[0] = (10);/* "enemy" ボスの位置表示 */
 	}
 }
 
 
 
-
+/* 直接描画 */
 extern void boss_hp_frame_check(void);
-//	   void font07_render_scorenum_xy( int time_out8888, int number, int x256, int y256)
-//atic void font07_render_scorenum_xy(SCORE_CHACHE_DATA *aaa){}
 static void gu_draw_score_chache(void)
 {
 	VIRTUAL_OBJ_STATE *head_obj_status_table;
 	head_obj_status_table = my_resource[TEX_07_FRONT/*num*/].object_table_head;
 //
-
-//				SDL_Rect s,d;
-//				s.w=(8); d.w=(8);
-//				s.h=(8); d.h=(8);
-	TGameSprite *obj;
+	static	/*TGameSprite*/SPRITE gu_bbb_sprite_pool[1];
+	/*TGameSprite*/SPRITE *obj;
+	obj = &gu_bbb_sprite_pool[0];
 	int i;
 	for (i=0; i<MAX_SCORE_CHACHE; i++)
 	{
 		SCORE_CHACHE_DATA *aaa;
 		aaa = &(score_number_chache[i]);
-	//	if (SCORE_DELETE < aaa->time_out8888)
-		if (0x80000000 & (aaa->time_out8888) )
+	//	if (SCORE_DELETE < aaa->time_out_color8888)
+		if (0x80000000 & (aaa->time_out_color8888) )
 		{
-			aaa->time_out8888 -= 0x01000000;// -= 2;
+			aaa->time_out_color8888 -= 0x01000000;	// 時間経過
+			obj->color32		= ((aaa->time_out_color8888));		/* α値(0xff==255 で不透明、0 で透明) */
+			/* --- オブジェクト表示設定 */
+			obj->cy256			= ((aaa->y256));	aaa->y256 -= 50;	/* 上に移動 */
+			obj->cx256			= ((aaa->x256));	/*x 512/256 */
 			{
-				/* --- オブジェクトポインタ受け取り */
-				obj 				= TGameScreen_GetSpriteSerial();
-				obj->used			= 1;					/*TR UE*/
-				{
-				//	obj->color8888		= 0xffffffff;//((aaa->time_out8888)<<24);		/* α値(0xff==255 で不透明、0 で透明) */
-				//	obj->color8888		= ((aaa->time_out8888)<<24)|(0x00ffffff);		/* α値(0xff==255 で不透明、0 で透明) */
-				//	obj->color8888		= ((aaa->time_out8888)<<24)|(0x8000ffff)|((obj->x256&1)?(0):(0x00ff0000));		/* α値(0xff==255 で不透明、0 で透明) */
-					obj->color8888		= ((aaa->time_out8888));		/* α値(0xff==255 で不透明、0 で透明) */
-				}
-				/* --- オブジェクト表示設定 */
-				obj->y256			= ((aaa->y256));	aaa->y256 -= 50;	/* 上に移動 */
-				obj->x256			= ((aaa->x256));	/*x 512/256 */
-				{
-			//	int tama_index = ((6*8)+3)+es_panel[i]/*(aaa->number)*/;
-				int tama_index = ((6*8)+6)+(aaa->number);
-				obj->w			= head_obj_status_table[tama_index].w;		/*((sss->w128)>>7)*/
-				obj->h			= head_obj_status_table[tama_index].h;		/*((sss->h128)>>7)*/
-				obj->tx 		= head_obj_status_table[tama_index].u;		/*1*/	//sss->texture_x;
-				obj->ty 		= head_obj_status_table[tama_index].v;		//sss->texture_y;
-				}
-			#if (1==USE_ZOOM_XY)
-			obj->zoom_x256	= sss->m_zoom_xy256;		/* 拡大率 0x100==256 が x1.0倍 */
-			obj->zoom_y256	= sss->m_zoom_xy256;		/* 拡大率 0x100==256 が x1.0倍 */
-			#else //(0==USE_ZOOM_XY)
-		//	obj->zoom_xy256 = 256;//sss->m_zoom_xy256;		/* 拡大率 0x100==256 が x1.0倍 */
-			obj->zoom_xy256 = 0x100;//sss->m_zoom_x256; 			//sss->m_zoom_xy256;	/* 拡大率 0x100==256 が x1.0倍 */
-			#endif/* (1==USE_ZOOM_XY) */
-			/* 描画用角度(下が0度で左回り(反時計回り)) */
-			obj->rotation_1024z = (0);//	/*m_RollZ*/ 	/* 角度は0-1023度 */	/* 角度は0-65535度 */
-//
+		//	int tama_index = ((6*8)+3)+es_panel[i]/*(aaa->number)*/;
+			int tama_index = ((6*8)+6)+(aaa->number);
+			obj->w			= head_obj_status_table[tama_index].w;
+			obj->h			= head_obj_status_table[tama_index].h;
+			obj->tx 		= head_obj_status_table[tama_index].u;		//sss->texture_x;
+			obj->ty 		= head_obj_status_table[tama_index].v;		//sss->texture_y;
+			}
 			#if (1==USE_ZBUFFER)
 			obj->priority	= sss->m_priority;			/*aaa*/ 	/* 表示優先順位 */
 			#endif/* (1==USE_ZBUFFER) */
-		//	s->type = SP_DELETE;
-
+			{
+				/* 回転拡大縮小なし、単純矩形コピー */
+				render_object_no_rot_zoom(obj);
 			}
 		}
 	}
 //
 	/* [ ボスの体力チェック ] */
 	//	if (B01_BA TTLE == pd_bo ssmode)
-	//	if ((STATE_FLAG_05_IS_BOSS|0) == (pd_state_flag&(STATE_FLAG_05_IS_BOSS|STATE_FLAG_06_IS_SCRIPT)))
-	if ((pd_state_flag&(STATE_FLAG_13_DRAW_BOSS_GAUGE)))
+	//	if ((STATE_FLAG_05_IS_BOSS|0) == (pd.state_flag&(STATE_FLAG_05_IS_BOSS|STATE_FLAG_06_IS_SCRIPT)))
+	if ((pd.state_flag&(STATE_FLAG_13_DRAW_BOSS_GAUGE)))
 	{
 		check_draw_boss_hp_value();
 	}
@@ -1329,69 +1278,57 @@ static void gu_draw_score_chache(void)
 	/* 数字を表示 */
 
 		/* ボスの位置を表示 */
+		obj->color32		= 0xffffffff;		/* α値(0xff==255 で不透明、0 で透明) */
 		for (i=0; i<4; i++)
 		{
-//			SCORE_CHACHE_DATA *aaa;
-//			aaa = &(score_number_chache[i]);
-	//		if (SCORE_DELETE < aaa->time_out8888)
-//			if (0x80000000 & (aaa->time_out8888) )
+			enum
 			{
-//				aaa->time_out8888 -= 0x01000000;// -= 2;
+				my_pos_cx = 0,
+				my_pos_cy,
+				my_pos_MAX
+			};
+			/* 座標はobjの中心座標、 */
+			const static int aaa_tbl[4][my_pos_MAX] =
+			{
+				/* cx256, 					cy256 */
+				{t256(256+4),				t256(272-(10/2)-2)},	/* "enemy" */
+				{t256(50+4),				t256(1+(10/2))},		/* "boss" */
+				{t256((GAME_WIDTH-16-4)),	t256(1+(10/2))},		/* "timex1"8x10ローマ数字 */
+				{t256((GAME_WIDTH-16-4+8)),	t256(1+(10/2))},		/* "timex10"8x10ローマ数字 */
+			};
+			/* --- オブジェクト表示設定 */
+			obj->cy256			= aaa_tbl[i][my_pos_cy];//((aaa->cy256));	//	aaa->cy256 -= 50;	/* 上に移動 */
+			obj->cx256			= aaa_tbl[i][my_pos_cx];//((aaa->cx256));	/*x 512/256 */
+			if (0==i)
+			{
+				SPRITE *zzz_player;
+				zzz_player = &obj00[FIX_OBJ_00_PLAYER];
+//				SPRITE *obj_boss;
+//				obj_boss = &obj00[FIX_OBJ_08_BOSS];
+				if (t256(32)<abs((global_obj_boss->cx256)-(zzz_player->cx256)))
 				{
-					/* --- オブジェクトポインタ受け取り */
-					obj 				= TGameScreen_GetSpriteSerial();
-					obj->used			= 1;					/*TR UE*/
-					{
-						obj->color8888		= 0xffffffff;//((aaa->time_out8888)<<24);		/* α値(0xff==255 で不透明、0 で透明) */
-					//	obj->color8888		= ((aaa->time_out8888)<<24)|(0x00ffffff);		/* α値(0xff==255 で不透明、0 で透明) */
-					//	obj->color8888		= ((aaa->time_out8888)<<24)|(0x8000ffff)|((obj->x256&1)?(0):(0x00ff0000));		/* α値(0xff==255 で不透明、0 で透明) */
-//						obj->color8888		= ((aaa->time_out8888));		/* α値(0xff==255 で不透明、0 で透明) */
-					}
-					const static int aaa_tbl[4][2] =
-					{
-						{t256(256+4),t256(272-10-2)},				/*"enemy"*/
-						{t256(50+4),t256(1)},					/*"boss"*/
-						{t256((GAME_WIDTH-16-4)),t256(1)},		/*"timex1"*/
-						{t256((GAME_WIDTH-16-4+8)),t256(1)},	/*"timex10"*/
-					};
-					/* --- オブジェクト表示設定 */
-					obj->y256			= aaa_tbl[i][1];//((aaa->y256));	//	aaa->y256 -= 50;	/* 上に移動 */
-					obj->x256			= aaa_tbl[i][0];//((aaa->x256));	/*x 512/256 */
-					if (0==i)
-					{
-						if (t256(32)<abs((obj_boss->x256)-(obj_player->x256)))
-						{
-							obj->x256			= (obj_boss->x256);
-						}
-						else
-						{
-							obj->x256			= (t256(512-128));
-						}
-					}
-					{
-				//	int tama_index = ((5*8)+4)+(9);//(aaa->number);
-					int tama_index = ((5*8)+3)+es_panel[i]/*(aaa->number)*/;
-				//	int tama_index = ((5*8)+3)+(9)/*(aaa->number)*/;
-					obj->w			= head_obj_status_table[tama_index].w;		/*((sss->w128)>>7)*/
-					obj->h			= head_obj_status_table[tama_index].h;		/*((sss->h128)>>7)*/
-					obj->tx 		= head_obj_status_table[tama_index].u;		/*1*/	//sss->texture_x;
-					obj->ty 		= head_obj_status_table[tama_index].v;		//sss->texture_y;
-					}
-				#if (1==USE_ZOOM_XY)
-				obj->zoom_x256	= sss->m_zoom_xy256;		/* 拡大率 0x100==256 が x1.0倍 */
-				obj->zoom_y256	= sss->m_zoom_xy256;		/* 拡大率 0x100==256 が x1.0倍 */
-				#else //(0==USE_ZOOM_XY)
-			//	obj->zoom_xy256 = 256;//sss->m_zoom_xy256;		/* 拡大率 0x100==256 が x1.0倍 */
-				obj->zoom_xy256 = 0x100;//sss->m_zoom_x256; 			//sss->m_zoom_xy256;	/* 拡大率 0x100==256 が x1.0倍 */
-				#endif/* (1==USE_ZOOM_XY) */
-				/* 描画用角度(下が0度で左回り(反時計回り)) */
-				obj->rotation_1024z = (0);				//	/*m_RollZ*/ 	/* 角度は0-1023度 */	/* 角度は0-65535度 */
-				//
-				#if (1==USE_ZBUFFER)
-				obj->priority	= sss->m_priority;			/*aaa*/ 	/* 表示優先順位 */
-				#endif/* (1==USE_ZBUFFER) */
-			//	s->type = SP_DELETE;
+					obj->cx256			= (global_obj_boss->cx256);
 				}
+				else
+				{
+					obj->cx256			= (t256(512-128));
+				}
+			}
+			{
+		//	int tama_index = ((5*8)+4)+(9);//(aaa->number);
+			int tama_index = ((5*8)+3)+es_panel[i]/*(aaa->number)*/;
+		//	int tama_index = ((5*8)+3)+(9)/*(aaa->number)*/;
+			obj->w			= head_obj_status_table[tama_index].w;
+			obj->h			= head_obj_status_table[tama_index].h;
+			obj->tx 		= head_obj_status_table[tama_index].u;		//sss->texture_x;
+			obj->ty 		= head_obj_status_table[tama_index].v;		//sss->texture_y;
+			}
+			#if (1==USE_ZBUFFER)
+			obj->priority	= sss->m_priority;			/*aaa*/ 	/* 表示優先順位 */
+			#endif/* (1==USE_ZBUFFER) */
+			{
+				/* 回転拡大縮小なし、単純矩形コピー */
+				render_object_no_rot_zoom(obj);
 			}
 		}
 		/*ボスを攻撃した場合のフレームチェック*/
@@ -1401,46 +1338,51 @@ static void gu_draw_score_chache(void)
 }
 #endif
 
-/* 共通部分 */
-#include "render/gu_render.h"
+	/* 共通部分 */
+	#include "render/gu_render.h"
 
-/* テクスチャ変形による擬似3D 将来的に無くなる予定。 */
-#include "render/gu_haikei_03_bg_fake_3D.h"
+	/* テクスチャ変形による擬似3D 将来的に無くなる予定。 */
+	#include "render/gu_haikei_03_bg_fake_3D.h"
 
-/* "永遠亭"の予定。 */
-#include "render/gu_haikei_02_bg_eientei.h"
+	/* "永遠亭"の予定。 */
+	#include "render/gu_haikei_02_bg_eientei.h"
 
-/* 256x256テクスチャを敷き詰める2D背景を描画 */
-#include "render/gu_haikei_00_bg_2D_256.h"
-
-/* ボスの後ろの魔方陣(大)を描画 */
-#include "render/gu_render_boss_big_mahoujin.h"
-
-/* 自分がボム(スペカ)撃った場合に出る。文字のロゴを描画 */
-#include "render/gu_render_spell_logo.h"
-
-/* SDL画面を描画 */
-#include "render/gu_render_SDL_screen.h"
-
-/* 会話の文字を描画 */
-#include "render/gu_render_serifu_moji.h"
-
-/* ボスのスペカ名を描画 */
-#include "render/gu_render_supeka_name.h"
+	/* 256x256テクスチャを敷き詰める2D背景を描画 */
+	#include "render/gu_haikei_00_bg_2D_256.h"
 
 
-/* スコアパネルになる予定の部分(現在SDL) */
-/* ボス体力描画のみ(現在Gu) */
-#include "render/gu_render_score_window.h"
+ int boss_x256;
+ int boss_y256;
 
-/* 半透明のせりふウィンドウ枠 */
-#include "render/gu_render_serifu_window.h"
+	/* ボスの後ろの魔方陣(大)を描画 */
+	#include "render/gu_render_boss_big_mahoujin.h"
 
-/* ラインテスト(まだ使用してない) */
-#include "render/gu_render_line_test.h"
+	/* 自分がボム(スペカ)撃った場合に出る。文字のロゴを描画 */
+	#include "render/gu_render_spell_logo.h"
 
-/* 3Dのテスト */
-#include "render/gu_haikei_01_bg_3D_test01.h"
+	/* SDL画面を描画 */
+	#include "render/gu_render_SDL_screen.h"
+
+	/* 会話の文字を描画 */
+	#include "render/gu_render_serifu_moji.h"
+
+	/* ボスのスペカ名を描画 */
+	#include "render/gu_render_supeka_name.h"
+
+
+	/* スコアパネルになる予定の部分(現在SDL) */
+	/* ボス体力描画のみ(現在Gu) */
+	#include "render/gu_render_score_window.h"
+
+	/* 半透明のせりふウィンドウ枠 */
+	#include "render/gu_render_serifu_window.h"
+
+	/* ラインテスト(まだ使用してない) */
+	#include "render/gu_render_line_test.h"
+
+	/* 3Dのテスト */
+	#include "render/gu_haikei_01_bg_3D_test01.h"
+	#include "render/gu_haikei_01_bg_3D_test02.h"
 
 /*---------------------------------------------------------
 
@@ -1459,7 +1401,7 @@ static void gu_draw_script_window(void)
 //	if (SPELL_CARD_MODE_00_OFF == spell_card_mode)
 	if (SPELL_CARD_MODE_03_HATUDAN != spell_card_mode)
 	{
-		if (0 != pd_bomber_time)
+		if (0 != pd.bomber_time)
 		{
 			gu_draw_rect_window(HAIKEI_01_JIKI_SPELL_CARD);
 		}
@@ -1523,13 +1465,19 @@ static void gu_set_texture(int texture_number)
 	プライオリティー＃２．BG 画面を描画
 	プライオリティー＃３．背景障害物を描画
 	プライオリティー＃４．魔方陣を描画
-	プライオリティー＃５．jikiを描画
+	プライオリティー＃５．ポリゴンライン面を描画(未作成)
+	プライオリティー＃６．自機を描画(A)
+	プライオリティー＃６．自機を描画(B)
+	プライオリティー＃７．ラインテスト画面を描画
+	プライオリティー＃８．敵を描画
+	プライオリティー＃９．ITEMを描画
+	プライオリティー＃10．敵弾を描画
 ---------------------------------------------------------*/
 
 //static void callback_gu_draw_haikei_all(void)
-static void gu_blit_haikei_maho_jiki(void)
+static void gu_blit_render_screen_01(void)
 {
-/* -- １．BG 画面を描画 */
+/* -- プライオリティー＃２BG 画面を描画 */
 	#if (1)
 	{
 		gu_set_texture(TEX_00_BACK_GROUND);
@@ -1543,10 +1491,10 @@ static void gu_blit_haikei_maho_jiki(void)
 	//	sceGuDisable(GU_CLIP_PLANES);
 	}
 	#endif
-/* -- ２．背景障害物を描画 */
+/* -- プライオリティー＃３．背景障害物を描画 */
 	#if (1)
 	#endif
-/* -- ３．魔方陣を描画 */
+/* -- プライオリティー＃４．魔方陣を描画 */
 	#if (1)
 	{
 		if (0!=draw_boss_hp_value)
@@ -1556,22 +1504,133 @@ static void gu_blit_haikei_maho_jiki(void)
 		}
 	}
 	#endif
-/* -- ４．jikiを描画 */
+/* -- プライオリティー＃５．ポリゴンライン面を描画 */
+	#if (0)
+	{
+		/* 魔方陣画像の一部を間借りする予定 */
+		/* パチェレーザー */
+	}
+	#endif
+/* -- プライオリティー＃６．自機を描画 */
 	#if (1)
 //	if (NULL != callback_gu_draw_haikei)	//共用if (0!=dr aw_bg_screen)
 	{
 		gu_set_texture(TEX_03_JIKI);
+
 		/*jiki_transfer_object();*/
-		{	TGameScreen_ClearSprite();
+		{
 		//	common_transfer_objects(sprite_list000_head, TEX_03_JIKI, SP_GROUP_JIKI_GET_ITEM, obj_status_table+(2*4*8*8));
 		//	common_transfer_objects(sprite_list000_head, TEX_03_JIKI, SP_GROUP_JIKI_GET_ITEM, obj_status_table+(8*8)+(select_player<<6) );
 			my_resource[TEX_03_JIKI].object_table_head = (obj_status_table+(OBJ_BANK_01_REIMU_A*OBJ_BANK_SIZE)+(select_player<<6));
-			common_transfer_objects(sprite_list000_head, TEX_03_JIKI, SP_GROUP_JIKI_GET_ITEM );
+			/* 自機c直接描画(自機面) */
+			common_transfer_objects111(/*sprite_list000_head,*/ TEX_03_JIKI, SP_GROUP_JIKI_GET_ITEM );
+			/* その他 */
+		//	TGameScreen_ClearSprite();
+			#if 1/*システムの自機面描画(雑魚として登録したもの) */
+			common_transfer_objects_clc_blit(/*sprite_list000_head,*/ TEX_03_JIKI, SP_GROUP_JIKI_GET_ITEM );/* 自機弾やボム時の立ち絵等の描画 */
+			#endif
 		}
-		s_blit_all_objects();/*PRIORITY_02_PLAYER*/
+	//	s_blit_all_objects();/*PRIORITY_02_PLAYER*/
 	}
 	#endif /*(000)*/
+
+
+
+
+/* -- プライオリティー＃７．ラインテスト画面を描画 */
+	#if (1==LINE_TEST)
+	if (NULL != callback_gu_draw_haikei)	//if (0!=dr aw_bg_screen)
+	{
+		/* -- ラインテスト画面を描画 */
+		if (pd.laser_mode)
+		{
+			gu_blit_lines();
+		}
+	}
+	#endif /*(000)*/
+	#if 000
+//	sceGuScissor(0, 0, PSP_WIDTH480, PSP_HEIGHT272);	/* 描画範囲を設定する */
+//	[ 旧SDL画面描画 ]
+//	sceGuScissor(0, 0, GAME_WIDTH, GAME_HEIGHT);	/* 描画範囲を設定する */
+	#endif
+//
+/* -- プライオリティー＃８．敵を描画 */
+	/* ☆ 敵面エフェクト */
+	/* ザコ(敵面エフェクト) */
+	/* ボス(敵面エフェクト) */
+	#if (1)
+	{
+		gu_set_texture(TEX_04_TEKI);	/* テクスチャをセット */
+		#if (1)
+		/*bullet_transfer_object();*/
+		{
+		//	common_transfer_objects(sprite_list000_head, TEX_04_TEKI, S P_GROUP_BULLETS, obj_status_table+0);
+			#if 0000/* 別で設定 */
+			my_resource[TEX_04_TEKI].object_table_head = (obj_status_table+(OBJ_BANK_11_ZAKO_STAGE1*OBJ_BANK_SIZE));
+			#endif
+		//	TGameScreen_ClearSprite();
+			common_transfer_objects_clc_blit(/*sprite_list000_head,*/ TEX_04_TEKI, (SP_GROUP_TEKI/*|SP_GROUP_BOSS*/) );
+		}
+	//	s_blit_all_objects();/*PRIORITY_05_BULLETS*/
+		#else
+		blit_bullet_all();
+		#endif /*(000)*/
+	}
+	#endif /*(000)*/
+//
+/* -- プライオリティー＃９．ITEMを描画 */
+//	/* その他の自機素材(アイテム面エフェクト) */
+	#if (1)
+	{
+		gu_set_texture(TEX_06_BULLET);	/* テクスチャをセット */
+		#if (1)
+		/*bullet_transfer_object();*/
+		{
+		//	common_transfer_objects(sprite_list444_head, TEX_06_BULLET, S P_GROUP_BULLETS, obj_status_table+0);
+			#if 000/* 別で設定 使ってない*/
+			my_resource[TEX_06_BULLET].object_table_head = (obj_status_table+(OBJ_BANK_01_ITEM*OBJ_BANK_SIZE));
+			#endif/*000*/
+		//	TGameScreen_ClearSprite();//???
+			common_transfer_444objects_new444(/*sprite_list444_head,*/ /*TEX_06_BULLET,*/ SP_GROUP_ITEMS );
+		}
+		#else
+		blit_bullet_all();
+		#endif /*(000)*/
+	}
+	#endif /*(000)*/
+//
+/* -- プライオリティー＃10．敵弾を描画 */
+	/* ☆ 弾幕面エフェクト */
+	#if (1)
+	/*
+		VRAMが使えないと、タイミングの関係でめんどくさい？
+	*/
+	/* 0==リリース, 1==開発中 */
+//	#define KAIHATSU_MODE (0)
+//	#if (0==KAIHATSU_MODE)
+//	if (shooting_game_core_work == main_call_func)/* game_coreの場合のみ弾幕描画(continue画面とかでは描かない) */
+//	#endif
+	{
+	//	gu_set_texture(TEX_06_BULLET);	/* テクスチャをセット */
+		#if (1)
+		/* 弾幕リストは分割する予定 なので専用に書き換える予定 */
+		/*bullet_transfer_object();*/
+		{
+		//	common_transfer_objects(sprite_list444_head, TEX_06_BULLET, S P_GROUP_BULLETS, obj_status_table+0);
+			#if 000/* 別で設定 使ってない*/
+			my_resource[TEX_06_BULLET].object_table_head = (obj_status_table+(OBJ_BANK_00_TAMA*OBJ_BANK_SIZE));/*使ってない*/
+			#endif/*000*/
+		//	TGameScreen_ClearSprite();//???
+			common_transfer_444objects_new444(/*sprite_list444_head,*/ /*TEX_06_BULLET,*/ SP_GROUP_BULLETS );
+		}
+		#else
+		blit_bullet_all();
+		#endif /*(000)*/
+	}
+	#endif /*(000)*/
+//
 }
+
 
 static u32 gu_bg_set_clear_color;
 global void gu_set_bg_u32_clear_color(u32 set_u32_clear_color)

@@ -12,18 +12,9 @@
 	ボスの後ろの魔方陣(大)
 ---------------------------------------------------------*/
 
- int boss_x256;
- int boss_y256;
 static int aaa_yyy;
 static void gu_draw_big_maho_jin(void)
 {
-//	#define BM_32V ((16*2)+2)	/* 一周分(+2は重なる分) */
-//	#define BM_32V ((16+1)*2)	/* 一周分(+2は重なる分) */
-	#define BM_32V ((32+1)*2)	/* 一周分(+2は重なる分) */
-
-	Vertex_uvcxyz_C32* vertices;
-	vertices = (Vertex_uvcxyz_C32*)sceGuGetMemory((BM_32V)*sizeof(Vertex_uvcxyz_C32));
-//
 	/* --- 半透明合成値 */
 	//#if (1==USE_VCOLOR)
 	//unsigned int blendlevel = (0xaa2f7fff);/* あかね */
@@ -42,19 +33,23 @@ static void gu_draw_big_maho_jin(void)
 			0x997f2fff, //		0x997f2fff,/* ending */
 		//	0xff601010, //	//	0xff601010,/**/
 		}; /* 透青緑赤 AABBGGRR */
-	const unsigned int big_maho_color8888 = maho_color_list[player_now_stage&0x07];
+	const unsigned int big_maho_color8888 = maho_color_list[pd.player_now_stage&0x07];
 //
 	unsigned int j;
 	unsigned short uv_x4;
 
 //	int boss_center_x = ((GAME_WIDTH)/2);
 //	int boss_center_y = ((GAME_HEIGHT)/2);
-	int boss_center_x = ((boss_x256)>>8)+(16);
-	int boss_center_y = ((boss_y256)>>8)+(24);
+				/* 中心座標なので、オフセットなし==ボス中心から弾出す。 */
+//	int boss_center_x = ((boss_x256)>>8)+(16);
+//	int boss_center_y = ((boss_y256)>>8)+(24);
+	int boss_center_x = ((boss_x256)>>8);
+	int boss_center_y = ((boss_y256)>>8);
 
 	/* 内側 */
 //	int hankei_111 = (draw_boss_hp_value>>2);/* 128==1024/8 */
-	int hankei_111 = (boss_life_value>>(2+3));/* 128==1024/8 */
+//	int hankei_111 = (boss_life_value>>(2+3));/* 128==1024/8 */
+	int hankei_111 = (spell_card_boss_timer>>(2+3))+(64);/* 128==1024/8 */
 	/* 外側 */
 	int hankei_222 = (hankei_111+(16)/*(8)*/);/* 8[dot]文字高さ */
 
@@ -62,21 +57,31 @@ static void gu_draw_big_maho_jin(void)
 	aaa_yyy++;
 	uv_x4 = (/*val5*/(aaa_yyy) /*& 0xff*/);
 
+	#if 1
+		/* 分割数は、 mipmap みたいにした方が良いかも。 */
+//		#define BM_32V	((16*2)+2)	/* 一周分(+2は重なる分) */
+//		#define BM_32V	((16+1)*2)	/* 一周分(+2は重なる分) */
+//		#define BM_32V	((32+1)*2)	/* 一周分(+2は重なる分) 32分割 */
+		#define BM_32V	((64+1)*2)	/* 一周分(+2は重なる分) 64分割 */
+		Vertex_uvcxyz_C32* vertices;
+		vertices = (Vertex_uvcxyz_C32*)sceGuGetMemory((BM_32V)*sizeof(Vertex_uvcxyz_C32));
+	//
+	#endif
 /* --- [ 回転文字 ] --- */
 //	int rotation_angle512 = (0);
 	int rotation_angle1024 = (0);
+//	int rotation_angle65536 = (0);
 	for (j=0; j<BM_32V; j+=2)/*32分割*/
 	{
 	int sin_angle;
 	int cos_angle;
-		#if (1==USE_SIN_TABLE)
-		sin_angle = (sin_tbl 512[/*rot_sin*/((/*OFFS_SIN512+*/rotation_angle512)&(512-1))]/*<<8*/);
-		cos_angle = (sin_tbl 512[/*rot_cos*/((	OFFS_COS512+  rotation_angle512)&(512-1))]/*<<8*/);
-		#else
+		#if 1
 	//	sin_angle = (int)(int256_sin1024(/*rot_sin*/((/*OFFS_SIN512+*/			  rotation_angle512+rotation_angle512)&(1024-1)))/*<<8*/);
 	//	cos_angle = (int)(int256_sin1024(/*rot_cos*/((	OFFS_COS512+OFFS_COS512+  rotation_angle512+rotation_angle512)&(1024-1)))/*<<8*/);
 		sin_angle = (int)(int256_sin1024(/*rot_sin*/((/*OFFS_SIN1024+*/ 		  rotation_angle1024)&(1024-1)))/*<<8*/);
 		cos_angle = (int)(int256_sin1024(/*rot_cos*/((	OFFS_COS1024+			  rotation_angle1024)&(1024-1)))/*<<8*/);
+//		sin_angle = (int)(int256_sin65536(/*rot_sin*/((/*OFFS_SIN65536+*/		  rotation_angle65536)&(65536-1)))/*<<8*/);
+//		cos_angle = (int)(int256_sin65536(/*rot_cos*/(( OFFS_COS65536+			  rotation_angle65536)&(65536-1)))/*<<8*/);
 		#endif
 	int ifx;
 	int ify;
@@ -101,14 +106,14 @@ static void gu_draw_big_maho_jin(void)
 		#if (1==USE_VCOLOR)
 		vertices[j+1].color = (big_maho_color8888); 	/*blendlevel*/
 		#endif
-		uv_x4				+=	32; 	/*64*/	/*テクスチャ*/
-	//	rotation_angle512	+=	(16)/*32*/; /*64*/	/* 角度 */
-		rotation_angle1024	+=	(32)/*32*/; /*64*/	/* 角度 */
+		uv_x4				+= (32);	/*64*/	/* テクスチャ 32[dots] */
+	//	rotation_angle512	+= (16);		/* 角度 */
+//		rotation_angle1024	+= (32);		/* 角度 32==(1024/32分割) 1周(1024)を32分割した場合の角度 */
+		rotation_angle1024	+= (16);		/* 角度 16==(1024/64分割) 1周(1024)を64分割した場合の角度 */
+//		rotation_angle65536 += (1024);		/* 角度 1024==(65536/64分割) 1周(65536)を64分割した場合の角度 */
 	}
 	sceGuDrawArray(GU_TRIANGLE_STRIP, TEXTURE_FLAGS5650_C32, (BM_32V), NULL, &vertices[0/*SL_24V*/]);
 }
 // 1 3 5 7 9
 // 0 2 4 6 8
-
-
 

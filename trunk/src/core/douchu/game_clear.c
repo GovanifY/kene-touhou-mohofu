@@ -15,18 +15,18 @@ global void add_enemy_all_clear(STAGE_DATA *l)
 {
 	#if 0
 	/* なんか知らんが、Lunaticでちょっとチェックしたら、オーバーフローするｗ。 */
-	player_add_score(adjust_score_by_difficulty((
-				(pd_zanki * score(3000000)) +	/* 残機   x 300万 */
-				(pd_bombs * score(1000000)) 	/* 残ボム x 100万 */
+	player_dummy_add_score(adjust_score_by_difficulty((
+				(pd.zanki * score(3000000)) +	/* 残機   x 300万 */
+				(pd.bombs * score(1000000)) 	/* 残ボム x 100万 */
 			)));
 	#else
 	/* なんか知らんが、オーバーフローするので、個別に足してみる。 */
-	player_add_score(adjust_score_by_difficulty((	(((u32)pd_zanki) * score(3000000)) ))); 	/* 残機   x 300万 */
-	player_add_score(adjust_score_by_difficulty((	(((u32)pd_bombs) * score(1000000)) ))); 	/* 残ボム x 100万 */
+	player_dummy_add_score(adjust_score_by_difficulty(( (((u32)pd.zanki) * score(3000000)) ))); 	/* 残機   x 300万 */
+	player_dummy_add_score(adjust_score_by_difficulty(( (((u32)pd.bombs) * score(1000000)) ))); 	/* 残ボム x 100万 */
 	#endif
 	/* 清算して消える */
-	pd_zanki = 0;
-	pd_bombs = 0;
+	pd.zanki = 0;
+	pd.bombs = 0;
 	//
 	game_clear_set_password();
 	#if 1/* この２つのセットで自動的に終了(GAME OVER)する */
