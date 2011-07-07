@@ -2,7 +2,7 @@
 #include "game_main.h"
 
 /*---------------------------------------------------------
-	東方模倣風	～ Toho Imitation Style.
+	東方模倣風 ～ Toho Imitation Style.
 	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	ファイル関連処理
@@ -262,7 +262,7 @@ static int ini_load_item(/*FILE *fp,*/ char *search, char *str_result)
 				*sc = 0;	// '\0' を追記。  NULL
 			}
 			//
-		//	error(ERR_FATAL, "test %s | %s\n", c, item_name);/*test 1\n | k0a  */
+		//	error(ERR_FATAL, "test %s | %s\n", c, item_name);/* test 1\n | k0a */
 			//
 			if (0==tiny_strcmp(item_name, search))
 			{
@@ -314,8 +314,7 @@ static const char *my_config_title[OPTION_CONFIG_08_MAX]=
 	"analog",
 	"open",
 };
-//extern char str_pa ss_word[]; 	/* [***090222 */
-extern int select_player;
+
 extern void set_default_key(int *key_setting_map, int key_setting_type);
 extern void set_default_option(int *option_setting_map);
 extern void check_limit_value_option(int *option_setting_map);
@@ -328,7 +327,7 @@ global void ini_load(void)
 	"ms0:/PICTURE/東方模倣風"が作れないので、必ず必要。
 	ない場合、無視されるのではなくて、最悪「ハングアップしたりする」。
 	(SDL側のせいって気もするけど???)
-	*/
+ */
 //	sceIoMkdir("ms0:/PICTURE/東方模倣風/", 0777);/* 出来ない */
 	sceIoMkdir("ms0:/PICTURE/東方模倣風", 0777);/* 出来る */
 	#endif
@@ -475,16 +474,16 @@ error00:
 	/* 範囲外チェック(範囲外の場合は修正) */
 	check_limit_value_option(option_config);/* */
 	/* 読み込んだデーターで初期設定 */
-	difficulty		= option_config[OPTION_CONFIG_04_CURRENT_DIFFICULTY];
-	select_player	= option_config[OPTION_CONFIG_05_CURRENT_PLAYER];
+	cg_game_difficulty		= option_config[OPTION_CONFIG_04_CURRENT_DIFFICULTY];
+	cg_game_select_player	= option_config[OPTION_CONFIG_05_CURRENT_PLAYER];
 //	if (-1 == ini_load_item(/*fp,*/ "pa ssword", st r_pass_word))	{	goto error00;/* return (-1); */ 	}
 
 	#if 1/*修正ずみ*/
 //	範囲外の場合は修正
 //	if (difficulty>3 || 0>difficulty)/* (easy)0 1 2 3(Lunatic) */
 //	{	difficulty = 0/* 0==easy 2*/;}
-	difficulty		&= 0x03;
-	select_player	&= 0x07;
+	cg_game_difficulty		&= 0x03;
+	cg_game_select_player	&= 0x07;
 	#endif
 }
 
@@ -553,8 +552,8 @@ global void ini_save(void)
 	strcpy(buf, "; オプション設定\n" );
 	write_buf(/*fp,*/fd, buf);
 	#endif	/* (USE_MEMO) */
-	option_config[OPTION_CONFIG_04_CURRENT_DIFFICULTY]	= difficulty;
-	option_config[OPTION_CONFIG_05_CURRENT_PLAYER]		= select_player;
+	option_config[OPTION_CONFIG_04_CURRENT_DIFFICULTY]	= (cg_game_difficulty);
+	option_config[OPTION_CONFIG_05_CURRENT_PLAYER]		= (cg_game_select_player);
 
 	{
 		unsigned int i;

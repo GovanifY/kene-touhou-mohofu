@@ -2,7 +2,7 @@
 #include "game_main.h"
 
 /*---------------------------------------------------------
-	東方模倣風	～ Toho Imitation Style.
+	東方模倣風 ～ Toho Imitation Style.
 	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	ゲーム開始時の難易度/プレイヤー選択
@@ -11,7 +11,7 @@
 
 #include "kanji_system.h"
 
-global int select_player;
+//global int (cg_game_select_player);
 
 static int is_turn_right;
 static SDL_Surface *difficulty_select_fg0_surface;
@@ -64,7 +64,6 @@ global void game_clear_set_password(void)
 	}
 }
 
-#define SP_X 250
 
 
 //player select用
@@ -81,14 +80,14 @@ global void game_clear_set_password(void)
 
 static /*const*/const char *player00_res[(BASE_SP_PNG_MAX)] =
 {
-	/*	0 REIMU */		"select/bg00.jpg",	//	"select/bg_re.jpg", 	// "select/sp_reimu_bg.jpg",
-	/*	1 REIMU */		"select/bg01.jpg",	//	"select/bg_re.jpg", 	// "select/sp_reimu_bg.jpg",
-	/*	2 MARISA */ 	"select/bg02.jpg",	//	"select/bg_ma.jpg", 	// "select/sp_marisa_bg.jpg",
-	/*	3 MARISA */ 	"select/bg03.jpg",	//	"select/bg_ma.jpg", 	// "select/sp_marisa_bg.jpg",
-	/*	4 REMILIA */	"select/bg04.jpg",	//	"select/bg_ma.jpg", 	// "select/sp_marisa_bg.jpg",
-	/*	5 YUYUKO */ 	"select/bg05.jpg",	//	"select/bg_oz.jpg", 	// "select/sp_remiria_bg.jpg",
-	/*	6 CIRNO */		"select/bg06.jpg",	//	"select/bg_ci.jpg", 	// "select/sp_cirno_bg.jpg",
-	/*	7 CIRNO */		"select/bg07.jpg",	//	"select/bg_yu.jpg", 	// "select/sp_yuyuko_bg.jpg",
+	/*	0 REIMU */		"select/bg00.png",	//	"select/bg_re.png", 	// "select/sp_reimu_bg.png",
+	/*	1 REIMU */		"select/bg01.png",	//	"select/bg_re.png", 	// "select/sp_reimu_bg.png",
+	/*	2 MARISA */ 	"select/bg02.png",	//	"select/bg_ma.png", 	// "select/sp_marisa_bg.png",
+	/*	3 MARISA */ 	"select/bg03.png",	//	"select/bg_ma.png", 	// "select/sp_marisa_bg.png",
+	/*	4 REMILIA */	"select/bg04.png",	//	"select/bg_ma.png", 	// "select/sp_marisa_bg.png",
+	/*	5 YUYUKO */ 	"select/bg05.png",	//	"select/bg_oz.png", 	// "select/sp_remiria_bg.png",
+	/*	6 CIRNO */		"select/bg06.png",	//	"select/bg_ci.png", 	// "select/sp_cirno_bg.png",
+	/*	7 CIRNO */		"select/bg07.png",	//	"select/bg_yu.png", 	// "select/sp_yuyuko_bg.png",
 //
 	/*	8 REIMU */		"select/pl00.png",	//	"select/p_re.png",		// "select/sp_reimu_st.png",
 	/*	9 REIMU */		"select/pl01.png",	//	"select/p_re.png",		// "select/sp_reimu_st.png",
@@ -122,7 +121,7 @@ static void draw_player_spec_message(void)
 		"アイシクルニードル\\n" 		"アイシクルストライク\\n"			"速度★★★ 攻撃★☆☆",		// No. 6 チルノ A(氷符)
 		"アイシクルニードル\\n" 		"氷とか\\n" 						"速度はええ 攻撃つおい",		// No. 7 チルノ Q(⑨系)
 	};/* 氷柱 == Icicle == アイシクル */
-	print_kanji000((char *)const_player_spec_str[(select_player)], /*int color_type*/7, /*int wait*/0);
+	print_kanji000((char *)const_player_spec_str[((cg_game_select_player))], /*int color_type*/7, /*int wait*/0);
 }
 
 enum
@@ -152,17 +151,17 @@ static void player_select_work(void)
 
 	if ((PLAYER_SELECT_03_LOAD)==my_ppp_loop)/* [load] */
 	{
-		select_player	&= 7;
+		(cg_game_select_player)	&= 7;
 //
-		player_select_bg2_surface=load_chache_bmp( (char *)player00_res[BASE_SP_BG_PNG+select_player]);//, 0, 0/*1*/);
-		player_select_fg2_surface=load_chache_bmp( (char *)player00_res[BASE_SP_ST_PNG+select_player]);//, 0, 0/*1*/);
+		player_select_bg2_surface=load_chache_bmp( (char *)player00_res[BASE_SP_BG_PNG+(cg_game_select_player)]);//, 0, 0/*1*/);
+		player_select_fg2_surface=load_chache_bmp( (char *)player00_res[BASE_SP_ST_PNG+(cg_game_select_player)]);//, 0, 0/*1*/);
 		SDL_SetColorKey(player_select_fg2_surface, (SDL_SRCCOLORKEY), 0x00000000);
 		if (0==is_turn_right)
-				{	select_player--;	}
-		else	{	select_player++;	}
-		select_player &= 0x07;
-		player_select_bg0_surface=load_chache_bmp( (char *)player00_res[BASE_SP_BG_PNG+select_player]);//, 0, 0/*1*/);
-		player_select_fg0_surface=load_chache_bmp( (char *)player00_res[BASE_SP_ST_PNG+select_player]);//, 0, 0/*1*/);
+				{	(cg_game_select_player)--;	}
+		else	{	(cg_game_select_player)++;	}
+		(cg_game_select_player) &= 0x07;
+		player_select_bg0_surface=load_chache_bmp( (char *)player00_res[BASE_SP_BG_PNG+(cg_game_select_player)]);//, 0, 0/*1*/);
+		player_select_fg0_surface=load_chache_bmp( (char *)player00_res[BASE_SP_ST_PNG+(cg_game_select_player)]);//, 0, 0/*1*/);
 		SDL_SetColorKey(player_select_fg0_surface, (SDL_SRCCOLORKEY), 0x00000000);
 //
 		sp_scale256 	= (255);
@@ -185,8 +184,12 @@ static void player_select_work(void)
 		SDL_BlitSurface(player_select_bg0_surface,NULL,sdl_screen[SDL_00_VIEW_SCREEN],NULL);
 		/* プレイヤー(1&2) / 背景(1&2) / 描画 */
 		{
+		//	#define PLAYER_OBJ_LOCATE_X 	(250)		/* (r32) 素材[200x200] */
+		//	#define PLAYER_OBJ_LOCATE_Y 	(50)		/* (r32) 素材[200x200] */
+			#define PLAYER_OBJ_LOCATE_X 	(256-32)	/* (r33) 素材[256x256] */
+			#define PLAYER_OBJ_LOCATE_Y 	(8) 		/* (r33) 素材[256x256] */
 			SDL_Rect dr;
-			dr.y = (50);
+			dr.y = PLAYER_OBJ_LOCATE_Y;
 			SDL_Surface *src;
 		//	player_opt_img256(player_select_fg2_surface, (256-sp_scale256), (  is_turn_right)/*1*/);	/* 右1 左0 */
 		//	player_opt_img256(player_select_fg0_surface, (	  sp_scale256), (1-is_turn_right)/*0*/);	/* 右0 左1 */
@@ -195,7 +198,7 @@ static void player_select_work(void)
 				sp_diff256+=(sp_scale256);
 				aaa=(((sp_diff256))>>8)-16;
 				if ((  is_turn_right))	{	aaa = -(aaa);}
-				dr.x = SP_X+(aaa);
+				dr.x = PLAYER_OBJ_LOCATE_X+(aaa);
 			}
 			src 		= player_select_fg2_surface;
 			dr.w = (src->w);
@@ -207,7 +210,7 @@ static void player_select_work(void)
 				sp_diff256+=(sp_scale256);
 				aaa=(((sp_diff256))>>8)-16;
 				if ((1-is_turn_right))	{	aaa = -(aaa);}
-				dr.x = SP_X+(aaa);
+				dr.x = PLAYER_OBJ_LOCATE_X+(aaa);
 			}
 			src 		= player_select_fg0_surface;
 			dr.w = (src->w);
@@ -220,7 +223,7 @@ static void player_select_work(void)
 		{
 			SDL_Rect ds;
 			ds.x = (0);
-			ds.y = (/*jj*/(difficulty)<<6);
+			ds.y = (/*jj*/((cg_game_difficulty))<<6);
 			ds.w = (SOZAI_HABA_184);	/* 素材幅191[ドット] */
 			ds.h = (SOZAI_TATE_064);	/* 素材幅 63[ドット] */
 		//
@@ -246,10 +249,10 @@ static void player_select_work(void)
 	else
 	if ((PLAYER_SELECT_05_SELECT)==my_ppp_loop)/* [選択] */
 	{
-		msg_time = (60*5);/* 必要 */
-		if (0==my_pad_alter)/* さっき何も押されてなかった場合にキーチェック(原作準拠) */
+		cg.msg_time = byou60(5);/* 必要 */	/* 約 5 秒 */
+		if (0==cg_my_pad_alter)/* さっき何も押されてなかった場合にキーチェック(原作準拠) */
 		{
-			if (my_pad & (PSP_KEY_LEFT|PSP_KEY_RIGHT|PSP_KEY_SHOT_OK|PSP_KEY_BOMB_CANCEL)) /* 左か右かショットかキャンセルのいづれか */
+			if (cg_my_pad & (PSP_KEY_LEFT|PSP_KEY_RIGHT|PSP_KEY_SHOT_OK|PSP_KEY_BOMB_CANCEL)) /* 左か右かショットかキャンセルのいづれか */
 			{	/* 状態が変わる場合で*/
 				/* 状態が変わる場合、ちゃんと SDLサーフェイスを開放 しないとメモリーリークするよ */
 				unloadbmp_by_surface(player_select_bg0_surface);	//キャッシュに入ってるのでNULLに出来ない。player_select_bg0_surface = NULL;
@@ -257,15 +260,15 @@ static void player_select_work(void)
 				unloadbmp_by_surface(player_select_bg2_surface);	//キャッシュに入ってるのでNULLに出来ない。player_select_bg2_surface = NULL;
 				unloadbmp_by_surface(player_select_fg2_surface);	//キャッシュに入ってるのでNULLに出来ない。player_select_fg2_surface = NULL;
 			//
-				if (my_pad & (PSP_KEY_LEFT|PSP_KEY_RIGHT)/*左か右の両方*/  ) /* 左右ボタン入力 */
+				if (cg_my_pad & (PSP_KEY_LEFT|PSP_KEY_RIGHT)/*左か右の両方*/  ) /* 左右ボタン入力 */
 				{
-					is_turn_right = (my_pad & PSP_KEY_RIGHT)?1:0;/* 右なら1, 左なら0 */
+					is_turn_right = (cg_my_pad & PSP_KEY_RIGHT)?1:0;/* 右なら1, 左なら0 */
 					voice_play(VOICE02_MENU_SELECT, TRACK01_EXPLODE);
 					my_ppp_loop = (PLAYER_SELECT_03_LOAD);	/* [load] */
 				}
-				if (my_pad & PSP_KEY_SHOT_OK)
+				if (cg_my_pad & PSP_KEY_SHOT_OK)
 				{
-					msg_time = (0);/* 必要 */
+					cg.msg_time = (0);/* 必要 */
 					{
 						/* 状態が変わる場合、ちゃんと SDLサーフェイスを開放 しないとメモリーリークするよ */
 						unloadbmp_by_surface(difficulty_select_fg0_surface);	//キャッシュに入ってるのでNULLに出来ない。difficulty_select_fg0_surface = NULL;
@@ -274,9 +277,9 @@ static void player_select_work(void)
 					main_call_func = stage_first_init;
 				}
 				else
-				if (my_pad & PSP_KEY_BOMB_CANCEL)
+				if (cg_my_pad & PSP_KEY_BOMB_CANCEL)
 				{
-					msg_time = (0);/* 必要 */
+					cg.msg_time = (0);/* 必要 */
 					voice_play(VOICE04_SHIP_HAKAI, TRACK03_SHORT_MUSIC/*TRACK01_EXPLODE*/);/* 自機死に音は、なるべく重ねない */
 					/* 難易度選択メニューに戻る */
 					main_call_func = difficulty_select_menu_start;	/* 難易度選択メニューへ */
@@ -309,12 +312,16 @@ static void draw_difficulty_spec_message(void)
 	home_cursor();			/* カーソルをホームポジションへ移動 */
 	static const char *const_difficulty_spec_str[(4)] =
 	{
-		"Easy\\n"		"簡単に言えば、ボムゲです。\\n" 		"　　　　　　　　　(ちゃんと全６面)",	// No. 0 easy
-		"Normal\\n" 	"普通に言えば、難しいです。\\n" 		"　　　　　　　　　　　　　(全６面)",	// No. 1 normal
-		"Hard\\n"		"お硬く言えば、厳しいです。\\n" 		"　　　　　　　　　　　　　(全６面)",	// No. 2 hard
-		"Lunatic\\n"	"月並みに言えば、激しいです。\\n"		"　　　　　　　　　　　　　(全６面)",	// No. 3 lunatic
+	//	"Easy\\n"		"簡単に言えば、ボムゲです。\\n" 		"　　　　　　　　　(ちゃんと全６面)",	// No. 0 easy
+	//	"Normal\\n" 	"普通に言えば、難しいです。\\n" 		"　　　　　　　　　　　　　(全６面)",	// No. 1 normal
+	//	"Hard\\n"		"お硬く言えば、厳しいです。\\n" 		"　　　　　　　　　　　　　(全６面)",	// No. 2 hard
+	//	"Lunatic\\n"	"月並みに言えば、激しいです。\\n"		"　　　　　　　　　　　　　(全６面)",	// No. 3 lunatic
+		"Easy\\n"		"簡単には攻略できない。\\n" 			"　　　　　　　　　(おおよそ全６面)",	// No. 0 easy
+		"Normal\\n" 	"普通の人にはお勧めできない。\\n"		"　　　　　　　　　　　　　(全６面)",	// No. 1 normal
+		"Hard\\n"		"硬い。\\n" 							"　　　　　　　　　　　　　(全６面)",	// No. 2 hard
+		"Lunatic\\n"	"月並みとは限らない。\\n"				"　　　　　　　　　　　　　(全６面)",	// No. 3 lunatic
 	};
-	print_kanji000((char *)const_difficulty_spec_str[(difficulty)], /*int color_type*/7, /*int wait*/0);
+	print_kanji000((char *)const_difficulty_spec_str[((cg_game_difficulty))], /*int color_type*/7, /*int wait*/0);
 }
 
 static void difficulty_select_menu_local_work(void)
@@ -322,7 +329,7 @@ static void difficulty_select_menu_local_work(void)
 	static int sp_scale256;
 	if ((RANK_SELECT_00_LOAD)==my_ppp_loop) 	/* [load] */
 	{
-		difficulty &= 0x03;
+		(cg_game_difficulty) &= 0x03;
 //
 		sp_scale256 	= (255);
 		sp_diff256		= (0);
@@ -360,50 +367,50 @@ static void difficulty_select_menu_local_work(void)
 				dr.x = (128);
 				dr.y = (16)+(jj<<6);
 			}
-			if ((jj==difficulty))
+			if ((jj==(cg_game_difficulty)))
 			{
 				dr.x -= (8);
 				dr.y -= (8);
 			}
 		//	SDL_SetColorKey(src, (SDL_SRCCOLORKEY), 0x00000000);
-			SDL_SetAlpha(src, SDL_SRCALPHA, (((jj==difficulty)?(255):(127))));
+			SDL_SetAlpha(src, SDL_SRCALPHA, (((jj==(cg_game_difficulty))?(255):(127))));
 			SDL_BlitSurface(src, &ds, sdl_screen[SDL_00_VIEW_SCREEN], &dr);
 		}
 	}
 	else
 	if ((RANK_SELECT_02_SELECT)==my_ppp_loop)/* [選択] */
 	{
-		msg_time = (60*5);/* 必要 */
-		if (0==my_pad_alter)/* さっき何も押されてなかった場合にキーチェック(原作準拠) */
+		cg.msg_time = byou60(5);/* 必要 */	/* 約 5 秒 */
+		if (0==cg_my_pad_alter)/* さっき何も押されてなかった場合にキーチェック(原作準拠) */
 		{
-			if (my_pad & (PSP_KEY_UP|PSP_KEY_DOWN|PSP_KEY_SHOT_OK|PSP_KEY_BOMB_CANCEL)) /* 左か右かショットかキャンセルのいづれか */
+			if (cg_my_pad & (PSP_KEY_UP|PSP_KEY_DOWN|PSP_KEY_SHOT_OK|PSP_KEY_BOMB_CANCEL)) /* 左か右かショットかキャンセルのいづれか */
 			{	/* 状態が変わる場合で*/
 			//
-				if (my_pad & (PSP_KEY_UP|PSP_KEY_DOWN)/*上か下の両方*/ ) /* 上下ボタン入力 */
+				if (cg_my_pad & (PSP_KEY_UP|PSP_KEY_DOWN)/*上か下の両方*/ ) /* 上下ボタン入力 */
 				{
-					if (my_pad & PSP_KEY_UP)
-							{	difficulty--;	}
-					else	{	difficulty++;	}
+					if (cg_my_pad & PSP_KEY_UP)
+							{	(cg_game_difficulty)--;	}
+					else	{	(cg_game_difficulty)++;	}
 					voice_play(VOICE02_MENU_SELECT, TRACK01_EXPLODE);
 					my_ppp_loop = (RANK_SELECT_00_LOAD);	/* [load] */
 				}
-				if (my_pad & PSP_KEY_SHOT_OK)
+				if (cg_my_pad & PSP_KEY_SHOT_OK)
 				{
-					msg_time = (0);/* 必要 */
+					cg.msg_time = (0);/* 必要 */
 					voice_play(VOICE01_MENU_OK, TRACK01_EXPLODE);/* テキトー */
 					/* 通常／プラクティス、ゲーム開始 */
 					// static void player_opt_init(void)吸収。なし
 					{
 						is_turn_right = 0;/* 必要 */
-						select_player++;/* プログラムplayer_select_work()の都合上調整 */	/*player_select_work()::[init]*/
+						(cg_game_select_player)++;/* プログラムplayer_select_work()の都合上調整 */	/*player_select_work()::[init]*/
 					}
 					my_ppp_loop++;/* = (PLAYER_SELECT_03_LOAD) */
 					main_call_func = player_select_work;
 				}
 				else
-				if (my_pad & PSP_KEY_BOMB_CANCEL)
+				if (cg_my_pad & PSP_KEY_BOMB_CANCEL)
 				{
-					msg_time = (0);/* 必要 */
+					cg.msg_time = (0);/* 必要 */
 					{
 						/* 状態が変わる場合、ちゃんと SDLサーフェイスを開放 しないとメモリーリークするよ */
 						unloadbmp_by_surface(difficulty_select_fg0_surface);	//キャッシュに入ってるのでNULLに出来ない。difficulty_select_fg0_surface = NULL;
@@ -419,7 +426,7 @@ global void difficulty_select_menu_start(void)
 {
 //	psp_clear_screen();
 	/* [init] */
-	if (0==my_pad_alter)/* さっき何も押されてなかった場合 */
+	if (0==cg_my_pad_alter)/* さっき何も押されてなかった場合 */
 	{
 		psp_push_screen();
 		/* [load] */

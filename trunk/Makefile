@@ -5,18 +5,24 @@
 
 TARGET = kene
 
-PSP_EBOOT_TITLE = kene_r32_debug
+PSP_EBOOT_TITLE = kene_r33_debug
 
-#RELESE_DATE = "2010/06/06"
+#RELESE_DATE = "2010/12/05"
+
+# (r33)動作確認済みpsp
+# 1.00    (psp-1000最初期のFW)
+# 3.60 M33(psp-2000最初期のCFW)
+# 上記のpspで動作確認を行いました。
+# これ以外は多分動くんじゃないかと思い、確認していません。
 
 #------------------------------------------------------------------------------
 # PSP setting
 #------------------------------------------------------------------------------
 
-# psp-2000対応(らしい)
+# psp-2000対応(らしい)。
 PSP_LARGE_MEMORY = 1
 
-# よくわかんない 滝汗; が3.71以降(つまりpsp-2000拡張メモリ)対応ってこと(らしい)
+# 3.71以降(つまりpsp-2000拡張メモリ)対応ってこと(らしい)。
 PSP_FW_VERSION = 371
 
 #------------------------------------------------------------------------------
@@ -45,6 +51,20 @@ CUSTOM_SDL = 1
 #CUSTOM_SDL = 0
 
 #------------------------------------------------------------------------------
+# Debug information (デバッグ用、ここを変えても EBOOT.PBP は同じ)
+#------------------------------------------------------------------------------
+# デバッグ用。グローバル変数の配置確認などしたい場合。
+#------------------------------------------------------------------------------
+
+# 0 == デバッグ用のシンボル配置情報を出力しない。
+# 「ライブラリの具体的な依存関係(実際の配置)」 や
+# 「グローバル変数の配置」、
+# 「データーセクションの実際の.align調整(「*fill*」ってのがGCCが.alignした奴)」 
+# 等が知りたくなった場合のデバッグ情報。
+DEBUG_MAP = 0
+#DEBUG_MAP = 1
+
+#------------------------------------------------------------------------------
 # Compile option flag (r31時点で間に合わなかった。研究中)
 #------------------------------------------------------------------------------
 # 注意: ここのカテゴリのオプションはr31時点で間に合わなかったのでダミーです。
@@ -67,8 +87,27 @@ CUSTOM_231SDL = 1
 #------------------------------------------------------------------------------
 # Custom Lib option flag (カスタマイズ)
 #------------------------------------------------------------------------------
-# 注意: ここのカテゴリのオプションを変更した場合は、SDL_mixer のリコンパイルが必ず必要です。
+# 注意: ここのカテゴリのオプションを変更した場合は、audio_mixer のリコンパイルが必ず必要です。
 # (設定変更後、make rr↓してからmake↓推奨)
+#------------------------------------------------------------------------------
+# FAQ. Q:「 audio_mixer 」って何よ？
+# 「 audio_mixer 」は SDL_mixer.a の改造版です。
+# audio_mixerは単体で使用できません。(SDL.aが要る)理由は、
+# 1. SDLの標準ファイル入出力機能を使用している。
+# 2. SDLの排斥制御機能(セマフォ)を使用している。(.ITはVERCH挟んでbufferingしてるのでセマフォは実際関係ないが、oggは再生で困る。)
+# です。(SDLのタイマーは使用していない)
+# mp3 に対応させるためには「 madlib.a 」が別途要ります。(madlib.aに関してはpspの場合、version違いが無いみたいなので添付してません)
+#------------------------------------------------------------------------------
+#  「 audio_mixer 」の改造個所は主に、
+# 1. mod(mikmod)のversionが古いので、最新版(でも前世紀)にしてついでに.IT形式の読み込みを高速化した。
+# 2. mod関連の mixing level の設定が ogg や mp3 と比べて小さすぎるので修正。(但し、実用的な範囲では音割れしないが音割れの可能性がある)
+# 3. mod関連の内内蔵 仮想ミキサー (VERCH==Virtual-Mixer)の負荷が高すぎるので速くした。(64bit -> 32bitにしてフィルターを修正)
+# 4. 必要ないエフェクタ機能(デジタル リバーブ)を排除して速くした。
+#    (このエフェクタ、面白いんだけどpspには負荷が高すぎた。弾幕じゃなけりゃ1ch(ステレオなのでつまり2ch)ぐらいは実用的な速度出る)
+#    (やろうと思えば ending-staff roll とか 負荷が少ない処で使えなくもない。)
+# 5. 効果音チャネルが 8chしかないので 16chにした。(もっと128chぐらいまでなら増やしても(現在フィルター&エフェクト無いので)負荷なんか殆んど無いと思われる)
+# 6. その他逆転再生とかループ再生とか必要ない機能はバッサリカット。(して速くした。)
+# 7. 他(忘れた)
 #------------------------------------------------------------------------------
 
 # 実験中
@@ -77,7 +116,7 @@ CUSTOM_LIB = 1
 #CUSTOM_LIB = 0
 
 # MP3の設定
-# 注意: MP3の使用可否を変更した場合は、SDL_mixer のリコンパイルが必ず必要です。(設定変更後、make rr↓してからmake↓推奨)
+# 注意: MP3の使用可否を変更した場合は、audio_mixer のリコンパイルが必ず必要です。(設定変更後、make rr↓してからmake↓推奨)
 
 	## 注意: LINK_SMPEG_MP3 と LINK_MAD_MP3 を両方 1 にする事は出来ません。
 	# ok 	LINK_SMPEG_MP3 = 0	LINK_MAD_MP3 = 0	MP3 とか使わない。
@@ -99,7 +138,7 @@ CUSTOM_LIB = 1
 	# (もし仮に両方にバグが無いと想定すると)たぶんバッファオーバーランなんじゃないかな？
 
 # 1 == LINK_OGG:標準設定 [ oggの使用可否 ] (0:使用しない、1:使用する)
-# 注意: oggの使用可否を変更した場合は、SDL_mixer のリコンパイルが必ず必要です。
+# 注意: oggの使用可否を変更した場合は、audio_mixer のリコンパイルが必ず必要です。
 LINK_OGG = 1
 #LINK_OGG = 0
 
@@ -107,7 +146,7 @@ LINK_OGG = 1
 # 0: libtremor_large  を使用する。
 # 1: libtremor_lowmem を使用する。
 # 0 == LINK_LIBTREMOR_LOW_MEM:標準設定 [ libtremor_lowmemの使用可否 ] (0:使用しない、1:使用する)
-# 注意: libtremor_lowmem の選択を変更した場合は、SDL_mixer のリコンパイルが必ず必要です。
+# 注意: libtremor_lowmem の選択を変更した場合は、audio_mixer のリコンパイルが必ず必要です。
 LINK_LIBTREMOR_LOW_MEM = 1
 #LINK_LIBTREMOR_LOW_MEM = 0
 
@@ -168,7 +207,15 @@ PSPSDK = $(shell psp-config --pspsdk-path)
 LIBDIR =
 LDFLAGS =
 
-#LDFLAGS += -Wl,-Map=mohoufu.map
+
+#------------------- for debug
+
+ifneq ($(DEBUG_MAP),1)
+	# 通常
+else
+	# マッピング出力(デバッグ用)
+	LDFLAGS += -Wl,-Map=mohoufu_map.txt
+endif
 
 #------------------- for debug
 
@@ -256,7 +303,7 @@ ifneq ($(CUSTOM_LIB),1)
 
 	#### 依存規則１
 		# libSDL_mixer.a は libSDL.a, libSDL_noGL.a より必ず先にリンク
-		LIBS += -lSDL_mixer
+		#互換なしLIBS += -lSDL_mixer
 endif
 
 ifneq ($(CUSTOM_231SDL),1)
@@ -435,12 +482,14 @@ OBJDIRS += $(OBJ)/font
 
 OBJS += $(OBJ)/core/my_math.o
 OBJS += $(OBJ)/core/tama/bullet_vector.o
-OBJS += $(OBJ)/core/tama/bullet_angle.o
+#OBJS += $(OBJ)/core/tama/bullet_chain_laser.o
 #OBJS += $(OBJ)/core/tama/bullet_system.o
+OBJS += $(OBJ)/core/tama/tama_system.o
+OBJS += $(OBJ)/core/tama/laser_system.o
 #OBJS += $(OBJ)/core/tama/sprite_old.o
 #OBJS += $(OBJ)/core/tama/sprite_SDL.o
 OBJS += $(OBJ)/core/tama/sprite_bullet.o
-OBJS += $(OBJ)/core/tama/danmaku.o
+OBJS += $(OBJ)/core/tama/spell.o
 OBJS += $(OBJ)/core/boss/spell_card.o
 OBJS += $(OBJ)/core/boss/common.o
 #; ボス(本体)
@@ -454,62 +503,39 @@ OBJS += $(OBJ)/core/boss/boss_02_mima.o
 #OBJS += $(OBJ)/core/boss/boss_01_alice.o	# 模倣風標準機能ですべて対処出来るので固有機能はなし。
 OBJS += $(OBJ)/core/boss/boss_move.o
 #; ボスのオプション
-OBJS += $(OBJ)/core/boss/option_12_sakuya_baramaki.o
-OBJS += $(OBJ)/core/boss/option_10_sakuya_ryoute.o
-OBJS += $(OBJ)/core/boss/option_09_sakuya_360knife.o
-OBJS += $(OBJ)/core/boss/option_08_sakuya_star.o
-OBJS += $(OBJ)/core/boss/option_07_sakuya_laser.o
+OBJS += $(OBJ)/core/boss/option_60_sakuya_baramaki1.o
+OBJS += $(OBJ)/core/boss/option_61_sakuya_baramaki2.o
+OBJS += $(OBJ)/core/boss/option_62_sakuya_ryoute.o
+OBJS += $(OBJ)/core/boss/option_63_sakuya_linear.o
+OBJS += $(OBJ)/core/boss/option_64_sakuya_kurukuru.o
+OBJS += $(OBJ)/core/boss/option_65_sakuya_360knife.o
+OBJS += $(OBJ)/core/boss/option_66_sakuya_star.o
+OBJS += $(OBJ)/core/boss/option_67_sakuya_laser.o
+#OBJS += $(OBJ)/core/boss/option_68_sakuya_hosigata.o
 #
-OBJS += $(OBJ)/core/boss/option_15_pache_laser.o
-OBJS += $(OBJ)/core/boss/option_11_pache_doll.o
+OBJS += $(OBJ)/core/boss/option_50_pache_laser.o
+OBJS += $(OBJ)/core/boss/option_51_pache_doll.o
 #
-OBJS += $(OBJ)/core/boss/option_06_aya_momiji02.o
-OBJS += $(OBJ)/core/boss/option_05_aya_momiji01.o
+OBJS += $(OBJ)/core/boss/option_41_aya_momiji02.o
+OBJS += $(OBJ)/core/boss/option_40_aya_momiji01.o
 #
-OBJS += $(OBJ)/core/boss/option_13_kaguya_dolls.o
-OBJS += $(OBJ)/core/boss/option_04_kaguya_tamanoe.o
-OBJS += $(OBJ)/core/boss/option_03_kaguya_houmotu.o
-OBJS += $(OBJ)/core/boss/option_02_mima_hosi.o
+OBJS += $(OBJ)/core/boss/option_30_kaguya_dolls.o
+#OBJS += $(OBJ)/core/boss/option_31_kaguya_tamanoe.o
+OBJS += $(OBJ)/core/boss/option_32_kaguya_houmotu.o
+OBJS += $(OBJ)/core/boss/option_20_mima_hosi.o
 #
-OBJS += $(OBJ)/core/boss/option_14_alice_doll_type_b.o
-OBJS += $(OBJ)/core/boss/option_01_alice_doll.o
+OBJS += $(OBJ)/core/boss/option_10_alice_doll_type_b.o
+OBJS += $(OBJ)/core/boss/option_11_alice_doll.o
 #; 中ボスもどき
 OBJS += $(OBJ)/core/douchu/chuu_boss.o
 #OBJS += $(OBJ)/core/douchu/chuu_03_rumia.o
 #OBJS += $(OBJ)/core/douchu/chuu_02_youkai2.o
 #OBJS += $(OBJ)/core/douchu/chuu_01_youkai1.o
 #; ザコのオプション
-OBJS += $(OBJ)/core/douchu/option_50_homing.o
+OBJS += $(OBJ)/core/douchu/option_00_homing.o
 #; ザコ
 OBJS += $(OBJ)/core/douchu/zako.o
-#	/* 魔方陣[A/B] */
-#OBJS += $(OBJ)/core/douchu/zako_11_mahoujin.o
-#	/* 竜巻 陰陽玉 */
-#OBJS += $(OBJ)/core/douchu/zako_10_inyou1.o
-#OBJS += $(OBJ)/core/douchu/zako_11_tatsumaki1.o
-#	/* 妖怪 */
-#OBJS += $(OBJ)/core/douchu/zako_12_kakomi1.o
-#OBJS += $(OBJ)/core/douchu/zako_04_aka_kedama.o
-#	/* 毛玉 */
-#OBJS += $(OBJ)/core/douchu/zako_03_yukari2.o
-#OBJS += $(OBJ)/core/douchu/zako_06_midori_kedama1.o
-#OBJS += $(OBJ)/core/douchu/zako_07_midori_kedama2.o
-#OBJS += $(OBJ)/core/douchu/zako_08_kedama1.o
-#OBJS += $(OBJ)/core/douchu/zako_09_kedama2.o
-#	/* [C妖精]その他ザコ */
-#OBJS += $(OBJ)/core/douchu/zako_01_obake1.o
-#OBJS += $(OBJ)/core/douchu/zako_02_obake2.o
-#OBJS += $(OBJ)/core/douchu/zako_05_karasu1.o
-#	/* [B妖精]中妖精 */
-#OBJS += $(OBJ)/core/douchu/zako_13_meido1.o
-#OBJS += $(OBJ)/core/douchu/zako_14_meido2.o
-#OBJS += $(OBJ)/core/douchu/zako_15_meido3.o
-#OBJS += $(OBJ)/core/douchu/zako_16_meido4.o
-#	/* [A妖精]小妖精 */
-#OBJS += $(OBJ)/core/douchu/zako_17_ao_yousei1.o
-#OBJS += $(OBJ)/core/douchu/zako_18_ao_yousei2.o
-#OBJS += $(OBJ)/core/douchu/zako_19_ao_yousei3.o
-#OBJS += $(OBJ)/core/douchu/zako_20_ao_yousei4.o
+
 #; 敵以外だが敵扱い
 OBJS += $(OBJ)/core/douchu/kanji_text.o
 OBJS += $(OBJ)/core/douchu/game_clear.o
@@ -551,6 +577,11 @@ OBJS += $(OBJ)/core/menu/name_entry.o
 OBJS += $(OBJ)/core/menu/option_menu.o
 OBJS += $(OBJ)/core/menu/key_config.o
 OBJS += $(OBJ)/core/menu/music_room.o
+#/* スクリプトシステムは分離予定あり */
+OBJS += $(OBJ)/core/menu/scenario_script.o
+#OBJS += $(OBJ)/core/draw/game_script.o
+OBJS += $(OBJ)/core/draw/draw_kanji.o
+OBJS += $(OBJ)/font/shinonome16p.o
 
 OBJS += $(OBJ)/core/my_file.o
 
@@ -558,12 +589,7 @@ OBJS += $(OBJ)/core/my_file.o
 
 OBJS += $(OBJ)/core/draw/graphics00.o 
 
-#/* スクリプトシステムは分離予定あり */
-OBJS += $(OBJ)/core/draw/scenario_script.o
-#OBJS += $(OBJ)/core/draw/game_script.o
 
-OBJS += $(OBJ)/core/draw/draw_kanji.o
-OBJS += $(OBJ)/font/shinonome16p.o
 
 OBJS += $(OBJ)/core/boot_main.o
 OBJS += $(OBJ)/core/initialize.o
@@ -592,11 +618,21 @@ INCDIR += $(SRC)/core/include
 ##	CFLAGS += -O2
 	# 模倣風では、ここで指定しない。(このオプションは最適化の設定)
 
-CFLAGS += -G0
 CFLAGS += -Wall
 	# Warning があればすべて出力。
 	# 模倣風では -Werror なので Warning扱いは、エラー扱いにして即コンパイル中止。
-CFLAGS += -g
+
+CFLAGS += -G0
+	# -G0 を指定すると、GPレジスタを使わない(たぶん)
+	# 参考 http://wfasim.dyndns.org/wordpress/?p=182
+
+# -G は GPレジスタに関するオプションで -g はデバッグに関するオプション。大文字と小文字で全然意味が違う。
+#???	CFLAGS += -g
+#	CFLAGS += -g
+#	-g はデバッグに関するオプション。って事は判るけど詳細は良く判んない。(-pg付けたら-g付けたと解釈されるのかな？)
+#	C++(smpeg)使う場合は -g が要るかも知れない。っていうか要ると思う。
+#	-g 付けるとほんの少し※コードが大きくなる。(※少し: r33の場合で 36[bytes])
+#	r33現在 模倣風はC++無いので -gは要らない。(-lstdc++も要らない)
 
 CFLAGS += -std=gnu99
 	# 1999年の GNU 規格に沿った C言語コード とする。(暗黙の省略とか、voidポインタの扱いとか...)
@@ -788,8 +824,8 @@ $(OBJ)/core/%.o: $(SRC)/core/%.c
 #$(OBJ)/png/%.o: $(SRC)/png/%.c
 #	psp-gcc -O2 -Werror $(CFLAGS) $(LIB_CFLAGS) -c $< -o $@
 
-# SDL_mixerの場合
-$(OBJ)/SDL_mixer/%.o: $(SRC)/SDL_mixer/%.c
+# audio_mixerの場合
+$(OBJ)/audio_mixer/%.o: $(SRC)/audio_mixer/%.c
 	psp-gcc -O3 -Werror $(CFLAGS) $(LIB_CFLAGS) -c $< -o $@
 
 # その他のライブラリの場合
@@ -825,14 +861,14 @@ mk_dir:
 	@$(RM) -f PARAM.SFO
 
 DELTREE_OBJ_ALL 	= @$(RM) -f -rd $(OBJ)
-DELTREE_SDL_MIXER	= @$(RM) -f -rd $(OBJ)/SDL_mixer
+DELTREE_AUDIO_MIXER	= @$(RM) -f -rd $(OBJ)/audio_mixer
 DELTREE_OBJ_CORE	= @$(RM) -f -rd $(OBJ)/core
 DELTREE_OBJ_JIKI	= @$(RM) -f -rd $(OBJ)/core/jiki
 
-# SDL mixer のみ、リコンパイル用。
+# audio mixer のみ、リコンパイル用。
 mixer:
-	@echo Remove SDL mixer files.
-	@$(DELTREE_SDL_MIXER)
+	@echo Remove audio mixer files.
+	@$(DELTREE_AUDIO_MIXER)
 
 # ゲームコアのみ、リコンパイル用。
 core:
@@ -869,6 +905,7 @@ rr:
 	@echo Remove all temporaly files.
 	@$(RM) -f PARAM.SFO
 	@$(RM) -f *.elf
+	@$(RM) -f mohoufu_map.txt
 	@$(DELTREE_OBJ_ALL)
 
 
@@ -914,25 +951,25 @@ SDL_lib_bunkai:
 	rm -f SDL_error.o
 	rm -f SDL_fatal.o
 	mv *.o $(OBJ)/SDL231/
-	mv $(OBJ)/SDL231/SDL_audio.o $(OBJ)/SDL231/audio/
-	mv $(OBJ)/SDL231/SDL_audiocvt.o $(OBJ)/SDL231/audio/
-	mv $(OBJ)/SDL231/SDL_audiodev.o $(OBJ)/SDL231/audio/
-	mv $(OBJ)/SDL231/SDL_audiomem.o $(OBJ)/SDL231/audio/
-	mv $(OBJ)/SDL231/SDL_mixer.o $(OBJ)/SDL231/audio/
-	mv $(OBJ)/SDL231/SDL_pspaudio.o $(OBJ)/SDL231/audio/
-	mv $(OBJ)/SDL231/SDL_wave.o $(OBJ)/SDL231/audio/
-	mv $(OBJ)/SDL231/SDL_sysmutex.o $(OBJ)/SDL231/thread/
-	mv $(OBJ)/SDL231/SDL_syssem.o $(OBJ)/SDL231/thread/
+	mv $(OBJ)/SDL231/SDL_audio.o     $(OBJ)/SDL231/audio/
+	mv $(OBJ)/SDL231/SDL_audiocvt.o  $(OBJ)/SDL231/audio/
+	mv $(OBJ)/SDL231/SDL_audiodev.o  $(OBJ)/SDL231/audio/
+	mv $(OBJ)/SDL231/SDL_audiomem.o  $(OBJ)/SDL231/audio/
+	mv $(OBJ)/SDL231/SDL_mixer.o     $(OBJ)/SDL231/audio/
+	mv $(OBJ)/SDL231/SDL_pspaudio.o  $(OBJ)/SDL231/audio/
+	mv $(OBJ)/SDL231/SDL_wave.o      $(OBJ)/SDL231/audio/
+	mv $(OBJ)/SDL231/SDL_sysmutex.o  $(OBJ)/SDL231/thread/
+	mv $(OBJ)/SDL231/SDL_syssem.o    $(OBJ)/SDL231/thread/
 	mv $(OBJ)/SDL231/SDL_systhread.o $(OBJ)/SDL231/thread/
-	mv $(OBJ)/SDL231/SDL_thread.o $(OBJ)/SDL231/thread/
-	mv $(OBJ)/SDL231/SDL_blit.o $(OBJ)/SDL231/video/
-	mv $(OBJ)/SDL231/SDL_blit_0.o $(OBJ)/SDL231/video/
-	mv $(OBJ)/SDL231/SDL_blit_1.o $(OBJ)/SDL231/video/
-	mv $(OBJ)/SDL231/SDL_blit_A.o $(OBJ)/SDL231/video/
-	mv $(OBJ)/SDL231/SDL_blit_N.o $(OBJ)/SDL231/video/
-	mv $(OBJ)/SDL231/SDL_bmp.o $(OBJ)/SDL231/video/
-	mv $(OBJ)/SDL231/SDL_pixels.o $(OBJ)/SDL231/video/
-	mv $(OBJ)/SDL231/SDL_RLEaccel.o $(OBJ)/SDL231/video/
-	mv $(OBJ)/SDL231/SDL_surface.o $(OBJ)/SDL231/video/
-	mv $(OBJ)/SDL231/SDL_pspvideo.o $(OBJ)/SDL231/video/
-	mv $(OBJ)/SDL231/SDL_video.o $(OBJ)/SDL231/video/
+	mv $(OBJ)/SDL231/SDL_thread.o    $(OBJ)/SDL231/thread/
+	mv $(OBJ)/SDL231/SDL_blit.o      $(OBJ)/SDL231/video/
+	mv $(OBJ)/SDL231/SDL_blit_0.o    $(OBJ)/SDL231/video/
+	mv $(OBJ)/SDL231/SDL_blit_1.o    $(OBJ)/SDL231/video/
+	mv $(OBJ)/SDL231/SDL_blit_A.o    $(OBJ)/SDL231/video/
+	mv $(OBJ)/SDL231/SDL_blit_N.o    $(OBJ)/SDL231/video/
+	mv $(OBJ)/SDL231/SDL_bmp.o       $(OBJ)/SDL231/video/
+	mv $(OBJ)/SDL231/SDL_pixels.o    $(OBJ)/SDL231/video/
+	mv $(OBJ)/SDL231/SDL_RLEaccel.o  $(OBJ)/SDL231/video/
+	mv $(OBJ)/SDL231/SDL_surface.o   $(OBJ)/SDL231/video/
+	mv $(OBJ)/SDL231/SDL_pspvideo.o  $(OBJ)/SDL231/video/
+	mv $(OBJ)/SDL231/SDL_video.o     $(OBJ)/SDL231/video/

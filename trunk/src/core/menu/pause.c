@@ -2,7 +2,7 @@
 #include "game_main.h"
 
 /*---------------------------------------------------------
-	東方模倣風	～ Toho Imitation Style.
+	東方模倣風 ～ Toho Imitation Style.
 	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	ポーズ メニュー
@@ -144,6 +144,7 @@ static void pause_work_draw(void)
 	fadout fininshed, menu done
 ---------------------------------------------------------*/
 extern void gamecore_term(void);
+extern void script_system_set_re_draw(void);
 static void pause_menu_local_workMENU_STATE_03_FININSH(void)
 {
 	SDL_SetAlpha(sdl_screen[SDL_01_BACK_SCREEN],SDL_SRCALPHA,255);
@@ -156,10 +157,12 @@ static void pause_menu_local_workMENU_STATE_03_FININSH(void)
 //	}
 	if (MENU_ITEM_00_CONTINUE_GAME == active_item)/* Continue Game */
 	{
-		#if 1/*Gu化完了したら要らなくなる*/
+		#if 1/* Gu化完了したら要らなくなる */
 		{
 			psp_clear_screen(); 	/* [PAUSE] 復帰時にSDL画面を消す。 */
 		}
+		/* SDLなのでこの機構が必要。Gu化完了したら要らなくなる */
+		script_system_set_re_draw();	/* スクリプトシステムに再描画指示。 */
 		#endif
 		main_call_func = pause_out_call_func;
 		//adjust_start_time(pause_start_time);
@@ -168,7 +171,7 @@ static void pause_menu_local_workMENU_STATE_03_FININSH(void)
 	if (MENU_ITEM_01_RETRY_GAME == active_item)/* Retry Game */
 	{
 		gamecore_term();
-		msg_time = (0);/* 必要(?) */
+		cg.msg_time = (0);/* 必要(?) */ 	/* 約 0 秒 */
 		main_call_func = stage_first_init;	/* 始めから */
 	}
 	else
@@ -201,17 +204,17 @@ static void pause_menu_local_workMENU_STATE_02_FADE_OUT(void)
 /*---------------------------------------------------------
 	fadein complete
 ---------------------------------------------------------*/
-extern int now_max_continue;
+
 static void pause_menu_local_workMENU_STATE_01_WORK_MENU(void)
 {
 	{
-		if (0==my_pad_alter)/* さっき何も押されてなかった場合にキーチェック(原作準拠) */
+		if (0==cg_my_pad_alter)/* さっき何も押されてなかった場合にキーチェック(原作準拠) */
 		{
-			if (my_pad & (PSP_KEY_DOWN|PSP_KEY_UP|PSP_KEY_PAUSE|PSP_KEY_RIGHT))
+			if (cg_my_pad & (PSP_KEY_DOWN|PSP_KEY_UP|PSP_KEY_PAUSE|PSP_KEY_RIGHT))
 			{
 				voice_play(VOICE02_MENU_SELECT, TRACK01_EXPLODE);
 			}
-			if (my_pad & PSP_KEY_DOWN)
+			if (cg_my_pad & PSP_KEY_DOWN)
 			{
 				if (active_item == MENU_ITEM_99_MAX-1)
 				{	active_item = 0;	}
@@ -221,7 +224,7 @@ static void pause_menu_local_workMENU_STATE_01_WORK_MENU(void)
 				}
 			//	www=FPS_MENU_FACTOR10;
 			}
-			else if (my_pad & PSP_KEY_UP)
+			else if (cg_my_pad & PSP_KEY_UP)
 			{
 				if (0 == active_item)
 				{	active_item = MENU_ITEM_99_MAX-1;	}
@@ -232,22 +235,22 @@ static void pause_menu_local_workMENU_STATE_01_WORK_MENU(void)
 			//	www=FPS_MENU_FACTOR10;
 			}
 			/* セレクトキーを押した場合、クイックリスタート。("始めから")  (原作のキーボードショートカット機能) */
-			if (my_pad & PSP_KEY_SELECT)					/* [select]ボタンで("始めから") */
+			if (cg_my_pad & PSP_KEY_SELECT)					/* [select]ボタンで("始めから") */
 			{
 				/*pause_menu.*/active_item	= MENU_ITEM_01_RETRY_GAME;
 				main_call_func = pause_menu_local_workMENU_STATE_02_FADE_OUT;//my_ppp_loop++;// MENU_STATE_02_FADE_OUT;
 			}
 			/* ポーズキーを押した場合、ポーズ解除。 */
-			if (my_pad & PSP_KEY_PAUSE) 				/* [start]ボタンでポーズ解除 */
+			if (cg_my_pad & PSP_KEY_PAUSE) 				/* [start]ボタンでポーズ解除 */
 			{
 				/*pause_menu.*/active_item	= MENU_ITEM_00_CONTINUE_GAME;
 				main_call_func = pause_menu_local_workMENU_STATE_02_FADE_OUT;//my_ppp_loop++;// MENU_STATE_02_FADE_OUT;
 			}
 			/* ボスデバッグ用 */
 			#if 0/*(1==DEBUG_MODE)*/
-			if (my_pad & PSP_KEY_RIGHT)
+			if (cg_my_pad & PSP_KEY_RIGHT)
 			{
-				now_max_continue = 90;/*test*/	/* ランキングにさせない */
+				cg_game_now_max_continue = 90;/*test*/	/* ランキングにさせない */
 //				pd_game_score=8;/*test*/
 //				pd_zanki=8;/*test*/
 			//	pd_bombs=8;/*test*/
@@ -257,7 +260,7 @@ static void pause_menu_local_workMENU_STATE_01_WORK_MENU(void)
 			//	#endif
 			}
 			#endif
-			if (my_pad & PSP_KEY_SHOT_OK)
+			if (cg_my_pad & PSP_KEY_SHOT_OK)
 			{
 				voice_play(VOICE01_MENU_OK/*VOICE02_MENU_SELECT*/, TRACK01_EXPLODE);
 				main_call_func = pause_menu_local_workMENU_STATE_02_FADE_OUT;//my_ppp_loop++;// MENU_STATE_02_FADE_OUT;/* メニュー消去準備 */
@@ -294,8 +297,8 @@ extern void set_core_game_time_MAX(void);
 /*static*/global void pause_menu_start(void)
 {
 	if (
-			(7==pd.player_now_stage)	/* スタッフロール1 */
-		|| (10==pd.player_now_stage)	/* スタッフロール2 */
+			(7==cg.game_now_stage)	/* スタッフロール1 */
+		|| (10==cg.game_now_stage)	/* スタッフロール2 */
 	)
 	{
 		set_core_game_time_MAX();

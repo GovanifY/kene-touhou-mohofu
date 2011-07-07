@@ -2,13 +2,14 @@
 #include "game_main.h"
 
 /*---------------------------------------------------------
-	東方模倣風	～ Toho Imitation Style.
+	東方模倣風 ～ Toho Imitation Style.
 	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	オーディオ マネージャー
 ---------------------------------------------------------*/
 
-	#include "./../SDL_mixer/music_mixer.h"/*何故かこちら*/
+//	#include "./../SDL_mixer/music_mixer.h"/*何故かこちら*/
+	#include "./../audio_mixer/music_mixer.h"/*何故かこちら*/
 
 //#ifdef ENABLE_PSP
 	//# /* カスタムライブラリを使う */
@@ -40,7 +41,7 @@
 /* --- 曲の管理最大数 (最大読み込みファイル数) */
 //#define MAX_MUSIC_FILES 8/*32*/
 
-/* --- 効果音の管理最大数 (最大読み込みファイル数)MAX_VOICE_ALLOC_FILES=>VOICE16_MAX_FILES	*/
+/* --- 効果音の管理最大数 (最大読み込みファイル数)MAX_VOICE_ALLOC_FILES=>VOICE16_MAX_FILES */
 //#define MAX_VOICE_ALLOC_FILES 16/*64*/
 
 /*---------------------------------------------------------
@@ -154,7 +155,7 @@ global void play_music_num(int num)
 			music_track = NULL;
 		}
 	}
-	/* ----- 設定で曲再生OFFなら再生しない	*/
+	/* ----- 設定で曲再生OFFなら再生しない */
 	if (0==option_config[OPTION_CONFIG_02_BGM])
 	{
 		return;
@@ -320,7 +321,7 @@ global void bullet_play_04_auto(int req)
 global void voice_play_vbl(void)
 {
 	if ( 0==use_audio ) return;
-	/* ----- 設定で効果音再生OFFなら再生しない	*/
+	/* ----- 設定で効果音再生OFFなら再生しない */
 	if (0==option_config[OPTION_CONFIG_03_SOUND])
 	{
 		return;
@@ -347,7 +348,7 @@ global void voice_play_vbl(void)
 		仮に本物と同じ音を使ったとしても、同じ効果音を出すためには、
 		効果音の発音方法も同じじゃないと、同じ音は鳴らない。
 		本物の効果音の発音方法は、さっぱり解からない。
-	*/
+ */
 	int i;
 	for (i=0; i<MAX_VOICE_TRACK; i++)
 	{
@@ -363,7 +364,7 @@ global void voice_play_vbl(void)
 	紅魔郷の場合、あんまり速く鳴らないように、
 	コントロールしてるようで、やっぱシステムじゃなくて
 	個別に(大体こんな感じで)制御してるのかも
-	*/
+ */
 	{
 		static int i=0;
 		i++;

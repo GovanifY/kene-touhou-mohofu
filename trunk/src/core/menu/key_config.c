@@ -2,7 +2,7 @@
 #include "game_main.h"
 
 /*---------------------------------------------------------
-	東方模倣風	～ Toho Imitation Style.
+	東方模倣風 ～ Toho Imitation Style.
 	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	キーコンフィグ
@@ -246,15 +246,15 @@ static void key_config_local_work(void)
 		break;
 	case (KEY_CONFIG_STATE_02_SELECT_LEFT_MENU):
 		psp_pop_screen();
-		if (0==my_pad_alter)/* さっき何も押されてなかった場合にキーチェック(原作準拠) */
+		if (0==cg_my_pad_alter)/* さっき何も押されてなかった場合にキーチェック(原作準拠) */
 		{
-			if (my_pad & PSP_KEY_UP)				// 上ボタン入力
+			if (cg_my_pad & PSP_KEY_UP)				// 上ボタン入力
 			{
 				if (KEY_CONFIG_MENU_00_SELECT == menu_cursor1)	{	menu_cursor1 = (KEY_CONFIG_MENU_MAX-1);}
 				else											{	menu_cursor1--;}
 			}
 			else
-			if (my_pad & PSP_KEY_DOWN)			// 下ボタン入力
+			if (cg_my_pad & PSP_KEY_DOWN)			// 下ボタン入力
 			{
 				if ((KEY_CONFIG_MENU_MAX-1) == menu_cursor1)	{	menu_cursor1 = KEY_CONFIG_MENU_00_SELECT;}
 				else											{	menu_cursor1++;}
@@ -263,21 +263,21 @@ static void key_config_local_work(void)
 			{
 				if (KEY_CONFIG_MENU_12_RESET == menu_cursor1)			// 項目[ RESET ] を選んでいる場合
 				{
-					if (my_pad & PSP_KEY_LEFT)	// 左ボタン入力
+					if (cg_my_pad & PSP_KEY_LEFT)	// 左ボタン入力
 					{
 						key_setting_default_type--;
 						key_setting_default_type &= (4-1);
 						voice_play(VOICE02_MENU_SELECT, TRACK01_EXPLODE);/*テキトー*/
 					}
 					else
-					if (my_pad & PSP_KEY_RIGHT) // 右ボタン入力
+					if (cg_my_pad & PSP_KEY_RIGHT) // 右ボタン入力
 					{
 						key_setting_default_type++;
 						key_setting_default_type &= (4-1);
 						voice_play(VOICE02_MENU_SELECT, TRACK01_EXPLODE);/*テキトー*/
 					}
 					else
-					if (my_pad & PSP_KEY_SHOT_OK) // ショットボタン入力
+					if (cg_my_pad & PSP_KEY_SHOT_OK) // ショットボタン入力
 					{
 						voice_play(VOICE07_BOMB, TRACK01_EXPLODE);/*テキトー*/
 						set_default_key(key_setting, key_setting_default_type);
@@ -287,13 +287,13 @@ static void key_config_local_work(void)
 				else
 				if (KEY_CONFIG_MENU_13_QUIT == menu_cursor1)	// 項目[ QUIT ] を選んでいる場合
 				{
-					if (my_pad & PSP_KEY_BOMB_CANCEL)	// キャンセルボタン入力
+					if (cg_my_pad & PSP_KEY_BOMB_CANCEL)	// キャンセルボタン入力
 					{
 						voice_play(VOICE04_SHIP_HAKAI, TRACK03_SHORT_MUSIC/*TRACK01_EXPLODE*/);/* 自機死に音は、なるべく重ねない */
 						my_ppp_loop++;// = (KEY_CONFIG_STATE_06_FADE_INIT);
 					}
 					else
-					if (my_pad & PSP_KEY_SHOT_OK)	// ショットボタン入力
+					if (cg_my_pad & PSP_KEY_SHOT_OK)	// ショットボタン入力
 					{
 						int saiteigen_exsist;	// 存在確認用。0で存在しない。存在しないとメニューを抜けれない。
 						saiteigen_exsist = 0;
@@ -343,7 +343,7 @@ static void key_config_local_work(void)
 				}
 				else	/* 設定項目を変更する場合( 項目[ RESET ] 項目[ QUIT ]以外を選んでいる場合) */
 				{
-					if (my_pad & (PSP_KEY_LEFT|PSP_KEY_RIGHT))		// 左右ボタン入力
+					if (cg_my_pad & (PSP_KEY_LEFT|PSP_KEY_RIGHT))		// 左右ボタン入力
 					{
 						int menu_cursor2;
 						for (menu_cursor2=0; menu_cursor2<(KINOU_13_MAX-1)/*11 ???*/; menu_cursor2++)
@@ -354,13 +354,13 @@ static void key_config_local_work(void)
 							}
 						}
 						//
-						if (my_pad & PSP_KEY_LEFT)			// 左ボタン入力
+						if (cg_my_pad & PSP_KEY_LEFT)			// 左ボタン入力
 						{
 							menu_cursor2--;
 							if ((KINOU_00_NONE) > menu_cursor2) 	{	menu_cursor2 = (KINOU_13_MAX-1); }
 						}
 						else
-						if (my_pad & PSP_KEY_RIGHT) 		// 右ボタン入力
+						if (cg_my_pad & PSP_KEY_RIGHT) 		// 右ボタン入力
 						{
 							menu_cursor2++;
 							if ((KINOU_13_MAX-1) < menu_cursor2)	{	menu_cursor2 = KINOU_00_NONE; }

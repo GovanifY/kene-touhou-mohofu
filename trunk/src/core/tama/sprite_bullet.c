@@ -2,31 +2,12 @@
 #include "game_main.h"
 
 /*---------------------------------------------------------
-	東方模倣風	～ Toho Imitation Style.
+	東方模倣風 ～ Toho Imitation Style.
 	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	スプライト マネージャ
 	-------------------------------------------------------
 --------------------------------------------------------- */
-		#if (0)/*なんだかよくわからんなー*/
-//	dx = ((obj2->cx256) - (obj1->cx256));
-//	dy = ((obj2->cy256) - (obj1->cy256));
-//	dx = ((obj2->cx256/*+(t256(15.0))*/) - (obj1->cx256+(obj1->w<<7)));
-//	dy = ((obj2->cy256/*+(t256(15.0))*/) - (obj1->cy256+(obj1->h<<7)));
-	// 本来の位置より右に２－３ドット、上に１－２ドットずれてる。
-//	dx = ((obj2->cx256/*+(t256(15.0))*/) - (obj1->cx256+(obj1->w<<7)));
-//	dy = ((obj2->cy256+(t256(4.0))) - (obj1->cy256+(obj1->h<<7)));/*何故か上にズレてるので補正してみる*/
-	// 左右は判らないが、上にまだ１－２ドットずれてる。
-//	dx = ((obj2->cx256+(t256(3.0))) - (obj1->cx256+(obj1->w<<7)));/*何故か右にズレてるので補正してみる*/
-//	dy = ((obj2->cy256+(t256(6.0))) - (obj1->cy256+(obj1->h<<7)));/*何故か上にズレてるので補正してみる*/
-	// 左右は判らないが、上にまだ１－２ドットずれてる。
-//		dx = ((obj2->cx256+(t256(3.0))) - (obj1->cx256+(obj1->w<<7)));/*何故か右にズレてるので補正してみる*/
-//		dy = ((obj2->cy256+(t256(9.0))) - (obj1->cy256+(obj1->h<<7)));/*何故か上にズレてるので補正してみる*/
-		#endif
-	//	#else
-	//	/* デバッグモード */
-	//	dx = ((obj2->cx256+(de bug_value1<<8)) - (obj1->cx256+(obj1->w<<7)));/*何故か右にズレてるので補正してみる*/
-	//	dy = ((obj2->cy256+(de bug_value2<<8)) - (obj1->cy256+(obj1->h<<7)));/*何故か上にズレてるので補正してみる*/
 
 /*---------------------------------------------------------
 	あたり判定 collision
@@ -73,7 +54,7 @@
  /
 
 
-     →あたり判定領域を回転させる。
+	 →あたり判定領域を回転させる。
 
 --------------------------------------------------------- */
 #if 0/* めも */
@@ -149,33 +130,32 @@ static /* BOOL */int collision_hit( /* obj_t */SPRITE *obj1, /* obj_t */SPRITE *
 	#if (0)/* この機能は要らない(?)かも。 */
 	/*--- 判定有効なオブジェクトでなかったら終了 */
 //	if (obj2->m_Hit256R == 0/* .0 */ /* FALSE */)
-	if ( (16) > obj2->m_Hit256R /* FALSE */)/*t256(1.00)t256(0.10)*/
+	if ( (16) > obj2->m_Hit256R )	/*t256(1.00)t256(0.10)*/
 	{
-		return (0/* FALSE */);	/* not hit. 当たってない */
+		return (0);/* FALSE */	/* not hit. 当たってない */
 	}
 //	if (obj1->m_Hit256R == 0/* .0 */ /* FALSE */)
-	if ( (16) > obj1->m_Hit256R /* FALSE */)/*t256(1.00)t256(0.10)*/
+	if ( (16) > obj1->m_Hit256R )	/*t256(1.00)t256(0.10)*/
 	{
-		return (0/* FALSE */);	/* not hit. 当たってない */
+		return (0);/* FALSE */	/* not hit. 当たってない */
 	}
 	#endif
 //
 	int dr; 	/* 半径(==radius) */
-	int dx; 	/* x差分(微小x, delta x) */
-	int dy; 	/* y差分(微小y, delta x) */
+	int dx; 	/* x差分(微小x距離, delta x) */
+	int dy; 	/* y差分(微小y距離, delta x) */
 	dr = (obj2->m_Hit256R + obj1->m_Hit256R);
-	#if 1/*Gu(中心座標)*/
+	/* 中心同士で差。つまり軸ごとの距離を求める。 */
 	dx = ((obj2->cx256) - (obj1->cx256));/* 中心同士で差を求める。 */
 	dy = ((obj2->cy256) - (obj1->cy256));/* 中心同士で差を求める。 */
-	#endif
 
 	/* check collision, delta x position. 矩形判定（Ｘ軸） */
-	if (dx < 0/* .0 */) 	{	dx = (-dx); 			}	/* dx = abs(dx); */
-	if (dx > dr)			{	return (0/* FALSE */);	}	/* not hit, because not near the dx. Ｘの差分が大きいので、当たってない */
+	if (dx < 0) 	{	dx = (-dx); 			}	/* dx = abs(dx); */
+	if (dx > dr)	{	return (0);/* FALSE */	}	/* not hit, because not near the dx. Ｘの差分が大きいので、当たってない */
 
 	/* check collision, delta y position. 矩形判定（Ｙ軸） */
-	if (dy < 0/* .0 */) 	{	dy = (-dy); 			}	/* dy = abs(dy); */
-	if (dy > dr)			{	return (0/* FALSE */);	}	/*	not hit, because not near the dy. Ｙの差分が大きいので、当たってない */
+	if (dy < 0) 	{	dy = (-dy); 			}	/* dy = abs(dy); */
+	if (dy > dr)	{	return (0);/* FALSE */	}	/*	not hit, because not near the dy. Ｙの差分が大きいので、当たってない */
 
 	/* check collision, circle delta round distance.  円の半径で判定 */
 	dr *= dr;
@@ -185,9 +165,9 @@ static /* BOOL */int collision_hit( /* obj_t */SPRITE *obj1, /* obj_t */SPRITE *
 	/* 当たり判定外なら */
 	if (dr < dx)/* if ( (dr^2) < ( (dx^2) + (dy^2) )) */
 	{
-		return (0/* FALSE */);	/* not hit. 当たってない */
+		return (0);/* FALSE */	/* not hit. 当たってない */
 	}
-	return (1/* TRUE */); /* hit! 当たった */
+	return (1);/* TRUE */	/* hit! 当たった */
 }
 #endif
 
@@ -203,10 +183,11 @@ static /* BOOL */int collision_hit( /* obj_t */SPRITE *obj1, /* obj_t */SPRITE *
 	(敵専用)スプライトのあたり判定
 --------------------------------------------------------- */
 
-global SPRITE obj44[SPRITE_444POOL_MAX];	/* 弾専用スプライトのリスト構造 */
-global SPRITE obj33[SPRITE_333POOL_MAX];	/* 敵専用スプライトのリスト構造 */
-global SPRITE obj00[SPRITE_111POOL_MAX];	/* 自機等固定スプライト  */
-global SPRITE obj22[SPRITE_222POOL_MAX];	/* パネル用スプライト  */
+global SPRITE obj99[OBJ99_MAX]; 	/* 全スプライト */
+//global SPRITE obj99[OBJ_HEAD_00_TAMA+OBJ_POOL_00_TAMA_MAX];	/* 弾専用スプライトのリスト構造 */
+//global SPRITE obj99[OBJ_HEAD_01_TEKI+OBJ_POOL_01_TEKI_MAX];	/* 敵専用スプライトのリスト構造 */
+//global SPRITE obj99[OBJ_HEAD_02_KOTEI+OBJ_POOL_02_KOTEI_MAX]; /* 自機等固定スプライト */
+//global SPRITE obj99[OBJ_HEAD_03_PANEL+OBJ_POOL_03_PANEL_MAX]; /* パネル用スプライト */
 
 static SPRITE *sprite_collision_check(SPRITE *tocheck, SPRITE *s, int type, unsigned int length)
 {
@@ -232,13 +213,11 @@ static SPRITE *sprite_collision_check(SPRITE *tocheck, SPRITE *s, int type, unsi
 							/* あたり判定があり、かつ、表示可能なもののみチェック */
 						)	/* do collision only visible and, use collision check type. */
 					{
-						#if 1
 						/* 4. 矩形/円あたり判定チェック   大まかに矩形で判別した後、近そうなら円の衝突判定 */
 						if (collision_hit(s,tocheck))	/* 矩形/円あたり判定 */ 	/* hit collision rectangle to circle check. */
 						{
 							return (s);/* あたった */	/* hit collisioning! */
 						}
-						#endif
 					}
 				}
 			}
@@ -247,27 +226,25 @@ static SPRITE *sprite_collision_check(SPRITE *tocheck, SPRITE *s, int type, unsi
 	}
 	return (NULL);/* あたってない */	/* no hit collisioning. */
 }
-/*static*/global SPRITE *sprite_collision_check_444(SPRITE *tocheck, int type)
+/*static*/global SPRITE *obj_collision_check_00_tama(SPRITE *tocheck, int type)
 {
 	SPRITE *s;
-	s = &obj44[0];
-	return sprite_collision_check(tocheck, s, type, SPRITE_444POOL_MAX);
+	s = &obj99[OBJ_HEAD_00_TAMA+0];
+	return sprite_collision_check(tocheck, s, type, OBJ_POOL_00_TAMA_MAX);
 }
-//	/*static*/global SPRITE *sprite_collision_check_SDL_teki(SPRITE *tocheck, int type)
-/*static*/global SPRITE *sprite_collision_check_SDL_teki(SPRITE *tocheck)/*, (SP_GROUP_TEKI)int ty pe*/
+//	/*static*/global SPRITE *obj_collision_check_01_teki(SPRITE *tocheck, int type)
+/*static*/global SPRITE *obj_collision_check_01_teki(SPRITE *tocheck)/*, (SP_GROUP_TEKI)int ty pe*/
 {
 	SPRITE *s;
-	s = &obj33[0];
-	return sprite_collision_check(tocheck, s, /*type*/(SP_GROUP_TEKI), SPRITE_333POOL_MAX);
+	s = &obj99[OBJ_HEAD_01_TEKI+0];
+	return sprite_collision_check(tocheck, s, /*type*/(SP_GROUP_TEKI), OBJ_POOL_01_TEKI_MAX);
 }
-
-
 
 
 /*---------------------------------------------------------
 	スプライト リストに登録されたスプライトを全部消す。
 --------------------------------------------------------- */
-static void sprite_remove_all(SPRITE *s, unsigned int length)
+static void obj_remove_all(SPRITE *s, unsigned int length)
 {
 	unsigned int ii;
 	for (ii=0; ii<length; ii++ )/* 全部調べる。 */
@@ -279,26 +256,24 @@ static void sprite_remove_all(SPRITE *s, unsigned int length)
 		s++;
 	}
 }
-//extern void sprite_remove_all_SDL_void(void); 		/*int type*/ /*gu汎用(旧SDL)*/
-//extern void sprite_remove_all_444_void(void); 		/*int type*/ /*弾幕専用*/
 
-static void s_sprite_remove_all_444_void(void)/*int ty pe*/
+
+static void s_obj_remove_all_00_tama(void)	/* 弾幕専用 */
 {
 	SPRITE *s;
-	s = &obj44[0];
-	sprite_remove_all(s, SPRITE_444POOL_MAX);
+	s = &obj99[OBJ_HEAD_00_TAMA+0];
+	obj_remove_all(s, OBJ_POOL_00_TAMA_MAX);
 }
-static void s_sprite_remove_all_SDL_void(void)/*int ty pe*/
+static void s_obj_remove_all_01_teki(void)	/* gu汎用(旧SDL) */
 {
 	SPRITE *s;
-	s = &obj33[0];
-	sprite_remove_all(s, SPRITE_333POOL_MAX);
+	s = &obj99[OBJ_HEAD_01_TEKI+0];
+	obj_remove_all(s, OBJ_POOL_01_TEKI_MAX);
 }
 global void sprite_all_cleanup(void)
 {
-	s_sprite_remove_all_SDL_void();/*gu汎用*/	/*SP_GROUP_ALL_GAME_OBJS*/
-	s_sprite_remove_all_444_void();/*弾幕専用*/ /*SP_GROUP_ALL_GAME_OBJS*/
-//	sprite_remove_all222(SP_GROUP_ALL_GAME_OBJS);/*弾幕用*/
+	s_obj_remove_all_01_teki();/* gu汎用 */
+	s_obj_remove_all_00_tama();/* 弾幕専用 */
 }
 
 /*---------------------------------------------------------
@@ -321,7 +296,9 @@ static void sprite_move_main(SPRITE *s, unsigned int length)
 		//	if (s->type != SP_DELETE ) /* 削除済みは飛ばす */	/* SP_DELETEが 0 になったので要らなくなった． */
 		//	#endif
 			{
+				#if 1/*???*/
 				if (s->type & (SP_GROUP_ALL_SDL_CORE_TYPE)/*type*/) /* typeが一致する場合のみ */
+				#endif
 				{
 					if (NULL != s->callback_mover)
 					{
@@ -339,42 +316,42 @@ static void sprite_move_main(SPRITE *s, unsigned int length)
 	}
 }
 
-static void s_sprite_move_main_Gu_444(void)
+	#if 0/*(r32)*/
+static void obj_move_main_00_tama(void) 	/* gu弾幕専用 */
 {
 	SPRITE *s;
-	s = &obj44[0+SPRITE_444POOL_MAX];
-	sprite_move_main(s, SPRITE_444POOL_MAX);
-	/* 道中の場合勝手に食み出しチェックを行い弾を消す(暫定的) */
-	if (0==(pd.state_flag & STATE_FLAG_05_IS_BOSS))
-	{
-		bullet_angle_all_gamen_gai_nara_kesu();/*角度弾の喰み出しチェックを行う(毎フレーム行う必要はない)*/
-	}
-}
-//extern void sprite_move_main_SDL_222(void);			/*int type*/ /*gu汎用(旧SDL)*/
-//extern void sprite_move_main_Gu_444(void);				/*int type*/ /*gu弾幕専用*/
-
-static void s_sprite_move_main_SDL_222(void)
-{
-	SPRITE *s;
-	s = &obj33[0+SPRITE_333POOL_MAX];
-	sprite_move_main(s, SPRITE_333POOL_MAX);
-}
-static void s_sprite_move_main_SDL_111(void)
-{
-	SPRITE *s;
-	s = &obj00[0+SPRITE_111POOL_MAX];
-	sprite_move_main(s, SPRITE_111POOL_MAX);
-}
-global void sprite_move_all(void)/*int ty pe*/
-{
-		//controller_work();
-//		sprite_work222(SP_GROUP_ALL_SDL_WORK_TYPE);/*弾幕用*/
-//		sprite_work000(SP_GROUP_ALL_SDL_WORK_TYPE);
-		s_sprite_move_main_SDL_111();/* 自機等固定オブジェクト */
-		s_sprite_move_main_SDL_222();/*gu汎用*/ 	/*SP_GROUP_ALL_SDL_CORE_TYPE*/
-		s_sprite_move_main_Gu_444();/*弾幕専用*/	/*SP_GROUP_ALL_SDL_CORE_TYPE*/
+	s = &obj99[OBJ_HEAD_00_TAMA+OBJ_POOL_00_TAMA_MAX+0];
+	sprite_move_main(s, OBJ_POOL_00_TAMA_MAX);
 
 }
+
+static void obj_move_main_01_teki(void) /* gu汎用(旧SDL) */
+{
+	SPRITE *s;
+	s = &obj99[OBJ_HEAD_01_TEKI+OBJ_POOL_01_TEKI_MAX+0];
+	sprite_move_main(s, OBJ_POOL_01_TEKI_MAX);
+}
+static void obj_move_main_02_kotei(void)
+{
+	SPRITE *s;
+	s = &obj99[OBJ_HEAD_02_KOTEI+OBJ_POOL_02_KOTEI_MAX+0];
+	sprite_move_main(s, OBJ_POOL_02_KOTEI_MAX);
+}
+global void sprite_move_all(void)
+{
+	obj_move_main_02_kotei();/* 自機等固定オブジェクト */
+	obj_move_main_01_teki();/* gu汎用 */
+	obj_move_main_00_tama();/* 弾幕専用 */
+}
+	#else/*(r33)*/
+global void sprite_move_all(void)
+{
+	SPRITE *s;
+	s = &obj99[OBJ_HEAD_03_PANEL];
+	sprite_move_main(s, (OBJ_POOL_00_TAMA_MAX+OBJ_POOL_01_TEKI_MAX+OBJ_POOL_02_KOTEI_MAX));
+
+}
+	#endif
 #if 1
 /*---------------------------------------------------------
 	画面外ならおしまい(個別、主に汎用objで使用)
@@ -436,7 +413,10 @@ static void s_check_hamidasi_bullet_angle_one(SPRITE *src)
 		(src->cy256 < bullet_clip_min.y256)||
 		(src->cy256 > bullet_clip_max.y256) )
 	{
-		src->jyumyou = JYUMYOU_NASI;
+		if (0!=(src->flags&SP_FLAG_COLISION_CHECK))/* あたり判定の無い弾は消さない。(発弾エフェクト用) */
+		{
+			src->jyumyou = JYUMYOU_NASI;
+		}
 	}
 	#endif
 }
@@ -448,10 +428,10 @@ static void s_check_hamidasi_bullet_angle_one(SPRITE *src)
 global void bullet_angle_all_gamen_gai_nara_kesu(void)
 {
 	int ii;
-	for (ii=0; ii<SPRITE_444POOL_MAX; ii++ )/* 全部調べる。 */
+	for (ii=0; ii<OBJ_POOL_00_TAMA_MAX; ii++ )/* 全部調べる。 */
 	{
 		SPRITE *s;
-		s = &obj44[ii];
+		s = &obj99[OBJ_HEAD_00_TAMA+ii];
 		s_check_hamidasi_bullet_angle_one(s);
 	}
 }
@@ -465,20 +445,8 @@ global void bullet_angle_all_gamen_gai_nara_kesu(void)
 #if 1/* 角度弾規格(策定案) */
 	#define tx256				vx256/* 基点座標x */
 	#define ty256				vy256/* 基点座標y */
-	//
-	#define radius256			user_data01 	/* 半径 */
-//	#define speed256			user_data02 	/* 加減速 */
-	#define speed65536			user_data02 	/* 加減速 */
-	#define tra65536			user_data03 	/* 加減速調整 */
-	#define rotate1024			user_data04 	/* 回転角度調整 */
-	#define bullet_status_mask	user_data05 	/* 画面外消去判定や反射機能 */
-#endif
 
-#if 1/* 角度弾規格B(仮策定案) */
-	/* 仮 */
-	#define SAYUU_HANSYA_BIT	0x0001
 #endif
-
 
 
 #if 0
@@ -493,7 +461,7 @@ static void s_check_hamidasi_bullet_angle_sayuu_hansya(SPRITE *src)
 	if (
 		(src->cx256 < t256(0)/*bullet_clip_min.x256*/) )
 	{
-		if (0==(src->bullet_status_mask & SAYUU_HANSYA_BIT))
+		if (0==(src->tama_system_tama_data & TAMA_DATA_SAYUU_HANSYA_BIT))
 				{	test_flag = 1;			}
 		else	{	src->jyumyou = JYUMYOU_NASI;	}
 	}
@@ -501,13 +469,13 @@ static void s_check_hamidasi_bullet_angle_sayuu_hansya(SPRITE *src)
 	if (
 		(src->cx256 > t256(GAME_WIDTH)/*bullet_clip_max.x256*/) )
 	{
-		if (0==(src->bullet_status_mask & SAYUU_HANSYA_BIT))
+		if (0==(src->tama_system_tama_data & TAMA_DATA_SAYUU_HANSYA_BIT))
 				{	test_flag = 1;			}
 		else	{	src->jyumyou = JYUMYOU_NASI;	}
 	}
 	if (0 != test_flag)
 	{
-			src->bullet_status_mask |= SAYUU_HANSYA_BIT;
+			src->tama_system_tama_data |= TAMA_DATA_SAYUU_HANSYA_BIT;
 		//	src->tx256 = - src->tx256;
 		//	src->tx256 = t256(GAME_WIDTH+GAME_WIDTH)/*bullet_clip_max.x256 + bullet_clip_max.x256*/ - src->tx256;
 			#if 1
@@ -523,7 +491,7 @@ static void s_check_hamidasi_bullet_angle_sayuu_hansya(SPRITE *src)
 	}
 	if (
 		(src->cy256 < - t256(100)/*bullet_clip_min.y256*/)||
-		(src->cy256 >   t256(272)/*bullet_clip_max.y256*/)
+		(src->cy256 >	t256(272)/*bullet_clip_max.y256*/)
 	)
 	{
 		src->jyumyou = JYUMYOU_NASI;
@@ -539,10 +507,10 @@ static void s_check_hamidasi_bullet_angle_sayuu_hansya(SPRITE *src)
 global void bullet_angle_all_gamen_gai_nara_hansya(void)
 {
 	int ii;
-	for (ii=0; ii<SPRITE_444POOL_MAX; ii++ )/* 全部調べる。 */
+	for (ii=0; ii<OBJ_POOL_00_TAMA_MAX; ii++ )/* 全部調べる。 */
 	{
 		SPRITE *s;
-		s = &obj44[ii];
+		s = &obj99[OBJ_HEAD_00_TAMA+ii];
 		s_check_hamidasi_bullet_angle_sayuu_hansya(s);
 	}
 }
@@ -557,47 +525,51 @@ global void bullet_angle_all_gamen_gai_nara_hansya(void)
 
 static void s_check_hamidasi_bullet_angle_sayuu_hansya_gensoku(SPRITE *src)
 {
+	if (0==(src->flags&SP_FLAG_COLISION_CHECK))/* あたり判定の無い弾は消さない。(発弾エフェクト用) */
+	{
+		return;
+	}
 	#if 1/* 検討中 */
 //	if ((src->cx256 < t256(-100))||(src->cx256 > t256(100)+t256(GAME_WIDTH))||
 //		(src->cy256 < t256(-256))||(src->cy256 > t256(100)+t256(GAME_HEIGHT) ) )
 	int test_flag;
 	test_flag = 0;
 	if (
-		(src->cx256 < t256(0)/*bullet_clip_min.x256*/) )
+		(src->cx256 < t256(8/*0*/)/*bullet_clip_min.x256*/) )
 	{
-		if (0==(src->bullet_status_mask & SAYUU_HANSYA_BIT))
+		if (0==(src->tama_system_tama_data & TAMA_DATA_SAYUU_HANSYA_BIT))
 				{	test_flag = 1;			}
 		else	{	src->jyumyou = JYUMYOU_NASI;	}
 	}
 	else
 	if (
-		(src->cx256 > t256(GAME_WIDTH)/*bullet_clip_max.x256*/) )
+		(src->cx256 > t256(480-128-8/*GAME_WIDTH*/)/*bullet_clip_max.x256*/) )
 	{
-		if (0==(src->bullet_status_mask & SAYUU_HANSYA_BIT))
+		if (0==(src->tama_system_tama_data & TAMA_DATA_SAYUU_HANSYA_BIT))
 				{	test_flag = 1;			}
 		else	{	src->jyumyou = JYUMYOU_NASI;	}
 	}
 	if (0!=test_flag)
 	{
-			src->bullet_status_mask |= SAYUU_HANSYA_BIT;
+			src->tama_system_tama_data |= TAMA_DATA_SAYUU_HANSYA_BIT;
 		//	src->tx256 = t256(GAME_WIDTH+GAME_WIDTH)/*bullet_clip_max.x256 + bullet_clip_max.x256*/ - src->tx256;
 		//	src->tx256 = - src->tx256;
 			#if 1
 			/* 現在の座標を新基点座標に変更し、半径0にする。 */
 			src->tx256 = src->cx256;
 			src->ty256 = src->cy256;
-			src->radius256 = 0;
+			src->tama_system_radius256 = (0);
 			#endif
 		//	src->rotationCCW1024 += (1024*3/4);/* -90度回転 */		/* ダメ[※2] */
 		//	src->rotationCCW1024 += (1024/4);/* 90度回転 */ 		/* ダメ[※2] */
 			src->rotationCCW1024 = (1024)-(src->rotationCCW1024);	/* 反転[※1] */
-		//	src->speed256					= ((src->speed256)>>1);/*減速*/
-			src->speed65536 				= ((src->speed65536)>>(1));/*減速*/
+		//	src->tama_system_speed256					= ((src->tama_system_speed256)>>1);/*減速*/
+			src->tama_system_speed65536 				= ((src->tama_system_speed65536)>>(1));/*減速*/
 			mask1024(src->rotationCCW1024);
 	}
 	if (
 		(src->cy256 < - t256(100)/*bullet_clip_min.y256*/)||
-		(src->cy256 >   t256(272)/*bullet_clip_max.y256*/)
+		(src->cy256 >	t256(272)/*bullet_clip_max.y256*/)
 	)
 	{
 		src->jyumyou = JYUMYOU_NASI;
@@ -611,10 +583,10 @@ static void s_check_hamidasi_bullet_angle_sayuu_hansya_gensoku(SPRITE *src)
 global void bullet_angle_all_gamen_gai_nara_hansya_gensoku(void)
 {
 	int ii;
-	for (ii=0; ii<SPRITE_444POOL_MAX; ii++ )/* 全部調べる。 */
+	for (ii=0; ii<OBJ_POOL_00_TAMA_MAX; ii++ )/* 全部調べる。 */
 	{
 		SPRITE *s;
-		s = &obj44[ii];
+		s = &obj99[OBJ_HEAD_00_TAMA+ii];
 		s_check_hamidasi_bullet_angle_sayuu_hansya_gensoku(s);
 	}
 }
@@ -635,9 +607,9 @@ global void sprite_initialize_position(SPRITE *h)
 	h->type 						= BOSS_00_BOSS11;
 	h->callback_mover				= NULL;
 	h->callback_loser				= NULL;
-	h->callback_hit_enemy			= NULL; 	/* ダミーコールバック登録 */
-	h->cx256 		= (t256(GAME_WIDTH/2));
-	h->cy256 		= (t256(-256));
+	h->callback_hit_teki			= NULL; 	/* ダミーコールバック登録 */
+	h->cx256		= (t256(GAME_WIDTH/2));
+	h->cy256		= (t256(-256));
 }
 
 /*---------------------------------------------------------
@@ -660,12 +632,8 @@ global void sprite_initialize_gu(SPRITE *obj)
 	obj->jyumyou	= JYUMYOU_1MIN; 		/* 1分したら勝手に自動消去。 */
 //	obj->timeover_ticks 		= 0;
 	#endif
-	#if (1==USE_ZOOM_XY)
 	obj->m_zoom_x256			= t256(1.00);	/* 表示拡大率 256 == [ x 1.00 ] */
 	obj->m_zoom_y256			= t256(1.00);	/* 表示拡大率 256 == [ x 1.00 ] */
-	#else
-	obj->m_zoom_xy256			= t256(1.00);	/* 表示拡大率 256 == [ x 1.00 ] */
-	#endif
 	#if (0==USE_MEM_CLEAR)/* [メモリゼロクリアー機能]を使わない場合は、初期化が必要。 */
 	obj->rotationCCW1024		= 0;	/* 描画用角度(下が0度で左回り(反時計回り)) */	/* 0 == 傾かない。下が0度 */
 //
@@ -674,7 +642,7 @@ global void sprite_initialize_gu(SPRITE *obj)
 //
 	obj->callback_mover 		= NULL;
 	obj->callback_loser 		= NULL;
-	obj->callback_hit_enemy 	= NULL;
+	obj->callback_hit_teki		= NULL;
 	#endif	/* (0==USE_MEM_CLEAR) */
 }
 
@@ -685,7 +653,7 @@ global void sprite_initialize_gu(SPRITE *obj)
 	登録できない場合、NULLを返す。
 --------------------------------------------------------- */
 
-global SPRITE *sprite_add_444only_bullet_error(void)/*int image_resource_num*/
+global SPRITE *obj_add_00_tama_error(void)/*int image_resource_num*/
 {
 	#if 1
 	/* private (この関数で)プライベートな変数 */
@@ -699,12 +667,12 @@ global SPRITE *sprite_add_444only_bullet_error(void)/*int image_resource_num*/
 		search_count = 0;
 my_retry:
 		search_count++;
-		if ( (SPRITE_444POOL_MAX-1) < search_count)
+		if ( (OBJ_POOL_00_TAMA_MAX-1) < search_count)
 		{	return(NULL);	}	/* (登録できない場合) */
 
 		register_num++; 	/* 登録できる可能性が高そうな位置 */
-		register_num &= (SPRITE_444POOL_MAX-1);
-		obj = &obj44[register_num];
+		register_num &= (OBJ_POOL_00_TAMA_MAX-1);
+		obj = &obj99[OBJ_HEAD_00_TAMA+register_num];
 	//
 	//	if (SP_DELETE != obj->type)/* 使用中ならもう一度探す。 */
 		if (JYUMYOU_NASI < obj->jyumyou)/* 使用中ならもう一度探す。 */
@@ -720,7 +688,7 @@ my_retry:
 	return (obj);
 }
 
-global SPRITE *sprite_add_gu_error(void)
+global SPRITE *obj_add_01_teki_error(void)
 {
 	#if 1
 	/* private (この関数で)プライベートな変数 */
@@ -734,12 +702,12 @@ global SPRITE *sprite_add_gu_error(void)
 		search_count = 0;
 my_retry:
 		search_count++;
-		if ( (SPRITE_333POOL_MAX-1) < search_count)
+		if ( (OBJ_POOL_01_TEKI_MAX-1) < search_count)
 		{	return(NULL);	}	/* (登録できない場合) */
 
 		register_num++; 	/* 登録できる可能性が高そうな位置 */
-		register_num &= (SPRITE_333POOL_MAX-1);
-		obj = &obj33[register_num];
+		register_num &= (OBJ_POOL_01_TEKI_MAX-1);
+		obj = &obj99[OBJ_HEAD_01_TEKI+register_num];
 	//
 	//	if (SP_DELETE != obj->type)/* 使用中ならもう一度探す。 */
 		if (JYUMYOU_NASI < obj->jyumyou)/* 使用中ならもう一度探す。 */
@@ -752,11 +720,11 @@ my_retry:
 }
 
 
-global SPRITE *sprite_add_direct(unsigned int register_number)
+global SPRITE *obj_add_nn_direct(unsigned int direct_register_number)/*OBJ_HEAD_02_KOTEI+*/
 {
 //	int priority;		priority		= image_resource_ptr->priority;
 	SPRITE *obj;/* 新規作成するスプライト */
-	obj = &obj00[register_number];
+	obj = &obj99[direct_register_number];
 	sprite_initialize_gu(obj);			/* 新規作成したスプライトを初期化 */
 	return (obj);
 }
@@ -765,10 +733,10 @@ global SPRITE *sprite_add_direct(unsigned int register_number)
 global void sprite_panel_init(void)
 {
 	unsigned int ii;
-	for (ii=0; ii<SPRITE_222POOL_MAX; ii++ )/* 全部 */
+	for (ii=0; ii<OBJ_POOL_03_PANEL_MAX; ii++ )/* 全部 */
 	{
 		SPRITE *obj;/* 初期化するスプライト */
-		obj = &obj22[ii];
+		obj = &obj99[OBJ_HEAD_03_PANEL+ii];
 		sprite_initialize_gu(obj);			/* スプライトを初期化 */
 	}
 	unsigned int kk;
@@ -779,11 +747,11 @@ global void sprite_panel_init(void)
 	{
 		SPRITE *obj;/* 初期化するスプライト */
 		/* スコア */
-		obj = &obj22[ii+PANEL_OBJ_00_S00];
+		obj = &obj99[OBJ_HEAD_03_PANEL+ii+PANEL_OBJ_00_S00];
 		obj->cx256 = (kk);
 		obj->cy256 = ((6*8+7)<<8);
 		/* ハイスコア */
-		obj = &obj22[ii+PANEL_OBJ_10_H00];
+		obj = &obj99[OBJ_HEAD_03_PANEL+ii+PANEL_OBJ_10_H00];
 		obj->cx256 = (kk);
 		obj->cy256 = ((3*8+2)<<8);
 		//

@@ -2,7 +2,7 @@
 #include "game_main.h"
 
 /*---------------------------------------------------------
-	東方模倣風	～ Toho Imitation Style.
+	東方模倣風 ～ Toho Imitation Style.
 	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	オプションメニュー
@@ -155,24 +155,24 @@ static void option_menu_local_work(void)
 		break;
 	case OPTION_MENU_STATE_01_SELECT_MENU:
 		psp_pop_screen();
-		if (0==my_pad_alter)/* さっき何も押されてなかった場合にキーチェック(原作準拠) */
+		if (0==cg_my_pad_alter)/* さっき何も押されてなかった場合にキーチェック(原作準拠) */
 		{
 			if (OPTION_MENU_07_RESET > menu_cursor1)
 			{
 				/* あまり重要でないので上下音、無しにしてみた */
-				if (my_pad & (/*PSP_KEY_UP|PSP_KEY_DOWN|*/PSP_KEY_LEFT|PSP_KEY_RIGHT))				// 上下左右ボタン入力
+				if (cg_my_pad & (/*PSP_KEY_UP|PSP_KEY_DOWN|*/PSP_KEY_LEFT|PSP_KEY_RIGHT))				// 上下左右ボタン入力
 				{
 					voice_play(VOICE02_MENU_SELECT, TRACK01_EXPLODE);
 				}
 			}
 		//
-			if (my_pad & PSP_KEY_UP)				// 上ボタン入力
+			if (cg_my_pad & PSP_KEY_UP)				// 上ボタン入力
 			{
 				if (OPTION_MENU_00_PLAYER == menu_cursor1)		{	menu_cursor1 = (OPTION_MENU_MAX-1);}
 				else											{	menu_cursor1--;}
 			}
 			else
-			if (my_pad & PSP_KEY_DOWN)			// 下ボタン入力
+			if (cg_my_pad & PSP_KEY_DOWN)			// 下ボタン入力
 			{
 				if ((OPTION_MENU_MAX-1) == menu_cursor1)		{	menu_cursor1 = OPTION_MENU_00_PLAYER;}
 				else											{	menu_cursor1++;}
@@ -181,7 +181,7 @@ static void option_menu_local_work(void)
 			{
 				if (OPTION_MENU_07_RESET == menu_cursor1)			// 項目[ RESET ] を選んでいる場合
 				{
-					if (my_pad & PSP_KEY_SHOT_OK) // ショットボタン入力
+					if (cg_my_pad & PSP_KEY_SHOT_OK) // ショットボタン入力
 					{
 						voice_play(VOICE07_BOMB, TRACK01_EXPLODE);/*テキトー*/
 						set_default_option(option_setting);
@@ -191,14 +191,14 @@ static void option_menu_local_work(void)
 				else
 				if (OPTION_MENU_09_QUIT == menu_cursor1)	// 項目[ QUIT ] を選んでいる場合
 				{
-					if (my_pad & PSP_KEY_BOMB_CANCEL)	// キャンセルボタン入力
+					if (cg_my_pad & PSP_KEY_BOMB_CANCEL)	// キャンセルボタン入力
 					{
 						voice_play(VOICE04_SHIP_HAKAI, TRACK03_SHORT_MUSIC/*TRACK01_EXPLODE*/);/* 自機死に音は、なるべく重ねない */
 						main_call_func = title_menu_start;		/* タイトルメニューへ移動指示 */
 						goto option_menu_terminate;//return;my_ppp_loop++;
 					}
 					else
-					if (my_pad & PSP_KEY_SHOT_OK)	// ショットボタン入力
+					if (cg_my_pad & PSP_KEY_SHOT_OK)	// ショットボタン入力
 					{
 					//	int saiteigen_exsist;	// 存在確認用。0で存在しない。存在しないとメニューを抜けれない。
 					//	saiteigen_exsist = 1;
@@ -230,7 +230,7 @@ static void option_menu_local_work(void)
 				else
 				if (OPTION_MENU_08_KEYCONFIG == menu_cursor1)			// 項目[ KEY CONFIG ] を選んでいる場合
 				{
-					if (my_pad & PSP_KEY_SHOT_OK) // ショットボタン入力
+					if (cg_my_pad & PSP_KEY_SHOT_OK) // ショットボタン入力
 					{
 						voice_play(VOICE07_BOMB, TRACK01_EXPLODE);/*テキトー*/
 					//	my_ppp_loop++;
@@ -241,7 +241,7 @@ static void option_menu_local_work(void)
 				else
 				if (OPTION_MENU_08_MUSIC_ROOM == menu_cursor1)			// 項目[ MUSIC ROOM ] を選んでいる場合
 				{
-					if (my_pad & PSP_KEY_SHOT_OK) // ショットボタン入力
+					if (cg_my_pad & PSP_KEY_SHOT_OK) // ショットボタン入力
 					{
 						voice_play(VOICE07_BOMB, TRACK01_EXPLODE);/*テキトー*/
 					//	my_ppp_loop++;
@@ -251,20 +251,20 @@ static void option_menu_local_work(void)
 				}
 				else	/* 設定項目を変更する場合( 項目[ RESET ] 項目[ QUIT ]以外を選んでいる場合) */
 				{
-					if (my_pad & (PSP_KEY_LEFT|PSP_KEY_RIGHT))		// 左右ボタン入力
+					if (cg_my_pad & (PSP_KEY_LEFT|PSP_KEY_RIGHT))		// 左右ボタン入力
 					{
 						int menu_cursor2;
 						// 選択した所に何が入っているのか調べる
 
 						menu_cursor2 = option_setting[menu_cursor1];
 						//
-						if (my_pad & PSP_KEY_LEFT)			// 左ボタン入力
+						if (cg_my_pad & PSP_KEY_LEFT)			// 左ボタン入力
 						{
 							menu_cursor2--;
 							if ((0/*KINOU_00_NONE*/) > menu_cursor2)	{	menu_cursor2 = (option_status_setting[menu_cursor1].item-1); }
 						}
 						else
-						if (my_pad & PSP_KEY_RIGHT) 		// 右ボタン入力
+						if (cg_my_pad & PSP_KEY_RIGHT) 		// 右ボタン入力
 						{
 							menu_cursor2++;
 							if ((option_status_setting[menu_cursor1].item-1) < menu_cursor2)	{	menu_cursor2 = 0/*KINOU_00_NONE*/; }

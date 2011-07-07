@@ -10,6 +10,11 @@
 	いいのかもしれない。
 	弾幕はシステム的にも「汎用スプライトで描かない方が効率が良い」ので、
 	専用ルーチンに分岐する予定(2009-11-13現在)です。
+	-------------------------------------------------------
+	回転しない場合と違い、
+	回転する場合は、回転公式を使いますので、
+	最後まで相対座標(obj中心を原点o(0,0)とする。)で計算し、
+	最後にobjの中心座標(cx,cy)を加えて画面上の描画座標(Guの使い方が1:1なので)とします。
 ---------------------------------------------------------*/
 
 static void render_object_use_rot_zoom(SPRITE *spr)
@@ -79,10 +84,13 @@ static void render_object_use_rot_zoom(SPRITE *spr)
 	unsigned int/*short*/ pos = 0;
 	unsigned int/*short*/ w_size;
 	w_size	= SLICE_64_SIZE;
+	/* 回転するので x,y 座標は、「画面の座標ではなく」、「obj中心を原点o(0,0)とした、相対座標」で計算しておく。 */
 //	unsigned int/*short*/ x_pos = ((spr->cx256>>8));
 //	unsigned int/*short*/ y_pos = ((spr->cy256>>8));
-	unsigned int/*short*/ x_pos = ((spr->cx256>>8)-(spr->w >> 1));/* 中心座標から画像サイズの半分を引き、左上座標を計算 */
-	unsigned int/*short*/ y_pos = ((spr->cy256>>8)-(spr->h >> 1));/* 中心座標から画像サイズの半分を引き、左上座標を計算 */
+//(r32)	unsigned int/*short*/ x_pos = ((spr->cx256>>8)-(spr->w >> 1));/* 中心座標から画像サイズの半分を引き、左上座標を計算 */
+//(r32)	unsigned int/*short*/ y_pos = ((spr->cy256>>8)-(spr->h >> 1));/* 中心座標から画像サイズの半分を引き、左上座標を計算 */
+	unsigned int/*short*/ x_pos = ( -(spr->w >> 1));/* 中心座標から画像サイズの半分を引き、左上座標を計算 */
+	unsigned int/*short*/ y_pos = ( -(spr->h >> 1));/* 中心座標から画像サイズの半分を引き、左上座標を計算 */
 	i = 0;
 	for (; i<count4; )
 	{
@@ -136,18 +144,12 @@ static void render_object_use_rot_zoom(SPRITE *spr)
 //		center_y = ((spr->cy256>>8)		) + (spr->h >> 1);/*/2*/
 		center_x = ((spr->cx256>>8)		) ;/*/2*/
 		center_y = ((spr->cy256>>8)		) ;/*/2*/
-		#if (1==USE_ZOOM_XY)
 		int zoom_x256;
 		int zoom_y256;
 	//	zoom_x256 = (spr->m_zoom_x256) * ((65536/256)); /* 拡大率は0-256倍なので0-65536倍へ変換。 */
 	//	zoom_y256 = (spr->m_zoom_y256) * ((65536/256)); /* 拡大率は0-256倍なので0-65536倍へ変換。 */
 		zoom_x256 = (spr->m_zoom_x256) /*<< (8)*/;		/* 拡大率は0-256倍なので0-65536倍へ変換。 */
 		zoom_y256 = (spr->m_zoom_y256) /*<< (8)*/;		/* 拡大率は0-256倍なので0-65536倍へ変換。 */
-		#else //(0==USE_ZOOM_XY)
-		int zoom_xy256;
-	//	zoom_xy256 = (spr->m_zoom_xy256) * ((65536/256)); /* 拡大率は0-256倍なので0-65536倍へ変換。 */
-		zoom_xy256 = (spr->m_zoom_xy256) /*<< (8)*/;		/* 拡大率は0-256倍なので0-65536倍へ変換。 */
-		#endif/* (1==USE_ZOOM_XY) */
 		unsigned int j;
 		for (j=0; j<4; j++)
 		{
@@ -157,8 +159,9 @@ static void render_object_use_rot_zoom(SPRITE *spr)
 			int iry;
 			ifx = vertices[(i)+j].x;
 			ify = vertices[(i)+j].y;
-			ifx -= center_x;
-			ify -= center_y;
+//(r33)			ifx -= center_x;
+//(r33)			ify -= center_y;
+//1859267 -> 1859251
 //			rx = ((fx * sprite_cos[rot]) - (fy * sprite_sin[rot])) * spr->zoomx;
 //			ry = ((fx * sprite_sin[rot]) + (fy * sprite_cos[rot])) * spr->zoomy;
 			#if 0
@@ -177,13 +180,8 @@ static void render_object_use_rot_zoom(SPRITE *spr)
 			iry = ((ifx * cos_angle) + (ify * sin_angle));	iry = (iry >>8/*16*/);	//	ry = ry / (65536.0);
 			#endif
 //
-			#if (1==USE_ZOOM_XY)
 			irx = ((irx * (zoom_x256))>>8);
 			iry = ((iry * (zoom_y256))>>8);
-			#else //(0==USE_ZOOM_XY)
-			irx = ((irx * (zoom_xy256))>>8);
-			iry = ((iry * (zoom_xy256))>>8);
-			#endif/* (1==USE_ZOOM_XY) */
 		//	irx = (irx >>8/*16*/);	//	rx = rx / (256.0/*65536.0*/);
 		//	iry = (iry >>8/*16*/);	//	ry = ry / (256.0/*65536.0*/);
 

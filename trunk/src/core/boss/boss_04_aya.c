@@ -4,7 +4,7 @@
 /*static*/extern void add_zako_aya_doll(SPRITE *src);/* äëíe */
 
 /*---------------------------------------------------------
-	ìåï˚ñÕïÌïó	Å` Toho Imitation Style.
+	ìåï˚ñÕïÌïó Å` Toho Imitation Style.
 	ÉvÉçÉWÉFÉNÉgÉyÅ[ÉW http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	éÀñΩä€ ï∂
@@ -49,28 +49,31 @@
 #define bullet_create_aya_kougeki_21	s_bullet_create_aya_oodama3
 static void s_bullet_create_aya_oodama3(SPRITE *src)
 {
-	obj_send1->cx256 					= (src->cx256);
-	obj_send1->cy256 					= (src->cy256);
-//
-	br.BULLET_REGIST_n_way				= (12); 				/* [12way] */
-	br.BULLET_REGIST_div_angle65536 	= (65536/12);			/* ï™äÑäpìx */	/* 30ìxÇ√Ç¬àÍé¸(12==360/30ÇæÇ©ÇÁ12ï˚å¸) */
-//	br.BULLET_REGIST_regist_type		= REGIST_TYPE_00_MULTI_VECTOR;/*åªç›éÌóﬁÇ™ñ≥Ç¢*/
+	obj_send1->cx256					= (src->cx256);
+	obj_send1->cy256					= (src->cy256);
+	//
+	br.BULLET_REGIST_06_n_way					= (12); 				/* [12way] */
+	br.BULLET_REGIST_07_div_angle65536			= (65536/12);			/* ï™äÑäpìx */	/* 30ìxÇ√Ç¬àÍé¸(12==360/30ÇæÇ©ÇÁ12ï˚å¸) */
+	//
+//	br.BULLET_REGIST_03_tama_data				= (TAMA_DATA_0000_TILT);/* (r33-)ïWèÄíe */
+	br.BULLET_REGIST_03_tama_data				= (TAMA_DATA_8000_NON_TILT);/* (r33-)îÒåXÇ´íe */
+	//ñ¢íËbr.BULLET_REGIST_05_regist_type			= TAMA_TYPE_00_ANGLE_TILT;/* (r33-)ïWèÄíe */
 //
 	tmp_angleCCW1024_jiki_nerai(src);
-	br.BULLET_REGIST_angle65536 		= ((src->tmp_angleCCW1024)<<6);
-	const u32 aaa						= ((u32)((((src->tmp_angleCCW65536)>>8)&(0x03))));
-	br.BULLET_REGIST_bullet_obj_type	= (BULLET_OODAMA32_00_AOI+(aaa));	/* íeÉOÉâ */
-//	br.BULLET_REGIST_speed256			= speed256; 			/* íeë¨ */
-	br.BULLET_REGIST_speed256			= (t256(4.0)-(difficulty<<7));			/* íeë¨ */
-	br.BULLET_REGIST_speed_offset		= t256(-2);/* å∏ë¨íeÅH */
-	bullet_regist_angle();
+	br.BULLET_REGIST_02_angle65536				= ((src->tmp_angleCCW1024)<<6);
+	const u32 aaa								= ((u32)((((src->tmp_angleCCW65536)>>8)&(0x03))));
+	br.BULLET_REGIST_04_bullet_obj_type 		= (BULLET_OODAMA32_00_AOI+(aaa));	/* íeÉOÉâ */
+//	br.BULLET_REGIST_00_speed256				= speed256; 			/* íeë¨ */
+	br.BULLET_REGIST_00_speed256				= (t256(4.0)-((cg_game_difficulty)<<7));			/* íeë¨ */
+	br.BULLET_REGIST_01_speed_offset			= t256(-2);/* å∏ë¨íeÅH */
+	tama_system_regist_katayori_n_way();/* (r33-) */
 }
 	#if 0
-			if (0==aaa) 	{		br.BULLET_REGIST_speed256			= (t256(2.0))+(difficulty<<8);	}//= (src->aya_speed)-t256(2.0);						}
-	else	if (1==aaa) 	{		br.BULLET_REGIST_speed256			= (t256(2.0))+(difficulty<<7);	}//= ((src->aya_speed)>>1); 						}
-	else					{		br.BULLET_REGIST_speed256			= (t256(4.0))+(difficulty<<7);	}//= /*édólïœçX*/(t256(4.0)+(difficulty<<7));/*, 10*/	}
+			if (0==aaa) 	{		br.BULLET_REGIST_00_speed256			= (t256(2.0))+(difficulty<<8);	}//= (src->aya_speed)-t256(2.0);						}
+	else	if (1==aaa) 	{		br.BULLET_REGIST_00_speed256			= (t256(2.0))+(difficulty<<7);	}//= ((src->aya_speed)>>1); 						}
+	else					{		br.BULLET_REGIST_00_speed256			= (t256(4.0))+(difficulty<<7);	}//= /*édólïœçX*/(t256(4.0)+(difficulty<<7));/*, 10*/	}
 	#endif
-//							{		br.BULLET_REGIST_speed256			= (t256(3.0))+(difficulty<<7);	}
+//							{		br.BULLET_REGIST_00_speed256			= (t256(3.0))+(difficulty<<7);	}
 
 
 
@@ -82,16 +85,16 @@ static void s_bullet_create_aya_oodama3(SPRITE *src)
 
 static void bullet_create_aya_kougeki_01(SPRITE *src)
 {
-	obj_send1->cx256 					= (src->cx256);
-	obj_send1->cy256 					= (src->cy256);
-//	h->aya_speed				= t256(4.0)+(difficulty<<8);
-//	br.BULLET_REGIST_speed256			= (src->aya_speed)-t256(2.0);				/* íeë¨ */	/*t256(5.0)*/
-	br.BULLET_REGIST_speed256			= (t256(2.0)+(difficulty<<8));				/* íeë¨ */	/*t256(5.0)*/
-	br.BULLET_REGIST_angle1024			= ANGLE_JIKI_NERAI_DAN;
-	br.BULLET_REGIST_div_angle1024		= cv1024r(30);//cv1024r(360-(30));			/* CCWÇÃèÍçá */
-	br.BULLET_REGIST_bullet_obj_type	= BULLET_KOME_00_SIRO + (ra_nd()&0x0f); 	/* íeÉOÉâ */	/* íeÇ…ì≈ìhÇ¡ÇƒÇ†ÇÈê›íË */
-	br.BULLET_REGIST_n_way				= (5);										/* [5way] */
-	br.BULLET_REGIST_regist_type		= REGIST_TYPE_00_MULTI_VECTOR;
+	obj_send1->cx256					= (src->cx256);
+	obj_send1->cy256					= (src->cy256);
+//	h->aya_speed								= t256(4.0)+(difficulty<<8);
+//	br.BULLET_REGIST_00_speed256				= (src->aya_speed)-t256(2.0);				/* íeë¨ */	/*t256(5.0)*/
+	br.BULLET_REGIST_00_speed256				= (t256(2.0)+((cg_game_difficulty)<<8));				/* íeë¨ */	/*t256(5.0)*/
+	br.BULLET_REGIST_02_VECTOR_angle1024		= ANGLE_JIKI_NERAI_DAN;
+	br.BULLET_REGIST_07_VECTOR_div_angle1024	= cv1024r(30);//cv1024r(360-(30));			/* CCWÇÃèÍçá */
+	br.BULLET_REGIST_04_bullet_obj_type 		= BULLET_KOME_00_SIRO + (ra_nd()&0x0f); 	/* íeÉOÉâ */	/* íeÇ…ì≈ìhÇ¡ÇƒÇ†ÇÈê›íË */
+	br.BULLET_REGIST_06_n_way					= (5);										/* [5way] */
+	br.BULLET_REGIST_05_regist_type 			= REGIST_TYPE_00_MULTI_VECTOR;
 	bullet_regist_vector();
 }
 /*---------------------------------------------------------
@@ -102,24 +105,24 @@ static void bullet_create_aya_kougeki_00(SPRITE *src)
 {
 	voice_play(VOICE11_BOSS_KIRARIN/*VOICE14_BOSS_KOUGEKI_01*/, TRACK04_TEKIDAN);/*ÉeÉLÉgÅ[*/
 //
-	obj_send1->cx256 					= (src->cx256);
-	obj_send1->cy256 					= (src->cy256);
-	br.BULLET_REGIST_angle1024			= ANGLE_JIKI_NERAI_DAN;
-	br.BULLET_REGIST_div_angle1024		= (int)(1024/24);
-	br.BULLET_REGIST_regist_type		= REGIST_TYPE_00_MULTI_VECTOR;
+	obj_send1->cx256					= (src->cx256);
+	obj_send1->cy256					= (src->cy256);
+	br.BULLET_REGIST_02_VECTOR_angle1024			= ANGLE_JIKI_NERAI_DAN;
+	br.BULLET_REGIST_07_VECTOR_div_angle1024		= (int)(1024/24);
+	br.BULLET_REGIST_05_regist_type 		= REGIST_TYPE_00_MULTI_VECTOR;
 	/* ñàâÒ */
 	{
 		unsigned int aaa;
-		aaa = (difficulty<<6);/*src->aya_speed*/
+		aaa = ((cg_game_difficulty)<<6);/*src->aya_speed*/
 		aaa += (t256(4.5)); 		/* 3.5ÇæÇ∆easyÇ™ìÔÇµÇ∑Ç¨ÇÈÅB t256(3.5) */
 		unsigned int jj;
-		for (jj=(0); jj<(8+difficulty); jj++ )
+		for (jj=(0); jj<(8+(cg_game_difficulty)); jj++ )
 		{
 			aaa -= (t256(0.125));
 			/* íeÇ…ì≈ìhÇ¡ÇƒÇ†ÇÈê›íË */
-			br.BULLET_REGIST_speed256			= (aaa);										/* íeë¨ */
-			br.BULLET_REGIST_bullet_obj_type	= BULLET_KOME_00_SIRO + (ra_nd()&0x0f); 	/* íeÉOÉâ */
-			br.BULLET_REGIST_n_way				= (11-jj);										/* [10way] */
+			br.BULLET_REGIST_00_speed256			= (aaa);										/* íeë¨ */
+			br.BULLET_REGIST_04_bullet_obj_type = BULLET_KOME_00_SIRO + (ra_nd()&0x0f); 	/* íeÉOÉâ */
+			br.BULLET_REGIST_06_n_way				= (11-jj);										/* [10way] */
 			bullet_regist_vector();
 		}
 	}
@@ -142,8 +145,8 @@ global void aya_05_keitai(SPRITE *src)
 {
 	if (SS00 ==src->boss_base_state777) 	/* ëﬁî */
 	{
-	//	ca se SS00:	/* ïsíË:èâä˙à íuèÓïÒÇÃéÊìæ->SS02Ç÷ */
-	//	ca se SS02:	/* ïsíË:èâä˙à íuÇ÷ñﬂÇÈ->SS03Ç÷ */
+	//	ca se SS00: /* ïsíË:èâä˙à íuèÓïÒÇÃéÊìæ->SS02Ç÷ */
+	//	ca se SS02: /* ïsíË:èâä˙à íuÇ÷ñﬂÇÈ->SS03Ç÷ */
 		src->target_x256 = t256((GAME_WIDTH-50)/2);
 	//	src->target_y256 = t256(20.0);
 		src->target_y256 = t256(30.0); /* */
@@ -158,7 +161,7 @@ global void aya_05_keitai(SPRITE *src)
 	else
 	if (SS01 ==src->boss_base_state777) 	/* à⁄ìÆ */
 	{
-	//	ca se SS03:	/* èâä˙à íu:ëÂíe3Ç¬->SS02, SS02, SS04 */
+	//	ca se SS03: /* èâä˙à íu:ëÂíe3Ç¬->SS02, SS02, SS04 */
 		if (/*150*/240 > src->vvv256 )	/* éûä‘Ç≈ */
 		{
 			src->vvv256 = t256(1.00);
@@ -175,13 +178,13 @@ global void aya_05_keitai(SPRITE *src)
 			if (zzz_aaa == 0)
 			{
 				SPRITE *zzz_player;
-				zzz_player = &obj00[FIX_OBJ_00_PLAYER];
+				zzz_player = &obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_00_PLAYER];
 			//	src->target_x256 = t256(GAME_WIDTH/2); /* ê^íÜÇ÷ÉèÅ[Év */
 				src->target_x256 = zzz_player->cx256;
 				src->target_y256 = zzz_player->cy256;
-				if (src->target_y256 > (t256(128.0)+(difficulty<<(8+4/*5*/))))
+				if (src->target_y256 > (t256(128.0)+((cg_game_difficulty)<<(8+4/*5*/))))
 				{
-					src->target_y256 = (t256(128.0)+(difficulty<<(8+4/*5*/)));
+					src->target_y256 = (t256(128.0)+((cg_game_difficulty)<<(8+4/*5*/)));
 				}
 			}
 			else
@@ -233,8 +236,8 @@ global void aya_05_keitai(SPRITE *src)
 			{
 				bullet_create_aya_kougeki_21(src);	/* çUåÇ */
 				#if (1==USE_CONTROLLER)
-				enemy_boss02_sr_add1(src);/* ç∂:âEâÒì]çUåÇ */
-				enemy_boss02_sr_add2(src);/* âE:ç∂âÒì]çUåÇ */
+				eee_boss02_sr_add1(src);/* ç∂:âEâÒì]çUåÇ */
+				eee_boss02_sr_add2(src);/* âE:ç∂âÒì]çUåÇ */
 				#endif //(1==USE_CONTROLLER)
 			}
 			else

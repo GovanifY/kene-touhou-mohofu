@@ -1,6 +1,6 @@
 
 /*---------------------------------------------------------
-	東方模倣風	～ Toho Imitation Style.
+	東方模倣風 ～ Toho Imitation Style.
 	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 ---------------------------------------------------------*/
@@ -118,11 +118,11 @@ void draw_loading_screen_test(void)
 	sceGuFinish();
 //
 	#if (0==USE_MAX_GU_TIME)
-	/* [通常タイプ]  */
+	/* [通常タイプ] */
 	sceGuSync(0, 0);/* (ここまで Gu) */
 	/* --- VSync and swap frame buffer */
 	#if (1==USE_VSYNC)
-	sceDisplayWaitVblankStart();/*vsync*/
+	sceDisplayWaitVblankStart();/*(vsync)*/
 	#endif /* (1==USE_VSYNC) */
 	sceGuSwapBuffers();
 	#endif /* (USE_MAX_GU_TIME) */

@@ -1,6 +1,6 @@
 
 /*---------------------------------------------------------
-	東方模倣風	～ Toho Imitation Style.
+	東方模倣風 ～ Toho Imitation Style.
 	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	このファイルは直接インクルードしません。
@@ -56,15 +56,15 @@ enum
 	VOICE08_DEATH,				//	"ザコ倒した",		/* i				サコ死に音専用						[どすーーー] */
 	VOICE09_GRAZE,				//	"グレイズ", 		/* j				グレイズ音							[か] */
 	VOICE15_COUNT_TIMER,		//	"時間制限", 		/* p :				時間制限カウント音					[へにょん] */
-	VOICE11_BOSS_KIRARIN,		//	"キラリン☆",		/* l				きらりん音	*/
+	VOICE11_BOSS_KIRARIN,		//	"キラリン☆",		/* l				きらりん音 */
 //
 	VOICE10_MAGICF_E_SHOT,		//	"ボスショット1",	/* k				音									[ふわ] */
 	VOICE12_SAKUYA_B2_SHOT, 	//	"ボスショット2",	/* m				咲夜 音 							[ぱあん] */
 	VOICE13_SAKUYA_SHOT02,		//	"ボスショット3",	/* n				咲夜じゅわショット音				[ちゅるちゅるちゅる] */
 	VOICE14_BOSS_KOUGEKI_01,	//	"ボスショット4",	/*[o];	[s(?)]		ボス攻撃音? 						[ばあん] */
-	VOICE16_BOSS_KYUPIN,		//	"ボスショット5",	/* l				キュピーン音  */
+	VOICE16_BOSS_KYUPIN,		//	"ボスショット5",	/* l				キュピーン音 */
 //
-	VOICE17_BOSS_TAME01,		//	"ボス溜め1",		/* r				うぃーん音	*/
+	VOICE17_BOSS_TAME01,		//	"ボス溜め1",		/* r				うぃーん音 */
 	VOICE16_MAX_FILES,
 };
 	/* 本家に低音系の効果音は無い＝＝合わないので廃止。 咲夜 音 [どどどどど] */

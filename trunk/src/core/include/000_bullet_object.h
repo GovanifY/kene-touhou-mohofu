@@ -1,6 +1,6 @@
 
 /*---------------------------------------------------------
-	東方模倣風	～ Toho Imitation Style.
+	東方模倣風 ～ Toho Imitation Style.
 	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	このファイルは直接インクルードしません。
@@ -79,82 +79,28 @@ enum
 	#endif
 #endif
 
+	/* 発弾エフェクトの時間分 */
+	#define HATUDAN_FRAME64 	(64)
+
 
 /* とりあえず */
 #if 1
-	#define boss_base_danmaku_type				user_data10
-	#define boss_base_danmaku_time_out			user_data11
-	#define boss_base_danmaku_test				user_data12
+	#define boss_base_spell_type				user_data10
+	#define boss_base_spell_time_out			user_data11
+	#define boss_base_spell_temporaly			user_data12
 //	#define boss_base_resurved000				user_data13/*(r32)現在、未使用。*/
 //	#define bo ss_base_state001 				user_data13/*廃止*/
 #endif
 
 
-extern int boss_hamidasi;			/* 「移動できなかったフラグ」(使用前に手動でOFF==0にしとく) */
+/**/extern int boss_hamidasi;		/* 「移動できなかったフラグ」(使用前に手動でOFF==0にしとく) */
 extern POINT256 boss_clip_min;		/* ボス移動範囲(最小値) */
 extern POINT256 boss_clip_max;		/* ボス移動範囲(最大値) */
 
 extern POINT256 bullet_clip_min;	/* 弾の範囲(最小値) */
 extern POINT256 bullet_clip_max;	/* 弾の範囲(最大値) */
 
-#if 1
-enum
-{
-	REGIST_TYPE_00_MULTI_VECTOR,	/* 多方向弾 */
-	REGIST_TYPE_01_HAZUMI,			/* 重力弾01 輝夜、最終形態で投げてくるかなり無茶な弾。 */
-	REGIST_TYPE_02_GRAVITY02,		/* 重力弾02 */
-	REGIST_TYPE_03_TOMARI,			/*	弾 */
-	REGIST_TYPE_04_KURU_KURU,		/*	弾 */
-	REGIST_TYPE_99_MAX,
-};
 
-/* 弾登録 */
-extern void bullet_regist_vector(void);
-extern void bullet_regist_angle(void);
-/* ベクトル弾の場合 */
-typedef struct _bullet_regist_
-{
-// 弾幕の受け渡し設定
-	int BULLET_REGIST_speed256; 					/* aa */
-	int BULLET_REGIST_angle1024;					/* bb */
-	int BULLET_REGIST_div_angle1024;				/* cc */
-	int BULLET_REGIST_bullet_obj_type;				/* dd */
-
-	int BULLET_REGIST_n_way;						/* ee */
-	int BULLET_REGIST_speed_offset; 				/* ff */
-
-	int BULLET_REGIST_regist_type;					/* 登録方式 */
-// 弾幕リストに登録する場合の設定
-//	int BULLET_REGIST_start_number; 				/* 開始番号 */
-//	int BULLET_REGIST_max_size; 					/* サイズ */
-} BULLET_REGIST;
-extern BULLET_REGIST br;
-#endif
-#define BULLET_REGIST_hosi_gata_time_out			BULLET_REGIST_speed256
-#define BULLET_REGIST_hosi_gata_angle1024			BULLET_REGIST_angle1024
-#define BULLET_REGIST_hosi_gata_add_speed256		BULLET_REGIST_div_angle1024
-
-#define BULLET_REGIST_jyuryoku_dan_delta256 		BULLET_REGIST_div_angle1024
-#define BULLET_REGIST_jyuryoku_dan_bound_counts 	BULLET_REGIST_n_way
-
-#define BULLET_REGIST_tomari2_dan_delta256			BULLET_REGIST_div_angle1024
-#define BULLET_REGIST_tomari2_dan_next_angle1024	BULLET_REGIST_n_way
-
-//
-/* 角度弾の場合 */
-
-//typedef struct _bullet_regist_
-//{
-//	int BULLET_REGIST_speed256; 					//		/* aa */	<同じ>
-#define BULLET_REGIST_angle65536			BULLET_REGIST_angle1024 		/* <65536度に決定> */	//		/* bb */
-#define BULLET_REGIST_div_angle65536		BULLET_REGIST_div_angle1024 	/* <65536度に決定> */
-//	int BULLET_REGIST_bullet_obj_type;				//		/* dd */	<同じ>
-//
-//	int BULLET_REGIST_n_way;						//		/* ee */	<同じ>
-//#define BU LLET_REGIST_sakuya_kurukurku_knife_height			BULLET_REGIST_speed_offset	//		/* ff */	<未定>
-//
-//	int BULLET_REGIST_regist_type;					/* 登録方式 */		<同じ>
-//} BULLET_REGIST;
 
 
 //extern void bakuhatsu_add_type(int x256, int y256, /*dou ble int delay_wait,*/ int type);
@@ -178,7 +124,6 @@ extern void common_99_keitai(SPRITE *src);/* 撃破後に画面外にボスが逃げる */
 
 /* ボスで宣言が必要なもの(グローバル) */
 
-extern void enemy_set_random_seed(void/*int set_seed*/);
 //extern int en emy_get_random_item(void);
 extern void lose_random_item(SPRITE *src);
 
@@ -201,8 +146,7 @@ extern void create_spell_card(SPRITE *src, int spell_card_type);
 extern void check_regist_generate_spell_card(SPRITE *src);	/* スペカ登録可能なら登録 / スペカ生成 */
 #endif
 
-
-extern	void danmaku_state_check_holding(SPRITE *src);/* 弾幕が終わるまで待つ。 */
+// extern	void dan maku_state_check_holding(SPRITE *src);/* 弾幕が終わるまで待つ。 */
 
 enum
 {
@@ -236,6 +180,6 @@ extern int spell_card_number;			/* [共用]スペカ番号 */
 
 
 //	ザコ登録の共通ルーチン
-//extern void add_zako_common(STAGE_DATA *l, SPRITE *src);
+//extern void add_za ko_common(GAME_COMMAND *l, SPRITE *src);
 
 #endif /* _SPELL_CARD_H_ */

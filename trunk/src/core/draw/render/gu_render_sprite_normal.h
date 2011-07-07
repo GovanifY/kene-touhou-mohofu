@@ -57,8 +57,9 @@ static void render_object_no_rot_zoom(SPRITE *spr)
 	unsigned int/*short*/ pos = 0;
 	unsigned int/*short*/ w_size;
 	w_size	= SLICE_64_SIZE;
-	unsigned int/*short*/ x_pos = ((spr->cx256>>8)-(spr->w >> 1));/* 中心座標から画像サイズの半分を引き、左上座標を計算 */
-	unsigned int/*short*/ y_pos = ((spr->cy256>>8)-(spr->h >> 1));/* 中心座標から画像サイズの半分を引き、左上座標を計算 */
+	/* 回転しないので x,y 座標は、「画面の座標で」つまり、「画面の左上を原点o(0,0)とした、絶対座標」で計算しておく。 */
+	unsigned int/*short*/ absolute_x_pos = ((spr->cx256>>8)-(spr->w >> 1));/* 中心座標から画像サイズの半分を引き、左上座標を計算 */
+	unsigned int/*short*/ absolute_y_pos = ((spr->cy256>>8)-(spr->h >> 1));/* 中心座標から画像サイズの半分を引き、左上座標を計算 */
 	for (; i<count2; )
 	{
 	//	if ((i1+1) < count)
@@ -69,21 +70,21 @@ static void render_object_no_rot_zoom(SPRITE *spr)
 		}
 	//
 		vertices[(i)].u = (spr->tx + pos);
-		vertices[(i)].v = spr->ty;
+		vertices[(i)].v = (spr->ty);
 		#if (1==USE_VCOLOR)
 		vertices[(i)].color = blendlevel;
 		#endif
-		vertices[(i)].x = (x_pos + pos);
-		vertices[(i)].y = y_pos;
+		vertices[(i)].x = (absolute_x_pos + pos);
+		vertices[(i)].y = (absolute_y_pos);
 		vertices[(i)].z = SPR_PRIORITY;
 	//
 		vertices[(i)+1].u	= (spr->tx + pos) + w_size;
-		vertices[(i)+1].v	= spr->ty + spr->h;
+		vertices[(i)+1].v	= (spr->ty) + spr->h;
 		#if (1==USE_VCOLOR)
 		vertices[(i)+1].color = blendlevel;
 		#endif
-		vertices[(i)+1].x	= (x_pos + pos) + w_size;
-		vertices[(i)+1].y	= y_pos + spr->h;
+		vertices[(i)+1].x	= (absolute_x_pos + pos) + w_size;
+		vertices[(i)+1].y	= (absolute_y_pos) + spr->h;
 		vertices[(i)+1].z	= SPR_PRIORITY;
 		i += 2;
 		pos += SLICE_64_SIZE;

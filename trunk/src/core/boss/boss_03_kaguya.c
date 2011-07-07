@@ -2,7 +2,7 @@
 #include "boss.h"
 
 /*---------------------------------------------------------
-	東方模倣風	～ Toho Imitation Style.
+	東方模倣風 ～ Toho Imitation Style.
 	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	蓬莱山 輝夜
@@ -39,7 +39,7 @@ global void kaguya_04_keitai(SPRITE *src)
 		src->vvv256 = t256(1.0);
 	}
 	/* 弾幕を撃ってない場合に追加 */
-	if (DANMAKU_00==src->boss_base_danmaku_type)		/* 弾幕生成終了なら弾幕生成 */
+	if (SPELL_00==src->boss_base_spell_type)		/* 弾幕生成終了なら弾幕生成 */
 	{
 		/* 気分で目標を決める。 */
 		kaguya_target_x256 = ((ra_nd()&0xffff))+(t256(48));
@@ -47,15 +47,15 @@ global void kaguya_04_keitai(SPRITE *src)
 		src->boss_base_state777++;
 		src->boss_base_state777 &= (4-1);
 		#if (1)
-		if (difficulty >=  src->boss_base_state777 )
+		if ((cg_game_difficulty) >=  src->boss_base_state777 )
 		{
-			spell_card_get_danmaku_number(src);
+			spell_card_get_spell_number(src);
 		}
 		#endif
 	}
 	alice_yuudou_move_only(src);
 	alice_yuudou_calc(src);
-	bullet_angle_all_gamen_gai_nara_kesu();/*角度弾の喰み出しチェックを行う(毎フレーム行う必要はない)*/
+	bullet_angle_all_gamen_gai_nara_kesu();/* 角度弾の喰み出しチェックを行う(毎フレーム行う必要はない) */
 }
 
 
@@ -72,17 +72,17 @@ global void kaguya_01_keitai(SPRITE *src)
 	src->cy256 = (t256(25)+(sin1024((aaa_wait))<<2));
 //
 	/* 弾幕を撃ってない場合に追加 */
-	if (DANMAKU_00==src->boss_base_danmaku_type)		/* 弾幕生成終了なら弾幕生成 */
+	if (SPELL_00==src->boss_base_spell_type)		/* 弾幕生成終了なら弾幕生成 */
 	{
 		/* 移動方向を決める */
 		src->boss_base_state777++;
 		src->boss_base_state777 &= (4-1);
 		#if (1)
-		if (difficulty >= src->boss_base_state777 )
+		if ((cg_game_difficulty) >= src->boss_base_state777 )
 		{
-			spell_card_get_danmaku_number(src);
+			spell_card_get_spell_number(src);
 		}
 		#endif
 	}
-	bullet_angle_all_gamen_gai_nara_kesu();/*角度弾の喰み出しチェックを行う(毎フレーム行う必要はない)*/
+	bullet_angle_all_gamen_gai_nara_kesu();/* 角度弾の喰み出しチェックを行う(毎フレーム行う必要はない) */
 }

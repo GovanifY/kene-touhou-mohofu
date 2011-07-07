@@ -2,7 +2,7 @@
 #include "game_main.h"
 
 /*---------------------------------------------------------
-	東方模倣風	～ Toho Imitation Style.
+	東方模倣風 ～ Toho Imitation Style.
 	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 ---------------------------------------------------------*/
@@ -83,48 +83,48 @@ enum	/* _remilia_formation_ */
 				{
 //#define JIKI_X_HARF (14)/*(31/2) 自機の半分 */
 /* 通常時 (X座標位置オフセット) (6の倍数が基本位置, 75%縮小の為 8の倍数の75%が6の倍数になる)6, 12, 18, 24, 30, 36, 42, 48, 54, 60, 66, 72, ... */
-{	(6),		(-6),		(24),		(-24)	},	/* 0 霊夢 A */
-{	(12),		(-12),		(24),		(-24)	},	/* 1 霊夢 B */
-{	(6),		(-6),		(24),		(-24)	},	/* 2 魔理沙 A */
-{	(24),		(-24),		(54),		(-54)	},	/* 3 魔理沙 B (Type B 貫通装備) */
-//	[2]右内 	[1]左内 	[3]右外 	[0]左外
-{	(6),		(-6),		(24),		(-24)	},	/* 4 レミリア */
-{	(24),		(-24),		(24),		(-24)	},	/* 5 幽々子 */
-{	(6),		(-6),		(24),		(-24)	},	/* 6 チルノ */
-{	(6),		(-6),		(24),		(-24)	},	/* 7 チルノ */
-/* 通常時 (Y座標位置オフセット) */
-{	(-22),		(-22),		(-4),		(-4)	},	/* 0 霊夢 A */
-{	(-20),		(-20),		(5),		(5) 	},	/* 1 霊夢 B */
-{	(-20),		(-20),		(5),		(5) 	},	/* 2 魔理沙 A */
-{	(-22),		(-22),		(-4),		(-4)	},	/* 3 魔理沙 B */
-{	(-29),		(-29),		(-15),		(-15)	},	/* 4 レミリア */	/* 前方配置 */
-{	(-7),		(-7),		(7),		(7) 	},	/* 5 幽々子 */
-{	(12),		(12),		(17),		(17)	},	/* 6 チルノ A */
-{	(12),		(12),		(17),		(17)	},	/* 7 チルノ Q */
-/* 低速時 (X座標位置オフセット) */
-{	(24),		(-24),		(12),		(-12)	},	/* 0 霊夢 A */
-{	(3),		(-3),		(12),		(-12)	},	/* 1 霊夢 B */
-{	(3),		(-3),		(12),		(-12)	},	/* 2 魔理沙 A */
-{	(6),		(-6),		(9),		(-9)	},	/* 3 魔理沙 B (Type B 貫通装備) */
-//	[2]右内 	[1]左内 	[3]右外 	[0]左外
-{	(6),		(-6),		(24),		(-24)	},	/* 4 レミリア */
-{	(30),		(-30),		(18),		(-18)	},	/* 5 幽々子 */
-{	(6),		(-6),		(24),		(-24)	},	/* 6 チルノ */
-{	(6),		(-6),		(24),		(-24)	},	/* 7 チルノ */
-/* 低速時 (Y座標位置オフセット)  */
-{	(15),		(15),		(29),		(29)	},	/* 0 霊夢 A */
-{	(-18),		(-18),		(-12),		(-12)	},	/* 1 霊夢 B */
-{	(-18),		(-18),		(-12),		(-12)	},	/* 2 魔理沙 A */
-{	(-22),		(-22),		(-4),		(-4)	},	/* 3 魔理沙 B */
-{	(-29),		(-29),		(-15),		(-15)	},	/* 4 レミリア */	/* 前方配置 */
-{	(4),		(4),		(18),		(18)	},	/* 5 幽々子 */
-{	(12),		(12),		(17),		(17)	},	/* 6 チルノ A */
-{	(12),		(12),		(17),		(17)	},	/* 7 チルノ Q */
+{	( 24),		 (-24),  (	6), 	   (-6),	},	/* 0 霊夢 A */
+{	( 24),		 (-24),  ( 12), 	  (-12),	},	/* 1 霊夢 B */
+{	( 24),		 (-24),  (	6), 	   (-6),	},	/* 2 魔理沙 A */
+{	( 54),		 (-54),  ( 24), 	  (-24),	},	/* 3 魔理沙 B (Type B 貫通装備) */
+//	[3]右外 	[0]左外 [2]右内 	[1]左内
+{	( 24),		 (-24),  (	6), 	   (-6),	},	/* 4 レミリア */
+{	( 24),		 (-24),  ( 24), 	  (-24),	},	/* 5 幽々子 */
+{	( 24),		 (-24),  (	6), 	   (-6),	},	/* 6 チルノ */
+{	( 24),		 (-24),  (	6), 	   (-6),	},	/* 7 チルノ */
+												/* 通常時 (Y座標位置オフセット) */
+{	( -4),		 (-4),	 (-22), 	 (-22), 	},	/* 0 霊夢 A */
+{	(  5),		  (5),	 (-20), 	 (-20), 	},	/* 1 霊夢 B */
+{	(  5),		  (5),	 (-20), 	 (-20), 	},	/* 2 魔理沙 A */
+{	( -4),		 (-4),	 (-22), 	 (-22), 	},	/* 3 魔理沙 B */
+{	(-15),		(-15),	 (-29), 	 (-29), 	},	/* 4 レミリア */	 /* 前方配置 */
+{	(  7),		  (7),	  (-7), 	  (-7), 	},	/* 5 幽々子 */
+{	( 17),		 (17),	  (12), 	  (12), 	},	/* 6 チルノ A */
+{	( 17),		 (17),	  (12), 	  (12), 	},	/* 7 チルノ Q */
+												/* 低速時 (X座標位置オフセット) */
+{	( 12),		 (-12),   (24), 	 (-24), 	},	/* 0 霊夢 A */
+{	( 12),		 (-12),   (3),		  (-3), 	},	/* 1 霊夢 B */
+{	( 12),		 (-12),   (3),		  (-3), 	},	/* 2 魔理沙 A */
+{	(  9),		  (-9),   (6),		  (-6), 	},	/* 3 魔理沙 B (Type B 貫通装備) */
+//	[3]右外 	[0]左外 [2]右内 	[1]左内
+{	( 24),		 (-24),   (6),		  (-6), 	},	/* 4 レミリア */
+{	( 18),		 (-18),  (30),		 (-30), 	},	/* 5 幽々子 */
+{	( 24),		 (-24),   (6),		  (-6), 	},	/* 6 チルノ */
+{	( 24),		 (-24),   (6),		  (-6), 	},	/* 7 チルノ */
+												/* 低速時 (Y座標位置オフセット) */
+{	( 29),		 (29),	 (15),		 (15),		},	/* 0 霊夢 A */
+{	(-12),		(-12),	(-18),		(-18),		},	/* 1 霊夢 B */
+{	(-12),		(-12),	(-18),		(-18),		},	/* 2 魔理沙 A */
+{	( -4),		 (-4),	(-22),		(-22),		},	/* 3 魔理沙 B */
+{	(-15),		(-15),	(-29),		(-29),		},	/* 4 レミリア */	/* 前方配置 */
+{	( 18),		 (18),	  (4),		  (4),		},	/* 5 幽々子 */
+{	( 17),		 (17),	 (12),		 (12),		},	/* 6 チルノ A */
+{	( 17),		 (17),	 (12),		 (12),		},	/* 7 チルノ Q */
 					/* 固定用 */
 //
 					/* 回転用 */
 					{	(20),  ( 30),	(40),  ( 50) }, 								/* 1 FORMATION_30_RADIUS_R: 回転半径 */
-					{	( 1),  (  2),	(-3),  ( -6) }, 								/* 0 FORMATION_31_ADD_R:		回転方向、角度加算値 */
+					{	( 1),  (  2),	(-3),  ( -6) }, 								/* 0 FORMATION_31_ADD_R:	回転方向、角度加算値 */
 			//		{	( 1*104+20),  ( 2*104+20),	( 0*104+20),  ( 3*104+20) },		/* 2 FORMATION_02_LOCATE_X: 画面後方から支援するよ(width352dot) */
 			//		{  (240),  (240),  (220),  (220) }, 								/* 3 FORMATION_02_LOCATE_Y: 画面後方から支援するよ */
 				};
@@ -141,10 +141,10 @@ static void move_delta_xy(SPRITE *src, int delta_x256, int delta_y256)
 	ccc_angle1024 >>= (6);
 
 //	int ccc_speed256;
-//	ccc_speed256 = (/*10*/((REMILIA==select_player)?t256(8.0):t256(1.0)));
+//	ccc_speed256 = (/*10*/((REMILIA==(cg_game_select_player))?t256(8.0):t256(1.0)));
 	const int bbb_speed_tbl[(8)] =/* REIMU(A/B) MARISA(A/B) REMILIA YUYUKO CIRNO(A/Q) */
 	{	t256(4.0),	t256(4.0),	t256(4.0),	t256(4.0),	t256(8.0),	t256(2.0),	t256(1.0),	t256(1.0)	};
-	const int ccc_speed256 = bbb_speed_tbl[select_player];
+	const int ccc_speed256 = bbb_speed_tbl[(cg_game_select_player)];
 	src->cx256 += ((sin1024(( ccc_angle1024))*(ccc_speed256))>>8);/*fps_factor*/	/* CCWの場合 */
 	src->cy256 += ((cos1024(( ccc_angle1024))*(ccc_speed256))>>8);/*fps_factor*/
 }
@@ -178,7 +178,7 @@ static void control_formation00(SPRITE *src) /* FORMATION_00 */
 				{	( 170),  ( 210),	( 100),  ( 280) },		/* 2 FORMATION_02_LOCATE_X: 画面後方から支援するよ(width352dot) */
 				{  (240),  (240),  (220),  (220) }, 								/* 3 FORMATION_02_LOCATE_Y: 画面後方から支援するよ */
 			};
-			const int if_teisoku = ((my_pad & PSP_KEY_SLOW))?( (2)):(0);
+			const int if_teisoku = ((cg_my_pad & PSP_KEY_SLOW))?( (2)):(0);
 			src->PL_OPTION_DATA_offset_x256 = ((aaa[if_teisoku+0][(src->PL_OPTION_DATA_opt_anime_add_id)])<<8);
 			src->PL_OPTION_DATA_offset_y256 = ((aaa[if_teisoku+1][(src->PL_OPTION_DATA_opt_anime_add_id)])<<8);/*240*/ /* プレイヤー番号に合わせている事に注意 */
 		}
@@ -186,7 +186,7 @@ static void control_formation00(SPRITE *src) /* FORMATION_00 */
 	else
 	{
 		SPRITE *zzz_player;
-		zzz_player = &obj00[FIX_OBJ_00_PLAYER];
+		zzz_player = &obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_00_PLAYER];
 		#if 1/*Gu(中心座標)*/
 		player_offs_x256 = zzz_player->cx256;
 		player_offs_y256 = zzz_player->cy256;
@@ -194,9 +194,9 @@ static void control_formation00(SPRITE *src) /* FORMATION_00 */
 		/* 初期化 */
 		{
 		//	/* FORMATION_00: レミリアの直前に四つ / チルノの直後に四人 */
-			const int if_teisoku = ((my_pad & PSP_KEY_SLOW))?( (8+8)):(0);
-			src->PL_OPTION_DATA_offset_x256 = ((ggg[if_teisoku+select_player	][(src->PL_OPTION_DATA_opt_anime_add_id)])<<8);
-			src->PL_OPTION_DATA_offset_y256 = ((ggg[if_teisoku+select_player+(8)][(src->PL_OPTION_DATA_opt_anime_add_id)])<<8);/*240*/ /* プレイヤー番号に合わせている事に注意 */
+			const int if_teisoku = ((cg_my_pad & PSP_KEY_SLOW))?( (8+8)):(0);
+			src->PL_OPTION_DATA_offset_x256 = ((ggg[if_teisoku+(cg_game_select_player)	][(src->PL_OPTION_DATA_opt_anime_add_id)])<<8);
+			src->PL_OPTION_DATA_offset_y256 = ((ggg[if_teisoku+(cg_game_select_player)+(8)][(src->PL_OPTION_DATA_opt_anime_add_id)])<<8);/*240*/ /* プレイヤー番号に合わせている事に注意 */
 		}
 	}
 
@@ -219,7 +219,7 @@ static void control_formation00(SPRITE *src) /* FORMATION_00 */
 		move_delta_xy(src, delta_x256, delta_y256); 	/* 目標地点に移動する */
 	#if 1
 		/* レミリア用 */
-//		if (REMILIA==select_player)
+//		if (REMILIA==(cg_game_select_player))
 		{
 			/* 目標付近までたどり着いたら */
 			if (( t256(-5) < delta_y256) &&
@@ -250,7 +250,7 @@ static void control_formation01(SPRITE *src) /* FORMATION_01 */
 	int player_offs_y256;
 	{
 		SPRITE *zzz_player;
-		zzz_player = &obj00[FIX_OBJ_00_PLAYER];
+		zzz_player = &obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_00_PLAYER];
 		#if 1/*Gu(中心座標)*/
 		player_offs_x256 = zzz_player->cx256;
 		player_offs_y256 = zzz_player->cy256;
@@ -274,7 +274,7 @@ static void control_formation01(SPRITE *src) /* FORMATION_01 */
 		move_delta_xy(src, delta_x256, delta_y256); /* 目標地点に移動する */
 	#if 1
 		/* レミリア用 */
-//		if (REMILIA==select_player)
+//		if (REMILIA==(cg_game_select_player))
 		{
 			/* 目標付近までたどり着いたら */
 			if (( t256(-5) < delta_y256) &&
@@ -293,7 +293,7 @@ static void control_formation01(SPRITE *src) /* FORMATION_01 */
 }
 			#if 0
 			/* レミリア用 */
-			if (REMILIA==select_player)
+			if (REMILIA==(cg_game_select_player))
 			{
 				/*REMILIA_angle512*/src->PL_OPTION_DATA_angleCCW1024 += oz_offset_add_r;	/*5==ra d2deg512(0.05)*/	/*fps_factor*/
 				mask1024(/*REMILIA_angle512*/src->PL_OPTION_DATA_angleCCW1024);
@@ -311,7 +311,7 @@ static void control_formation03(SPRITE *src) /* FORMATION_03 */
 	int player_offs_y256;
 	{
 		SPRITE *zzz_player;
-		zzz_player = &obj00[FIX_OBJ_00_PLAYER];
+		zzz_player = &obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_00_PLAYER];
 		#if 1/*Gu(中心座標)*/
 		player_offs_x256 = zzz_player->cx256;
 		player_offs_y256 = zzz_player->cy256;
@@ -332,7 +332,7 @@ static void control_formation03(SPRITE *src) /* FORMATION_03 */
 		move_delta_xy(src, delta_x256, delta_y256); /* 目標地点に移動する */
 		#if 1
 		/* レミリア用 */
-//		if (REMILIA==select_player)
+//		if (REMILIA==(cg_game_select_player))
 		{
 			/* 目標付近までたどり着いたら */
 			if (( t256(-5) < delta_y256) &&
@@ -359,18 +359,18 @@ static void control_formation03(SPRITE *src) /* FORMATION_03 */
 	int player_offs_y256;
 	{
 		SPRITE *zzz_player;
-		zzz_player = &obj00[FIX_OBJ_00_PLAYER];
+		zzz_player = &obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_00_PLAYER];
 		#if 1/*Gu(中心座標)*/
 		player_offs_x256 = zzz_player->cx256;
 		player_offs_y256 = zzz_player->cy256;
 		#endif
 	}
 	/* 少なくとも低速移動でオプションが止められるのはレミリアのみ(チルノには合わない) */
-	if (REMILIA==select_player)
+	if (REMILIA==(cg_game_select_player))
 	{
 		if (state_zz1==FORMATION_03)/* FORMATION_03: 減速時用(好きな位置に置けるよ) */
 		{
-			if (my_pad & PSP_KEY_SLOW)
+			if (cg_my_pad & PSP_KEY_SLOW)
 			{
 				/* レミリア用 */
 				src->PL_OPTION_DATA_slow_count += (1<<2);
@@ -395,9 +395,9 @@ static void control_formation03(SPRITE *src) /* FORMATION_03 */
 	int slow_remilia_flag;
 	slow_remilia_flag = 0;
 	/* 低速移動 */
-	if (REMILIA==select_player)
+	if (REMILIA==(cg_game_select_player))
 	{
-		if (my_pad & PSP_KEY_SLOW)
+		if (cg_my_pad & PSP_KEY_SLOW)
 		{
 			slow_remilia_flag=1;
 		}
@@ -416,9 +416,9 @@ static void control_formation03(SPRITE *src) /* FORMATION_03 */
 		{
 		//	if (my_pad & PSP_KEY_OPTION)
 		/* (オプションキーキーを離した瞬間なら) */
-			if ((0==(my_pad & PSP_KEY_OPTION))) 	/* オプションキーが離されている */
+			if ((0==(cg_my_pad & PSP_KEY_OPTION))) 	/* オプションキーが離されている */
 			{
-				if ( (my_pad^my_pad_alter) & PSP_KEY_OPTION)	/* オプションキーの状態が変わった(トグル、押したまたは離した場合) */
+				if ( (cg_my_pad^cg_my_pad_alter) & PSP_KEY_OPTION)	/* オプションキーの状態が変わった(トグル、押したまたは離した場合) */
 				{
 	#if 0/*デバッグ用*/
 	/*	★「ボスと相打ちするとハングアップ」バグ(～r26)対策 */
@@ -431,11 +431,11 @@ static void control_formation03(SPRITE *src) /* FORMATION_03 */
 	0x4
 		ST ATE_FLAG_11_IS_BOSS_DESTROY				(0x0400)
 	0xb
-		STATE_FLAG_13_DRAW_BOSS_GAUGE				(0x1000)
-		STATE_FLAG_14_GAME_LOOP_QUIT				(0x2000)
-		STATE_FLAG_16_NOT_ALLOW_KEY_CONTROL 		(0x8000)
+		ST ATE_FLAG_13_DRAW_BOSS_GAUGE				(0x1000)
+		ST ATE_FLAG_14_GAME_LOOP_QUIT				(0x2000)
+		ST ATE_FLAG_16_NOT_ALLOW_KEY_CONTROL 		(0x8000)
 	 */
-	p d_my_score	= pd.state_flag;
+	p d_my_score	= cg.state_flag;
 	p d_graze_point = state_zz1;
 	#endif
 					state_zz1++;

@@ -5,7 +5,7 @@
 //#include "spell_card_value.h"
 
 /*---------------------------------------------------------
-	東方模倣風	～ Toho Imitation Style.
+	東方模倣風 ～ Toho Imitation Style.
 	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 ---------------------------------------------------------*/
@@ -16,6 +16,9 @@ extern void move_alice(SPRITE *src);
 /* 目標を設定し、誘導移動 */
 extern void alice_yuudou_move_only(SPRITE *src);	/* 移動のみ */
 extern void alice_yuudou_calc(SPRITE *src); 		/* 誘導計算のみ */
+
+/* 時間切れの場合の透明度設定 */
+extern void set_timeout_alpha(SPRITE *src);
 
 #if 1
 /* ボス共通規格 */

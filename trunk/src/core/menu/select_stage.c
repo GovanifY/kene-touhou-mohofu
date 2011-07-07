@@ -2,7 +2,7 @@
 #include "game_main.h"
 
 /*---------------------------------------------------------
-	東方模倣風  ～ Toho Imitation Style.
+	東方模倣風 ～ Toho Imitation Style.
 	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	ステージ選択メニュー
@@ -10,11 +10,6 @@
 ---------------------------------------------------------*/
 
 #include "kanji_system.h"
-
-
-extern int continue_stage;
-//global int practice_mode;
-
 
 #define MAX_MENU_ITEMS (8)
 typedef struct
@@ -87,12 +82,6 @@ static MENU_RESOURCE my_menu_resource[/*8*/MAX_MENU_ITEMS/*10*/] =
 /*---------------------------------------------------------
 
 ---------------------------------------------------------*/
-extern int now_max_continue;
-
-
-/*---------------------------------------------------------
-
----------------------------------------------------------*/
 static void stage_select_menu_draw_all(void)
 {
 	{
@@ -144,6 +133,7 @@ static void stage_select_menu_draw_all(void)
 	fadout fininshed, menu done
 ---------------------------------------------------------*/
 
+
 static void stage_select_menu_work_MENU_STATE_03_FININSH(void)
 {
 	SDL_SetAlpha(sdl_screen[SDL_01_BACK_SCREEN],SDL_SRCALPHA,255);
@@ -154,7 +144,7 @@ static void stage_select_menu_work_MENU_STATE_03_FININSH(void)
 //			//SDL_FreeSurface(aaa.menu_item_surface[i]);
 //		}
 //	}
-	continue_stage = aaa.active_item;
+	cg.game_continue_stage = aaa.active_item;
 	/* プラクティス ゲーム開始 */
 	main_call_func = difficulty_select_menu_start;	/* 難易度選択メニューへ */
 //	www=FPS_MENU_FACTOR10;
@@ -183,13 +173,13 @@ static void stage_select_menu_work_MENU_STATE_02_FADE_OUT(void)
 
 static void stage_select_menu_work_MENU_STATE_01_WORK_MENU(void)
 {
-	if (0==my_pad_alter)/* さっき何も押されてなかった場合にキーチェック(原作準拠) */
+	if (0==cg_my_pad_alter)/* さっき何も押されてなかった場合にキーチェック(原作準拠) */
 	{
-		if (my_pad & (PSP_KEY_DOWN|PSP_KEY_UP|PSP_KEY_PAUSE|PSP_KEY_RIGHT))
+		if (cg_my_pad & (PSP_KEY_DOWN|PSP_KEY_UP|PSP_KEY_PAUSE|PSP_KEY_RIGHT))
 		{
 			voice_play(VOICE02_MENU_SELECT, TRACK01_EXPLODE);
 		}
-		if (my_pad & PSP_KEY_DOWN)
+		if (cg_my_pad & PSP_KEY_DOWN)
 		{
 			if (aaa.active_item == aaa.max_items-1)
 			{	aaa.active_item = 0;}
@@ -199,7 +189,7 @@ static void stage_select_menu_work_MENU_STATE_01_WORK_MENU(void)
 			}
 		//	www=FPS_MENU_FACTOR10;
 		}
-		else if (my_pad & PSP_KEY_UP)
+		else if (cg_my_pad & PSP_KEY_UP)
 		{
 			if (0 == aaa.active_item)
 			{	aaa.active_item = aaa.max_items-1;}
@@ -209,7 +199,7 @@ static void stage_select_menu_work_MENU_STATE_01_WORK_MENU(void)
 			}
 		//	www=FPS_MENU_FACTOR10;
 		}
-		if (my_pad & PSP_KEY_SHOT_OK)
+		if (cg_my_pad & PSP_KEY_SHOT_OK)
 		{
 			voice_play(VOICE01_MENU_OK/*VOICE02_MENU_SELECT*/, TRACK01_EXPLODE);
 			main_call_func = stage_select_menu_work_MENU_STATE_02_FADE_OUT; 	/* メニュー消去準備 */
@@ -246,13 +236,13 @@ static void stage_select_menu_work_MENU_STATE_00_FADE_IN_MENU(void)
 	{
 		aaa.menu_item_surface[i] = NULL;
 		{
-			aaa.menu_item_my_obj[i].x256 			= 0;
-			aaa.menu_item_my_obj[i].y256 			= 0;
+			aaa.menu_item_my_obj[i].x256			= 0;
+			aaa.menu_item_my_obj[i].y256			= 0;
 
-			aaa.menu_item_my_obj[i].MENU_DATA_i0 	= 0;
-			aaa.menu_item_my_obj[i].MENU_DATA_i1 	= 0;
-			aaa.menu_item_my_obj[i].MENU_DATA_i2 	= 0;
-			aaa.menu_item_my_obj[i].MENU_DATA_i3 	= 0;
+			aaa.menu_item_my_obj[i].MENU_DATA_i0	= 0;
+			aaa.menu_item_my_obj[i].MENU_DATA_i1	= 0;
+			aaa.menu_item_my_obj[i].MENU_DATA_i2	= 0;
+			aaa.menu_item_my_obj[i].MENU_DATA_i3	= 0;
 		}
 	}
 	aaa.max_items		= 0;
@@ -277,10 +267,10 @@ loop:
 loop_quit:
 	for (i=0; i<aaa.max_items; i++)
 	{
-		aaa.menu_item_my_obj[i].MENU_DATA_i0 	= my_menu_resource[i/*aaa.max_items*/].x_offset;
-		aaa.menu_item_my_obj[i].MENU_DATA_i1 	= (PSP_HEIGHT272/2+40) -(((5+16))*((aaa.max_items)>>1)) +(i*((5+16)));
-		aaa.menu_item_my_obj[i].MENU_DATA_i2 	= 0;
-		aaa.menu_item_my_obj[i].MENU_DATA_i3 	= 0;
+		aaa.menu_item_my_obj[i].MENU_DATA_i0	= my_menu_resource[i/*aaa.max_items*/].x_offset;
+		aaa.menu_item_my_obj[i].MENU_DATA_i1	= (PSP_HEIGHT272/2+40) -(((5+16))*((aaa.max_items)>>1)) +(i*((5+16)));
+		aaa.menu_item_my_obj[i].MENU_DATA_i2	= 0;
+		aaa.menu_item_my_obj[i].MENU_DATA_i3	= 0;
 	}
 //
 	#if 1
@@ -299,8 +289,8 @@ loop_quit:
 		「エンディング、スタッフロール、プラクティス」が
 		選べるバグがあるので、修正する。
 	*/
-	if ( (6-1) < continue_stage)	{continue_stage = (6-1);	/* (6-1) */}
+	if ( (6-1) < cg.game_continue_stage)	{cg.game_continue_stage = (6-1);	/* (6-1) */}
 	#endif
-	aaa.active_item = continue_stage;
+	aaa.active_item = cg.game_continue_stage;
 	main_call_func = stage_select_menu_work_MENU_STATE_00_FADE_IN_MENU;
 }

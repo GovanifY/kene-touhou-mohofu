@@ -2,7 +2,7 @@
 #include "game_main.h"
 
 /*---------------------------------------------------------
-	“Œ•û–Í•í•—	` Toho Imitation Style.
+	“Œ•û–Í•í•— ` Toho Imitation Style.
 	ƒvƒƒWƒFƒNƒgƒy[ƒW http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 ---------------------------------------------------------*/
@@ -47,7 +47,7 @@ static void clouds_mover(SPRITE *src)
 		#if 1/*Gu(’†SÀ•W)*/
 		src->cy256			-= (t256(GAME_HEIGHT));
 		src->CLOUDS_DATA_speed_rand256 = (ra_nd()&((128)-1));
-		src->cx256			= (ra_nd()&((256*256)-1))+(ra_nd()&((128*256)-1));							/*(ra_nd()%GAME_WIDTH)*/
+		src->cx256			= (ra_nd()&((256*256)-1))+(ra_nd()&((128*256)-1));		/*(ra_nd()%GAME_WIDTH)*/
 		#endif
 		//c->alpha			= bg_alpha;
 //		src->alpha			= 200;/*’x‚·‚¬‚é([60-50fps -> [40-30]fps)*/
@@ -58,7 +58,7 @@ static void clouds_mover(SPRITE *src)
 
 ---------------------------------------------------------*/
 
-//	int lev = player_now_stage;
+//	int lev = cg.game_now_stage;
 //	sp rintf(filename,"wolke03_%d.png",lev);
 //	sp rintf(filename,"wolke02_%d.png",lev);
 //	sp rintf(filename,"wolke01_%d.png",lev);
@@ -98,7 +98,7 @@ static char clouds_filename_work[32];
 extern void load_bg2_chache(char *filename, int use_alpha);
 /*l->user_string,l->user_x,l->user_y*/
 // /*static*/extern SPRITE *sprite_add_internal_res(IM AGE_RESOURCE *image_resource_ptr);
-global void add_clouds(STAGE_DATA *l)
+global void game_command_00_regist_clouds(GAME_COMMAND *l)
 {
 	if ((MAX_CLOUDS-1) < used_clouds)
 	{
@@ -113,15 +113,15 @@ global void add_clouds(STAGE_DATA *l)
 	strcpy(clouds_filename_work, /*filename*/(l->user_string));
 	{
 		SPRITE *h;
-		h						= sprite_add_gu_error();
+		h						= obj_add_01_teki_error();
 		if (NULL!=h)/* “o˜^‚Å‚«‚½ê‡‚Ì‚Ý */
 		{
 			w3[used_clouds] 	= h;
 			used_clouds++;
 		//
 			h->m_Hit256R		= (1/*test*/);
-			h->cx256 			=  (ra_nd()&((256*256)-1))+(ra_nd()&((128*256)-1)); 	/*(ra_nd()%GAME_WIDTH)*/ /*((w3[i]->w)<<8)*/
-			h->cy256 			= -64-(ra_nd()&((256*256)-1));							/*(ra_nd()%GAME_HEIGHT)*/
+			h->cx256			=  (ra_nd()&((256*256)-1))+(ra_nd()&((128*256)-1)); 	/*(ra_nd()%GAME_WIDTH)*/ /*((w3[i]->w)<<8)*/
+			h->cy256			= -64-(ra_nd()&((256*256)-1));							/*(ra_nd()%GAME_HEIGHT)*/
 			h->flags			&= (~(SP_FLAG_COLISION_CHECK));/*‚ ‚½‚è”»’è‚È‚µ*/
 //			h->flags			|= (SP_FLAG_VISIBLE);
 			h->type 			= SP_FRONT_YUKI/*(SP_DUMMY_MUTEKI)*/;

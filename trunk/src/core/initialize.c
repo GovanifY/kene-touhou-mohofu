@@ -2,7 +2,7 @@
 #include "game_main.h"
 
 /*---------------------------------------------------------
-	東方模倣風	～ Toho Imitation Style.
+	東方模倣風 ～ Toho Imitation Style.
 	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	ゲームシステム初期化処理、関連
@@ -25,15 +25,15 @@ extern void kanji_system_exit(void);/* 外す */
 
 extern void init_imglist(void);
 //extern void init_math(void);
-extern void ini_load(void); 	// [***090110
-extern void ini_save(void); 	// [***090115
+extern void ini_load(void);
+extern void ini_save(void);
 extern void bg2_system_init(void);
 //extern void pr eload_gfx(void);
 extern void psp_pad_init(void);
 extern void psp_video_init01(void);
 extern void psp_video_init02(void);
 extern void old_menu_system_init(void);
-extern int continue_stage;
+
 void game_system_init(void)
 {
 	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO ); /*| SDL_INIT_JOYSTICK*/
@@ -68,7 +68,7 @@ void game_system_init(void)
 	#endif
 //
 	#if (1)/*Guで描く前に必要な初期化*/
-	pd.bomber_time = 0;
+	cg.bomber_time = 0;
 	#endif
 //
 	#if 1//(1==US E_GU)
@@ -84,7 +84,7 @@ void game_system_init(void)
 	obj_send1		= my_calloc(sizeof(SPRITE));/* 引数受け渡し用 */
 	bg2_system_init();
 	/* ゲームコア game_core_init(); */
-	continue_stage					= (1-1);	/* (0) */
+	cg.game_continue_stage			= (1-1);	/* (0) 0は1面から開始という意味。 */
 //	pr actice_mode					= 0;
 //	vo lume 						= 0;
 //	za nki							= 2;
@@ -109,8 +109,8 @@ void game_system_exit(void)
 	/* たぶんSDL231の開放処理にバグあると思います。
 	登録(具体的にはmallocとかでメモリ確保)してないのに
 	開放(freeとか)して、辻褄が合わなくなってる。
-	*/
-	SDL_Quit(); 	// [***** 追加:090103
+ */
+	SDL_Quit();
 	#endif /* (0) */
 	#ifdef ENABLE_PROFILE
 	gprof_cleanup();

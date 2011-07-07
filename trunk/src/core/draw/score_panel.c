@@ -2,10 +2,12 @@
 #include "game_main.h"
 
 /*---------------------------------------------------------
-	東方模倣風	～ Toho Imitation Style.
+	東方模倣風 ～ Toho Imitation Style.
 	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	スコアパネル(表示)関連
+	-------------------------------------------------------
+	現在(r33)SDLの為、処理落ちするとかなり酷いです。
 ---------------------------------------------------------*/
 
 static SDL_Surface *panel_base; 	// パネルベース
@@ -36,8 +38,8 @@ static SDL_Surface *star_gauge;
 	#define STR_NORMAL		"IJKLM" " " 	/*5つ*/
 	#define STR_HARD		"NOPQ" "  " 	/*4つ*/
 	#define STR_LUNATIC 	"RSTUVW"		/*6つ*/
-	#define STR_EXTRA		"XYZab" 		/*5つ*/
-	#define STR_TIME_		"cdef"			/*4つ*/
+//	#define STR_EXTRA		"XYZab" 		/*5つ*/ 	/* 未使用(r33) */
+//	#define STR_TIME_		"cdef"			/*4つ*/ 	/* 地味に処理落ち要因になっていたので廃止。(r33) */
 //	#define STR_RANK_		"hijkl" 		/*5つ*/
 	#define STR_FPS_		"hij"			/*3つ*/
 	#define CHR_PIRIOD_ 	'g' 			/*1つ*/
@@ -248,10 +250,10 @@ global void score_display(void)
 	#endif
 //
 	/* [ プレイヤー数表示 ] */
-	draw_stars_status( R_00_aka_hosi_png,  (pd.zanki), 10*8+4); /*R_01_mizu_hosi_png*/
+	draw_stars_status( R_00_aka_hosi_png,  (cg.zanki), 10*8+4); /*R_01_mizu_hosi_png*/
 //
 	/* [ ボム数表示 ] */
-	draw_stars_status( R_01_mizu_hosi_png, (pd.bombs), 14*8+1); /*R_00_aka_hosi_png*/
+	draw_stars_status( R_01_mizu_hosi_png, (cg.bombs), 14*8+1); /*R_00_aka_hosi_png*/
 
 	//{/*←何故かスコープしない方が良い(もちろんスコープあるなしで,コードが変わる)*/
 		char buffer[64/*100*/];
@@ -259,8 +261,8 @@ global void score_display(void)
 
 	/* 通常時(デバッグ以外は死ぬ(喰らいボムモードへ)) */
 		/* [ ハイスコア表示 ] */
-		if (top_score < pd.game_score)
-		{	top_score = pd.game_score;}
+		if (top_score < cg.game_score)
+		{	top_score = cg.game_score;}
 	//	sp rintf(buffer,"%09d0", top_score);
 		strcpy(buffer,"0000000000");
 		dec_print_format(top_score, 	9/*8*/, (char *)buffer);		font_print_screen_xy(buffer, FONT10W, PPP+5*8+4,3*8+2);
@@ -268,13 +270,13 @@ global void score_display(void)
 		/* [ スコア表示 ] */
 	//	sp rintf(buffer,"%09d0", pd_game_score);
 		strcpy(buffer,"0000000000");
-		dec_print_format(pd.game_score,	9/*8*/, (char *)buffer);		font_print_screen_xy(buffer, FONT10W, PPP+5*8+4,6*8+7);
+		dec_print_format(cg.game_score, 9/*8*/, (char *)buffer);		font_print_screen_xy(buffer, FONT10W, PPP+5*8+4,6*8+7);
 	//
 
 
 		/* [ パワーゲージ表示 ] */
-		draw_power_gauge(pd.weapon_power); /*,PPP+7,124*/
-		if (pd.weapon_power > (MAX_POWER_IS_128-1) /*== 128*/)/*max==MAX_POWER_IS_128==「129段階」*/
+		draw_power_gauge(cg.weapon_power); /*,PPP+7,124*/
+		if (cg.weapon_power > (MAX_POWER_IS_128-1) /*== 128*/)/*max==MAX_POWER_IS_128==「129段階」*/
 		{
 			strcpy(buffer, STR_MAX);
 		}
@@ -284,18 +286,18 @@ global void score_display(void)
 		//	sp rintf(buffer, "%d", (int)((dou ble)p->weapon / 128 * 100 )); 	// [***090123		変更
 		//	sp rintf(buffer," %d", (((int)(pd_weapon_power) * 200) >>8) );		// [***090214		変更
 			strcpy(buffer,"  0");
-			dec_print_format( (((int)(pd_weapon_power) * 200) >>8), 2, (char *)&buffer[1]);
+			dec_print_format( (((int)(cg.weapon_power) * 200) >>8), 2, (char *)&buffer[1]);
 			#endif
-			#if 0/* [P]数 表記 */
+			#if 1/* [P]数 表記(r33) */
 			strcpy(buffer,"  0");
-			dec_print_format( (((int)(pd_weapon_power) ) ), 3, (char *)&buffer[0]);
+			dec_print_format( (((int)(cg.weapon_power) ) ), 3, (char *)&buffer[0]);
 			#endif
-			#if 1/* 5.00 表記 */
+			#if 0/* 5.00 表記(r32) */
 		//	sp rintf(buffer, "%d", (int)((dou ble)p->weapon / 128 * 100 )); 	// [***090123		変更
 		//	sp rintf(buffer," %d", (((int)(pd_weapon_power) * 200) >>8) );		// [***090214		変更
 			/* "5.00" */
 			strcpy(buffer,"0000");
-			dec_print_format( (((int)(pd.weapon_power) * (200*5)) >>8), 3, (char *)&buffer[0]);
+			dec_print_format( (((int)(cg.weapon_power) * (200*5)) >>8), 3, (char *)&buffer[0]);
 		//	buffer[4] = 0;
 			buffer[3] = buffer[2];
 			buffer[2] = buffer[1];
@@ -305,23 +307,25 @@ global void score_display(void)
 		font_print_screen_xy(buffer, FONT10W, PPP+10*8+7,17*8+5);
 		//font_print_screen_xy(buffer, FONT10W, PPP+8*8+3,125/*+1*/-2);
 	//
+		#if 0/* 地味に処理落ち要因になっていたので廃止。(r33) */
 		/* [ ボム有効時間表示 ] */
 		//if (p->ex tra_type!=PLX_NONE)
-		if (0 != pd.bomber_time)
+		if (0 != cg.bomber_time)
 		{
 		//	sp rintf(buffer, STR_TIME_"%3d",(int)(((int)pd_bomber_time)/10));
 		//	font_print_screen_xy(buffer, FONT10W, PPP+3*8-6,160);
 			strcpy(buffer, STR_TIME_"   ");
-			dec_print_format( (int)(((int)pd.bomber_time) ), 3, (char *)&buffer[5]);
+			dec_print_format( (int)(((int)cg.bomber_time) ), 3, (char *)&buffer[5]);
 			buffer[7] = (0);	/*' '*/ 	/* 1桁目は表示しない */
 			font_print_screen_xy(buffer, FONT10W, PPP+8*8+4,22*8);
 		}
+		#endif
 	//
 		/* --- 妖のグレイズカンスト 99999回 (5桁) --- */
 		/* [ グレイズスコア表示 ] */
 		//	sp rintf(buffer," %d", pd_graze_point);
 			strcpy(buffer,"   0");
-			dec_print_format( pd.graze_point, 4, (char *)&buffer[0]);
+			dec_print_format( cg.graze_point, 4, (char *)&buffer[0]);
 		//	font_print_screen_xy(buffer, FONT10W, PPP+7*8+3,140);/*3桁(足りない)*/
 			font_print_screen_xy(buffer, FONT10W, PPP+11*8+4,20*8);/*4桁(稼げる)*/
 	//
@@ -336,7 +340,7 @@ global void score_display(void)
 		//	/* 4==PLX_BOMB:*/		STR_EXTRA,
 			//	/*default:*/		"UNKNOWN ???",
 			};
-			font_print_screen_xy( (char *)rank_name[(difficulty)&(4-1)], FONT10W, PPP+/*7*/1*8,256);
+			font_print_screen_xy( (char *)rank_name[((cg_game_difficulty))&(4-1)], FONT10W, PPP+/*7*/1*8,256);
 		}
 	//
 		#if 1
@@ -390,10 +394,9 @@ global void score_display(void)
 	パネル表示、初期化
 ---------------------------------------------------------*/
 
-extern int select_player;
 global void score_panel_init(void)
 {
-	top_score			= high_score_table[select_player][0].score; 	// 常に表示するハイコアの取得=>score.cで利用
+	top_score			= high_score_table[(cg_game_select_player)][0].score;	// 常に表示するハイコアの取得=>score.cで利用
 	panel_base			= load_chache_bmp((char*)"panel/panel_base.png");//, 0, 1);
 	star_gauge			= load_chache_bmp((char*)"panel/hosi_gauge.png");//, 0, 1); 	/*(char *)img_name[img_num]*/
 	SDL_SetColorKey(star_gauge, (SDL_SRCCOLORKEY|SDL_RLEACCEL), 0x00000000);/* 現状 SDL合成のため必要 */
@@ -402,14 +405,14 @@ global void score_panel_init(void)
 /*---------------------------------------------------------
 	コンテニュー回数の表示
 ---------------------------------------------------------*/
-extern int	now_max_continue;
-global void render_continue(void)/*int now_max_continue*/
+
+global void render_continue(void)
 {
 	char buffer[64/*100*/];
 //	/* あとn回コンティニューできます */
-//	sp rintf(buffer,  "TRY CHANCE STILL AT %2d", now_max_continue);
+//	sp rintf(buffer,  "TRY CHANCE STILL AT %2d", cg_game_now_max_continue);
 	strcpy(buffer,	"TRY CHANCE STILL AT  0");
-	dec_print_format( now_max_continue, 2, (char *)&buffer[20]);
+	dec_print_format( ((cg.game_now_max_continue)), 2, (char *)&buffer[20]);
 //
 	font_print_screen_xy(buffer, FONT16R, 0/*10*/, 16/*50*/);
 	#if (0==USE_CONTINUED_RANKING)

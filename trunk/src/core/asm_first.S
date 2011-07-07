@@ -1,7 +1,7 @@
 
 # /*
 #---------------------------------------------------------
-#	東方模倣風	～ Toho Imitation Style.
+#	東方模倣風 ～ Toho Imitation Style.
 #	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
 #---------------------------------------------------------
 #	Asm., The first. (1番目)

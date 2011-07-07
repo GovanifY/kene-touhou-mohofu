@@ -2,14 +2,14 @@
 #include "game_main.h"
 
 /*---------------------------------------------------------
-	東方模倣風	～ Toho Imitation Style.
+	東方模倣風 ～ Toho Imitation Style.
 	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	pspの起動ルーチン等
 ---------------------------------------------------------*/
 
 #if 0
-	/* makefile に -Dmain=SDL_main がある場合  */
+	/* makefile に -Dmain=SDL_main がある場合 */
 /*
 	 makefile に -Dmain=SDL_main がある場合は、
 	SDLが用意したメインルーチンを使用するので、ここには
@@ -22,7 +22,7 @@
 	と色々問題が多いので使わない方が賢明です。
 */
 #else
-	/* makefile に -Dmain=SDL_main がない場合  */
+	/* makefile に -Dmain=SDL_main がない場合 */
 /*
 	こちらの場合は PSPSDK の用意した起動ルーチンを使用する場合です。
 	起動ルーチンは簡単なアセンブラ＋PSPのOSに利用関数を知らせる表で
@@ -87,6 +87,33 @@ PSP_MAIN_THREAD_STACK_SIZE_KB(32);			/* (プログラムが使用する変数の)スタック領域
 
 global void (*main_call_func)(void);
 global void (*return_call_func)(void);
+
+//#define USE_FIX_GP	(0)
+#define USE_FIX_GP	(1)
+/*---------------------------------------------------------
+	GPレジスタの値をチェックし、異常な場合は変更する
+	-------------------------------------------------------
+	HBLのversionによっては、起動時の GPレジスタに異常値が入る事が
+	あるらしいのでその対策。(Ruka氏)
+	-------------------------------------------------------
+	GPレジスタ(GP相対16ビットレジスタ)(GPREL16, GP rerative 16 bit register)というのは
+	MIPSのCPUが持っているレジスタで、
+	+32k[bytes]～-32k[bytes]の範囲(64k[bytes]の範囲)で、相対アクセスする為のレジスタ。
+---------------------------------------------------------*/
+	#if (1==USE_FIX_GP)
+static void FixedGP(void)
+{
+	void* my_gp_value;
+	/* GPレジスタの値をチェック */
+	asm volatile ("move %0, $gp\n" : "=r" (my_gp_value));
+	if (module_info.gp_value != my_gp_value)
+	{
+		/* GPレジスタの値が異常な場合は修正 */
+		asm volatile ("move $gp, %0\n" :: "r" (module_info.gp_value));
+	}
+}
+	#endif
+
 
 /*---------------------------------------------------------
 	[HOME]キーで終了処理部分
@@ -186,6 +213,9 @@ extern void game_main(void);
 /* ここは -Dmain=SDL_main の場合、マクロなので自動的に int SDL_main(int argc, char *argv[]) になる。それをSDL側のmain()から呼ぶ。 */
 global int main(int argc, char *argv[])
 {
+	#if (1==USE_FIX_GP)
+	FixedGP();	/* */
+	#endif
 	#if (1==HACK_FPU)
 	disable_FPU_exeptions_in_main();	/* この関数はmain()直下に書かないとダメかもしれない($31を弄るので) */
 	#endif

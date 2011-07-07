@@ -62,10 +62,10 @@ enum
 	SPELL_CARD_07N_sakuya_ggg,		/* 第七形態: (分散魔方陣)追加計画中 */
 	SPELL_CARD_07H_sakuya_ggg,		/* 第七形態: (分散魔方陣)追加計画中 */
 	SPELL_CARD_07L_sakuya_ggg,		/* 第七形態: (分散魔方陣)追加計画中 */
-//	SPELL_CARD_08E_sakuya_hhh,		/* 第八形態: (時止めナイフ)追加計画中 */
-//	SPELL_CARD_08N_sakuya_hhh,		/* 第八形態: (時止めナイフ)追加計画中 */
-//	SPELL_CARD_08H_sakuya_hhh,		/* 第八形態: (時止めナイフ)追加計画中 */
-//	SPELL_CARD_08L_sakuya_hhh,		/* 第八形態: (時止めナイフ)追加計画中 */
+	SPELL_CARD_08E_sakuya_hhh,		/* 第八形態: (時止めナイフ)追加計画中 */
+	SPELL_CARD_08N_sakuya_hhh,		/* 第八形態: (時止めナイフ)追加計画中 */
+	SPELL_CARD_08H_sakuya_hhh,		/* 第八形態: (時止めナイフ)追加計画中 */
+	SPELL_CARD_08L_sakuya_hhh,		/* 第八形態: (時止めナイフ)追加計画中 */
 	SPELL_CARD_09E_sakuya_iii,		/* 第九形態: 最終形態(その1) */
 	SPELL_CARD_09N_sakuya_iii,		/* 第九形態: 最終形態(その1) */
 	SPELL_CARD_09H_sakuya_iii,		/* 第九形態: 最終形態(その1) */
@@ -78,47 +78,138 @@ enum
 	SPELL_CARD_11N_sakuya_kkk,		/* 第11形態: 最終形態(その3) */
 	SPELL_CARD_11H_sakuya_kkk,		/* 第11形態: 最終形態(その3) */
 	SPELL_CARD_11L_sakuya_kkk,		/* 第11形態: 最終形態(その3) */
-// パチェ 5面
-	SPELL_CARD_00E_pache_000,
-	SPELL_CARD_00N_pache_000,
-	SPELL_CARD_00H_pache_000,
-	SPELL_CARD_00L_pache_000,
-	SPELL_CARD_11E_pache_bbb,
-	SPELL_CARD_11N_pache_bbb,
-	SPELL_CARD_11H_pache_bbb,
-	SPELL_CARD_11L_pache_bbb,
-	SPELL_CARD_12E_pache_ccc,
-	SPELL_CARD_12N_pache_ccc,
-	SPELL_CARD_12H_pache_ccc,
-	SPELL_CARD_12L_pache_ccc,
-	SPELL_CARD_13E_pache_ddd,
-	SPELL_CARD_13N_pache_ddd,
-	SPELL_CARD_13H_pache_ddd,
-	SPELL_CARD_13L_pache_ddd,
-	SPELL_CARD_14E_pache_eee,
-	SPELL_CARD_14N_pache_eee,
-	SPELL_CARD_14H_pache_eee,
-	SPELL_CARD_14L_pache_eee,
-	SPELL_CARD_15E_pache_fff,
-	SPELL_CARD_15N_pache_fff,
-	SPELL_CARD_15H_pache_fff,
-	SPELL_CARD_15L_pache_fff,
-	SPELL_CARD_16E_pache_ggg,
-	SPELL_CARD_16N_pache_ggg,
-	SPELL_CARD_16H_pache_ggg,
-	SPELL_CARD_16L_pache_ggg,
-	SPELL_CARD_17E_pache_hhh,
-	SPELL_CARD_17N_pache_hhh,
-	SPELL_CARD_17H_pache_hhh,
-	SPELL_CARD_17L_pache_hhh,
-//	SPELL_CARD_18E_pache_iii,
-//	SPELL_CARD_18N_pache_iii,
-//	SPELL_CARD_18H_pache_iii,
-//	SPELL_CARD_18L_pache_iii,
-//	SPELL_CARD_19E_pache_jjj,
-//	SPELL_CARD_19N_pache_jjj,
-//	SPELL_CARD_19H_pache_jjj,
-//	SPELL_CARD_19L_pache_jjj,
+// パチェA 5面
+	SPELL_CARD_00E_pacheA_000,	/* "形態変更" */
+	SPELL_CARD_00N_pacheA_000,	/* "形態変更" */
+	SPELL_CARD_00H_pacheA_000,	/* "形態変更" */
+	SPELL_CARD_00L_pacheA_000,	/* "形態変更" */
+	SPELL_CARD_11E_pacheA_bbb,		/* 第一形態: 通常攻撃1 */
+	SPELL_CARD_11N_pacheA_bbb,		/* 第一形態: 通常攻撃1 */
+	SPELL_CARD_11H_pacheA_bbb,		/* 第一形態: 通常攻撃1 */
+	SPELL_CARD_11L_pacheA_bbb,		/* 第一形態: 通常攻撃1 */
+	SPELL_CARD_12E_pacheA_ccc,		/* 第二形態: スペルカードⅠ */
+	SPELL_CARD_12N_pacheA_ccc,		/* 第二形態: スペルカードⅠ */
+	SPELL_CARD_12H_pacheA_ccc,		/* 第二形態: スペルカードⅠ */
+	SPELL_CARD_12L_pacheA_ccc,		/* 第二形態: スペルカードⅠ */
+	SPELL_CARD_13E_pacheA_ddd,		/* 第三形態: 通常攻撃2 */
+	SPELL_CARD_13N_pacheA_ddd,		/* 第三形態: 通常攻撃2 */
+	SPELL_CARD_13H_pacheA_ddd,		/* 第三形態: 通常攻撃2 */
+	SPELL_CARD_13L_pacheA_ddd,		/* 第三形態: 通常攻撃2 */
+	SPELL_CARD_14E_pacheA_eee,		/* 第四形態: スペルカードⅡ */
+	SPELL_CARD_14N_pacheA_eee,		/* 第四形態: スペルカードⅡ */
+	SPELL_CARD_14H_pacheA_eee,		/* 第四形態: スペルカードⅡ */
+	SPELL_CARD_14L_pacheA_eee,		/* 第四形態: スペルカードⅡ */
+	SPELL_CARD_15E_pacheA_fff,		/* 第五形態: スペルカードⅢ */
+	SPELL_CARD_15N_pacheA_fff,		/* 第五形態: スペルカードⅢ */
+	SPELL_CARD_15H_pacheA_fff,		/* 第五形態: スペルカードⅢ */
+	SPELL_CARD_15L_pacheA_fff,		/* 第五形態: スペルカードⅢ */
+	SPELL_CARD_16E_pacheA_ggg,		/* 第六形態: スペルカードⅣ */
+	SPELL_CARD_16N_pacheA_ggg,		/* 第六形態: スペルカードⅣ */
+	SPELL_CARD_16H_pacheA_ggg,		/* 第六形態: スペルカードⅣ */
+	SPELL_CARD_16L_pacheA_ggg,		/* 第六形態: スペルカードⅣ */
+	SPELL_CARD_17E_pacheA_hhh,
+	SPELL_CARD_17N_pacheA_hhh,
+	SPELL_CARD_17H_pacheA_hhh,
+	SPELL_CARD_17L_pacheA_hhh,
+// パチェB 5面
+	SPELL_CARD_00E_pacheB_000,	/* "形態変更" */
+	SPELL_CARD_00N_pacheB_000,	/* "形態変更" */
+	SPELL_CARD_00H_pacheB_000,	/* "形態変更" */
+	SPELL_CARD_00L_pacheB_000,	/* "形態変更" */
+	SPELL_CARD_11E_pacheB_bbb,		/* 第一形態: 通常攻撃1 */
+	SPELL_CARD_11N_pacheB_bbb,		/* 第一形態: 通常攻撃1 */
+	SPELL_CARD_11H_pacheB_bbb,		/* 第一形態: 通常攻撃1 */
+	SPELL_CARD_11L_pacheB_bbb,		/* 第一形態: 通常攻撃1 */
+	SPELL_CARD_12E_pacheB_ccc,		/* 第二形態: スペルカードⅠ */
+	SPELL_CARD_12N_pacheB_ccc,		/* 第二形態: スペルカードⅠ */
+	SPELL_CARD_12H_pacheB_ccc,		/* 第二形態: スペルカードⅠ */
+	SPELL_CARD_12L_pacheB_ccc,		/* 第二形態: スペルカードⅠ */
+	SPELL_CARD_13E_pacheB_ddd,		/* 第三形態: 通常攻撃2 */
+	SPELL_CARD_13N_pacheB_ddd,		/* 第三形態: 通常攻撃2 */
+	SPELL_CARD_13H_pacheB_ddd,		/* 第三形態: 通常攻撃2 */
+	SPELL_CARD_13L_pacheB_ddd,		/* 第三形態: 通常攻撃2 */
+	SPELL_CARD_14E_pacheB_eee,		/* 第四形態: スペルカードⅡ */
+	SPELL_CARD_14N_pacheB_eee,		/* 第四形態: スペルカードⅡ */
+	SPELL_CARD_14H_pacheB_eee,		/* 第四形態: スペルカードⅡ */
+	SPELL_CARD_14L_pacheB_eee,		/* 第四形態: スペルカードⅡ */
+	SPELL_CARD_15E_pacheB_fff,		/* 第五形態: スペルカードⅢ */
+	SPELL_CARD_15N_pacheB_fff,		/* 第五形態: スペルカードⅢ */
+	SPELL_CARD_15H_pacheB_fff,		/* 第五形態: スペルカードⅢ */
+	SPELL_CARD_15L_pacheB_fff,		/* 第五形態: スペルカードⅢ */
+	SPELL_CARD_16E_pacheB_ggg,		/* 第六形態: スペルカードⅣ */
+	SPELL_CARD_16N_pacheB_ggg,		/* 第六形態: スペルカードⅣ */
+	SPELL_CARD_16H_pacheB_ggg,		/* 第六形態: スペルカードⅣ */
+	SPELL_CARD_16L_pacheB_ggg,		/* 第六形態: スペルカードⅣ */
+	SPELL_CARD_17E_pacheB_hhh,
+	SPELL_CARD_17N_pacheB_hhh,
+	SPELL_CARD_17H_pacheB_hhh,
+	SPELL_CARD_17L_pacheB_hhh,
+// パチェC 5面
+	SPELL_CARD_00E_pacheC_000,	/* "形態変更" */
+	SPELL_CARD_00N_pacheC_000,	/* "形態変更" */
+	SPELL_CARD_00H_pacheC_000,	/* "形態変更" */
+	SPELL_CARD_00L_pacheC_000,	/* "形態変更" */
+	SPELL_CARD_11E_pacheC_bbb,		/* 第一形態: 通常攻撃1 */
+	SPELL_CARD_11N_pacheC_bbb,		/* 第一形態: 通常攻撃1 */
+	SPELL_CARD_11H_pacheC_bbb,		/* 第一形態: 通常攻撃1 */
+	SPELL_CARD_11L_pacheC_bbb,		/* 第一形態: 通常攻撃1 */
+	SPELL_CARD_12E_pacheC_ccc,		/* 第二形態: スペルカードⅠ */
+	SPELL_CARD_12N_pacheC_ccc,		/* 第二形態: スペルカードⅠ */
+	SPELL_CARD_12H_pacheC_ccc,		/* 第二形態: スペルカードⅠ */
+	SPELL_CARD_12L_pacheC_ccc,		/* 第二形態: スペルカードⅠ */
+	SPELL_CARD_13E_pacheC_ddd,		/* 第三形態: 通常攻撃2 */
+	SPELL_CARD_13N_pacheC_ddd,		/* 第三形態: 通常攻撃2 */
+	SPELL_CARD_13H_pacheC_ddd,		/* 第三形態: 通常攻撃2 */
+	SPELL_CARD_13L_pacheC_ddd,		/* 第三形態: 通常攻撃2 */
+	SPELL_CARD_14E_pacheC_eee,		/* 第四形態: スペルカードⅡ */
+	SPELL_CARD_14N_pacheC_eee,		/* 第四形態: スペルカードⅡ */
+	SPELL_CARD_14H_pacheC_eee,		/* 第四形態: スペルカードⅡ */
+	SPELL_CARD_14L_pacheC_eee,		/* 第四形態: スペルカードⅡ */
+	SPELL_CARD_15E_pacheC_fff,		/* 第五形態: スペルカードⅢ */
+	SPELL_CARD_15N_pacheC_fff,		/* 第五形態: スペルカードⅢ */
+	SPELL_CARD_15H_pacheC_fff,		/* 第五形態: スペルカードⅢ */
+	SPELL_CARD_15L_pacheC_fff,		/* 第五形態: スペルカードⅢ */
+	SPELL_CARD_16E_pacheC_ggg,		/* 第六形態: スペルカードⅣ */
+	SPELL_CARD_16N_pacheC_ggg,		/* 第六形態: スペルカードⅣ */
+	SPELL_CARD_16H_pacheC_ggg,		/* 第六形態: スペルカードⅣ */
+	SPELL_CARD_16L_pacheC_ggg,		/* 第六形態: スペルカードⅣ */
+	SPELL_CARD_17E_pacheC_hhh,
+	SPELL_CARD_17N_pacheC_hhh,
+	SPELL_CARD_17H_pacheC_hhh,
+	SPELL_CARD_17L_pacheC_hhh,
+// パチェD 5面
+	SPELL_CARD_00E_pacheD_000,	/* "形態変更" */
+	SPELL_CARD_00N_pacheD_000,	/* "形態変更" */
+	SPELL_CARD_00H_pacheD_000,	/* "形態変更" */
+	SPELL_CARD_00L_pacheD_000,	/* "形態変更" */
+	SPELL_CARD_11E_pacheD_bbb,		/* 第一形態: 通常攻撃1 */
+	SPELL_CARD_11N_pacheD_bbb,		/* 第一形態: 通常攻撃1 */
+	SPELL_CARD_11H_pacheD_bbb,		/* 第一形態: 通常攻撃1 */
+	SPELL_CARD_11L_pacheD_bbb,		/* 第一形態: 通常攻撃1 */
+	SPELL_CARD_12E_pacheD_ccc,		/* 第二形態: スペルカードⅠ */
+	SPELL_CARD_12N_pacheD_ccc,		/* 第二形態: スペルカードⅠ */
+	SPELL_CARD_12H_pacheD_ccc,		/* 第二形態: スペルカードⅠ */
+	SPELL_CARD_12L_pacheD_ccc,		/* 第二形態: スペルカードⅠ */
+	SPELL_CARD_13E_pacheD_ddd,		/* 第三形態: 通常攻撃2 */
+	SPELL_CARD_13N_pacheD_ddd,		/* 第三形態: 通常攻撃2 */
+	SPELL_CARD_13H_pacheD_ddd,		/* 第三形態: 通常攻撃2 */
+	SPELL_CARD_13L_pacheD_ddd,		/* 第三形態: 通常攻撃2 */
+	SPELL_CARD_14E_pacheD_eee,		/* 第四形態: スペルカードⅡ */
+	SPELL_CARD_14N_pacheD_eee,		/* 第四形態: スペルカードⅡ */
+	SPELL_CARD_14H_pacheD_eee,		/* 第四形態: スペルカードⅡ */
+	SPELL_CARD_14L_pacheD_eee,		/* 第四形態: スペルカードⅡ */
+	SPELL_CARD_15E_pacheD_fff,		/* 第五形態: スペルカードⅢ */
+	SPELL_CARD_15N_pacheD_fff,		/* 第五形態: スペルカードⅢ */
+	SPELL_CARD_15H_pacheD_fff,		/* 第五形態: スペルカードⅢ */
+	SPELL_CARD_15L_pacheD_fff,		/* 第五形態: スペルカードⅢ */
+	SPELL_CARD_16E_pacheD_ggg,		/* 第六形態: スペルカードⅣ */
+	SPELL_CARD_16N_pacheD_ggg,		/* 第六形態: スペルカードⅣ */
+	SPELL_CARD_16H_pacheD_ggg,		/* 第六形態: スペルカードⅣ */
+	SPELL_CARD_16L_pacheD_ggg,		/* 第六形態: スペルカードⅣ */
+	SPELL_CARD_17E_pacheD_hhh,
+	SPELL_CARD_17N_pacheD_hhh,
+	SPELL_CARD_17H_pacheD_hhh,
+	SPELL_CARD_17L_pacheD_hhh,
 // 文 4面
 	SPELL_CARD_00E_aya_000,
 	SPELL_CARD_00N_aya_000,

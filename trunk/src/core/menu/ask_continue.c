@@ -2,7 +2,7 @@
 #include "game_main.h"
 
 /*---------------------------------------------------------
-	東方模倣風	～ Toho Imitation Style.
+	東方模倣風 ～ Toho Imitation Style.
 	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	コンティニュー？メニュー
@@ -95,7 +95,7 @@ enum
 //	MENU *m,//		&ask_continue_menu,
 
 //static u32 pause_start_time = 0;
-extern void render_continue(void/*int now_max_continue*/);
+extern void render_continue(void);
 
 
 /*---------------------------------------------------------
@@ -106,7 +106,6 @@ extern void render_continue(void/*int now_max_continue*/);
 extern void player_continue_value(void);
 
 static u8 my_ppp_loop;
-extern int now_max_continue;
 static void ask_continue_menu_local_work(void)
 {
 	{
@@ -123,13 +122,13 @@ static void ask_continue_menu_local_work(void)
 			break;
 		case MENU_STATE_01_WORK_MENU:			/* fadein complete */
 		{
-			if (0==my_pad_alter)/* さっき何も押されてなかった場合にキーチェック(原作準拠) */
+			if (0==cg_my_pad_alter)/* さっき何も押されてなかった場合にキーチェック(原作準拠) */
 			{
-				if (my_pad & (PSP_KEY_DOWN|PSP_KEY_UP|PSP_KEY_PAUSE|PSP_KEY_RIGHT))
+				if (cg_my_pad & (PSP_KEY_DOWN|PSP_KEY_UP|PSP_KEY_PAUSE|PSP_KEY_RIGHT))
 				{
 					voice_play(VOICE02_MENU_SELECT, TRACK01_EXPLODE);
 				}
-				if (my_pad & PSP_KEY_DOWN)
+				if (cg_my_pad & PSP_KEY_DOWN)
 				{
 					if (active_item == MENU_ITEM_99_MAX-1)
 					{	active_item = 0;	}
@@ -139,7 +138,7 @@ static void ask_continue_menu_local_work(void)
 					}
 				//	www=FPS_MENU_FACTOR10;
 				}
-				else if (my_pad & PSP_KEY_UP)
+				else if (cg_my_pad & PSP_KEY_UP)
 				{
 					if (0 == active_item)
 					{	active_item = MENU_ITEM_99_MAX-1;	}
@@ -150,18 +149,18 @@ static void ask_continue_menu_local_work(void)
 				//	www=FPS_MENU_FACTOR10;
 				}
 				/* セレクトキーを押した場合、必ずコンティニューしない。 */
-				if (my_pad & PSP_KEY_SELECT)					/* [select]ボタンで必ずコンティニューしない */
+				if (cg_my_pad & PSP_KEY_SELECT)					/* [select]ボタンで必ずコンティニューしない */
 				{
 					/*pause_menu.*/active_item	= MENU_ITEM_01_CONTINUE_NO;
 					my_ppp_loop++;// MENU_STATE_02_FADE_OUT;
 				}
 				/* ポーズキーを押した場合、必ずコンティニュー決定。 */
-				if (my_pad & PSP_KEY_PAUSE) 				/* [start]ボタンで必ずコンティニュー決定 */
+				if (cg_my_pad & PSP_KEY_PAUSE) 				/* [start]ボタンで必ずコンティニュー決定 */
 				{
 					/*pause_menu.*/active_item	= MENU_ITEM_00_CONTINUE_YES;
 					my_ppp_loop++;// MENU_STATE_02_FADE_OUT;
 				}
-				if (my_pad & PSP_KEY_SHOT_OK)
+				if (cg_my_pad & PSP_KEY_SHOT_OK)
 				{
 					voice_play(VOICE01_MENU_OK/*VOICE02_MENU_SELECT*/, TRACK01_EXPLODE);
 					my_ppp_loop++;// MENU_STATE_02_FADE_OUT;/* メニュー消去準備 */
@@ -264,7 +263,7 @@ static void ask_continue_menu_local_work(void)
 
 /*static*/global void ask_continue_menu_start(void)
 {
-	render_continue(/*now_max_continue*/);
+	render_continue();
 	#if 1
 	/* てすと、構造的問題 */
 	//if (RES09_PAUSE_MENU==res_num)

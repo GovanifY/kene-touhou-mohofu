@@ -1,6 +1,6 @@
 
 /*---------------------------------------------------------
-	東方模倣風	～ Toho Imitation Style.
+	東方模倣風 ～ Toho Imitation Style.
 	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	このファイルは直接インクルードしません。
@@ -61,7 +61,7 @@ static void gu_draw_front_spell_logo(void)
 #define SPELL_LOGO_LOCATE_Y01_160 (160)
 #define SPELL_LOGO_LOCATE_Y02_200 (SPELL_LOGO_LOCATE_Y01_160+SPELL_LOGO_HEIGHT_64)
 	x5 = 0;
-	x4 = (/*val5*/(pd.bomber_time) /*& 0xff*/);
+	x4 = (/*val5*/(cg.bomber_time) /*& 0xff*/);
 	for (j=0; j<SL_24V; j+=2)
 	{
 		vertices[j].x = x5;

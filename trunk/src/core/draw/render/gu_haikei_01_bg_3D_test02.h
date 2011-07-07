@@ -1,7 +1,7 @@
 static Vertex_cube 	__attribute__((aligned(16))) aaa_polygon_model[(8*3)] =
 {
 	/* テクスチャの位置 				頂点の位置座標 */
-	/* u	v  色(ABGR8888) 		     x    y    z   */
+	/* u	v  色(ABGR8888) 		     x    y    z */
 	{  0,	0, MY_COLOR_ARGB888_WHITE,-63,-63, 63}, // #0	// 0	/* 青 */
 	{255, 255, MY_COLOR_ARGB888_BLUE,  63, 63, 63}, // #2	// 5	/* 青 青 */
 	{255,	0, MY_COLOR_ARGB888_WHITE,-63, 63, 63}, // #1	// 4[]
@@ -68,7 +68,7 @@ static void gu_draw_bg_3D_test02(void)
 	//		reset the time counter
 
 	nnn++;
-	if (nnn >= (5*60) ) /* 300==(5[sec]*60[flame])*/
+	if (nnn >= byou60(5) ) /* 300==(5[sec] x 60[flame])*/
 	{
 		nnn = 0;
 		test_auto_rot_bbbb();

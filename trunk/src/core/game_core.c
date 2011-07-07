@@ -2,7 +2,7 @@
 #include "game_main.h"
 
 /*---------------------------------------------------------
-	東方模倣風	～ Toho Imitation Style.
+	東方模倣風 ～ Toho Imitation Style.
 	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	ゲームコア
@@ -33,57 +33,23 @@
 #include "kanji_system.h"
 
 /*---------------------------------------------------------
-	ザコで宣言が必要なもの(グローバル)
+	宣言が必要なもの(グローバル)
 ---------------------------------------------------------*/
 
 	/* その他(特殊機能) */
-extern void add_clouds( 				STAGE_DATA *l);/* どの敵でもない場合は、演出用画像 */
-extern void add_enemy_all_clear(		STAGE_DATA *l);/* 全面クリアーの場合、この敵を追加 */
-extern void bg2_control(				STAGE_DATA *l);
-
-	/* ボス */
-extern void add_boss_common(			STAGE_DATA *l);/* 1面はアリス */
-
-	/* [中型敵]妖怪 */
-extern void add_chuu_boss(				STAGE_DATA *l);
-
-	/* 魔方陣 */
-extern void add_enemy_mahoujin( 		STAGE_DATA *l);
-
-	/* 竜巻 陰陽玉 */
-extern void add_zako_inyou1(			STAGE_DATA *l);
-extern void add_zako_tatsumaki1(		STAGE_DATA *l);
-	/* 妖怪 */
-extern void add_zako_kakomi1(			STAGE_DATA *l);
-extern void add_zako_aka_kedama1(		STAGE_DATA *l); 	/* 橙 */
-	/* 毛玉 */
-extern void add_zako_inseki1(			STAGE_DATA *l); 	/* その他ザコ */
-extern void add_zako_yukari2(			STAGE_DATA *l); 	/* その他ザコ */
-extern void add_zako_midori_kedama1(	STAGE_DATA *l);
-extern void add_zako_midori_kedama2(	STAGE_DATA *l);
-extern void add_zako_kedama1(			STAGE_DATA *l);
-extern void add_zako_kedama2(			STAGE_DATA *l);
-	/* [C妖精]その他ザコ */
-extern void add_zako_obake1(			STAGE_DATA *l);
-extern void add_zako_obake2(			STAGE_DATA *l);
-extern void add_zako_karasu1(			STAGE_DATA *l);
-	/* [B妖精]中妖精 */
-extern void add_zako_meido1(			STAGE_DATA *l);
-extern void add_zako_meido2(			STAGE_DATA *l);
-extern void add_zako_meido3(			STAGE_DATA *l);
-extern void add_zako_meido4(			STAGE_DATA *l);
-	/* [A妖精]小妖精 */
-extern void add_zako_ao_yousei1(		STAGE_DATA *l);
-extern void add_zako_ao_yousei2(		STAGE_DATA *l);
-extern void add_zako_ao_yousei3(		STAGE_DATA *l);
-extern void add_zako_ao_yousei4(		STAGE_DATA *l);
+extern void game_command_00_regist_clouds(		GAME_COMMAND *l);/* どの敵でもない場合は、演出用画像 */
+extern void game_command_01_game_all_clear( 	GAME_COMMAND *l);/* 全面クリアーの場合、この敵を追加 */
+extern void game_command_02_bg_control( 		GAME_COMMAND *l);/* 背景コントロール(スクロール速度等を指定) */
 //
-
-extern void add_enemy_load_bg(			STAGE_DATA *l);
-extern void add_enemy_kanji_string( 	STAGE_DATA *l);
+extern void game_command_03_regist_boss(		GAME_COMMAND *l);/* ボス、スクリプト起動 */
+extern void game_command_04_regist_chuu_boss(	GAME_COMMAND *l);/* [中型敵]妖怪、生成処理 */
+extern void game_command_05_regist_zako(		GAME_COMMAND *l);/* ザコ、生成処理 */
+//
+extern void game_command_07_load_bg(			GAME_COMMAND *l);
+extern void game_command_06_kanji_hyouji(		GAME_COMMAND *l);
 
 /* この方式は処理落ち解消しにくい(Gu化も難しい)ので都合により廃止 */
-//extern void add_enemy_load_picture(	STAGE_DATA *l);
+//extern void game_command_08_load_picture( 	GAME_COMMAND *l);
 
 /*---------------------------------------------------------
 	敵の追加
@@ -92,54 +58,24 @@ extern void add_enemy_kanji_string( 	STAGE_DATA *l);
 	字句解析(parth)等は load_stage.c で予め済ませておきます。
 ---------------------------------------------------------*/
 
-static void add_all_teki(STAGE_DATA *l)
+static void add_game_command(GAME_COMMAND *l)
 {
 	/* 中間コード形式のコマンドから各関数に分岐する */
-	/* enemyの生成を番号で管理(load_stage.c の ctype_name[]に対応している) */
-	void (*aaa[ETYPE_MAX])(STAGE_DATA *l) =
+	/* game_commandの生成を番号で管理(load_stage.c の ctype_name[]に対応している) */
+	void (*aaa[ETYPE_MAX])(GAME_COMMAND *l) =
 	{
-		add_clouds,/* [番兵区切り] */	/*NULL*/	/* add_clouds();内部で見つからない場合は、enemy_error(); */
+		game_command_00_regist_clouds,/* [番兵区切り] */	/*NULL*/	/* game_command_00_regist_clouds();内部で見つからない場合は、teki_error(); */
 	/* その他 */
-		add_enemy_all_clear,		/* ゲーム 全ステージ クリアー */
-		bg2_control,/*CTYPE_02_BG_CONTROL*/
-	/* ボス */
-		add_boss_common,			/* 共通 */
-	/* 特殊敵[中型敵] */
-		add_chuu_boss,				/* 中ボスの予定 */
-	/* 魔方陣 */
-		add_enemy_mahoujin, 		/*	""	*/
-		add_enemy_mahoujin, 		/*	""	*/
-	/* 竜巻 陰陽玉 */
-		add_zako_inyou1,			/*	-"陰陽玉1"	*/
-		add_zako_tatsumaki1,		/*	C"竜巻1"	*/		/*enemy_error*/
-	/* 妖怪 */
-		add_zako_kakomi1,			/*	-"囲妖怪1"	*/
-		add_zako_aka_kedama1,		/*	a"赤毛玉1"	*/		/* 橙 */
-	/* 毛玉 */
-		add_zako_inseki1,			/*	C"隕石1"	*/		/*enemy_error*/ 	/* その他ザコ */
-		add_zako_yukari2,			/*	C"紫編隊2"	*/		/*enemy_error*/ 	/* その他ザコ */
-		add_zako_midori_kedama1,	/*	-"緑毛玉1"	*/
-		add_zako_midori_kedama2,	/*	C"緑毛玉2"	*/		/*enemy_error*/
-		add_zako_kedama1,			/*	-"毛玉1"	*/
-		add_zako_kedama2,			/*	-"毛玉2"	*/
-	/* [C妖精]その他ザコ */
-		add_zako_obake1,			/*	-"おばけ1"	*/
-		add_zako_obake2,			/*	-"おばけ2"	C"虹毛玉1"	*/		/*enemy_error*/
-		add_zako_karasu1,			/*	-"烏1"	*/
-	/* [B妖精]中妖精 */
-		add_zako_meido1,			/*	-"メイド1"	*/
-		add_zako_meido2,			/*	-"メイド2"	*/
-		add_zako_meido3,			/*	C"メイド3"	*/		/*enemy_error*/
-		add_zako_meido4,			/*	-"メイド4"	*/
-	/* [A妖精]小妖精 */
-		add_zako_ao_yousei1,		/*	="青妖精1"	*/		// [***090207	追加
-		add_zako_ao_yousei2,		/*	="青妖精2"	*/		// [***090124	追加
-		add_zako_ao_yousei3,		/*	="青妖精3"	*/		//	追加
-		add_zako_ao_yousei4,		/*	="青妖精4"	*/		//	追加
-//
-		add_enemy_kanji_string, 	/* ETYPE_01_SJIS_TEXT */
-		add_enemy_load_bg,			/* ETYPE_02_LOAD_BG */
-	//	add_enemy_load_picture, 	/* ETYPE_03_PICTURE */		/* この方式は処理落ち解消しにくい(Gu化も難しい)ので都合により廃止 */
+		game_command_01_game_all_clear, 	/* ゲーム 全ステージ クリアー */
+		game_command_02_bg_control,/*CTYPE_02_BG_CONTROL*/
+	/* 敵 */
+		game_command_03_regist_boss,			/* ボス共通 */
+		game_command_04_regist_chuu_boss,		/* 中-ボスの予定 特殊敵[中型敵] */
+		game_command_05_regist_zako,			/* ザコ */
+	//
+		game_command_06_kanji_hyouji,			/* ETYPE_01_SJIS_TEXT */
+		game_command_07_load_bg,				/* ETYPE_02_LOAD_BG */
+	//	game_command_08_load_picture,			/* ETYPE_03_PICTURE */		/* この方式は処理落ち解消しにくい(Gu化も難しい)ので都合により廃止 */
 	};
 	(*aaa[ (int)(l->user_i_code) ])(l); 	/* 中間コード形式のコマンドから各関数に分岐する */
 }
@@ -148,12 +84,9 @@ static void add_all_teki(STAGE_DATA *l)
 
 ---------------------------------------------------------*/
 
-extern STAGE_DATA *stage_data_table;
+extern GAME_COMMAND *stage_command_table;
 
-extern int select_player;
-//extern int pr actice_mode;
 
-global int difficulty = RANK_EASY;		/*	RANK_NORMAL*/
 
 //static u32 stage_start_time;
 //static u32 game_start_time;
@@ -161,8 +94,13 @@ global int difficulty = RANK_EASY;		/*	RANK_NORMAL*/
 /*---------------------------------------------------------
 
 ---------------------------------------------------------*/
-static u32 game_v_time;
-static int v_time_hold_mode;
+
+static u32 game_v_time;/* ゲーム時間 game flame time counter. */
+
+#if (1==USE_HOLD_GAME_MODE)
+static int v_time_hold_mode;/* 咲夜用に止めたり動かしたり出来るようにしとく */
+#endif /* (1==USE_HOLD_GAME_MODE) */
+
 static void init_stage_start_time(void)
 {
 //	stage_start_time = psp_get_uint32_ticks();
@@ -173,41 +111,47 @@ static void init_stage_start_time(void)
 	game_v_time = 65535;/* 適当に大きな値[flame](65535[flame]==約18[分]==18.xxx x 60 x 60 ) */
 }
 
-global void hold_game_time(void)/* ゲーム時間の一時停止(咲夜、新規格イベント(構想中)等、使う) */
+#if (1==USE_HOLD_GAME_MODE)
+global void hold_game_mode_on(void)/* ゲーム時間の一時停止(咲夜、新規格イベント(構想中)等、使う) */
 {
 	v_time_hold_mode = 1;
 }
 
-global void continue_game_time(void)/* ゲーム時間の動作開始 */
+global void hold_game_mode_off(void)/* ゲーム時間の動作開始 */
 {
 	v_time_hold_mode = 0;
 }
+#endif /* (1==USE_HOLD_GAME_MODE) */
+
 
 /*---------------------------------------------------------
 	シューティングゲーム本体の初期化
 ---------------------------------------------------------*/
-extern int continue_stage;
 
 extern void sprite_test_debug_init(void);/* r32:とりあえずバグあるのを無理やり回避(?) */
 extern void set_rnd_seed(int set_seed);
-extern /*int*/void load_stage(void/*int level*/);
-extern void player_init(void);
-extern void player_load_stage_muteki(void);
+extern void load_stage(void);
+extern void player_init_first(void);
+extern void player_init_stage(void);
 extern void score_panel_init(void);
 global void common_load_init(void)
 {
-	set_rnd_seed(pd.player_now_stage);	/* 乱数系列の初期化 */
+	set_rnd_seed(cg.game_now_stage);	/* 乱数系列の初期化 */
 //
 	/* Load next stage */
-	load_stage();//if (0==load_stage(/*level*/))	{	error(ERR_WARN, "no entrys for level %d",level);}
+	load_stage();
 	// ロード中は処理落ちしているので、ロード後に時間を再作成する。
 	init_stage_start_time();
 //
-	player_load_stage_muteki();/* ステージ開始時のみ若干の無敵状態にセット */
+	player_init_stage();/* ステージ開始時のみ若干の無敵状態にセット */
 //
 	kanji_window_clear();	/* 漢字ウィンドウの内容を消す。 */
 	home_cursor();			/* カーソルをホームポジションへ移動 */
-	continue_game_time();/* ゲーム時間の動作開始 */
+	//
+	#if (1==USE_HOLD_GAME_MODE)
+	hold_game_mode_off();/* ゲーム時間の動作開始 */
+	#endif /* (1==USE_HOLD_GAME_MODE) */
+	//
 	#if 1/*Gu化完了したら要らなくなる*/
 	{
 		psp_clear_screen(); /* [PAUSE] 復帰時にSDL画面を消す。 */
@@ -228,27 +172,28 @@ global void stage_first_init(void)
 	score_panel_init();
 	//sprite_controller_remove_all();
 //
-	player_init();/* 初回のみ設定 */
-//	player_load_stage_muteki();/* ステージ開始時のみ若干の無敵状態にセット */
+	player_init_first();/* 初回のみ設定 */
+//	player_init_stage();/* ステージ開始時のみ若干の無敵状態にセット */
 //
 	kanji_window_clear();	/* 漢字ウィンドウの内容を消す。 */
 	home_cursor();			/* カーソルをホームポジションへ移動 */
 //
-	pd.player_now_stage/*data->now_stage*/ /*level*/	= continue_stage/*+1-1*/ /*1*/;
+	cg.game_now_stage	= cg.game_continue_stage;
 //
 	main_call_func = common_load_init;
 }
 
-/*---------------------------------------------------------
 
+/*---------------------------------------------------------
+	イベントシーンを次に進める。
 ---------------------------------------------------------*/
 
 global void incliment_scene(void)
 {
-	{
+	{/*(r32)*/
 		/*ボス戦闘後イベント*/
 	//	if (B09_STAGE_LOAD==pd_bo ssmode) // 9:stage読み込み
-		if (/*STATE_FLAG_05_IS_BOSS == */(pd.state_flag & STATE_FLAG_05_IS_BOSS))
+		/*(r32)*/if (/*STATE_FLAG_05_IS_BOSS == */(cg.state_flag & STATE_FLAG_05_IS_BOSS))
 		{
 			main_call_func = stage_clear_result_screen_start;	/* ステージクリアー時のリザルト画面 */
 		}
@@ -256,19 +201,88 @@ global void incliment_scene(void)
 		else
 	//	if (B08_START == pd_bo ssmode) // 8:ボス曲を鳴らし、1ボスとの戦闘へ。
 		{
-			pd.state_flag |= (STATE_FLAG_05_IS_BOSS|STATE_FLAG_13_DRAW_BOSS_GAUGE);
+			/*(r32)*/cg.state_flag |= (STATE_FLAG_05_IS_BOSS|STATE_FLAG_13_DRAW_BOSS_GAUGE);
+			/* 雑魚追加読み込み処理を停止する。 */
+			cg.state_flag			&= (~STATE_FLAG_14_ZAKO_TUIKA); 	/* off / 雑魚追加読み込み処理を停止する。 */
 		}
 	}
 }
-//
-extern void script_ivent_load(void);
-/* 注意：static関数にしない */global void my_special(void)
+
+
+/*---------------------------------------------------------
+	特殊イベントの実行処理
+	特殊処理(たまにしか実行しない処理)
+	コア(メインループに)に追加すると、シューティングゲーム本体が遅くなるので、
+	動作が遅すぎて弾幕シューティングゲームならなくなってしまう。
+	そこで動作速度的観点から、頻度の少ない特殊機能はここで実行する。
+---------------------------------------------------------*/
+static void game_core_zako_tuika(void)
 {
+	{
+		GAME_COMMAND *l;
+		/*
+		This routine, search back to begin.
+		このルーチンは逆順に検索します。
+	 */
+		l = stage_command_table;
+		while (NULL != l)	/* コマンドリストの終わり(NULL)まで調べる */	/* [head ==NULL] then end. */
+		{
+			/* コマンド処理済み？ */
+			if (0 < l->v_time )//if (0 == l->done ) 	/* teki set done flag */
+			{
+			//	#if 1
+				if (game_v_time >= (l->v_time)) 	/* (現在時間 >= 設定時間) なら、敵をセット */
+			//	#else
+			//	if (v_time >= ((l->time) ) )
+			//	#endif
+				{
+					add_game_command(l);	/* コマンド生成する(コマンドが雑魚敵の場合、雑魚敵を生成する) */
+					l->v_time = (-1);	/* コマンド処理済みをマーク */	/* teki set done flag */	//l->done = 1;
+				}
+			}
+			l = l->next;	/* 次を調べる */	/* choice alter. */
+		}
+	}
+	/* 道中の場合勝手に喰み出しチェックを行い弾を消す(暫定的) */
+	#if 0
+//	if (0!=(cg.state_flag & STATE_FLAG_05_IS_NOT_BOSS))
+	if (0==(cg.state_flag & STATE_FLAG_05_IS_BOSS))/*(r32)*/
+	#endif
+	{
+		bullet_angle_all_gamen_gai_nara_kesu();/* 角度弾の喰み出しチェックを行う(毎フレーム行う必要はない) */
+	}
+}
+//
+extern void script_system_SDL_draw(void);
+extern void script_move_main(void);
+extern void script_ivent_load(void);
+/* 注意：(動作速度低下するので)static関数にしない */global void my_special(void)
+{
+	#if 1
+	/* 雑魚を検索し登場させる処理 */
+	{
+	//	if (cg.state_flag & (ST ATE_FLAG_14_GAME_LOOP_QUIT))
+	//	{
+	//		;	/* GAMEOUT中 */
+	//	}
+	//	else
+		if (cg.state_flag & (STATE_FLAG_14_ZAKO_TUIKA))
+		{
+			/* 生きてる */
+			#if 1
+			game_core_zako_tuika();
+			#else
+			#endif
+			/* [旧]特殊処理のあった位置 */
+		}
+	}
+	#endif
+
 	#if 1
 	/*
 		★「(喰らいボム受付期間中に)ボスと相打ちするとハングアップ」バグ(～r29)対策
-	*/
-	if (0 < /*bomb_wait*/pd.bomber_time)		/* ボムウェイト処理 */
+ */
+	if (0 < /*bomb_wait*/cg.bomber_time)		/* ボムウェイト処理 */
 	{
 		return;/* ボム発動中は待機 */
 	}
@@ -277,33 +291,37 @@ extern void script_ivent_load(void);
 	#if 0
 	/*
 		★「(喰らいボム受付期間中に)ボスと相打ちするとハングアップ」バグ(～r29)対策
-	*/
+ */
 	/* キー入力無効中(==復活中) は、敵あたり判定はない */
-	if (0==(pd.state_flag & (/*STATE_FLAG_06_IS_SCRIPT|*/STATE_FLAG_16_NOT_ALLOW_KEY_CONTROL)))
+	if (0==(cg.state_flag & (/*STATE_FLAG_06_IS_SCRIPT|*/STATE_FLAG_16_NOT_ALLOW_KEY_CONTROL)))
 	{
 		return;/* ボム発動中は待機 */
 	}
 	#endif
-//	if (pd_bo ssmode==B05_BEFORE_LOAD)		// [***090313	追加
-//	if (pd_bo ssmode==B07_AFTER_LOAD)		// [***090313	追加
-	if (pd.state_flag & (STATE_FLAG_10_IS_LOAD_SCRIPT)) 	// [***090313	追加
+	if (cg.state_flag & (STATE_FLAG_10_IS_LOAD_SCRIPT))
 	{
-		pd.state_flag &= (~(STATE_FLAG_10_IS_LOAD_SCRIPT));/*off*/
-		script_ivent_load(/*0 1*/);
+		cg.state_flag &= (~(STATE_FLAG_10_IS_LOAD_SCRIPT));/*off*/
+		script_ivent_load();/*0 1*/
 	}
 
-//	if (pd.state_flag & (ST ATE_FLAG_11_IS_BOSS_DESTROY))
+//	if (cg.state_flag & (ST ATE_FLAG_11_IS_BOSS_DESTROY))
 //	{
-//		pd.state_flag &= (~(ST ATE_FLAG_11_IS_BOSS_DESTROY));/*off*/
+//		cg.state_flag &= (~(ST ATE_FLAG_11_IS_BOSS_DESTROY));/*off*/
 //		boss_destroy_aaa();
 //	}
 	/* スクリプトが終わった？ */
-	if (pd.state_flag & (STATE_FLAG_12_END_SCRIPT))
+	if (cg.state_flag & (STATE_FLAG_12_END_SCRIPT))
 	{
-		pd.state_flag &= (~(STATE_FLAG_12_END_SCRIPT));/*off*/	/*	pd_bo ssmode=B00_NONE;*/
-	//	pd.state_flag &= (~(STATE_FLAG_12_END_SCRIPT));/*off*/	/*	pd_bo ssmode=B00_NONE;*/	/*B01_BA TTLE*/
+		cg.state_flag &= (~(STATE_FLAG_12_END_SCRIPT));/*off*/	/*	pd_bo ssmode=B00_NONE;*/
+	//	cg.state_flag &= (~(STATE_FLAG_12_END_SCRIPT));/*off*/	/*	pd_bo ssmode=B00_NONE;*/	/*B01_BA TTLE*/
 		incliment_scene();
 	}
+	/* スクリプト動作が必要？ */
+	/*(r32)*/if (cg.state_flag & STATE_FLAG_06_IS_SCRIPT)
+	{
+		script_system_SDL_draw();	/* スクリプト SDL 描画(遅い) */
+		script_move_main(); 		/* スクリプト動作(移動) */
+	}	/*STATE_FLAG_06_IS_SCRIPT==*/
 }
 
 
@@ -313,20 +331,9 @@ extern void script_ivent_load(void);
 	ここに追記すればするほど、シューティングゲーム本体が
 	遅くなるので、注意して追記してくれ。
 	めったに実行しない物は関数化して外に追い出そう。
-	-------------------------------------------------------
-	ここは、現在一つしかないが、
-	単純コールバック方式(いくつあっても速度低下しない方式にした)にしたので、
-	複数にすることが出来るようになった。
-	そこで、
-		道中用
-		会話用
-		ボス用
-	の少なくとも３つに分ける予定。
 ---------------------------------------------------------*/
-
 extern void vbl_draw_screen(void);/*support.c*/
 
-extern void script_move_main(void);
 extern void score_display(void);
 extern void bg2_move_main(void);
 extern void draw_SDL_score_chache(void);
@@ -335,78 +342,41 @@ global void shooting_game_core_work(void)
 {
 	{
 my_game_core_loop:
-		if (0==v_time_hold_mode)
+		/* [A] ゲーム時間を経過させる。 */
+		#if (1==USE_HOLD_GAME_MODE)
+		if (0==v_time_hold_mode)/* 咲夜用に止めたり動かしたり出来るようにしとく */
+		#endif /* (1==USE_HOLD_GAME_MODE) */
 		{
-			/* game_v_time=Zeit seit Spielbeginn in 1/10 sec. */
-			game_v_time++;//=(psp_get_uint32_ticks()-stage_start_time);
+			game_v_time++;	/* ゲーム時間はフレーム単位(game time resolutions about 1/60 seconds.) */
 		}
-	//
-		if (pd.state_flag & STATE_FLAG_14_GAME_LOOP_QUIT)
-		{
-			;	/* GAMEOUT中 */
-		}
-		else
-		{
-			/* 生きてる */
-			#if 1
-			{
-				STAGE_DATA *l;
-				/*
-				This routine, serch back to begin.
-				このルーチンは逆順に検索します。
-				*/
-				l = stage_data_table;
-				while (NULL != l)	/* 敵リストの終わり(NULL)まで調べる */	/* [head ==NULL] then end. */
-				{
-					/* 処理済み？ */
-					if (0 < l->v_time )//if (0 == l->done ) 	/* enemy set done flag */
-					{
-					//	#if 1
-						if (game_v_time >= (l->v_time)) 	/* (現在時間 >= 設定時間) なら、敵をセット */
-					//	#else
-					//	if (v_time >= ((l->time) ) )
-					//	#endif
-						{
-							add_all_teki(l);	/* 敵をセット */
-							l->v_time = (-1);	/* 処理済みをマーク */	/* enemy set done flag */	//l->done = 1;
-						}
-					}
-					l = l->next;	/* 次を調べる */	/* choice alter. */
-				}
-			}
-			#else
-
-			#endif
-			/*	[旧]特殊処理のあった位置 */
-		}
-//
-			/*
-				★「ボスと相打ちするとハングアップ」バグ(～r26)対策
-				[新]特殊処理の位置:
-				ボスを倒した場合に自分が死んでいて、喰らいボム判定中の場合、
-				[旧]特殊処理の位置では、喰らいボム判定の為STATE_FLAG_14_GAME_LOOP_QUITなので
-				ST ATE_FLAG_11_IS_BOSS_DESTROY(特殊処理で判定)が判定できないバグ(～r26)がある。
-				そこで位置を動かした。(ST ATE_FLAG_11_IS_BOSS_DESTROYの判定は少なくともこちら側でする必要がある)
-			 */
-			#if (1)
-			/* 特殊処理(たまにしか実行しない処理)
-				コアvoid shooting_game_core_work(void)関数のサイズが大きいと、
-				CPUの命令キャッシュがフローする事により処理落ちするので、
-				特殊処理(たまにしか実行しない処理)はコアの外に追い出します。
-				その際「 static関数にしない」様に注意します。
-				static関数にすると、GCCが勝手に __inline__ 関数に変換する為(-O3の場合)
-				追い出した意味が無くなります。(インライン展開される)
-			 */
-		//	if (B00_NONE != pd_bo ssmode)
-			if (pd.state_flag & (STATE_FLAG_10_IS_LOAD_SCRIPT|STATE_FLAG_12_END_SCRIPT))/*|ST ATE_FLAG_11_IS_BOSS_DESTROY*/
-			{
-				my_special();/* 注意：static関数にしない */
-			}
-			#endif
-//
-		#if 0/*ゲーム時間デバッグ用*/
+		#if 0/* ゲーム時間デバッグ用 */
 		/* パネルのスコア欄にゲーム時間を 表示させる。っていうか書き換えちゃう。 */
 		pd_score		= (game_v_time);
+		#endif
+	//
+		/* [B] 特殊処理イベントが発生している場合、特殊処理を行う。 */
+		#if (1)
+		/*
+			★「ボスと相打ちするとハングアップ」バグ(～r26)対策
+			[新]特殊処理の位置:
+			ボスを倒した場合に自分が死んでいて、喰らいボム判定中の場合、
+			[旧]特殊処理の位置では、喰らいボム判定の為ST ATE_FLAG_14_GAME_LOOP_QUITなので
+			ST ATE_FLAG_11_IS_BOSS_DESTROY(特殊処理で判定)が判定できないバグ(～r26)がある。
+			そこで位置を動かした。(ST ATE_FLAG_11_IS_BOSS_DESTROYの判定は少なくともこちら側でする必要がある)
+		 */
+		/* 特殊処理(たまにしか実行しない処理)
+			コアvoid shooting_game_core_work(void)関数のサイズが大きいと、
+			CPUの命令キャッシュがフローする事により処理落ちするので、
+			特殊処理(たまにしか実行しない処理)はコアの外に追い出します。
+			その際「 static関数にしない」様に注意します。
+			static関数にすると、GCCが勝手に __inline__ 関数に変換する為(-O3の場合)
+			追い出した意味が無くなります。(インライン展開される)
+		 */
+	//	if (B00_NONE != pd_bo ssmode)
+		/*(r32)*/if (cg.state_flag & (STATE_FLAG_10_IS_LOAD_SCRIPT|STATE_FLAG_12_END_SCRIPT|STATE_FLAG_06_IS_SCRIPT|STATE_FLAG_14_ZAKO_TUIKA))/*|ST ATE_FLAG_11_IS_BOSS_DESTROY*/
+		{
+			my_special();/* 注意：(動作速度低下するので)static関数にしない */
+		}
 		#endif
 //
 		/*
@@ -414,39 +384,40 @@ my_game_core_loop:
 			動作(移動)と描画は違う概念なのできちんと分離する事。
 			もし、処理が遅くなって、描画をフレームスキップさせる場合でも、
 			動作(移動)はフレームスキップさせない。
-		*/
+	 */
 		bg2_move_main();
 		sprite_move_all();	/* スプライトオブジェクトの移動処理 */
 		/* 描画 */
-//		sprite_display222(SP_GROUP_ALL_SDL_DRAW_TYPE);/*弾幕用*/
-//		sprite_display000((SP_GROUP_ALL_SDL_DRAW_TYPE & (~SP_GROUP_TEKI)));
-//		sprite_display000(SP_GROUP_ALL_SDL_DRAW_TYPE);
-	//	pause_sprite_display();/* SDL表示(現状SP_GROUP_PAUSE_S P_ME NU_TEXTのみSDL描画) */
-	//	draw_SDL_score_chache();/* SDL描画 */
 		// この辺は速度低下するのでコールバックにすべき
-		if ((pd.state_flag & STATE_FLAG_06_IS_SCRIPT))	{	script_move_main(); 	}	/*STATE_FLAG_06_IS_SCRIPT==*/
-		if (0!=draw_side_panel) 						{	score_display();		}	/*ST ATE_FLAG_09_IS_PANEL_WINDOW==*/	/*(pd.state_flag & ST ATE_FLAG_09_IS_PANEL_WINDOW)*/
+		/*(r32)*/if (0!=draw_side_panel)
+		{
+			score_display();		/* スコアパネル SDL 描画(遅い) */
+		}	/*ST ATE_FLAG_09_IS_PANEL_WINDOW==*/	/*(cg.state_flag & ST ATE_FLAG_09_IS_PANEL_WINDOW)*/
 //
-
 	// ハングアップ対策：常にポーズ可能に変更する。(2010-02-11)
 	// メニューのキー入力が仕様変更になったので、ここもそれに併せて仕様変更。(2010-06-01)
 	//	if (0==my_pad)
-		if (0==(my_pad_alter & PSP_KEY_PAUSE))/* さっきポーズが押されてなくて */
+		if (0==(cg_my_pad_alter & PSP_KEY_PAUSE))/* さっきポーズが押されてなくて */
 		{
-			if (my_pad & PSP_KEY_PAUSE)/* 今ポーズが押されたら */
+			if (cg_my_pad & PSP_KEY_PAUSE)/* 今ポーズが押されたら */
 			{
-			//	if (0==(pd.state_flag & STATE_FLAG_06_IS_SCRIPT))/*たまにうまくいかない事がある*/
+			//	if (0==(cg.state_flag & STATE_FLAG_06_IS_SCRIPT))/*たまにうまくいかない事がある*/
 				{
 					main_call_func			= pause_menu_start;
 					pause_out_call_func 	= shooting_game_core_work;/* ポーズ復帰後の戻り先を決める */
 				}
 			}
 		}
-//
-		vbl_draw_screen();	/* 画面描画とキー入力(本当は v-blanc タイミングで) */
+		/* Gu描画 */
+		{
+			vbl_draw_screen();	/* 画面描画とキー入力(本当は v-blanc タイミングで) */
+		}
+		/* ゲームコアから外に出ると、(CPUの命令キャッシュが壊れるので(?))、極端に速度低下する。
+			必要ない場合は外に出ない為の処置 */
 		if (shooting_game_core_work == main_call_func)
 		{
 			goto my_game_core_loop;
 		}
+		/* ここに来たら、外に出るので遅くなるという事 */
 	}
 }

@@ -1,6 +1,6 @@
 
 /*---------------------------------------------------------
-	東方模倣風	～ Toho Imitation Style.
+	東方模倣風 ～ Toho Imitation Style.
 	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	インクルードファイルについて
@@ -244,15 +244,8 @@ enum
 	KEY_NUM12_MAX			/* 最大数 */
 };
 
-extern u32 my_pad;			/*今回入力*/
-extern u32 my_pad_alter;	/*前回入力*/
 
 
-//#define IS_KEY BOARD_PULLED ((0==my_pad)&&(my_pad^my_pad_alter))/* 何かキーを離されたら */
-/*	キーを離した瞬間が確定とする。押した瞬間が確定だと、押された間だけ動作する物が同時にあると都合が悪い。 */
-/*
-	r31:原作ではキーを押した瞬間が確定のものが多いので、おかしいところはキーを押した瞬間が確定に修正した。
-*/
 enum /*_game_rank_*/
 {
 	RANK_EASY = 0,
@@ -312,16 +305,15 @@ extern int pad_config[KEY_NUM12_MAX];
 ---------------------------------------------------------*/
 
 #include "000_sprite_system.h"
+#include "000_gu_obj_type.h"
 //#include "bullet_system.h"
 
 //extern SPRITE *ob j_player;
 extern SPRITE *global_obj_boss;
 extern SPRITE *obj_send1;
+//extern SPRITE *obj_send2;
 
 
-extern int difficulty;
-
-extern int msg_time;/* メッセージ(仮対応)表示時間 */
 
 //#include "font.h"
 //#include "menu.h"
@@ -374,6 +366,8 @@ typedef struct
 	int count_bonus;	/* スペルカードボーナス回数 */
 } SCORE_FORMAT;
 
+// game_main.h で定義(変わる可能性があるから)
+
 #define DIRECTRY_NAME_DATA_STR			"data"
 /* 'data' の文字数は 4 文字 */
 #define DIRECTRY_NAME_DATA_LENGTH		(4)
@@ -381,11 +375,6 @@ typedef struct
 #define DIRECTRY_NAME_TEXT_STR			"/text/"
 /* '/text/' の文字数は 6 文字 */
 #define DIRECTRY_NAME_TEXT_LENGTH		(6)
-
-		/* 'data' の文字数は 4 文字 */
-	//	#define DIRECTRY_NAME_DATA_LENGTH		(4) 	// game_main.h で定義(変わる可能性があるから)
-		/* '/text/' の文字数は 6 文字 */
-	//	#define DIRECTRY_NAME_TEXT_LENGTH		(6)
 
 #define DIRECTRY_NAME_KAKUCHOUSI_TEXT_STR			".txt"
 
@@ -395,8 +384,11 @@ typedef struct
 #include "000_player.h"
 #include "000_bonus.h"
 #include "000_load_stage.h"
-#include "000_danmaku.h"
+#include "000_spell.h"
 #include "000_bullet_object.h"
+
+#include "000_tama_system.h"	/*(r33から追加)*/
+
 
 //#ifndef _HIGH_SCORE_H_
 //#define _HIGH_SCORE_H_
@@ -439,13 +431,6 @@ extern void load_SDL_bg(int bg_type_number);
 
 /* Gu Render */
 #include "000_gu_render.h"
-#if 1
-
-extern int draw_side_panel;/* パネル表示on(0以外)/off(0) */
-
-extern int draw_boss_hp_value;	/* ボスhp描画値 */
-extern int boss_life_value; 	/* ボスhp体力値 / ボス魔方陣サイズ描画値 */
-#endif
 
 extern void error(int errorlevel, char *msg, ...);
 extern SDL_Surface *load_chache_bmp(char *filename);//, int use_alpha, int use_chache);
@@ -461,7 +446,7 @@ extern char get_stage_chr(int i);
 
 #if 1
 extern void script_boss_load(int boss_number);
-extern void script_boss_start(void/*int i*/);
+extern void script_boss_start(void);/*int i*/
 #endif
 
 extern void display_vidinfo(void);

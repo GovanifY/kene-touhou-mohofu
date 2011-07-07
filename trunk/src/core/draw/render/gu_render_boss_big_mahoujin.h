@@ -1,6 +1,6 @@
 
 /*---------------------------------------------------------
-	東方模倣風	～ Toho Imitation Style.
+	東方模倣風 ～ Toho Imitation Style.
 	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	このファイルは直接インクルードしません。
@@ -25,31 +25,28 @@ static void gu_draw_big_maho_jin(void)
 		{	/*AABBGGRR*/
 			0x997f2fff, //		0x997f2fff,/**/
 			0x77ff993f, //		0x77ff5f1f,/* 1面 */		/* アリス */
-			0x553fff3f, //		0x99ff7f2f,/* 2面 */		/* 文	  */
-			0xaa2f7fff, //		0xaa2f7fff,/* 3面 */		/* 未定   */
-			0xaaffffff, //		0x997f2fff,/* 4面 */		/* 輝夜   */
+			0x553fff3f, //		0x99ff7f2f,/* 2面 */		/* 文 */
+			0xaa2f7fff, //		0xaa2f7fff,/* 3面 */		/* 未定 */
+			0xaaffffff, //		0x997f2fff,/* 4面 */		/* 輝夜 */
 			0x33ff5f1f, //		0x33ff5f1f,/* 5面 */		/* パチェ */
-			0x997f2fff, //		0x997f2fff,/* 6面 */		/* 咲夜   */
+			0x997f2fff, //		0x997f2fff,/* 6面 */		/* 咲夜 */
 			0x997f2fff, //		0x997f2fff,/* ending */
 		//	0xff601010, //	//	0xff601010,/**/
 		}; /* 透青緑赤 AABBGGRR */
-	const unsigned int big_maho_color8888 = maho_color_list[pd.player_now_stage&0x07];
+	const unsigned int big_maho_color8888 = maho_color_list[cg.game_now_stage&0x07];
 //
 	unsigned int j;
 	unsigned short uv_x4;
 
-//	int boss_center_x = ((GAME_WIDTH)/2);
-//	int boss_center_y = ((GAME_HEIGHT)/2);
-				/* 中心座標なので、オフセットなし==ボス中心から弾出す。 */
-//	int boss_center_x = ((boss_x256)>>8)+(16);
-//	int boss_center_y = ((boss_y256)>>8)+(24);
-	int boss_center_x = ((boss_x256)>>8);
-	int boss_center_y = ((boss_y256)>>8);
+	int boss_center_x = ((global_obj_boss->cx256)>>8);
+	int boss_center_y = ((global_obj_boss->cy256)>>8);
 
 	/* 内側 */
 //	int hankei_111 = (draw_boss_hp_value>>2);/* 128==1024/8 */
 //	int hankei_111 = (boss_life_value>>(2+3));/* 128==1024/8 */
-	int hankei_111 = (spell_card_boss_timer>>(2+3))+(64);/* 128==1024/8 */
+//	int hankei_111 = (spell_card_boss_timer>>(2+3))+(64);/* 128==1024/8 */
+//	int hankei_111 = (spell_card_boss_timer>>(7))+(64);/* 128==1024/8 */
+	int hankei_111 = (spell_card_boss_timer>>(8))+(64);/* 128==1024/8 */
 	/* 外側 */
 	int hankei_222 = (hankei_111+(16)/*(8)*/);/* 8[dot]文字高さ */
 

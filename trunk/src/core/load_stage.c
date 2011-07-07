@@ -2,13 +2,13 @@
 #include "game_main.h"
 
 /*---------------------------------------------------------
-	東方模倣風	～ Toho Imitation Style.
+	東方模倣風 ～ Toho Imitation Style.
 	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	ステージ敵データー(dat)の読み込み
 ---------------------------------------------------------*/
 
-STAGE_DATA *stage_data_table = NULL;
+global GAME_COMMAND *stage_command_table = NULL;
 
 /*---------------------------------------------------------
 	子関数
@@ -19,8 +19,8 @@ STAGE_DATA *stage_data_table = NULL;
 
 static void load_stage_free_entry(void)
 {
-	STAGE_DATA *d = stage_data_table;
-	STAGE_DATA *n;
+	GAME_COMMAND *d = stage_command_table;
+	GAME_COMMAND *n;
 	while (NULL != d)
 	{
 		n = d->next;
@@ -30,113 +30,65 @@ static void load_stage_free_entry(void)
 		#endif
 		d = n;
 	}
-	stage_data_table = (STAGE_DATA *)NULL;/* head to set NULL */
+	stage_command_table = (GAME_COMMAND *)NULL;/* head to set NULL */
 }
 
 /*---------------------------------------------------------
 	子関数
 ---------------------------------------------------------*/
 
+enum
+{
+	PARAM_00_time60 = 0,		//	u32 time60; 			/* 出現時間(1/60秒単位) */
+	PARAM_01_user_command,		//	int user_command;		/* １文字コマンド(敵やメッセージ等の種別) */
+	PARAM_02_user_select_gazou, //	int select_gazou;		/* アニメ/画像種類 */
+	PARAM_03_user_kougeki_type, //	int user_kougeki_type;	/* 敵が攻撃する場合のスペカの種類 */
+	PARAM_04_user_x,			//	int user_x; 			/* 数字パラメーター１(出現Ｘ座標など) */
+	PARAM_05_user_y,			//	int user_y; 			/* 数字パラメーター２(出現Ｙ座標、敵難度など) */
+	PARAM_06_user_hp,			//	int user_hp;			/* 数字パラメーター２(出現Ｙ座標、敵難度など) */
+	PARAM_07_user_item8,		//	int user_item8; 		/* 数字パラメーター２(出現Ｙ座標、敵難度など) */
+	PARAM_08_user_score,		//	int user_score; 		/* 数字パラメーター２(出現Ｙ座標、敵難度など) */
+	PARAM_99_MAX/*最大数*/
+};
 
 /*---------------------------------------------------------
 	子関数
 ---------------------------------------------------------*/
 extern void load_bg2_chache(char *filename, int use_alpha);
 /* Do set the entry. */
-static void load_stage_add_entry(
-	u32 time60,
-	char *user_string,
-	int user_command,
-	int user_select_gazou,
-	int user_x,
-	int user_y,
-	int user_hp,
-	int user_item8,
-	int user_score
-	)		// オブジェクトの生成
+static void load_stage_add_entry( char *user_string, const int *c_pn )		// オブジェクトの生成
 {
-	STAGE_DATA *new_entry;
-	new_entry						= my_calloc(sizeof(STAGE_DATA));
-//	new_entry->v_time				= (time60*6/*100*1000*/);/* 読み込み後、PSPに都合の良い値に変換(1/10[sec]-> 1/1000000[sec] == 1[nsec] == nano seconds ) */
-//	new_entry->v_time				= (time60*6/*100*1000*/);/* 読み込み後、PSPに都合の良い値に変換(1/10[sec]-> 1/60[sec] ) */
-	new_entry->v_time				= (time60  /*100*1000*/);/* 読み込み後、PSPに都合の良い値に変換(1/10[sec]-> 1/60[sec] ) */
-	new_entry->user_x				= user_x;
-	new_entry->user_y				= user_y;
-	new_entry->user_hp				= user_hp;
-	new_entry->user_item8			= user_item8;
-	new_entry->user_select_gazou	= user_select_gazou;
-	new_entry->user_score			= user_score;
+	GAME_COMMAND *new_entry;
+	new_entry						= my_calloc(sizeof(GAME_COMMAND));
+	#define MUSIC_CONVERT_TIME		(10)
+	/* 10[flame](==0.1666[秒]ずらす。)読み込みと変換に時間がかかる事を考慮して、時間をずらす。 */
+	new_entry->v_time				= MUSIC_CONVERT_TIME+(c_pn[PARAM_00_time60]);/* 元々フレーム単位 */
+	new_entry->user_select_gazou	= c_pn[PARAM_02_user_select_gazou];
+	new_entry->user_kougeki_type	= c_pn[PARAM_03_user_kougeki_type];
+	new_entry->user_x				= c_pn[PARAM_04_user_x];
+	new_entry->user_y				= c_pn[PARAM_05_user_y];
+	new_entry->user_hp				= c_pn[PARAM_06_user_hp];
+	new_entry->user_item8			= c_pn[PARAM_07_user_item8];
+	new_entry->user_score			= c_pn[PARAM_08_user_score];
 //	new_entry->done 				= 0;
 //
-	new_entry->user_255_code		= (u8)(user_command&0xff);
+	new_entry->user_255_code		= (u8)((c_pn[PARAM_01_user_command])&0xff);
 	new_entry->user_i_code			= 0;
 
 	strncpy(new_entry->user_string, user_string, (MAX_PARA1_36-1)/*63*/);
 
 /* ゲーム中は、中間コード形式のコマンドを扱い構文解析はしない。(構文解析はload_stage.cで行う) */
 
-	//	"慧音", 	/*	extra 2 	"BOSS05",*/
-	//	"チルノ",	/*	extra 1 	"BOSS05",*/
-	//	"咲夜", 	/*	stage 6 	"BOSS04",*/ 	// [***090207		追加
-	//	"パチェ",	/*	stage 5 	"BOSS01",*/
-	//	"輝夜", 	/*	stage 4 	"BOSS03",*/
-	//	"未定", 	/*	stage 3 	"BOSS03",*/ 	/* 3面はどうするか未定(永琳? 慧音?) */
-	//	"文",		/*	stage 2 	"BOSS02",*/
-	//	"アリス",	/*	stage 1 	"BOSS01",*/
-
-	//	"中ボス6",
-	//	"小悪魔",	/*	"GFAIRY",*/ 	//		追加
-	//	"鈴仙",
-	//	"てゐ",
-	//	"中ボス2",
-	//	"ルーミア", /*	"GFAIRY",*/ 	//		追加
-//		廃止
-	//	"妖怪2",	/*	"GFAIRY",*/ 	//		追加
-	//	"妖怪1",	/*	"GFAIRY",*/ 	// [***090207		追加
-
-
-//
 	const char *ctype_name[CTYPE_99_MAX] =	/* 現在 32 種類 */
 	{
 		NULL,/* [番兵区切り] */
 	//	その他
 		"QUIT", 	/* ゲーム 全ステージ クリアー */
 		"BG",		/*	"BG_CONTROL"*/		/* ←システムコマンドなので英語にした */
-	//	ボス
-		"ボス", 	/* 共通化(ボススクリプト起動) */
-	/* 特殊敵[中型敵] */
-		"中ボス",
-//
-	/* 魔方陣 */
-		"魔方陣1",	/*	"GROUNDER",*/
-		"魔方陣2",	/*	"MAGICF",*/
-	/* 竜巻 陰陽玉 */
-		"陰陽玉1",	/*	"PLASMABALL",*/
-		"竜巻1",	/*	"PROBALL",*/
-	/* 妖怪 */
-		"囲妖怪1",	/*	"CUBE",*/
-		"赤毛玉1",	/*	"MINE",*/		/* 橙 */
-	/* 毛玉 */
-		"隕石1",	/*	"MING",*/		/* その他ザコ */
-		"紫編隊2",	/*	"GREETER",*/	/* その他ザコ */
-		"緑毛玉1",	/*	"XEV",*/
-		"緑毛玉2",	/*	"CRUSHER",*/
-		"毛玉1",	/*	"BADGUY",*/
-		"毛玉2",	/*	"BADGUY",*/
-	/* [C妖精]その他ザコ */
-		"おばけ1",	/*	"DRAGER",*/
-		"おばけ2",	/*	"EYEFO",*/
-		"烏1",		/*	"",*/
-	/* [B妖精]中妖精 */
-		"メイド1",	/*	"RWINGX",*/
-		"メイド2",	/*	"ZATAK",*/
-		"メイド3",	/*	"CURVER",*/
-		"メイド4",	/*	"CIR",*/
-	/* [A妖精]小妖精 */
-		"青妖精1",	/*	"FAIRY",*/		// [***090207		追加
-		"青妖精2",	/*	"SPLASH",*/ 	// [***090124		追加
-		"青妖精3",	/*	"SPLASH",*/ 	//		追加
-		"青妖精4",	/*	"SPLASH",*/ 	//		追加
+	// 敵
+		"ボス", 	/* (ボス / 中-ボス)用 スクリプト起動 */
+		"中ボス",	/* ザコ中-ボス(スクリプト起動しない) */
+		"ザコ", 	/* ザコ */
 	};
 //
 	/* 読み込んだコマンドを中間コード形式に変換する */
@@ -165,22 +117,20 @@ static void load_stage_add_entry(
 	}
 	else
 	{
+		for (new_entry->user_i_code = /*CT YPE_00_unknown+*/(CTYPE_99_MAX-1); /*0*/CTYPE_00_NONE/*CT YPE_00_unknown*/ < new_entry->user_i_code; new_entry->user_i_code--)
 		{
-			for (new_entry->user_i_code = /*CT YPE_00_unknown+*/(CTYPE_99_MAX-1); /*0*/CTYPE_00_NONE/*CT YPE_00_unknown*/ < new_entry->user_i_code; new_entry->user_i_code--)
+			if (0==tiny_strcmp( new_entry->user_string, /*(char *)*/&/*btype_name*/ctype_name[(unsigned int)new_entry->user_i_code][0] ) )
 			{
-				if (0==tiny_strcmp( new_entry->user_string, /*(char *)*/&/*btype_name*/ctype_name[(unsigned int)new_entry->user_i_code][0] ) )
-				{
-					break;
-				}
-			} // 0/*CT YPE_00_unknown*/ == aaa );
-		}
+				break;
+			}
+		} // 0/*CT YPE_00_unknown*/ == aaa );
 	}
 //
-	if (NULL==stage_data_table) 	// 最初の解析行か？
-	{	new_entry->next = (STAGE_DATA *)NULL;}
+	if (NULL==stage_command_table)	// 最初の解析行か？
+	{	new_entry->next = (GAME_COMMAND *)NULL;}
 	else
-	{	new_entry->next = stage_data_table; 	}	// stage_data_tableは前回のデータ
-	stage_data_table = new_entry;		// stage_data_tableに今生成したデータのアドレスを代入。
+	{	new_entry->next = stage_command_table;	}	// stage_command_tableは前回のデータ
+	stage_command_table = new_entry;		// stage_command_tableに今生成したデータのアドレスを代入。
 	// nextにはdatファイル的には現在走査中の行の上の行が入っている。
 }
 
@@ -192,14 +142,14 @@ static void load_stage_add_entry(
 
 static char *load_stage_get_int(char *ccc, int *number)
 {
-	char buffer[32/*128*/];
+	char buffer[32];/*128*/
 	char *ddd = buffer;
 	int i = 0;
 //	while (isdigit(*c)) 			/* isdigit : 数字かどうかの判定 */
 	while ((isdigit(*ccc))||('-'==(*ccc)))		/* 負数にも対応 / isdigit : 数字かどうかの判定 */
 	{
 		i++;
-		if (i >= 32/*128*/)
+		if (i >= 32)/*128*/
 		{	goto ne222;}
 		*ddd++ = *ccc++;
 	}
@@ -227,27 +177,25 @@ ne222:
 extern void set_default_bullet_clip(void);
 
 extern int select_player;
-extern void bg2_start_stage(void);	// [***090209		追加
+extern void bg2_start_stage(void);
 extern void stage_bg_load_texture(void);
 extern void gu_set_bg_u32_clear_color(u32 set_u32_clear_color);
-void load_stage(void)	/*int level*/	/* 元々int */
+
+extern void teki_random_item_table_initialize(void);/*int set_seed*/
+global void load_stage(void)
 {
 	set_default_bullet_clip();		/* 弾幕の範囲を標準に設定 */
-	bg2_start_stage();				// [***090209		追加
-	enemy_set_random_seed(/*set_seed*/);	/* リプレイ対応出来るように、乱数系列の初期化。 */
-//	int level = player_now_stage;
-	pd.player_now_stage++;				/*(*level)++*/
+	bg2_start_stage();
+	;/* リプレイ対応出来るように、乱数系列の初期化。 */
+	teki_random_item_table_initialize();/*set_seed*/	/* ランダムアイテム敵の場合に使う、共通発生テーブルを初期化。 */
+	cg.game_now_stage++;
 	// change music soundtrack
-	play_music_num(pd.player_now_stage);	/* n面道中 */	 /*1+(*level)*/
-//
-//	int load_stage_number = player_now_stage;
+	play_music_num(cg.game_now_stage);	/* n面道中 */
 	{
-		{
-			pd.state_flag &= (~(STATE_FLAG_05_IS_BOSS));/*ボスoff*/
-		}
-		draw_side_panel = 1/*pd.state_flag |= ST ATE_FLAG_09_IS_PANEL_WINDOW*/;/* パネル表示on */
+		/* (r32) */cg.state_flag		|= STATE_FLAG_14_ZAKO_TUIKA;	/* 雑魚追加処理をする場合on */
+		/* (r32) */cg.state_flag &= (~(STATE_FLAG_05_IS_BOSS));/*ボスoff*/
+		draw_side_panel = (1);	/* パネル表示on */	/* cg.state_flag |= ST ATE_FLAG_09_IS_PANEL_WINDOW */
 	}
-//
 	{
 		const u32 bg_color_list[8] =
 		{	/*AABBGGRR*/
@@ -255,30 +203,29 @@ void load_stage(void)	/*int level*/	/* 元々int */
 			0xff106010,/*1面(緑、魔法の森)*/
 			0xff401010,/*3面(青、迷いの竹林)*/		//	0xff104010,/*3面(緑)*/
 			0xff402020,/*4面(青、永遠亭)*/
-			0xff804010,/*2面(水、妖怪の山、滝)*/	//	0xff802010,/*2面(青)*/		0xff102080,/*2面*/
+			0xff804010,/*2面(水、妖怪の山、滝)*/	//	0xff802010,/*2面(青)*/		0xff102080,
 			0xff601030,/*5面(青、図書館)*/
 			0xff301060,/*6面(赤、紅魔館)*/			//	0xff601030,/*6面(青)*/
 			0xff000000,/*ending(黒)*/
 		//	0xff601010,/**/
 		};
-		gu_set_bg_u32_clear_color((bg_color_list[pd.player_now_stage&0x07]));
+		gu_set_bg_u32_clear_color((bg_color_list[cg.game_now_stage&0x07]));
 	}
 	stage_bg_load_texture();
 //
-//
 //	char my_fopen_file_name[128];
-//	sp rintf(my_fopen_file_name, DIRECTRY_NAME_DATA_STR "/dat/stage%02d.dat", player_now_stage);
-//	sp rintf(my_fopen_file_name, DIRECTRY_NAME_DATA_STR "/dat/stage%01d.txt", player_now_stage);
-//	sp rintf(my_fopen_file_name, DIRECTRY_NAME_DATA_STR "/dat/stage%c.txt", ('0'+ player_now_stage) );
-//	sp rintf(my_fopen_file_name, DIRECTRY_NAME_DATA_STR "/dat/stage%c.txt", ('0'+ player_now_stage) );
+//	sp rintf(my_fopen_file_name, DIRECTRY_NAME_DATA_STR "/dat/stage%02d.dat", cg.game_now_stage);
+//	sp rintf(my_fopen_file_name, DIRECTRY_NAME_DATA_STR "/dat/stage%01d.txt", cg.game_now_stage);
+//	sp rintf(my_fopen_file_name, DIRECTRY_NAME_DATA_STR "/dat/stage%c.txt", ('0'+ cg.game_now_stage) );
+//	sp rintf(my_fopen_file_name, DIRECTRY_NAME_DATA_STR "/dat/stage%c.txt", ('0'+ cg.game_now_stage) );
 	strcpy(my_fopen_file_name, DIRECTRY_NAME_DATA_STR "/dat/stageZ.txt");
-	my_fopen_file_name[10+DIRECTRY_NAME_DATA_LENGTH] = get_stage_chr(pd.player_now_stage); /*load_stage_number*/
+	my_fopen_file_name[10+DIRECTRY_NAME_DATA_LENGTH] = get_stage_chr(cg.game_now_stage); /*load_stage_number*/
 
 //	/*FILE*/char *fp;
 	if (NULL==(/*fp =*/my_fopen(/*my_fopen_file_name*/ /*,"r"*/)))
 	{
 	//	error(ERR_FATAL, (char*)"can't read stage data %s\nerrno: %d (%s)",my_fopen_file_name,errno,strerror(errno));
-		error(ERR_FATAL, (char*)"can't read stage %d data %s\n", /*load_stage_number*/pd.player_now_stage, my_fopen_file_name );
+		error(ERR_FATAL, (char*)"can't read stage %d data %s\n", /*load_stage_number*/cg.game_now_stage, my_fopen_file_name );
 	}
 //
 	load_stage_free_entry();	/* 前回まで確保したメモリがあれば、先に開放する。 */
@@ -288,15 +235,8 @@ void load_stage(void)	/*int level*/	/* 元々int */
 		if (/*NULL*/0 != my_file_fgets(/*buffer_text_1_line,128,fp*/))
 		{
 			int end_arg/*=0*/;			/* [だみー]行末 == 引数の取得の中止 */
-			int time60; 				/* 出現時間(1/60秒単位)  */
 			char user_string[128];		/* 文字列(メッセージやファイル名) */
-			int int_user_command;		/* １文字コマンド(敵やメッセージ等の種別) */
-			int select_gazou;			/* アニメ/画像種類 */
-			int user_x; 				/* 数字パラメーター１(出現Ｘ座標など) */
-			int user_y; 				/* 数字パラメーター２(出現Ｙ座標、敵難度など) */
-			int user_hp;				/* 数字パラメーター２(出現Ｙ座標、敵難度など) */
-			int user_item8; 			/* 数字パラメーター２(出現Ｙ座標、敵難度など) */
-			int user_score; 			/* 数字パラメーター２(出現Ｙ座標、敵難度など) */
+			int c_pn[PARAM_99_MAX/*6*/];
 			line_num++; 				/* ファイルの実行数 */
 //
 			char *ch;					/* 走査位置 */
@@ -332,49 +272,32 @@ void load_stage(void)	/*int level*/	/* 元々int */
 			/* データーの区切りに ',' が無い場合はエラー */
 			#define CHECK_ERROR_VALUE_KUGIRI	CHECK_ERROR_VALUE	if (',' != *ch++)	{	GOTO_ERR_WARN;	}
 			/* parth start. 構文解析開始 */
-			ch = load_stage_get_int(ch, &time60);					CHECK_ERROR_VALUE_KUGIRI	/* load int time60. */	/* 出現時間[フレーム(1/60秒)単位]の取得 */
-			ch = load_my_file_get_str(ch, user_string, &end_arg);	CHECK_ERROR_VALUE_KUGIRI	/* load str user_string. */ 	/*, '|'*/
-			ch = load_stage_get_int(ch, &int_user_command); 		CHECK_ERROR_VALUE_KUGIRI	/* load 1 char commnd. １文字コマンド */
-			ch = load_stage_get_int(ch, &select_gazou); 			CHECK_ERROR_VALUE_KUGIRI	/* load graphics select. */
-			ch = load_stage_get_int(ch, &user_x);					CHECK_ERROR_VALUE_KUGIRI	/* load int user_x. 出現x座標 */
-			ch = load_stage_get_int(ch, &user_y);					CHECK_ERROR_VALUE_KUGIRI	/* load int user_y. 出現y座標 */
-			ch = load_stage_get_int(ch, &user_hp);					CHECK_ERROR_VALUE_KUGIRI	/* load int user_hp. 体力 */
-			ch = load_stage_get_int(ch, &user_item8);				CHECK_ERROR_VALUE_KUGIRI	/* load int user_. 出現アイテム */
-			ch = load_stage_get_int(ch, &user_score);				CHECK_ERROR_VALUE			/* load int user_. 撃破時の獲得スコア[(1/10単位)] */
+			ch = load_stage_get_int(ch, &c_pn[PARAM_00_time60]);				CHECK_ERROR_VALUE_KUGIRI	/* load int time60. */	/* 出現時間[フレーム(1/60秒)単位]の取得 */
+			ch = load_my_file_get_str(ch, user_string, &end_arg);				CHECK_ERROR_VALUE_KUGIRI	/* load str user_string. */ 	/*, '|'*/
+			ch = load_stage_get_int(ch, &c_pn[PARAM_01_user_command]);			CHECK_ERROR_VALUE_KUGIRI	/* load 1 char commnd. １文字コマンド */
+			ch = load_stage_get_int(ch, &c_pn[PARAM_02_user_select_gazou]); 	CHECK_ERROR_VALUE_KUGIRI	/* load graphics select. */
+			ch = load_stage_get_int(ch, &c_pn[PARAM_03_user_kougeki_type]); 	CHECK_ERROR_VALUE_KUGIRI	/* load graphics select. */
+			ch = load_stage_get_int(ch, &c_pn[PARAM_04_user_x]);				CHECK_ERROR_VALUE_KUGIRI	/* load int user_x. 出現x座標 */
+			ch = load_stage_get_int(ch, &c_pn[PARAM_05_user_y]);				CHECK_ERROR_VALUE_KUGIRI	/* load int user_y. 出現y座標 */
+			ch = load_stage_get_int(ch, &c_pn[PARAM_06_user_hp]);				CHECK_ERROR_VALUE_KUGIRI	/* load int user_hp. 体力 */
+			ch = load_stage_get_int(ch, &c_pn[PARAM_07_user_item8]);			CHECK_ERROR_VALUE_KUGIRI	/* load int user_. 出現アイテム */
+			ch = load_stage_get_int(ch, &c_pn[PARAM_08_user_score]);			CHECK_ERROR_VALUE			/* load int user_. 撃破時の獲得スコア[(1/10単位)] */
 			/* do set register entry. 読み込み成功したデーターを、追加登録する。 */
-			#define MUSIC_CONVERT_TIME (10)
 			/* 追加登録する */
-			load_stage_add_entry(
-				MUSIC_CONVERT_TIME+time60,
-				user_string,
-				int_user_command,
-				select_gazou,
-				user_x,
-				user_y,
-				user_hp,
-				user_item8,
-				user_score
-			);
+			load_stage_add_entry( user_string, c_pn );
 			entrys++;		/* 有効行数 */
 			goto loop;
 		#if (1==USE_PARTH_DEBUG)
 		err_warn:
-			/* Load parth error. */
-		//	static void load_stage_set_error(char *load_filename, int error_line_number)
-		//	{
-		//		error(ERR_WARN, (char*)"syntax error in stage data '%s', line no: %d", load_filename, error_line_number);
-		//	}
-		//	load_stage_set_error(filename, line_num);
 			error(/*ERR_WARN*/ERR_FATAL, (char*)"syntax error in stage data '%s', line no: %d", filename, line_num);
 			goto loop;
 		#endif
 		}
 	}
 	my_fclose(/*fp*/);
-	//return (entrys);
 	if (0==entrys)		/* 有効行数がなければエラー */
 	{
-		error(/*ERR_WARN*/ERR_FATAL, (char*)"no entrys for STAGE%d.TXT", pd.player_now_stage); /*level*/ /*load_stage_number*/
+		error(/*ERR_WARN*/ERR_FATAL, (char*)"no entrys for STAGE%d.TXT", cg.game_now_stage);
 	}
 	//fps_init();/* ??? auto fps初期化 */
 }

@@ -1,6 +1,6 @@
 
 /*---------------------------------------------------------
-	“Œ•û–Í•í•—	` Toho Imitation Style.
+	“Œ•û–Í•í•— ` Toho Imitation Style.
 	ƒvƒƒWƒFƒNƒgƒy[ƒW http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	‚±‚Ìƒtƒ@ƒCƒ‹‚Í’¼ÚƒCƒ“ƒNƒ‹[ƒh‚µ‚Ü‚¹‚ñB
@@ -14,7 +14,7 @@
 	ƒXƒvƒ‰ƒCƒg ƒ}ƒl[ƒWƒƒ
 --------------------------------------------------------- */
 /*
-Žõ–½:	s32 JYUMYOU
+Žõ–½:   s32 JYUMYOU
 1[•b]                                   60           >                64 [flame]
 1[•ª]                                   60 x 60      >           64 x 64 [flame]
 1[ŽžŠÔ] 0x034BC0 ==   216000            60 x 60 x 60 >      64 x 64 x 64 [flame] ==   262144 0x040000
@@ -26,7 +26,7 @@ signed int ‚¾‚ÆA‰Šú’l‚ª 0x01ff ffff ‚¾‚Á‚½ê‡A2.5[“ú]Œo‰ß‚µ‚Ä‚àAƒJƒEƒ“ƒ^‚Ì’
 */
 
 #define JYUMYOU_MUGEN	(16777216)
-#define JYUMYOU_1MIN	(60*60)
+#define JYUMYOU_1MIN	byou60(60)
 #define JYUMYOU_NASI	(0)
 /*
 JYUMYOU_MUGEN:	(Žõ–½–³ŒÀ==Žõ–½A–ñ2.5[“ú])ƒvƒŒƒCƒ„[‚âƒIƒvƒVƒ‡ƒ““™AŽ©“®‚ÅÁ‚¦‚Ä‚Í¢‚é‚à‚ÌB
@@ -123,10 +123,10 @@ JYUMYOU_NASI:	(Žõ–½A‚È‚µB–³‚µ‚É‚È‚é‚ÆAŽ©“®‚ÅÁ‹Ž‚³‚ê‚é‚Ì‚Å’ˆÓBu–ˆƒtƒŒ[ƒ€Ž
 /*	Ž©•ªB */
 	//dummy_SP_PLAYER_CORE/*ƒvƒŒƒCƒ„[‚ÌƒRƒA(‚ ‚½‚è”»’è‚ªŽ€–S”»’è)*/		= /*0x0100*/SP_GROUP_PLAYER_CORE,
 /* ------------- */
-/*	ƒUƒR“G (ƒ{ƒ€’†A‘Ì“–‚½‚è‚ÅƒvƒŒƒCƒ„[Ž€‚È‚È‚¢)  */
+/*	ƒUƒR“G (ƒ{ƒ€’†A‘Ì“–‚½‚è‚ÅƒvƒŒƒCƒ„[Ž€‚È‚È‚¢) */
 //	SP_ZAKO 																= /*0x0400*/SP_GROUP_TEKI,		/* Die Boesen */
 /* ------------- */
-/*	ƒ{ƒX“G / ’†ƒUƒR“G (ƒ{ƒ€’†A‘Ì“–‚½‚è‚ÅƒvƒŒƒCƒ„[Ž€‚Ê)  */
+/*	ƒ{ƒX“G / ’†ƒUƒR“G (ƒ{ƒ€’†A‘Ì“–‚½‚è‚ÅƒvƒŒƒCƒ„[Ž€‚Ê) */
 //	S P_CHUU,// /*“ÁŽê“G[’†Œ^“G]*/ /*S P_ZA KO_YOKAI1*/ 					= /*0x0400*/SP_GROUP_BOSS,		/* [***090325 */
 //	S P_BO SS,
 /* ------------- */
@@ -145,388 +145,6 @@ JYUMYOU_NASI:	(Žõ–½A‚È‚µB–³‚µ‚É‚È‚é‚ÆAŽ©“®‚ÅÁ‹Ž‚³‚ê‚é‚Ì‚Å’ˆÓBu–ˆƒtƒŒ[ƒ€Ž
 
 //#define SP_MUTEKI 	SP_GROUP07_FRONT
 
-/* === Gu“G–Ê === */		/* --- ‚Ü‚¾ì‚Á‚Ä‚È‚¢ --- */
-enum	/* ™ –‚•ûw–ÊƒGƒtƒFƒNƒg */
-{
-	TEKI_00_BOSS11			/* ƒ{ƒX & ’†ƒ{ƒX[‰E‘¤1] */						= /*0x0400*/SP_GROUP_TEKI,
-	TEKI_01_BOSS12, 		/* ƒ{ƒX & ’†ƒ{ƒX[‰E‘¤2] */
-	TEKI_02_BOSS13, 		/* ƒ{ƒX & ’†ƒ{ƒX[‰E‘¤3] */
-	TEKI_03_BOSS14, 		/* ƒ{ƒX & ’†ƒ{ƒX[‰E‘¤4] */
-	TEKI_04_BOSS21, 		/* ƒ{ƒX & ’†ƒ{ƒX[¶‘¤1] */
-	TEKI_05_BOSS22, 		/* ƒ{ƒX & ’†ƒ{ƒX[¶‘¤2] */
-	TEKI_06_BOSS23, 		/* ƒ{ƒX & ’†ƒ{ƒX[¶‘¤3] */
-	TEKI_07_BOSS24, 		/* ƒ{ƒX & ’†ƒ{ƒX[¶‘¤4] */
-//
-	TEKI_08_BOSS31, 		/* ƒ{ƒX & ’†ƒ{ƒX[’†S1] */
-	TEKI_09_BOSS32, 		/* ƒ{ƒX & ’†ƒ{ƒX[’†S2] */
-	TEKI_10_BOSS33, 		/* ƒ{ƒX & ’†ƒ{ƒX[’†S3] */
-	TEKI_11_BOSS34, 		/* ƒ{ƒX & ’†ƒ{ƒX[’†S4] */
-	TEKI_12_YOUSEI1_1,		/* —d¸1 */
-	TEKI_13_YOUSEI1_2,		/* —d¸1 */
-	TEKI_14_YOUSEI1_3,		/* —d¸1 */
-	TEKI_15_YOUSEI1_4,		/* —d¸1 */
-//
-	TEKI_16_YOUSEI1_5,		/* —d¸1 */ 	/* BOSS_16_YOUSEI11 */
-	TEKI_17_YOUSEI1_6,		/* —d¸1 */
-	TEKI_18_YOUSEI1_7,		/* —d¸1 */
-	TEKI_19_YOUSEI1_8,		/* —d¸1 */
-	TEKI_20_YOUSEI1_9,		/* —d¸1 */
-	TEKI_21_YOUSEI1_a,		/* —d¸1 */
-	TEKI_22_YOUSEI1_b,		/* —d¸1 */
-	TEKI_23_YOUSEI1_c,		/* —d¸1 */
-//
-	TEKI_24_YOUSEI2_1,		/* —d¸2 */
-	TEKI_25_YOUSEI2_2,		/* —d¸2 */
-	TEKI_26_YOUSEI2_3,		/* —d¸2 */
-	TEKI_27_YOUSEI2_4,		/* —d¸2 */
-	TEKI_28_YOUSEI2_5,		/* —d¸2 */
-	TEKI_29_YOUSEI2_6,		/* —d¸2 */
-	TEKI_30_YOUSEI2_7,		/* —d¸2 */
-	TEKI_31_YOUSEI2_8,		/* —d¸2 */
-//
-	TEKI_32_YOUSEI2_9,		/* —d¸2 */
-	TEKI_33_YOUSEI2_a,		/* —d¸2 */
-	TEKI_34_YOUSEI2_b,		/* —d¸2 */
-	TEKI_35_YOUSEI2_c,		/* —d¸2 */
-	TEKI_36_YOUSEI3_1,		/* —d¸3 */
-	TEKI_37_YOUSEI3_2,		/* —d¸3 */
-	TEKI_38_YOUSEI3_3,		/* —d¸3 */
-	TEKI_39_YOUSEI3_4,		/* —d¸3 */
-//
-	TEKI_40_YOUSEI3_5,		/* —d¸3 */
-	TEKI_41_YOUSEI3_6,		/* —d¸3 */
-	TEKI_42_YOUSEI3_7,		/* —d¸3 */
-	TEKI_43_YOUSEI3_8,		/* —d¸3 */
-	TEKI_44_YOUSEI3_9,		/* —d¸3 */
-	TEKI_45_YOUSEI3_a,		/* —d¸3 */
-	TEKI_46_YOUSEI3_b,		/* —d¸3 */
-	TEKI_47_YOUSEI3_c,		/* —d¸3 */
-//
-	TEKI_48_EFFECT1_resurved,	/* r29Œ»Ý –¢Žg—p */
-	TEKI_49_EFFECT2_resurved,	/* r29Œ»Ý –¢Žg—p */
-	TEKI_50_EFFECT3_resurved,	/* r29Œ»Ý –¢Žg—p */
-	TEKI_51_EFFECT4_resurved,	/* r29Œ»Ý –¢Žg—p */
-	TEKI_52_MAHOJIN,			/* Œã‚ë‚Ì–‚•ûw */
-	TEKI_53_INYOU_DAI,
-	TEKI_54_CHOU1,
-	TEKI_55_CHOU2,
-//
-	TEKI_56_CHEN,
-	TEKI_57_BLUE_BOOK,
-	TEKI_58_RED_BOOK,
-	TEKI_59_HAI_KEDAMA,
-	TEKI_60_AKA_KEDAMA,
-	TEKI_61_NIJI_HOSI,
-	TEKI_62_TATSUMAKI,
-	TEKI_63_HOMING_STUFF,
-};
-#define BOSS_00_BOSS11		TEKI_00_BOSS11
-#define BOSS_16_YOUSEI11	TEKI_16_YOUSEI1_5
-
-/* === Gu–‚•ûw–Ê === */		/* --- ‚Ü‚¾ì‚Á‚Ä‚È‚¢ --- */
-
-//enum	/* ™ –‚•ûw–ÊƒGƒtƒFƒNƒg */
-//{
-//	MAHOU_JIN_00_aaa	= /*0x00010000*/SP_GROUP_MAHOU_JIN,
-//	MAHOU_JIN_01_bbb,
-//	MAHOU_JIN_02_,
-//	MAHOU_JIN_03_,
-//	MAHOU_JIN_04_,
-//	MAHOU_JIN_05_,
-//	MAHOU_JIN_06_,
-//	MAHOU_JIN_07_,
-//};
-
-/* === Guƒtƒƒ“ƒg–Ê === */		/* --- ‚Ü‚¾ì‚Á‚Ä‚È‚¢ --- */
-
-enum	/* ™ ƒtƒƒ“ƒg–ÊƒGƒtƒFƒNƒg */
-{	/* Ž©•ª‚Ì‚ ‚½‚è”»’èˆÊ’u•\Ž¦—pƒRƒA(ƒtƒƒ“ƒg–ÊƒGƒtƒFƒNƒg) */
-	zzz_JIKI_CORE_00_REIMU_A	= /*0x4000*/SP_GROUP07_FRONT,
-	zzz_JIKI_CORE_01_REIMU_B,
-	zzz_JIKI_CORE_02_MARISA_A,
-	zzz_JIKI_CORE_03_MARISA_B,
-	zzz_JIKI_CORE_04_MARISA_C,
-	zzz_JIKI_CORE_05_REMILIA,
-	zzz_JIKI_CORE_06_CHIRNO,
-	zzz_JIKI_CORE_07_YUYUKO,
-//	/* CORE‰B‚·—p */
-	zzz_CORE_HIDE_10_REIMU_A,
-	zzz_CORE_HIDE_11_REIMU_B,
-	zzz_CORE_HIDE_12_MARISA_A,
-	zzz_CORE_HIDE_13_MARISA_B,
-	zzz_CORE_HIDE_14_MARISA_C,
-	zzz_CORE_HIDE_15_REMILIA,
-	zzz_CORE_HIDE_16_CHIRNO,
-	zzz_CORE_HIDE_17_YUYUKO,
-//	/* ¬”š”­ / ƒUƒRÁ–Å”š”­(ƒtƒƒ“ƒg–ÊƒGƒtƒFƒNƒg) */
-	BAKUHA00,	/* ¬”š”­(‰©F?AŒ»Ýƒ_ƒ~[) */
-	BAKUHA01,	/* ¬”š”­(Â)BASE_TR_BLUE_PNG */
-	BAKUHA02,	/* ¬”š”­(Ô)BASE_TR_RED_PNG */
-	BAKUHA03,	/* ¬”š”­(—Î)BASE_TR_GREEN_PNG */
-	BAKUHA04,	/* ƒUƒRÁ–Å”š”­(‰©FAŒ»Ýƒ_ƒ~[) */
-	BAKUHA05,	/* ƒUƒRÁ–Å”š”­(Â)BASE_BAKUHA05_PNG */
-	BAKUHA06,	/* ƒUƒRÁ–Å”š”­(Ô)BASE_BAKUHA06_PNG */
-	BAKUHA07,	/* ƒUƒRÁ–Å”š”­(—Î)BASE_BAKUHA07_PNG */
-//	/* ‰Î‰Š”š”­(ƒtƒƒ“ƒg–ÊƒGƒtƒFƒNƒg) */
-	BAKUHA08,	/* ‰Î‰Š”š”­ */
-	BAKUHA09,	/* ‰Î‰Š”š”­ */
-	BAKUHA0a,	/* ‰Î‰Š”š”­ */
-	BAKUHA0b,	/* ‰Î‰Š”š”­ */
-	BAKUHA0c,	/* ‰Î‰Š”š”­ */
-	BAKUHA0d,	/* ‰Î‰Š”š”­ */
-	BAKUHA0e,	/* ‰Î‰Š”š”­ */
-	BAKUHA0f,	/* ‰Î‰Š”š”­ */
-//
-	SPELL_SQUERE_,	/* [ ] x 5 */
-	SP_DUMMY_MUTEKI,//S P_GROUP_ETC_DUMMY_REMILIA,
-	SP_FRONT_YUKI,//S P_GROUP_ETC_DUMMY_SLOW_BOMB,		//	SPELL_LOGO_,/* Border Power of Spiritual */ 	//	SPELL_TACHIE_,
-	PANEL_STR_MAX,
-	PANEL_STR_EASY,
-	PANEL_STR_NORMAL,
-	PANEL_STR_HARD,
-	PANEL_STR_LUNATIC,
-//
-	PANEL_STR_EXTRA,
-	PANEL_STR_TIME,
-	PANEL_STR_fps,
-	PANEL_STR_0_roman,
-	PANEL_STR_1_roman,
-	PANEL_STR_2_roman,
-	PANEL_STR_3_roman,
-	PANEL_STR_4_roman,
-//
-	PANEL_STR_5_roman,
-	PANEL_STR_6_roman,
-	PANEL_STR_7_roman,
-	PANEL_STR_8_roman,
-	PANEL_STR_9_roman,
-	PANEL_STR_enemy,
-	PANEL_STR_0_kanji,
-	PANEL_STR_1_kanji,
-//
-	PANEL_STR_2_kanji,
-	PANEL_STR_3_kanji,
-	PANEL_STR_4_kanji,
-	PANEL_STR_5_kanji,
-	PANEL_STR_6_kanji,
-	PANEL_STR_7_kanji,
-	PANEL_STR_8_kanji,
-	PANEL_STR_9_kanji,
-//
-};
-/*
-	SP_DUMMY_MUTEKI == FRONT –Ê‚È‚Ì‚Å‚ ‚½‚è”»’è‚È‚µB‚»‚ê‚©‚ç•\Ž¦‚³‚ê‚È‚¢B
-	SP_FRONT_YUKI == FRONT –Ê‚È‚Ì‚Å‚ ‚½‚è”»’è‚È‚µB(‚Æ‚è‚ ‚¦‚¸‰¼‚Å)á‚Ý‚½‚¢‚È•\Ž¦B
-*/
-//#define SP_DUMMY_MUTEKI S P_GROUP_ETC_DUMMY_REMILIA
-//#define SP_FRONT_YUKI 	S P_GROUP_ETC_DUMMY_SLOW_BOMB
-
-/* Border Power of Spiritual. —ì‰Ì‚Å—Í‚ð”­Šö‚·‚é‹«ŠE. —ì‰Ì‚Å‚Ì—Í‚Ì‹«ŠE */
-/* Border Power of Spiritus.  Žð¸‚Å—Í‚ð”­Šö‚·‚é‹«ŠE. Žð¸‚Å‚Ì—Í‚Ì‹«ŠE */
-/*
-Spiritus  Žð¸
-Spiritual —ì‰Ì
-—ì‰Ì‚Ì‹«ŠE—Í
-Border Power of Spiritual. —ì‰Ì‚Ìƒpƒ[‚ÉÚ‚µ‚Ä‚­‚¾‚³‚¢B
-Border Power of Spiritus. Žð¸‚Ìƒpƒ[‚ÉÚ‚µ‚Ä‚­‚¾‚³‚¢B
-*/
-
-/* === GuƒvƒŒƒCƒ„[–Ê === */
-enum/* ƒIƒvƒVƒ‡ƒ“‚ÆƒCƒ“ƒ^[ƒŠ[ƒu‚µ‚Ä‚é‚Ì‚ÍA(ƒIƒvƒVƒ‡ƒ“ƒAƒjƒ)ƒvƒƒOƒ‰ƒ€‚Ì“s‡ */
-{
-// [5]
-	JIKI_OPTION_00_00			= SP_GROUP_JIKI_GET_ITEM/*0x0800*/,
-	JIKI_OPTION_00_01,
-	JIKI_OPTION_00_02,
-	JIKI_OPTION_00_03,
-	JIKI_OPTION_00_04,
-	JIKI_OPTION_00_05,
-	JIKI_OPTION_00_06,
-	JIKI_OPTION_00_07,
-
-//	ƒvƒŒƒCƒ„[ƒAƒjƒ[ƒVƒ‡ƒ“
-// [1]	¶‚ÖˆÚ“®‚ÌƒAƒjƒ[ƒVƒ‡ƒ“	[’†S¨¶‘¤4¨¶‘¤3¨¶‘¤2¨¶‘¤1¨¶‘¤1¨¶‘¤1¨...]
-	JIKI_PLAYER_00_LEFT,	/* ¶‘¤1 */ 	/* Å‚à¶ */
-	JIKI_PLAYER_01_LEFT,	/* ¶‘¤2 */
-	JIKI_PLAYER_02_LEFT,	/* ¶‘¤3 */
-	JIKI_PLAYER_03_LEFT,	/* ¶‘¤4 */ 	/* ’†‚æ‚è¶ */
-//	ŒJ‚è•Ô‚µƒAƒjƒ[ƒVƒ‡ƒ“		[’†S1¨’†S2¨’†S3¨’†S4¨’†S1¨’†S2¨’†S3¨’†S4¨...]
-	JIKI_PLAYER_04_MID, 	/* ’†S1 */
-	JIKI_PLAYER_05_MID, 	/* ’†S2 */
-	JIKI_PLAYER_06_MID, 	/* ’†S3 */
-	JIKI_PLAYER_07_MID, 	/* ’†S4 */
-
-// [6]
-	JIKI_OPTION_01_00,
-	JIKI_OPTION_01_01,
-	JIKI_OPTION_01_02,
-	JIKI_OPTION_01_03,
-	JIKI_OPTION_01_04,
-	JIKI_OPTION_01_05,
-	JIKI_OPTION_01_06,
-	JIKI_OPTION_01_07,
-
-// [2]	‰E‚ÖˆÚ“®‚ÌƒAƒjƒ[ƒVƒ‡ƒ“	[’†S¨‰E‘¤1¨‰E‘¤2¨‰E‘¤3¨‰E‘¤4¨‰E‘¤4¨‰E‘¤4¨...]
-	JIKI_PLAYER_08_RIGHT,	/* ‰E‘¤1 */ 	/* ’†‚æ‚è‰E */
-	JIKI_PLAYER_09_RIGHT,	/* ‰E‘¤2 */
-	JIKI_PLAYER_10_RIGHT,	/* ‰E‘¤3 */
-	JIKI_PLAYER_11_RIGHT,	/* ‰E‘¤4 */ 	/* Å‚à‰E */
-	JIKI_ETC_00,			/* --- –¢Žg—p --- */
-	JIKI_ETC_01,			/* --- –¢Žg—p --- */
-	JIKI_ETC_02,			/* --- –¢Žg—p --- */
-	JIKI_ETC_03,			/* --- –¢Žg—p --- */
-
-// [7]
-	JIKI_OPTION_02_00,
-	JIKI_OPTION_02_01,
-	JIKI_OPTION_02_02,
-	JIKI_OPTION_02_03,
-	JIKI_OPTION_02_04,
-	JIKI_OPTION_02_05,
-	JIKI_OPTION_02_06,
-	JIKI_OPTION_02_07,
-
-// [3]
-	JIKI_BOMBER_00, 		/* ƒ{ƒ“ƒo[”­“®Žž‚Ì—§‚¿ŠG */
-	JIKI_BOMBER_01, 		/* —U“±ƒ{ƒ€(’á‘¬ƒ{ƒ€)	  */
-	JIKI_BOMBER_02, 		/* --- –¢Žg—p --- / Œ‹ŠE”’ / ’·‰Š1 */
-	JIKI_BOMBER_03, 		/* --- –¢Žg—p --- / Œ‹ŠE‰© / ’·‰Š2 */
-	JIKI_BOMBER_04, 		/* ‰©ŽD1 / ¯1 / \Žš‰Š1 / ’±1 / ƒ` */
-	JIKI_BOMBER_05, 		/* ‰©ŽD2 / ¯2 / \Žš‰Š2 / ’±2 / ƒ‹ */
-	JIKI_BOMBER_06, 		/* ‰©ŽD3 / ¯3 / \Žš‰Š3 / ’±3 / ƒm */
-	JIKI_BOMBER_07, 		/* ‰©ŽD4 / ¯4 / \Žš‰Š4 / ’±4 / ‡H */
-
-// [8]
-	JIKI_OPTION_03_00,
-	JIKI_OPTION_03_01,
-	JIKI_OPTION_03_02,
-	JIKI_OPTION_03_03,
-	JIKI_OPTION_03_04,
-	JIKI_OPTION_03_05,
-	JIKI_OPTION_03_06,
-	JIKI_OPTION_03_07,
-
-// [4]
-	JIKI_SHOT_00,			/* ÔŽDC /	/  / ’·‰Š3 /  */
-	JIKI_SHOT_01,			/* ÔŽDB /	/  / ’·‰Š4 /  */
-	JIKI_SHOT_02,			/* ÔŽDA / ‰©¯ / ¬‰Š / •X / Â’± */
-	JIKI_SHOT_03,			/* / ‚±‚¤‚à‚è’e1 / ‰©ŽD1 */
-	JIKI_SHOT_04,			/* / ‚±‚¤‚à‚è’e2 / ‰©ŽD2 */
-	JIKI_SHOT_05,			/* / ‚±‚¤‚à‚è’e3 / ‰©ŽD3 */
-	JIKI_SHOT_06,			/* / ‚±‚¤‚à‚è’e4 / ‰©ŽD4 */
-	JIKI_SHOT_07,			/* / ‚±‚¤‚à‚è’e5 / j’e / X’e / ƒEƒFƒCƒu’e / ƒsƒ“ƒN’±’e */
-
-};
-
-/* === Gu’e–‹–Ê === */
-/*haisi_BULLET_MINI8_00_AKA */
-//	haisi_BULLET_MINI8_03_AKA,
-//	haisi_BULLET_MINI8_04_KIIRO,
-//	haisi_BULLET_MINI8_05_AOI,
-//	haisi_BULLET_MINI8_06_AOI,
-//	haisi_BULLET_MINI8_07_YUKARI,
-//	haisi_BULLET_MINI8_01_AKA,
-//	haisi_BULLET_MINI8_02_KIIRO,
-
-/* TAMA_GROUIP_08_MASK_0xfff8: 8 ’e == 1 ƒOƒ‹[ƒv‚Æ‚µ‚ÄŠÇ—‚·‚éê‡‚ÉAƒOƒ‹[ƒv‹æ•Ê‚ð‚·‚éˆ×‚Ìƒ}ƒXƒN’l */
-#define TAMA_GROUIP_08_MASK_0xfff8 (0xfff8)
-#define is_tama_grouip08(aaa) (aaa & TAMA_GROUIP_08_MASK_0xfff8)
-enum
-{
-//1
-	BULLET_00_HOSI_TEN			= SP_GROUP_BULLETS/*0x0800*/,
-	BULLET_MARU10_01_AKA,			//Ô BULLET_MARU10_00_FUKA_MIDORI,	/* [—ÎF*/
-	BULLET_MARU10_02_YUKARI,		//Ž‡ BULLET_MARU10_01_KI_MIDORI,	/* ‰©—ÎF*/
-	BULLET_MARU10_03_AOI,			//Â BULLET_MARU10_02_KIIRO,		/* ‰©F*/
-	BULLET_MARU10_04_MIZU_IRO,		//… BULLET_MARU10_03_AOI,			/* Â*/
-	BULLET_MARU10_05_MIDORI,		//—Î BULLET_MARU8_08_dummy,
-	BULLET_MARU10_06_KI_IRO,		//‰© BULLET_MARU8_09_dummy,
-	BULLET_MARU10_07_DAI_DAI,		//žò BULLET_MARU8_10_dummy,
-//2
-	BULLET_KOME_00_SIRO,			//”’	//BULLET_KOME_00_AKA,		BULLET_MARU8_11_dummy,
-	BULLET_KOME_01_AKA, 			//Ô	//BULLET_KOME_01_AOI,		BULLET_KOME_01_AOI,
-	BULLET_KOME_02_YUKARI,			//Ž‡	//BULLET_KOME_02_AKA,		BULLET_KOME_02_AKA,
-	BULLET_KOME_03_AOI, 			//Â	//BULLET_KOME_03_YUKARI,	BULLET_KOME_03_YUKARI,
-	BULLET_KOME_04_MIZU_IRO,		//…	//BULLET_KOME_04_MIDORI,	BULLET_KOME_04_MIDORI,
-	BULLET_KOME_05_MIDORI,			//—Î	//BULLET_KOME_05_KIIRO, 	BULLET_KOME_05_KIIRO,
-	BULLET_KOME_06_KI_IRO,			//‰©	//BULLET_KOME_06_dummy, 	BULLET_KOME_06_dummy,
-	BULLET_KOME_07_DAI_DAI, 		//žò	//BULLET_KOME_07_dummy, 	BULLET_KOME_07_dummy,
-//3
-	BULLET_MARU8_00_SIRO, 			//”’	//BULLET_MARU8_00_AKA,		//
-	BULLET_MARU8_01_AKA,			//Ô	//BULLET_MARU8_01_YUKARI,	//
-	BULLET_MARU8_02_YUKARI, 		//Ž‡	//BULLET_MARU8_02_AOI,		//
-	BULLET_MARU8_03_AOI,			//Â	//BULLET_MARU8_03_MIDORI,	//
-	BULLET_MARU8_04_MIZU_IRO, 		//…	//BULLET_MARU8_04_MIDORI,	//
-	BULLET_MARU8_05_MIDORI, 		//—Î	//BULLET_MARU8_05_MIDORI,	//
-	BULLET_MARU8_06_KI_IRO,			//‰©	//BULLET_MARU8_06_KIIRO,	//
-	BULLET_MARU8_07_DAI_DAI,		//žò	//BULLET_MARU8_07_AOI,		//
-//4
-	BULLET_MARU12_00_SIRO,		/*12*/
-	BULLET_MARU12_01_AKA,		/*12*/
-	BULLET_MARU12_02_AOI,		/*12*/
-	BULLET_MARU12_03_MIDORI,	/*12*/
-	BULLET_MARU12_04_KIIRO, 	/*12*/	//	BULLET_MARU8_12_dummy,
-	BULLET_MARU12_05_DAIDAI,	/*12*/	//	BULLET_MARU8_13_dummy,
-	BULLET_CAP16_04_KOME_SIROI, 	/* [Â”’•Ä’e] */
-	BULLET_CAP16_05_TUTU_SIROI, 	/* [Â”’ŽÀ•ï’e] */
-//5
-	BULLET_UROKO14_00_AOI,
-	BULLET_UROKO14_01_AKA,
-	BULLET_UROKO14_02_YUKARI,
-	BULLET_UROKO14_03_MIDORI,
-	BULLET_UROKO14_04_MIZUIRO,
-	BULLET_UROKO14_05_KIIRO,
-	BULLET_UROKO14_06_dummy,
-	BULLET_UROKO14_07_dummy,
-//6
-	BULLET_KUNAI12_00_AOI,
-	BULLET_KUNAI12_01_AKA,
-	BULLET_KUNAI12_02_MIDORI,
-	BULLET_KUNAI12_03_MIDORI,
-	BULLET_KUNAI12_04_YUKARI,
-	BULLET_KUNAI12_05_AOI,
-	BULLET_KUNAI12_06_KIN,
-	BULLET_KUNAI12_07_KIN,
-//7
-	BULLET_OFUDA12_00_AOI,
-	BULLET_OFUDA12_01_AKA,
-	BULLET_OFUDA12_02_YUKARI,
-	BULLET_OFUDA12_03_MIDORI,
-	BULLET_KNIFE20_04_AOI,
-	BULLET_KNIFE20_05_AKA,
-	BULLET_KNIFE20_06_YUKARI,
-	BULLET_KNIFE20_07_MIDORI,
-//8
-	BULLET_HARI32_00_AOI,
-	BULLET_HARI32_01_AKA,
-	BULLET_HARI32_02_KIIRO,
-	BULLET_HARI32_03_DAIDAI,
-	BULLET_OODAMA32_00_AOI, 	/*ÂF*/
-	BULLET_OODAMA32_01_AKA, 	/*ÔF*/
-	BULLET_OODAMA32_02_KIIRO,	/*‰©F*/
-	BULLET_OODAMA32_03_MIDORI,	/*—ÎF*/
-};
-//	BULLET_OODAMA32_04_MIDORI,
-//	BULLET_OODAMA32_05_AOI,
-//	BULLET_OODAMA32_06_KIIRO,
-//	BULLET_OODAMA32_07_PINK,
-
-/* === GuITEM–Ê === */
-enum /*sprite_type*/
-{
-/*	ƒAƒCƒeƒ€ */
-	SP_ITEM_00_P001 	/* [p]¬ */ 								= /*0x1000*/SP_GROUP_ITEMS, 	/* Bonus items */
-	SP_ITEM_01_P008,	/* [P]‘å */
-	SP_ITEM_02_P128,	/* [F] */
-	SP_ITEM_03_1UP, 	/* [1up] */
-	SP_ITEM_04_BOMB,	/* [B] */
-	SP_ITEM_05_TENSU,	/* [“_] */
-	SP_ITEM_06_HOSI,	/* [™] */
-	SP_ITEM_07_SPECIAL,
-};
-
-/* === GuFRONT–Ê === */
-
 /*---------------------------------------------------------
 	ƒIƒuƒWƒFƒoƒ“ƒNƒVƒXƒeƒ€
 --------------------------------------------------------- */
@@ -534,31 +152,32 @@ enum /*sprite_type*/
 /* ŠÇ—‚·‚éƒIƒuƒWƒFƒNƒgƒoƒ“ƒN */
 enum
 {
-	OBJ_BANK_00_TAMA = 0,		// “G’e—pƒoƒ“ƒN			//  ¦1.“G’e/ƒAƒCƒeƒ€—pƒeƒNƒXƒ`ƒƒ‚Í‹¤—p
-	OBJ_BANK_01_ITEM,			// ƒAƒCƒeƒ€—pƒoƒ“ƒN		//  ¦1.“G’e/ƒAƒCƒeƒ€—pƒeƒNƒXƒ`ƒƒ‚Í‹¤—p
-	OBJ_BANK_02_FRONT_BANK0,	// ƒtƒƒ“ƒg–Ê—pƒoƒ“ƒN	//  ¦2.ƒtƒƒ“ƒg/ƒpƒlƒ‹—pƒeƒNƒXƒ`ƒƒ‚Í‹¤—p
+	OBJ_BANK_00_TAMA = 0,		// “G’e—pƒoƒ“ƒN 		//	¦1.“G’e/ƒAƒCƒeƒ€—pƒeƒNƒXƒ`ƒƒ‚Í‹¤—p
+	OBJ_BANK_01_ITEM,			// ƒAƒCƒeƒ€—pƒoƒ“ƒN 	//	¦1.“G’e/ƒAƒCƒeƒ€—pƒeƒNƒXƒ`ƒƒ‚Í‹¤—p
+	OBJ_BANK_02_FRONT_BANK0,	// ƒtƒƒ“ƒg–Ê—pƒoƒ“ƒN	//	¦2.ƒtƒƒ“ƒg/ƒpƒlƒ‹—pƒeƒNƒXƒ`ƒƒ‚Í‹¤—p
 //	OBJ_BANK_07_FRONT_BANK1,	// —pƒoƒ“ƒN
 //	OBJ_BANK_07_FRONT_BANK2,	// —pƒoƒ“ƒN
-	OBJ_BANK_03_TITLE_dummy,	/*[—\’è]*/	// ƒ^ƒCƒgƒ‹‰æ–Ê—pƒoƒ“ƒN	//  ¦2.ƒtƒƒ“ƒg/ƒpƒlƒ‹—pƒeƒNƒXƒ`ƒƒ‚Í‹¤—p
+	OBJ_BANK_03_TITLE_dummy,	/*[—\’è]*/	// ƒ^ƒCƒgƒ‹‰æ–Ê—pƒoƒ“ƒN //	¦2.ƒtƒƒ“ƒg/ƒpƒlƒ‹—pƒeƒNƒXƒ`ƒƒ‚Í‹¤—p
 //	OBJ_BANK_09_EFFECT, 		/*[—\’è]*/	// —pƒoƒ“ƒN
 //
-	OBJ_BANK_01_REIMU_A,	// Ž©‹@—pƒoƒ“ƒN()
-	OBJ_BANK_02_REIMU_B,	// Ž©‹@—pƒoƒ“ƒN()
-	OBJ_BANK_03_MARISA_A,	// Ž©‹@—pƒoƒ“ƒN()
-	OBJ_BANK_04_MARISA_B,	// Ž©‹@—pƒoƒ“ƒN()
-	OBJ_BANK_05_REMILIA,	// Ž©‹@—pƒoƒ“ƒN()
-	OBJ_BANK_06_YUYUKO, 	// Ž©‹@—pƒoƒ“ƒN()
-	OBJ_BANK_07_CIRNO_A,	// Ž©‹@—pƒoƒ“ƒN()
-	OBJ_BANK_08_CIRNO_Q,	// Ž©‹@—pƒoƒ“ƒN()
+	OBJ_BANK_01_REIMU_A,	// Ž©‹@—pƒoƒ“ƒN(—ì–²AA—ì•„)
+	OBJ_BANK_02_REIMU_B,	// Ž©‹@—pƒoƒ“ƒN(—ì–²BA–²•„)
+	OBJ_BANK_03_MARISA_A,	// Ž©‹@—pƒoƒ“ƒN(–‚—¹_AA–‚•„)
+	OBJ_BANK_04_MARISA_B,	// Ž©‹@—pƒoƒ“ƒN(–‚—¹_BA—ö•„)
+	OBJ_BANK_05_REMILIA,	// Ž©‹@—pƒoƒ“ƒN(ƒŒƒ~ƒŠƒA)
+	OBJ_BANK_06_YUYUKO, 	// Ž©‹@—pƒoƒ“ƒN(—HXŽq)
+	OBJ_BANK_07_CIRNO_A,	// Ž©‹@—pƒoƒ“ƒN(ƒ`ƒ‹ƒmA)
+	OBJ_BANK_08_CIRNO_Q,	// Ž©‹@—pƒoƒ“ƒN(ƒ`ƒ‹ƒm‡H)
 //
-	OBJ_BANK_21_BOSS_STAGE1,	// ƒ{ƒX—pƒoƒ“ƒN(ƒAƒŠƒX)
-	OBJ_BANK_22_BOSS_STAGE2,	// ƒ{ƒX—pƒoƒ“ƒN(–¢’è)
-	OBJ_BANK_23_BOSS_STAGE3,	// ƒ{ƒX—pƒoƒ“ƒN(‹P–é)
-	OBJ_BANK_24_BOSS_STAGE4,	// ƒ{ƒX—pƒoƒ“ƒN(•¶)
-	OBJ_BANK_25_BOSS_STAGE5,	// ƒ{ƒX—pƒoƒ“ƒN(ƒpƒ`ƒ…ƒŠ[)
-	OBJ_BANK_26_BOSS_STAGE6,	// ƒ{ƒX—pƒoƒ“ƒN(ç–é)
-	OBJ_BANK_11_ZAKO_STAGE1,	// ƒUƒR—pƒoƒ“ƒN 		// OBJ_BANK_27_BOSS_STAGE7_dummy,
-	OBJ_BANK_28_BOSS_STAGE8,
+	OBJ_BANK_21_BOSS_STAGE1,	// ƒ{ƒX—pƒoƒ“ƒN(ƒXƒe[ƒW 1AƒAƒŠƒX)
+	OBJ_BANK_22_BOSS_STAGE2,	// ƒ{ƒX—pƒoƒ“ƒN(ƒXƒe[ƒW 2A–¢’è)
+	OBJ_BANK_23_BOSS_STAGE3,	// ƒ{ƒX—pƒoƒ“ƒN(ƒXƒe[ƒW 3A‹P–é)
+	OBJ_BANK_24_BOSS_STAGE4,	// ƒ{ƒX—pƒoƒ“ƒN(ƒXƒe[ƒW 4A•¶)
+	OBJ_BANK_25_BOSS_STAGE5,	// ƒ{ƒX—pƒoƒ“ƒN(ƒXƒe[ƒW 5Aƒpƒ`ƒ…ƒŠ[)
+	OBJ_BANK_26_BOSS_STAGE6,	// ƒ{ƒX—pƒoƒ“ƒN(ƒXƒe[ƒW 6Aç–é)
+	OBJ_BANK_11_ZAKO_STAGE1,	// ƒUƒR—pƒoƒ“ƒN(ƒXƒe[ƒW 1-6, extra, phantasm)		// OBJ_BANK_27_BOSS_STAGE7_dummy,
+	OBJ_BANK_28_BOSS_STAGE8,	// ƒ{ƒX—pƒoƒ“ƒN(ƒXƒe[ƒW 8AƒGƒLƒXƒgƒ‰)
+	OBJ_BANK_29_BOSS_STAGE9,	// ƒ{ƒX—pƒoƒ“ƒN(ƒXƒe[ƒW 9Aƒtƒ@ƒ“ƒ^ƒYƒ€)
 //
 //	OBJ_BANK_11_ZAKO_STAGE1,
 //	OBJ_BANK_12_ZAKO_STAGE2,
@@ -609,22 +228,37 @@ typedef struct /*_point_vector256*/
 } POINT_VECTOR256;
 /* t256À•W + t256ƒxƒNƒgƒ‹ */
 
+/*
+	‹­§ŒX‚«off‚Ì“ÁŽê‹@”\:
+	m_zoom_y256 ‚É M_ZOOM_Y256_NO_TILT ‚ðÝ’è‚µ‚Ä‚¨‚­‚ÆA
+	rotationCCW1024(•`‰æ—pŠp“x) ‚ð–³Ž‹‚µ‚ÄA‰ñ“]–³‚µA‹­§1.0”{‚Å•`‰æ‚·‚éB
+*/
+#define M_ZOOM_Y256_NO_TILT (0)
+/*
+	ƒAƒŠƒX‚ÌlŒ`‚ª‹OÕ‚Í‰ñ“]’e‚È‚Ì‚ÉƒOƒ‰‚Í‰ñ“]‚µ‚Ä‚¢‚È‚©‚Á‚½‚èA
+	ƒpƒ`ƒF‚Ì‰Š‚ÌƒAƒjƒ[ƒVƒ‡ƒ“(‰Î•„uƒAƒOƒjƒVƒƒƒCƒ“v)‚â
+	ƒ`ƒ‹ƒm‚âƒ‹[ƒ~ƒA‚ÌŠÛ’e‚â‘å‹Ê’e‚ª‰ñ“]‚µ‚Ä‚¢‚È‚©‚Á‚½‚èA‚»‚Ì‘¼FXŽg—p‚µ‚Ä‚¢‚éB
+	–{‰Æ‚à•`‰æ—pÝ’èŠp“x‚ðƒVƒ“ƒvƒ‹‚É–³Ž‹‚·‚é‰½‚ç‚©‚Ì‹@”\‚ª‚ ‚é‚Ì‚Å‚Í?‚ÆŽv‚¢ŽÀ‘•‚µ‚Ä‚Ý‚½B
+	Šî–{“I‚ÉŠÛ’e‚Í‰ñ“]‚³‚¹‚é‚Æ–³‘Ê‚É’x‚­‚È‚éB
+*/
+
 
 #if 1
 // union ‹¤—p
-	#define base_hp 					user00
-	#define base_weapon_strength		user00
-	#define base_time_out				user00/*bakuhatsu*/
-	#define base_score					user01
-	//#define base_state					user01
+	#define base_hp 					katasa
+	#define base_weapon_strength		katasa
+	#define base_time_out				katasa/*bakuhatsu*/
+//	#define base_score					user01
+	#define base_score					user_data13
+	//#define base_state				user01
 #endif
 //
 /* ƒXƒvƒ‰ƒCƒg‚ÌŽg‚¢•û
 
 •ª—Þ		Ž©‹@		Ž©’e					“G					“G’e			”š”­
-user00		--			base_weapon_strength	base_hp 			base_time_out	base_time_out
+katasa		--			base_weapon_strength	base_hp 			base_time_out	base_time_out
 			--			•Ší‹­‚³				‘Ì—Í				ŽžŠÔ			ŽžŠÔ
-user01		--			--						base_score			--				--
+user_data13 	--			--						base_score			--				--
 			--			--						ƒXƒRƒA				--				--
 */
 
@@ -638,18 +272,13 @@ typedef struct _sprite
 //[4]
 	int rotationCCW1024;			/* •`‰æ—pŠp“x(‰º‚ª0“x‚Å¶‰ñ‚è(”½ŽžŒv‰ñ‚è), ˆêŽü‚Í1024•ªŠ„, 0-1023“x) */
 	int tmp_angleCCW1024;			/* •ÛŽ—pŠp“x(‰º‚ª0“x‚Å¶‰ñ‚è(”½ŽžŒv‰ñ‚è), ˆêŽü‚Í1024•ªŠ„, 0-1023“x) */
-	int user00; 					/* user00 ENEMY_BASE base; */	//int health;	int time_out;		/* user03 */
-	int user01; 					/* user01 ENEMY_BASE base; */	//int score;	int state;			/* user02 */
-//[8]
+	int katasa; 					/* user00 ENEMY_BASE base; */	//int health;	int time_out;		/* user03 */
 	int type;						/* Ží—Þ‹y‚ÑŽg—p‰Â”Û / Sprite-Type, (siehe enum SPRITE_TYPE), 0 = remove. */
+//[8]
 	u32 color32;					/* Gu color AGBR8888 MAKE32RGBA(RED, GREEN, BLUE, ALPHA)‚ÅŠe—v‘f 0 ‚©‚ç 255 (0x00 ‚©‚ç 0xff)‚Ü‚ÅB */
 	int m_Hit256R;					/* ‚ ‚½‚è”»’è—p */
-	#if (1==USE_ZOOM_XY)
-	int m_zoom_x256;				/* •\Ž¦Šg‘å—¦x */
-	int m_zoom_y256;				/* •\Ž¦Šg‘å—¦y */
-	#else //(0==USE_ZOOM_XY)
-	int m_zoom_xy256;				/* •\Ž¦Šg‘å—¦xy */
-	#endif/* (1==USE_ZOOM_XY) */
+	int m_zoom_x256;				/* •\Ž¦Šg‘å—¦x (‰æ‘œ‚Ì‰¡‚ÌŠg‘å—¦t256()Œ`Ž®‚ÅŽw’è) */
+	int m_zoom_y256;				/* •\Ž¦Šg‘å—¦y (‰æ‘œ‚Ìc‚ÌŠg‘å—¦t256()Œ`Ž®‚ÅŽw’è) */
 //[12]
 	/* ‚Æ‚è‚ ‚¦‚¸ˆÚs—p(1)]—ˆŒÝŠ·(’e) */
 	int user_data00;
@@ -666,25 +295,30 @@ typedef struct _sprite
 	int user_data10;
 	int user_data11;
 	int user_data12;
-	int user_data13;
+	int user_data13;		/* “GƒXƒRƒA */
+//	int user01; 					/* user01 ENEMY_BASE base; */	//int score;	int state;			/* user02 */
 //
 	void (*callback_loser)(struct _sprite *src);	/* Custom-loser-Routine (‚â‚ç‚ê‚½Œã‚Éƒ{[ƒiƒX‚ðo‚·‚Æ‚©Aˆá‚¤”š”­‚·‚é‚Æ‚©) / Ž©‹@ƒIƒvƒVƒ‡ƒ“‚ÌƒAƒjƒ[ƒVƒ‡ƒ“ƒR[ƒ‹ƒoƒbƒN */
 	void (*callback_mover)(struct _sprite *src);	/* Custom-Move-Routine */
-	void (*callback_hit_enemy)(struct _sprite *c, struct _sprite *src); 	// [***090325		’Ç‰Á
+	void (*callback_hit_teki)(struct _sprite *c, struct _sprite *src);	// [***090325		’Ç‰Á
 	struct _sprite *target_obj; 		/* ‚Æ‚è‚ ‚¦‚¸ˆÚs—p(3)ˆÚs‚µ‚½‚ç‚È‚­‚È‚éB */
 //[20]
-// •`‰æ—p
-	int w;
-	int h;
-	int tx; 	/* u ƒeƒNƒXƒ`ƒƒÀ•W */
-	int ty; 	/* v ƒeƒNƒXƒ`ƒƒÀ•W */
 //
 	/*u8*/u32 flags;					/* ƒtƒ‰ƒOƒZƒbƒg / siehe unten (SP_FLAG...) */
 	s32 jyumyou;	/* Žõ–½ */
 //	u32 dummy_used;/*???*/
 //	int dummy111;/* Žg‚Á‚Ä‚È‚¢ƒ_ƒ~[ */
+// •`‰æ—p
+//	u16 u0;
+//	u16 v0;
+//	u16 u1;
+//	u16 v1;
+	/*u16*/u16/*int*/ tx;	//tx = u0;	int tx; 	/* u ƒeƒNƒXƒ`ƒƒÀ•W */
+	/*u16*/u16/*int*/ ty;	//ty = v0;	int ty; 	/* v ƒeƒNƒXƒ`ƒƒÀ•W */
+	/*u16*/u16/*int*/ w;	//w = (u1-u0);	int w;
+	/*u16*/u16/*int*/ h;	//h = (v1-v0);	int h;
 } SPRITE;
-
+// 1858355 1858307
 /*---------------------------------------------------------
 	jyumyou Žõ–½ life_cycle sprite_time_out sprite_longevity
 	-------------------------------------------------------
@@ -721,19 +355,18 @@ typedef struct _sprite
 	ƒŠƒ\[ƒX resource
 ---------------------------------------------------------*/
 
-extern SPRITE *sprite_add_444only_bullet_error(void);				/* guˆÚs’†A’eê—p 				int bullet_type_num */
-extern SPRITE *sprite_add_gu_error(void);							/* guˆÚs’†A”Ä—pƒXƒvƒ‰ƒCƒg 		int bullet_type_num */
-extern SPRITE *sprite_add_direct(unsigned int register_number); 	/* ê—pŒÅ’èƒXƒvƒ‰ƒCƒg */
+extern SPRITE *obj_add_00_tama_error(void); 							/* guˆÚs’†A’eê—p 				int bullet_type_num */
+extern SPRITE *obj_add_01_teki_error(void); 							/* guˆÚs’†A”Ä—pƒXƒvƒ‰ƒCƒg 		int bullet_type_num */
+extern SPRITE *obj_add_nn_direct(unsigned int register_object_absolute_direct_number);	/* ‹­§“o˜^—pBŠëŒ¯‚È‚Ì‚Å’ˆÓ‚µ‚ÄŽg‚¤B*/
+/* (r33)‚Å–¼‘O‚¾‚¯‚Å‚È‚­Žd—l‚ª•Ï‚í‚Á‚½‚Ì‚Å’ˆÓB / ê—pŒÅ’èƒXƒvƒ‰ƒCƒg‚Ìê‡‚ÍŒÅ’è’l‚Ü‚Å‚ÌƒIƒtƒZƒbƒg
+OBJ_HEAD_02_KOTEI‚ð‘«‚·B */
 
 extern void sprite_all_cleanup(void);
-extern void sprite_move_all(void);	/* ƒXƒvƒ‰ƒCƒgƒIƒuƒWƒFƒNƒg‚ÌˆÚ“®ˆ— */
+extern void sprite_move_all(void);		/* ƒXƒvƒ‰ƒCƒgƒIƒuƒWƒFƒNƒg‚ÌˆÚ“®ˆ— */
 
-//extern void sprite_display000(int type);/**/
-//extern void sprite_display222(int type);/*’e–‹—p*/
-extern void pause_sprite_display(void);/**/
 
-extern SPRITE *sprite_collision_check_SDL_teki(SPRITE *tocheck);/*“Gê—p*/	//, int type);
-extern SPRITE *sprite_collision_check_444(SPRITE *tocheck, int type);/*gu’e–‹ê—p*/
+extern SPRITE *obj_collision_check_01_teki(SPRITE *tocheck);/*“Gê—p*/	//, int type);
+extern SPRITE *obj_collision_check_00_tama(SPRITE *tocheck, int type);/*gu’e–‹ê—p*/
 
 extern void gamen_gai_nara_zako_osimai(SPRITE *src);/* ‰æ–ÊŠO‚È‚ç‚¨‚µ‚Ü‚¢ */
 extern void check_boss_option_time_out(SPRITE *src);/* */
@@ -761,13 +394,6 @@ extern void sprite_initialize_position(SPRITE *src);
 //	#define USE_ZBUFFER 	(1)
 //#endif
 //
-//#if 1
-//	/* ’PƒŠg‘å */
-//	#define USE_ZOOM_XY 	(0)
-//#else
-//	/* c‰¡Šg‘å */
-//	#define USE_ZOOM_XY 	(1)
-//#endif
 
 
 
@@ -861,7 +487,7 @@ enum
 	PANEL_OBJ_32_G06,		/* ƒOƒŒƒCƒY2Œ…–Ú */
 	PANEL_OBJ_33_G07,		/* ƒOƒŒƒCƒY1Œ…–Ú */
 	//
-	SPRITE_222POOL_MAX/* MAX */
+	OBJ_POOL_03_PANEL_MAX/* MAX */
 };
 //enum /*_common_my_obj_*/
 //{
@@ -888,17 +514,17 @@ enum
 enum
 {
 	/* •`‰æƒvƒ‰ƒCƒIƒŠƒeƒB[‚ªŽ©‹@ƒeƒNƒXƒ`ƒƒ[‚Ì‚à‚Ì */
-	FIX_OBJ_00_PLAYER = 0,		/*<Žg—p’†>[r32•ÏXÏ‚Ý] sprite_add_direct(FIX_OBJ_00_PLAYER); */
-	FIX_OBJ_01_JIKI_MARU,		/*<Žg—p’†>[r32•ÏXÏ‚Ý] sprite_add_direct(FIX_OBJ_01_JIKI_MARU); */
+	FIX_OBJ_00_PLAYER = 0,		/*<Žg—p’†>[r32•ÏXÏ‚Ý] obj_add_nn_direct(OBJ_HEAD_02_KOTEI+FIX_OBJ_00_PLAYER); */
+	FIX_OBJ_01_JIKI_MARU,		/*<Žg—p’†>[r32•ÏXÏ‚Ý] obj_add_nn_direct(OBJ_HEAD_02_KOTEI+FIX_OBJ_01_JIKI_MARU); */
 	FIX_O_BJ_02_SEND1,			/*[—\’è]*/
 	FIX_O_BJ_03_SEND2,			/*[—\’è]*/
-	FIX_OBJ_04_JIKI_OPTION0,	/*<Žg—p’†>[r32•ÏXÏ‚Ý] sprite_add_direct(FIX_OBJ_04_JIKI_OPTION0+jj); */
+	FIX_OBJ_04_JIKI_OPTION0,	/*<Žg—p’†>[r32•ÏXÏ‚Ý] obj_add_nn_direct(OBJ_HEAD_02_KOTEI+FIX_OBJ_04_JIKI_OPTION0+jj); */
 	FIX_OBJ_05_JIKI_OPTION1,	/*<Žg—p’†>[r32•ÏXÏ‚Ý]*/
 	FIX_OBJ_06_JIKI_OPTION2,	/*<Žg—p’†>[r32•ÏXÏ‚Ý]*/
 	FIX_OBJ_07_JIKI_OPTION3 ,	/*<Žg—p’†>[r32•ÏXÏ‚Ý]*/
 //
 	/* •`‰æƒvƒ‰ƒCƒIƒŠƒeƒB[‚ªfrontƒeƒNƒXƒ`ƒƒ[‚Ì‚à‚Ì */
-//	xxx_FIX_OBJ_08_BOSS,		/* <‚ ‚½‚è”»’è‚Ì“s‡ão—ˆ‚È‚¢> */	/*<Žg—p’†>[r32•ÏXÏ‚Ý] sprite_add_direct(FIX_OBJ_08_BOSS); */
+//	xxx_FIX_OBJ_08_BOSS,		/* <‚ ‚½‚è”»’è‚Ì“s‡ão—ˆ‚È‚¢> */	/*<Žg—p’†>[r32•ÏXÏ‚Ý] obj_add_nn_direct(OBJ_HEAD_02_KOTEI+FIX_OBJ_08_BOSS); */
 //	FIX_O_BJ_09_,				/*[—\’è]*/
 //	FIX_O_BJ_10_,				/*[—\’è]*/
 //	FIX_OBJ_11_EFFECT01,				/*<Žg—p’†>*/
@@ -914,7 +540,7 @@ enum
 	FIX_OBJ_13, 	/*[—\’è]*/
 	FIX_OBJ_14, 	/*[—\’è]*/
 	FIX_OBJ_15_JIKI_TEISOKU_EFFECT, 	/*[—\’è]*/				/*<Žg—p’†>*/
-	SPRITE_111POOL_MAX/*MAX*/
+	OBJ_POOL_02_KOTEI_MAX/*MAX*/
 };
 	/* •`‰æƒvƒ‰ƒCƒIƒŠƒeƒB[‚ªŽ©‹@ƒeƒNƒXƒ`ƒƒ[‚Ì‚à‚Ì */
 /* -- ƒvƒ‰ƒCƒIƒŠƒeƒB[”‚UDŽ©‹@‚ð•`‰æ */
@@ -930,20 +556,32 @@ enum
 
 */
 
-/* ’e‚ÌÅ‘å”‚Í SPRITE_444POOL_MAX (==1024) ‚»‚êˆÈã“o˜^‚µ‚æ‚¤‚Æ‚µ‚Ä‚à“o˜^‚³‚ê‚È‚¢B */
-//#define SPRITE_444POOL_MAX		(512)/* ‚Æ‚è‚ ‚¦‚¸ */
-#define SPRITE_444POOL_MAX		(1024)/* ’e“o˜^ƒvƒƒOƒ‰ƒ€‚Ì“s‡ã 2^n ‚Å‚ ‚é•K—v‚ª‚ ‚è‚Ü‚·B(1024==(1<<10) ) */
-extern SPRITE obj44[SPRITE_444POOL_MAX];	/* ’eê—pƒXƒvƒ‰ƒCƒg‚ÌƒŠƒXƒg\‘¢ */
+/* ’e‚ÌÅ‘å”‚Í OBJ_POOL_00_TAMA_MAX (==1024) ‚»‚êˆÈã“o˜^‚µ‚æ‚¤‚Æ‚µ‚Ä‚à“o˜^‚³‚ê‚È‚¢B */
+//#define OBJ_POOL_00_TAMA_MAX		(512)/* ‚Æ‚è‚ ‚¦‚¸ */
+#define OBJ_POOL_00_TAMA_MAX		(1024)/* ’e“o˜^ƒvƒƒOƒ‰ƒ€‚Ì“s‡ã 2^n ‚Å‚ ‚é•K—v‚ª‚ ‚è‚Ü‚·B(1024==(1<<10) ) */
+//extern SPRITE obj99[OBJ_HEAD_00_TAMA+OBJ_POOL_00_TAMA_MAX];		/* ’eê—pƒXƒvƒ‰ƒCƒg */
 
-/* “G(Ž©‹@AƒIƒvƒVƒ‡ƒ“AŽ©’e“™A’eˆÈŠO‚Ì‘S‚Ä‚ÌƒXƒvƒ‰ƒCƒgŠÜ‚Þ)‚ÌÅ‘å”‚Í SPRITE_333POOL_MAX (==256) ‚»‚êˆÈã“o˜^‚µ‚æ‚¤‚Æ‚µ‚Ä‚à“o˜^‚³‚ê‚È‚¢B */
-#define SPRITE_333POOL_MAX		(256)/* “G“o˜^ƒvƒƒOƒ‰ƒ€‚Ì“s‡ã 2^n ‚Å‚ ‚é•K—v‚ª‚ ‚è‚Ü‚·B(1024==(1<<10) ) */
-extern SPRITE obj33[SPRITE_333POOL_MAX];	/* “Gê—pƒXƒvƒ‰ƒCƒg‚ÌƒŠƒXƒg\‘¢ */
+/* “G(Ž©‹@AƒIƒvƒVƒ‡ƒ“AŽ©’e“™A’eˆÈŠO‚Ì‘S‚Ä‚ÌƒXƒvƒ‰ƒCƒgŠÜ‚Þ)‚ÌÅ‘å”‚Í OBJ_POOL_01_TEKI_MAX (==256) ‚»‚êˆÈã“o˜^‚µ‚æ‚¤‚Æ‚µ‚Ä‚à“o˜^‚³‚ê‚È‚¢B */
+#define OBJ_POOL_01_TEKI_MAX		(256)/* “G“o˜^ƒvƒƒOƒ‰ƒ€‚Ì“s‡ã 2^n ‚Å‚ ‚é•K—v‚ª‚ ‚è‚Ü‚·B(1024==(1<<10) ) */
+//extern SPRITE obj99[OBJ_HEAD_01_TEKI+OBJ_POOL_01_TEKI_MAX];		/* “Gê—pƒXƒvƒ‰ƒCƒg */
 
-extern SPRITE obj00[SPRITE_111POOL_MAX];	/* “Gê—pƒXƒvƒ‰ƒCƒg‚ÌƒŠƒXƒg\‘¢ */
+//extern SPRITE obj99[OBJ_HEAD_02_KOTEI+OBJ_POOL_02_KOTEI_MAX]; 	/* “Gê—pƒXƒvƒ‰ƒCƒg */
 
-/* ƒpƒlƒ‹—pƒXƒvƒ‰ƒCƒg‚Í SPRITE_222POOL_MAX (==256) ‚»‚êˆÈã“o˜^‚µ‚æ‚¤‚Æ‚µ‚Ä‚à“o˜^‚³‚ê‚È‚¢B */
-//#define SPRITE_222POOL_MAX		(256)/* “G“o˜^ƒvƒƒOƒ‰ƒ€‚Ì“s‡ã 2^n ‚Å‚ ‚é•K—v‚ª‚ ‚è‚Ü‚·B(1024==(1<<10) ) */
-extern SPRITE obj22[SPRITE_222POOL_MAX];	/* ƒpƒlƒ‹—pƒXƒvƒ‰ƒCƒg‚ÌƒŠƒXƒg\‘¢ */
+/* ƒpƒlƒ‹—pƒXƒvƒ‰ƒCƒg‚Í OBJ_POOL_03_PANEL_MAX (==256) ‚»‚êˆÈã“o˜^‚µ‚æ‚¤‚Æ‚µ‚Ä‚à“o˜^‚³‚ê‚È‚¢B */
+//#define OBJ_POOL_03_PANEL_MAX 	(256)/* “G“o˜^ƒvƒƒOƒ‰ƒ€‚Ì“s‡ã 2^n ‚Å‚ ‚é•K—v‚ª‚ ‚è‚Ü‚·B(1024==(1<<10) ) */
+//extern SPRITE obj99[OBJ_HEAD_03_PANEL+OBJ_POOL_03_PANEL_MAX]; 	/* ƒpƒlƒ‹—pƒXƒvƒ‰ƒCƒg */
+
+
+
+
+
+	/* ‘SƒXƒvƒ‰ƒCƒg */
+#define OBJ_HEAD_00_TAMA	(0) 										/* ’eê—pƒXƒvƒ‰ƒCƒg */
+#define OBJ_HEAD_01_TEKI	(OBJ_HEAD_00_TAMA+OBJ_POOL_00_TAMA_MAX) 	/* “Gê—pƒXƒvƒ‰ƒCƒg */
+#define OBJ_HEAD_02_KOTEI	(OBJ_HEAD_01_TEKI+OBJ_POOL_01_TEKI_MAX) 	/* Ž©‹@“™ŒÅ’èƒXƒvƒ‰ƒCƒg */
+#define OBJ_HEAD_03_PANEL	(OBJ_HEAD_02_KOTEI+OBJ_POOL_02_KOTEI_MAX)	/* ƒpƒlƒ‹—pƒXƒvƒ‰ƒCƒg */
+#define OBJ99_MAX			(OBJ_HEAD_03_PANEL+OBJ_POOL_03_PANEL_MAX)
+extern SPRITE obj99[OBJ99_MAX]; 	/* ‘SƒXƒvƒ‰ƒCƒg */
 
 
 /*---------------------------------------------------------

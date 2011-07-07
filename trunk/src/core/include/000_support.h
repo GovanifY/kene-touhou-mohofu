@@ -1,6 +1,6 @@
 
 /*---------------------------------------------------------
-	東方模倣風	～ Toho Imitation Style.
+	東方模倣風 ～ Toho Imitation Style.
 	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	このファイルは直接インクルードしません。
@@ -237,13 +237,6 @@ R8G8B8A8フォーマットで色を設定する事になりますが、PSPはリトルエンディアンのCPUを
 	#define USE_ZBUFFER 	(1)
 #endif
 
-#if (0)
-	/* 単純拡大 */
-	#define USE_ZOOM_XY 	(0)
-#else/*てすと*/
-	/* 縦横拡大 */
-	#define USE_ZOOM_XY 	(1)
-#endif
 
 /* C:/cygwin/pspdev/psp/include/math.h で宣言されているので要らない */
 //#ifndef M_PI
@@ -341,6 +334,10 @@ R8G8B8A8フォーマットで色を設定する事になりますが、PSPはリトルエンディアンのCPUを
 //#define t8_to_dou ble(x)		(((dou ble)(x))*(1.0/8.0))
 #define t8_floor(x) 			((x)>>(3))
 
+/* 秒単位の時間で */
+#define byou60(x)	(x*60)
+/* 約秒単位の時間で */
+#define byou64(x)	(x*64)
 
 /* aaa%の確率で */
 #define rand_percent(aaa) ((unsigned char)(ra_nd())<=(unsigned char)( (aaa*256)/100 ) ) /* aaa%の確率で */
@@ -349,7 +346,7 @@ R8G8B8A8フォーマットで色を設定する事になりますが、PSPはリトルエンディアンのCPUを
 intで値を保持して、使う度に変換、逆変換した方が、ずっと速い。
 そこでラジアン撲滅する為のマクロ */
 #if 0
-	/* １周が512度の単位系の atan2(y,x), cos(x), sin(x)  */
+	/* １周が512度の単位系の atan2(y,x), cos(x), sin(x) */
 	#define at an_512(y,x)	(rad2deg512(atan2((y),(x))))
 	#define co_s512(x)		(cos(deg512_2rad((x))))
 	#define si_n512(x)		(sin(deg512_2rad((x))))

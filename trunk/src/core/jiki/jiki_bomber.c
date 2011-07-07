@@ -2,7 +2,7 @@
 #include "game_main.h"
 
 /*---------------------------------------------------------
-	東方模倣風	～ Toho Imitation Style.
+	東方模倣風 ～ Toho Imitation Style.
 	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	各プレイヤー(霊夢 ＆ 魔理沙 ＆ レミリア ＆ チルノ ＆ 幽々子)
@@ -11,6 +11,43 @@
 ---------------------------------------------------------*/
 
 #include "jiki_local.h"
+
+/*---------------------------------------------------------
+	player_bomber.h
+---------------------------------------------------------*/
+
+//typedef struct
+//{
+//	int speed256;
+//	int state;
+//	int time_out;			/* 設定時間内に見つけられない場合はおしまい */
+//	SPRITE *target_obj; 	/* int target_id */
+//} PL_HOMING_DATA; 		/* == PL_HLASER_DATA */
+
+#define YUUDOU_BOMBER_speed256					user_data01
+#define YUUDOU_BOMBER_reimu_musou_id			user_data02
+//efine PL_HOMING_time_out						YUUDOU_BOMBER_reimu_musou_id		/* 設定時間内に見つけられない場合はおしまい */
+//efine PL_HOMING_KODOMO_DATA_color256			user_data04
+
+//	int angleCCW1024;
+//	int nr; 				/* 右か左(ホーミング), nr==number */
+
+
+//typedef struct
+//{
+#define PL_HOMING_KODOMO_DATA_check_x256		user_data00
+#define PL_HOMING_KODOMO_DATA_check_y256		user_data01
+/*???*/#define PL_HOMING_KODOMO_DATA_time_out	user_data02 		/* 設定時間内に見つけられない場合はおしまい */
+//#define PL_HOMING_KODOMO_DATA_color256		user_data04
+//	SPRITE *target_obj; 	/* int target_id */
+//} PL_HOMING_KODOMO_DATA;	/* == PL_HLASER_DATA */
+
+//typedef struct
+//{
+#define PL_KEKKAI_DATA_angleCCW1024 			user_data00
+#define PL_KEKKAI_DATA_add_r1024				user_data01
+#define PL_KEKKAI_DATA_radius					user_data02 		/* 半径(radius) */
+//} PL_KEKKAI_DATA;
 
 
 
@@ -58,13 +95,13 @@ static void reimu_move_rotate_kekkai(SPRITE *src) /* 霊夢 */
 	#endif
 //
 	SPRITE *zzz_player;
-	zzz_player = &obj00[FIX_OBJ_00_PLAYER];
+	zzz_player = &obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_00_PLAYER];
 	#if 1/*Gu(中心座標)*/
 	src->cx256 = zzz_player->cx256 + sin1024((src->PL_KEKKAI_DATA_angleCCW1024))*src->PL_KEKKAI_DATA_radius;	/* CCWの場合 */
 	src->cy256 = zzz_player->cy256 + cos1024((src->PL_KEKKAI_DATA_angleCCW1024))*src->PL_KEKKAI_DATA_radius;
 	#endif
 	/* スクエア結界(霊夢B) */
-	if (REIMU_A != select_player)
+	if (REIMU_A != (cg_game_select_player))
 	{
 		if ( 0 < src->PL_KEKKAI_DATA_add_r1024)
 		{
@@ -79,24 +116,24 @@ static void reimu_move_rotate_kekkai(SPRITE *src) /* 霊夢 */
 			else	{	src->cy256 = zzz_player->cy256 - ((src->PL_KEKKAI_DATA_radius)<<8); 	}
 		}
 	}
-//	if (REIMU==select_player)
+//	if (REIMU==(cg_game_select_player))
 	{
 		if (src->PL_KEKKAI_DATA_radius<255) 	{	src->PL_KEKKAI_DATA_radius += (ra_nd()&1);	}	/* 少しずつ広がるようにした */
 		else									{	src->jyumyou = JYUMYOU_NASI;
-													pd.state_flag &= (~STATE_FLAG_02_BOMB_AUTO_GET_ITEM);	/* ボムによる自動収集は終わり */
+													cg.state_flag &= (~STATE_FLAG_02_BOMB_AUTO_GET_ITEM);	/* ボムによる自動収集は終わり */
 												}	/* 回転が広がったらおしまい */
 	//	src->alpha				= ((int)(255-src->PL_KEKKAI_DATA_radius))&(256-1);	/* だんだん消えるようにした */
 	//	src->color32			= ((((255-src->PL_KEKKAI_DATA_radius))&(0xff))<<24)|0x00ffffff; /* だんだん消えるようにした */
 		src->color32			= ((((255-src->PL_KEKKAI_DATA_radius))&(0xff))<<24)|0x00ffffff; /* だんだん消えるようにした */
 	}
-//	else //if (YUYUKO==select_player)
+//	else //if (YUYUKO==(cg_game_select_player))
 //	{
 
 //		if (pd_bomber_time<=0)	{	src->jyumyou = JYUMYOU_NASI;}/* 時間制限でおしまい */
 //	}
-	if ( (ra_nd()&0xff) < pd.bomber_time)
+	if ( (ra_nd()&0xff) < cg.bomber_time)
 	{
-		if(0==((src->PL_KEKKAI_DATA_radius)&7))
+		if (0==((src->PL_KEKKAI_DATA_radius)&7))
 		{
 			//player_weapon_colision_check_kekkai(src, src->PL_KEKKAI_DATA_radius);
 			bullets_to_hosi();/* 弾全部、星アイテムにする */
@@ -113,7 +150,7 @@ static void reimu_move_rotate_kekkai(SPRITE *src) /* 霊夢 */
 static void marisa_move_master_spark(SPRITE *src)
 {
 	SPRITE *zzz_player;
-	zzz_player = &obj00[FIX_OBJ_00_PLAYER];
+	zzz_player = &obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_00_PLAYER];
 //	src->cx256 += src->vx256;	/*fps_factor*/
 //	src->cy256 += src->vy256;	/*fps_factor*/
 	src->cx256 = zzz_player->cx256; 			/*fps_factor*/
@@ -133,11 +170,11 @@ static void marisa_move_master_spark(SPRITE *src)
 		src->rotationCCW1024 = ((sin1024((src->tmp_angleCCW1024)))>>2);
 	}
 	/* 時間でおしまい */
-	if (0 >= pd.bomber_time)	{ src->jyumyou = JYUMYOU_NASI;}/* 時間制限でおしまい */
+	if (0 >= cg.bomber_time)	{ src->jyumyou = JYUMYOU_NASI;}/* 時間制限でおしまい */
 	else
-	if (0x40 > pd.bomber_time)	/* 0x3f ... 0x01 */
+	if (0x40 > cg.bomber_time)	/* 0x3f ... 0x01 */
 	{
-		src->color32			= ((((pd.bomber_time))/*&(0x3f)*/)<<(24+2))|0x00ffffff; /* だんだん消えるようにした */
+		src->color32			= ((((cg.bomber_time))/*&(0x3f)*/)<<(24+2))|0x00ffffff; /* だんだん消えるようにした */
 		/* (この値の範囲なら)実はマスク必要ない。 */
 	}
 	player_weapon_colision_check(src, PLAYER_WEAPON_TYPE_01_BOMB);/* ボムで敵を倒すあたり判定 */
@@ -155,9 +192,9 @@ static void marisa_yuyuko_move_levarie_gyastry_dream(SPRITE *src)
 	#if 1
 	/* YUYUKO MARISA_A 以外 */
 	if (
-	//	(CIRNO_A==select_player) || (CIRNO_Q==select_player) ||
-		((CIRNO_A-1)<select_player) //||
-	//	(MARISA_B==select_player)/* マスパ(もどき) */
+	//	(CIRNO_A==(cg_game_select_player)) || (CIRNO_Q==(cg_game_select_player)) ||
+		((CIRNO_A-1)<(cg_game_select_player)) //||
+	//	(MARISA_B==(cg_game_select_player))/* マスパ(もどき) */
 	)
 	#endif
 	{	/*チルノ用(暫定的)*/	/*1.5*(d->speed);*/ 	/*fps_factor*/
@@ -174,21 +211,13 @@ static void marisa_yuyuko_move_levarie_gyastry_dream(SPRITE *src)
 			0, 0,  0,  0, 0, 0,  3,  3, /* 拡大速度 */	/* CIRNO は 拡大 する。 */
 		};
 		/* 表示角度(下が0度で左回り(反時計回り)) */
-		src->rotationCCW1024	+= aaa_sss[select_player];
+		src->rotationCCW1024	+= aaa_sss[(cg_game_select_player)];
 		mask1024((src->rotationCCW1024));
-		#if (1==USE_ZOOM_XY)
 		if ( t256(4.0) > src->m_zoom_x256)
-		#else
-		if ( t256(4.0) > src->m_zoom_xy256)
-		#endif
 		{
-			#if (1==USE_ZOOM_XY)
-			src->m_zoom_x256 += aaa_sss[select_player+(PLAYERS8)];
-		//	src->m_zoom_y256 += aaa_sss[select_player+(PLAYERS8)];
+			src->m_zoom_x256 += aaa_sss[(cg_game_select_player)+(PLAYERS8)];
+		//	src->m_zoom_y256 += aaa_sss[(cg_game_select_player)+(PLAYERS8)];
 			src->m_zoom_y256 = src->m_zoom_x256;
-			#else
-			src->m_zoom_xy256 += aaa_sss[select_player+(PLAYERS8)];
-			#endif
 		}
 	}
 	player_bomber_out_colision_check(src);
@@ -266,17 +295,17 @@ static void yuudou_idou(SPRITE *src)
 			}
 			#else
 			/* 直接誘導 */
-			src->rotationCCW1024/*src->PL_HOMING_DATA_angleCCW1024*/ = ta1024;
+			src->rotationCCW1024/*src->YUUDOU_BOMBER_angleCCW1024*/ = ta1024;
 			#endif
 		#endif
 		}
-		mask1024(src->rotationCCW1024/*src->PL_HOMING_DATA_angleCCW1024*/);
+		mask1024(src->rotationCCW1024/*src->YUUDOU_BOMBER_angleCCW1024*/);
 		#endif/*誘導(000)*/
 	}
 	else	/* 目標が画面外ならば新しい目標を探す。 */
 	{
 		/* Ziel wurde anderweitig vernichtet, neues Ziel suchen */
-		src->target_obj = &obj00[FIX_OBJ_00_PLAYER];		/* 画面外に逃げられた */
+		src->target_obj = &obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_00_PLAYER];		/* 画面外に逃げられた */
 	}
 }
 
@@ -294,32 +323,32 @@ enum
 static void marisa_move_parrent_hlaser(SPRITE *src)
 {
 	/* 他の誘導ボムが、既に倒したか？ */
-	if (&obj00[FIX_OBJ_00_PLAYER] == src->target_obj)	/* 見つからない(他の誘導ボムが倒してしまった場合) */
+	if (&obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_00_PLAYER] == src->target_obj) /* 見つからない(他の誘導ボムが倒してしまった場合) */
 	{
 		/* ターゲット検索、敵を探す。 */
-		src->target_obj = search_enemy_by_sprite();
+		src->target_obj = search_teki_from_obj();
 	}
 	else	/* まだターゲットが生きてる */
 	{
-		if (HOMING_096_TIME_OUT < src->PL_HOMING_DATA_time_out)
+		if (HOMING_096_TIME_OUT < src->jyumyou)
 		{
 			/* 一定時間減速 */
-			src->PL_HOMING_DATA_speed256 -= t256(0.5);/*減速*/
+			src->YUUDOU_BOMBER_speed256 -= t256(0.5);/*減速*/
 			// 止まると困る
-			if ( 0 > src->PL_HOMING_DATA_speed256 )
+			if ( 0 > src->YUUDOU_BOMBER_speed256 )
 			{
-				src->PL_HOMING_DATA_speed256 = t256(0.75);	/* 最小値 */
+				src->YUUDOU_BOMBER_speed256 = t256(0.75);	/* 最小値 */
 			}
 		}
 		else
 		{
 			/* 一定時間を超えたら加速 */
-			src->PL_HOMING_DATA_speed256 += t256(0.5);/*加速*/
+			src->YUUDOU_BOMBER_speed256 += t256(0.5);/*加速*/
 			// 速過ぎるのも困る
-		//	if ( t256(12.0) < src->PL_HOMING_DATA_speed256)
-			if ( t256(16.0) < src->PL_HOMING_DATA_speed256)
+		//	if ( t256(12.0) < src->YUUDOU_BOMBER_speed256)
+			if ( t256(16.0) < src->YUUDOU_BOMBER_speed256)
 			{
-				src->PL_HOMING_DATA_speed256 = t256(16.0);	/* 最大値 */
+				src->YUUDOU_BOMBER_speed256 = t256(16.0);	/* 最大値 */
 			}
 		}
 		//
@@ -327,21 +356,21 @@ static void marisa_move_parrent_hlaser(SPRITE *src)
 	}
 	#if 1
 	/* (多分必要ないけど)念の為マスク */
-	mask1024(src->rotationCCW1024/*src->PL_HOMING_DATA_angleCCW1024*/);
+	mask1024(src->rotationCCW1024/*src->YUUDOU_BOMBER_angleCCW1024*/);
 	#endif
 	#if 1
 	/* 表示用 */
-//	src->rotationCCW1024	= src->rotationCCW1024/*src->PL_HOMING_DATA_angleCCW1024*/;
+//	src->rotationCCW1024	= src->rotationCCW1024/*src->YUUDOU_BOMBER_angleCCW1024*/;
 	#endif
-	src->cx256 += ((sin1024((src->rotationCCW1024/*src->PL_HOMING_DATA_angleCCW1024*/))*src->PL_HOMING_DATA_speed256)>>8);/*fps_factor*/	/* CCWの場合 */
-	src->cy256 += ((cos1024((src->rotationCCW1024/*src->PL_HOMING_DATA_angleCCW1024*/))*src->PL_HOMING_DATA_speed256)>>8);/*fps_factor*/
+	src->cx256 += ((sin1024((src->rotationCCW1024/*src->YUUDOU_BOMBER_angleCCW1024*/))*src->YUUDOU_BOMBER_speed256)>>8);/*fps_factor*/	/* CCWの場合 */
+	src->cy256 += ((cos1024((src->rotationCCW1024/*src->YUUDOU_BOMBER_angleCCW1024*/))*src->YUUDOU_BOMBER_speed256)>>8);/*fps_factor*/
 	player_weapon_colision_check(src, PLAYER_WEAPON_TYPE_00_SHOT);
 //
-	src->PL_HOMING_DATA_time_out--;/*fps_factor*/
-	if (0 > src->PL_HOMING_DATA_time_out ) /* 時間切れ？ */
-	{
-		src->jyumyou = JYUMYOU_NASI;		/* 時間切れなのでおしまい */
-	}
+//	src->jyumyou--;/*fps_factor*/
+//	if (0 > src->jyumyou ) /* 時間切れ？ */
+//	{
+//		src->jyumyou = JYUMYOU_NASI;		/* 時間切れなのでおしまい */
+//	}
 }
 
 /*---------------------------------------------------------
@@ -352,33 +381,32 @@ static void marisa_move_parrent_hlaser(SPRITE *src)
 static void move_reimu_musou_fuuin(SPRITE *src)
 {
 	/* 他の誘導ボムが、既に倒したか？ */
-	if (&obj00[FIX_OBJ_00_PLAYER] == src->target_obj)	/* 見つからない(他の誘導ボムが倒してしまった場合) */
+	if (&obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_00_PLAYER] == src->target_obj) /* 見つからない(他の誘導ボムが倒してしまった場合) */
 	{
 		/* ターゲット検索、敵を探す。 */
-		src->target_obj = search_enemy_by_sprite();
+		src->target_obj = search_teki_from_obj();
 	}
 	else	/* まだターゲットが生きてる */
 	{
-		if ( t256(3.0) > src->PL_HOMING_DATA_speed256)
+		if ( t256(3.0) > src->YUUDOU_BOMBER_speed256)
 		{
-			src->PL_HOMING_DATA_speed256 += /*(int)*/t256(0.5);/*加速*/
+			src->YUUDOU_BOMBER_speed256 += /*(int)*/t256(0.5);/*加速*/
 		}
 		//
 		yuudou_idou(src);
 	}
 // ボムは最大 7 個(8)
-#define PL_HOMING_DATA_reimu_musou_id PL_HOMING_DATA_time_out
-//	if((pd.bomber_time&0x0f)==(src->PL_HOMING_DATA_reimu_musou_id&0x0f))
-	if((pd.bomber_time&0x07)==(src->PL_HOMING_DATA_reimu_musou_id&0x07))
+//	if ((cg.bomber_time&0x0f)==(src->YUUDOU_BOMBER_reimu_musou_id&0x0f))
+	if ((cg.bomber_time&0x07)==(src->YUUDOU_BOMBER_reimu_musou_id&0x07))
 	{
-		src->vx256 = ((sin1024((src->rotationCCW1024/*src->PL_HOMING_DATA_angleCCW1024*/))*src->PL_HOMING_DATA_speed256)>>8);/*fps_factor*/ /* CCWの場合 */
-		src->vy256 = ((cos1024((src->rotationCCW1024/*src->PL_HOMING_DATA_angleCCW1024*/))*src->PL_HOMING_DATA_speed256)>>8);/*fps_factor*/
+		src->vx256 = ((sin1024((src->rotationCCW1024/*src->YUUDOU_BOMBER_angleCCW1024*/))*src->YUUDOU_BOMBER_speed256)>>8);/*fps_factor*/ /* CCWの場合 */
+		src->vy256 = ((cos1024((src->rotationCCW1024/*src->YUUDOU_BOMBER_angleCCW1024*/))*src->YUUDOU_BOMBER_speed256)>>8);/*fps_factor*/
 	}
 		src->cx256 += (src->vx256);/*fps_factor*/
 		src->cy256 += (src->vy256);/*fps_factor*/
 	player_weapon_colision_check(src, PLAYER_WEAPON_TYPE_01_BOMB/*PLAYER_WEAPON_TYPE_00_SHOT*/);
 //
-	if (0 >= pd.bomber_time)	/* 時間切れの場合 */
+	if (0 >= cg.bomber_time)	/* 時間切れの場合 */
 	{
 		gamen_gai_nara_zako_osimai(src);/* 画面外ならおしまい */
 		src->base_weapon_strength--;/* 時間切れの場合、体力を減らす */
@@ -451,20 +479,20 @@ static void yuyuko_add_meifu(SPRITE *src/*, int ggg*/ /*r_or_l*/)	/* [***090221 
 		for (i=0; i<10; i+=1)
 		{
 			SPRITE *h;
-			h = sprite_add_gu_error();
+			h = obj_add_01_teki_error();
 			if (NULL!=h)/* 登録できた場合のみ */
 			{
 				//
 				h->m_Hit256R		= JIKI_ATARI_ITEM_16;
 //				h->flags			|= (SP_FLAG_VISIBLE|SP_FLAG_TIME_OVER);
-				h->type 			= (/*SP_GROUP_JIKI_GET_ITEM*/JIKI_BOMBER_04|SP_GROUP_SHOT_SPECIAL)/*ボスに有効*/;/*(SP_GROUP_JIKI_GET_ITEM|SP_GROUP_SHOT_ZAKO) ボスに無効*/
+				h->type 			= (/*SP_GROUP_JIKI_GET_ITEM*/JIKI_BOMBER_04|SP_GROUP_SHOT_SPECIAL);/* ボスに有効 */
 				h->callback_mover	= remilia_move_burn_fire;
 				h->color32			= MAKE32RGBA(0xff, 0xff, 0xff, 0x64);		/*	h->alpha			= 0x64 100;*/
 				h->base_weapon_strength 	= (8*(5));/* 仕様変更した */	/*9*/ /*10*/
 				{
 			u32 my_rand;
 				my_rand = ra_nd();
-					if (YUYUKO==select_player)
+					if (YUYUKO==(cg_game_select_player))
 					{
 						h->cx256			= (u16)((my_rand	)) + t256((GAME_WIDTH -256)/2);
 						h->cy256			= (u16)((my_rand>>16)) + t256((GAME_HEIGHT-256)/2);
@@ -508,13 +536,13 @@ static void remilia_add_burn_shot(SPRITE *src/*, int ggg*/ /*r_or_l*/)	/* [***09
 		for (i=0; i<((4*3)-1); i++)
 		{
 			SPRITE *h;
-			h = sprite_add_gu_error();
+			h = obj_add_01_teki_error();
 			if (NULL!=h)/* 登録できた場合のみ */
 			{
 				//
 				h->m_Hit256R		= JIKI_ATARI_ITEM_16;
 //				h->flags			|= (SP_FLAG_VISIBLE|SP_FLAG_TIME_OVER);
-//				h->type 			= (/*SP_GROUP_JIKI_GET_ITEM*/JIKI_BOMBER_04|SP_GROUP_SHOT_SPECIAL)/*ボスに有効*/;/*(SP_GROUP_JIKI_GET_ITEM|SP_GROUP_SHOT_ZAKO) ボスに無効*/
+//				h->type 			= (/*SP_GROUP_JIKI_GET_ITEM*/JIKI_BOMBER_04|SP_GROUP_SHOT_SPECIAL)/*ボスに有効*/;
 				h->type 			= (/*SP_GROUP_JIKI_GET_ITEM*/JIKI_BOMBER_01|SP_GROUP_SHOT_SPECIAL)/*ボスに有効*/ /*SP_PL_HLASER*/;
 				h->callback_mover	= remilia_move_burn_fire;
 //				h->color32			= MAKE32RGBA(0xff, 0xff, 0xff, 0x64);		/*	h->alpha			= 0x64 100;*/
@@ -547,6 +575,38 @@ static void remilia_add_burn_shot(SPRITE *src/*, int ggg*/ /*r_or_l*/)	/* [***09
 	}
 }
 
+#define BASE_STD_BOMB_STRENGTH		(PLAYERS8*0)
+#define BASE_LOW_BOMB_STRENGTH		(PLAYERS8*1)
+
+/*static*/static const u8 player_fix_status[(PLAYERS8*2)/*BASE_MAX*/] =
+{/* REIMU(A/B) MARISA(A/B)	REMILIA YUYUKO CIRNO(A/Q) */
+//	 /* BASE_SPEED_ANIME	   プレイヤーのアニメーション速度 */
+//	  40,  40,	40,  40,   24,	48,   8,   8,	 /* BASE_STD_BOMB_STRENGTH 通常ボムの強さ / standard bomb strength. */
+//	 192, 192, 255, 255,   96, 160,  96,  96,	 /* BASE_LOW_BOMB_STRENGTH 低速ボムの強さ / lower bomb strength. */
+	#if 0
+	  48,  40,	40,  40,   32,	48,   8,   9,	 /* BASE_STD_BOMB_STRENGTH 通常ボムの強さ / standard bomb strength. */
+	 160, 192, 240, 255,  127, 160,  96, 127,	 /* BASE_LOW_BOMB_STRENGTH 低速ボムの強さ / lower bomb strength. */
+	#else
+	  48,  40,	40,  40,   32,	48, 240, 255,	 /* BASE_STD_BOMB_STRENGTH 通常ボムの強さ / standard bomb strength. */
+	 160, 192, 240, 255,  127, 160, 240, 255,	 /* BASE_LOW_BOMB_STRENGTH 低速ボムの強さ / lower bomb strength. */
+//	 (255), 192, 240, 255,	127, 160,  (244),  96,	 /* BASE_LOW_BOMB_STRENGTH 低速ボムの強さ / lower bomb strength. */
+	#endif
+//
+};
+//	  40,	 40,	5*8,	 40,	 24,	6*8,	 1*8,	1*8,	/* BASE_STD_BOMB_STRENGTH 通常ボムの強さ / standard bomb strength. */
+//	 30*8,	30*8,  48*8,	48*8,	12*8,  24*8,	12*8,  12*8,	/* BASE_LOW_BOMB_STRENGTH 低速ボムの強さ / lower bomb strength. */
+
+/*
+レミリアボム: 通常ボムの強さ:[旧==8] [新==4]
+旧 3回==((256/64)-1) [24==(8)*3]
+新 7回==((256/32)-1) [21==(3)*7]
+REIMU		5,[新==5] [旧==3]
+MARISA		5,
+REMILIA 	3,[新==3] [旧==8]
+YUYUKO		6,[新==6] [旧==4]
+CIRNO		1,[新==1] [旧==4]
+	通常ボムの強さ / standard bomb strength.
+*/
 /*---------------------------------------------------------
 	霊夢 A 専用 低速ボム追加
 	霊符霊夢
@@ -571,7 +631,7 @@ static void reimu_add_reifu_musofuuin(SPRITE *src)
 		musou_id &= 0x07;
 		{
 			SPRITE *h;
-			h						= sprite_add_gu_error();
+			h						= obj_add_01_teki_error();
 			if (NULL!=h)/* 登録できた場合のみ */
 			{
 				h->m_Hit256R		= JIKI_ATARI_ITEM_16;
@@ -584,7 +644,7 @@ static void reimu_add_reifu_musofuuin(SPRITE *src)
 				h->cy256			= src->cy256;
 				#endif
 			//	h->flags			|= (SP_FLAG_VISIBLE/*|SP_FLAG_TIME_OVER*/);
-//				h->flags			&= (~(SP_FLAG_VISIBLE));	/*非表示*/
+//				h->flags			&= (~(SP_FLAG_VISIBLE));	/* 非表示 */
 	//			if (0==i)
 				{
 					h->callback_mover	= move_reimu_musou_fuuin;
@@ -592,16 +652,16 @@ static void reimu_add_reifu_musofuuin(SPRITE *src)
 	//				h->rotationCCW1024	= (0/*j&1*/)?(cv1024r(	0+10)):(cv1024r(360-10));
 	//				h->rotationCCW1024	= (i<<6);
 					/* 180 ... 0 (1024/128==8) */
-					h->rotationCCW1024	= ( (((int)pd.bomber_time)<<3)+(512));/* 射出する方向 */
+					h->rotationCCW1024	= ( (((int)cg.bomber_time)<<3)+(512));/* 射出する方向 */
 					#if 0
 					/* (多分必要ないけど)念の為マスク */
-					mask1024(src->rotationCCW1024/*src->PL_HOMING_DATA_angleCCW1024*/);
+					mask1024(src->rotationCCW1024/*src->YUUDOU_BOMBER_angleCCW1024*/);
 					#endif
-					h->PL_HOMING_DATA_speed256				= t256(1.2);
-					h->base_weapon_strength 				= player_fix_status[BASE_LOW_BOMB_STRENGTH+select_player]/*6*/;/*低速ボムの強さ*/
-				//	h->PL_HOMING_DATA_time_out/*range*/ 	= (100);	/*(200)*/
-					h->PL_HOMING_DATA_reimu_musou_id		= (musou_id);	/*(ii)(200)*/
-					h->target_obj							= &obj00[FIX_OBJ_00_PLAYER];			/* h->target_obj == obj00[FIX_OBJ_00_PLAYER];みつからない */
+					h->YUUDOU_BOMBER_speed256				= t256(1.2);
+					h->base_weapon_strength 				= player_fix_status[BASE_LOW_BOMB_STRENGTH+(cg_game_select_player)]/*6*/;/* 低速ボムの強さ */
+					h->jyumyou								= byou60(20);	/* 20秒 テキトー */ 	// (100);	/*(200)*/
+					h->YUUDOU_BOMBER_reimu_musou_id 		= (musou_id);	/*(ii)(200)*/
+					h->target_obj							= &obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_00_PLAYER];			/* h->target_obj == obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_00_PLAYER];みつからない */
 				}
 			}
 		}
@@ -631,7 +691,7 @@ static void marisa_add_teisoku_yuudoudan(SPRITE *src)
 		#undef hlaser_NUM_OF_ENEMIES
 		{
 			h_old = h;
-			h					= sprite_add_gu_error();
+			h					= obj_add_01_teki_error();
 	//	if (NULL!=h)/* 登録できた場合のみ */	/* 強制登録 */
 		if (NULL==h)return;/* 登録できた場合のみ */
 /* うーん... */
@@ -645,7 +705,7 @@ static void marisa_add_teisoku_yuudoudan(SPRITE *src)
 			h->cy256			= src->cy256;
 			#endif
 		//	h->flags			|= (SP_FLAG_VISIBLE/*|SP_FLAG_TIME_OVER*/);
-//			h->flags			&= (~(SP_FLAG_VISIBLE));	/*非表示*/
+//			h->flags			&= (~(SP_FLAG_VISIBLE));	/* 非表示 */
 //				h->PL_HOMING_KODOMO_DATA_color256		= (t256(1.0));	/* 明るさ(アルファ初期値) */
 			h->color32			= tmp_color32;
 //			tmp_color32 -= 0x10000000;
@@ -656,10 +716,10 @@ static void marisa_add_teisoku_yuudoudan(SPRITE *src)
 				h->callback_mover	= marisa_move_parrent_hlaser;
 //				h->rotationCCW1024						= cv1024r(0);
 				h->rotationCCW1024						= (j&1)?(cv1024r(  0+10)):(cv1024r(360-10));
-				h->PL_HOMING_DATA_speed256				= t256(4.0);//t256(12.0);
-				h->base_weapon_strength 				= player_fix_status[BASE_LOW_BOMB_STRENGTH+select_player];/*6*/ /*低速ボムの強さ*/
-				h->PL_HOMING_DATA_time_out/*range*/ 	= (HOMING_128_TIME_OUT);	/*100(200)*/
-				h->target_obj							= &obj00[FIX_OBJ_00_PLAYER];	/* (h->target_obj==obj00[FIX_OBJ_00_PLAYER])==見つからない */
+				h->YUUDOU_BOMBER_speed256				= t256(4.0);//t256(12.0);
+				h->base_weapon_strength 				= player_fix_status[BASE_LOW_BOMB_STRENGTH+(cg_game_select_player)];/*6*/ /* 低速ボムの強さ */
+				h->jyumyou								= (HOMING_128_TIME_OUT);	/*100(200)*/
+				h->target_obj							= &obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_00_PLAYER];	/* (h->target_obj==obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_00_PLAYER])==見つからない */
 			}
 			else
 			{
@@ -691,14 +751,14 @@ static void marisa_add_teisoku_yuudoudan(SPRITE *src)
 static void reimu_tuika_musofuuin_shot(SPRITE *src) /* [***090220 追加 */
 {
 	SPRITE *zzz_player;
-	zzz_player = &obj00[FIX_OBJ_00_PLAYER];
+	zzz_player = &obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_00_PLAYER];
 	//
 //	if (0x3f==(((int)pd_bomber_time)&0x3f))
 //	if (0x0f==(((int)pd_bomber_time)&0x0f))
 	if (0x0f==((src->jyumyou)&0x0f))/* 波動を撃つタイミング */
 	{
 		/* シナリオ時には誘導弾を追加しない */
-		if (0==(pd.state_flag & STATE_FLAG_06_IS_SCRIPT))
+		if (0==(cg.state_flag & STATE_FLAG_06_IS_SCRIPT))
 		{
 			reimu_add_reifu_musofuuin(zzz_player);/* 波動発動(早口言葉?) */
 		}
@@ -707,7 +767,7 @@ static void reimu_tuika_musofuuin_shot(SPRITE *src) /* [***090220 追加 */
 	src->cx256 = zzz_player->cx256;
 	src->cy256 = zzz_player->cy256;
 	#endif
-/* 時間制限でおしまい */	//if (0 >= pd.bomber_time)	{ src->jyumyou = JYUMYOU_NASI;}/* 時間制限でおしまい */
+/* 時間制限でおしまい */	//if (0 >= cg.bomber_time)	{ src->jyumyou = JYUMYOU_NASI;}/* 時間制限でおしまい */
 }
 
 /*---------------------------------------------------------
@@ -716,19 +776,19 @@ static void reimu_tuika_musofuuin_shot(SPRITE *src) /* [***090220 追加 */
 static void marisa_tuika_bomber_teisoku_yuudoudan(SPRITE *src)
 {
 	SPRITE *zzz_player;
-	zzz_player = &obj00[FIX_OBJ_00_PLAYER];
+	zzz_player = &obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_00_PLAYER];
 	//
 //	if (0==(((int)pd_bomber_time)&0x3f))
 //	if (0==(((int)pd_bomber_time)&0x0f))/*(r31)*/
 	if (0==((src->jyumyou)&0x07))/*(r32)追加量を2倍にしてみる。*/
 	{
 		/* シナリオ時には誘導弾を追加しない */
-		if (0==(pd.state_flag & STATE_FLAG_06_IS_SCRIPT))
+		if (0==(cg.state_flag & STATE_FLAG_06_IS_SCRIPT))
 		{
 			marisa_add_teisoku_yuudoudan(zzz_player);
 		}
 	}
-/* 時間制限でおしまい */	//	if (0 >= pd.bomber_time)	{	src->jyumyou = JYUMYOU_NASI;}/* 時間制限でおしまい */
+/* 時間制限でおしまい */	//	if (0 >= cg.bomber_time)	{	src->jyumyou = JYUMYOU_NASI;}/* 時間制限でおしまい */
 }
 
 /*---------------------------------------------------------
@@ -744,7 +804,7 @@ static void remilia_tuika_cross_shot(SPRITE *src) /* [***090220 追加 */
 	if (0x07==((src->jyumyou)&0x07))/* 波動を撃つタイミング */
 	{
 		/* シナリオ時には誘導弾を追加しない */
-		if (0==(pd.state_flag & STATE_FLAG_06_IS_SCRIPT))
+		if (0==(cg.state_flag & STATE_FLAG_06_IS_SCRIPT))
 		{
 			remilia_add_burn_shot(src);/* 波動発動(早口言葉?) */
 		}
@@ -754,7 +814,7 @@ static void remilia_tuika_cross_shot(SPRITE *src) /* [***090220 追加 */
 	src->cx256 += src->vx256;
 	src->cy256 += src->vy256;
 	#endif
-/* 時間制限でおしまい */	//	if (0 >= pd.bomber_time)	{ src->jyumyou = JYUMYOU_NASI;}
+/* 時間制限でおしまい */	//	if (0 >= cg.bomber_time)	{ src->jyumyou = JYUMYOU_NASI;}
 }
 
 /*---------------------------------------------------------
@@ -764,14 +824,14 @@ static void remilia_tuika_cross_shot(SPRITE *src) /* [***090220 追加 */
 static void yuyuko_tuika_meifu(SPRITE *src) /* [***090220 追加 */
 {
 	SPRITE *zzz_player;
-	zzz_player = &obj00[FIX_OBJ_00_PLAYER];
+	zzz_player = &obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_00_PLAYER];
 	//
 //	if (0x3f==(((int)pd_bomber_time)&0x3f))
 //	if (0x0f==(((int)pd_bomber_time)&0x0f))
 	if (0x0f==((src->jyumyou)&0x0f))/* 波動を撃つタイミング */
 	{
 		/* シナリオ時には誘導弾を追加しない */
-		if (0==(pd.state_flag & STATE_FLAG_06_IS_SCRIPT))
+		if (0==(cg.state_flag & STATE_FLAG_06_IS_SCRIPT))
 		{
 			yuyuko_add_meifu(zzz_player);/* 波動発動(早口言葉?) */
 		}
@@ -780,7 +840,7 @@ static void yuyuko_tuika_meifu(SPRITE *src) /* [***090220 追加 */
 	src->cx256 = zzz_player->cx256;
 	src->cy256 = zzz_player->cy256;
 	#endif
-/* 時間制限でおしまい */	//	if (0 >= pd.bomber_time)	{ src->jyumyou = JYUMYOU_NASI;}/* 時間制限でおしまい */
+/* 時間制限でおしまい */	//	if (0 >= cg.bomber_time)	{ src->jyumyou = JYUMYOU_NASI;}/* 時間制限でおしまい */
 }
 
 
@@ -794,12 +854,12 @@ parrent 親系 -------------------------------------------------------------------
 
 /*static*/global void reimu_create_bomber_kekkai_parrent(SPRITE *src)		/* 霊夢 */		//シールドの追加
 {
-	pd.state_flag	|= STATE_FLAG_02_BOMB_AUTO_GET_ITEM;	/*ボムによる自動収集可能*/
+	cg.state_flag	|= STATE_FLAG_02_BOMB_AUTO_GET_ITEM;	/* ボムによる自動収集可能 */
 	int ii;//	int i;	/* 半象限ずつ */
-	for (ii=0; ii<(8); ii++)//	for (i=0;i<360/*i<=359*/;i+=45)
+	for (ii=0; ii<(8); ii++)//	for (i=0; i<360; i+=45)
 	{
 		SPRITE *h;
-		h				= sprite_add_gu_error();
+		h				= obj_add_01_teki_error();
 	//	if (NULL!=h)/* 登録できた場合のみ */
 		if (NULL==h)return;/* 登録できた場合のみ */
 		{
@@ -807,30 +867,22 @@ parrent 親系 -------------------------------------------------------------------
 			if (0 == (ii&1))// if (i%90 == 0)
 			{
 				h->PL_KEKKAI_DATA_add_r1024 	= ( 46);							/* 時計回り */
-				h->PL_KEKKAI_DATA_radius		= (5);		/*(48)*/	//d->radius=38; 	/*半径初期値*/	/* 少しずつ広がるようにした */
+				h->PL_KEKKAI_DATA_radius		= (16);		/*(48)*/	//d->radius=38; 	/* 半径初期値 */	/* 少しずつ広がるようにした */
 			}
 			else		/* 1つだと不安なので2つ作った。 */
 			{
 				h->PL_KEKKAI_DATA_add_r1024 	= (-34);							/* 反時計回り */
-				h->PL_KEKKAI_DATA_radius		= (0);		/*(45)*/	//d->radius=35; 	/*半径初期値*/	/* 少しずつ広がるようにした */
+				h->PL_KEKKAI_DATA_radius		= (0);		/*(45)*/	//d->radius=35; 	/* 半径初期値 */	/* 少しずつ広がるようにした */
 			}
-	//		if (YUYUKO==select_player)
-	//		{	/* 幽々子 */
-	//			h->PL_KEKKAI_DATA_radius		+= 45/*45*/;		/*半径初期値*/
-	//			h->type 		= (SP_GROUP_JIKI_GET_ITEM|SP_GROUP_SHOT_ZAKO)/*ボスに無効*/;
-	//		}
-	//		else // if (REIMU==select_player)
-			{	/* 霊夢 */
-				h->type 				= (ii&(4-1))+(/*SP_GROUP_JIKI_GET_ITEM*/JIKI_BOMBER_04|SP_GROUP_SHOT_SPECIAL)/*ボスに有効*/;/*(SP_GROUP_JIKI_GET_ITEM|SP_GROUP_SHOT_ZAKO) ボスに無効*/
-			}
+			/* 霊夢 */
+			h->type 				= (ii&(4-1))+(/*SP_GROUP_JIKI_GET_ITEM*/JIKI_BOMBER_04|SP_GROUP_SHOT_SPECIAL);/* ボスに有効 */
 			h->callback_mover			= reimu_move_rotate_kekkai; 		/*	時計回り ＆ 反時計回り ＆ スクエア結界(霊夢B) 兼用 */
-		//	h->callback_mover			= reimu_move_rotate_kekkai/*2*/;		/* 反時計回り */
 //			h->flags					|= (SP_FLAG_VISIBLE|SP_FLAG_TIME_OVER);
-			h->PL_KEKKAI_DATA_angleCCW1024		= (ii*cv1024r((45)));	/*i*/
+			h->PL_KEKKAI_DATA_angleCCW1024		= (ii<<7);	/* (1024/8) */
 			/* 出始めはプレイヤー座標 */
 			{
 				SPRITE *zzz_player;
-				zzz_player = &obj00[FIX_OBJ_00_PLAYER];
+				zzz_player = &obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_00_PLAYER];
 				h->cx256					= zzz_player->cx256;
 				h->cy256					= zzz_player->cy256;
 			}
@@ -845,12 +897,12 @@ parrent 親系 -------------------------------------------------------------------
 
 /*static*/global void marisa_create_bomber_master_spark_parrent(SPRITE *src)
 {
-	pd.state_flag	|= STATE_FLAG_02_BOMB_AUTO_GET_ITEM;	/*ボムによる自動収集可能*/
+	cg.state_flag	|= STATE_FLAG_02_BOMB_AUTO_GET_ITEM;	/*ボムによる自動収集可能*/
 	int iii;
 	for (iii=0; iii<(3)/*16*/; iii++)
 	{
 		SPRITE *h;
-		h					= sprite_add_gu_error();
+		h					= obj_add_01_teki_error();
 	//	if (NULL!=h)/* 登録できた場合のみ */
 		if (NULL==h)return;/* 登録できた場合のみ */ 	/*うーん？？？*/
 		{
@@ -863,22 +915,17 @@ parrent 親系 -------------------------------------------------------------------
 			};
 			h->color32					= (color_mask32[iii]);
 			h->m_Hit256R				= ((128)<<8);
-	//		h->type 					= (/*SP_GROUP_JIKI_GET_ITEM*/JIKI_BOMBER_04|SP_GROUP_SHOT_ZAKO)/*ボスに無効*/;/*(SP_GROUP_JIKI_GET_ITEM|SP_GROUP_SHOT_SPECIAL)*/ /*ボスに有効*/
-			h->type 					= (/*SP_GROUP_JIKI_GET_ITEM*/JIKI_BOMBER_04|SP_GROUP_SHOT_SPECIAL)/*ボスに有効*/ /*(SP_GROUP_JIKI_GET_ITEM|SP_GROUP_SHOT_ZAKO) ボスに無効*/;
+			h->type 					= (/*SP_GROUP_JIKI_GET_ITEM*/JIKI_BOMBER_04|SP_GROUP_SHOT_SPECIAL);/* ボスに有効 */
 //			h->flags					|= (SP_FLAG_VISIBLE|SP_FLAG_TIME_OVER);
 			h->callback_mover			= marisa_move_master_spark;
 			h->tmp_angleCCW1024 		= ((iii)<<8);
-			#if (1==USE_ZOOM_XY)
 			h->m_zoom_x256				= (256*4);	/* 描画用ボムの初期サイズ / size of bomb at first. */
 			h->m_zoom_y256				= (256*4);	/* 描画用ボムの初期サイズ / size of bomb at first. */
-			#else
-			h->m_zoom_xy256 			= (256*4);	/* 描画用ボムの初期サイズ / size of bomb at first. */
-			#endif
-			h->base_weapon_strength 	= player_fix_status[BASE_STD_BOMB_STRENGTH+select_player]; /*k_strength*/ /*5*/ /*15-k-k*/ /* [***090214 追加 */
+			h->base_weapon_strength 	= player_fix_status[BASE_STD_BOMB_STRENGTH+(cg_game_select_player)]; /*k_strength*/ /*5*/ /*15-k-k*/ /* [***090214 追加 */
 
 			h->vx256					= (0);	/*fps_factor*/	/* CCWの場合 */
 			h->vy256					= (0);	/*fps_factor*/
-			#if 1/*省略可能かも？*/
+			#if 1/* 省略可能かも？ */
 			h->cx256					= src->cx256;
 			h->cy256					= src->cy256-t256(MASKER_SPARK_LENGTH144);
 			#endif
@@ -896,14 +943,14 @@ parrent 親系 -------------------------------------------------------------------
 
 /*static*/global void yuyuko_create_bomber_gyastry_dream_parrent(SPRITE *src)
 {
-	pd.state_flag	|= STATE_FLAG_02_BOMB_AUTO_GET_ITEM;	/*ボムによる自動収集可能*/
+	cg.state_flag	|= STATE_FLAG_02_BOMB_AUTO_GET_ITEM;	/*ボムによる自動収集可能*/
 	int jjj;		jjj=0;
 	int angCCW1024; angCCW1024 = (0);/* 0 チルノ用(暫定的)*/
 	int iii;
 	for (iii=0; iii<(18*3)/*16*/; iii++)
 	{
 		SPRITE *h;
-		h					= sprite_add_gu_error();
+		h					= obj_add_01_teki_error();
 	//
 	//	if (NULL!=h)/* 登録できた場合のみ */
 		if (NULL==h)return;/* 登録できた場合のみ */ 	/*うーん？？？*/
@@ -919,12 +966,11 @@ parrent 親系 -------------------------------------------------------------------
 				 (32),	//	BASE_BOMBER_ATARI_0g,/*32*/ 	/* チルノ */	/*	8 */	/*0,*/	 /* ci a */  //  BASE_BOMBER_ATARI_0d,/*32*/
 				 (32),	//	BASE_BOMBER_ATARI_0h,/*4*/		/* 幽々子 */	/*	6 */	/*0,*/	 /* ci q */  //  BASE_BOMBER_ATARI_0b,/*16*/
 			};
-			h->m_Hit256R			= ((base_bomber_atari[select_player])<<8);
+			h->m_Hit256R			= ((base_bomber_atari[(cg_game_select_player)])<<8);
 			//
 			jjj++;
 			jjj &= 0x03;	//	if (4==jjj) 	{	jjj=0;	}
-	//		h->type 		= (/*SP_GROUP_JIKI_GET_ITEM*/JIKI_BOMBER_04|SP_GROUP_SHOT_ZAKO)/*ボスに無効*/;/*(SP_GROUP_JIKI_GET_ITEM|SP_GROUP_SHOT_SPECIAL)*/ /*ボスに有効*/
-			h->type 		= (/*SP_GROUP_JIKI_GET_ITEM*/JIKI_BOMBER_04|SP_GROUP_SHOT_SPECIAL)/*ボスに有効*/ /*(SP_GROUP_JIKI_GET_ITEM|SP_GROUP_SHOT_ZAKO) ボスに無効*/;
+			h->type 		= (/*SP_GROUP_JIKI_GET_ITEM*/JIKI_BOMBER_04|SP_GROUP_SHOT_SPECIAL);/* ボスに有効 */
 			h->type += jjj;
 	//
 
@@ -936,23 +982,19 @@ parrent 親系 -------------------------------------------------------------------
 				{/* REIMU(A/B) MARISA(A/B) REMILIA YUYUKO CIRNO(A/Q) */
 					256, 256, 256, 256, 32, 256, 32, 32,	/* 描画用ボムの初期サイズ / size of bomb at first. */
 				};
-				h->m_zoom_x256		= player_fix_status_ggg[select_player]/*8*/;/* 64 == (1/4) */
+				h->m_zoom_x256		= player_fix_status_ggg[(cg_game_select_player)]/*8*/;/* 64 == (1/4) */
 			}
 			#else
-			if (YUYUKO!=select_player)
+			if (YUYUKO!=(cg_game_select_player))
 			{
-				#if (1==USE_ZOOM_XY)
 				h->m_zoom_x256		= 1+(ra_nd()&(64-1));	/* 描画用ボムの初期サイズ / size of bomb at first. */
 				h->m_zoom_y256		= 1+(ra_nd()&(64-1));	/* 描画用ボムの初期サイズ / size of bomb at first. */
-				#else
-				h->m_zoom_xy256 	= 1+(ra_nd()&(64-1));	/* 描画用ボムの初期サイズ / size of bomb at first. */
-				#endif
 			}
 			#endif
 
-			h->base_weapon_strength 	= player_fix_status[BASE_STD_BOMB_STRENGTH+select_player] /*k_strength*/ /*5*/ /*15-k-k*/;/* [***090214 追加 */
-			/* MARISAは強いが拡散してしまうのであたらない。  */
-			/* チルノは当てやすいのでその分弱くしないと強すぎちゃう。  */
+			h->base_weapon_strength 	= player_fix_status[BASE_STD_BOMB_STRENGTH+(cg_game_select_player)] /*k_strength*/ /*5*/ /*15-k-k*/;/* [***090214 追加 */
+			/* MARISAは強いが拡散してしまうのであたらない。 */
+			/* チルノは当てやすいのでその分弱くしないと強すぎちゃう。 */
 			int d_speed256;
 			#if 0
 			if (0==(iii&(2-1)/*%2*/))
@@ -969,7 +1011,7 @@ parrent 親系 -------------------------------------------------------------------
 			h->cy256			= src->cy256;
 			#endif
 			/* ギャストリドリーム(もどき)。スターダストレヴァリエと違い近接性能は無い。 */
-			if (YUYUKO==select_player)	/* 幽々子 */
+			if (YUYUKO==(cg_game_select_player))	/* 幽々子 */
 			{
 				h->cx256		+= ((h->vx256)<<5);
 				h->cy256		+= ((h->vy256)<<5);
@@ -1018,7 +1060,7 @@ parrent 親系 -------------------------------------------------------------------
 
 /*static*/global void marisa_create_bomber_star_dust_levarie_parrent(SPRITE *src)
 {
-	pd.state_flag	|= STATE_FLAG_02_BOMB_AUTO_GET_ITEM;	/*ボムによる自動収集可能*/
+	cg.state_flag	|= STATE_FLAG_02_BOMB_AUTO_GET_ITEM;	/*ボムによる自動収集可能*/
 //
 	int angCCW1024; angCCW1024 = (0);/* 0 チルノ用(暫定的)*/
 	int iii;
@@ -1028,12 +1070,12 @@ parrent 親系 -------------------------------------------------------------------
 		for (kkk=0; kkk<(3)/*16*/; kkk++)/*3サイズ*/
 		{
 			SPRITE *h;
-			h					= sprite_add_gu_error();
+			h					= obj_add_01_teki_error();
 		//	if (NULL!=h)/* 登録できた場合のみ */
 			if (NULL==h)return;/* 登録できた場合のみ */ 	/*うーん？？？*/
 			{
-			//	h->m_Hit256R			= ((16)<<8);//((base_bomber_atari[select_player])<<8);
-				h->m_Hit256R			= ((32)<<8);//((base_bomber_atari[select_player])<<8);
+			//	h->m_Hit256R			= ((16)<<8);//((base_bomber_atari[(cg_game_select_player)])<<8);
+				h->m_Hit256R			= ((32)<<8);//((base_bomber_atari[(cg_game_select_player)])<<8);
 				const static u32 color_mask32[8] =
 				{	//		   RED	 GREEN BLUE  ALPHA
 					MAKE32RGBA(0xff, 0x00, 0x00, 0x7f), 	//	  下(赤0)
@@ -1046,18 +1088,13 @@ parrent 親系 -------------------------------------------------------------------
 					MAKE32RGBA(0x00, 0x00, 0xff, 0x7f), 	//	左下(青2)
 				};
 				h->color32					= (color_mask32[iii]);
-		//		h->type 					= (/*SP_GROUP_JIKI_GET_ITEM*/JIKI_BOMBER_04|SP_GROUP_SHOT_ZAKO)/*ボスに無効*/;/*(SP_GROUP_JIKI_GET_ITEM|SP_GROUP_SHOT_SPECIAL)*/ /*ボスに有効*/
-				h->type 					= (/*SP_GROUP_JIKI_GET_ITEM*/JIKI_BOMBER_04|SP_GROUP_SHOT_SPECIAL)/*ボスに有効*/ /*(SP_GROUP_JIKI_GET_ITEM|SP_GROUP_SHOT_ZAKO) ボスに無効*/;
+				h->type 					= (/*SP_GROUP_JIKI_GET_ITEM*/JIKI_BOMBER_04|SP_GROUP_SHOT_SPECIAL);/*ボスに有効*/
 		//
 	//			h->flags					|= (SP_FLAG_VISIBLE|SP_FLAG_TIME_OVER);
 				h->callback_mover			= marisa_yuyuko_move_levarie_gyastry_dream;
-				#if (1==USE_ZOOM_XY)
 				h->m_zoom_x256				= (0x100<<(kkk));	/* 描画用ボムの初期サイズ / size of bomb at first. */
 				h->m_zoom_y256				= (0x100<<(kkk));	/* 描画用ボムの初期サイズ / size of bomb at first. */
-				#else
-				h->m_zoom_xy256 			= (0x100<<(kkk));	/* 描画用ボムの初期サイズ / size of bomb at first. */
-				#endif
-				h->base_weapon_strength 	= player_fix_status[BASE_STD_BOMB_STRENGTH+select_player] /*k_strength*/ /*5*/ /*15-k-k*/;/* [***090214 追加 */
+				h->base_weapon_strength 	= player_fix_status[BASE_STD_BOMB_STRENGTH+(cg_game_select_player)] /*k_strength*/ /*5*/ /*15-k-k*/;/* [***090214 追加 */
 				{
 //					const int d_speed256	= t256(1.5);	/* 速度一定 */
 					const int d_speed256	= t256(1.5);	/* 速度一定 */
@@ -1093,26 +1130,24 @@ parrent 親系 -------------------------------------------------------------------
 
 /*static*/global void remilia_create_bomber_cross_shot_parrent(SPRITE *src) /* レミリア */ /* [***090220 追加 */
 {
-	pd.state_flag		|= STATE_FLAG_02_BOMB_AUTO_GET_ITEM;	/*ボムによる自動収集可能*/
+	cg.state_flag		|= STATE_FLAG_02_BOMB_AUTO_GET_ITEM;	/*ボムによる自動収集可能*/
 	SPRITE *h;
-	h						= sprite_add_gu_error();
+	h						= obj_add_01_teki_error();
 	if (NULL!=h)/* 登録できた場合のみ */	/* うーん... */
 	{
 		h->jyumyou			= (PD_BOMBER_JYUMYOU180);
 //		h->m_Hit256R		= JIKI_ATARI_ITEM_16;
 //		h->flags			|= (/*SP_FLAG_VISIBLE|*/SP_FLAG_TIME_OVER);
-//		h->flags			&= (~(SP_FLAG_VISIBLE));	/*非表示*/
-//		h->color32			= MAKE32RGBA(0xff, 0xff, 0xff, 0xdc);		/*	h->alpha			= 0xdc;*/	/*非表示*/
+//		h->flags			&= (~(SP_FLAG_VISIBLE));	/* 非表示 */
+//		h->color32			= MAKE32RGBA(0xff, 0xff, 0xff, 0xdc);		/*	h->alpha			= 0xdc;*/	/* 非表示 */
 		h->callback_mover	= remilia_tuika_cross_shot;
-	//	h->type 			= (SP_GROUP_JIKI_GET_ITEM|SP_GROUP_SHOT_ZAKO);/* ボスの直接攻撃は禁止 */		/*(SP_GROUP_JIKI_GET_ITEM|SP_GROUP_SHOT_ZAKO) ボスに無効*/
-//		h->type 			= (/*表示しない*/S P_GROUP_ETC_DUMMY_REMILIA/*SP_GROUP_JIKI_GET_ITEM|SP_GROUP_SHOT_ZAKO*/);/* ボスの直接攻撃は禁止 */		/*(SP_GROUP_JIKI_GET_ITEM|SP_GROUP_SHOT_ZAKO) ボスに無効*/
-		h->type 			= (/*SP_GROUP_JIKI_GET_ITEM*/JIKI_BOMBER_01|SP_GROUP_SHOT_SPECIAL)/*ボスに有効*/; /*SP_PL_HLASER*/
+		h->type 			= (/*SP_GROUP_JIKI_GET_ITEM*/JIKI_BOMBER_01|SP_GROUP_SHOT_SPECIAL);/*ボスに有効*/
 	//	#if 1/*Gu(中心座標)*/
-	//	h->cx256			= t256(GAME_NOT_VISIBLE480);//(src->cx256); /*非表示*/
-//	//	h->cy256			= (src->cy256); /*非表示*/
+	//	h->cx256			= t256(GAME_NOT_VISIBLE480);//(src->cx256); /* 非表示 */
+//	//	h->cy256			= (src->cy256); /* 非表示 */
 	//	#endif
 		SPRITE *zzz_player;
-		zzz_player = &obj00[FIX_OBJ_00_PLAYER];
+		zzz_player = &obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_00_PLAYER];
 		#if 1/*Gu(中心座標)*/
 		/*開始時の座標*/
 		h->cx256 = zzz_player->cx256;
@@ -1120,7 +1155,7 @@ parrent 親系 -------------------------------------------------------------------
 		#endif
 		{
 //			SPRITE *obj_boss;
-//			obj_boss = &obj00[FIX_OBJ_08_BOSS];
+//			obj_boss = &obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_08_BOSS];
 			int int_angle1024;
 			int int_aaa;
 		//	int_angle1024 = at an_1024(global_obj_boss->cy256-zzz_player->cy256, global_obj_boss->cx256-zzz_player->cx256);
@@ -1145,23 +1180,22 @@ parrent 親系 -------------------------------------------------------------------
 ---------------------------------------------------------*/
 /*static*/global void marisa_create_bomber_homing_parrent(SPRITE *src)
 {
-	pd.state_flag		|= STATE_FLAG_02_BOMB_AUTO_GET_ITEM;	/* ボムによる自動収集可能 */
+	cg.state_flag		|= STATE_FLAG_02_BOMB_AUTO_GET_ITEM;	/* ボムによる自動収集可能 */
 //
 	SPRITE *h;
-	h						= sprite_add_gu_error();
+	h						= obj_add_01_teki_error();
 	if (NULL!=h)/* 登録できた場合のみ */	/* うーん... */
 	{
 		h->jyumyou			= (PD_BOMBER_JYUMYOU180);
 //		h->m_Hit256R		= JIKI_ATARI_ITEM_16;
 	//	h->flags			|= (SP_FLAG_VISIBLE/*|SP_FLAG_TIME_OVER*/);
-//		h->flags			&= (~(SP_FLAG_VISIBLE));	/*非表示*/
-//		h->color32			= MAKE32RGBA(0xff, 0xff, 0xff, 0xdc);	/*	c->alpha			= 0x80 0xdc;*/	/*非表示*/
+//		h->flags			&= (~(SP_FLAG_VISIBLE));	/* 非表示 */
+//		h->color32			= MAKE32RGBA(0xff, 0xff, 0xff, 0xdc);	/*	c->alpha			= 0x80 0xdc;*/	/* 非表示 */
 		h->callback_mover	= marisa_tuika_bomber_teisoku_yuudoudan;
-	//	h->type 			= (SP_GROUP_JIKI_GET_ITEM|SP_GROUP_SHOT_SPECIAL)/*ボスに有効*/; /* 低速ボムもボスに有効とする */	/*(SP_GROUP_JIKI_GET_ITEM|SP_GROUP_SHOT_ZAKO) ボスに無効*/
-		h->type 			= (/*表示しない*/SP_DUMMY_MUTEKI/*S P_GROUP_ETC_DUMMY_SLOW_BOMB*/ /*SP_GROUP_JIKI_GET_ITEM|SP_GROUP_SHOT_SPECIAL*/)/*ボスに有効*/;	/* 低速ボムもボスに有効とする */	/*(SP_GROUP_JIKI_GET_ITEM|SP_GROUP_SHOT_ZAKO) ボスに無効*/
+		h->type 			= (/*表示しない*/SP_DUMMY_MUTEKI/*S P_GROUP_ETC_DUMMY_SLOW_BOMB*/ /*SP_GROUP_JIKI_GET_ITEM|SP_GROUP_SHOT_SPECIAL*/);/*ボスに有効*/	/* 低速ボムもボスに有効とする */
 		#if 1/*Gu(中心座標)*/
-		h->cx256			= t256(GAME_NOT_VISIBLE480);//src->cx256;	/*非表示*/
-//		h->cy256			= src->cy256;	/*非表示*/
+		h->cx256			= t256(GAME_NOT_VISIBLE480);//src->cx256;	/* 非表示 */
+//		h->cy256			= src->cy256;	/* 非表示 */
 		#endif
 //
 		#if 1
@@ -1176,26 +1210,24 @@ parrent 親系 -------------------------------------------------------------------
 ---------------------------------------------------------*/
 /*static*/global void reimu_create_bomber_homing_shot_parrent(SPRITE *src)	/* reimu_move_add_bomber_hlaser */
 {
-	pd.state_flag		|= STATE_FLAG_02_BOMB_AUTO_GET_ITEM;	/* ボムによる自動収集可能 */
+	cg.state_flag		|= STATE_FLAG_02_BOMB_AUTO_GET_ITEM;	/* ボムによる自動収集可能 */
 	SPRITE *h;
-	h						= sprite_add_gu_error();
+	h						= obj_add_01_teki_error();
 	if (NULL!=h)/* 登録できた場合のみ */	/* うーん... */
 	{
 		h->jyumyou			= (PD_BOMBER_JYUMYOU180);
 //		h->m_Hit256R		= JIKI_ATARI_ITEM_16;
 //		h->flags			|= (/*SP_FLAG_VISIBLE|*/SP_FLAG_TIME_OVER);
-//		h->flags			&= (~(SP_FLAG_VISIBLE));	/*非表示*/
-//		h->color32			= MAKE32RGBA(0xff, 0xff, 0xff, 0xdc);		/*	h->alpha			= 0xdc;*/	/*非表示*/
+//		h->flags			&= (~(SP_FLAG_VISIBLE));	/* 非表示 */
+//		h->color32			= MAKE32RGBA(0xff, 0xff, 0xff, 0xdc);		/*	h->alpha			= 0xdc;*/	/* 非表示 */
 		h->callback_mover	= reimu_tuika_musofuuin_shot;
-	//	h->type 			= (SP_GROUP_JIKI_GET_ITEM|SP_GROUP_SHOT_ZAKO);/* ボスの直接攻撃は禁止 */		/*(SP_GROUP_JIKI_GET_ITEM|SP_GROUP_SHOT_ZAKO) ボスに無効*/
-//		h->type 			= (/*表示しない*/S P_GROUP_ETC_DUMMY_REMILIA/*SP_GROUP_JIKI_GET_ITEM|SP_GROUP_SHOT_ZAKO*/);/* ボスの直接攻撃は禁止 */		/*(SP_GROUP_JIKI_GET_ITEM|SP_GROUP_SHOT_ZAKO) ボスに無効*/
-		h->type 			= (/*SP_GROUP_JIKI_GET_ITEM*/JIKI_BOMBER_01|SP_GROUP_SHOT_SPECIAL)/*ボスに有効*/; /*SP_PL_HLASER*/
+		h->type 			= (/*SP_GROUP_JIKI_GET_ITEM*/JIKI_BOMBER_01|SP_GROUP_SHOT_SPECIAL);/* ボスに有効 */
 	//	#if 1/*Gu(中心座標)*/
-	//	h->cx256			= t256(GAME_NOT_VISIBLE480);//(src->cx256); /*非表示*/
-//	//	h->cy256			= (src->cy256); /*非表示*/
+	//	h->cx256			= t256(GAME_NOT_VISIBLE480);//(src->cx256); /* 非表示 */
+//	//	h->cy256			= (src->cy256); /* 非表示 */
 	//	#endif
 		SPRITE *zzz_player;
-		zzz_player = &obj00[FIX_OBJ_00_PLAYER];
+		zzz_player = &obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_00_PLAYER];
 		#if 1/*Gu(中心座標)*/
 		/*開始時の座標*/
 		h->cx256 = zzz_player->cx256;
@@ -1203,7 +1235,7 @@ parrent 親系 -------------------------------------------------------------------
 		#endif
 		{
 //			SPRITE *obj_boss;
-//			obj_boss = &obj00[FIX_OBJ_08_BOSS];
+//			obj_boss = &obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_08_BOSS];
 			#if 1
 			/* 描画用グラ回転 */
 		//	h->rotationCCW1024	= int_angle1024;
@@ -1223,22 +1255,21 @@ parrent 親系 -------------------------------------------------------------------
 ---------------------------------------------------------*/
 /*static*/global void yuyuko_create_bomber_meifu_parrent(SPRITE *src) /* (幽々子低速) */ /* [***090220 追加 */
 {
-	pd.state_flag		|= STATE_FLAG_02_BOMB_AUTO_GET_ITEM;	/*ボムによる自動収集可能*/
+	cg.state_flag		|= STATE_FLAG_02_BOMB_AUTO_GET_ITEM;	/* ボムによる自動収集可能 */
 	SPRITE *h;
-	h						= sprite_add_gu_error();
+	h						= obj_add_01_teki_error();
 	if (NULL!=h)/* 登録できた場合のみ */	/* うーん... */
 	{
 		h->jyumyou			= (PD_BOMBER_JYUMYOU180);
 //		h->m_Hit256R		= JIKI_ATARI_ITEM_16;
 //		h->flags			|= (/*SP_FLAG_VISIBLE|*/SP_FLAG_TIME_OVER);
-//		h->flags			&= (~(SP_FLAG_VISIBLE));	/*非表示*/
-//		h->color32			= MAKE32RGBA(0xff, 0xff, 0xff, 0xdc);		/*	h->alpha			= 0xdc;*/	/*非表示*/
+//		h->flags			&= (~(SP_FLAG_VISIBLE));	/* 非表示 */
+//		h->color32			= MAKE32RGBA(0xff, 0xff, 0xff, 0xdc);		/*	h->alpha			= 0xdc;*/	/* 非表示 */
 		h->callback_mover	= yuyuko_tuika_meifu;
-	//	h->type 			= (SP_GROUP_JIKI_GET_ITEM|SP_GROUP_SHOT_ZAKO);/* ボスの直接攻撃は禁止 */		/*(SP_GROUP_JIKI_GET_ITEM|SP_GROUP_SHOT_ZAKO) ボスに無効*/
-		h->type 			= (/*表示しない*/SP_DUMMY_MUTEKI/*S P_GROUP_ETC_DUMMY_REMILIA*/ /*SP_GROUP_JIKI_GET_ITEM|SP_GROUP_SHOT_ZAKO*/);/* ボスの直接攻撃は禁止 */		/*(SP_GROUP_JIKI_GET_ITEM|SP_GROUP_SHOT_ZAKO) ボスに無効*/
+		h->type 			= (/*表示しない*/SP_DUMMY_MUTEKI/*S P_GROUP_ETC_DUMMY_REMILIA*/ /*SP_GROUP_JIKI_GET_ITEM|SP_GROUP_SHOT_ZAKO*/); /* ボスの直接攻撃は禁止 */
 		#if 1/*Gu(中心座標)*/
-		h->cx256			= t256(GAME_NOT_VISIBLE480);//(src->cx256); /*非表示*/
-//		h->cy256			= (src->cy256); /*非表示*/
+		h->cx256			= t256(GAME_NOT_VISIBLE480);//(src->cx256); /* 非表示 */
+//		h->cy256			= (src->cy256); /* 非表示 */
 		#endif
 	}
 }

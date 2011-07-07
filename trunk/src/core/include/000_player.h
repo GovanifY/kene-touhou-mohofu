@@ -1,6 +1,6 @@
 
 /*---------------------------------------------------------
-	東方模倣風	～ Toho Imitation Style.
+	東方模倣風 ～ Toho Imitation Style.
 	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	このファイルは直接インクルードしません。
@@ -25,11 +25,31 @@
 // 結果：やっぱもう少し下がいい。8[dots]といわず16[dots]ぐらい下がいい。再び実験してみる。
 // 結果：こんなもんかな？というわけで80(79)[dots]に決定。もう8[dots]下88(87)でもいいかもね。
 // 本家の感覚を大事にするならこんなもんだと思う。
-#define PLAYER_SPLIT_LINE256		(t256(80))
+//---------------
+//「アイテム引き寄せライン」以下で取ると「アイテム引き寄せライン」から322ラインまで距離で減点。
+//
+//プレイフィールドは 384x448 なので、448-322 == 126
+//「アイテム引き寄せライン」は多分上から128ドットかな？
+//
+//(Bアイテムの大きさが16x16[dot]なので、Bアイテムの消失判定は 448+(16/2)ラインで行うから、
+//最後にBアイテムの判定があるのが、BアイテムのＹ軸中心が456[ライン]にきた場合。
+//456-322 == 134, 134-128 == 6. この6[ライン]はそもそも自機中心が画面下部に行けない分が数ドット(5[dot?])ある。
+//残り1[dot]は不等号で判定したから? )
+//---------------
+// もし同比率なら、
+// (模倣風アイテム引き寄せライン)/(本家アイテム引き寄せライン) == (模倣風ゲームフィールド縦)/(本家ゲームフィールド縦)
+// が成立する。(模倣風アイテム引き寄せライン)が知りたいのだから移行して、
+// (模倣風アイテム引き寄せライン) == (本家アイテム引き寄せライン) * (模倣風ゲームフィールド縦)/(本家ゲームフィールド縦)
+// (模倣風アイテム引き寄せライン) == 128 * 272/448 == 77.7142857142857142857142857142857 =:= 78[dots] 単純な比率計算の場合。
 // http://hossy.info/game/toho/k_score.php ここの画像を逆算して計算すると 77 dots あたり。
-//#define PLAYER_SPLIT_LINE256		(t256(77))
+/* アイテム引き寄せライン */
+//#define PLAYER_SPLIT_LINE256		(t256(77))/* 画像から仮定 */
+//#define PLAYER_SPLIT_LINE256		(t256(78))/* 本家と同比率と仮定し逆算 */
+#define PLAYER_SPLIT_LINE256		(t256(80))/* 中心座標で管理してない奴(-r31) */
+/* 現状(r33) プレイ感覚としてこの3つ(77, 78, 80)の中では (80)が一番本家に近い。(77, 78)は上過ぎる。
+あまり下にしても面白くないから、(80)程度が妥当な気がする。 */
 
-/* このラインより下からは敵が撃たない */
+/* 敵が撃たないライン (このラインより下からは敵が撃たない) */
 #define ENEMY_LAST_SHOT_LINE256 	(t256(272-72))
 
 
@@ -61,6 +81,7 @@ enum /*_select_player_*/		// [***090203		追加
 
 /* ボスと戦う際にon(ボス前イベントではOFF) */
 #define STATE_FLAG_05_IS_BOSS						(0x0010)
+
 /* ゲーム中シナリオスクリプトモードで on になる。ゲームが再開されると off になる。*/
 #define STATE_FLAG_06_IS_SCRIPT 					(0x0020)
 /* on */
@@ -84,38 +105,109 @@ enum /*_select_player_*/		// [***090203		追加
 
 //#define STATE_FLAG_0123_AUTO_GET_ITEM (STATE_FLAG_01_PLAYER_UP_AUTO_GET_ITEM|STATE_FLAG_02_BOMB_AUTO_GET_ITEM|STATE_FLAG_03_SCORE_AUTO_GET_ITEM)
 
-#define STATE_FLAG_14_GAME_LOOP_QUIT				(0x2000)
+//#define ST ATE_FLAG_14_GAME_LOOP_QUIT 			(0x2000)
+#define STATE_FLAG_14_ZAKO_TUIKA					(0x2000)/* 雑魚追加処理をする場合on */
+
 #define STATE_FLAG_15_KEY_SHOT						(0x4000)
-//#define STATE_FLAG_16_NOT_ALLOW_KEY_CONTROL 		(0x8000)/* 廃止? */
+//#define STATE_FLAG_16_NOT_ALLOW_KEY_CONTROL		(0x8000)/* 廃止? */
 
 
 
-typedef struct _player_spec_
+typedef struct _game_core_global_class_
 {
 	int state_flag; 	/* 設定フラグ */	// [***090116		追加
 	int weapon_power;	/* 0x00-0x80  (0-128 の129段階==本家と同じ)   max==128==「129段階」*/
 	int chain_point;
-	int player_now_stage; /* */
+	int bomber_time;	/* Use Gu */
 //
 	u32 game_score; 	/* スコア得点 */
 	u32 graze_point;	/* グレイズ得点 */
 	int bombs;			/* ボム数 */
 	int zanki;			/* 残りチャンス */
 //
-	int bomber_time;		/* Use Gu */
-//	int difficulty;
+//	int game_difficulty;遅過ぎる。
 //
-//	/* 集計システム */
-	int use_continue;	/* コンティニュー回数 */
-	int count_miss; 	/* ミス回数 */
-	int used_bomber;	/* ボム使用回数 */
-	int use_kurai_bomb; /* 喰らいボム成功回数 */
-	int count_bonus;	/* スペルカードボーナス回数 */
+//	/* 集計システム(player_data) */
+	int player_data_use_continue;	/* コンティニュー回数 */
+	int player_data_count_miss; 	/* ミス回数 */
+	int player_data_used_bomber;	/* ボム使用回数 */
+	int player_data_use_kurai_bomb; /* 喰らいボム成功回数 */
+	int player_data_count_bonus;	/* スペルカードボーナス回数 */
 //
-	int laser_mode; 	/* てすと(レーザーモード 0:off, 1:on) */
-} PLAYER_SPEC;
-extern PLAYER_SPEC pd;
+	int msg_time;/* メッセージ(仮対応)表示時間 */
+//
+//	u8 laser_mode;	/* てすと(レーザーモード 0:off, 1:on) */
+//	u8 dummy1;
+	/* 集計システム以外の保持状態 */
+//	u8 game_select_player;
+//遅過ぎる。	u8 game_difficulty/* = RANK_EASY*/; 	/*	RANK_NORMAL*/
+//
+	s8 game_now_stage;				/* 現在ステージ番号 */
+	s8 game_continue_stage; 		/* 現在コンティニューするステージ番号を保持 */
+	s8 game_now_max_continue;		/* コンティニュー可能な回数 */
+	s8 game_practice_mode;			/* 練習モード */
+} GAME_CORE_GLOBAL_CLASS;
+extern GAME_CORE_GLOBAL_CLASS cg;
 
+/* 意図的に入れないもの */
+extern int cg_game_select_player;/* cg_game_difficulty: (将来はともかく)現状(r33)は GAME_CORE_GLOBAL_CLASSに入れない方が良いっぽい。 */
+extern int cg_game_difficulty;/* cg_game_difficulty: GAME_CORE_GLOBAL_CLASSに入れると速度低下する。 */
+
+
+extern int draw_script_screen;					/* せりふウィンドウ表示フラグ */
+// /*extern*/ int msg_time; 					/* せりふウィンドウ表示時間(仮) */
+#if 1
+	#if 1/* アライメント関係(???) (s16)で GAME_CORE_GLOBAL_CLASSに入れると巧くいかない */
+	/* 意図的に入れないもの */
+	extern	u32 cg_my_pad;			/*今回入力*/
+	extern	u32 cg_my_pad_alter;	/*前回入力*/
+	extern	s16 cg_analog_x;		/* アナログ量、補正済み */
+	extern	s16 cg_analog_y;		/* アナログ量、補正済み */
+	#endif
+//
+
+extern int draw_side_panel;/* パネル表示on(0以外)/off(0) */
+
+extern int draw_boss_hp_value;	/* ボスhp描画値 */
+extern int boss_life_value; 	/* ボスhp体力値 / ボス魔方陣サイズ描画値 */
+#endif
+extern int boss_x256;
+extern int boss_y256;
+
+
+
+
+
+extern int chu_boss_mode;
+#define USE_HOLD_GAME_MODE	(0)
+
+#if (1==USE_HOLD_GAME_MODE)
+extern void hold_game_mode_on(void);/* ゲーム時間の一時停止 */
+extern void hold_game_mode_off(void);/* ゲーム時間の動作開始 */
+#endif
+
+//extern int cg_game_continue_stage;
+//extern int cg_game_practice_mode;//extern int practice_mode;
+//extern int cg_game_now_max_continue;
+//extern u32 my_pad;			/*今回入力*/
+//extern u32 my_pad_alter;	/*前回入力*/
+//extern /*global*/short cg_analog_x; /* アナログ量、補正済み */
+//extern /*global*/short cg_analog_y; /* アナログ量、補正済み */
+
+//#define IS_KEY BOARD_PULLED ((0==my_pad)&&(my_pad^my_pad_alter))/* 何かキーを離されたら */
+/*	キーを離した瞬間が確定とする。押した瞬間が確定だと、押された間だけ動作する物が同時にあると都合が悪い。 */
+/*
+	r31:原作ではキーを押した瞬間が確定のものが多いので、おかしいところはキーを押した瞬間が確定に修正した。
+*/
+
+//extern int cg_game_difficulty;
+//extern int (cg_game_select_player);
+
+//global int cg_game_difficulty = RANK_EASY;		/*	RANK_NORMAL*/
+
+
+
+//1857939 1857907
 /* 127 かと思っていたけど、128みたい(つまり129段階) */
 //#define MAX_POWER_IS_128 (127)/* 0x00-0x7f  (0-127 の128段階) */
 //#define MAX_POWER_IS_128 (128)/* 0x00-0x80  (0-128 の129段階) */

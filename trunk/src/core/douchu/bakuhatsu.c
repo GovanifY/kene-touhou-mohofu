@@ -2,7 +2,7 @@
 #include "game_main.h"
 
 /*---------------------------------------------------------
-	東方模倣風	～ Toho Imitation Style.
+	東方模倣風 ～ Toho Imitation Style.
 	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	爆発作成
@@ -14,15 +14,11 @@
 
 static void move_bakuhatsu(SPRITE *src)
 {
-	src->base_time_out--;
-	if (0 < src->base_time_out)
+	/* 寿命があるうちは動かす。(寿命経過はシステム側がする) */
+	if (0 < src->jyumyou)
 	{
 		src->cx256 += src->vx256;
 		src->cy256 += src->vy256;
-	}
-	else
-	{
-		src->jyumyou = JYUMYOU_NASI;
 	}
 }
 
@@ -35,18 +31,18 @@ global void bakuhatsu_add_type_ddd(SPRITE *src, int type)
 {
 	{
 		SPRITE *h;
-		h					= sprite_add_gu_error();
+		h					= obj_add_01_teki_error();
 		if (NULL!=h)/* 登録できた場合のみ */
 		{
 			h->m_Hit256R		= TAMA_ATARI_JIPPOU32_PNG;/*????*/
-			h->base_time_out	= 30;/*30 フレーム*/
+			h->jyumyou			= (30);/*30 フレーム*/
 
 //			h->flags			|= (/*SP_FLAG_VISIBLE|*/SP_FLAG_TIME_OVER);
 			h->flags			&= (~(SP_FLAG_COLISION_CHECK)); 	/* あたり判定のOFF(無敵) */
 
 			#if 1
-			h->cx256 			= (src->cx256);
-			h->cy256 			= (src->cy256);
+			h->cx256			= (src->cx256);
+			h->cy256			= (src->cy256);
 			#endif
 			h->color32			= MAKE32RGBA(0xff, 0xff, 0xff, 0x66);	/*	s->alpha			= 0x80;*/
 			//

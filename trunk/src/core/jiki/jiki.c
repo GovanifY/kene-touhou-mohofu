@@ -2,36 +2,50 @@
 #include "game_main.h"
 
 /*---------------------------------------------------------
-	東方模倣風	～ Toho Imitation Style.
+	東方模倣風 ～ Toho Imitation Style.
 	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
-	各プレイヤー(霊夢 ＆ 魔理沙 ＆ レミリア ＆ チルノ ＆ 幽々子)
+	各プレイヤー
 	REIMU(A/B) MARISA(A/B/C) REMILIA CIRNO YUYUKO
 	-------------------------------------------------------
+	博麗 霊夢 A (霊符)					(はくれい れいむ)
+	博麗 霊夢 B (夢符)					(はくれい れいむ)
+	霧雨 魔理沙 A (魔符)				(きりさめ まりさ)
+	霧雨 魔理沙 B (恋符)				(きりさめ まりさ)
+	レミリア スカーレット				(Remilia Scarlet)
+	華胥の亡霊			西行寺 幽々子	(さいぎょうじ ゆゆこ)
+	幽冥楼閣の亡霊少女	西行寺 幽々子	(さいぎょうじ ゆゆこ)
+	チルノ A							(Cirno)
+	チルノ ⑨							(Cirno)
 ---------------------------------------------------------*/
 
 #include "jiki_local.h"
-
 #include "kanji_system.h"
 
 /*---------------------------------------------------------
 
 ---------------------------------------------------------*/
 
-global PLAYER_SPEC pd;
+global GAME_CORE_GLOBAL_CLASS cg;
 
+#if 1/* たぶん */
+global int cg_game_select_player;
+global int cg_game_difficulty;
+#endif
 /*---------------------------------------------------------
 	共通オブジェクト
 ---------------------------------------------------------*/
 #if 1
 
-//global SPRITE *obj00[FIX_OBJ_00_PLAYER];
+//global SPRITE *obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_00_PLAYER];
 //static SPRITE *obj_maru;		/* ○ */
 //static SPRITE *option[4];
 
-global SPRITE *global_obj_boss; //obj00[FIX_OBJ_08_BOSS]
-
+global SPRITE *global_obj_boss; //obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_08_BOSS]
+//global SPRITE *global_obj_boss_target;
 global SPRITE *obj_send1;
+//global SPRITE *obj_send2;
+
 //global SPRITE *obj_effect[8]; /* [□]（スペルカードのグラフィック） */
 
 //#define TEISOKU_EFFECT_00_OBJ (6)
@@ -39,63 +53,12 @@ global SPRITE *obj_send1;
 
 #endif
 
-
-	/*---------------------------------------------------------
-		各プレイヤーの性能差
-	---------------------------------------------------------*/
+/*---------------------------------------------------------
+	各プレイヤーの性能差
+---------------------------------------------------------*/
 /* 霊夢 特殊能力：喰らいボムの受付時間が長い */
 /* チルノ 特殊能力：⑨ */
-
-/*static*/global const u8 player_fix_status[BASE_MAX] =
-{/* REIMU(A/B) MARISA(A/B)	REMILIA YUYUKO CIRNO(A/Q) */
-//	/* BASE_OPT_SHOT_INTERVAL オプションショットの更新間隔 / option shot interval. */
-//	  14,  13,	11,   8,	8,	31,   8,   9,	 /* WEAPON_L0 */
-//	  12,  11,	10,   8,	8,	28,   8,   9,	 /* WEAPON_L1 */
-//	  10,	9,	 9,   8,	8,	25,   8,   9,	 /* WEAPON_L2 */
-//	   8,	7,	 8,   8,	8,	22,   8,   9,	 /* WEAPON_L3 */
-//	   6,	5,	 7,   8,	8,	19,   8,   9,	 /* WEAPON_L4 */
-//	   4,	3,	 6,   8,	8,	16,   8,   9,	 /* WEAPON_L5 */
 //
-	  14,  13,	11,   4,	8,	31,   8,   9,	 /* WEAPON_L0 */
-	  12,  11,	10,   4,	8,	28,   8,   9,	 /* WEAPON_L1 */
-	  10,	9,	 9,   4,	8,	25,   8,   9,	 /* WEAPON_L2 */
-	   8,	7,	 8,   4,	8,	22,   8,   9,	 /* WEAPON_L3 */
-	   6,	5,	 7,   4,	8,	19,   7,   8,	 /* WEAPON_L4 */
-	   4,	3,	 6,   3,	8,	16,   5,   6,	 /* WEAPON_L5 */
-//	 /* BASE_SPEED_ANIME	   プレイヤーのアニメーション速度 */
-	   8,	8,	 2,   2,	3,	 4,   1,   1,	 /* BASE_SPEED_ANIME	   プレイヤーのアニメーション速度 */
-//	  16,  16,	 8,   8,	4,	12,   9,   9,	 /* BASE_HIT_BOMB_DEC_WAIT	   喰らいボムの受付時間 / hit_bomb_wait. */
-//	  16-16,  16-16,	 16-8,	 16-8,	16-4,	16-12,	 16-9,	 16-9,	 /* BASE_HIT_BOMB_DEC_WAIT 喰らいボムの受け付け猶予減少時間 / hit_bomb_wait. */
-//	  0,  0,	 8,   8,	12,  4,   7,   7,	 /* BASE_HIT_BOMB_DEC_WAIT 喰らいボムの受け付け猶予減少時間 / hit_bomb_wait.(値が小さい程、受け付け時間が長い) */
-	  0,  0,	 8,   8,	12,  4,   3,   2,	 /* BASE_HIT_BOMB_DEC_WAIT 喰らいボムの受け付け猶予減少時間 / hit_bomb_wait.(値が小さい程、受け付け時間が長い) */
-//	  40,  40,	40,  40,   24,	48,   8,   8,	 /* BASE_STD_BOMB_STRENGTH 通常ボムの強さ / standard bomb strength. */
-//	 192, 192, 255, 255,   96, 160,  96,  96,	 /* BASE_LOW_BOMB_STRENGTH 低速ボムの強さ / lower bomb strength. */
-	#if 0
-	  48,  40,	40,  40,   32,	48,   8,   9,	 /* BASE_STD_BOMB_STRENGTH 通常ボムの強さ / standard bomb strength. */
-	 160, 192, 240, 255,  127, 160,  96, 127,	 /* BASE_LOW_BOMB_STRENGTH 低速ボムの強さ / lower bomb strength. */
-	#else
-	  48,  40,	40,  40,   32,	48, 240, 255,	 /* BASE_STD_BOMB_STRENGTH 通常ボムの強さ / standard bomb strength. */
-	 160, 192, 240, 255,  127, 160, 240, 255,	 /* BASE_LOW_BOMB_STRENGTH 低速ボムの強さ / lower bomb strength. */
-//	 (255), 192, 240, 255,	127, 160,  (244),  96,	 /* BASE_LOW_BOMB_STRENGTH 低速ボムの強さ / lower bomb strength. */
-	#endif
-//
-	   0,	0,	 0,   0,	0,	 1,   1,   1,	 /* BASE_OPT_ANIM_TYPE	   0==回転, 1==パターン */
-	   2,	2,	 2,   2,	2,	12,   3,   3,	 /* BASE_OPT_ANIM_SPEED    回転/パターン速度 */
-};
-//	  40,	 40,	5*8,	 40,	 24,	6*8,	 1*8,	1*8,	/* BASE_STD_BOMB_STRENGTH 通常ボムの強さ / standard bomb strength. */
-//	 30*8,	30*8,  48*8,	48*8,	12*8,  24*8,	12*8,  12*8,	/* BASE_LOW_BOMB_STRENGTH 低速ボムの強さ / lower bomb strength. */
-
-/*
-レミリアボム: 通常ボムの強さ:[旧==8] [新==4]
-旧 3回==((256/64)-1) [24==(8)*3]
-新 7回==((256/32)-1) [21==(3)*7]
-REIMU		5,[新==5] [旧==3]
-MARISA		5,
-REMILIA 	3,[新==3] [旧==8]
-YUYUKO		6,[新==6] [旧==4]
-CIRNO		1,[新==1] [旧==4]
-	通常ボムの強さ / standard bomb strength.
-*/
 
 
 
@@ -105,17 +68,17 @@ CIRNO		1,[新==1] [旧==4]
 	プレイヤー武器のあたり判定
 ---------------------------------------------------------*/
 
-/*static*/global void player_weapon_colision_check(SPRITE *shot, int erase_shot_type)
+/* static */global void player_weapon_colision_check(SPRITE *shot, int erase_shot_type)
 {
 //	SPRITE *shot;	/* 自弾 */
 	SPRITE *tt; 	/* 一時使用のテンポラリ(敵スプライト、または、敵弾スプライト) */
 	#define teki_obj		tt
 	#define tekidan_obj 	tt
 	/* 敵弾にあたった場合に敵弾を消す(ボム系のみ) */
-	if (/*PLAYER_WEAPON_TYPE_01_BOMB==*/erase_shot_type/*erase_bullets*/)	/* ボム系のみ */
+	if (/* PLAYER_WEAPON_TYPE_01_BOMB== */erase_shot_type/* erase_bullets */)	/* ボム系のみ */
 	{
 		/* 自弾にあたったのは敵弾なのか調べる． */
-		tekidan_obj = sprite_collision_check_444(shot, SP_GROUP_BULLETS);/* 弾幕専用(弾幕) */
+		tekidan_obj = obj_collision_check_00_tama(shot, SP_GROUP_BULLETS);/* 弾幕専用(弾幕) */
 		if (NULL != tekidan_obj)		/* 敵弾に当たったら */
 		{
 			tekidan_obj->jyumyou = JYUMYOU_NASI;	/* 敵弾が消滅 */
@@ -125,20 +88,20 @@ CIRNO		1,[新==1] [旧==4]
 	/* 敵にあたった場合に敵を消す */
 	{
 		/* 自弾にあたったのは敵自体なのか調べる． */
-		teki_obj = sprite_collision_check_SDL_teki(shot);//, (SP_GROUP_TEKI));	/*|SP_GROUP_BOSS*/	/*SP_GROUP_ENEMYS*/
+		teki_obj = obj_collision_check_01_teki(shot);//, (SP_GROUP_TEKI));	/* |SP_GROUP_BOSS */	/* SP_GROUP_ENEMYS */
 		if (NULL != teki_obj)			/* 敵自体に当たったら */
 		{
-			if (NULL != (teki_obj->callback_hit_enemy)) 	/*	*/
+			if (NULL != (teki_obj->callback_hit_teki)) 	/*	 */
 			{
-				(teki_obj->callback_hit_enemy)(teki_obj/*敵自体*/, shot/*自弾*/);
+				(teki_obj->callback_hit_teki)(teki_obj/* 敵自体 */, shot/* 自弾 */);
 			}
 			/* 自弾が敵にあたった場合に自弾が消滅する */
-			if (/*erase_player_tama*/PLAYER_WEAPON_TYPE_00_SHOT == erase_shot_type) 	/* ショット系のみ */
+			if (/* erase_player_tama */PLAYER_WEAPON_TYPE_00_SHOT == erase_shot_type)	/* ショット系のみ */
 			{
 			//	/* 自弾消滅方法が特殊な場合 */
 			//	if (NULL != (shot->callback_loser))
 			//	{
-			//		(shot->callback_loser)(shot/*自弾*/);
+			//		(shot->callback_loser)(shot/* 自弾 */);
 			//	}
 				shot->jyumyou = JYUMYOU_NASI;		/* 自弾が消滅 */
 				/* ショットが敵に当たった場合、打ち込み点を加算。(無敵キャラでも撃ち込み点で稼げる) */
@@ -153,20 +116,20 @@ CIRNO		1,[新==1] [旧==4]
 	敵を探す子関数
 ---------------------------------------------------------*/
 
-/*static*/global SPRITE *search_enemy_by_sprite(void)
+/* static */global SPRITE *search_teki_from_obj(void)
 {
 	int ii;
-	for (ii=0; ii<SPRITE_333POOL_MAX; ii++ )/* 全部調べる。 */
+	for (ii=0; ii<OBJ_POOL_01_TEKI_MAX; ii++ )/* 全部調べる。 */
 	{
 		SPRITE *h;
-		h = &obj33[ii];
+		h = &obj99[OBJ_HEAD_01_TEKI+ii];
 	//
 		if (
 			#if 1
 		//	(SP_DELETE != h->type ) && /* 削除済みは飛ばす */
 			(JYUMYOU_NASI <= h->jyumyou) && /* 削除済みは飛ばす */
 			#endif
-			(0 != (h->type & (SP_GROUP_TEKI/*|SP_GROUP_BOSS*/))/*SP_GROUP_ENEMYS*/) 	/* プレイヤーにとっての敵(ザコやボス) */
+			(0 != (h->type & (SP_GROUP_TEKI/* |SP_GROUP_BOSS */))/* SP_GROUP_ENEMYS */) 	/* プレイヤーにとっての敵(ザコやボス) */
 		)
 		{
 //			if (
@@ -176,17 +139,17 @@ CIRNO		1,[新==1] [旧==4]
 //				(h->flags & SP_FLAG_VISIBLE)										/* 使用中の敵 */
 //			)
 			{
-				#if 1/*Gu(中心座標)*/
+				#if 1/* Gu(中心座標) */
 				if ((h->cx256 > 0) && (h->cx256 < t256(GAME_WIDTH ) ) &&
 					(h->cy256 > 0) && (h->cy256 < t256(GAME_HEIGHT) ))	/* 表示画面内の敵 */
 				#endif
 				{
-					return (h);/*見つけたよ*/
+					return (h);/* 見つけたよ */
 				}
 			}
 		}
 	}
-	return (&obj00[FIX_OBJ_00_PLAYER]);/*見つからなかった*/
+	return (&obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_00_PLAYER]);/* 見つからなかった */
 }
 
 
@@ -196,7 +159,7 @@ CIRNO		1,[新==1] [旧==4]
 
 static void player_move_tachie(SPRITE *src) 	/* [***100113 追加 */
 {
-	if ((128-1) < pd.bomber_time)/* 残り時間が 128 以上なら、移動して待機 */
+	if ((128-1) < cg.bomber_time)/* 残り時間が 128 以上なら、移動して待機 */
 	{
 		/* 画面外から出現、停止。しばし待つ。 */
 		if ( t256(100) > src->cx256 )
@@ -205,16 +168,12 @@ static void player_move_tachie(SPRITE *src) 	/* [***100113 追加 */
 		}
 	}
 	else
-	if ((1/*-1*/) < pd.bomber_time)/* 拡大 */
+	if ((1/*-1 */) < cg.bomber_time)/* 拡大 */
 	{
-		/* (24+(1))  、ここでの pd.bomber_time は、最大0x7fなので。 */
-		src->color32		= (pd.bomber_time<<(24+(1)))|0x00ffffff;
-		#if (1==USE_ZOOM_XY)
+		/* (24+(1))  、ここでの cg.bomber_time は、最大0x7fなので。 */
+		src->color32		= (cg.bomber_time<<(24+(1)))|0x00ffffff;
 		src->m_zoom_x256	+= (10);
 		src->m_zoom_y256	+= (10);
-		#else
-		src->m_zoom_xy256	+= (10);
-		#endif
 	}
 	else
 	{
@@ -237,24 +196,21 @@ static void player_move_tachie(SPRITE *src) 	/* [***100113 追加 */
 		(仮チルノ)	[丸氷弾]、
 ---------------------------------------------------------*/
 
-/*static*/ int weapon_level_offset; /* 装備した武器レベル(番号)の８倍にプレイヤー値を足した値をオフセットとして保持 */
+/* static */ int cg_jiki_weapon_level_offset; /* 装備した武器レベル(番号)の８倍にプレイヤー値を足した値をオフセットとして保持 */
 /*
-	weapon_level_offset == player番号 + (武器レベル x 8)
-	weapon_level_offset =  select_player + (weapon_level<<3);
-*/
+	cg_jiki_weapon_level_offset == player番号 + (武器レベル x 8)
+	cg_jiki_weapon_level_offset =  (cg_game_select_player) + (weapon_level<<3);
+ */
 
 
 /*---------------------------------------------------------
 	プレイヤー、オプションの移動(霊夢、魔理沙、仮幽々子)
 ---------------------------------------------------------*/
 
-//#define BASE_OPT_SHOT_ANIME	(PLAYERS8*3)
-//	 12,  12,	6,	 6,    3,  yuuyko(12),	 CIRNO(3),	 CIRNO(3),	/* オプションショットのアニメーション速度 */
-
 /*---------------------------------------------------------
 	プレイヤー、オプションの定義
 ---------------------------------------------------------*/
-/*static*/extern void player_move_option(SPRITE *src);
+/* static */extern void player_move_option(SPRITE *src);
 
 /*---new add-----*/
 
@@ -264,39 +220,36 @@ static void player_move_tachie(SPRITE *src) 	/* [***100113 追加 */
 	(幽々子)[幽々子ボムの扇本体]
 ---------------------------------------------------------*/
 
-static void player_create_bomber_tachie(void/*SPRITE *src*/)
+static void player_create_bomber_tachie(void/* SPRITE *src */)
 {
 	SPRITE *h;
-	h					= sprite_add_gu_error();
-	if (NULL!=h)/* 登録できた場合のみ */	/*(?)*/
+	h					= obj_add_01_teki_error();
+	if (NULL!=h)/* 登録できた場合のみ */	/* (?) */
 	{
 		h->m_Hit256R			= JIKI_ATARI_ITEM_80;
-//		h->flags				|= (/*SP_FLAG_VISIBLE|*/SP_FLAG_TIME_OVER);
+//		h->flags				|= (/* SP_FLAG_VISIBLE| */SP_FLAG_TIME_OVER);
 		h->color32				= MAKE32RGBA(0xff, 0xff, 0xff, 0xff);
 		h->callback_mover		= player_move_tachie;
-		h->type 				= (JIKI_BOMBER_00|SP_GROUP_SHOT_ZAKO);	/*SP_GROUP_JIKI_GET_ITEM*/ /*JI KI_SHOT_00*/	/* ボスの直接攻撃は禁止 */	/*(SP_GROUP_JIKI_GET_ITEM|SP_GROUP_SHOT_ZAKO) ボスに無効*/
+		h->type 				= (JIKI_BOMBER_00|SP_GROUP_SHOT_ZAKO);	/* SP_GROUP_JIKI_GET_ITEM */ /* JI KI_SHOT_00 */	/* ボスの直接攻撃は禁止 */	/* (SP_GROUP_JIKI_GET_ITEM|SP_GROUP_SHOT_ZAKO) ボスに無効 */
 		/* 立ち絵初期位置 */
-		h->cx256				= -t256(150);	// (200)	/*0*/  /*(src->cx256) */
-		h->cy256				=  t256(150);	// (100)	/*GAME_HEIGHT+1*/ /*(src->cy256)*/
+		h->cx256				= -t256(150);	// (200)	/* 0 */  /* (src->cx256) */
+		h->cy256				=  t256(150);	// (100)	/* GAME_HEIGHT+1 */ /* (src->cy256) */
 	//
 		/* 描画用角度 */
 	//	h->rotationCCW1024		= (256);
 		h->rotationCCW1024		= (0);
 	//
-	/*???*/ 	h->base_weapon_strength 	= (1/*8*1*/);		/* 扇本体 の強さ */
+	/* ??? */	h->base_weapon_strength 	= (1/* 8*1 */); 	/* 扇本体 の強さ */
 	}
 }
 
 
-
-
-
-
-enum /*_player_state_*/
+enum /* _player_state_ */
 {
 	//...
-	LIMIT_m255_CONTINUE 		= (-255),
-	LIMIT_m127_MIN				= (-127),
+	LIMIT_m255_CONTINUE 		= (-64),//	LIMIT_m255_CONTINUE 		= (-255),
+	LIMIT_fukki2				= (-48),// 復帰2 < LIMIT_fukki2
+	LIMIT_m127_MIN				= (-32),// 復帰1 <	LIMIT_m127_MIN				= (-127),
 	LIMIT_m16_GAME_OUT			= (-16),
 	LIMIT_m1_KURAI_BOMB_UKETUKE = (-1),
 	LIMIT_0_ZERO	= (0),
@@ -309,7 +262,7 @@ enum /*_player_state_*/
 
 /* 0==特殊イベント発生していない。 */
 static signed int pds_status_timer; /* 特殊イベント発生中タイマー */
-//static int pd.special_ivent_type; /* 特殊イベントの種類 */
+//static int cg.special_ivent_type; /* 特殊イベントの種類 */
 
 
 extern void reimu_create_bomber_kekkai_parrent(SPRITE *src);				/* 霊夢専用 ボムの親 */
@@ -324,15 +277,13 @@ extern void reimu_create_bomber_homing_shot_parrent(SPRITE *src);			/* 霊夢専用 
 	プレイヤーキー操作
 ---------------------------------------------------------*/
 
-//static int /*bomb_wait*/d->bomber_time;		/* ボムの有効時間 */	//次のボムを出せるまでの時間
+//static int /* bomb_wait */d->bomber_time; 	/* ボムの有効時間 */	//次のボムを出せるまでの時間
 
-extern /*global*/short my_analog_x; /* アナログ量、補正済み */
-extern /*global*/short my_analog_y; /* アナログ量、補正済み */
 extern void set_bg_alpha(int set_bg_alpha);
 extern void register_main_shot(SPRITE *s1);
 
 
-//enum /*_player_state_*/
+//enum /* _player_state_ */
 //{
 //	PLAYER_STATE_00_NORMAL,
 //	PLAYER_STATE_01_KURAI_BOMB_UKETUKE, 	/* [***090125		追加:PLAYER_STATE_01_KURAI_BOMB_UKETUKE */
@@ -346,49 +297,49 @@ static void player_keycontrol(SPRITE *s1)
 	/*---------------------------------------------------------
 		プレイヤーボム関連処理
 	---------------------------------------------------------*/
-//	if (STATE_FLAG_06_IS_SCRIPT==(pd.state_flag & STATE_FLAG_06_IS_SCRIPT))
+//	if (STATE_FLAG_06_IS_SCRIPT==(cg.state_flag & STATE_FLAG_06_IS_SCRIPT))
 //	{
 //		;	/* 会話イベント中はボム関連の処理はしない */
 //	}
 //	else
 		/* シナリオ時には誘導弾を追加しない */
-	if (0==(pd.state_flag & STATE_FLAG_06_IS_SCRIPT))
+	if (0==(cg.state_flag & STATE_FLAG_06_IS_SCRIPT))
 	{
 	//	if (d->bomber_time>0)
-		if (0 < /*bomb_wait*/pd.bomber_time)		/* ボムウェイト処理 */
+		if (0 < /* bomb_wait */cg.bomber_time)		/* ボムウェイト処理 */
 		{
 			//	d->bomber_time-=fps_fa_ctor;
-			/*bomb_wait*/pd.bomber_time--/*-=fps_fa_ctor*/;/**/
-			if (2 > /*bomb_wait*/pd.bomber_time)
+			/* bomb_wait */cg.bomber_time--/*-=fps_fa_ctor */;/* */
+			if (2 > /* bomb_wait */cg.bomber_time)
 			{
 				set_bg_alpha(255);/* 画面を明るくする */
 		//	}
 		//	else
-		//	if (/*bomb_wait*/pd.bomber_time < 190)
+		//	if (/* bomb_wait */cg.bomber_time < 190)
 		//	{
-				pd.state_flag &= (~STATE_FLAG_02_BOMB_AUTO_GET_ITEM);	/* ボムによる自動収集は終わり */
+				cg.state_flag &= (~STATE_FLAG_02_BOMB_AUTO_GET_ITEM);	/* ボムによる自動収集は終わり */
 			}
 		}
 		else
 		{
-			pd.bomber_time = 0;
+			cg.bomber_time = 0;
 		//}
-		//if (/*bomb_wait*/d->bomber_time<=0)
+		//if (/* bomb_wait */d->bomber_time<=0)
 		//{
-			if (my_pad & PSP_KEY_BOMB_CANCEL)
+			if (cg_my_pad & PSP_KEY_BOMB_CANCEL)
 			{
-				if (0 < pd.bombs)
+				if (0 < cg.bombs)
 				{
-					pd.bombs--;
-					pd.used_bomber++;	/* ボム使用回数 */
-					voice_play(VOICE07_BOMB, TRACK02_ALEART_IVENT);/*テキトー*/
+					cg.bombs--;
+					cg.player_data_used_bomber++;	/* 集計システム(player_data)ボム使用回数 */
+					voice_play(VOICE07_BOMB, TRACK02_ALEART_IVENT);/* テキトー */
 					set_bg_alpha(50);/* 画面を暗くする */
 //					set_bg_alpha(100);/* 画面を暗くする */
 //					set_bg_alpha(127);/* 画面を暗くする */
 					/* 立ち絵 */
-					player_create_bomber_tachie(/*obj00[FIX_OBJ_00_PLAYER]*/);
+					player_create_bomber_tachie(/* obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_00_PLAYER] */);
 					//
-					static /*const*/ void (*regist_call_table[/*16*/(PLAYERS8*2)])(SPRITE *src) =
+					static /* const */ void (*regist_call_table[/* 16 */(PLAYERS8*2)])(SPRITE *src) =
 					{
 						reimu_create_bomber_homing_shot_parrent,				reimu_create_bomber_kekkai_parrent, 		/* 霊夢 A */
 						reimu_create_bomber_kekkai_parrent, 					marisa_create_bomber_homing_parrent,		/* 霊夢 B */
@@ -400,31 +351,31 @@ static void player_keycontrol(SPRITE *s1)
 						yuyuko_create_bomber_gyastry_dream_parrent, 			marisa_create_bomber_homing_parrent,		/* チルノ Q */
 					};
 						int index_aaa;
-						index_aaa = ((select_player)+(select_player)+((my_pad & PSP_KEY_SLOW)?1:0));
+						index_aaa = (((cg_game_select_player))+((cg_game_select_player))+((cg_my_pad & PSP_KEY_SLOW)?1:0));
 					{
-						(regist_call_table[(index_aaa)])(&obj00[FIX_OBJ_00_PLAYER]);
+						(regist_call_table[(index_aaa)])(&obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_00_PLAYER]);
 					}
 					s1->color32 				= MAKE32RGBA(0xff, 0xff, 0xff, 0x50);	/* 半透明 */
 					{
 						SPRITE *zzz_obj_maru;
-						zzz_obj_maru = &obj00[FIX_OBJ_01_JIKI_MARU];
+						zzz_obj_maru = &obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_01_JIKI_MARU];
 						zzz_obj_maru->color32	= MAKE32RGBA(0xff, 0xff, 0xff, 0x50);	/* 半透明 */
 					}
-//					if (PLAYER_STATE_01_KURAI_BOMB_UKETUKE==pd.special_ivent_type)/* 喰らいボム受付中 */
+//					if (PLAYER_STATE_01_KURAI_BOMB_UKETUKE==cg.special_ivent_type)/* 喰らいボム受付中 */
 					if (LIMIT_0_ZERO > pds_status_timer)/* 喰らいボム受付中 */
 					{
-						pd.use_kurai_bomb++;/* 喰らいボム成功 */
+						cg.player_data_use_kurai_bomb++;/* 集計システム(player_data)喰らいボム成功 */
 					}
-//					pds_status_timer = LIMIT_128;// pd.special_ivent_type	= PLAYER_STATE_03_SAVE_02;
-					pd.bomber_time		= (PD_BOMBER_JYUMYOU180);//pd.bomber_time_table[(index_aaa)];
+//					pds_status_timer = LIMIT_128;// cg.special_ivent_type	= PLAYER_STATE_03_SAVE_02;
+					cg.bomber_time		= (PD_BOMBER_JYUMYOU180);//cg.bomber_time_table[(index_aaa)];
 					//	#define USER_BOMOUT_WAIT (30)
-					pds_status_timer	= pd.bomber_time + USER_BOMOUT_WAIT;/*実質無敵時間*/
+					pds_status_timer	= cg.bomber_time + USER_BOMOUT_WAIT;/* 実質無敵時間 */
 					/*	実質無敵時間 == (設定無敵時間 + USER_BOMOUT_WAIT)。 	実質無敵時間 == 設定無敵時間 だと、わかりにくいので若干の余裕が必要。 */
 				//
 					kanji_window_clear_line(0); 	/* 漢字ウィンドウの1行目(==0)の内容を消す。 */
 					set_cursor(0, 0);				/* カーソルを1行目(==0)へ移動 */
 					{
-						msg_time = pd.bomber_time;	/*(60*5)*/
+						cg.msg_time = cg.bomber_time;	/* byou60(5) */ /* 約 5 秒 */
 						typedef struct
 						{
 							const char *spell_str_name; 	/* スペカ名称 */
@@ -441,7 +392,7 @@ static void player_keycontrol(SPRITE *s1)
 	{"霰符「アイシクルストライク」" 	"\n"},	{"氷符「オンザロック」" 			"\n"},	/* 霰(あられ): 雨が凍ったり、溶けかけた雪が再び凍って降る。 */
 	{"最強「アタイの拳」"				"\n"},	{"最雹「九文キック」"				"\n"},	/* 霙符 霜踏 霙(みぞれ): 雨と雪が混ざって降る。 */
 						};
-						print_kanji000(my_aaa_resource[index_aaa].spell_str_name, /*int color_type*/7, /*int wait*/0);
+						print_kanji000(my_aaa_resource[index_aaa].spell_str_name, /* int color_type */7, /* int wait */0);
 					}
 				}
 			}
@@ -450,12 +401,12 @@ static void player_keycontrol(SPRITE *s1)
 
 
 	#if 0/* 今まで検討したボム時間(主なもの) */
-//	/* 低速ボム */			pd.bomber_time = 200/*320*/ /*400*/ /*800*/;			/* ボムの有効時間(設定無敵時間)[※１仕様が変わったので半分にした] */
-//	/* 霊夢 */				pd.bomber_time = 180/*200*/;							/* ボムの有効時間(設定無敵時間) */	/* こちらはボス有効(攻撃型) */
-//	/* 魔理沙	チルノ */	pd.bomber_time = 100/*32*/ /*100*/; 					/* ボムの有効時間(設定無敵時間) */
-//	/* 扇 有効時間 */		pd.bomber_time = 255/*255==((16*4*2*2)-1)*/;			/* ボムの有効時間(設定無敵時間) */
-//	レミリアボム			pd.bomber_time = 0x7e	/* 255==0xff==8発	254==0xfe==7発==0xbf=192 4発==0x7f 150==0x96*/;
-	static const u8 pd.bomber_time_table[/*16*/(PLAYERS8*2)] =
+//	/* 低速ボム */			cg.bomber_time = 200/* 320 */ /* 400 */ /* 800 */;		/* ボムの有効時間(設定無敵時間)[※１仕様が変わったので半分にした] */
+//	/* 霊夢 */				cg.bomber_time = 180/* 200 */;							/* ボムの有効時間(設定無敵時間) */	/* こちらはボス有効(攻撃型) */
+//	/* 魔理沙	チルノ */	cg.bomber_time = 100/* 32 */ /* 100 */; 				/* ボムの有効時間(設定無敵時間) */
+//	/* 扇 有効時間 */		cg.bomber_time = 255/* 255==((16*4*2*2)-1) */;			/* ボムの有効時間(設定無敵時間) */
+//	レミリアボム			cg.bomber_time = 0x7e	/* 255==0xff==8発	254==0xfe==7発==0xbf=192 4発==0x7f 150==0x96 */;
+	static const u8 cg.bomber_time_table[/* 16 */(PLAYERS8*2)] =
 	{
 		180,		180,		/* 180 200 霊夢 A */
 		180,		200,		/* 180 200 霊夢 B */
@@ -468,7 +419,7 @@ static void player_keycontrol(SPRITE *s1)
 	};
 	#endif
 //
-//	if (PLAYER_STATE_01_KURAI_BOMB_UKETUKE==pd.special_ivent_type) return;/* 喰らいボム受付中 */
+//	if (PLAYER_STATE_01_KURAI_BOMB_UKETUKE==cg.special_ivent_type) return;/* 喰らいボム受付中 */
 	if (LIMIT_0_ZERO > pds_status_timer)	{	return; 	}	/* 喰らいボム受付中 */
 //
 	/*---------------------------------------------------------
@@ -478,27 +429,27 @@ static void player_keycontrol(SPRITE *s1)
 		256固定小数点で自機の移動量
 		1.0dot	 == 256 == t256(1.0),			縦横の場合
 		約0.7dot == 181 == t256(1.0/√2.0)		斜めの場合
-	*/
+	 */
 	static const s16 jiki_move_length[16][2] =
 	{
-	/*LDRU*/ /* y x */
+	/* LDRU */ /* y x */
 	// 斜め移動が速過ぎるのを修正。
-	/*0000*/ {	  0,	0},
-	/*0001*/ {	  0, -256},/*0 U*/
-	/*0010*/ {	256,	0},/*2 R*/
-	/*0011*/ {	181, -181},/*1 UR*/
-	/*0100*/ {	  0,  256},/*4 D*/
-	/*0101*/ {	  0,	0},
-	/*0110*/ {	181,  181},/*3 DR*/
-	/*0111*/ {	  0,	0},
-	/*1000*/ { -256,	0},/*6 L*/
-	/*1001*/ { -181, -181},/*7 UL*/
-	/*1010*/ {	  0,	0},
-	/*1011*/ {	  0,	0},
-	/*1100*/ { -181,  181},/*5 DL*/
-	/*1101*/ {	  0,	0},
-	/*1110*/ {	  0,	0},
-	/*1111*/ {	  0,	0},
+	/* 0000 */ {	  0,	0},
+	/* 0001 */ {	  0, -256},/* 0 U */
+	/* 0010 */ {	256,	0},/* 2 R */
+	/* 0011 */ {	181, -181},/* 1 UR */
+	/* 0100 */ {	  0,  256},/* 4 D */
+	/* 0101 */ {	  0,	0},
+	/* 0110 */ {	181,  181},/* 3 DR */
+	/* 0111 */ {	  0,	0},
+	/* 1000 */ { -256,	0},/* 6 L */
+	/* 1001 */ { -181, -181},/* 7 UL */
+	/* 1010 */ {	  0,	0},
+	/* 1011 */ {	  0,	0},
+	/* 1100 */ { -181,	181},/* 5 DL */
+	/* 1101 */ {	  0,	0},
+	/* 1110 */ {	  0,	0},
+	/* 1111 */ {	  0,	0},
 	};
 /* 花映塚会話何たらサイト http://ambriel.hp.infoseek.co.jp/th9/  基本性能比較 移動速度(高速モード)
 														[51200/xxxF]
@@ -526,21 +477,21 @@ static void player_keycontrol(SPRITE *s1)
 200/145 	145F	てゐ								0x0161[ 353.103448275862068965517241379310]1.37931034482758620689655172413793		[YUYUKO]
 200/148 	148F	幽香								0x015a[ 345.945945945945945945945945945946]1.35135135135135135135135135135135
 
-*/
+ */
 //#define BASE_SPEED_MINIMUM		(PLAYERS8*4)
 //#define BASE_SPEED_MAXIMUM		(PLAYERS8*5)
 //	 2,  3,  4,  7,  3, 	/* 最低速度 player_speed_minimum */
 //	 4,  5,  4,  7,  3, 	/* 最高速度 player_speed_maximum */
-	/* 高速モード(通常時) */								/* 高速モード(ボム発動時) */
+	/* 高速モード(通常時) */					/* 高速モード(ボム発動時) */
 	#define SPEED_HIGH_REIMU_A		(0x02f1)	/* t256(2.94) 2.94140625		  t256(3.0), */
 	#define SPEED_HIGH_REIMU_B		(0x02f1)	/* t256(2.94) 2.94140625		  t256(3.0), */
 	#define SPEED_HIGH_MARISA_A 	(0x03a3)	/* t256(3.64) 3.63671875		  t256(2.0), */
 	#define SPEED_HIGH_MARISA_B 	(0x03a3)	/* t256(3.64) 3.63671875		  t256(2.0), */
 	#define SPEED_HIGH_REMILIA		(0x0347)	/* t256(3.28) 3.27734375		  t256(5.0), */
 	#define SPEED_HIGH_YUYUKO		(0x02c7)	/* t256(2.78) 2.77734375		  t256(5.0), */
-	#define SPEED_HIGH_CIRNO_A		(0x0373)	/* t256(3.45) 3.44921875		  t256(4.5), */ 			/* ⑨だから低速の方が速い */
-	#define SPEED_HIGH_CIRNO_Q		(0x0373)	/* t256(3.45) 3.44921875		  t256(4.5), */ 			/* ⑨だから低速の方が速い */
-														/* 低速モード(通常時) */								/* 低速モード(ボム発動時) */
+	#define SPEED_HIGH_CIRNO_A		(0x0373)	/* t256(3.45) 3.44921875		  t256(4.5), */ 	/* ⑨だから低速の方が速い */
+	#define SPEED_HIGH_CIRNO_Q		(0x0373)	/* t256(3.45) 3.44921875		  t256(4.5), */ 	/* ⑨だから低速の方が速い */
+												/* 低速モード(通常時) */							/* 低速モード(ボム発動時) */
 	#define SPEED_LOW_REIMU_A		(0x0178)	/* t256(1.47) 1.46875000 t256(2.0) t256(2.0), */
 	#define SPEED_LOW_REIMU_B		(0x0178)	/* t256(1.47) 1.46875000 t256(2.0) t256(2.0), */
 	#define SPEED_LOW_MARISA_A		(0x0233)	/* t256(2.20) 2.19921875 t256(2.5) t256(2.0), */
@@ -553,8 +504,8 @@ static void player_keycontrol(SPRITE *s1)
 	#define PLAYER_WIDTH			(50)	/*	固定サイズ */
 	#define PLAYER_HEIGHT			(50)	/*	固定サイズ */
 
-	static const signed /*int*/short player_speed256[(PLAYERS8*4)] =
-	{	/* 高速モード(通常時) */								/* 高速モード(ボム発動時) */
+	static const signed /* int */short player_speed256[(PLAYERS8*4)] =
+	{	/* 高速モード(通常時) */	/* 高速モード(ボム発動時) */
 		SPEED_HIGH_REIMU_A, 		/* REIMU_A */
 		SPEED_HIGH_REIMU_B, 		/* REIMU_B */
 		SPEED_HIGH_MARISA_A,		/* MARISA_A */
@@ -563,7 +514,7 @@ static void player_keycontrol(SPRITE *s1)
 		SPEED_HIGH_YUYUKO,			/* YUYUKO */
 		SPEED_HIGH_CIRNO_A, 		/* CIRNO_A */
 		SPEED_HIGH_CIRNO_Q, 		/* CIRNO_Q */
-		/* 低速モード(通常時) */								/* 低速モード(ボム発動時) */
+		/* 低速モード(通常時) */	/* 低速モード(ボム発動時) */
 		SPEED_LOW_REIMU_A,			/* REIMU_A */
 		SPEED_LOW_REIMU_B,			/* REIMU_B */
 		SPEED_LOW_MARISA_A, 		/* MARISA_A */
@@ -572,8 +523,8 @@ static void player_keycontrol(SPRITE *s1)
 		SPEED_LOW_YUYUKO,			/* YUYUKO */
 		SPEED_LOW_CIRNO_A,			/* CIRNO_A */
 		SPEED_LOW_CIRNO_Q,			/* CIRNO_Q */
-	#if 0/*[マスタースパーク中は、速度半分。]*/
-		/* 高速モード(通常時) */								/* 高速モード(ボム発動時) */
+	#if 0/* [マスタースパーク中は、速度半分。] */
+		/* 高速モード(通常時) */	/* 高速モード(ボム発動時) */
 		SPEED_HIGH_REIMU_A, 		/* REIMU_A */
 		SPEED_HIGH_REIMU_B, 		/* REIMU_B */
 		SPEED_HIGH_MARISA_A,		/* MARISA_A */
@@ -582,7 +533,7 @@ static void player_keycontrol(SPRITE *s1)
 		SPEED_HIGH_YUYUKO,			/* YUYUKO */
 		SPEED_HIGH_CIRNO_A, 		/* CIRNO_A */
 		SPEED_HIGH_CIRNO_Q, 		/* CIRNO_Q */
-		/* 低速モード(通常時) */								/* 低速モード(ボム発動時) */
+		/* 低速モード(通常時) */	/* 低速モード(ボム発動時) */
 		SPEED_LOW_REIMU_A,			/* REIMU_A */
 		SPEED_LOW_REIMU_B,			/* REIMU_B */
 		SPEED_LOW_MARISA_A, 		/* MARISA_A */
@@ -595,13 +546,13 @@ static void player_keycontrol(SPRITE *s1)
 	};
 	/* 自機速度を決める。 */
 	unsigned int is_slow;
-	is_slow = (my_pad & PSP_KEY_SLOW);
-	/*const*/ signed int my_speed = player_speed256[select_player + ((is_slow)?(PLAYERS8):(0))];
+	is_slow = (cg_my_pad & PSP_KEY_SLOW);
+	/* const */ signed int my_speed = player_speed256[(cg_game_select_player) + ((is_slow)?(PLAYERS8):(0))];
 	/* 移動量を決める。(移動量 = 自機速度 x アナログキー、デジタルの場合は予めアナログキー移動量に変換してある) */
-	#if 1/*[マスタースパーク中は、速度半分。]*/
+	#if 1/* [マスタースパーク中は、速度半分。] */
 	if (
-		(MARISA_B==select_player) &&	/* 魔理沙B(恋符) */
-		(0<pd.bomber_time)				/* マスタースパーク中 */
+		(MARISA_B==(cg_game_select_player)) &&	/* 魔理沙B(恋符) */
+		(0<cg.bomber_time)				/* マスタースパーク中 */
 	)
 		#if 0
 	{
@@ -611,13 +562,12 @@ static void player_keycontrol(SPRITE *s1)
 		#endif
 	{	(my_speed >>= 1);	}
 	#endif
-	short	aaa_my_analog_x = (((my_speed)*(my_analog_x))>>8);
-	short	aaa_my_analog_y = (((my_speed)*(my_analog_y))>>8);
+	short	aaa_cg_analog_x = (((my_speed)*(cg_analog_x))>>8);
+	short	aaa_cg_analog_y = (((my_speed)*(cg_analog_y))>>8);
 	/* 斜めを考慮して移動する。 */
-	s1->cx256 += ((((signed int)(jiki_move_length[((my_pad&0xf0)>>4)][0]))*(aaa_my_analog_x))>>8);	/*fps_factor*/
-	s1->cy256 += ((((signed int)(jiki_move_length[((my_pad&0xf0)>>4)][1]))*(aaa_my_analog_y))>>8);	/*fps_factor*/
-	/* 画面外に、はみだしたら修正。 */
-	#if 1/*Gu(中心座標)*/
+	s1->cx256 += ((((signed int)(jiki_move_length[((cg_my_pad&0xf0)>>4)][0]))*(aaa_cg_analog_x))>>8);	/* fps_factor */
+	s1->cy256 += ((((signed int)(jiki_move_length[((cg_my_pad&0xf0)>>4)][1]))*(aaa_cg_analog_y))>>8);	/* fps_factor */
+	/* 画面外に、はみだしたら修正。(中心座標で判定) */
 //		 if (s1->cx256 < t256(0))				{	s1->cx256 = t256(0);				}/* 左チェック */
 //	else if (s1->cx256 > t256(GAME_WIDTH)  )	{	s1->cx256 = t256(GAME_WIDTH);		}/* 右チェック */
 //		 if (s1->cy256 < t256(0))				{	s1->cy256 = t256(0);				}/* 上チェック */
@@ -629,36 +579,34 @@ static void player_keycontrol(SPRITE *s1)
 		 if (s1->cx256 < t256(PLAYER_WIDTH/2))					{	s1->cx256 = t256(PLAYER_WIDTH/2);					}/* 左チェック(喰み出さない) */
 	else if (s1->cx256 > t256(GAME_WIDTH-(PLAYER_WIDTH/2))	)	{	s1->cx256 = t256(GAME_WIDTH-(PLAYER_WIDTH/2));		}/* 右チェック(喰み出さない) */
 //		 if (s1->cy256 < t256(PLAYER_HEIGHT/2)) 				{	s1->cy256 = t256((PLAYER_HEIGHT/2));				}/* 上チェック(喰み出さない) */
-//	else if (s1->cy256 > t256(GAME_HEIGHT-(PLAYER_HEIGHT/2)) )	{	s1->cy256 = t256(GAME_HEIGHT-(PLAYER_HEIGHT/2));	}/* 下チェック(喰み出さない) */
+//	else if (s1->cy256 > t256(GAME_HEIGHT-(PLAYER_HEIGHT/2)) )	{	s1->cy256 = t256(GAME_HEIGHT-(PLAYER_HEIGHT/2));	}/* 下チェック(喰み出さない、5[dot]内側っぽいがpspは縦解像度無さ過ぎる) */
 		 if (s1->cy256 < t256(0))								{	s1->cy256 = t256(0);								}/* 上チェック(上が喰み出すか、喰み出さないかまだ仕様が決まってない) */
 	else if (s1->cy256 > t256(GAME_HEIGHT)) 					{	s1->cy256 = t256(GAME_HEIGHT);						}/* 下チェック(下が喰み出すのは意図的) */
-	#endif
 	/* コア移動 */
 	{
 		SPRITE *s2;
 	//	s2 = obj_maru;
-		s2 = &obj00[FIX_OBJ_01_JIKI_MARU];
-		#if 1/*Gu(中心座標)*/
-		s2->cx256 = s1->cx256;	/* 中心座標なのでコアオフセットはない */
-		s2->cy256 = s1->cy256;	/* 中心座標なのでコアオフセットはない */
-		#endif
-//		if (is_slow)	{	s2->type		&= (~(0x08));/*s2->flags		|= ( (SP_FLAG_VISIBLE));*/	}	/* ○、表示 */
-//		else			{	s2->type		|= ( (0x08));/*s2->flags		&= (~(SP_FLAG_VISIBLE));*/	}	/* ○、非表示 */
+		s2 = &obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_01_JIKI_MARU];
+		/* Gu(中心座標) */
+		s2->cx256 = s1->cx256;
+		s2->cy256 = s1->cy256;
+//		if (is_slow)	{	s2->type		&= (~(0x08));/* s2->flags		|= ( (SP_FLAG_VISIBLE)); */ }	/* ○、表示 */
+//		else			{	s2->type		|= ( (0x08));/* s2->flags		&= (~(SP_FLAG_VISIBLE)); */ }	/* ○、非表示 */
 		/* 低速モード用エフェクトの表示 */
 		{
 			SPRITE *obj_tei_soku;
 //			obj_tei_soku					= obj_effect[TEISOKU_EFFECT_00_OBJ];
-			obj_tei_soku					= &obj00[FIX_OBJ_15_JIKI_TEISOKU_EFFECT];
+			obj_tei_soku					= &obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_15_JIKI_TEISOKU_EFFECT];
 			if (is_slow)
 			{
 //				SPRITE *zzz_obj_maru;
-//				zzz_obj_maru				= &obj00[FIX_OBJ_01_JIKI_MARU];
+//				zzz_obj_maru				= &obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_01_JIKI_MARU];
 //				obj_tei_soku->type			= (SPELL_SQUERE_);
 				obj_tei_soku->type			= (SPELL_SQUERE_);
-//				obj_tei_soku->flags 		|= (/*SP_FLAG_COLISION_CHECK*/SP_FLAG_VISIBLE/*|SP_FLAG_VISIBLE*/);
+//				obj_tei_soku->flags 		|= (/* SP_FLAG_COLISION_CHECK */SP_FLAG_VISIBLE/* |SP_FLAG_VISIBLE */);
 //				obj_tei_soku->flags 		|= ( (SP_FLAG_VISIBLE));		/* 低速モード用エフェクト、表示 */
-				obj_tei_soku->cx256 		= (s1->cx256);	/* 中心座標なのでコアオフセットはない */
-				obj_tei_soku->cy256 		= (s1->cy256);	/* 中心座標なのでコアオフセットはない */
+				obj_tei_soku->cx256 		= (s1->cx256);	/* 中心座標 */
+				obj_tei_soku->cy256 		= (s1->cy256);	/* 中心座標 */
 				#if 1
 				/* 描画用角度(下が0度で左回り(反時計回り)) */
 				obj_tei_soku->rotationCCW1024 += (10);
@@ -666,7 +614,7 @@ static void player_keycontrol(SPRITE *s1)
 			}
 			else
 			{
-				obj_tei_soku->type			= (SP_DUMMY_MUTEKI);/*(S P_GROUP_ETC_DUMMY_REMILIA);*/
+				obj_tei_soku->type			= (SP_DUMMY_MUTEKI);/* (S P_GROUP_ETC_DUMMY_REMILIA); */
 			//	obj_tei_soku->type			= (CORE_HIDE_10_REIMU_A);
 //				obj_tei_soku->flags 		&= (~(SP_FLAG_VISIBLE));		/* 低速モード用エフェクト、非表示 */
 			//	obj_tei_soku->type			= (SPELL_SQUERE_);
@@ -675,30 +623,30 @@ static void player_keycontrol(SPRITE *s1)
 		}
 	}
 	/* MAX時のアイテム自動収集 */
-	if (my_pad & PSP_KEY_UP/*PSP_CTRL_UP*/) 	/* 註：斜め上でも回収可能 */ /*&& (s1->y>0)*/
+	if (cg_my_pad & PSP_KEY_UP/* PSP_CTRL_UP */)	/* 註：斜め上でも回収可能 */ /* && (s1->y>0) */
 	{
 		#if 1
 			/* 全キャラ: アイテム上部収集がいつでも可能 */
 		#else
-		if ((pd.weapon_power==MAX_POWER_IS_128) 	// 128[***090123 変更 /*max==MAX_POWER_IS_128==「129段階」*/
+		if ((cg.weapon_power==MAX_POWER_IS_128) 	// 128[***090123 変更 /* max==MAX_POWER_IS_128==「129段階」 */
 			/* 魔理沙 特殊能力：アイテム上部収集がいつでも可能 */
-			|| (MARISA_A==select_player)
-			|| (MARISA_B==select_player)
-		//	|| (MARISA_C==select_player)
+			|| (MARISA_A==(cg_game_select_player))
+			|| (MARISA_B==(cg_game_select_player))
+		//	|| (MARISA_C==(cg_game_select_player))
 		)	/* 魔理沙は常に上部自動収集が可能 */
 		#endif
 		{
-			if (s1->cy256 < PLAYER_SPLIT_LINE256/*t256(50)*/)/* [FULLパワー時のアイテム引き寄せライン] */
+			if (s1->cy256 < PLAYER_SPLIT_LINE256/* t256(50) */)/* [FULLパワー時のアイテム引き寄せライン] */
 			{
-				pd.state_flag |= STATE_FLAG_01_PLAYER_UP_AUTO_GET_ITEM; /* 上部自動収集可能 */
+				cg.state_flag |= STATE_FLAG_01_PLAYER_UP_AUTO_GET_ITEM; /* 上部自動収集可能 */
 			}
 		}
 	}
-	else if (my_pad & PSP_KEY_DOWN/*PSP_CTRL_DOWN*/)	/* 註：斜め下でもやめる */ /*&& (s1->y<screen->h*-s1->h)*/
+	else if (cg_my_pad & PSP_KEY_DOWN/* PSP_CTRL_DOWN */)	/* 註：斜め下でもやめる */ /* && (s1->y<screen->h*-s1->h) */
 	{
-		//if (pd.state_flag & (STATE_FLAG_01_PLAYER_UP_AUTO_GET_ITEM /*| STATE_FLAG_02_BOMB_AUTO_GET_ITEM*/) )/*???たぶん*/
+		//if (cg.state_flag & (STATE_FLAG_01_PLAYER_UP_AUTO_GET_ITEM /* | STATE_FLAG_02_BOMB_AUTO_GET_ITEM */) )/* ???たぶん */
 		{
-			pd.state_flag &= (~STATE_FLAG_01_PLAYER_UP_AUTO_GET_ITEM);	/* 上部自動収集不可 */
+			cg.state_flag &= (~STATE_FLAG_01_PLAYER_UP_AUTO_GET_ITEM);	/* 上部自動収集不可 */
 		}
 	}
 //
@@ -706,35 +654,46 @@ static void player_keycontrol(SPRITE *s1)
 			プレイヤーショット関連処理
 		---------------------------------------------------------*/
 	/* シナリオスクリプトモードではショットボタン入力無効 */
-	if (0==(pd.state_flag & STATE_FLAG_06_IS_SCRIPT))
+	if (0==(cg.state_flag & STATE_FLAG_06_IS_SCRIPT))
 	{
-		if (my_pad & PSP_KEY_SHOT_OK)
+		if (cg_my_pad & PSP_KEY_SHOT_OK)
 		{
-			pd.state_flag |= STATE_FLAG_15_KEY_SHOT;	/* on */
+			cg.state_flag |= STATE_FLAG_15_KEY_SHOT;	/* on */
 			register_main_shot(s1);
 		}
 	}
-	#if 0/*デバッグ用*/
-	p d_my_score	= (weapon_level_offset);/*デバッグ*/
-	p d_graze_point = (weapon_level_offset);/*デバッグ*/
+	#if 0/* デバッグ用 */
+	p d_my_score	= (cg_jiki_weapon_level_offset);/* デバッグ */
+	p d_graze_point = (cg_jiki_weapon_level_offset);/* デバッグ */
 	#endif
 
 	/*---------------------------------------------------------
 		プレイヤーアニメーション関連処理
 	---------------------------------------------------------*/
 	{static int anime_delay;
-		anime_delay -= 1;	/*fps_fa_ctor*/
+		anime_delay -= 1;	/* fps_fa_ctor */
 		if (0 > anime_delay)
 		{
-			anime_delay = player_fix_status[BASE_SPEED_ANIME+select_player];/*2*/
+			//#define BASE_SPEED_ANIME			(PLAYERS8*0)
+			//#define BASE_HIT_BOMB_DEC_WAIT	(PLAYERS8*1)	/* 喰らいボムの受け付け猶予減少時間 */
+			//#define BASE_MAX					(PLAYERS8*2)		/* 最大数 */
+			//extern const u8 player_fix_status[BASE_MAX];
+			/* static */static const u8 base_speed_anime[(PLAYERS8)/* BASE_MAX */] =
+			{/* REIMU(A/B) MARISA(A/B)	REMILIA YUYUKO CIRNO(A/Q) */
+			//	 /* BASE_SPEED_ANIME	   プレイヤーのアニメーション速度 */
+				   8,	8,	 2,   2,	3,	 4,   1,   1,	 /* BASE_SPEED_ANIME	   プレイヤーのアニメーション速度 */
+			};
+			//#define BASE_OPT_SHOT_ANIME	(PLAYERS8*3)
+			//	 12,  12,	6,	 6,    3,  yuuyko(12),	 CIRNO(3),	 CIRNO(3),	/* オプションショットのアニメーション速度 */
+			anime_delay = base_speed_anime[/* BASE_SPEED_ANIME+ */(cg_game_select_player)];/* 2 */
 			//
-			static int auto_anime_frame = (4);/*5*/
-				 if (my_pad & PSP_KEY_LEFT/*PSP_CTRL_LEFT*/)	{	if ( (0) < auto_anime_frame )	{auto_anime_frame--;} }
-			else if (my_pad & PSP_KEY_RIGHT/*PSP_CTRL_RIGHT*/)	{	if ( (8) > auto_anime_frame )	{auto_anime_frame++;} }
+			static int auto_anime_frame = (4);/* 5 */
+				 if (cg_my_pad & PSP_KEY_LEFT/* PSP_CTRL_LEFT */)	{	if ( (0) < auto_anime_frame )	{auto_anime_frame--;} }
+			else if (cg_my_pad & PSP_KEY_RIGHT/* PSP_CTRL_RIGHT */) {	if ( (8) > auto_anime_frame )	{auto_anime_frame++;} }
 			else
 			{
-				if (auto_anime_frame>4/*5*/) auto_anime_frame--;
-				if (auto_anime_frame<4/*5*/) auto_anime_frame++;
+				if (auto_anime_frame>4/* 5 */) auto_anime_frame--;
+				if (auto_anime_frame<4/* 5 */) auto_anime_frame++;
 			}
 			#if 1
 			{
@@ -766,13 +725,13 @@ static void player_keycontrol(SPRITE *s1)
 		5
 		6
 		7
-*/
+ */
 }
 
 /*---------------------------------------------------------
 	武器レベルが変更された場合に、武器やオプションの状態をチェックして変更
 ---------------------------------------------------------*/
-/* [pd.weapon_powerが変更された場合に必ず行う後チェック] */
+/* [cg.weapon_powerが変更された場合に必ず行う後チェック] */
 static void check_weapon_level(void)
 {
 	/*---------------------------------------------------------
@@ -784,22 +743,22 @@ static void check_weapon_level(void)
 	// (0-128の129段階に修正)
 	#if 0//1968661
 	/* いろいろ頑張ってみたが、元の調整(6,11,61,86)は誰得(?)なので変える(2倍を超える値の調整は意味無い気ががする) */
-	u8 pds_weapon;	pds_weapon = pd.weapon_power;
-		 if (pds_weapon < ( 8)) 	{	weapon_level_offset = (WEAPON_L0<<3);	}	/* WEAPON_L0(P000-P008) */	/* 6*/
-	else if (pds_weapon < ( 16))	{	weapon_level_offset = (WEAPON_L1<<3);	}	/* WEAPON_L1(P008-P015) */	/*11*/
-	else if (pds_weapon < ( 32))	{	weapon_level_offset = (WEAPON_L2<<3);	}	/* WEAPON_L2(P016-P031) */	/*61*/
-	else if (pds_weapon < ( 64))	{	weapon_level_offset = (WEAPON_L3<<3);	}	/* WEAPON_L3(P032-P063) */	/*86*/
-	else if (pds_weapon < (128))	{	weapon_level_offset = (WEAPON_L4<<3);	}	/* WEAPON_L4(P064-P127) */
-	else							{	weapon_level_offset = (WEAPON_L5<<3);	}	/* WEAPON_L5(P128)		*/	/*max==P128==「129段階」*/
-	weapon_level_offset += select_player;
+	u8 pds_weapon;	pds_weapon = cg.weapon_power;
+		 if (pds_weapon < ( 8)) 	{	cg_jiki_weapon_level_offset = (WEAPON_L0<<3);	}	/* WEAPON_L0(P000-P008) */	/* 6 */
+	else if (pds_weapon < ( 16))	{	cg_jiki_weapon_level_offset = (WEAPON_L1<<3);	}	/* WEAPON_L1(P008-P015) */	/* 11 */
+	else if (pds_weapon < ( 32))	{	cg_jiki_weapon_level_offset = (WEAPON_L2<<3);	}	/* WEAPON_L2(P016-P031) */	/* 61 */
+	else if (pds_weapon < ( 64))	{	cg_jiki_weapon_level_offset = (WEAPON_L3<<3);	}	/* WEAPON_L3(P032-P063) */	/* 86 */
+	else if (pds_weapon < (128))	{	cg_jiki_weapon_level_offset = (WEAPON_L4<<3);	}	/* WEAPON_L4(P064-P127) */
+	else							{	cg_jiki_weapon_level_offset = (WEAPON_L5<<3);	}	/* WEAPON_L5(P128)		 */ /* max==P128==「129段階」 */
+	cg_jiki_weapon_level_offset += (cg_game_select_player);
 	#endif
 	#if 1//1968181
-	u8 pds_weapon;	pds_weapon = pd.weapon_power;
-	/* 0000 0001 1111 1--- */
+	u8 pds_weapon;	pds_weapon = cg.weapon_power;
+	/* 0000 0001 1111 1---*/
 	/* 紅、調べたら丁度2倍っぽい。 */
 	{	/* 丁度2倍だとこんな感じで簡略化できる。 */
-		weapon_level_offset = (select_player/*0*/);
-		weapon_level_offset += (WEAPON_L5<<3);
+		cg_jiki_weapon_level_offset = ((cg_game_select_player)/* 0 */);
+		cg_jiki_weapon_level_offset += (WEAPON_L5<<3);
 		int jj;
 		for (jj=(0); jj<(5); jj++)
 		{
@@ -807,69 +766,103 @@ static void check_weapon_level(void)
 			{
 				goto loop_end;//break;
 			}
-			weapon_level_offset -= (0x08);
+			cg_jiki_weapon_level_offset -= (0x08);
 		}
 		loop_end:;
 	}/*
 0000 0000 0000 0000
 		  5432 1 0
 		  0123 4
-*/
+ */
 	#endif
 //
 	/*---------------------------------------------------------
 		プレイヤーオプションチェック(必要であればオプションをセット)
 	---------------------------------------------------------*/
-	#if 1
+	#if 0/* (r32) */
 	{
 		/* いろいろ頑張ってみたが、元の調整(35,55,80,108)は誰得(?)なので変える(2倍を超える値の調整は意味無い気ががする) */
 	//	static const u8 jjj_tbl[4] =
 	//	{
-	//		( 8),		//(35-1),
-	//		(16),		//(55-1),
-	//		(32),		//(80-1),
-	//		(64)		//(108-1),
+	//		( 8),		// (35-1),
+	//		(16),		// (55-1),
+	//		(32),		// (80-1),
+	//		(64)		// (108-1),
 	//	};
 		int jj;
 		for (jj=(0); jj<(4); jj++)/* オプションは4つ */
 		{
 			SPRITE *zzz_obj_option;
-			zzz_obj_option = &obj00[FIX_OBJ_04_JIKI_OPTION0+jj];
-			if ( (pds_weapon > ((0x08)<<jj)/*jjj_tbl[jj]*/))	/* 丁度2倍だとこんな感じで簡略化できる。 */
-					{	zzz_obj_option->flags	|= ( (SP_FLAG_OPTION_VISIBLE)); 	}	// 可視フラグのOn(可視)
-			else	{	zzz_obj_option->flags	&= (~(SP_FLAG_OPTION_VISIBLE)); 	zzz_obj_option->cy256=t256(GAME_HEIGHT+1+16);	}	// 可視フラグのOFF(不可視)
+			zzz_obj_option = &obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_04_JIKI_OPTION0+jj];
+			if ( (pds_weapon > ((0x08)<<jj)/* jjj_tbl[jj] */))	/* 丁度2倍だとこんな感じで簡略化できる。 */
+			{
+				/* オプション登場 */
+				/* もし新規登場なら */
+				if (0==(zzz_obj_option->flags & SP_FLAG_OPTION_VISIBLE) )
+				{
+					zzz_obj_option->flags	|= ( (SP_FLAG_OPTION_VISIBLE)); 	// 可視フラグのOn(可視)
+					const SPRITE *s1 = &obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_00_PLAYER];
+					zzz_obj_option->cx256 = s1->cx256;
+					zzz_obj_option->cy256 = s1->cy256;
+				}
+			}
+			else
+			{
+				/* オプション隠す */
+				zzz_obj_option->flags	&= (~(SP_FLAG_OPTION_VISIBLE)); 	// 可視フラグのOFF(不可視)
+				zzz_obj_option->cy256=t256(GAME_HEIGHT+1+16);
+			}
+		}
+	}
+	#endif
+	#if 1/* (r33)チルノはともかく左右対称じゃないとかっこ悪い気がしてきた。 */
+	{
+		/* いろいろ頑張ってみたが、元の調整(35,55,80,108)は誰得(?)なので変える(2倍を超える値の調整は意味無い気ががする) */
+	//	static const u8 jjj_tbl[4] =
+	//	{
+	//		( 8),		// (35-1),
+	//		(16),		// (55-1),
+	//		(32),		// (80-1),
+	//		(64)		// (108-1),
+	//	};
+	// jj0 00
+	// jj1 01
+	// jj2 10
+	// jj3 11
+		int jj;
+		for (jj=(0); jj<(4); jj++)/* オプションは4つ */
+		{
+			SPRITE *zzz_obj_option;
+			zzz_obj_option = &obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_04_JIKI_OPTION0+jj];
+			const u8 jjj_tbl[4] = /* オプションの出現条件 */
+			{
+				( 8-1), 	// オプション#0はpower 8以上で付く。
+				( 8-1), 	// オプション#1はpower 8以上で付く。
+				(96-1), 	// オプション#2はpower96以上で付く。
+				(96-1), 	// オプション#3はpower96以上で付く。
+			};
+			if ( (pds_weapon > jjj_tbl[jj]) )/* オプションの出現条件 */
+			{
+				/* オプション登場 */
+				/* もし新規登場なら */
+				if (0==(zzz_obj_option->flags & SP_FLAG_OPTION_VISIBLE) )
+				{
+					zzz_obj_option->flags	|= ( (SP_FLAG_OPTION_VISIBLE)); 	// 可視フラグのOn(可視)
+					const SPRITE *s1 = &obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_00_PLAYER];
+					zzz_obj_option->cx256 = s1->cx256;
+					zzz_obj_option->cy256 = s1->cy256;
+				}
+			}
+			else
+			{
+				/* オプション隠す */
+				zzz_obj_option->flags	&= (~(SP_FLAG_OPTION_VISIBLE)); 	// 可視フラグのOFF(不可視)
+				zzz_obj_option->cy256=t256(GAME_HEIGHT+1+16);
+			}
 		}
 	}
 	#endif
 }
-/*
-メモ
-;-------------------
-霊夢 霊符	ショット（ホーミングアミュレット）		ボム （夢想封印）
-
-L0	1way(まっすぐ中)								P000-P007			(直進1way)
-オプション2つ追加									P008-P015
-L1	2way(右上、左上)								P016-	28			(間隔が狭い2way)
-
-L3	3way(まっすぐ中、右斜上、左斜上)				P032-	43			(間隔が広い3way)
-
-Lx	3way(まっすぐ中、右斜上、左斜上)				P064-	113 	124 (間隔が広い3way)
-
-124 オプション3方向
-
-Lx	4way(まっすぐ右、まっすぐ左、右斜上、左斜上)			MAX(128)	(間隔が広い4way)
-
-;-------------------
-霊夢 夢符	ショット（パスウェイジョンニードル）	ボム （封魔陣）
-
-;-------------------
-魔理沙 魔符 ショット（マジックミサイル）			ボム （スターダストレヴァリエ）
-
-;-------------------
-魔理沙 恋符 ショット（イリュージョンレーザー）		ボム （マスタースパーク）
-
-;-------------------
-*/
 
 /*---------------------------------------------------------
 	プレイヤーとアイテムのあたり判定1(アイテム専用)
@@ -879,47 +872,47 @@ Lx	4way(まっすぐ右、まっすぐ左、右斜上、左斜上)			MAX(128)	(間隔が広い4way)
 ---------------------------------------------------------*/
 static void player_add_power_type(SPRITE *src, SPRITE *ttt)
 {
-	{	const u8 aaa[4] = { 1, 8, 127, 1/*チルノ用*/};
-		const int add_power = aaa[/*((ttt_type))*/((NULL==ttt)?(0/*3 チルノ用*/):((ttt->type)&0x03))];
-		int previous_power; previous_power = pd.weapon_power;		/* アイテム取得する直前のパワー値 */
-		pd.weapon_power += add_power;	/* パワー値、加算 */
+	{	const u8 aaa[4] = { 1, 8, 127, 1/* チルノ用 */};
+		const int add_power = aaa[/* ((ttt_type)) */((NULL==ttt)?(0/* 3 チルノ用 */):((ttt->type)&0x03))];
+		int previous_power; previous_power = cg.weapon_power;		/* アイテム取得する直前のパワー値 */
+		cg.weapon_power += add_power;	/* パワー値、加算 */
 		/* パワー値、超えてたら修正 */
-		if ((MAX_POWER_IS_128-1) < pd.weapon_power )/*127==128段階目*/
+		if ((MAX_POWER_IS_128-1) < cg.weapon_power )/* 127==128段階目 */
 		{
-			pd.weapon_power = MAX_POWER_IS_128;/* 最大値 */
+			cg.weapon_power = MAX_POWER_IS_128;/* 最大値 */
 		}
 		int add_score_point;
-		if (MAX_POWER_IS_128 == pd.weapon_power/*previous_power*/) /* maxの場合 */
+		if (MAX_POWER_IS_128 == cg.weapon_power/* previous_power */) /* maxの場合 */
 		{
-			if (previous_power != pd.weapon_power)/* 直前がMAXじゃなかったのに、今回MAXになった場合 */
+			if (previous_power != cg.weapon_power)/* 直前がMAXじゃなかったのに、今回MAXになった場合 */
 			{
 				#if 1
 				/* 特殊機能 */
 				bullets_to_hosi();/* 弾全部、星アイテムにする */
 				#endif
 			}
-			pd.chain_point += add_power;	/* チェイン、加算 */
+			cg.chain_point += add_power;	/* チェイン、加算 */
 			/* チェイン、超えてたら修正 */
-			if (31 < pd.chain_point)
+			if (31 < cg.chain_point)
 			{
-				pd.chain_point = 31;/* 最大値 */
+				cg.chain_point = 31;/* 最大値 */
 			}
 			/* (ノーミスボーナス)ウェポンボーナス得点計算 */
-			add_score_point = (/*score_type*/(pd.chain_point));
+			add_score_point = (/* score_type */(cg.chain_point));
 			#if 1
 			/* チェインはボムMAXでないと実質、貯まらない */
 				#if 0
 		//	if (NULL==ttt)/* チルノなら */
 				#else
 			/* レミリア & 幽々子 & チルノは、ボム消費型(基本的にあまり貯めないでどんどん使う==割と直ぐ貯まる)にしようかと。 */
-			if ((REMILIA-1) < select_player)/* レミリア & 幽々子 & チルノなら */
+			if ((REMILIA-1) < (cg_game_select_player))/* レミリア & 幽々子 & チルノなら */
 				#endif
 			{
-				if ((8-1) < pd.bombs)	{	;	}/* 既に最大値(8)ならば、なにもせず。 */
+				if ((8-1) < cg.bombs)	{	;	}/* 既に最大値(8)ならば、なにもせず。 */
 				else
 				{
-					pd.bombs++; 	/* ボム追加 */
-					pd.weapon_power = (MAX_POWER_IS_128>>1);/* 最大値の半分 */
+					cg.bombs++; 	/* ボム追加 */
+					cg.weapon_power = (MAX_POWER_IS_128>>1);/* 最大値の半分 */
 				}
 			}
 			#endif
@@ -928,7 +921,7 @@ static void player_add_power_type(SPRITE *src, SPRITE *ttt)
 		{
 			/* (MAX時以外の) [P]は10点 */
 			/* (MAX時以外の) [P中]は80点 */
-			add_score_point = ((add_power/*-1*/)/*SCORE_10*/);
+			add_score_point = ((add_power/*-1 */)/* SCORE_10 */);
 		}
 		if (NULL!=ttt)/* チルノ以外なら */
 		{
@@ -936,16 +929,37 @@ static void player_add_power_type(SPRITE *src, SPRITE *ttt)
 			/* */ttt->jyumyou = JYUMYOU_NASI;/* おしまい */
 		}
 	}
-	check_weapon_level();/* [pd.weapon_powerが変更された場合に必ず行う後チェック] */
+	check_weapon_level();/* [cg.weapon_powerが変更された場合に必ず行う後チェック] */
 //
-	voice_play(VOICE05_BONUS, TRACK07_GRAZE);/*テキトー*/
+	voice_play(VOICE05_BONUS, TRACK07_GRAZE);/* テキトー */
 }
+/* http://hossy.info/game/toho/k_score.php
+B アイテムの点数
+難易度	通常：下   通常：上 1px毎 引き寄せ
+easy	27800	   60000	 100 100000
+normal	27800	   60000	 100 100000
+hard	42040	  100000	 180 150000
+lunatic 63330	  150000	 270 200000
+extra	71200	  200000	 400 300000
 
-static void player_colision_check_item(SPRITE *src)/*, int mask*/	/*,SP_GROUP_ITEMS*/
+---------------
+「アイテム引き寄せライン」以下で取ると「アイテム引き寄せライン」から322ラインまで距離で減点。
+
+プレイフィールドは 384x448 なので、448-322 == 126
+「アイテム引き寄せライン」は多分上から128ドットかな？
+
+(Bアイテムの大きさが16x16[dot]なので、Bアイテムの消失判定は 448+(16/2)ラインで行うから、
+最後にBアイテムの判定があるのが、BアイテムのＹ軸中心が456[ライン]にきた場合。
+456-322 == 134, 134-128 == 6. この6[ライン]はそもそも自機中心が画面下部に行けない分が数ドット(5[dot?])ある。
+残り1[dot]は不等号で判定したから? )
+---------------
+模倣風ではＢ取って加点は無い(r33現在)。
+ */
+static void player_colision_check_item(SPRITE *src)/* , int mask */ /* ,SP_GROUP_ITEMS */
 {
 	/* 自機がアイテムにあたった場合 */
 	SPRITE *ttt;	//対象
-	ttt = sprite_collision_check_444(src, SP_GROUP_ITEMS);	/* 弾幕専用(アイテム) */	/*mask*/
+	ttt = obj_collision_check_00_tama(src, SP_GROUP_ITEMS);	/* 弾幕専用(アイテム) */	/* mask */
 	if (NULL != ttt)
 	{
 		switch (ttt->type)
@@ -957,31 +971,31 @@ static void player_colision_check_item(SPRITE *src)/*, int mask*/	/*,SP_GROUP_IT
 		//
 		case SP_ITEM_04_BOMB:
 			//player_add_bomb(t);		// [*****本来はコメントアウトしないよ
-			if ((8-1) < pd.bombs)	{	goto add_10000pts;	}/* 既に最大値(8)ならば、10000+ [pts] */
-			pd.bombs++;
-			#if 1/*バグfix?*/
+			if ((8-1) < cg.bombs)	{	goto add_10000pts;	}/* 既に最大値(8)ならば、10000+ [pts] */
+			cg.bombs++;
+			#if 1/* バグfix? */
 			ttt->jyumyou = JYUMYOU_NASI;/* おしまい */
 			#endif
-			voice_play(VOICE05_BONUS, TRACK07_GRAZE);/*テキトー*/
+			voice_play(VOICE05_BONUS, TRACK07_GRAZE);/* テキトー */
 			break;
 
 		case SP_ITEM_03_1UP:
-			if ((8-1) < pd.zanki)	{	goto add_10000pts;	}/* 既に最大値(8)ならば、10000+ [pts] */
-			pd.zanki++;
-			#if 1/*バグfix?*/
+			if ((8-1) < cg.zanki)	{	goto add_10000pts;	}/* 既に最大値(8)ならば、10000+ [pts] */
+			cg.zanki++;
+			#if 1/* バグfix? */
 			ttt->jyumyou = JYUMYOU_NASI;/* おしまい */
 			#endif
-			/*effect_sound_number=*/voice_play(VOICE06_EXTEND, TRACK03_SHORT_MUSIC);/*テキトー*/
+			/* effect_sound_number= */voice_play(VOICE06_EXTEND, TRACK03_SHORT_MUSIC);/* テキトー */
 			break;
 
 		case SP_ITEM_07_SPECIAL:
 			break;
 		#if 0
 		/* 星点は、あたり判定なし */
-		case S P_ITEM_05_HOSI:		/*not_break;*/
+		case S P_ITEM_05_HOSI:		/* not_break; */
 			ttt->jyumyou = JYUMYOU_NASI;/* 星点のみ特別処理 */
 //
-			voice_play(VOICE05_BONUS, TRACK07_GRAZE);/*テキトー*/
+			voice_play(VOICE05_BONUS, TRACK07_GRAZE);/* テキトー */
 			break;
 		#endif
 		case SP_ITEM_05_TENSU:
@@ -993,14 +1007,14 @@ static void player_colision_check_item(SPRITE *src)/*, int mask*/	/*,SP_GROUP_IT
 				if (PLAYER_SPLIT_LINE256 < src->cy256)	/* PLAYER_SPLIT_LINE256 未満の場合は、PLAYER_SPLIT_LINE256までの距離におおじて減点 */
 				{
 				//	add_score_point -= ((ttt->cy256-PLAYER_SPLIT_LINE256)>>(4+8));
-				//	add_score_point = ((/*0x1f-(3)*/(SCORE_9000)-((ttt->cy256-PLAYER_SPLIT_LINE256)>>(3+8)))/*&0x1f*/);
+				//	add_score_point = ((/* 0x1f-(3) */(SCORE_9000)-((ttt->cy256-PLAYER_SPLIT_LINE256)>>(3+8)))/* &0x1f */);
 					add_score_point = (SCORE_9000) - ((ttt->cy256-PLAYER_SPLIT_LINE256)>>(3+8));
 				}
 				else
 				{
 					add_10000pts:/* 強引に得点10000+ [pts] */
 				//	add_score_point = (SCORE_10000);	/* 基本点 10000[pts] */
-					add_score_point = (SCORE_10000+difficulty); 	/* 基本点 10000[pts](easy), 11000(normal), 12000(hard), 512000(lunatic). */
+					add_score_point = (SCORE_10000+(cg_game_difficulty));	/* 基本点 10000[pts](easy), 11000(normal), 12000(hard), 512000(lunatic). */
 				}
 				//player_dummy_add_score(score(1000));		// [***090123		変更
 			//
@@ -1008,7 +1022,7 @@ static void player_colision_check_item(SPRITE *src)/*, int mask*/	/*,SP_GROUP_IT
 				/* */ttt->jyumyou = JYUMYOU_NASI;/* おしまい */
 //
 			}
-			voice_play(VOICE05_BONUS, TRACK07_GRAZE);/*テキトー*/
+			voice_play(VOICE05_BONUS, TRACK07_GRAZE);/* テキトー */
 			break;
 		}
 	}
@@ -1026,18 +1040,25 @@ static void player_set_pichuun(void)
 {
 //	#if 0//(0==US E_ATARI_DE BUG)/* 当たり判定デバッグ時は無敵。 */
 //	/* 通常時(デバッグ以外は死ぬ(喰らいボムモードへ)) */
-//	pd.special_ivent_type		= PLAYER_STATE_01_KURAI_BOMB_UKETUKE;						/* 喰らいボム入力受け付けモードへ移行する。 */
-//	pds_status_timer	= player_fix_status[BASE_HIT_BOMB_DEC_WAIT+select_player];			/* 喰らいボムの入力受け付け時間を設定 */
-//	pds_status_timer	= (-1);/*とりあえず*/
-//	pds_status_timer	= (-1);/*とりあえず*/	/* デバッグ(喰らいボム時間、全部霊夢並みに長い)*/
+//	cg.special_ivent_type		= PLAYER_STATE_01_KURAI_BOMB_UKETUKE;						/* 喰らいボム入力受け付けモードへ移行する。 */
+//	pds_status_timer	= static_fix_status[BASE_HIT_BOMB_DEC_WAIT+(cg_game_select_player)];			/* 喰らいボムの入力受け付け時間を設定 */
+//	pds_status_timer	= (-1);/* とりあえず */
+//	pds_status_timer	= (-1);/* とりあえず */ /* デバッグ(喰らいボム時間、全部霊夢並みに長い) */
 //	#else
-	pds_status_timer	= (-1)-player_fix_status[BASE_HIT_BOMB_DEC_WAIT+select_player]; 	/* 喰らいボムの入力受け付け時間を設定 */
+/* static */static const u8 base_hit_bomb_dec_wait[(PLAYERS8)/* BASE_MAX */] =
+{/* REIMU(A/B) MARISA(A/B)	REMILIA YUYUKO CIRNO(A/Q) */
+//	  16,  16,	 8,   8,	4,	12,   9,   9,	 /* BASE_HIT_BOMB_DEC_WAIT	   喰らいボムの受付時間 / hit_bomb_wait. */
+//	  16-16,  16-16,	 16-8,	 16-8,	16-4,	16-12,	 16-9,	 16-9,	 /* BASE_HIT_BOMB_DEC_WAIT 喰らいボムの受け付け猶予減少時間 / hit_bomb_wait. */
+//	  0,  0,	 8,   8,	12,  4,   7,   7,	 /* BASE_HIT_BOMB_DEC_WAIT 喰らいボムの受け付け猶予減少時間 / hit_bomb_wait.(値が小さい程、受け付け時間が長い) */
+	  0,  0,	 8,   8,	12,  4,   3,   2,	 /* BASE_HIT_BOMB_DEC_WAIT 喰らいボムの受け付け猶予減少時間 / hit_bomb_wait.(値が小さい程、受け付け時間が長い) */
+};
+	pds_status_timer	= (-1)-base_hit_bomb_dec_wait[/* BASE_HIT_BOMB_DEC_WAIT+ */(cg_game_select_player)];	/* 喰らいボムの入力受け付け時間を設定 */
 //	#endif
-	voice_play(VOICE04_SHIP_HAKAI, TRACK03_SHORT_MUSIC/*TRACK01_EXPLODE*/);/* 自機死に音は、なるべく重ねない */
+	voice_play(VOICE04_SHIP_HAKAI, TRACK03_SHORT_MUSIC/* TRACK01_EXPLODE */);/* 自機死に音は、なるべく重ねない */
 	{
 		SPRITE *zzz_player;
-		zzz_player = &obj00[FIX_OBJ_00_PLAYER];
-		player_explode(zzz_player);/*プレイヤー爆発*/
+		zzz_player = &obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_00_PLAYER];
+		player_explode(zzz_player);/* プレイヤー爆発 */
 	}
 }
 
@@ -1051,7 +1072,7 @@ static void player_set_pichuun(void)
 	「敵(雑魚＆ボス)による死亡」
 ---------------------------------------------------------*/
 	//	player_colision_check_graze(s1);	/* グレイズの当たり判定 */
-	//	player_colision_check_enemy(s1);	/* 雑魚＆ボスの当たり判定 */
+	//	player_colision_check_teki(s1); 	/* 雑魚＆ボスの当たり判定 */
 
 #define TEST_FIX_GRAZE048	(t256(128.0))
 #define TEST_FIX_DEATH001	(t256(1.0))
@@ -1071,25 +1092,25 @@ static void player_colision_check_all(SPRITE *src)
 	#endif
 	SPRITE *ttt;	/* 敵弾 */
 	ttt = NULL;
-	ttt = sprite_collision_check_444(src, SP_GROUP_BULLETS);/* 弾幕専用(弾幕) */
+	ttt = obj_collision_check_00_tama(src, SP_GROUP_BULLETS);/* 弾幕専用(弾幕) */
 	if (NULL != ttt)
 	{
 		/* プレイヤーに敵弾があたった場合はグレイズする */
 		if (0==(ttt->flags & SP_FLAG_GRAZE)) /* グレイズ済? */
 		{
-			ttt->flags |= SP_FLAG_GRAZE;/*グレイズ済*/
-			pd.graze_point++;/*グレイズ数*/
+			ttt->flags |= SP_FLAG_GRAZE;/* グレイズ済 */
+			cg.graze_point++;/* グレイズ数 */
 			// チルノの場合、グレイズでパワーアップ。
-			if ( (CIRNO_A-1) < (select_player) )/* 6:CIRNO_A or 7:CIRNO_Q */
+			if ( (CIRNO_A-1) < ((cg_game_select_player)) )/* 6:CIRNO_A or 7:CIRNO_Q */
 			{
-				player_add_power_type(src, /*ttt*/NULL);
+				player_add_power_type(src, /* ttt */NULL);
 			}
 			else
 			{
-				player_dummy_add_score((score(100)+score(200)*difficulty));/*score(500)*/
+				player_dummy_add_score((score(100)+score(200)*(cg_game_difficulty)));/* score(500) */
 			}
 				/* グレイズ音 */
-				voice_play(VOICE09_GRAZE, TRACK07_GRAZE);/*テキトー*/
+				voice_play(VOICE09_GRAZE, TRACK07_GRAZE);/* テキトー */
 		}
 #if 1
 		/* プレイヤースプライトが弾に触れているか */
@@ -1098,23 +1119,23 @@ static void player_colision_check_all(SPRITE *src)
 			uuu = NULL;
 	#if (0)
 			SPRITE *zzz_obj_maru;
-			zzz_obj_maru = &obj00[FIX_OBJ_01_JIKI_MARU];
+			zzz_obj_maru = &obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_01_JIKI_MARU];
 			/* (グレイズ中ならコアと敵弾のあたり判定をする) */
 //			#if (0)
 //			/* コアで判定(廃止) */
-//			uuu = sprite_collision_check_444(zzz_obj_maru, SP_GROUP_BULLETS);/* 弾幕専用(弾幕) */
+//			uuu = obj_collision_check_00_tama(zzz_obj_maru, SP_GROUP_BULLETS);/* 弾幕専用(弾幕) */
 //			#else
 			/* 自機で判定 */
 			int chache_m_Hit256R;
 			chache_m_Hit256R	= src->m_Hit256R;/* 自機のあたり判定サイズ */
 			src->m_Hit256R		= zzz_obj_maru->m_Hit256R;/* ○のあたり判定サイズ */
-			uuu = sprite_collision_check_444(src, SP_GROUP_BULLETS);/* 弾幕専用(弾幕) */
+			uuu = obj_collision_check_00_tama(src, SP_GROUP_BULLETS);/* 弾幕専用(弾幕) */
 			src->m_Hit256R		= chache_m_Hit256R;/* 戻す */
 //			#endif
 	#else
 			src->m_Hit256R		= TEST_FIX_DEATH001;/* てすと、死亡判定。 */
 			/* 自機で判定 */
-			uuu = sprite_collision_check_444(src, SP_GROUP_BULLETS);/* 弾幕専用(弾幕) */
+			uuu = obj_collision_check_00_tama(src, SP_GROUP_BULLETS);/* 弾幕専用(弾幕) */
 			src->m_Hit256R		= TEST_FIX_GRAZE048;/* てすと、グレイズ判定。 */
 	#endif
 			if (NULL != uuu)	{	player_set_pichuun();	}
@@ -1133,11 +1154,11 @@ static void player_colision_check_all(SPRITE *src)
 		-------------------------------------------------------
 		自機が敵(ボス/中型/ザコ)に体当たりされた場合
 	---------------------------------------------------------*/
-	//	static void player_colision_check_enemy(SPRITE *src)
+	//	static void player_colision_check_teki(SPRITE *src)
 	{
 		SPRITE *ttt;	/* 敵自体(ボス/中型/ザコ) */
-		/*SP_GROUP_ENEMYS*/  // (SP_GROUP_TEKI/*|SP_GROUP_BOSS*/);
-		ttt = sprite_collision_check_SDL_teki(src);// (SP_GROUP_TEKI)  /*SP_GROUP_ENEMYS*/);/*敵専用*/
+		/* SP_GROUP_ENEMYS */  // (SP_GROUP_TEKI/* |SP_GROUP_BOSS */);
+		ttt = obj_collision_check_01_teki(src);// (SP_GROUP_TEKI)  /* SP_GROUP_ENEMYS */);/* 敵専用 */
 		if (NULL != ttt)	{	player_set_pichuun();	}
 	}
 
@@ -1153,20 +1174,22 @@ static void player_colision_check_all(SPRITE *src)
 ---------------------------------------------------------*/
 global void player_loop_quit(void)
 {
-	pd.state_flag		|= STATE_FLAG_14_GAME_LOOP_QUIT;
+//	/* (r32) */cg.state_flag		|= ST ATE_FLAG_14_GAME_LOOP_QUIT;
+	/* (r32) */cg.state_flag			&= (~STATE_FLAG_14_ZAKO_TUIKA); 	/* off / 雑魚追加読み込み処理を停止する。 */
+
 	#if (0000)
 	option[0]->flags	&= (~SP_FLAG_OPTION_VISIBLE);	/* オプションを消す */
 	option[1]->flags	&= (~SP_FLAG_OPTION_VISIBLE);	/* オプションを消す */
 	option[2]->flags	&= (~SP_FLAG_OPTION_VISIBLE);	/* オプションを消す */
 	option[3]->flags	&= (~SP_FLAG_OPTION_VISIBLE);	/* オプションを消す */
-	#endif/*0000*/
+	#endif/* 0000 */
 //
 //	pds_status_timer	= (150);	/* 150	 120では若干短い 100 */
-//	pd.special_ivent_type	= PLAYER_STATE_04_GAME_OUT;/* GAME_OUT中 */
+//	cg.special_ivent_type	= PLAYER_STATE_04_GAME_OUT;/* GAME_OUT中 */
 	pds_status_timer	= (LIMIT_m16_GAME_OUT); 	/* とりあえず */	/* 150	 120では若干短い 100 */
 }
 	#if (00)
-	obj00[FIX_OBJ_00_PLAYER]->flags &= (~(SP_FLAG_VISIBLE));	/* 自機、非表示 */
+	obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_00_PLAYER]->flags &= (~(SP_FLAG_VISIBLE));	/* 自機、非表示 */
 	obj_maru->flags 	&= (~(SP_FLAG_VISIBLE));	/* ○、非表示 */
 //	obj_maru->alpha 	= 0x00; 		// ○を消すために入れたけど意味無かったかもしれない。	// ゲームオーバー時の○の表示処理
 	#endif
@@ -1178,54 +1201,61 @@ global void player_loop_quit(void)
 /*---------------------------------------------------------
 	プレイヤー復活処理
 ---------------------------------------------------------*/
-/* ステージデーター読み込み後の無敵設定 */
-global void player_load_stage_muteki(void)
+static void player_fukkatsu_aaa(SPRITE *s1) 	/* プレイヤー位置の初期化 */
 {
-//	pds_status_timer	= (40); 						// 無敵時間 		/*120*/ /*150-120*/
-//	pd.special_ivent_type	= PLAYER_STATE_02_SAVE_01;	// 無敵状態？
-	pds_status_timer	= (LIMIT_512);					// 初期無敵時間 		/*120*/ /*150-120*/
+	/* Gu(中心座標) */
+	s1->cx256 = t256(GAME_WIDTH/2);
+	s1->cy256 = t256(220/* GAME_HEIGHT */);/* 240 */
+	s1->m_zoom_x256 = t256(1.0);/*	初期登場時、拡大率 x 1.0[倍] */
+	s1->m_zoom_y256 = t256(1.0);/*	初期登場時、拡大率 x 1.0[倍] */
 }
+
 /* ステージ中に復活する場合の無敵設定 */
 static void player_few_muteki(void)
 {
-//	pds_status_timer	= (40); 						// 無敵時間 		/*120*/ /*150-120*/
-//	pd.special_ivent_type	= PLAYER_STATE_02_SAVE_01;	// 無敵状態？
-	pds_status_timer	= (LIMIT_m127_MIN); 			// 無敵時間 		/*120*/ /*150-120*/
+//	pds_status_timer	= (40); 						// 無敵時間 		/* 120 */ /* 150-120 */
+//	cg.special_ivent_type	= PLAYER_STATE_02_SAVE_01;	// 無敵状態？
+	pds_status_timer	= (LIMIT_m127_MIN); 			// 無敵時間 		/* 120 */ /* 150-120 */
 }
 
-static void player_fukkatsu_bbb(SPRITE *s1)
+static void player_fukkatsu_bbb222(SPRITE *s1)
 {
-		/* プレイヤー位置の初期化 */
-		#if 1/*Gu(中心座標)*/
-		s1->cx256 = t256(GAME_WIDTH/2);
-		s1->cy256 = t256(220/*GAME_HEIGHT*/);/*240*/
-		#endif
 	player_few_muteki();/* ステージ開始時のみ若干の無敵状態にセット */
 	#if (00)
-	/*obj00[FIX_OBJ_00_PLAYER]*/s1->flags			|= ( (SP_FLAG_VISIBLE));			/* 自機、表示 */
+	/* obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_00_PLAYER] */s1->flags 		|= ( (SP_FLAG_VISIBLE));			/* 自機、表示 */
 	#endif
-	/*obj00[FIX_OBJ_00_PLAYER]*/s1->color32 		= MAKE32RGBA(0xff, 0xff, 0xff, 0x50);						/* 自機、半透明 */	/*	s1->alpha			= 0x50;*/
+	/* obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_00_PLAYER] */s1->color32		= MAKE32RGBA(0xff, 0xff, 0xff, 0x50);						/* 自機、半透明 */	/*	s1->alpha			= 0x50; */
 //
 	{
 		SPRITE *zzz_obj_maru;
-		zzz_obj_maru = &obj00[FIX_OBJ_01_JIKI_MARU];
+		zzz_obj_maru = &obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_01_JIKI_MARU];
 	//	obj_maru->flags |= ( (SP_FLAG_VISIBLE));						/* ○、表示 */
-		zzz_obj_maru->color32	= MAKE32RGBA(0xff, 0xff, 0xff, 0x50);								/* ○、半透明 */	/*	obj_maru->alpha = 0x50;*/
+		zzz_obj_maru->color32	= MAKE32RGBA(0xff, 0xff, 0xff, 0x50);								/* ○、半透明 */	/*	obj_maru->alpha = 0x50; */
 	}
 	// チルノの場合、「ボム無し」からスタート.
-	if ( (CIRNO_A-1) < (select_player) )/* 6:CIRNO_A or 7:CIRNO_Q */
+	if ( (CIRNO_A-1) < ((cg_game_select_player)) )/* 6:CIRNO_A or 7:CIRNO_Q */
 	{
-		pd.bombs			= (0);	/* ボム所持数の初期化 */
+		cg.bombs			= (0);	/* ボム所持数の初期化 */
 	}
 	else/* チルノ以外 */
 	{
-		pd.bombs			= option_config[OPTION_CONFIG_01_BOMB]; 	/* ボム所持数の初期化 */	/*player_fix_status[BASE_BOMBS+select_player]*/  /*3*/
+		cg.bombs			= option_config[OPTION_CONFIG_01_BOMB]; 	/* ボム所持数の初期化 */	/* static_fix_status[BASE_BOMBS+(cg_game_select_player)] */  /* 3 */
 	}
-	pd.chain_point		= (0);										/* ノーミスボーナスの初期化 */	// pd.chain_point(ノーミスボーナス)の初期化 // どれだけ連続(ノーミス)でwepon_upを取ったか
+	cg.chain_point		= (0);										/* ノーミスボーナスの初期化 */	// cg.chain_point(ノーミスボーナス)の初期化 // どれだけ連続(ノーミス)でwepon_upを取ったか
 //
-	check_weapon_level();/* [pd.weapon_powerが変更された場合に必ず行う後チェック] */
+	check_weapon_level();/* [cg.weapon_powerが変更された場合に必ず行う後チェック] */
 }
 
+/* ステージデーター読み込み後の無敵設定 */
+global void player_init_stage(void)
+{
+	SPRITE *s1;
+	s1 = &obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_00_PLAYER];
+	player_fukkatsu_aaa(s1);	/* プレイヤー位置の初期化 */
+//	pds_status_timer	= (40); 						// 無敵時間 		/* 120 */ /* 150-120 */
+//	cg.special_ivent_type	= PLAYER_STATE_02_SAVE_01;	// 無敵状態？
+	pds_status_timer	= (LIMIT_512);					// 初期無敵時間 		/* 120 */ /* 150-120 */
+}
 /*---------------------------------------------------------
 	プレイヤーやられ処理
 ---------------------------------------------------------*/
@@ -1234,12 +1264,12 @@ static void player_explode(SPRITE *s1)
 {
 	/* アイテムを吐き出す */	//	[***090124ちょっと追加
 	{
-		if ((0==pd.zanki)
-			/*&&(0==difficulty)*/	/* (紅、調べたら難易度に関係なく[F]が出る)	*/
+		if ((0==cg.zanki)
+			/* &&(0==difficulty) */ /* (紅、調べたら難易度に関係なく[F]が出る)	 */
 		)
 		{
 			/* コンティニューの場合(GAME_OUT)easy の場合 */
-			/* 無駄に8個吐かせる  */
+			/* 無駄に8個吐かせる */
 			/* コンティニューの場合easy の場合： (キャッチ出来る数で点数は違うけど、どれか１つキャッチすれば POWER は同じだから) */
 		//	item_create(s1, (0==difficulty)?(SP_ITEM_02_P128):(SP_ITEM_01_P008), 8, ITEM_MOVE_FLAG_06_RAND_XY);
 			item_create(s1, (SP_ITEM_02_P128), 8, ITEM_MOVE_FLAG_06_RAND_XY);
@@ -1255,7 +1285,7 @@ static void player_explode(SPRITE *s1)
 				極端に弱くて死ぬ事はほぼない。
 				  極端に弱くて死ぬのは結構下手だと思うので、若干の救済策が必要かと思う。
 				その場合 FIRE_POWER_G (8) x (7+1) == 64/128 (全部集めて50%) にした。
-			*/
+			 */
 			#if (0)
 			/*
 				パワーアップシステムを若干見直したので、(30-1) -> (16) へ基準を厳しくした。
@@ -1274,44 +1304,37 @@ static void player_explode(SPRITE *s1)
 					WEAPON_L0[P00] -> 死ぬ -> ３つ取る[P8]x3[個] -> [P00+P8x3]==WEAPON_L2[P24]
 					WEAPON_L2[P16] -> 死ぬ -> 全部取る[P1]x6[個] -> [P16+P1x6]==WEAPON_L2[P22]
 					死んで半分(3つ)取ると必ずWEAPON_L2以上になる。
-			*/
-		//	item_create(s1, (((30-1) > pd.weapon_power)?(SP_ITEM_01_P008):(SP_ITEM_00_P001)), (7)/*5*/, ITEM_MOVE_FLAG_06_RAND_XY);
-		//	item_create(s1, (((16) > pd.weapon_power)?(SP_ITEM_01_P008):(SP_ITEM_00_P001)), (6), ITEM_MOVE_FLAG_06_RAND_XY);/* いくら下手でも、多少多いかな? */
+			 */
+		//	item_create(s1, (((30-1) > cg.weapon_power)?(SP_ITEM_01_P008):(SP_ITEM_00_P001)), (7)/* 5 */, ITEM_MOVE_FLAG_06_RAND_XY);
+		//	item_create(s1, (((16) > cg.weapon_power)?(SP_ITEM_01_P008):(SP_ITEM_00_P001)), (6), ITEM_MOVE_FLAG_06_RAND_XY);/* いくら下手でも、多少多いかな? */
 		//	item_create(s1, SP_ITEM_01_P008, 1, ITEM_MOVE_FLAG_06_RAND_XY);
 			#else
 			/* 多少修正してみる */
-			item_create(s1, (((16) > pd.weapon_power)?(SP_ITEM_01_P008):(SP_ITEM_00_P001)), (3), ITEM_MOVE_FLAG_06_RAND_XY);/* 下手な人ががんばれば3つ取れる事が前提 */
+			item_create(s1, (((16) > cg.weapon_power)?(SP_ITEM_01_P008):(SP_ITEM_00_P001)), (3), ITEM_MOVE_FLAG_06_RAND_XY);/* 下手な人ががんばれば3つ取れる事が前提 */
 			item_create(s1, SP_ITEM_00_P001, (5), ITEM_MOVE_FLAG_06_RAND_XY);/* P001をばらまく(おまけ、下手な人は、がんばっても同時には取れないという事が前提) */
 			#endif
 		}
 		//
 		/* レミリア 特殊能力：抱え落ちすると必ずボムが出る */
-		if (REMILIA==select_player) 	/* レミリアの場合 */
+		if (REMILIA==(cg_game_select_player))	/* レミリアの場合 */
 		{
 			/* 抱え落ちすると */
-			if (0 != pd.bombs)
+			if (0 != cg.bombs)
 			{
 				/* 使ってない分の持ってるボムを吐き出す */
-				item_create(s1, SP_ITEM_04_BOMB, pd.bombs, ITEM_MOVE_FLAG_06_RAND_XY);
+				item_create(s1, SP_ITEM_04_BOMB, cg.bombs, ITEM_MOVE_FLAG_06_RAND_XY);
 			}
 		}
 	}
-//		pd.explode		= 0;
-//	if (0==pd.explode)
+//		cg.explode		= 0;
+//	if (0==cg.explode)
 	{
-
-	//	bakuhatsu_add_type(t->cx256+t256(5),t->cy256+t256(5),/*0,*/BAKUHATSU_MINI00);
+	//	bakuhatsu_add_type(t->cx256+t256(5),t->cy256+t256(5),/* 0, */BAKUHATSU_MINI00);
 	//	t->jyumyou = JYUMYOU_NASI;/* おしまい */			/* あたった敵爆発 */
-	//	pd.explode=0;
-	//	pd.bonus=0;
-		//	voice_play(VOICE04_SHIP_HAKAI, TRACK03_SHORT_MUSIC/*TRACK01_EXPLODE*/);/* 自機死に音は、なるべく重ねない */ 	// [***090127	場所を移動する。// 変更元
+	//	cg.explode=0;
+	//	cg.bonus=0;
+		//	voice_play(VOICE04_SHIP_HAKAI, TRACK03_SHORT_MUSIC/* TRACK01_EXPLODE */);/* 自機死に音は、なるべく重ねない */	// [***090127	場所を移動する。// 変更元
 		/* 爆発エフェクト */
-
-		#if 0/* あたった敵は倒せない敵かもしれないので、ここで必ず消すのはまずい気がする */
-		/* あたった敵爆発 */
-		bakuhatsu_add_type(pd.enemy->cx256+t256( 5), pd.enemy->cy256+t256( 5), /*0,*/ BAKUHATSU_MINI00);
-		pd.enemy->type	= SP_DELETE;/*???*/
-		#endif
 		/* 自分爆発 */
 		#if 1
 		{
@@ -1322,15 +1345,15 @@ static void player_explode(SPRITE *s1)
 			}
 		}
 		#endif
-		/*	*/
-		pd.bomber_time	= 0;			/* ←ここが無いせいで魔理沙(&チルノ)ボム撃てなくなってた */
+		/*	 */
+		cg.bomber_time	= 0;			/* ←ここが無いせいで魔理沙(&チルノ)ボム撃てなくなってた */
 		#if 1
-	//	pd.bomber_time = 0;/*都合上*/
+	//	cg.bomber_time = 0;/* 都合上 */
 		set_bg_alpha(255);/* 画面を明るくする */
 		#endif
 
-	//	pd.state_flag		= STATE_FLAG_00_NONE;/*???*/
-		pd.state_flag		&= (~(	STATE_FLAG_01_PLAYER_UP_AUTO_GET_ITEM | 	/* 終わり */
+	//	cg.state_flag		= STATE_FLAG_00_NONE;/* ??? */
+		cg.state_flag		&= (~(	STATE_FLAG_01_PLAYER_UP_AUTO_GET_ITEM | 	/* 終わり */
 									STATE_FLAG_02_BOMB_AUTO_GET_ITEM |			/* 終わり */
 									STATE_FLAG_03_SCORE_AUTO_GET_ITEM));		/* 終わり */
 
@@ -1348,7 +1371,7 @@ static void player_explode(SPRITE *s1)
 	pds_status_timer--;
 	pds_status_timer &= 0xff; // 何らかの値でマスク
 //
-	負値(-255):
+	負値(-255): LIMIT_m255_CONTINUE
 		復活中							(方向キー入力無効。ボム低速等キー入力、無効)
 	負値(-127): LIMIT_m127_MIN
 		ゲームオーバーデモ				(方向キー入力無効。ボム低速等キー入力、無効。敵あたり無し。弾あたり無し。)
@@ -1368,8 +1391,8 @@ static void player_explode(SPRITE *s1)
 		ゲーム開始時に付き無敵。		(方向キー入力有効。ボム低速等キー入力、有効。敵あたり無し。弾あたり無し。)
 	512:
 ---------------------------------------------------------*/
-//void render_continue(void/*int now_max_continue*/);
-/*static*/ int	now_max_continue;
+//void render_continue(void/* int cg_game_now_max_continue */);
+
 static void player_move_special_ivent(SPRITE *s1)
 {
 	pds_status_timer--;
@@ -1377,18 +1400,19 @@ static void player_move_special_ivent(SPRITE *s1)
 //	pds_status_timer = (signed int)(pds_status_timer & (0x1ff)); // 何らかの値でマスク
 	#else
 	if (LIMIT_m255_CONTINUE > pds_status_timer) {	pds_status_timer += (512); }
-//	if (-511 > pds_status_timer) {	pds_status_timer += 1024; }/*デバッグ検証用*/
+//	if (-511 > pds_status_timer) {	pds_status_timer += 1024; }/* デバッグ検証用 */
 	#endif
 //
 	if (LIMIT_m127_MIN > pds_status_timer)
 	{
-		//復活中の処理
-		/* 拡大してたら縮小 */
-		#if (1==USE_ZOOM_XY)
-		/* X のみ縮小。Y は変更せず。 */
+	//	if (LIMIT_fukki2 == pds_status_timer)
+	//	{
+	//		;
+	//	}
+		/* 復活中の処理、拡大してたら X のみ縮小。Y は変更せず。 */
 		if (t256(1.0) < s1->m_zoom_x256)
 		{
-			s1->m_zoom_x256 -= (5);
+			s1->m_zoom_x256 -= (5*4);//			s1->m_zoom_x256 -= (5);
 		//	s1->m_zoom_y256 -= (5);
 		}
 		else
@@ -1396,34 +1420,24 @@ static void player_move_special_ivent(SPRITE *s1)
 			s1->m_zoom_x256 = (t256(1.0));
 		//	s1->m_zoom_y256 = (t256(1.0));
 		}
-		#else
-		if (t256(1.0) < s1->m_zoom_xy256)
-		{
-			s1->m_zoom_xy256 -= (5);
-		}
-		else
-		{
-			s1->m_zoom_xy256 = (t256(1.0));
-		}
-		#endif
 	}
 	else
 	if (LIMIT_m127_MIN == pds_status_timer)
 	{
 		//ゲームオーバーデモ
 //		case PLAYER_STATE_04_GAME_OUT:/* GAME_OUT中 */
-//			pd.special_ivent_type	= 0;/*???*/
-			now_max_continue--;
+//			cg.special_ivent_type	= 0;/* ??? */
+			cg.game_now_max_continue--;
 			if (
-					(0 < now_max_continue)
+					(0 < cg.game_now_max_continue)
 				#if (0)/* (0==DE BUG) */
 				/* まだ無効 */
-				&& ( (6) != player_now_stage)	/* 最終面はコンティニュー出来ない。 */
+				&& ( (6) != cg.game_now_stage)	/* 最終面はコンティニュー出来ない。 */
 				#endif
 				)
 			{
-				pd.use_continue++;	/* コンティニュー回数 */
-			//	render_continue(/*now_max_continue*/);
+				cg.player_data_use_continue++;	/* コンティニュー回数 */
+			//	render_continue(/* cg_game_now_max_continue */);
 				main_call_func = ask_continue_menu_start;
 			}
 			else
@@ -1448,26 +1462,23 @@ static void player_move_special_ivent(SPRITE *s1)
 		option[1]->flags	&= (~SP_FLAG_OPTION_VISIBLE);	/* オプションを消す */
 		option[2]->flags	&= (~SP_FLAG_OPTION_VISIBLE);	/* オプションを消す */
 		option[3]->flags	&= (~SP_FLAG_OPTION_VISIBLE);	/* オプションを消す */
-		#endif/*0000*/
-		pd.count_miss++;	/* ミス回数 */
+		#endif/* 0000 */
+		cg.player_data_count_miss++;	/* ミス回数 */
 		/* 残チャンス減らす */
-		pd.zanki--;
-		if (0 > pd.zanki)	/* 残チャンスがなければ */
+		cg.zanki--;
+		if (0 > cg.zanki)	/* 残チャンスがなければ */
 		{
 			player_loop_quit();
 		}
 		else
 		{
-		/*	MAX(128)->死ぬ->(112)->死ぬ->(96)->死ぬ->(80)->死ぬ->(64)	(常に16減で一定)	*/
-			pd.weapon_power -= (16);	/* 武器レベルの低下(紅、調べたら難易度に関係なくP16減だった) */
-			if (0 > pd.weapon_power)	{	pd.weapon_power = 0;	}
-			player_fukkatsu_bbb(s1);
-			#if (1==USE_ZOOM_XY)
+		/*	MAX(128)->死ぬ->(112)->死ぬ->(96)->死ぬ->(80)->死ぬ->(64)	(常に16減で一定)	 */
+			cg.weapon_power -= (16);	/* 武器レベルの低下(紅、調べたら難易度に関係なくP16減だった) */
+			if (0 > cg.weapon_power)	{	cg.weapon_power = 0;	}
+			player_fukkatsu_aaa(s1);	/* プレイヤー位置の初期化 */
+			player_fukkatsu_bbb222(s1);
 			s1->m_zoom_x256 = t256(1.0)+(120*5);/* 拡大 */
 			s1->m_zoom_y256 = t256(1.0);//+(120*5);/* 拡大 */
-			#else
-			s1->m_zoom_xy256 = t256(1.0)+(120*5);/* 拡大 */
-			#endif
 		}
 	}
 	else
@@ -1478,7 +1489,7 @@ static void player_move_special_ivent(SPRITE *s1)
 		//喰らいボム受付中の処理
 //		case PLAYER_STATE_01_KURAI_BOMB_UKETUKE:/* 喰らいボム受付中 */			// [***090125		追加
 //			/* 死亡確定 */
-//			pd.state_flag |= STATE_FLAG_16_NOT_ALLOW_KEY_CONTROL;		/* キー入力無効(1) */
+//			cg.state_flag |= STATE_FLAG_16_NOT_ALLOW_KEY_CONTROL;		/* キー入力無効(1) */
 //			break;
 	}
 	else
@@ -1487,22 +1498,22 @@ static void player_move_special_ivent(SPRITE *s1)
 		(LIMIT_1_ONEから 1 引いたもの、この 値(-1) は(player_move_special_ivent();開始時の)pds_status_timer--;を補正する分。)
 		(結果的に(現在は)LIMIT_0_ZEROと同じだが、意味はLIMIT_0_ZEROと同じではない。)
 		LIMIT_1_ONEは固定値(1)ではない、現状 値(1) だけど将来は判らない。
-		*/
+		 */
 	if ((LIMIT_1_ONE-1) == pds_status_timer)
 	{
 		/* 半透明を通常に戻す */
-		s1->color32 		= MAKE32RGBA(0xff, 0xff, 0xff, 0xff);					/*	s1->alpha			= 0xff;*/
+		s1->color32 		= MAKE32RGBA(0xff, 0xff, 0xff, 0xff);					/*	s1->alpha			= 0xff; */
 		{
 			SPRITE *zzz_obj_maru;
-			zzz_obj_maru = &obj00[FIX_OBJ_01_JIKI_MARU];
-			zzz_obj_maru->color32	= MAKE32RGBA(0xff, 0xff, 0xff, 0xff);		/* ○、 */	/*	zzz_obj_maru->alpha = 0xff;*/
+			zzz_obj_maru = &obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_01_JIKI_MARU];
+			zzz_obj_maru->color32	= MAKE32RGBA(0xff, 0xff, 0xff, 0xff);		/* ○、 */	/*	zzz_obj_maru->alpha = 0xff; */
 		}
 	}
 //	else
 //	if ((LIMIT_128-1) == pds_status_timer)
 //	{
-//		case PLAYER_STATE_03_SAVE_02:/*プレイヤー復活中２*/
-//			pd.special_ivent_type	= PLAYER_STATE_00_NORMAL;
+//		case PLAYER_STATE_03_SAVE_02:/* プレイヤー復活中２ */
+//			cg.special_ivent_type	= PLAYER_STATE_00_NORMAL;
 //				s1->m_zoom_x256 			= t256(1.0)+100;	 /* サイズ */
 //			break;
 //	}
@@ -1522,8 +1533,8 @@ static void player_move_special_ivent(SPRITE *s1)
 
 static void any_player_move(SPRITE *s1)
 {
-	pd.state_flag &= (~STATE_FLAG_15_KEY_SHOT); /* off */
-	if (0!=(pd.state_flag & (STATE_FLAG_06_IS_SCRIPT)))
+	cg.state_flag &= (~STATE_FLAG_15_KEY_SHOT); /* off */
+	if (0!=(cg.state_flag & (STATE_FLAG_06_IS_SCRIPT)))
 	{
 		pds_status_timer = (LIMIT_1_ONE);	/* スクリプト動作中 は 1 */
 	}
@@ -1547,10 +1558,10 @@ static void any_player_move(SPRITE *s1)
 }
 
 //		bullets_to_hosi();/* 弾全部、星アイテムにする */
-//廃止	if (0==(pd.state_flag & STATE_FLAG_16_NOT_ALLOW_KEY_CONTROL))	/* キー入力有効(0) */
+//廃止	if (0==(cg.state_flag & STATE_FLAG_16_NOT_ALLOW_KEY_CONTROL))	/* キー入力有効(0) */
 //		if (0 <= pds_status_timer)	/* 正値の場合、移動可能 */
 
-	#if 0/*デバッグ*/
+	#if 0/* デバッグ */
 	if (0 <= pds_status_timer)	/* 正値の場合 */
 	{
 		p d_my_score	= pds_status_timer;
@@ -1573,13 +1584,17 @@ extern void player_init_extend_score(void);
 //extern int zanki;
 global void player_continue_value(void)
 {
-	pd.zanki				= (1+option_config[OPTION_CONFIG_00_PLAYER]);	/*pd.base_zanki*/	/*((zanki&0x03)+2)*/ /*player_fix_status[BASE_LIVES+select_player]*/
-	pd.game_score			= score(0);
-	pd.state_flag			&= (~STATE_FLAG_14_GAME_LOOP_QUIT); 	/* 復帰 */
+	cg.zanki				= (1+option_config[OPTION_CONFIG_00_PLAYER]);	/* cg.base_zanki */ /* ((zanki&0x03)+2) */ /* static_fix_status[BASE_LIVES+(cg_game_select_player)] */
+	cg.game_score			= score(0);
+//	/* (r32) */cg.state_flag			&= (~ST ATE_FLAG_14_GAME_LOOP_QUIT); 	/* 復帰 */
+	/* (r32) */cg.state_flag		|= STATE_FLAG_14_ZAKO_TUIKA;	/* on 復帰 */
 	#if (1==USE_EXTEND_CHECK)
 	player_init_extend_score();
 	#endif
-	player_fukkatsu_bbb(&obj00[FIX_OBJ_00_PLAYER]);/* オプションを追加より後 */
+	SPRITE *s1;
+	s1 = &obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_00_PLAYER];
+	player_fukkatsu_aaa(s1);	/* プレイヤー位置の初期化 */
+	player_fukkatsu_bbb222(s1);/* オプションを追加より後 */
 
 	/*
 		[コンティニュースタート時]及び、[新規スタート時]の特別処理。(つまりゲーム中復活時[以外の]場合)
@@ -1588,7 +1603,7 @@ global void player_continue_value(void)
 		かつ直ぐに動ける(方向キー入力有効...)ように細工する。
 		------------------------------------------------------------
 		(ゲーム中復活時の場合は一定時間動けない。)
-	*/
+	 */
 	/* 拡大率を1.0倍にする。 */
 //	s1->m_zoom_x256 = (t256(1.0));
 	/* (無敵時間で)直ぐに動ける。 */
@@ -1596,51 +1611,71 @@ global void player_continue_value(void)
 }
 
 /*---------------------------------------------------------
-	プレイヤー、オプションの追加
-	霊夢	魔理沙	幽々子 レミリア ＆ チルノ
+	プレイヤー自機を作成。
+	自機オプションを作成。
 ---------------------------------------------------------*/
 
-static void option_create(void) /* レミリア ＆ チルノ [***090220 追加 */
+static void jiki_and_option_create(void)
 {
-	SPRITE *zzz_player;
-	zzz_player = &obj00[FIX_OBJ_00_PLAYER];
+	SPRITE *s1;
+	s1					= obj_add_nn_direct(OBJ_HEAD_02_KOTEI+FIX_OBJ_00_PLAYER);	/* 必ず登録できる。 */
+	s1->jyumyou 		= JYUMYOU_MUGEN;/* 時間で自動消去しない */
+	{
+		static const s32 graze_atari[8] =
+		{
+			t256(16.0), 	/* 霊夢A */ 	//	BASE_CORE_ATARI_0a,/* 6 */		/* 霊夢A */ 	/*	5 */	BASE_CORE_ATARI_0a,/* 6 */
+			t256(16.0), 	/* 霊夢B */ 	//	BASE_CORE_ATARI_0b,/* 6 */		/* 霊夢B */ 	/*	5 */	BASE_CORE_ATARI_0a,/* 6 */
+			t256(32.0), 	/* 魔理沙A */	//	BASE_CORE_ATARI_0c,/* 8 */		/* 魔理沙A */	/*	6 */	BASE_CORE_ATARI_0b,/* 8 */
+			t256(32.0), 	/* 魔理沙B */	//	BASE_CORE_ATARI_0d,/* 8 */		/* 魔理沙B */	/*	6 */	BASE_CORE_ATARI_0b,/* 8 */
+			t256(16.0), 	/* レミリア */	//	BASE_CORE_ATARI_0e,/* 8 */		/* 魔理沙C */	/*	7 */	BASE_CORE_ATARI_0c,/* 12 */
+			t256(48.0), 	/* 幽々子 */	//	BASE_CORE_ATARI_0f,/* 12 */ 	/* レミリア */	/*	9 */	BASE_CORE_ATARI_0e,/* 8 */
+			t256(48.0), 	/* チルノA */	//	BASE_CORE_ATARI_0g,/* 16 */ 	/* チルノ */	/*	8 */	BASE_CORE_ATARI_0d,/* 16 */
+			t256(48.0), 	/* チルノQ */	//	BASE_CORE_ATARI_0h,/* 8 */		/* 幽々子 */	/*	6 */	BASE_CORE_ATARI_0b,/* 8 */
+		};
+	//	s1->m_Hit256R		= JIKI_ATARI_ITEM_16;/* t256(16.0); グレイズ判定 */
+		s1->m_Hit256R		= ((graze_atari[(cg_game_select_player)]));/* グレイズ判定 */
+	}
+	s1->type			= (SP_GROUP_JIKI_GET_ITEM);
+	s1->flags			|= (SP_FLAG_COLISION_CHECK/* |SP_FLAG_VISIBLE */);
+	s1->callback_mover	= any_player_move;
+//
 	unsigned int jj;
 	for (jj=0; jj<4; jj++)
 	{
 		SPRITE *h;
-		h						= sprite_add_direct(FIX_OBJ_04_JIKI_OPTION0/*+OPTION_C1*/+jj);	/* 必ず登録できる。  */
+		h						= obj_add_nn_direct(OBJ_HEAD_02_KOTEI+FIX_OBJ_04_JIKI_OPTION0/* +OPTION_C1 */+jj);	/* 必ず登録できる。 */
 		h->jyumyou				= JYUMYOU_MUGEN;/* 時間で自動消去しない */
 		{
-		//	h->type 				= (JIKI_OPTION_00_00/*|S P_MUTEKI*/)+kk; kk += (16);/* オプションインターリーブ */ /*8*/
-			h->type 				= (JIKI_OPTION_00_00/*|S P_MUTEKI*/)+(jj<<4); /* オプションインターリーブ */ /*8*/
+		//	h->type 				= (JIKI_OPTION_00_00/* |S P_MUTEKI */)+kk; kk += (16);/* オプションインターリーブ */ /* 8 */
+			h->type 				= (JIKI_OPTION_00_00/* |S P_MUTEKI */)+(jj<<4); /* オプションインターリーブ */ /* 8 */
 			{
-				static const /*int*/s16 aaa_tbl[4] =
+				static const /* int */s16 aaa_tbl[4] =
 				{
-					cv1024r(360-(45*5)),	/*cv1024r(45*1)*/ /*1024*1/8*/ /*;*/ /*チルノ*/
-					cv1024r(360-(45*7)),	/*cv1024r(45*5)*/ /*1024*5/8*/ /*;*/ /*チルノ*/
-					cv1024r(360-(45*1)),	/*cv1024r(45*3)*/ /*1024*3/8*/ /*;*/ /*チルノ*/
-					cv1024r(360-(45*3)) 	/*cv1024r(45*7)*/ /*1024*7/8*/ /*;*/ /*チルノ*/
+					cv1024r(360-(45*5)),	/* cv1024r(45*1) */ /* 1024*1/8 */ /* ; */ /* チルノ */
+					cv1024r(360-(45*7)),	/* cv1024r(45*5) */ /* 1024*5/8 */ /* ; */ /* チルノ */
+					cv1024r(360-(45*1)),	/* cv1024r(45*3) */ /* 1024*3/8 */ /* ; */ /* チルノ */
+					cv1024r(360-(45*3)) 	/* cv1024r(45*7) */ /* 1024*7/8 */ /* ; */ /* チルノ */
 				};
-				h->PL_OPTION_DATA_angleCCW1024/*REMILIA_angle1024*/ = aaa_tbl[jj];
+				h->PL_OPTION_DATA_angleCCW1024/* REMILIA_angle1024 */ = aaa_tbl[jj];
 			}
 				h->PL_OPTION_DATA_opt_anime_add_id		= (OPTION_C1+jj);
 
 		//
-			#if 1/*Gu(中心座標)*/
-			h->cx256					= (zzz_player->cx256);
-			h->cy256					= (zzz_player->cy256);
+			#if 1/* Gu(中心座標) */
+			h->cx256					= (s1->cx256);
+			h->cy256					= (s1->cy256);
 			#endif
 			h->m_Hit256R			= TAMA_ATARI_BULLET_DUMMY;
 		//	h->flags				|= (SP_FLAG_OPTION_VISIBLE);
 			h->flags				&= (~(SP_FLAG_OPTION_VISIBLE)); 	/* 可視フラグのOFF(不可視) */
 			h->flags				&= (~(SP_FLAG_COLISION_CHECK)); 	/* あたり判定のOFF(無敵) */
 
-	/*???*/ h->base_weapon_strength 				= (1/*8*5*/);/* [***090214 追加 */
+	/* ??? */ h->base_weapon_strength				= (1/* 8*5 */);/* [***090214 追加 */
 			{
 			//
 				h->callback_mover		= player_move_option;
 			//
-			//	h->PL_OPTION_DATA_next					= obj00[FIX_OBJ_00_PLAYER];
+			//	h->PL_OPTION_DATA_next					= obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_00_PLAYER];
 			//	h->P L_OPTION_DATA_state2				= 0;
 				h->PL_OPTION_DATA_offset_x256			= t256(0);
 				h->PL_OPTION_DATA_offset_y256			= t256(0);
@@ -1652,11 +1687,11 @@ static void option_create(void) /* レミリア ＆ チルノ [***090220 追加 */
 		//	h->PL_OPTION_DATA_state1				= 0;///
 			h->PL_OPTION_DATA_anime_wait			= 0;
 			/* レミリアのオプションは半透明っぽい */
-			if (REMILIA==select_player)
+			if (REMILIA==(cg_game_select_player))
 			{
 			//	h->color32			= MAKE32RGBA(0xff, 0xff, 0xff, 0x96);	/*	h->alpha			= 0x96; */	/* 明る過ぎる */
-				h->color32			= MAKE32RGBA(0xff, 0xff, 0xff, 0x80);	/*	h->alpha			= 0x80;*/	/* 半透明 */
-			//	h->color32			= MAKE32RGBA(0xff, 0xff, 0xff, 0x50);	/*	h->alpha			= 0x50;*/	/* 暗ら過ぎる */
+				h->color32			= MAKE32RGBA(0xff, 0xff, 0xff, 0x80);	/*	h->alpha			= 0x80; */	/* 半透明 */
+			//	h->color32			= MAKE32RGBA(0xff, 0xff, 0xff, 0x50);	/*	h->alpha			= 0x50; */	/* 暗ら過ぎる */
 			}
 		}
 	}
@@ -1665,130 +1700,107 @@ static void option_create(void) /* レミリア ＆ チルノ [***090220 追加 */
 	プレイヤー初期化
 ---------------------------------------------------------*/
 extern void sprite_initialize_position(SPRITE *h);
-extern int boss_hp_dec_by_frame;/*ボス攻撃減少値、フレーム単位*/
-extern int practice_mode;
+extern int boss_hp_dec_by_frame;/* ボス攻撃減少値、フレーム単位 */
+
 extern void select_jiki_load_surface(void);
 extern void boss_effect_sprite_add(void);
 extern void sprite_panel_init(void);
-global void player_init(void)
+global void player_init_first(void)
 {
 	select_jiki_load_surface();
-//
 	sprite_all_cleanup();/* 全obj消去 */
-//
-	SPRITE *s1;
-	s1					= sprite_add_direct(FIX_OBJ_00_PLAYER); 	/* 必ず登録できる。  */
-	s1->jyumyou 		= JYUMYOU_MUGEN;/* 時間で自動消去しない */
-	{
-		static const s32 graze_atari[8] =
-		{
-			t256(16.0), 	/* 霊夢A */ 	//	BASE_CORE_ATARI_0a,/*6*/		/* 霊夢A */ 	/*	5 */	BASE_CORE_ATARI_0a,/*6*/
-			t256(16.0), 	/* 霊夢B */ 	//	BASE_CORE_ATARI_0b,/*6*/		/* 霊夢B */ 	/*	5 */	BASE_CORE_ATARI_0a,/*6*/
-			t256(32.0), 	/* 魔理沙A */	//	BASE_CORE_ATARI_0c,/*8*/		/* 魔理沙A */	/*	6 */	BASE_CORE_ATARI_0b,/*8*/
-			t256(32.0), 	/* 魔理沙B */	//	BASE_CORE_ATARI_0d,/*8*/		/* 魔理沙B */	/*	6 */	BASE_CORE_ATARI_0b,/*8*/
-			t256(16.0), 	/* レミリア */	//	BASE_CORE_ATARI_0e,/*8*/		/* 魔理沙C */	/*	7 */	BASE_CORE_ATARI_0c,/*12*/
-			t256(48.0), 	/* 幽々子 */	//	BASE_CORE_ATARI_0f,/*12*/		/* レミリア */	/*	9 */	BASE_CORE_ATARI_0e,/*8*/
-			t256(48.0), 	/* チルノA */	//	BASE_CORE_ATARI_0g,/*16*/		/* チルノ */	/*	8 */	BASE_CORE_ATARI_0d,/*16*/
-			t256(48.0), 	/* チルノQ */	//	BASE_CORE_ATARI_0h,/*8*/		/* 幽々子 */	/*	6 */	BASE_CORE_ATARI_0b,/*8*/
-		};
-	//	s1->m_Hit256R		= JIKI_ATARI_ITEM_16;/* t256(16.0); グレイズ判定 */
-		s1->m_Hit256R		= ((graze_atari[select_player]));/* グレイズ判定 */
-	}
-	s1->type			= (SP_GROUP_JIKI_GET_ITEM);
-	s1->flags			|= (SP_FLAG_COLISION_CHECK/*|SP_FLAG_VISIBLE*/);
-	s1->callback_mover	= any_player_move;
-	#if 1/*Gu(中心座標)*/
-	s1->cx256			= (t256(GAME_WIDTH/2));
-	s1->cy256			= (t256(GAME_HEIGHT));
-	#endif
-//
+	jiki_and_option_create();	/* 自機、自機オプションを作成 */
 	/* プレイヤー、生死判定用コア(obj_maru == ○)の追加 */
-
 	SPRITE *zzz_obj_maru;
-	zzz_obj_maru				= sprite_add_direct(FIX_OBJ_01_JIKI_MARU);	/* 必ず登録できる。  */
+	zzz_obj_maru				= obj_add_nn_direct(OBJ_HEAD_02_KOTEI+FIX_OBJ_01_JIKI_MARU);	/* 必ず登録できる。 */
 	zzz_obj_maru->jyumyou		= JYUMYOU_MUGEN;/* 時間で自動消去しない */
-//	zzz_obj_maru->type			= (JIKI_CORE_00_REIMU_A+select_player);
+//	zzz_obj_maru->type			= (JIKI_CORE_00_REIMU_A+(cg_game_select_player));
 //	zzz_obj_maru->type			= (SPELL_SQUERE_);
-	zzz_obj_maru->type			= (SP_DUMMY_MUTEKI);/*(S P_GROUP_ETC_DUMMY_REMILIA);*/
+	zzz_obj_maru->type			= (SP_DUMMY_MUTEKI);/* (S P_GROUP_ETC_DUMMY_REMILIA); */
 	{
 		static const s32 base_core_atari[8] =
 		{
-			t256(0.75), 	/* 霊夢A */ 	//	BASE_CORE_ATARI_0a,/*6*/		/* 霊夢A */ 	/*	5 */	BASE_CORE_ATARI_0a,/*6*/
-			t256(0.75), 	/* 霊夢B */ 	//	BASE_CORE_ATARI_0b,/*6*/		/* 霊夢B */ 	/*	5 */	BASE_CORE_ATARI_0a,/*6*/
-			t256(1.50), 	/* 魔理沙A */	//	BASE_CORE_ATARI_0c,/*8*/		/* 魔理沙A */	/*	6 */	BASE_CORE_ATARI_0b,/*8*/
-			t256(1.50), 	/* 魔理沙B */	//	BASE_CORE_ATARI_0d,/*8*/		/* 魔理沙B */	/*	6 */	BASE_CORE_ATARI_0b,/*8*/
-			t256(1.75), 	/* レミリア */	//	BASE_CORE_ATARI_0e,/*8*/		/* 魔理沙C */	/*	7 */	BASE_CORE_ATARI_0c,/*12*/
-			t256(2.00), 	/* 幽々子 */	//	BASE_CORE_ATARI_0f,/*12*/		/* レミリア */	/*	9 */	BASE_CORE_ATARI_0e,/*8*/
-			t256(0.90), 	/* チルノA */	//	BASE_CORE_ATARI_0g,/*16*/		/* チルノ */	/*	8 */	BASE_CORE_ATARI_0d,/*16*/
-			t256(0.25), 	/* チルノQ */	//	BASE_CORE_ATARI_0h,/*8*/		/* 幽々子 */	/*	6 */	BASE_CORE_ATARI_0b,/*8*/
+			t256(0.75), 	/* 霊夢A */ 	//	BASE_CORE_ATARI_0a,/* 6 */		/* 霊夢A */ 	/*	5 */	BASE_CORE_ATARI_0a,/* 6 */
+			t256(0.75), 	/* 霊夢B */ 	//	BASE_CORE_ATARI_0b,/* 6 */		/* 霊夢B */ 	/*	5 */	BASE_CORE_ATARI_0a,/* 6 */
+			t256(1.50), 	/* 魔理沙A */	//	BASE_CORE_ATARI_0c,/* 8 */		/* 魔理沙A */	/*	6 */	BASE_CORE_ATARI_0b,/* 8 */
+			t256(1.50), 	/* 魔理沙B */	//	BASE_CORE_ATARI_0d,/* 8 */		/* 魔理沙B */	/*	6 */	BASE_CORE_ATARI_0b,/* 8 */
+			t256(1.75), 	/* レミリア */	//	BASE_CORE_ATARI_0e,/* 8 */		/* 魔理沙C */	/*	7 */	BASE_CORE_ATARI_0c,/* 12 */
+			t256(2.00), 	/* 幽々子 */	//	BASE_CORE_ATARI_0f,/* 12 */ 	/* レミリア */	/*	9 */	BASE_CORE_ATARI_0e,/* 8 */
+			t256(0.90), 	/* チルノA */	//	BASE_CORE_ATARI_0g,/* 16 */ 	/* チルノ */	/*	8 */	BASE_CORE_ATARI_0d,/* 16 */
+			t256(0.25), 	/* チルノQ */	//	BASE_CORE_ATARI_0h,/* 8 */		/* 幽々子 */	/*	6 */	BASE_CORE_ATARI_0b,/* 8 */
 		};
 		//	if (NULL!=h)/* 登録できた場合のみ */	/* 強制登録 */
-		zzz_obj_maru->m_Hit256R 		= ((base_core_atari[select_player]));
+		zzz_obj_maru->m_Hit256R 		= ((base_core_atari[(cg_game_select_player)]));
 	}
 
 //
 //	#if (0==US E_BOSS_COMMON_MALLOC)
-//	obj00[FIX_OBJ_08_BOSS]				= NULL;
+//	obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_08_BOSS]				= NULL;
 //	#else
 //----[BOSS]
 	/* あたり判定の都合上 */
 	{	SPRITE *h;
-		h								= sprite_add_gu_error();	/* 敵obj番号の0番を必ず取得できる。 */
-	//	h	あたり判定の都合上できない							= sprite_add_direct(FIX_OBJ_08_BOSS);	/* 必ず登録できる。  */
+		h								= obj_add_01_teki_error();	/* 敵obj番号の0番を必ず取得できる。 */
+	//	h	あたり判定の都合上できない							= obj_add_nn_direct(OBJ_HEAD_02_KOTEI+FIX_OBJ_08_BOSS);	/* 必ず登録できる。 */
 	//	if (NULL!=h)/* 登録できた場合のみ */	/* 強制登録 */		/* 仕様バグ(?) */
-	//	h = &obj00[FIX_OBJ_08_BOSS];
+	//	h = &obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_08_BOSS];
 		sprite_initialize_position(h);
 		h->jyumyou				= JYUMYOU_MUGEN;/* 時間で自動消去しない */
 		global_obj_boss 			= h;
+	//	h->target_obj = global_obj_boss_target;/* ワークエリアを確保 */
+//????		h->target_obj = &obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_13_BOSS_SEND_TEST1];
 	}
 //	#endif
 	{
 		boss_effect_sprite_add();
 		boss_effect_initialize_position();
 	}
-
 //
-	pd.use_continue 		= 0;	/* コンティニュー回数 */
-	pd.count_miss			= 0;	/* ミス回数 */
-	pd.used_bomber			= 0;	/* ボム使用回数 */
-	pd.use_kurai_bomb		= 0;	/* 喰らいボム使用回数 */
-//	pd.count_bonus			= 0;	/* スペルカードボーナス回数 */
 //
-	pd.bomber_time			= 0;	/*==bomb_wait*/
-	pd.graze_point			= 0;
+	cg.player_data_use_continue 		= 0;	/* コンティニュー回数 */
+	cg.player_data_count_miss			= 0;	/* ミス回数 */
+	cg.player_data_used_bomber			= 0;	/* ボム使用回数 */
+	cg.player_data_use_kurai_bomb		= 0;	/* 喰らいボム使用回数 */
+//	cg.player_data_count_bonus			= 0;	/* スペルカードボーナス回数 */
 //
-	pd.state_flag			= STATE_FLAG_00_NONE;
-//	if (MARISA==select_player)		{	pd.state_flag		|= STATE_FLAG_04_IS_MARISA; 	}	/* 魔理沙は常に自動収集 */
+	cg.bomber_time			= 0;	/* ==bomb_wait */
+	cg.graze_point			= 0;
 //
-
-
+	/* (r32) */cg.state_flag			= STATE_FLAG_00_NONE;
+//	if (MARISA==(cg_game_select_player))		{	cg.state_flag		|= STATE_FLAG_04_IS_MARISA; 	}	/* 魔理沙は常に自動収集 */
 //
-	boss_hp_dec_by_frame	= 0;/*ボス攻撃減少値、フレーム単位*/
 //
-	weapon_level_offset 	= select_player + (/*0==武器レベル*/0<<3);
+	boss_hp_dec_by_frame	= 0;/* ボス攻撃減少値、フレーム単位 */
+//
+	cg_jiki_weapon_level_offset 	= (cg_game_select_player) + (/* 0==武器レベル */0<<3);
 	/* 練習モードの場合はフルパワーで始める(その代わりクリア後のイベントが見れない) */
-	pd.weapon_power 		= (0==practice_mode)?(0):(MAX_POWER_IS_128);
+	cg.weapon_power 		= (0==cg.game_practice_mode)?(0):(MAX_POWER_IS_128);
 //
-	/* オプションを追加 */
-	option_create();
-//
-	now_max_continue		= DEFAULT_MAX_CONTINUE;/*(3)*/
-//
+
+	cg.game_now_max_continue		= DEFAULT_MAX_CONTINUE;/* (3) */
 	#if 1
 	player_continue_value();
 	#else
-//	p d_zanki				= /*pd.base_zanki*/ player_fix_status[BASE_LIVES+select_player];
+//	p d_zanki				= /* cg.base_zanki */ static_fix_status[BASE_LIVES+(cg_game_select_player)];
 //	p d_my_score			= score(0);
-//	player_fukkatsu_bbb(obj00[FIX_OBJ_00_PLAYER]);/* オプションを追加より後 */
+//	/* Gu(中心座標) */
+//	s1->cx256			= (t256(GAME_WIDTH/2));
+//	s1->cy256			= (t256(GAME_HEIGHT));
+//	player_fukkatsu_aaa(s1);	/* プレイヤー位置の初期化 */
+//	player_fukkatsu_bbb222(obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_00_PLAYER]);/* オプションを追加より後 */
 	#endif
 //読み込み無敵で再設定されるので無意味//	pds_status_timer	= (LIMIT_512);					// 初期登場時、無敵時間
-	#if (1==USE_ZOOM_XY)
-	s1->m_zoom_x256 = t256(1.0);/*	初期登場時、拡大率 x 1.0[倍] */
-	s1->m_zoom_y256 = t256(1.0);/*	初期登場時、拡大率 x 1.0[倍] */
-	#else
-	s1->m_zoom_xy256 = t256(1.0);/* 初期登場時、拡大率 x 1.0[倍] */
-	#endif
 	sprite_panel_init();
+
+
+
+
+
+
+	#if 1/* (r33仕様変更により)どこかで初期化が必ず必要(ここでない方が良いかも？) */
+			br.BULLET_REGIST_03_tama_data			= (0);/* どこかで初期化が必ず必要 */
+	#endif
+			chu_boss_mode			= (0);/* どこかで初期化が必ず必要 */
 }
 
 
@@ -1803,29 +1815,17 @@ global void player_init(void)
 global void set_clear_pdc_special_ivent(void)
 {
 	#if (0)
-//	pds_status_timer	= /*pd.bomber_time*/(255) + USER_BOMOUT_WAIT;/*(30)*/	/*実質無敵時間*/
+//	pds_status_timer	= /* cg.bomber_time */(255) + USER_BOMOUT_WAIT;/* (30) */	/* 実質無敵時間 */
 	#else
 //	pds_status_timer	= (6);/* 6[フレーム] ボス倒してから次(シナリオ)に進むまでの待ち時間 */
 //	pds_status_timer	= (60);/* 60[フレーム] ボス倒してから、ボスが画面外に退避するまでの待ち時間 */
 //	pds_status_timer	= (9999);/* 退避後に退避内で指定。	60[フレーム] ボス倒してから、ボスが画面外に退避するまでの待ち時間 */
 //	pds_status_timer	= (600);/* 退避後に退避内で指定。	60[フレーム] ボス倒してから、ボスが画面外に退避するまでの待ち時間 */
 	#endif
-//	pds_status_timer	= 40/*120*/ /*150-120*/;									// 無敵時間
-//	pd.special_ivent_type	= PLAYER_STATE_02_SAVE_01;	// 無敵状態？
-//	pd.special_ivent_type	= PLAYER_STATE_03_SAVE_02;	/* 稀に、うまくいかない */
-//	pds_status_timer	= (LIMIT_m127_MIN); 				// 無敵時間 		/*120*/ /*150-120*/
-	pds_status_timer	= (LIMIT_65535);					// 無敵時間 		/*120*/ /*150-120*/
+//	pds_status_timer	= 40/* 120 */ /* 150-120 */;									// 無敵時間
+//	cg.special_ivent_type	= PLAYER_STATE_02_SAVE_01;	// 無敵状態？
+//	cg.special_ivent_type	= PLAYER_STATE_03_SAVE_02;	/* 稀に、うまくいかない */
+//	pds_status_timer	= (LIMIT_m127_MIN); 				// 無敵時間 		/* 120 */ /* 150-120 */
+	pds_status_timer	= (LIMIT_65535);					// 無敵時間 		/* 120 */ /* 150-120 */
 }
 
-
-/*---------------------------------------------------------
-	レーザー
----------------------------------------------------------*/
-global void add_laser_off(SPRITE *src)
-{
-	pd.laser_mode = (0);/* off */
-}
-global void add_laser_on(SPRITE *src)
-{
-	pd.laser_mode = (1);/* on */
-}

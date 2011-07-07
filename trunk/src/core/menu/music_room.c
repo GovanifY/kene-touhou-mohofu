@@ -2,7 +2,7 @@
 #include "game_main.h"
 
 /*---------------------------------------------------------
-	東方模倣風	～ Toho Imitation Style.
+	東方模倣風 ～ Toho Imitation Style.
 	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	ミュージックルーム
@@ -65,7 +65,7 @@ static void music_room_draw_message(int cursor1, int cursor2)
 "No.9 遠野幻想物語\\n"							"ファンタズムステージのテーマです。",
 "No.10 上海紅茶館  ～ Chinese Tea\\n"			"エンディング2のテーマです。",
 "No.11 人形裁判 ～ 人の形弄びし少女\\n" 		"アリスのテーマです。",
-"No.12 コンプリート・ダークネス\\n" 			"魅魔のテーマです。", 						// Complete Darkness
+"No.12 コンプリート・ダークネス\\n" 			"魅魔のテーマです。",						// Complete Darkness
 "No.13 竹取飛翔 ～ Lunatic Princess\\n" 		"蓬莱山 輝夜のテーマです。",
 "No.14 風神少女\\n" 							"射命丸 文のテーマです。",
 "No.15 ラクトガール ～ 少女密室\\n" 			"パチュリー・ノーレッジのテーマです。",
@@ -172,7 +172,7 @@ static void music_room_local_work(void)
 		bg_alpha_aaa		= 0;
 		kanji_window_clear();	/* 漢字ウィンドウの内容を消す。 */
 		home_cursor();			/* カーソルをホームポジションへ移動 */
-		msg_time = (60*5);
+		cg.msg_time = byou60(5);	/* 約 5 秒 */
 		print_kanji000("ようこそ\\n"//"幻想音樂室\\n"
 			"完コピとか私の能\力的に無理ですので、\\nBGMは全曲勝手にアレンジ版です。",
 		//	"原曲の面影がないほど変わっちゃってるのもあります。",
@@ -192,16 +192,16 @@ static void music_room_local_work(void)
 		break;
 	case (MUSIC_ROOM_STATE_02_SELECT_MENU):
 		psp_pop_screen();
-		msg_time = (60*5);
-		if (0==my_pad_alter)/* さっき何も押されてなかった場合にキーチェック(原作準拠) */
+		cg.msg_time = byou60(5);	/* 約 5 秒 */
+		if (0==cg_my_pad_alter)/* さっき何も押されてなかった場合にキーチェック(原作準拠) */
 		{
-			if (my_pad & PSP_KEY_UP)			/* 上ボタン入力 */
+			if (cg_my_pad & PSP_KEY_UP)			/* 上ボタン入力 */
 			{
 				if (MUSIC_ROOM_00_BGM == menu_cursor1)		{	menu_cursor1 = (MUSIC_ROOM_03_MAX-1);	}
 				else										{	menu_cursor1--; 	}
 			}
 			else
-			if (my_pad & PSP_KEY_DOWN)			/* 下ボタン入力 */
+			if (cg_my_pad & PSP_KEY_DOWN)			/* 下ボタン入力 */
 			{
 				if ((MUSIC_ROOM_03_MAX-1) == menu_cursor1)	{	menu_cursor1 = MUSIC_ROOM_00_BGM;	}
 				else										{	menu_cursor1++; 	}
@@ -210,7 +210,7 @@ static void music_room_local_work(void)
 			{
 				if (MUSIC_ROOM_02_QUIT == menu_cursor1) /* 項目[ QUIT ] を選んでいる場合 */
 				{
-					if (my_pad & (PSP_KEY_SHOT_OK|PSP_KEY_BOMB_CANCEL)) 	/* ショット || キャンセルボタン入力 */
+					if (cg_my_pad & (PSP_KEY_SHOT_OK|PSP_KEY_BOMB_CANCEL)) 	/* ショット || キャンセルボタン入力 */
 					{
 						#if (1)
 						voice_play(VOICE04_SHIP_HAKAI, TRACK03_SHORT_MUSIC/*TRACK01_EXPLODE*/);/* 自機死に音は、なるべく重ねない */
@@ -218,23 +218,23 @@ static void music_room_local_work(void)
 						#endif
 						play_music_num(BGM_23_menu01);
 						load_SDL_bg(BG_TYPE_00_title_bg);
-						msg_time = (0);
+						cg.msg_time = (0);	/* 約 0 秒 */
 //						bg_alpha_aaa		= 255;
 						bg_alpha_aaa		= 0;
 						my_ppp_loop++;// = (MUSIC_ROOM_STATE_03_FADE_OUT);
 					}
 				}
 				else	/* 設定項目を変更する場合 */
-				if (my_pad & (PSP_KEY_LEFT|PSP_KEY_RIGHT))		/* 左右ボタン入力 */
+				if (cg_my_pad & (PSP_KEY_LEFT|PSP_KEY_RIGHT))		/* 左右ボタン入力 */
 				{
-					if (my_pad & PSP_KEY_LEFT)			/* 左ボタン入力 */
+					if (cg_my_pad & PSP_KEY_LEFT)			/* 左ボタン入力 */
 					{
 						music_room_setting[menu_cursor1]--;
 						if ((0/*MOJI_00*/) > music_room_setting[menu_cursor1])	{	music_room_setting[menu_cursor1] = music_room_setting[menu_cursor1+2]; }
 						music_room_draw_message(menu_cursor1,music_room_setting[menu_cursor1]);
 					}
 					else
-					if (my_pad & PSP_KEY_RIGHT) 		/* 右ボタン入力 */
+					if (cg_my_pad & PSP_KEY_RIGHT) 		/* 右ボタン入力 */
 					{
 						music_room_setting[menu_cursor1]++;
 						if (music_room_setting[menu_cursor1+2] < music_room_setting[menu_cursor1])	{	music_room_setting[menu_cursor1] = 0/*MOJI_00*/; }
@@ -242,7 +242,7 @@ static void music_room_local_work(void)
 					}
 				}
 				else	/* 設定項目を変更する場合 */
-				if (my_pad & PSP_KEY_SHOT_OK) /* ショットボタン入力 */
+				if (cg_my_pad & PSP_KEY_SHOT_OK) /* ショットボタン入力 */
 				{
 					if (MUSIC_ROOM_00_BGM == menu_cursor1)	/* 項目[ BGM ] を選んでいる場合 */
 					{
@@ -257,7 +257,7 @@ static void music_room_local_work(void)
 					}
 				}
 				else	/* 設定項目を変更する場合 */
-				if (my_pad & PSP_KEY_BOMB_CANCEL) /* キャンセルボタン入力 */
+				if (cg_my_pad & PSP_KEY_BOMB_CANCEL) /* キャンセルボタン入力 */
 				{
 					play_music_num(BGM_00_stop);
 				}

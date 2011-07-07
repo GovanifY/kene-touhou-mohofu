@@ -2,7 +2,7 @@
 #include "game_main.h"
 
 /*---------------------------------------------------------
-	東方模倣風	～ Toho Imitation Style.
+	東方模倣風 ～ Toho Imitation Style.
 	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	アイテム関連
@@ -51,7 +51,7 @@ static void move_item_type02(SPRITE *src)	/* 自動収集ならば、自分に集まる */
 			src->ITEM_DATA_y_sum256 = t256(2.0/*1.0*/); 	/* pspは解像度が低いので細工(x2) */ 	/* (2.5==5*0.5) */
 		}
 		SPRITE *zzz_player;
-		zzz_player = &obj00[FIX_OBJ_00_PLAYER];
+		zzz_player = &obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_00_PLAYER];
 		src->ITEM_DATA_x_sa256 = (src->cx256 - zzz_player->cx256);
 		src->ITEM_DATA_y_sa256 = (src->ITEM_DATA_true_y256 - zzz_player->cy256);
 		/* 自分に集まる */
@@ -160,13 +160,12 @@ static void move_item_type02(SPRITE *src)	/* 自動収集ならば、自分に集まる */
 			(低速モードでは取れなくても構わない) */
 		#endif
 
-extern int select_player;
 
 static void move_item_type01(SPRITE *src)
 {
 	/* 自動収集モードのどれかが作動してたら、 */
 	if (0 != (
-		(pd.state_flag) &
+		(cg.state_flag) &
 		(STATE_FLAG_01_PLAYER_UP_AUTO_GET_ITEM |		/* MAX時の上回収 */
 		 STATE_FLAG_02_BOMB_AUTO_GET_ITEM | 			/* ボム発動中のみ回収 */
 		 STATE_FLAG_03_SCORE_AUTO_GET_ITEM				/* ボス撃破時の一時回収 */
@@ -194,11 +193,11 @@ static void move_item_type01(SPRITE *src)
 			t256(3.0),	/* CIRNO_A */
 			t256(4.0),	/* CIRNO_Q */
 		};
-		int rakka_sokudo_maximum = rakka_sokudo[(select_player)];
+		int rakka_sokudo_maximum = rakka_sokudo[((cg_game_select_player))];
 		/* レミリア & 幽々子 の場合、低速移動で落下速度を一時的に下げられる。 */
-		if (0x04==(select_player & 0x06) )/* 4:REMILIA or 5:YUYUKO */
+		if (0x04==((cg_game_select_player) & 0x06) )/* 4:REMILIA or 5:YUYUKO */
 		{
-			if (/*is_slow =*/ (my_pad & PSP_KEY_SLOW))/* 低速移動の場合 */
+			if (/*is_slow =*/ (cg_my_pad & PSP_KEY_SLOW))/* 低速移動の場合 */
 			{
 				rakka_sokudo_maximum >>= 1;/* 一時的に半分 */
 			}
@@ -216,7 +215,7 @@ static void move_item_type01(SPRITE *src)
 			// SP_ITEM_00_P001: /* ウェポンアイテム(小P) */
 			// SP_ITEM_01_P008: /* ウェポンアイテム(中P) */
 			// SP_ITEM_02_P128: /* ウェポンアイテム(F) */
-				pd.chain_point = 0;/* チェイン破棄 */
+				cg.chain_point = 0;/* チェイン破棄 */
 				//;
 			}
 			// else {;} 	/* [点][星][B][1UP]等逃しても、チェイン維持。 */
@@ -263,11 +262,11 @@ static void move_item_type00(SPRITE *src)
 	アイテム出現させる子関数
 ---------------------------------------------------------*/
 /*int x, int y*/
-static SPRITE *item_mono_create(SPRITE *src, int sel_type)/*  */
+static SPRITE *item_mono_create(SPRITE *src, int sel_type)/* */
 {
 	//	アイテムの種類を選ぶ
 	SPRITE *h;
-	h						= sprite_add_444only_bullet_error();
+	h						= obj_add_00_tama_error();
 	if (NULL != h)
 	{
 		sel_type &= 0x07;		/* アイテムの種類 == グラフィックの種類 */
@@ -304,14 +303,14 @@ static SPRITE *item_mono_create(SPRITE *src, int sel_type)/*  */
 		if ( SP_ITEM_06_HOSI == sel_type )	/* 星点のみ特別処理 */
 		{
 			/* 紅は、こうらしい */
-			if ( USER_BOMOUT_WAIT > pd.bomber_time )
+			if ( USER_BOMOUT_WAIT > cg.bomber_time )
 			{	/* ボム中(設定無敵時間中)は100pts.(稼げない) */
 				bonus_info_score_nodel(h, SCORE_100);/*自動消去へ仕様変更s->jyumyou = JYUMYOU_NASI;*/
 			}
 			else/* 星点 */
 			{	/* ボム後の実質無敵期間中はこちら(稼げる) */
 				/* ((graze/3)*10)+(500) pts */
-				bonus_info_any_score_nodel(h, (score(500)+(((pd.graze_point*86)>>8)/*(pd->graze_point/3)*/)) );/*自動消去へ仕様変更c->jyumyou = JYUMYOU_NASI;*/
+				bonus_info_any_score_nodel(h, (score(500)+(((cg.graze_point*86)>>8)/*(pd->graze_point/3)*/)) );/*自動消去へ仕様変更c->jyumyou = JYUMYOU_NASI;*/
 			}
 			h->flags			= (0/*SP_FLAG_VISIBLE|SP_FLAG_TIME_OVER*/);/*当たり判定なし*/
 		}
@@ -337,19 +336,27 @@ static void s_item_convert_hosi(SPRITE *h)
 	//	if ( SP_ITEM_06_HOSI == sel_type )	/* 星点のみ特別処理 */
 		{
 			/* 紅は、こうらしい */
-			if ( USER_BOMOUT_WAIT > pd.bomber_time )
+			if ( USER_BOMOUT_WAIT > cg.bomber_time )
 			{	/* ボム中(設定無敵時間中)は100pts.(稼げない) */
 				bonus_info_score_nodel(h, SCORE_100);/*自動消去へ仕様変更s->jyumyou = JYUMYOU_NASI;*/
 			}
 			else/* 星点 */
 			{	/* ボム後の実質無敵期間中はこちら(稼げる) */
 				/* ((graze/3)*10)+(500) pts */
-				bonus_info_any_score_nodel(h, (score(500)+(((pd.graze_point*86)>>8)/*(pd->graze_point/3)*/)) );/*自動消去へ仕様変更c->jyumyou = JYUMYOU_NASI;*/
+				bonus_info_any_score_nodel(h, (score(500)+(((cg.graze_point*86)>>8)/*(pd->graze_point/3)*/)) );/*自動消去へ仕様変更c->jyumyou = JYUMYOU_NASI;*/
 			}
 //			h->flags			|= (SP_FLAG_VISIBLE|SP_FLAG_TIME_OVER);/*当たり判定なし*/
 		}
 	}
+		/* エフェクトの場合も星点になる。 */
 		h->type = SP_ITEM_06_HOSI;
+		{
+			/* エフェクトの場合半透明なので、白に戻す。 */
+			h->color32		= (0xffffffff);
+			/* エフェクトの場合半透明なので、原寸に戻す。 */
+			h->m_zoom_x256	= t256(1.0);
+			h->m_zoom_y256	= t256(1.0);
+		}
 		reflect_sprite_spec444(h, OBJ_BANK_SIZE_01_ITEM);
 		h->ITEM_DATA_true_y256		= (/*src*/h->cy256); /* 仮想 */
 
@@ -372,10 +379,10 @@ global void bullets_to_hosi(void)
 //	while (NULL != s)/* スプライト リストの最後まで調べる */
 
 	int ii;
-	for (ii=0; ii<SPRITE_444POOL_MAX; ii++ )/* 全部調べる。 */
+	for (ii=0; ii<OBJ_POOL_00_TAMA_MAX; ii++ )/* 全部調べる。 */
 	{
 		SPRITE *s;
-		s = &obj44[ii];
+		s = &obj99[OBJ_HEAD_00_TAMA+ii];
 	//
 	//	#if 1/* 要らない気がする(てすとちう) */
 	//	if (s->type != SP_DELETE ) /* 削除済みは飛ばす */
@@ -408,7 +415,7 @@ global void item_create(
 )
 {
 	#if 0
-	if ( (CIRNO_A-1) < (select_player) )/* 6:CIRNO_A or 7:CIRNO_Q */
+	if ( (CIRNO_A-1) < ((cg_game_select_player)) )/* 6:CIRNO_A or 7:CIRNO_Q */
 	{
 	//	if (item_type<SP_ITEM_02_P128)		// [小p][大P]	 は出ない。
 		if (item_type<(SP_ITEM_02_P128+1))	// [小p][大P][F] は出ない。
@@ -418,7 +425,7 @@ global void item_create(
 	}
 	else
 	// レミリアの場合[点]は出さない.
-	if (REMILIA==select_player)
+	if (REMILIA==(cg_game_select_player))
 	{
 		if (item_type==(SP_ITEM_05_TENSU))	// [点] は出ない。
 		{
@@ -441,7 +448,7 @@ global void item_create(
 (SP_ITEM_06_HOSI&0xff), 	(SP_ITEM_06_HOSI&0xff), 	(SP_ITEM_06_HOSI&0xff), 	(SP_ITEM_06_HOSI&0xff), 	(SP_ITEM_06_HOSI&0xff), 	(SP_ITEM_06_HOSI&0xff), 	(SP_ITEM_06_HOSI&0xff), 	(SP_ITEM_06_HOSI&0xff),
 (SP_ITEM_07_SPECIAL&0xff),	(SP_ITEM_07_SPECIAL&0xff),	(SP_ITEM_07_SPECIAL&0xff),	(SP_ITEM_07_SPECIAL&0xff),	(SP_ITEM_07_SPECIAL&0xff),	(SP_ITEM_07_SPECIAL&0xff),	(SP_ITEM_07_SPECIAL&0xff),	(SP_ITEM_07_SPECIAL&0xff),
 		};
-		item_type = (/*SP_ITEM_00_P001*/SP_GROUP_ITEMS | (item_henkan[((item_type&0x07)<<3)+select_player]));
+		item_type = (/*SP_ITEM_00_P001*/SP_GROUP_ITEMS | (item_henkan[((item_type&0x07)<<3)+(cg_game_select_player)]));
 	}
 	//
 	int i;
@@ -534,11 +541,11 @@ global void item_create_for_boss(SPRITE *src, int item_create_mode)
 	};
 //	item_create(src, item_tbl[ITEM_03+difficulty+item_create_mode]/*SP_ITEM_03_1UP	*/, 1, ITEM_MOVE_FLAG_06_RAND_XY);
 //	item_create(src, item_tbl[ITEM_02+difficulty+item_create_mode]/*SP_ITEM_02_P128 */, 1, ITEM_MOVE_FLAG_06_RAND_XY);
-//	item_create(src, item_tbl[ITEM_01+difficulty+item_create_mode]/*SP_ITEM_01_P008 */, pd.player_now_stage/*5*/, ITEM_MOVE_FLAG_06_RAND_XY);
+//	item_create(src, item_tbl[ITEM_01+difficulty+item_create_mode]/*SP_ITEM_01_P008 */, cg.game_now_stage/*5*/, ITEM_MOVE_FLAG_06_RAND_XY);
 	int i;
-	for (i=0; i<1+(((pd.player_now_stage>>1))&0x0f); i++)
+	for (i=0; i<1+(((cg.game_now_stage>>1))&0x0f); i++)
 	{
-		item_create(src, SP_GROUP_ITEMS+u8_item_tbl[item_create_mode+((difficulty+i)&((ITEM_MAX)-1))]/*SP_ITEM_03_1UP	*/, 1, ITEM_MOVE_FLAG_06_RAND_XY);
+		item_create(src, SP_GROUP_ITEMS+u8_item_tbl[item_create_mode+(((cg_game_difficulty)+i)&((ITEM_MAX)-1))]/*SP_ITEM_03_1UP */, 1, ITEM_MOVE_FLAG_06_RAND_XY);
 	}
 	item_create(src, SP_ITEM_05_TENSU/*SP_IT EM_06_HOSI*/, (16)/*(7)*/, (ITEM_MOVE_FLAG_01_COLLECT|ITEM_MOVE_FLAG_06_RAND_XY) );/*星点を出す*/
 }
@@ -557,11 +564,11 @@ global void item_create_for_boss(SPRITE *src, int item_create_mode)
 
 static unsigned int random_item_seed;		/*=0*/
 
-global void enemy_set_random_seed(void) 	/*int set_seed*/
+global void teki_random_item_table_initialize(void) 	/*int set_seed*/
 {
 	random_item_seed = (ra_nd()&(8-1)); 	/*set_seed*/
 }
-static int s_enemy_get_random_item(void)
+static int s_teki_get_random_item(void)
 {
 	static const u16/*int*/ item_table[32] =
 	{
@@ -585,7 +592,7 @@ static int s_enemy_get_random_item(void)
 
 global /*static*/ void lose_random_item(SPRITE *src)
 {
-	item_create(src, s_enemy_get_random_item(), (1), (/*IT EM_MOVE_FLAG_01_COLLECT|*/ITEM_MOVE_FLAG_06_RAND_XY)/*(up_flags)*/ );
+	item_create(src, s_teki_get_random_item(), (1), (/*IT EM_MOVE_FLAG_01_COLLECT|*/ITEM_MOVE_FLAG_06_RAND_XY)/*(up_flags)*/ );
 }
 
 /*-------------------------------------------------------*/
@@ -609,7 +616,7 @@ global u32 adjust_score_by_difficulty(u32 convert_score)
 	/* hard */		t256(2.0),	/*模倣風*/
 	/* lunatic */	t256(5.0),	/*模倣風*/
 	};
-	return (((convert_score)*(mul_tbl256[difficulty]))>>8);
+	return (((convert_score)*(mul_tbl256[(cg_game_difficulty)]))>>8);
 }
 
 /*
@@ -632,14 +639,14 @@ global u32 adjust_score_by_difficulty(u32 convert_score)
 
 global void player_dummy_add_score(u32 score_num_pts)
 {
-	pd.game_score += score_num_pts;
+	cg.game_score += score_num_pts;
 	/* カンスト(スコアカウンター ストップ)チェックも約1秒(60flame)に1回で
 		内部的には問題ないんだけど、表示が変になると思うよ。 */
 	#if (1==USE_MAX_SCORE_COUNTER_STOP_CHECK)
 	/* カンスト(スコアカウンター ストップ)チェック */
-	if ( PLAYER_MAX_SCORE < pd.game_score ) /* カンスト チェック */
+	if ( PLAYER_MAX_SCORE < cg.game_score ) /* カンスト チェック */
 	{
-		pd.game_score = PLAYER_MAX_SCORE;
+		cg.game_score = PLAYER_MAX_SCORE;
 	}
 	#endif /* (1==USE_MAX_SCORE_COUNTER_STOP_CHECK) */
 }
@@ -656,9 +663,9 @@ global void player_check_extend_score(void)
 {
 	/* 1000万、2500万、5000万、10000万(1億)でエクステンド */
 	#if (1==USE_EXTEND_CHECK)
-	if ( extend_check_score < pd.game_score )	/* エクステンド チェック */
+	if ( extend_check_score < cg.game_score )	/* エクステンド チェック */
 	{
-		pd.zanki++; 	/* エクステンド */
+		cg.zanki++; 	/* エクステンド */
 		/*
 			スコアによるエクステンド音は特殊なので、目立つべき。
 			(アイテムによるエクステンド音と違って、目で確認しない)

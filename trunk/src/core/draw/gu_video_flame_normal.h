@@ -1,6 +1,6 @@
 
 /*---------------------------------------------------------
-	東方模倣風	～ Toho Imitation Style.
+	東方模倣風 ～ Toho Imitation Style.
 	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 ---------------------------------------------------------*/
@@ -37,7 +37,7 @@ void vbl_draw_screen(void)
 	/* --- プライオリティー＃１．画面クリア */
 	#if 1
 	{	static u32 gu_bg_alt_clear_color;
-		if(gu_bg_set_clear_color!=gu_bg_alt_clear_color)
+		if (gu_bg_set_clear_color!=gu_bg_alt_clear_color)
 		{
 			gu_bg_alt_clear_color = gu_bg_set_clear_color;
 			sceGuClearColor(gu_bg_set_clear_color);/*AABBGGRR*/
@@ -149,7 +149,7 @@ void vbl_draw_screen(void)
 			my_resource[TEX_07_FRONT].object_table_head = (obj_status_table+(OBJ_BANK_02_FRONT_BANK0*OBJ_BANK_SIZE));
 #if 1/*システムのフロント面描画(雑魚として登録したもの)*/
 		//	common_transfer_objects_clc_blit(/*sprite_list000_head,*/ TEX_07_FRONT, SP_GROUP07_FRONT );
-			/* 自機c直接描画(フロント面) */
+			/* 自機の直接描画(フロント面) */
 			common_transfer_objects111(/*sprite_list000_head,*/ TEX_07_FRONT, SP_GROUP07_FRONT );
 #endif
 		}
@@ -172,7 +172,7 @@ void vbl_draw_screen(void)
 
 	/* プライオリティー＃22．☆ フロント面エフェクト(テクスチャ共用) */
 	//{
-	if (0 != pd.bomber_time)
+	if (0 != cg.bomber_time)
 	{
 		gu_draw_front_spell_logo();
 	}
@@ -197,11 +197,11 @@ void vbl_draw_screen(void)
 		#define FLAG_DRAW_SUPEKA (0x02)/* スペカ文字の描画指示 */
 		int 	use_draw_FONT;/* 文字の描画指示 */
 		use_draw_FONT = 0;/* 描画指示をクリア */
-		if (0 != (draw_script_screen+msg_time))
+		if (0 != (draw_script_screen+(cg.msg_time)))
 		{
-			if (0 != (msg_time))/* メッセージ(仮対応)表示時間 */
+			if (0 != (cg.msg_time))/* メッセージ(仮対応)表示時間 */
 			{
-				msg_time--;
+				cg.msg_time--;
 			}
 			gu_draw_script_window();
 			use_draw_FONT |= FLAG_DRAW_SERIFU;/* せりふ文字を描画指示 */
@@ -229,7 +229,7 @@ void vbl_draw_screen(void)
 	sceGuFinish();
 //
 	#if (0==USE_MAX_GU_TIME)
-	/* [通常タイプ]  */
+	/* [通常タイプ] */
 	sceGuSync(0, 0);/* (ここまで Gu) */
 	/* --- VSync and swap frame buffer */
 	#if (1==USE_VSYNC)

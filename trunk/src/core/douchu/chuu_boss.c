@@ -2,7 +2,7 @@
 #include "game_main.h"
 
 /*---------------------------------------------------------
-	東方模倣風	～ Toho Imitation Style.
+	東方模倣風 ～ Toho Imitation Style.
 	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 		"ルーミア", 				"GFAIRY",
@@ -40,13 +40,14 @@ enum /* _yokai_type_ */
 
 
 /*---------------------------------------------------------
-	s = ボス本体 boss sprite
-	t = プレイヤーの弾 player's weapon
+	SPRITE *src;	中-ボス敵自体
+	SPRITE *tama;	自弾
 ---------------------------------------------------------*/
 
-static void callback_hit_chuu_boss(SPRITE *src/*敵自体*/, SPRITE *tama /*自弾*/)
+static void callback_hit_chuu_boss(SPRITE *src, SPRITE *tama)
 {
-	bakuhatsu_add_type_ddd(tama, BAKUHATSU_MOVE12/*BAKUHATSU_MINI00*/);
+	/* ボス & 中-ボスに自弾があたった場合の火花エフェクトを登録(現在Gu部分がないので描画してない) */
+	bakuhatsu_add_type_ddd(tama, BAKUHATSU_MOVE12/*BAKUHATSU_MINI00*/);/* 先に実行した方が速い */
 //
 	src->base_hp -= tama->base_weapon_strength; 	/* 攻撃して体力減らす(強さ分引く) */
 	if (0 >= src->base_hp)			/* ０か負値なら、倒した。 */
@@ -66,11 +67,11 @@ static void callback_hit_chuu_boss(SPRITE *src/*敵自体*/, SPRITE *tama /*自弾*/)
 				(SP_ITEM_00_P001&0xff), 	/* [p]小 */
 				(SP_ITEM_05_TENSU&0xff),	/* [点] */
 			};
-			item_type = (SP_GROUP_ITEMS|(item_tbl[difficulty]));
+			item_type = (SP_GROUP_ITEMS|(item_tbl[(cg_game_difficulty)]));
 		}
 		else
 		{
-			item_type = SP_ITEM_05_TENSU;	/*点数を出す*/
+			item_type = SP_ITEM_05_TENSU;	/* 点数を出す */
 		}
 		item_create(src, item_type, 7, ITEM_MOVE_FLAG_06_RAND_XY);	/* ちらばる */
 		player_dummy_add_score(src->base_score);
@@ -79,9 +80,9 @@ static void callback_hit_chuu_boss(SPRITE *src/*敵自体*/, SPRITE *tama /*自弾*/)
 	//	src->type						= SP_DELETE;
 		/* 倒した場合背後の魔方陣が消えているが、逃がした場合背後の魔方陣がある。 */
 		src->YOKAI1_DATA_s2->jyumyou		= JYUMYOU_NASI; /* 倒した場合、背後の魔方陣を消す。 */
-		src->jyumyou					= (512-1);
+		src->jyumyou						= (512-1);
 		/* コールバック登録 */
-		src->callback_hit_enemy = NULL; 	/* ダミーコールバック登録 */
+		src->callback_hit_teki = NULL;	/* ダミーコールバック登録 */
 	}
 }
 
@@ -103,15 +104,6 @@ static void move_chuu_boss(SPRITE *src)
 		}
 		#endif
 		src->cy256						-= t256(1.5);	/*fps_factor*/
-		#if 0/*Gu(中心座標)*/
-		if ( 0 > src->cy256)
-		#endif
-		#if 0/*現在、左上基点なので、本来はこう*/
-		if ( 0 > (src->cy256+((src->height_size256/*縦のサイズ*/))))
-		#endif
-		#if 0/*Gu(中心座標基点になったら、本来はこう。*/
-		if ( 0 > (src->cy256+((src->height_harf_size256/*縦の半分サイズ*/))))
-		#endif
 		if ( 0 > (src->cy256+t256(55.0)))/* 55ドットとして(左上基点、縦のサイズ) */
 	//	if ( 0 > src->cy256)/* 簡略版 */
 		{
@@ -121,6 +113,9 @@ static void move_chuu_boss(SPRITE *src)
 			{
 				src->YOKAI1_DATA_s2->jyumyou	= JYUMYOU_NASI;
 			}
+			/* 退場処理 */
+			chu_boss_mode = 0;
+			//hold_game_mode_off();
 		}
 	}
 	else
@@ -139,7 +134,7 @@ static void move_chuu_boss(SPRITE *src)
 	if (512+100+512 > src->jyumyou) 	// SS02:	/* 禊弾幕が終わるまで待機 */
 	{
 	//	danmaku_state_check_holding(src);
-		if (DANMAKU_00 == src->boss_base_danmaku_type)
+		if (SPELL_00 == src->boss_base_spell_type)
 		{
 			src->jyumyou = (512+100-1);
 		}
@@ -147,9 +142,9 @@ static void move_chuu_boss(SPRITE *src)
 	else
 	if (512+100+512+100 > src->jyumyou) 	// SS01:	/* 弾幕セット */			/* 8偶数弾 7奇数弾 */
 	{
-			src->jyumyou=(512+100+512-1);/* = SS02;*/
-			src->boss_base_danmaku_type 	= src->YOKAI1_DATA_start_danmaku;	/*DANMAKU_01*/	/* 禊弾幕をセット */		/* "妖怪2"&"ルーミア"専用 */
-			danmaku_set_time_out(src);		/* 弾幕の時間切れを設定 */
+			src->jyumyou = (512+100+512-1);/* = SS02;*/
+			src->boss_base_spell_type	= src->YOKAI1_DATA_start_danmaku;	/* 弾幕をセット */		/* "妖怪2"&"ルーミア"専用 */
+			spell_set_time_out(src);		/* 弾幕の時間切れを設定 */
 	}
 	else
 //	if (512+100+512+100+100 > src->jyumyou) // SS00:	/* 上から登場 */
@@ -188,7 +183,7 @@ static void move_chuu_boss(SPRITE *src)
 	}
 	else
 	{
-		danmaku_generator(src); /* 弾幕生成 */
+		spell_generator(src); /* 弾幕生成 */
 	}
 }
 
@@ -196,17 +191,21 @@ static void move_chuu_boss(SPRITE *src)
 /*---------------------------------------------------------
 	敵を追加する
 ---------------------------------------------------------*/
-
-global void add_chuu_boss(STAGE_DATA *l)
+global int chu_boss_mode;
+global void game_command_04_regist_chuu_boss(GAME_COMMAND *l)
 {
+	if (0==chu_boss_mode)
+	{
+		chu_boss_mode = 1;
+		//hold_game_mode_on();
 	/* プライオリティー(表示優先順位)があるから、背後に表示させる為に、初めに後ろの魔方陣を確保。 */
 	SPRITE *s2; 		/* 後ろの魔方陣 */
-	s2								= sprite_add_gu_error();
+	s2								= obj_add_01_teki_error();
 	if (NULL!=s2/*h*/)/* 登録できた場合のみ */
 	{
 		/* 後ろの魔方陣が確保出来たら本体を確保。 */
 		SPRITE *s1; 	/* 本体 */
-		s1									= sprite_add_gu_error();
+		s1									= obj_add_01_teki_error();
 		if (NULL!=s1/*h*/)/* 登録できた場合のみ */
 		{
 			/* 0ttd dddd
@@ -215,7 +214,8 @@ global void add_chuu_boss(STAGE_DATA *l)
 				'd': danmaku type. (0-31)
 			*/
 			int my_yokai_type;
-			my_yokai_type = (((l->user_255_code)>>5)&(4-1));
+		//	my_yokai_type = (((l->user_255_code)>>5)&(4-1));
+			my_yokai_type = (((l->user_255_code)   )&(4-1));
 		//
 			obj_send1->cx256			= ((l->user_x)<<(8));
 			obj_send1->cy256			= t256(-30.0);
@@ -229,34 +229,34 @@ global void add_chuu_boss(STAGE_DATA *l)
 					MAKE32RGBA(0xff, 0xff, 0xff, 0x7f), 	/* 灰っぽく */
 					MAKE32RGBA(0xff, 0x3f, 0x3f, 0x7f), 	/* 赤っぽく */
 					MAKE32RGBA(0x3f, 0x00, 0xff, 0x7f), 	/* 青っぽく */
-					MAKE32RGBA(0x5f, 0xff, 0xaf, 0x7f), 	/* 紫っぽく */
+					MAKE32RGBA(0x5f, 0xff, 0xaf, 0x7f), 	/* 紫っぽく(水色になった) */
 				};
 				s2->color32 				= color_table[my_yokai_type];
 			}
-			s2->cx256					= obj_send1->cx256;
-			s2->cy256					= obj_send1->cy256;
+			s2->cx256					= (obj_send1->cx256);
+			s2->cy256					= (obj_send1->cy256);
 		//
 			s1->m_Hit256R				= ZAKO_ATARI16_PNG;
 			s1->yokai_type				= my_yokai_type;
 
-			if (YOKAI_TYPE_00_RUMIA == (my_yokai_type))/*ルーミア*/
+			if (YOKAI_TYPE_00_RUMIA == (my_yokai_type))/* ルーミア */
 			{
 				s1->type				= TEKI_00_BOSS11;
 			}
-			else	/*妖怪2*/
+			else	/* 妖怪2 */
 			{
 				s1->type				= TEKI_54_CHOU1;
 			}
 			s1->flags					|= (SP_FLAG_COLISION_CHECK/*|SP_FLAG_VISIBLE|SP_FLAG_TIME_OVER*/);
 			s1->callback_mover			= move_chuu_boss;
 		//	s1->callback_loser			= lose_youkai1;
-			s1->callback_hit_enemy		= callback_hit_chuu_boss;	/* コールバック登録 */
-			s1->cx256					= obj_send1->cx256;
-			s1->cy256					= obj_send1->cy256;
+			s1->callback_hit_teki		= callback_hit_chuu_boss;	/* コールバック登録 */
+			s1->cx256					= (obj_send1->cx256);
+			s1->cy256					= (obj_send1->cy256);
 		//
-			s1->base_hp 				= (8*200)+(2/*di fficulty*/<<(4+3));	/*ルーミア*/		/* easyでも存在感を印象づける為に 200 は必要 */ 	// 50+150*di fficulty;
-		//	s1->base_hp 				= (8*160)+(1/*di fficulty*/<<(4+3-1));	/*妖怪2*/			/* easyでも存在感を印象づける為に 200 は必要 */ 	// 50+150*di fficulty;
-			s1->base_score				= score(100)+score(100)*difficulty;
+			/* easyでも存在感を印象づける為に 200 は必要 */ 	// 50+150*di fficulty;
+			s1->base_hp 				= ((l->user_hp));		/* 設定ファイルから体力を決める。 */
+			s1->base_score				= ((l->user_score));	/* 設定ファイルから獲得スコアを決める。 */
 		//
 			s1->YOKAI1_DATA_repeat				= (2+2+1);
 			s1->YOKAI1_DATA_start_limit_y256	= ((l->user_y)<<(8));/* t256(50.0) */
@@ -264,9 +264,10 @@ global void add_chuu_boss(STAGE_DATA *l)
 			{
 				#if 1
 			//------------ 弾幕関連
-				s1->boss_base_danmaku_type			= 0;
+				s1->boss_base_spell_type			= 0;
 			//	s1->YOKAI1_DATA_start_danmaku		= ((((l->user_255_code)&0x1f)+0x10/*とりあえずr27互換*/)&0x1f);
-				s1->YOKAI1_DATA_start_danmaku		= ((l->user_255_code)&0x1f);
+			//	s1->YOKAI1_DATA_start_danmaku		= ((l->user_255_code)&0x1f);
+				s1->YOKAI1_DATA_start_danmaku		= ((l->user_kougeki_type)&0x3f);
 				#endif
 			}
 		}
@@ -276,7 +277,11 @@ global void add_chuu_boss(STAGE_DATA *l)
 			s2->jyumyou 			= JYUMYOU_NASI;/* 登録できなかった場合 */
 		}
 	}
+	}
 }
+		//	s1->base_hp 				= 1856;//(8*200)+(2/*di fficulty*/<<(4+3)); 	/* ルーミア */
+		//	s1->base_hp 				= (8*160)+(1/*di fficulty*/<<(4+3-1));	/* 妖怪2 */
+		//	s1->base_score				= score(100)+score(100)*(cg_game_difficulty);
 
 /*
  (46-24)/2 == 11

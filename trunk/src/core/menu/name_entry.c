@@ -8,7 +8,7 @@
 #include "game_main.h"
 
 /*---------------------------------------------------------
-	東方模倣風	～ Toho Imitation Style.
+	東方模倣風 ～ Toho Imitation Style.
 	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	ハイスコア表示デモ画面(夢の記録)
@@ -266,10 +266,10 @@ static void yume_no_kiroku_local_work(void)
 		}
 		break;
 	case RESULT_03_PAD_CHECK:
-		if (0==my_pad_alter)/* さっき何も押されてなかった場合にキーチェック(原作準拠) */
+		if (0==cg_my_pad_alter)/* さっき何も押されてなかった場合にキーチェック(原作準拠) */
 		{
 			/* 次の人の戦歴を見る */
-			if (my_pad & (PSP_KEY_RIGHT|PSP_KEY_LEFT|PSP_KEY_UP|PSP_KEY_DOWN))	/* PSP_KEY_SHOT_OKが押された */
+			if (cg_my_pad & (PSP_KEY_RIGHT|PSP_KEY_LEFT|PSP_KEY_UP|PSP_KEY_DOWN))	/* PSP_KEY_SHOT_OKが押された */
 			{
 				show_player_num++;										/* 次の人にする */
 			//	if (/*4*/7<show_player_num) 	{show_player_num=0;}	/* 最後まで見たら始めから見る */
@@ -279,7 +279,7 @@ static void yume_no_kiroku_local_work(void)
 			}
 			/* 見るのやめてメニューに戻る */
 			else
-			if (my_pad & (PSP_KEY_SHOT_OK|PSP_KEY_BOMB_CANCEL|PSP_KEY_OPTION|PSP_KEY_PAUSE|PSP_KEY_SELECT))
+			if (cg_my_pad & (PSP_KEY_SHOT_OK|PSP_KEY_BOMB_CANCEL|PSP_KEY_OPTION|PSP_KEY_PAUSE|PSP_KEY_SELECT))
 			{
 			//	more_show = 0;	/* もうおしまい */
 				return_call_func = title_menu_start;	/* タイトルメニューへ移動設定(反映するのは、まだ先) */
@@ -335,12 +335,10 @@ static void yume_no_kiroku_local_work(void)
 	ハイスコア表示デモ画面(夢の記録)(開始、初期設定)
 ---------------------------------------------------------*/
 
-extern int select_player;
-
 global void yume_no_kiroku_start(void)
 {
 	//void result_init(void)
-	show_player_num = (select_player & 0x07);/*0*/	/* 現在選択されているプレイヤーから記録を表示開始する。 */
+	show_player_num = ((cg_game_select_player) & 0x07);/*0*/	/* 現在選択されているプレイヤーから記録を表示開始する。 */
 	psp_push_screen();	/* 現在の表示画面を裏画面に保存 */
 	my_ppp_loop = RESULT_01_SET_LOCATION;
 	main_call_func		= yume_no_kiroku_local_work;/* 動作先 */
@@ -355,13 +353,11 @@ global void yume_no_kiroku_start(void)
 //#include "game_main.h"
 
 /*---------------------------------------------------------
-	東方模倣風  ～ Toho Imitation Style.
+	東方模倣風 ～ Toho Imitation Style.
 	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	ハイスコア名前入力、登録画面
 ---------------------------------------------------------*/
-
-extern int select_player;
 
 //	/*static*/extern void high_score_render_sub(int show_player_num, int iii, int bbb);
 //	/*static*/extern SDL_Surface *result_surfaces[];
@@ -477,15 +473,15 @@ static void name_entry_draw(void)
 static void name_entry_local_work(void)
 {
 	{
-		if (0 == my_pad_alter)/* さっき何も押されてなかった場合にキーチェック(原作準拠) */
+		if (0 == cg_my_pad_alter)/* さっき何も押されてなかった場合にキーチェック(原作準拠) */
 		{
 			/* 斜め移動はしない */
-				 if (my_pad & PSP_KEY_LEFT )	{	sel_aaa--;				if (sel_aaa <  (0)) 				sel_aaa  = (KEYBOARD_M40-1);	}
-			else if (my_pad & PSP_KEY_RIGHT)	{	sel_aaa++;				if (sel_aaa == (KEYBOARD_M40))		sel_aaa  = (0); 				}
-			else if (my_pad & PSP_KEY_UP	 )	{	sel_aaa-=KEYBOARD_W10;	if (sel_aaa <  (0)) 				sel_aaa += (KEYBOARD_M40);		}
-			else if (my_pad & PSP_KEY_DOWN )	{	sel_aaa+=KEYBOARD_W10;	if (sel_aaa >  (KEYBOARD_M40-1))	sel_aaa -= (KEYBOARD_M40);		}
+				 if (cg_my_pad & PSP_KEY_LEFT )	{	sel_aaa--;				if (sel_aaa <  (0)) 				sel_aaa  = (KEYBOARD_M40-1);	}
+			else if (cg_my_pad & PSP_KEY_RIGHT)	{	sel_aaa++;				if (sel_aaa == (KEYBOARD_M40))		sel_aaa  = (0); 				}
+			else if (cg_my_pad & PSP_KEY_UP	 )	{	sel_aaa-=KEYBOARD_W10;	if (sel_aaa <  (0)) 				sel_aaa += (KEYBOARD_M40);		}
+			else if (cg_my_pad & PSP_KEY_DOWN )	{	sel_aaa+=KEYBOARD_W10;	if (sel_aaa >  (KEYBOARD_M40-1))	sel_aaa -= (KEYBOARD_M40);		}
 			//
-			if (my_pad & PSP_KEY_SHOT_OK) 	/* 入力決定 == (さっき)入力決定ボタンが押された。 */
+			if (cg_my_pad & PSP_KEY_SHOT_OK)	/* 入力決定 == (さっき)入力決定ボタンが押された。 */
 			{
 				switch (letter[sel_aaa].ascii)
 				{
@@ -508,7 +504,7 @@ static void name_entry_local_work(void)
 					break;
 				}
 			}
-			else if (my_pad & PSP_KEY_BOMB_CANCEL/*PSP_KEY_OPTION*/)	/* (さっき)キャンセルボタンが押された。 */
+			else if (cg_my_pad & PSP_KEY_BOMB_CANCEL/*PSP_KEY_OPTION*/)	/* (さっき)キャンセルボタンが押された。 */
 			{
 			delete_last_character:
 				if (0 < now_select_name_chr) /* 名前入力の入力文字がある場合で。  at first chr? */
@@ -517,7 +513,7 @@ static void name_entry_local_work(void)
 					entry[now_select_name_chr] = ' ';	/* 消す */
 				}
 			}
-			else if (my_pad & PSP_KEY_PAUSE)		/* (さっき)終了(強制決定)ボタンが押された。 */
+			else if (cg_my_pad & PSP_KEY_PAUSE)		/* (さっき)終了(強制決定)ボタンが押された。 */
 			{
 			agree_entry:	/* 入力終了決定 */
 				if (0 < now_select_name_chr)	// 名前入力の入力文字がある場合で。何か入力されている場合で。
@@ -576,7 +572,7 @@ global void name_entry_start(void)
 		}
 	}
 	letter[i].ascii = MY_CODE_DEL_KEY;	letter_surface[i++] = font_render( (char*)/*"DEL"*/"/", FONT16R); /* 39 */
-	letter[i].ascii = MY_CODE_OK_KEY;	letter_surface[i++] = font_render( (char*)/*"OK"*/"!",  FONT16R); /* 40 */
+	letter[i].ascii = MY_CODE_OK_KEY;	letter_surface[i++] = font_render( (char*)/*"OK"*/"!",	FONT16R); /* 40 */
 	{
 		int k;
 		k = 0;
@@ -598,7 +594,7 @@ global void name_entry_start(void)
 	/* 新たにランクインしたスコア位置を調べる */
 	for (i=0; i<5; i++)
 	{
-		if (last_score > high_score_table[select_player][i].score)
+		if (last_score > high_score_table[(cg_game_select_player)][i].score)
 		{
 			break;
 		}
@@ -608,13 +604,13 @@ global void name_entry_start(void)
 	/* スコア位置より下を移動させる */
 	for (j=4; j>my_rank; j--)
 	{
-		high_score_table[select_player][j] = high_score_table[select_player][j-1];
+		high_score_table[(cg_game_select_player)][j] = high_score_table[(cg_game_select_player)][j-1];
 	}
 	/* 新たにランクインしたスコア位置へ挿入 */
-	high_score_table[select_player][my_rank].score			= last_score;
-	high_score_table[select_player][my_rank].final_stage	= pd.player_now_stage;/**/
+	high_score_table[(cg_game_select_player)][my_rank].score			= last_score;
+	high_score_table[(cg_game_select_player)][my_rank].final_stage	= cg.game_now_stage;/**/
 //
-	entry = high_score_table[select_player][my_rank].name;
+	entry = high_score_table[(cg_game_select_player)][my_rank].name;
 	entry[0] = ' ';
 	entry[1] = ' ';
 	entry[2] = ' ';
@@ -639,7 +635,7 @@ global void name_entry_start(void)
 	{
 		for (j=0; j<5; j++)
 		{
-			high_score_render_sub(select_player, j, ((my_rank==j)));/* FONT16R 白  FONT16W 紅(黄) */
+			high_score_render_sub((cg_game_select_player), j, ((my_rank==j)));/* FONT16R 白  FONT16W 紅(黄) */
 		//
 			SDL_Rect r;
 			r.x = (RANK_LOCATE_OFS_X_32);
