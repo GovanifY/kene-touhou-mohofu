@@ -70,7 +70,6 @@ static void load_stage_add_entry( char *user_string, const int *c_pn )		// ƒIƒuƒ
 	new_entry->user_hp				= c_pn[PARAM_06_user_hp];
 	new_entry->user_item8			= c_pn[PARAM_07_user_item8];
 	new_entry->user_score			= c_pn[PARAM_08_user_score];
-//	new_entry->done 				= 0;
 //
 	new_entry->user_255_code		= (u8)((c_pn[PARAM_01_user_command])&0xff);
 	new_entry->user_i_code			= 0;
@@ -79,9 +78,9 @@ static void load_stage_add_entry( char *user_string, const int *c_pn )		// ƒIƒuƒ
 
 /* ƒQ[ƒ€’†‚ÍA’†ŠÔƒR[ƒhŒ`®‚ÌƒRƒ}ƒ“ƒh‚ğˆµ‚¢\•¶‰ğÍ‚Í‚µ‚È‚¢B(\•¶‰ğÍ‚Íload_stage.c‚Ås‚¤) */
 
-	const char *ctype_name[CTYPE_99_MAX] =	/* Œ»İ 32 í—Ş */
+	const char *ctype_name[GC_CODE_MAX] = 	/* (r34)Œ»İ 6 í—Ş */
 	{
-		NULL,/* [”Ô•º‹æØ‚è] */
+		NULL,/* (sjis-text•\¦) [”Ô•º‹æØ‚è] */
 	//	‚»‚Ì‘¼
 		"QUIT", 	/* ƒQ[ƒ€ ‘SƒXƒe[ƒW ƒNƒŠƒA[ */
 		"BG",		/*	"BG_CONTROL"*/		/* ©ƒVƒXƒeƒ€ƒRƒ}ƒ“ƒh‚È‚Ì‚Å‰pŒê‚É‚µ‚½ */
@@ -92,32 +91,10 @@ static void load_stage_add_entry( char *user_string, const int *c_pn )		// ƒIƒuƒ
 	};
 //
 	/* “Ç‚İ‚ñ‚¾ƒRƒ}ƒ“ƒh‚ğ’†ŠÔƒR[ƒhŒ`®‚É•ÏŠ·‚·‚é */
-	if ((255)==new_entry->user_255_code)
 	{
-		new_entry->user_i_code = ETYPE_01_SJIS_TEXT;	/* 'T'ext. */
-	}
-	else
-	if ((128)==new_entry->user_255_code)
-	{
-		new_entry->user_i_code = ETYPE_02_LOAD_BG;	/* 'B'ack 'G'round. */		/* Background */
-		#if 000
-	//	if ( 0 == ti ny_strcmp(new_entry->user_string,"0") ) /* ƒtƒ@ƒCƒ‹–¼‚ª‚O‚Ìê‡ƒVƒXƒeƒ€ƒRƒ}ƒ“ƒh[Šg’£—\’è] */
-		if ( '0' == new_entry->user_string[0] ) /* ƒtƒ@ƒCƒ‹–¼‚Ì1š–Ú‚ª‚O‚Ìê‡ƒVƒXƒeƒ€ƒRƒ}ƒ“ƒh[Šg’£—\’è] */
-		{
-			;
-		}
-		else
-		{
-			load_bg2_chache(new_entry->user_string, 0); /* ƒQ[ƒ€’†‰æ‘œ“WŠJ‚·‚é‚Æˆ——‚¿‚ª“‚¢‚Ì‚ÅƒLƒƒƒbƒVƒ…‚É‹l‚ß‚éB */
-			/* ’ˆÓFè•it‚¶‚á‚È‚¢‚ñ‚¾‚©‚çA‰æ‘œ“WŠJƒ‰ƒCƒuƒ‰ƒŠ(libpng‚Æ‚©libjpeg)‚ğg‚¤ŒÀ‚èA‚Ç‚±‚©‚Åˆ——‚¿‚·‚é‚æB
-				(‰æ‘œ“WŠJƒ‰ƒCƒuƒ‰ƒŠ(libpng‚Æ‚©libjpeg)‚ÉCPU‚É•‰‰×‚ª‚©‚©‚ç‚È‚¢‚æ‚¤‚ÉA•ÊƒXƒŒƒbƒh‚Å‚ä‚Á‚­‚è“WŠJ‚³‚¹‚é‹@”\‚ª–³‚¢)
-				‚Â‚Ü‚èA‚±‚±‚ÌêŠ‚Å“WŠJ‚µ‚Ä‚é‚ñ‚¾‚©‚çA‚±‚±‚ÌêŠload_stage()‚Åˆ——‚¿‚ª“‚¢‚Æ‚¢‚¤–‚¾‚æB */
-		}
-		#endif
-	}
-	else
-	{
-		for (new_entry->user_i_code = /*CT YPE_00_unknown+*/(CTYPE_99_MAX-1); /*0*/CTYPE_00_NONE/*CT YPE_00_unknown*/ < new_entry->user_i_code; new_entry->user_i_code--)
+		for (new_entry->user_i_code = (GC_CODE_MAX-1);
+			(0) < new_entry->user_i_code;
+			new_entry->user_i_code--)
 		{
 			if (0==tiny_strcmp( new_entry->user_string, /*(char *)*/&/*btype_name*/ctype_name[(unsigned int)new_entry->user_i_code][0] ) )
 			{
@@ -145,8 +122,12 @@ static char *load_stage_get_int(char *ccc, int *number)
 	char buffer[32];/*128*/
 	char *ddd = buffer;
 	int i = 0;
-//	while (isdigit(*c)) 			/* isdigit : ”š‚©‚Ç‚¤‚©‚Ì”»’è */
-	while ((isdigit(*ccc))||('-'==(*ccc)))		/* •‰”‚É‚à‘Î‰ / isdigit : ”š‚©‚Ç‚¤‚©‚Ì”»’è */
+//	while (isdigit(*ccc))			/* isdigit : ”š‚©‚Ç‚¤‚©‚Ì”»’è */
+	while (
+		(isdigit((int)((char)(*ccc))))	/* gcc 4.3.5 */
+		||
+		(((char)'-')==(*ccc))
+	)		/* •‰”‚É‚à‘Î‰ / isdigit : ”š‚©‚Ç‚¤‚©‚Ì”»’è */
 	{
 		i++;
 		if (i >= 32)/*128*/
@@ -160,6 +141,11 @@ static char *load_stage_get_int(char *ccc, int *number)
 ne222:
 	return ((char *) NULL);
 }
+/*
+gcc 4.3.5	warning: array subscript has type 'char'
+isdigit( int );
+*/
+
 #include "111_my_file.h"
 
 /*---------------------------------------------------------
@@ -194,7 +180,7 @@ global void load_stage(void)
 	{
 		/* (r32) */cg.state_flag		|= STATE_FLAG_14_ZAKO_TUIKA;	/* G‹›’Ç‰Áˆ—‚ğ‚·‚éê‡on */
 		/* (r32) */cg.state_flag &= (~(STATE_FLAG_05_IS_BOSS));/*ƒ{ƒXoff*/
-		draw_side_panel = (1);	/* ƒpƒlƒ‹•\¦on */	/* cg.state_flag |= ST ATE_FLAG_09_IS_PANEL_WINDOW */
+		cg.side_panel_draw_flag = (1);	/* ƒpƒlƒ‹•\¦on */	/* cg.state_flag |= ST ATE_FLAG_09_IS_PANEL_WINDOW */
 	}
 	{
 		const u32 bg_color_list[8] =
@@ -213,65 +199,40 @@ global void load_stage(void)
 	}
 	stage_bg_load_texture();
 //
-//	char my_fopen_file_name[128];
-//	sp rintf(my_fopen_file_name, DIRECTRY_NAME_DATA_STR "/dat/stage%02d.dat", cg.game_now_stage);
-//	sp rintf(my_fopen_file_name, DIRECTRY_NAME_DATA_STR "/dat/stage%01d.txt", cg.game_now_stage);
-//	sp rintf(my_fopen_file_name, DIRECTRY_NAME_DATA_STR "/dat/stage%c.txt", ('0'+ cg.game_now_stage) );
-//	sp rintf(my_fopen_file_name, DIRECTRY_NAME_DATA_STR "/dat/stage%c.txt", ('0'+ cg.game_now_stage) );
-	strcpy(my_fopen_file_name, DIRECTRY_NAME_DATA_STR "/dat/stageZ.txt");
-	my_fopen_file_name[10+DIRECTRY_NAME_DATA_LENGTH] = get_stage_chr(cg.game_now_stage); /*load_stage_number*/
+//	char my_file_common_name[128];
+//	sp rintf(my_file_common_name, DIRECTRY_NAME_DATA_STR "/dat/stage%02d.dat", cg.game_now_stage);
+//	sp rintf(my_file_common_name, DIRECTRY_NAME_DATA_STR "/dat/stage%01d.txt", cg.game_now_stage);
+//	sp rintf(my_file_common_name, DIRECTRY_NAME_DATA_STR "/dat/stage%c.txt", ('0'+ cg.game_now_stage) );
+//	sp rintf(my_file_common_name, DIRECTRY_NAME_DATA_STR "/dat/stage%c.txt", ('0'+ cg.game_now_stage) );
+	strcpy(my_file_common_name, DIRECTRY_NAME_DATA_STR "/dat/stageZ.txt");
+	my_file_common_name[10+DIRECTRY_NAME_DATA_LENGTH] = get_stage_chr(cg.game_now_stage); /*load_stage_number*/
 
 //	/*FILE*/char *fp;
-	if (NULL==(/*fp =*/my_fopen(/*my_fopen_file_name*/ /*,"r"*/)))
-	{
-	//	error(ERR_FATAL, (char*)"can't read stage data %s\nerrno: %d (%s)",my_fopen_file_name,errno,strerror(errno));
-		error(ERR_FATAL, (char*)"can't read stage %d data %s\n", /*load_stage_number*/cg.game_now_stage, my_fopen_file_name );
+	if (NULL==(/*fp =*/my_file_fopen()))	/* ŠJ‚¯‚È‚©‚Á‚½‚Æ‚« */	/*my_file_common_name*/ /*,"r"*/
+	{	/* “Ç‚İ‚İ¸”s */
+	//	error(ERR_FATAL, (char*)"can't read stage data %s\nerrno: %d (%s)",my_file_common_name,errno,strerror(errno));
+		error(ERR_FATAL, (char*)"can't read stage %d data %s\n", /*load_stage_number*/cg.game_now_stage, my_file_common_name );
 	}
 //
 	load_stage_free_entry();	/* ‘O‰ñ‚Ü‚ÅŠm•Û‚µ‚½ƒƒ‚ƒŠ‚ª‚ ‚ê‚ÎAæ‚ÉŠJ•ú‚·‚éB */
 	int entrys		= 0;		/* —LŒøs”‚Ì’²¸ */
-	int line_num	= 0;		/* ƒtƒ@ƒCƒ‹‚ÌÀs” */
-	{loop:;
-		if (/*NULL*/0 != my_file_fgets(/*buffer_text_1_line,128,fp*/))
-		{
-			int end_arg/*=0*/;			/* [‚¾‚İ[]s–– == ˆø”‚Ìæ“¾‚Ì’†~ */
-			char user_string[128];		/* •¶š—ñ(ƒƒbƒZ[ƒW‚âƒtƒ@ƒCƒ‹–¼) */
-			int c_pn[PARAM_99_MAX/*6*/];
-			line_num++; 				/* ƒtƒ@ƒCƒ‹‚ÌÀs” */
-//
-			char *ch;					/* ‘–¸ˆÊ’u */
-			ch = buffer_text_1_line;
-			/* skiped lines. */
-			#if 0
-			/* '\n'‚ªˆ«‚¢‚Ì‚©I‚­‚¢‚©‚È‚¢(???) */
-			if ('\n'==(*ch))		{	goto loop;/*continue;*/ }	/* ‰üs‚Ì‚İ‚Ìs‚Í‹ós‚È‚Ì‚Å‚â‚ç‚È‚¢‚Å‚Æ‚Î‚· */
-			while (isspace(*ch))	{	ch++;					}	/* ‹ó”’‚âTAB‚ğœ‹ */
-			#else
-			{my_isspace:;
-				if (' '>=(*ch))
-				{
-					ch++;
-					if (0x0a==(*ch))
-					{	goto loop;/*continue;*/ }	/* skiped null line. */
-					else
-					{	goto my_isspace;	}
-				}
-			}
-			#endif
-			/* ';'‚Ån‚Ü‚és‚ÍƒRƒƒ“ƒgs‚È‚Ì‚ÅAŸ‚Ìs‚Ü‚Å”ò‚Î‚·B */
-//			if (';'==(*ch)) 	{	goto loop;/*continue;*/ }	/* ';'‚Ån‚Ü‚és‚ÍƒRƒƒ“ƒg‚È‚Ì‚Å‚â‚ç‚È‚¢‚Å‚Æ‚Î‚· */
-			//
+	{
+		MY_FILE_LOOP_BEGIN;
+		//
 		#if (1==USE_PARTH_DEBUG)
-			/*continue;*/;
 			#define GOTO_ERR_WARN goto err_warn
 		#else
-			#define GOTO_ERR_WARN goto loop
+			#define GOTO_ERR_WARN MY_FILE_LOOP_CONTINUE
 		#endif
-			/* ƒf[ƒ^[‚Ì’l‚ªˆ«‚¢ê‡‚ÍƒGƒ‰[ */
-			#define CHECK_ERROR_VALUE			if (NULL == ch) 	{	GOTO_ERR_WARN;	}
-			/* ƒf[ƒ^[‚Ì‹æØ‚è‚É ',' ‚ª–³‚¢ê‡‚ÍƒGƒ‰[ */
-			#define CHECK_ERROR_VALUE_KUGIRI	CHECK_ERROR_VALUE	if (',' != *ch++)	{	GOTO_ERR_WARN;	}
-			/* parth start. \•¶‰ğÍŠJn */
+		/* ƒf[ƒ^[‚Ì’l‚ªˆ«‚¢ê‡‚ÍƒGƒ‰[ */
+		#define CHECK_ERROR_VALUE			if (NULL == ch) 	{	GOTO_ERR_WARN;	}
+		/* ƒf[ƒ^[‚Ì‹æØ‚è‚É ',' ‚ª–³‚¢ê‡‚ÍƒGƒ‰[ */
+		#define CHECK_ERROR_VALUE_KUGIRI	CHECK_ERROR_VALUE	if (',' != *ch++)	{	GOTO_ERR_WARN;	}
+		/* parth start. \•¶‰ğÍŠJn */
+		int end_arg/*=0*/;	end_arg=0;		/* [‚¾‚İ[]s–– == ˆø”‚Ìæ“¾‚Ì’†~ */
+		char user_string[128];		/* •¶š—ñ(ƒƒbƒZ[ƒW‚âƒtƒ@ƒCƒ‹–¼) */
+		{
+			int c_pn[PARAM_99_MAX];/*6*/
 			ch = load_stage_get_int(ch, &c_pn[PARAM_00_time60]);				CHECK_ERROR_VALUE_KUGIRI	/* load int time60. */	/* oŒ»ŠÔ[ƒtƒŒ[ƒ€(1/60•b)’PˆÊ]‚Ìæ“¾ */
 			ch = load_my_file_get_str(ch, user_string, &end_arg);				CHECK_ERROR_VALUE_KUGIRI	/* load str user_string. */ 	/*, '|'*/
 			ch = load_stage_get_int(ch, &c_pn[PARAM_01_user_command]);			CHECK_ERROR_VALUE_KUGIRI	/* load 1 char commnd. ‚P•¶šƒRƒ}ƒ“ƒh */
@@ -285,16 +246,17 @@ global void load_stage(void)
 			/* do set register entry. “Ç‚İ‚İ¬Œ÷‚µ‚½ƒf[ƒ^[‚ğA’Ç‰Á“o˜^‚·‚éB */
 			/* ’Ç‰Á“o˜^‚·‚é */
 			load_stage_add_entry( user_string, c_pn );
-			entrys++;		/* —LŒøs” */
-			goto loop;
-		#if (1==USE_PARTH_DEBUG)
-		err_warn:
-			error(/*ERR_WARN*/ERR_FATAL, (char*)"syntax error in stage data '%s', line no: %d", filename, line_num);
-			goto loop;
-		#endif
 		}
+		entrys++;		/* —LŒøs” */
+		MY_FILE_LOOP_CONTINUE;
+	#if (1==USE_PARTH_DEBUG)
+	err_warn:
+		error(/*ERR_WARN*/ERR_FATAL, (char*)"syntax error in stage data '%s', line no: %d", filename, debug_number_of_read_line);
+		MY_FILE_LOOP_CONTINUE;
+	#endif
+		MY_FILE_LOOP_END;
 	}
-	my_fclose(/*fp*/);
+	my_file_fclose(/*fp*/);
 	if (0==entrys)		/* —LŒøs”‚ª‚È‚¯‚ê‚ÎƒGƒ‰[ */
 	{
 		error(/*ERR_WARN*/ERR_FATAL, (char*)"no entrys for STAGE%d.TXT", cg.game_now_stage);

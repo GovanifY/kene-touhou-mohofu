@@ -16,9 +16,9 @@ static void my_nerai(SPRITE *src)
 {
 	obj_send1->cx256	= (src->target_x256);						/* ’eŒ¹x256 */
 	obj_send1->cy256	= (src->target_y256-t256(64)/*+(20)*/); 	/* ’eŒ¹y256 */
-	tmp_angleCCW1024_src_nerai(obj_send1, src);
-	src->vx256			= ((sin1024(src->tmp_angleCCW1024)));
-	src->vy256			= ((cos1024(src->tmp_angleCCW1024)));
+	tmp_angleCCW65536_src_nerai(obj_send1, src);
+	src->vx256			= ((sin65536(src->tmp_angleCCW65536)));
+	src->vy256			= ((cos65536(src->tmp_angleCCW65536)));
 }
 
 static void move_kedama1(SPRITE *src)
@@ -35,15 +35,13 @@ static void move_kedama1(SPRITE *src)
 		{
 			if (ENEMY_LAST_SHOT_LINE256 > src->cy256)	/* ‚±‚Ìƒ‰ƒCƒ“‚æ‚è‰º‚©‚ç‚Í“G‚ªŒ‚‚½‚È‚¢ */
 			{
-				obj_send1->cx256							= (src->cx256);
-				obj_send1->cy256							= (src->cy256);
 				br.BULLET_REGIST_00_speed256				= t256(1.0);	//t256(1.0)+t256((teki_rank)>>1),
 				br.BULLET_REGIST_02_VECTOR_angle1024		= ANGLE_JIKI_NERAI_DAN;
+			//	br.BULLET_REGIST_03_VECTOR_regist_type		= VEC TOR_REGIST_TYPE_00_MULTI_VECTOR;
 				br.BULLET_REGIST_04_bullet_obj_type 		= BULLET_KOME_00_SIRO+(src->cx256&0x07);
-				br.BULLET_REGIST_05_regist_type 			= REGIST_TYPE_00_MULTI_VECTOR;
 				br.BULLET_REGIST_06_n_way					= (3+(cg_game_difficulty)+(cg_game_difficulty));
 				br.BULLET_REGIST_07_VECTOR_div_angle1024	= (int)(1024/24);
-				bullet_regist_vector();
+				bullet_regist_multi_vector_send1_xy_src(src); 	/* ’eŒ¹x256 y256 ’†S‚©‚ç”­’eB */
 			}
 		}
 	}
@@ -70,9 +68,9 @@ static void move_kedama1(SPRITE *src)
 	/* ˆÚ“®‚·‚é */
 	src->cx256 += (((src->vx256)*src->speed256)>>8);
 	src->cy256 += (((src->vy256)*src->speed256)>>8);
-	/* ƒAƒjƒ(‰ñ“]) */
-	src->rotationCCW1024 += (10);
-	mask1024(src->rotationCCW1024);
+	/* ƒAƒjƒ[ƒVƒ‡ƒ“ */
+	src->zako_anime_rotate_angle1024 = ( 10);
+	zako_anime_type04(src); 	/* ƒOƒ‰‰ñ“] */
 }
 
 /*---------------------------------------------------------

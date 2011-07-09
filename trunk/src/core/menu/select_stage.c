@@ -129,10 +129,11 @@ static void stage_select_menu_draw_all(void)
 		}
 	}
 }
+
+
 /*---------------------------------------------------------
 	fadout fininshed, menu done
 ---------------------------------------------------------*/
-
 
 static void stage_select_menu_work_MENU_STATE_03_FININSH(void)
 {
@@ -173,13 +174,13 @@ static void stage_select_menu_work_MENU_STATE_02_FADE_OUT(void)
 
 static void stage_select_menu_work_MENU_STATE_01_WORK_MENU(void)
 {
-	if (0==cg_my_pad_alter)/* さっき何も押されてなかった場合にキーチェック(原作準拠) */
+	if (0==psp_pad.pad_data_alter)/* さっき何も押されてなかった場合にキーチェック(原作準拠) */
 	{
-		if (cg_my_pad & (PSP_KEY_DOWN|PSP_KEY_UP|PSP_KEY_PAUSE|PSP_KEY_RIGHT))
+		if (psp_pad.pad_data & (PSP_KEY_DOWN|PSP_KEY_UP|PSP_KEY_PAUSE|PSP_KEY_RIGHT))
 		{
 			voice_play(VOICE02_MENU_SELECT, TRACK01_EXPLODE);
 		}
-		if (cg_my_pad & PSP_KEY_DOWN)
+		if (psp_pad.pad_data & PSP_KEY_DOWN)
 		{
 			if (aaa.active_item == aaa.max_items-1)
 			{	aaa.active_item = 0;}
@@ -189,7 +190,7 @@ static void stage_select_menu_work_MENU_STATE_01_WORK_MENU(void)
 			}
 		//	www=FPS_MENU_FACTOR10;
 		}
-		else if (cg_my_pad & PSP_KEY_UP)
+		else if (psp_pad.pad_data & PSP_KEY_UP)
 		{
 			if (0 == aaa.active_item)
 			{	aaa.active_item = aaa.max_items-1;}
@@ -199,7 +200,7 @@ static void stage_select_menu_work_MENU_STATE_01_WORK_MENU(void)
 			}
 		//	www=FPS_MENU_FACTOR10;
 		}
-		if (cg_my_pad & PSP_KEY_SHOT_OK)
+		if (psp_pad.pad_data & PSP_KEY_SHOT_OK)
 		{
 			voice_play(VOICE01_MENU_OK/*VOICE02_MENU_SELECT*/, TRACK01_EXPLODE);
 			main_call_func = stage_select_menu_work_MENU_STATE_02_FADE_OUT; 	/* メニュー消去準備 */

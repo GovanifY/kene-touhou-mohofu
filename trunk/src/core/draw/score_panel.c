@@ -178,10 +178,10 @@ static void draw_power_gauge(int weapon)/*, int dx, int dy*/
 	rect_src.y = (20);/*(0)*/
 	rect_src.h = (13);
 	#if 0
-//	rect_src.w = (int)((dou ble)weapon / 127/*128*/ * (dou ble)power_gauge->w); 	// [***090123		変更
+//	rect_src.w = (int)((dou ble)weapon / 127/*128*/ * (dou ble)power_gauge->w);
 	#else
 	/* 1 dot ぐらい誤差あるかもしれないけど簡略化(高速化) */
-	rect_src.w = ((int)(weapon * (80)/*power_gauge->w*/)>>7); // [***090123 	変更
+	rect_src.w = ((int)(weapon * (80)/*power_gauge->w*/)>>7);
 	#endif
 	rect_dest.w = (80);/*power_gauge->w*/
 	rect_dest.h = (13);/*power_gauge->h*/
@@ -194,7 +194,6 @@ static void draw_power_gauge(int weapon)/*, int dx, int dy*/
 	スコアパネルのステータス表示
 ---------------------------------------------------------*/
 
-static int top_score;
 //static unsigned int psp_get_fps60(void);
 
 #if (1==USE_EXTEND_CHECK)
@@ -227,6 +226,7 @@ extern void player_check_extend_score(void);
 	ttt= ((unsigned int)(ticks_now - ticks_alt));/* 差分時間 the clock time of differencial ticks. */
 	/* fps を 100 倍した整数形式へ変換 */
 	if (0 != ttt)/* ゼロ 0 で割る場合を回避する(Devision by zero 防止) */
+//	if (0x0f < ttt)/* ゼロ 0 で割る場合を回避する(Devision by zero 防止) */
 	{
 	//	ttt = ( (unsigned int)(60*60*16666) / (ttt));					/*"60fps"*/
 	//	ttt = ( (unsigned int)(60*60*166666) / (unsigned int)(ttt));	/*"60.0fps"*/
@@ -239,6 +239,7 @@ extern void player_check_extend_score(void);
 }
 
 
+static u32 top_score;
 global void score_display(void)
 {
 	#if 1/*テストoff*/
@@ -283,8 +284,8 @@ global void score_display(void)
 		else
 		{
 			#if 0/* 100% 表記 */
-		//	sp rintf(buffer, "%d", (int)((dou ble)p->weapon / 128 * 100 )); 	// [***090123		変更
-		//	sp rintf(buffer," %d", (((int)(pd_weapon_power) * 200) >>8) );		// [***090214		変更
+		//	sp rintf(buffer, "%d", (int)((dou ble)p->weapon / 128 * 100 ));
+		//	sp rintf(buffer," %d", (((int)(pd_weapon_power) * 200) >>8) );
 			strcpy(buffer,"  0");
 			dec_print_format( (((int)(cg.weapon_power) * 200) >>8), 2, (char *)&buffer[1]);
 			#endif
@@ -293,8 +294,8 @@ global void score_display(void)
 			dec_print_format( (((int)(cg.weapon_power) ) ), 3, (char *)&buffer[0]);
 			#endif
 			#if 0/* 5.00 表記(r32) */
-		//	sp rintf(buffer, "%d", (int)((dou ble)p->weapon / 128 * 100 )); 	// [***090123		変更
-		//	sp rintf(buffer," %d", (((int)(pd_weapon_power) * 200) >>8) );		// [***090214		変更
+		//	sp rintf(buffer, "%d", (int)((dou ble)p->weapon / 128 * 100 ));
+		//	sp rintf(buffer," %d", (((int)(pd_weapon_power) * 200) >>8) );
 			/* "5.00" */
 			strcpy(buffer,"0000");
 			dec_print_format( (((int)(cg.weapon_power) * (200*5)) >>8), 3, (char *)&buffer[0]);

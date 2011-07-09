@@ -322,7 +322,6 @@ static void obj_move_main_00_tama(void) 	/* gu弾幕専用 */
 	SPRITE *s;
 	s = &obj99[OBJ_HEAD_00_TAMA+OBJ_POOL_00_TAMA_MAX+0];
 	sprite_move_main(s, OBJ_POOL_00_TAMA_MAX);
-
 }
 
 static void obj_move_main_01_teki(void) /* gu汎用(旧SDL) */
@@ -349,7 +348,6 @@ global void sprite_move_all(void)
 	SPRITE *s;
 	s = &obj99[OBJ_HEAD_03_PANEL];
 	sprite_move_main(s, (OBJ_POOL_00_TAMA_MAX+OBJ_POOL_01_TEKI_MAX+OBJ_POOL_02_KOTEI_MAX));
-
 }
 	#endif
 #if 1
@@ -442,13 +440,6 @@ global void bullet_angle_all_gamen_gai_nara_kesu(void)
 	左右が画面外なら反射(弾幕)
 ---------------------------------------------------------*/
 
-#if 1/* 角度弾規格(策定案) */
-	#define tx256				vx256/* 基点座標x */
-	#define ty256				vy256/* 基点座標y */
-
-#endif
-
-
 #if 0
 /*---------------------------------------------------------
 	左右が画面外なら反射のみ(弾幕)
@@ -476,14 +467,7 @@ static void s_check_hamidasi_bullet_angle_sayuu_hansya(SPRITE *src)
 	if (0 != test_flag)
 	{
 			src->tama_system_tama_data |= TAMA_DATA_SAYUU_HANSYA_BIT;
-		//	src->tx256 = - src->tx256;
-		//	src->tx256 = t256(GAME_WIDTH+GAME_WIDTH)/*bullet_clip_max.x256 + bullet_clip_max.x256*/ - src->tx256;
-			#if 1
-			/* 現在の座標を新基点座標に変更し、半径0にする。 */
-			src->tx256 = src->cx256;
-			src->ty256 = src->cy256;
-			src->radius256 = 0;
-			#endif
+
 		//	src->rotationCCW1024 += (1024/4);/* 90度回転 */ 		/* ダメ[※2] */
 		//	src->rotationCCW1024 += (1024*3/4);/* -90度回転 */		/* ダメ[※2] */
 			src->rotationCCW1024 = (1024)-(src->rotationCCW1024);	/* 反転[※1] */
@@ -552,14 +536,7 @@ static void s_check_hamidasi_bullet_angle_sayuu_hansya_gensoku(SPRITE *src)
 	if (0!=test_flag)
 	{
 			src->tama_system_tama_data |= TAMA_DATA_SAYUU_HANSYA_BIT;
-		//	src->tx256 = t256(GAME_WIDTH+GAME_WIDTH)/*bullet_clip_max.x256 + bullet_clip_max.x256*/ - src->tx256;
-		//	src->tx256 = - src->tx256;
-			#if 1
-			/* 現在の座標を新基点座標に変更し、半径0にする。 */
-			src->tx256 = src->cx256;
-			src->ty256 = src->cy256;
-			src->tama_system_radius256 = (0);
-			#endif
+
 		//	src->rotationCCW1024 += (1024*3/4);/* -90度回転 */		/* ダメ[※2] */
 		//	src->rotationCCW1024 += (1024/4);/* 90度回転 */ 		/* ダメ[※2] */
 			src->rotationCCW1024 = (1024)-(src->rotationCCW1024);	/* 反転[※1] */
@@ -659,7 +636,7 @@ global SPRITE *obj_add_00_tama_error(void)/*int image_resource_num*/
 	/* private (この関数で)プライベートな変数 */
 	static int register_num;	/* 登録できる可能性が高そうな位置を保持 */
 	#endif
-//	if (登録できない場合)	{	return(NULL);	}
+//	if (登録できない場合)	{	return (NULL);	}
 //	int priority;		priority		= image_resource_ptr->priority;
 	SPRITE *obj;/* 新規作成するスプライト */
 	{
@@ -668,7 +645,7 @@ global SPRITE *obj_add_00_tama_error(void)/*int image_resource_num*/
 my_retry:
 		search_count++;
 		if ( (OBJ_POOL_00_TAMA_MAX-1) < search_count)
-		{	return(NULL);	}	/* (登録できない場合) */
+		{	return (NULL);	}	/* (登録できない場合) */
 
 		register_num++; 	/* 登録できる可能性が高そうな位置 */
 		register_num &= (OBJ_POOL_00_TAMA_MAX-1);
@@ -694,7 +671,7 @@ global SPRITE *obj_add_01_teki_error(void)
 	/* private (この関数で)プライベートな変数 */
 	static int register_num;	/* 登録できる可能性が高そうな位置を保持 */
 	#endif
-//	if (登録できない場合)	{	return(NULL);	}
+//	if (登録できない場合)	{	return (NULL);	}
 //	int priority;		priority		= image_resource_ptr->priority;
 	SPRITE *obj;/* 新規作成するスプライト */
 	{
@@ -703,7 +680,7 @@ global SPRITE *obj_add_01_teki_error(void)
 my_retry:
 		search_count++;
 		if ( (OBJ_POOL_01_TEKI_MAX-1) < search_count)
-		{	return(NULL);	}	/* (登録できない場合) */
+		{	return (NULL);	}	/* (登録できない場合) */
 
 		register_num++; 	/* 登録できる可能性が高そうな位置 */
 		register_num &= (OBJ_POOL_01_TEKI_MAX-1);

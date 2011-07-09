@@ -29,10 +29,9 @@
 
 static void knife_shot(SPRITE *src)
 {
-	obj_send1->cx256 = (src->cx256);
-	obj_send1->cy256 = (src->cy256);
+	send1_xy(src);	/* ’eŒ¹x256 y256 ’†S‚©‚ç”­’eB */
+//	br.BULLET_REGIST_03_VECTOR_regist_type		= VEC TOR_REGIST_TYPE_00_MULTI_VECTOR;
 	br.BULLET_REGIST_04_bullet_obj_type 		= BULLET_KNIFE20_04_AOI;		/* [ÂƒiƒCƒt’e] */
-	br.BULLET_REGIST_05_regist_type 			= REGIST_TYPE_00_MULTI_VECTOR;
 	br.BULLET_REGIST_06_n_way					= (1);	/* [1way] */
 //	br.BULLET_REGIST_07_VECTOR_div_angle1024	= (int)(1024/(18)); 			/* ƒ_ƒ~[•ªŠ„Šp“x(1way‚È‚Ì‚ÅŽg—p‚µ‚Ä‚¢‚È‚¢) */
 	{
@@ -51,7 +50,7 @@ static void knife_shot(SPRITE *src)
 				(int)(1024*6/12),
 			};
 			br.BULLET_REGIST_02_VECTOR_angle1024			= (src->RYOUTE_KNIFE_DATA_angle1024+((int)(jj_bbb[jj])*src->RYOUTE_KNIFE_DATA_l_or_r));
-			bullet_regist_vector();
+			bullet_regist_multi_vector_direct();
 		}
 	}
 }
@@ -117,10 +116,10 @@ global void bullet_create_sakuya_ryoute_knife(SPRITE *src)
 			h->m_Hit256R		= TAMA_ATARI_KNIFE18_PNG;
 			h->callback_mover	= sakuya_ryoute_knife_move;
 		//
-			tmp_angleCCW1024_jiki_nerai(src);/*???(original)*/ /* Šï”’e‚Ìê‡‚ÉŽ©‹@‘_‚¢ */
+			tmp_angleCCW65536_jiki_nerai(src);
 			h->RYOUTE_KNIFE_DATA_l_or_r 		= r_or_l;
 			int tmp1024;
-			tmp1024 = src->tmp_angleCCW1024;
+			tmp1024 = ((src->tmp_angleCCW65536)>>6);
 			tmp1024 -= (128*r_or_l)/*1024*1/8*/;
 			mask1024(tmp1024);
 		//	if (0==length256)	{length256=1*256;}

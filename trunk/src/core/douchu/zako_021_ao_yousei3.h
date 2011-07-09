@@ -26,15 +26,13 @@ static void move_ao_yousei3(SPRITE *src)
 		{
 			if ((cg_game_difficulty))
 			{
-				obj_send1->cx256						= (src->cx256);
-				obj_send1->cy256						= (src->cy256);
-				br.BULLET_REGIST_00_speed256			= (t256(2.0)+(((cg_game_difficulty))<<6));
-				br.BULLET_REGIST_02_VECTOR_angle1024	= ANGLE_JIKI_NERAI_DAN;
-				br.BULLET_REGIST_04_bullet_obj_type 	= BULLET_KUNAI12_00_SIRO+((ra_nd())&7);
-				br.BULLET_REGIST_05_regist_type 		= REGIST_TYPE_00_MULTI_VECTOR;
-				br.BULLET_REGIST_06_n_way				= (8);
-				br.BULLET_REGIST_07_VECTOR_div_angle1024		= (int)(1024/(8));
-				bullet_regist_vector();
+				br.BULLET_REGIST_00_speed256				= (t256(2.0)+(((cg_game_difficulty))<<6));
+				br.BULLET_REGIST_02_VECTOR_angle1024		= ANGLE_JIKI_NERAI_DAN;
+			//	br.BULLET_REGIST_03_VECTOR_regist_type		= VEC TOR_REGIST_TYPE_00_MULTI_VECTOR;
+				br.BULLET_REGIST_04_bullet_obj_type 		= BULLET_KUNAI12_00_SIRO+((ra_nd())&7);
+				br.BULLET_REGIST_06_n_way					= (8);
+				br.BULLET_REGIST_07_VECTOR_div_angle1024	= (int)(1024/(8));
+				bullet_regist_multi_vector_send1_xy_src(src); 	/* 弾源x256 y256 中心から発弾。 */
 			}
 		}
 	}
@@ -45,10 +43,7 @@ static void move_ao_yousei3(SPRITE *src)
 	#endif
 
 	/* アニメーション */
-	{
-	//	src->type				= (TEKI_12_YOUSEI1_1)+(src->KARASU3_houkou) | ((src->jyumyou>>2)&(4-1));
-		zako_anime_type02(src, (TEKI_12_YOUSEI1_1)+(src->KARASU3_houkou));
-	}
+	zako_anime_type02(src);
 }
 
 

@@ -178,7 +178,7 @@ static void control_formation00(SPRITE *src) /* FORMATION_00 */
 				{	( 170),  ( 210),	( 100),  ( 280) },		/* 2 FORMATION_02_LOCATE_X: 画面後方から支援するよ(width352dot) */
 				{  (240),  (240),  (220),  (220) }, 								/* 3 FORMATION_02_LOCATE_Y: 画面後方から支援するよ */
 			};
-			const int if_teisoku = ((cg_my_pad & PSP_KEY_SLOW))?( (2)):(0);
+			const int if_teisoku = ((psp_pad.pad_data & PSP_KEY_SLOW))?( (2)):(0);
 			src->PL_OPTION_DATA_offset_x256 = ((aaa[if_teisoku+0][(src->PL_OPTION_DATA_opt_anime_add_id)])<<8);
 			src->PL_OPTION_DATA_offset_y256 = ((aaa[if_teisoku+1][(src->PL_OPTION_DATA_opt_anime_add_id)])<<8);/*240*/ /* プレイヤー番号に合わせている事に注意 */
 		}
@@ -194,7 +194,7 @@ static void control_formation00(SPRITE *src) /* FORMATION_00 */
 		/* 初期化 */
 		{
 		//	/* FORMATION_00: レミリアの直前に四つ / チルノの直後に四人 */
-			const int if_teisoku = ((cg_my_pad & PSP_KEY_SLOW))?( (8+8)):(0);
+			const int if_teisoku = ((psp_pad.pad_data & PSP_KEY_SLOW))?( (8+8)):(0);
 			src->PL_OPTION_DATA_offset_x256 = ((ggg[if_teisoku+(cg_game_select_player)	][(src->PL_OPTION_DATA_opt_anime_add_id)])<<8);
 			src->PL_OPTION_DATA_offset_y256 = ((ggg[if_teisoku+(cg_game_select_player)+(8)][(src->PL_OPTION_DATA_opt_anime_add_id)])<<8);/*240*/ /* プレイヤー番号に合わせている事に注意 */
 		}
@@ -353,7 +353,7 @@ static void control_formation03(SPRITE *src) /* FORMATION_03 */
 
 ---------------------------------------------------------*/
 
-/*static*/ void player_control_option(SPRITE *src) /* レミリア ＆ チルノ [***090220 追加 */
+/*static*/ void player_control_option(SPRITE *src)
 {
 	int player_offs_x256;
 	int player_offs_y256;
@@ -370,7 +370,7 @@ static void control_formation03(SPRITE *src) /* FORMATION_03 */
 	{
 		if (state_zz1==FORMATION_03)/* FORMATION_03: 減速時用(好きな位置に置けるよ) */
 		{
-			if (cg_my_pad & PSP_KEY_SLOW)
+			if (psp_pad.pad_data & PSP_KEY_SLOW)
 			{
 				/* レミリア用 */
 				src->PL_OPTION_DATA_slow_count += (1<<2);
@@ -397,7 +397,7 @@ static void control_formation03(SPRITE *src) /* FORMATION_03 */
 	/* 低速移動 */
 	if (REMILIA==(cg_game_select_player))
 	{
-		if (cg_my_pad & PSP_KEY_SLOW)
+		if (psp_pad.pad_data & PSP_KEY_SLOW)
 		{
 			slow_remilia_flag=1;
 		}
@@ -416,9 +416,9 @@ static void control_formation03(SPRITE *src) /* FORMATION_03 */
 		{
 		//	if (my_pad & PSP_KEY_OPTION)
 		/* (オプションキーキーを離した瞬間なら) */
-			if ((0==(cg_my_pad & PSP_KEY_OPTION))) 	/* オプションキーが離されている */
+			if ((0==(psp_pad.pad_data & PSP_KEY_OPTION)))	/* オプションキーが離されている */
 			{
-				if ( (cg_my_pad^cg_my_pad_alter) & PSP_KEY_OPTION)	/* オプションキーの状態が変わった(トグル、押したまたは離した場合) */
+				if ( (psp_pad.pad_data^psp_pad.pad_data_alter) & PSP_KEY_OPTION)	/* オプションキーの状態が変わった(トグル、押したまたは離した場合) */
 				{
 	#if 0/*デバッグ用*/
 	/*	★「ボスと相打ちするとハングアップ」バグ(～r26)対策 */
@@ -433,7 +433,7 @@ static void control_formation03(SPRITE *src) /* FORMATION_03 */
 	0xb
 		ST ATE_FLAG_13_DRAW_BOSS_GAUGE				(0x1000)
 		ST ATE_FLAG_14_GAME_LOOP_QUIT				(0x2000)
-		ST ATE_FLAG_16_NOT_ALLOW_KEY_CONTROL 		(0x8000)
+		ST ATE_FLAG_16_NOT_ALLOW_KEY_CONTROL		(0x8000)
 	 */
 	p d_my_score	= cg.state_flag;
 	p d_graze_point = state_zz1;

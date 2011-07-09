@@ -1,5 +1,5 @@
 
-#include "boss.h"//#include "game_main.h"
+#include "boss.h"
 
 /*---------------------------------------------------------
 	東方模倣風 ～ Toho Imitation Style.
@@ -10,24 +10,19 @@
 ---------------------------------------------------------*/
 #if 0/*メモ*/
 /* ボス共通規格 */
-	#define target_x256 		user_data00 	/* 目標x座標 */
-	#define target_y256 		user_data01 	/* 目標y座標 */
-	#define vvv256				user_data02 	/* 目標座標への到達割合 */
-	#define boss_time_out		user_data03 	/* 制限時間 */
+	#define target_x256 			user_data00 	/* 目標x座標 */
+	#define target_y256 			user_data01 	/* 目標y座標 */
+	#define toutatu_wariai256		user_data02 	/* 目標座標への到達割合 */
+	#define kougeki_anime_count 	user_data03 	/* 攻撃アニメーション用カウンタ */
+	#define boss_time_out			user_data04 	/* 制限時間 */
+	#define boss_base_state777		user_data04 	/* 制限時間(boss_time_outと同じ) */
+//
+	#define boss_spell_timer		user_data05 	/* スペル時間 */
 #endif
 
-#define rotate_angle1024	user_data04 	/* ボスを中心として、回転角度。(下CCW1024形式) */
-#define shot_angle1024		user_data05 	/* */
+#define rotate_angle1024	user_data06 	/* ボスを中心として、回転角度。(下CCW1024形式) */
+#define shot_angle1024		user_data07 	/* */
 
-
-/*---------------------------------------------------------
-	敵やられ
----------------------------------------------------------*/
-
-static void lose_kaguya_doll(SPRITE *src)
-{
-	item_create_for_boss(src, ITEM_CREATE_MODE_02);
-}
 
 
 /*---------------------------------------------------------
@@ -48,23 +43,24 @@ static void move_kaguya_doll(SPRITE *src)
 //			br.BULLET_REGIST_00_speed256				= (t256(1.5))+(((difficulty)<<6));	/* 弾速 */
 //			br.BULLET_REGIST_02_VECTOR_angle1024		= (src->shot_angle1024);			/* */
 //			br.BULLET_REGIST_04_bullet_obj_type 		= BULLET_KUNAI12_01_AKA;			/* [赤クナイ弾] */
-//			br.BULLET_REGIST_05_regist_type 			= REGIST_TYPE_00_MULTI_VECTOR;
+//		//	br.BULLET_REGIST_03_VECTOR_regist_type		= VEC TOR_REGIST_TYPE_00_MULTI_VECTOR;
 //			br.BULLET_REGIST_06_n_way					= (2+difficulty);					/* [2-5way] */
 //			br.BULLET_REGIST_07_VECTOR_div_angle1024	= (int)(1024/160);					/* 密着弾 */
-//			bullet_regist_vector();
+//			bullet_regist_multi_vector_direct();
 		{
 			src->shot_angle1024 -= (16);		/* cv1024r(10)*/
 //
-				obj_send1->cx256						= (src->cx256);
-				obj_send1->cy256						= (src->cy256);
-				br.BULLET_REGIST_00_speed256						= t256(1.0);//t256(1+difficulty)/*(3+difficulty)*/ /*(4+difficulty)*/;
-//				br.BULLET_REGIST_02_VECTOR_angle1024				= (src->shot_angle1024&(256-1))+512+128;// /*deg512_2rad*/( (doll_data->br_angle512&(256-1) )+deg_360_to_512(90) );
-				br.BULLET_REGIST_02_VECTOR_angle1024				= (src->shot_angle1024&(256-1))-512-128;// /*deg512_2rad*/( (doll_data->br_angle512&(256-1) )+deg_360_to_512(90) );
-				br.BULLET_REGIST_04_bullet_obj_type 				= (BULLET_MINI8_03_AOI);	/* 弾グラ */
-				br.BULLET_REGIST_05_regist_type 					= REGIST_TYPE_02_GRAVITY02;
-			//	br.BULLET_REGIST_07_VECTOR_jyuryoku_dan_delta256	= ((ra_nd()&0x03)+1);//t256(0.04)/*10*/
-				br.BULLET_REGIST_07_VECTOR_jyuryoku_dan_delta256	= ((ra_nd()&0x03)+2);//t256(0.04)
-				bullet_regist_vector();
+				br.BULLET_REGIST_00_speed256					= t256(1.0);//t256(1+difficulty)/*(3+difficulty)*/ /*(4+difficulty)*/;
+//				br.BULLET_REGIST_02_VECTOR_angle1024			= (src->shot_angle1024&(256-1))+512+128;// /*deg512_2rad*/( (doll_data->br_angle512&(256-1) )+deg_360_to_512(90) );
+				br.BULLET_REGIST_02_VECTOR_angle1024			= (src->shot_angle1024&(256-1))-512-128;// /*deg512_2rad*/( (doll_data->br_angle512&(256-1) )+deg_360_to_512(90) );
+				br.BULLET_REGIST_03_VECTOR_regist_type			= LEGACY_REGIST_TYPE_00_HANERU;
+				br.BULLET_REGIST_04_bullet_obj_type 			= (BULLET_MINI8_03_AOI);	/* 弾グラ */
+				#if (1==USE_HAZUMI)
+				br.BULLET_REGIST_06_VECTOR_HANERU_KAISUU		= VECTOR_TYPE_000_HANE_NAI;
+				#endif /* (1==USE_HAZUMI) */
+			//	br.BULLET_REGIST_07_VECTOR_legacy_dan_delta256	= ((ra_nd()&0x03)+1);//t256(0.04)/*10*/
+				br.BULLET_REGIST_07_VECTOR_legacy_dan_delta256	= ((ra_nd()&0x03)+2);//t256(0.04)
+				bullet_regist_legacy_vector_send1_xy_src(src);  	/* 弾源x256 y256 中心から発弾。 */
 		}
 		}
 	}
@@ -86,11 +82,12 @@ static void move_kaguya_doll(SPRITE *src)
 	敵を追加する
 ---------------------------------------------------------*/
 
-void add_zako_kaguya_dolls(SPRITE *src)
+void add_zako_kaguya_dolls01(SPRITE *src)
 {
-//	#define ADD_ANGLE (171*2)	/* 1周を3分割した角度、170.66*2 == 1024/3 */
-//	#define ADD_ANGLE (85*2)	/* 1周を6分割した角度、 85.33*2 == 1024/6 */
-	#define ADD_ANGLE (102*2)	/* 1周を5分割した角度、102.40*2 == 1024/5 */
+//	#define ADD_ANGLE (341) 	/* 1周を 3分割した角度、341.33 == 1024/3  */
+//	#define ADD_ANGLE (171) 	/* 1周を 6分割した角度、170.66 == 1024/6  */
+	#define ADD_ANGLE (205) 	/* 1周を 5分割した角度、204.80 == 1024/5  */
+//	#define ADD_ANGLE (51)		/* 1周を20分割した角度、 51.20 == 1024/20 */
 //	const int add_angle = (ADD_ANGLE);	/* 加算角度 */
 //
 	int i_angle1024;	/* 積算角度 */
@@ -106,7 +103,7 @@ void add_zako_kaguya_dolls(SPRITE *src)
 			h->flags				= (SP_FLAG_COLISION_CHECK/*|SP_FLAG_VISIBLE*/);
 	//
 			h->callback_mover		= move_kaguya_doll;
-			h->callback_loser		= lose_kaguya_doll;
+			h->callback_loser		= lose_option_00;
 			h->callback_hit_teki	= callback_hit_zako;
 	//
 			h->target_x256			= (src->cx256);

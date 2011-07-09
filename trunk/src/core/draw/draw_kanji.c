@@ -418,7 +418,7 @@ global /*static*/ void script_message_window_clear(void)
 
 //	inits				= 1;/*???*/
 //	is_bg				= 0;/*???*/
-//	draw_script_screen	= 0;/*???*/
+//	cg.draw_flag_script_screen	= 0;/*???*/
 
 	home_cursor();		/* カーソルをホームポジションへ移動 */
 //	cursor_x_chached	= 0;/*???*/ /* カーソル初期化 */
@@ -440,7 +440,7 @@ global /*static*/ void script_message_window_clear(void)
 	 (wait指定で、frame毎に一文字描画。 wait0で、続きを全描画)
 ---------------------------------------------------------*/
 
-global /*static*/ int print_kanji000(const char *str, int color_type, int wait)
+global /*static*/ int print_kanji000(const char *str, int color_type, /*(要確認)*/int wait)
 {
 	font_color_number = (color_type & 0x0f);
 //
@@ -449,7 +449,7 @@ global /*static*/ int print_kanji000(const char *str, int color_type, int wait)
 	{	/* wait が 0 の場合は一回で全文字描画する */
 		static unsigned int count_wait_time;
 		count_wait_time++;
-		if (count_wait_time > wait)
+		if (count_wait_time > (unsigned/*(要確認)*/)wait)
 		{
 			count_wait_time = 0;
 			need_draw_this_flame = 1;

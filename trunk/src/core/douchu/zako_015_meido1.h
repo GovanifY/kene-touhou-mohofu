@@ -25,19 +25,14 @@ static void move_meido1(SPRITE *src)
 		src->speed256	+= t256(0.1);/*加速しながら プレイヤーに突っ込んでくる*/
 		if (src->cy256 >= t256(GAME_HEIGHT-150))
 		{
-		//	if (teki_rank)
-			{
-				obj_send1->cx256						= (src->cx256);
-				obj_send1->cy256						= (src->cy256);
-				br.BULLET_REGIST_00_speed256			= t256(2.8);				/* 弾速 */	 // //t256(1.0)+t256(teki_rank)/*t256(3)+t256(teki_rank)*/	/* 速過ぎ */
-			//	br.BULLET_REGIST_00_speed256			= speed256; 				/* 弾速 */
-				br.BULLET_REGIST_02_VECTOR_angle1024	= ANGLE_JIKI_NERAI_DAN; 	/* 自機狙い弾 */	/* 発射中心角度 / 特殊機能(自機狙い/他) */
-				br.BULLET_REGIST_04_bullet_obj_type 	= BULLET_MINI8_01_AKA;		/* [赤弾] */ /* 弾グラ */
-				br.BULLET_REGIST_05_regist_type 		= REGIST_TYPE_00_MULTI_VECTOR;
-				br.BULLET_REGIST_06_n_way				= (1);						/* [1way] */
-			//	br.BULLET_REGIST_07_VECTOR_div_angle1024		= (0);						/* ダミー角度(未使用) */
-				bullet_regist_vector();
-			}
+			br.BULLET_REGIST_00_speed256				= t256(2.8);				/* 弾速 */	 // //t256(1.0)+t256(teki_rank)/*t256(3)+t256(teki_rank)*/	/* 速過ぎ */
+		//	br.BULLET_REGIST_00_speed256				= speed256; 				/* 弾速 */
+			br.BULLET_REGIST_02_VECTOR_angle1024		= ANGLE_JIKI_NERAI_DAN; 	/* 自機狙い弾 */	/* 発射中心角度 / 特殊機能(自機狙い/他) */
+		//	br.BULLET_REGIST_03_VECTOR_regist_type		= VEC TOR_REGIST_TYPE_00_MULTI_VECTOR;
+			br.BULLET_REGIST_04_bullet_obj_type 		= BULLET_MINI8_01_AKA;		/* [赤弾] */ /* 弾グラ */
+			br.BULLET_REGIST_06_n_way					= (1);							/* [1way] */
+		//	br.BULLET_REGIST_07_VECTOR_div_angle1024	= (0);							/* ダミー角度(未使用) */
+			bullet_regist_multi_vector_send1_xy_src(src); 	/* 弾源x256 y256 中心から発弾。 */
 			src->jyumyou = (512+1023);
 			src->tmp_angleCCW1024 += (1024/2);	/* (1024/2) == [180/360 度] 反転して逃げる */
 			mask1024(src->tmp_angleCCW1024);
@@ -49,7 +44,8 @@ static void move_meido1(SPRITE *src)
 	{
 		/* プレイヤーに突っ込んでくる / schnell richtung player */
 		src->jyumyou = (512+2047);
-		tmp_angleCCW1024_jiki_nerai(src);
+		tmp_angleCCW65536_jiki_nerai(src);
+		src->tmp_angleCCW1024 = ((src->tmp_angleCCW65536)>>6);		/* 「1周が65536分割」から「1周が1024分割」へ変換する。 */
 	//	src->speed256	= /*t256(3+(teki_rank>>1))*/ /*(4+teki_rank)*/;/* 速過ぎ */
 	}
 	else
@@ -74,7 +70,7 @@ static void move_meido1(SPRITE *src)
 	src->cx256 += ((sin1024((src->tmp_angleCCW1024))*src->speed256)>>8);/*fps_factor*/
 	src->cy256 += ((cos1024((src->tmp_angleCCW1024))*src->speed256)>>8);/*fps_factor*/
 	/* アニメーション */
-	zako_anime_type01(src, TEKI_36_YOUSEI3_1);
+	zako_anime_type01(src);
 }
 
 /*---------------------------------------------------------

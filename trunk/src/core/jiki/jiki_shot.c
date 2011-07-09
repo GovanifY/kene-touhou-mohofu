@@ -34,7 +34,7 @@ enum
 	YUYUKO_SHOT_TYPE_09,
 	YUYUKO_SHOT_TYPE_0a,
 	YUYUKO_SHOT_TYPE_0b,
-//	/* 針(サブショット) */
+//	/* 針(サブウェポン) */
 	NEEDLE_ANGLE_270,
 	NEEDLE_ANGLE_263,	/* レミリア 用 */
 	NEEDLE_ANGLE_277,	/* レミリア 用 */
@@ -78,6 +78,9 @@ Lx	4way(まっすぐ右、まっすぐ左、右斜上、左斜上)			MAX(128)	(間隔が広い4way)
 	霊夢 ＆ 魔理沙 ＆ レミリア ＆ 幽々子 ＆ チルノ
 ---------------------------------------------------------*/
 
+/*---------------------------------------------------------
+	レミリア専用、ショット弾の移動
+---------------------------------------------------------*/
 
 static void remilia_move_object(SPRITE *src)
 {
@@ -100,25 +103,71 @@ static void remilia_move_object(SPRITE *src)
 	}
 }
 
+/*---------------------------------------------------------
+	幽々子専用、ショット弾の移動
+---------------------------------------------------------*/
+
 static void yuyuko_move_object(SPRITE *src)
 {
+	static int pow_low;
+	pow_low++;
+	if ((1024) < pow_low)/* 1024発移動するごとに御腹が空く */
+	{
+		pow_low = 0;
+		if (0 < cg.weapon_power)/* パワーがあれば */
+		{
+			cg.weapon_power--;/* 減らす */
+		}
+	}
 	src->cx256 += src->vx256;		/*fps_factor*/
 	src->cy256 += src->vy256;		/*fps_factor*/
 //	if (YUYUKO==(cg_game_select_player))		/* 幽々子はそれる */
 	{
-		src->vx256 += ((src->vx256*cg.weapon_power)>>11);
+		#if (1)
+		/* パワーの量に比例してショットの軌跡を曲げる。 */
+		src->vx256 += ((src->vx256 * cg.weapon_power)>>11);
+		#endif
+		//
+		#if (1)
+		/* ショットを誘導する。 */
+		if (global_obj_boss->cx256 < src->cx256)/*(ボスが左 < 幽々子が右)*/
+		{
+			if (0 < src->vx256)/*(正==幽々子ショットが右へ移動中)*/
+			{
+				src->vx256 -= src->vx256;/* 符号反転(負方向==幽々子ショットを左へ誘導) */
+			}
+		//	else/*(負==幽々子ショットが左へ移動中)*/
+		//	{;}/*(補正する必要は無し)*/
+		}
+		else/*(幽々子が左 > ボスが右)*/
+		{
+			if (0 > src->vx256)/*(負==幽々子ショットが左へ移動中)*/
+			{
+				src->vx256 -= src->vx256;/* 符号反転(正方向==幽々子ショットを右へ誘導) */
+			}
+		//	else/*(正==幽々子ショットが右へ移動中)*/
+		//	{;}/*(補正する必要は無し)*/
+		}
+		#endif
 	}
-	if (src->cy256 < t256(-10))
+	//
+	if (src->cy256 < t256(-10))/*(画面外に出たら)*/
 	{
-		src->jyumyou = JYUMYOU_NASI;
+		src->jyumyou = JYUMYOU_NASI;/*(ショットおしまい)*/
 	}
-	else
+	else/*画面内なら*/
 	{
-		player_weapon_colision_check(src, PLAYER_WEAPON_TYPE_00_SHOT);
+		player_weapon_colision_check(src, PLAYER_WEAPON_TYPE_00_SHOT);/*(あたり判定チェック)*/
 	}
 }
+
+/*---------------------------------------------------------
+	霊夢Aザブトン専用、ショット弾の移動
+---------------------------------------------------------*/
+
 static void zabuton_move_object(SPRITE *src)
 {
+	/* 誘導する */
 	if (src->cx256 < src->PL_SHOT_DATA_target_x256 )
 	{
 		src->cx256 += src->vx256;		/*fps_factor*/
@@ -127,8 +176,7 @@ static void zabuton_move_object(SPRITE *src)
 	{
 		src->cx256 -= src->vx256;		/*fps_factor*/
 	}
-	src->cy256 += src->vy256;		/*fps_factor*/
-//
+	src->cy256 += src->vy256;			/*fps_factor*/
 //
 //	if (REIMU==(cg_game_select_player)) 		/* 霊夢の回転ショット */
 //	if ((REIMU_B+1) > (cg_game_select_player))	/* 霊夢の回転ショット */
@@ -150,6 +198,10 @@ static void zabuton_move_object(SPRITE *src)
 	}
 }
 
+/*---------------------------------------------------------
+	その他汎用、ショット弾の移動
+---------------------------------------------------------*/
+
 static void other_move_object(SPRITE *src)
 {
 	src->cx256 += src->vx256;		/*fps_factor*/
@@ -163,23 +215,24 @@ static void other_move_object(SPRITE *src)
 		player_weapon_colision_check(src, PLAYER_WEAPON_TYPE_00_SHOT);
 	}
 }
-#define reimu_a_move_shot	zabuton_move_object
-#define reimu_a_move_hari	other_move_object
-#define reimu_b_move_shot	other_move_object
-#define reimu_b_move_hari	other_move_object
-#define marisa_a_move_shot	other_move_object
-#define marisa_a_move_hari	other_move_object
-#define marisa_b_move_shot	other_move_object
-#define marisa_b_move_hari	other_move_object
+/* メインショット(札) / サブウェポン(針) */
+#define reimu_a_move_shot	zabuton_move_object/*(座蒲団専用)*/
+#define reimu_a_move_hari	other_move_object/*(汎用)*/
+#define reimu_b_move_shot	other_move_object/*(汎用)*/
+#define reimu_b_move_hari	other_move_object/*(汎用)*/
+#define marisa_a_move_shot	other_move_object/*(汎用)*/
+#define marisa_a_move_hari	other_move_object/*(汎用)*/
+#define marisa_b_move_shot	other_move_object/*(汎用)*/
+#define marisa_b_move_hari	other_move_object/*(汎用)*/
 
-#define remilia_move_shot	remilia_move_object
-#define remilia_move_hari	remilia_move_object
-#define yuyuko_move_shot	yuyuko_move_object
-#define yuyuko_move_hari	yuyuko_move_object
-#define chrno_a_move_shot	other_move_object
-#define chrno_a_move_hari	other_move_object
-#define chrno_q_move_shot	other_move_object
-#define chrno_q_move_hari	other_move_object
+#define remilia_move_shot	remilia_move_object/*(レミリア専用)*/
+#define remilia_move_hari	remilia_move_object/*(レミリア専用)*/
+#define yuyuko_move_shot	yuyuko_move_object/*(幽々子専用)*/
+#define yuyuko_move_hari	yuyuko_move_object/*(幽々子専用)*/
+#define chrno_a_move_shot	other_move_object/*(汎用)*/
+#define chrno_a_move_hari	other_move_object/*(汎用)*/
+#define chrno_q_move_shot	other_move_object/*(汎用)*/
+#define chrno_q_move_hari	other_move_object/*(汎用)*/
 
 /*---------------------------------------------------------
 
@@ -244,11 +297,11 @@ enum
 			(8),	/* 幽々子 */		//	/*	4  9  8 */
 			(6),	/* チルノ A */		//	/*	6  8  6 */
 			(9),	/* チルノ Q */		//	/*	8  6  4 */
-			/* サブショット(針)のあたり判定 BASE_NEEDLE_ATARI */
-			(6),	/* 霊夢 A */		//	/*	6  5  6 */
-			(6),	/* 霊夢 B */		//	/*	6  5  6 */
-			(8),	/* 魔理沙 A */		//	/*	8  6  8 */
-			(8),	/* 魔理沙 B */		//	/*	8  6  8 */
+			/* サブウェポン(針)のあたり判定 BASE_NEEDLE_ATARI */
+		   (10),	/* 霊夢 A[誘導] */			//	/*	6  5  6 */	/* (r34) 10==r33u1 (6==r33) */
+			(6),	/* 霊夢 B[針] */			//	/*	6  5  6 */
+			(8),	/* 魔理沙 A[星] */			//	/*	8  6  8 */
+			(6),	/* 魔理沙 B[レーザー] */	//	/*	8  6  8 */	/* (r34) 6==r33u1 (8==r33) */
 		   (12),	/* レミリア */		//	/*	8  7 12 */
 			(8),	/* 幽々子 */		//	/* 12  9  8 */
 		   (16),	/* チルノ A */		//	/* 16  8 16 */
@@ -259,7 +312,7 @@ enum
 	//	h->type 			= (/*SP_GROUP_JIKI_GET_ITEM*/JI KI_SHOT_02|SP_GROUP_SHOT_SPECIAL)-shot_status;
 		#if 1
 	//	else
-	//	if (0x01== shot_status)	/* 針 */
+	//	if (0x01== shot_status) 	/* 針 */
 		{
 			h->type 			= (JIKI_SHOT_07|SP_GROUP_SHOT_SPECIAL); 	/*SP_GROUP_JIKI_GET_ITEM*/	/*SP_PL_FIREBALL*/
 		}
@@ -268,7 +321,7 @@ enum
 		{
 			if (REIMU_B+1 > (cg_game_select_player))	/* 霊夢? */
 			{
-			//	if (0x02== shot_status)	/* 霊夢の回転ショット */
+			//	if (0x02== shot_status) /* 霊夢の回転ショット */
 				if (REIMU_SHOT_TYPE_00 != shot_type)/* 誘導ショット以外？ */
 				{
 					h->type 			= (JIKI_SHOT_01|SP_GROUP_SHOT_SPECIAL); 	/*SP_GROUP_JIKI_GET_ITEM*/
@@ -451,10 +504,10 @@ enum
 			#endif
 			#if 1/*(r33)*/
 	// 参考 http://hossy.info/game/toho/k_chara.php
-	//				 霊夢 (霊) - 誘導弾 誘導弾は通常弾と同じ速度
-	//				 霊夢 (夢) - ニードル ニードルは通常弾の2倍速
-	// 11==16* 0.7 魔理沙 (魔) - ミサイル 通常弾の70％。
-	// ?? ??	   魔理沙 (恋) - レーザー スピード測定不能。というか全てにおいて測定困難。
+		//	9 :  9			//				 霊夢 (霊) - 誘導弾 誘導弾は通常弾と同じ速度
+		//	9 : 18			//				 霊夢 (夢) - ニードル ニードルは通常弾の2倍速
+		//	9 :  6.3==9*0.7 // 11==16* 0.7 魔理沙 (魔) - ミサイル 通常弾の70％。
+		//						// ?? ??	   魔理沙 (恋) - レーザー スピード測定不能。というか全てにおいて測定困難。
 		//	 a	 a	  a    ?
 		//	 a	 2a  0.7a  ?
 			  9,  9,   9,  9,	9,	4,	 8,  9, 	/* speed	ショットの速さ (遅い方が画面上の弾数が増えるので強い。ただし重くなる) */
@@ -497,17 +550,34 @@ enum
 			  7, 10,   6,155,  50, 65,	56, 52, 	/* WEAPON_L4(P064-P127)  OPT4 strength 針の強さ */
 			  8, 12,   7,166,  52, 66,	80, 78, 	/* WEAPON_L5(P128)		 OPT4 strength 針の強さ */
 			#endif
-			#if 1/*(r33t4)誘導/針巫女対応。誘導巫女(と森マリ)あまりに弱すぎるので、強くする。
+			#if 0/*(r33t4)誘導/針巫女対応。誘導巫女A(と森マリA)あまりに弱すぎるので、強くする。
 				誘導巫女に関してはオプション追加間隔の速度が(r33以降で)遅すぎるようになったので、
 				ここの威力を増やしてもたいして強くならないから、ここの威力を増やしすぎても問題ない。
 			*/
-			 11*2, 16,  10*2, 20,  48, 64,	48, 48, 	/* WEAPON_L0(P000-P008)  OPT0 strength 針の強さ */
-			 11*2, 16,  10*2,108,  48, 64,	48, 48, 	/* WEAPON_L1(P008-P015)  OPT1 strength 針の強さ */
-			  9*2, 10,   7*2,128,  49, 64,	48, 48, 	/* WEAPON_L2(P016-P031)  OPT2 strength 針の強さ */
-			  9*2, 10,   6*2,144,  49, 65,	48, 48, 	/* WEAPON_L3(P032-P063)  OPT3 strength 針の強さ */
-			  7*2, 10,   6*2,155,  50, 65,	56, 52, 	/* WEAPON_L4(P064-P127)  OPT4 strength 針の強さ */
-			  8*2, 12,   7*2,166,  52, 66,	80, 78, 	/* WEAPON_L5(P128)		 OPT4 strength 針の強さ */
+			 11*2, 16,	10*2, 20,  48, 64,	48, 48, 	/* WEAPON_L0(P000-P008)  OPT0 strength 針の強さ */
+			 11*2, 16,	10*2,108,  48, 64,	48, 48, 	/* WEAPON_L1(P008-P015)  OPT1 strength 針の強さ */
+			  9*2, 10,	 7*2,128,  49, 64,	48, 48, 	/* WEAPON_L2(P016-P031)  OPT2 strength 針の強さ */
+			  9*2, 10,	 6*2,144,  49, 65,	48, 48, 	/* WEAPON_L3(P032-P063)  OPT3 strength 針の強さ */
+			  7*2, 10,	 6*2,155,  50, 65,	56, 52, 	/* WEAPON_L4(P064-P127)  OPT4 strength 針の強さ */
+			  8*2, 12,	 7*2,166,  52, 66,	80, 78, 	/* WEAPON_L5(P128)		 OPT4 strength 針の強さ */
 			#endif
+			#if 0/*メモ(上と同じ)*/
+			 22, 16,  20, 20,  48, 64,	48, 48, 	/* WEAPON_L0(P000-P008)  OPT0 strength 針の強さ */
+			 22, 16,  20,108,  48, 64,	48, 48, 	/* WEAPON_L1(P008-P015)  OPT1 strength 針の強さ */
+			 18, 10,  14,128,  49, 64,	48, 48, 	/* WEAPON_L2(P016-P031)  OPT2 strength 針の強さ */
+			 18, 10,  12,144,  49, 65,	48, 48, 	/* WEAPON_L3(P032-P063)  OPT3 strength 針の強さ */
+			 14, 10,  12,155,  50, 65,	56, 52, 	/* WEAPON_L4(P064-P127)  OPT4 strength 針の強さ */
+			 16, 12,  14,166,  52, 66,	80, 78, 	/* WEAPON_L5(P128)		 OPT4 strength 針の強さ */
+			#endif
+			#if 1/*(r34) (r33u1) 誘導巫女(A)、弱いので若干強くする。レイマリ(B)強すぎるので若干弱くする。 */
+			 30, 16,  20, 32,  48, 64,	48, 48, 	/* WEAPON_L0(P000-P008)  OPT0 strength 針の強さ */
+			 28, 16,  20, 64,  48, 64,	48, 48, 	/* WEAPON_L1(P008-P015)  OPT1 strength 針の強さ */
+			 26, 10,  14, 80,  49, 64,	48, 48, 	/* WEAPON_L2(P016-P031)  OPT2 strength 針の強さ */
+			 24, 10,  12, 88,  49, 65,	48, 48, 	/* WEAPON_L3(P032-P063)  OPT3 strength 針の強さ */
+			 22, 10,  12, 98,  50, 65,	56, 52, 	/* WEAPON_L4(P064-P127)  OPT4 strength 針の強さ */
+			 20, 12,  14,108,  52, 66,	80, 78, 	/* WEAPON_L5(P128)		 OPT4 strength 針の強さ */
+			#endif
+
 #if 0
 -----------(r33t3)[針巫女(夢)は針とショットでちゃんと差を付ける]
 ショットと針の威力バランスが重要なので、ここに書くと解からないので、上参照。
@@ -538,8 +608,8 @@ enum
 12 x 4 == 48 == 2.40[total]    x 4 ==	 ==  . 0[total] /
 14 x 4 == 56 == 2.80[total]    x 4 ==	 ==  . 0[total] /
 	// 参考 http://hossy.info/game/toho/k_chara.php
-//	注意: これらの測定データーは「ショット(札)」と「サブショット(針)」を足した威力なので、
-// 「ショット(札)」、「サブショット(針)」それぞれ単体の具体的威力については何も判らない。
+//	注意: これらの測定データーは「メインショット(札)」と「サブウェポン(針)」を足した威力なので、
+// 「メインショット(札)」、「サブウェポン(針)」それぞれ単体の具体的威力については何も判らない。
 // (単体の具体的威力については、ゲーム中では簡単には測定できない。(測定困難))
 	//				 霊夢 (霊) - 誘導弾 誘導弾は通常弾と同じ速度
 	//				 霊夢 (夢) - ニードル ニードルは通常弾の2倍速
@@ -568,7 +638,7 @@ enum
 MAX | 18   | 18 |	| × 2.8 |	1300	|| MAX |  30  |  3 |   | × -.- |	 ?
 
 #endif
-	/* [***20090822 REIMU 24 <- 16 (とりあえず針弱すぎるので) */
+	/* REIMU 24 <- 16 (とりあえず針弱すぎるので) */
 	/* r32 霊夢Aの誘導ショット。強すぎる気がするので、32 → 16 にしてみる。*/
 		};
 	//		 2, 3,	3, 2,  4,16, 5, 5,	/* strength ショットの強さ */
@@ -580,7 +650,7 @@ MAX | 18   | 18 |	| × 2.8 |	1300	|| MAX |  30  |  3 |   | × -.- |	 ?
 		//static const u8 ddd_tbl[DDD_MAX] =
 		//{/* REIMU(A/B) MARISA(A/B) REMILIA YUYUKO CIRNO(A/Q) */
 	//		 3, 3, 4, 4, 6, 8, 6, 6,	/* strength 針の強さ */ 	/* REMILIA, CIRNO,	6 5 強すぎる */
-	/* 霊夢(強くしてみる [***20090930 ) */
+	/* 霊夢(強くしてみる) */
 	//		 4, 4, 4,10, 6, 8, 6, 6,	/* strength 針の強さ */ 	/* REMILIA, CIRNO,	6 5 強すぎる */
 	//		 4, 4, 4,25, 6, 8, 6, 6,	/* strength 針の強さ */ 	/* REMILIA, CIRNO,	6 5 強すぎる */
 	//		18,18,10,15, 3, 4, 3, 3,	/* speed	針の速さ (遅い方が画面上の弾数が増えるので強い。ただし重くなる) */
@@ -623,9 +693,9 @@ MAX | 18   | 18 |	| × 2.8 |	1300	|| MAX |  30  |  3 |   | × -.- |	 ?
 							h->vy256	 = cos1024((int_angle1024))*/*p->speed*/(16/*ccc_tbl[CCC_SPEED+(cg_game_select_player)]*/);/*fps_factor*/
 							#if 1
 							/* 描画用グラ回転 */
-							if (MARISA_A==(cg_game_select_player))/* (魔理沙魔符の)マジックミサイルは傾かない。 */
+							if (MARISA_A==(cg_game_select_player))/* (魔理沙A魔符の)マジックミサイルは傾かない。 */
 							{	int_angle1024 = (0);	}
-							else/* (霊夢霊符の)ホーミングアミュレットは模倣風では傾ける事にする。 */
+							else/* (霊夢A霊符の)ホーミングアミュレットは模倣風では傾ける事にする。 */
 							{
 							//	h->rotationCCW1024	= int_angle1024;
 								/* 描画用グラ回転(ショットは上が正面なので、回転角を計算)[180/360度]回す。 */
@@ -693,7 +763,8 @@ static void shot_regist_ma_lazer(SPRITE *s) /* 魔理沙B レーザー */
 	//	if (0x00==(count128&0x60))	/* 強力だが、1/4時間しか効果がない。 */
 		#else
 		count128 &= 0x7f;
-		if ((43)>(count128 ))	/* 強力だが、1/3時間しか効果がない。 */
+	//	if ((43)>(count128 ))	/* 強力だが、1/3時間しか効果がない。(r33t4) */
+		if ((26)>(count128 ))	/* 強力だが、1/5時間しか効果がない。(r33u1) */
 		#endif
 		{
 			shot_regist_re_hari(s);
@@ -865,7 +936,7 @@ static void player_animate_option(SPRITE *src)
 	   4,	3,	 6,   3,	8,	16,   5,   6,	 /* WEAPON_L5 */
 };
 					src->PL_OPTION_DATA_opt_shot_interval = player_bbb_status[(cg_jiki_weapon_level_offset)];/* (霊夢 魔理沙	仮幽々子)オプションのショット間隔 */
-					#if 1//1975613
+					#if 1//
 					static /*const*/ void (*ggg[PLAYERS8])(SPRITE *sss) =
 					{
 						/*REIMU_A*/ 	shot_regist_re_yudou,			/* 霊夢 A(誘導赤札) */

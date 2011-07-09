@@ -116,22 +116,22 @@ JYUMYOU_NASI:	(õ–½A‚È‚µB–³‚µ‚É‚È‚é‚ÆA©“®‚ÅÁ‹‚³‚ê‚é‚Ì‚Å’ˆÓBu–ˆƒtƒŒ[ƒ€
 		//©ƒEƒFƒ|ƒ“ƒAƒCƒeƒ€(’†)	//ƒEƒFƒ|ƒ“ƒAƒCƒeƒ€(‹­)¨SP_ITEM_EXTRA_SHIELD,
 		//¨‚±‚ê‚ç‚Í’á‘¬ƒ{ƒ€‚É‹zû‚³‚ê‚½BSP_ITEM_EXTRA_HOMING, SP_ITEM_EXTRA_HLASER,
 /*	©•ªA */
-//	S P_PLAYER_ITEM/*ƒvƒŒƒCƒ„[‚Ì–{‘Ì(‚ ‚½‚è”»’è‚ªƒAƒCƒeƒ€æ“¾)*/			= /*0x0100*/SP_GROUP_JIKI_GET_ITEM, /* Unser Held */
+//	S P_PLAYER_ITEM/*ƒvƒŒƒCƒ„[‚Ì–{‘Ì(‚ ‚½‚è”»’è‚ªƒAƒCƒeƒ€æ“¾)*/			= /*0x0100*/SP_GROUP_JIKI_GET_ITEM,
 /*	©’e */
-//	S P_SHOT_BOSS,/*ƒvƒŒƒCƒ„[‚Ìƒ{ƒX‚É—LŒø’e*/							//	= /*0x0200*/SP_GROUP_SHOTS, 	/* Waffen des Helden */
+//	S P_SHOT_BOSS,/*ƒvƒŒƒCƒ„[‚Ìƒ{ƒX‚É—LŒø’e*/							//	= /*0x0200*/SP_GROUP_SHOTS,
 //	S P_SHOT_ZAKO,/*ƒvƒŒƒCƒ„[‚Ìƒ{ƒX‚É–³Œø’e*/
 /*	©•ªB */
 	//dummy_SP_PLAYER_CORE/*ƒvƒŒƒCƒ„[‚ÌƒRƒA(‚ ‚½‚è”»’è‚ª€–S”»’è)*/		= /*0x0100*/SP_GROUP_PLAYER_CORE,
 /* ------------- */
 /*	ƒUƒR“G (ƒ{ƒ€’†A‘Ì“–‚½‚è‚ÅƒvƒŒƒCƒ„[€‚È‚È‚¢) */
-//	SP_ZAKO 																= /*0x0400*/SP_GROUP_TEKI,		/* Die Boesen */
+//	SP_ZAKO 																= /*0x0400*/SP_GROUP_TEKI,
 /* ------------- */
 /*	ƒ{ƒX“G / ’†ƒUƒR“G (ƒ{ƒ€’†A‘Ì“–‚½‚è‚ÅƒvƒŒƒCƒ„[€‚Ê) */
-//	S P_CHUU,// /*“Áê“G[’†Œ^“G]*/ /*S P_ZA KO_YOKAI1*/ 					= /*0x0400*/SP_GROUP_BOSS,		/* [***090325 */
+//	S P_CHUU,// /*“Áê“G[’†Œ^“G]*/ /*S P_ZA KO_YOKAI1*/ 					= /*0x0400*/SP_GROUP_BOSS,
 //	S P_BO SS,
 /* ------------- */
 /*	“G’e */
-	//dummy_SP_BULLET														= /*0x0800*/SP_GROUP_BULLETS,	/* ... und ihre Waffen */
+	//dummy_SP_BULLET														= /*0x0800*/SP_GROUP_BULLETS,
 /* ------------- */
 
 //enum /*sprite_type*/
@@ -140,7 +140,7 @@ JYUMYOU_NASI:	(õ–½A‚È‚µB–³‚µ‚É‚È‚é‚ÆA©“®‚ÅÁ‹‚³‚ê‚é‚Ì‚Å’ˆÓBu–ˆƒtƒŒ[ƒ€
 /*	ƒ|[ƒY’†ˆÚ“®‰Â”\•¨ */
 //	S P_ME NU_TEXT	/* •¶š */												= /*0x2000*/SP_GROUP_PAUSE_S P_ME NU_TEXT,
 /*	‚»‚Ì‘¼ */
-//	SP_MUTEKI																= /*0x4000*/SP_GROUP07_FRONT,		/* diverses */
+//	SP_MUTEKI																= /*0x4000*/SP_GROUP07_FRONT,
 //};
 
 //#define SP_MUTEKI 	SP_GROUP07_FRONT
@@ -207,8 +207,8 @@ enum
 
 typedef struct /*_point256*/
 {
-	Uint16 x;	/*	union POINT */	/* x ˆÊ’u */
-	Uint16 y;	/*	union POINT */	/* y ˆÊ’u */
+	u16 x;	/*	union POINT */	/* x ˆÊ’u */
+	u16 y;	/*	union POINT */	/* y ˆÊ’u */
 } POINT_u16;
 /* u16À•W */
 
@@ -255,11 +255,11 @@ typedef struct /*_point_vector256*/
 //
 /* ƒXƒvƒ‰ƒCƒg‚Ìg‚¢•û
 
-•ª—Ş		©‹@		©’e					“G					“G’e			”š”­
-katasa		--			base_weapon_strength	base_hp 			base_time_out	base_time_out
-			--			•Ší‹­‚³				‘Ì—Í				ŠÔ			ŠÔ
+•ª—Ş			©‹@		©’e					“G					“G’e			”š”­
+katasa			--			base_weapon_strength	base_hp 			base_time_out	base_time_out
+				--			•Ší‹­‚³				‘Ì—Í				ŠÔ			ŠÔ
 user_data13 	--			--						base_score			--				--
-			--			--						ƒXƒRƒA				--				--
+				--			--						ƒXƒRƒA				--				--
 */
 
 #define tmp_angleCCW65536 tmp_angleCCW1024
@@ -269,56 +269,58 @@ typedef struct _sprite
 	int cy256;						/*	union POINT */			/* center y •\¦ ’†SÀ•WˆÊ’u  (256ŒÅ’è¬”“_Œ`®) / akt. Position */
 	int vx256;						/*	union POINT_VECTOR */	/* ‹¤—pregist_vector(); */	/*union BULLET_VECTOR_DATA*/
 	int vy256;						/*	union POINT_VECTOR */	/* ‹¤—pregist_vector(); */	/*union BULLET_VECTOR_DATA*/
-//[4]
+//[4==1*4]
 	int rotationCCW1024;			/* •`‰æ—pŠp“x(‰º‚ª0“x‚Å¶‰ñ‚è(”½Œv‰ñ‚è), ˆêü‚Í1024•ªŠ„, 0-1023“x) */
 	int tmp_angleCCW1024;			/* •Û—pŠp“x(‰º‚ª0“x‚Å¶‰ñ‚è(”½Œv‰ñ‚è), ˆêü‚Í1024•ªŠ„, 0-1023“x) */
-	int katasa; 					/* user00 ENEMY_BASE base; */	//int health;	int time_out;		/* user03 */
-	int type;						/* í—Ş‹y‚Ñg—p‰Â”Û / Sprite-Type, (siehe enum SPRITE_TYPE), 0 = remove. */
-//[8]
+	/*u8*/u32 flags;				/* ƒtƒ‰ƒOƒZƒbƒg / (SP_FLAG...) */
+	int type;						/* í—Ş‹y‚Ñg—p‰Â”Û / Sprite-Type, ( enum SPRITE_TYPE), 0 = remove. */
+//[8==2*4]
 	u32 color32;					/* Gu color AGBR8888 MAKE32RGBA(RED, GREEN, BLUE, ALPHA)‚ÅŠe—v‘f 0 ‚©‚ç 255 (0x00 ‚©‚ç 0xff)‚Ü‚ÅB */
 	int m_Hit256R;					/* ‚ ‚½‚è”»’è—p */
 	int m_zoom_x256;				/* •\¦Šg‘å—¦x (‰æ‘œ‚Ì‰¡‚ÌŠg‘å—¦t256()Œ`®‚Åw’è) */
 	int m_zoom_y256;				/* •\¦Šg‘å—¦y (‰æ‘œ‚Ìc‚ÌŠg‘å—¦t256()Œ`®‚Åw’è) */
-//[12]
+//[12==3*4]
 	/* ‚Æ‚è‚ ‚¦‚¸ˆÚs—p(1)]—ˆŒİŠ·(’e) */
 	int user_data00;
 	int user_data01;
 	int user_data02;
 	int user_data03;
-//[16]
+//[16==4*4]
 	int user_data04;
 	int user_data05;
 	int user_data06;
 	int user_data07;
-//[20]
+//[20==5*4]
+	s32 jyumyou;	/* õ–½ */
+	int katasa; 					/* user00 ENEMY_BASE base; */	//int health;	int time_out;		/* user03 */
 	/* ‚Æ‚è‚ ‚¦‚¸ˆÚs—p(2)’Ç‰Á’eAŠî–{‹@”\ */
-	int user_data10;
-	int user_data11;
 	int user_data12;
 	int user_data13;		/* “GƒXƒRƒA */
-//	int user01; 					/* user01 ENEMY_BASE base; */	//int score;	int state;			/* user02 */
-//
-	void (*callback_loser)(struct _sprite *src);	/* Custom-loser-Routine (‚â‚ç‚ê‚½Œã‚Éƒ{[ƒiƒX‚ğo‚·‚Æ‚©Aˆá‚¤”š”­‚·‚é‚Æ‚©) / ©‹@ƒIƒvƒVƒ‡ƒ“‚ÌƒAƒjƒ[ƒVƒ‡ƒ“ƒR[ƒ‹ƒoƒbƒN */
-	void (*callback_mover)(struct _sprite *src);	/* Custom-Move-Routine */
-	void (*callback_hit_teki)(struct _sprite *c, struct _sprite *src);	// [***090325		’Ç‰Á
-	struct _sprite *target_obj; 		/* ‚Æ‚è‚ ‚¦‚¸ˆÚs—p(3)ˆÚs‚µ‚½‚ç‚È‚­‚È‚éB */
-//[20]
-//
-	/*u8*/u32 flags;					/* ƒtƒ‰ƒOƒZƒbƒg / siehe unten (SP_FLAG...) */
-	s32 jyumyou;	/* õ–½ */
-//	u32 dummy_used;/*???*/
-//	int dummy111;/* g‚Á‚Ä‚È‚¢ƒ_ƒ~[ */
+//[24==6*4]
+	void (*callback_move01)(struct _sprite *src);		/* Custom-Move-Routine */
+	void (*callback_move02)(struct _sprite *src);		/* Custom-Tamakesi-Routine / Zako Anime */
+	void (*callback_move03)(struct _sprite *c, struct _sprite *src);
+	void (*callback_move04)(struct _sprite *src);		/* Custom-loser-Routine (‚â‚ç‚ê‚½Œã‚Éƒ{[ƒiƒX‚ğo‚·‚Æ‚©Aˆá‚¤”š”­‚·‚é‚Æ‚©) / ©‹@ƒIƒvƒVƒ‡ƒ“‚ÌƒAƒjƒ[ƒVƒ‡ƒ“ƒR[ƒ‹ƒoƒbƒN */
+//[28==7*4]
 // •`‰æ—p
-//	u16 u0;
-//	u16 v0;
-//	u16 u1;
-//	u16 v1;
-	/*u16*/u16/*int*/ tx;	//tx = u0;	int tx; 	/* u ƒeƒNƒXƒ`ƒƒÀ•W */
-	/*u16*/u16/*int*/ ty;	//ty = v0;	int ty; 	/* v ƒeƒNƒXƒ`ƒƒÀ•W */
-	/*u16*/u16/*int*/ w;	//w = (u1-u0);	int w;
-	/*u16*/u16/*int*/ h;	//h = (v1-v0);	int h;
+	struct _sprite *target_obj; 		/* ‚Æ‚è‚ ‚¦‚¸ˆÚs—p(3)ˆÚs‚µ‚½‚ç‚È‚­‚È‚éB */
+	/*u16*/u16/*int*/ tx;	//	u16 u0;//tx = u0;		int tx; 	/* u ƒeƒNƒXƒ`ƒƒÀ•W */
+	/*u16*/u16/*int*/ ty;	//	u16 v0;//ty = v0;		int ty; 	/* v ƒeƒNƒXƒ`ƒƒÀ•W */
+	/*u16*/u16/*int*/ w;	//	u16 u1;//w = (u1-u0);	int w;
+	/*u16*/u16/*int*/ h;	//	u16 v1;//h = (v1-v0);	int h;
+	int for_align_dummy_11;/* .align ‡‚í‚¹—pB.align‡‚Á‚Ä‚½•û‚ªÀs‘¬“x‚Í‘¬‚¢‚µAƒvƒƒOƒ‰ƒ€‚àŠÈ—ª‰»o—ˆ‚é‚Ì‚Åí‚É¬‚³‚¢Bg‚Á‚Ä‚È‚¢ƒ_ƒ~[B */
+//[32==8*4]
 } SPRITE;
-// 1858355 1858307
+//	int user01; 					/* user01 ENEMY_BASE base; */	//int score;	int state;			/* user02 */
+
+#define callback_mover			callback_move01
+#define callback_boss_tamakesi	callback_move02/* ‹¤—p */
+#define callback_zako_anime 	callback_move02/* ‹¤—p */
+#define callback_hit_teki		callback_move03
+#define callback_loser			callback_move04
+
+
+
 /*---------------------------------------------------------
 	jyumyou õ–½ life_cycle sprite_time_out sprite_longevity
 	-------------------------------------------------------

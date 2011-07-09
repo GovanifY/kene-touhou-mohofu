@@ -178,16 +178,16 @@ static void convert_swizzle
 		#if (1==USE_SDL_image)
 		my_texture[num]->format->BytesPerPixel =  2;
 		my_texture[num]->format->BitsPerPixel  = 16;
-		my_texture[num]->format->Rmask = /*PSP_SCREEN_FORMAT_RMASK*/RMASK16/*RMASK16*/;
-		my_texture[num]->format->Gmask = /*PSP_SCREEN_FORMAT_GMASK*/GMASK16/*GMASK16*/;
-		my_texture[num]->format->Bmask = /*PSP_SCREEN_FORMAT_BMASK*/BMASK16/*BMASK16*/;
-		my_texture[num]->format->Amask = /*PSP_SCREEN_FORMAT_AMASK*/AMASK16/*AMASK16*/;
+		my_texture[num]->format->Rmask = /*PSP_SCREEN_FORMAT_RMASK*/RMASK16;/*RMASK16*/
+		my_texture[num]->format->Gmask = /*PSP_SCREEN_FORMAT_GMASK*/GMASK16;/*GMASK16*/
+		my_texture[num]->format->Bmask = /*PSP_SCREEN_FORMAT_BMASK*/BMASK16;/*BMASK16*/
+		my_texture[num]->format->Amask = /*PSP_SCREEN_FORMAT_AMASK*/AMASK16;/*AMASK16*/
 		#endif
 	// 16bitF
 		convert_swizzle(
 			(u8*)((my_resource[num].my_texture)->MY_DIB_DATA),
 			(const u8*)gulist/*convert_works*/,
-			/* texture width x 2 */  my_map_TW128/*512*/*2, 	/* short ‚¾‚©‚ç 2”{ */
+			/* texture width x 2 */  my_map_TW128/*512*/*(2), 	/* short ‚¾‚©‚ç 2”{ */
 			/* texture height	 */  my_map_TH128/*512*/);
 		// 512*2 because swizzle operates in bytes, and each pixel in a 16-bit texture is 2 bytes
 	}
@@ -203,7 +203,7 @@ static void convert_swizzle
 		convert_swizzle(
 			(u8*)((my_resource[num].my_texture)->MY_DIB_DATA),
 			(const u8*)gulist/*convert_works*/,
-			/* texture width x 4 */  my_map_TW128/*512*/*4, 	/* int ‚¾‚©‚ç 4”{ */
+			/* texture width x 4 */  my_map_TW128/*512*/*(4), 	/* int ‚¾‚©‚ç 4”{ */
 			/* texture height	 */  my_map_TH128/*512*/);
 		// 512*2 because swizzle operates in bytes, and each pixel in a 16-bit texture is 2 bytes
 		#endif

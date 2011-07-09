@@ -30,16 +30,15 @@ typedef struct _bullet_regist_
 	int BULLET_REGIST_03_tama_data; 				/* 加角度(交差弾用) */
 
 	int BULLET_REGIST_04_bullet_obj_type;			/* 弾グラフィックの種類 */
-	int BULLET_REGIST_05_regist_type;				/* 登録方式(動きの種類) */	/* 仕様変更(r33) */
 	// 以下は、 n_way弾の場合に必要な要素。
 	int BULLET_REGIST_06_n_way; 					/* n way 弾の弾数 */
 	int BULLET_REGIST_07_div_angle65536;			/* n way 弾の分割角度 */	/* <分解能65536度に決定> */
 	// 以下は、 弾幕リストに登録する場合の設定。
 //	int BULLET_REGIST_start_number; 				/* 開始番号 */
 //	int BULLET_REGIST_max_size; 					/* サイズ */
+//	int dummy_BULLET_REGIST_05_regist_type; 		/* 登録方式(動きの種類) */	/* 仕様変更(r33) */
 } BULLET_REGIST;
 extern BULLET_REGIST br;/* 旧システムから引き継ぐ */
-
 
 /*---------------------------------------------------------
 	弾幕の受け渡し設定(ベクトル弾の場合)
@@ -53,17 +52,26 @@ extern BULLET_REGIST br;/* 旧システムから引き継ぐ */
 
 #define BULLET_REGIST_00_VECTOR_hosi_gata_time_out			BULLET_REGIST_00_speed256
 #define BULLET_REGIST_02_VECTOR_hosi_gata_angle1024 		BULLET_REGIST_02_angle65536
+#define BULLET_REGIST_03_VECTOR_regist_type 				BULLET_REGIST_03_tama_data
 #define BULLET_REGIST_07_VECTOR_hosi_gata_add_speed256		BULLET_REGIST_07_div_angle65536
-
-#define BULLET_REGIST_06_VECTOR_jyuryoku_dan_bound_counts	BULLET_REGIST_06_n_way
-#define BULLET_REGIST_07_VECTOR_jyuryoku_dan_delta256		BULLET_REGIST_07_div_angle65536
 
 #define BULLET_REGIST_02_VECTOR_angle1024					BULLET_REGIST_02_angle65536
 #define BULLET_REGIST_06_VECTOR_tomari_dan_next_angle1024	BULLET_REGIST_06_n_way
-#define BULLET_REGIST_07_VECTOR_tomari_dan_delta256 		BULLET_REGIST_07_div_angle65536
+#define BULLET_REGIST_07_VECTOR_legacy_dan_delta256 		BULLET_REGIST_07_div_angle65536
 
 #define BULLET_REGIST_07_VECTOR_div_angle1024				BULLET_REGIST_07_div_angle65536
 
+
+#define USE_HAZUMI (0)
+
+#if (1==USE_HAZUMI)
+	/*
+		0==BULLET_REGIST_06_VECTOR_HANERU_KAISUU				重力弾
+		0!=BULLET_REGIST_06_VECTOR_HANERU_KAISUU				はずみ弾(輝夜専用)
+	*/
+	#define VECTOR_TYPE_000_HANE_NAI							(0)/* 重力弾 */
+	#define BULLET_REGIST_06_VECTOR_HANERU_KAISUU				BULLET_REGIST_06_n_way
+#endif /* (1==USE_HAZUMI) */
 
 /*---------------------------------------------------------
 	登録種類(角度弾の場合)
@@ -75,36 +83,49 @@ extern void tama_system_regist_n_way(void); 			/* 通常 n way弾 */
 
 /*---------------------------------------------------------
 	登録種類(ベクトル弾の場合)
+	-------------------------------------------------------
+	ベクトル弾は角度弾と統合する為に、移行中です。
 ---------------------------------------------------------*/
-extern void bullet_regist_vector(void);
+
+/* ベクトル特殊弾(仮、移行形態) */
+extern void bullet_regist_legacy_vector_direct(void);
+extern void bullet_regist_legacy_vector_send1_xy_src(SPRITE *src);
+
+/* ベクトル多方向弾(仮、移行形態) */
+extern void bullet_regist_multi_vector_direct(void);
+extern void bullet_regist_multi_vector_send1_xy_src(SPRITE *src);
 
 /*---------------------------------------------------------
-	ベクトル弾の種類、廃止予定(旧互換)
+	ベクトル特殊弾の種類、廃止予定(旧互換)
+	-------------------------------------------------------
+	特殊弾は将来的に弾幕スクリプトへ移行した場合に、
+	弾幕スクリプトで記述できないので、スペカに移行して完全に無くなります。
+	ただし、スペカにならないザコ特殊弾は残るかもしれません。(速度次第)
 ---------------------------------------------------------*/
 
-enum
+enum/*_tama_data_*/
 {
-	REGIST_TYPE_00_MULTI_VECTOR,	/* 多方向弾 */
-	REGIST_TYPE_01_HAZUMI,			/* 重力弾01 輝夜、最終形態で投げてくるかなり無茶な弾。 */
-	REGIST_TYPE_02_GRAVITY02,		/* 重力弾02 */
-	REGIST_TYPE_03_TOMARI,			/* 止まり弾 */
-	REGIST_TYPE_99_MAX,
+	LEGACY_REGIST_TYPE_00_HANERU,			/* 重力弾 / 輝夜、最終形態で投げてくるかなり無茶な弾。 */
+	LEGACY_REGIST_TYPE_01_TOMARI,			/* 止まり弾 */
+	LEGACY_REGIST_TYPE_99_MAX,
 };
-// (r33)廃止済み:	REGIST_TY PE_04_KURU_KURU,		/* くるくる弾 */
+// (r34)廃止中: 	VECTOR_REGIST_TY PE_00_MULTI_VECTOR,	/* 多方向弾 */
+// (r33)廃止済み:	REGIST_TY PE_04_KURU_KURU,				/* くるくる弾 */
 
 /*---------------------------------------------------------
 	角度弾規格(策定案、仮運用中。)
 	基点座標関連は特殊機能に振って変更するかも知れない。
 ---------------------------------------------------------*/
 
-	#define tama_system_radius256				user_data00 	/* 半径 */
-	#define tama_system_speed65536				user_data01 	/* 加減速 */	//	#define tama_system_speed256				user_data02 	/* 加減速 */
-	#define tama_system_tra65536				user_data02 	/* 加減速調整 */
-	#define tama_system_tama_data				user_data03 	/* 画面外消去判定や反射機能 */
-	#define tama_system_hatsudan_counter		user_data04 	/* 発弾カウンタ */
-//	#define tama_system_aaa 					user_data05 	/* 拡張予定(?) (r33現在未使用) / tama_system_add_rot ate1024 加角度、回転角度調整(交差弾用) t256形式() */
-//	#define tama_system_bbb 					user_data06 	/* 拡張予定(?) (r33現在未使用) / */
-//	#define tama_system_ccc 					user_data07 	/* 拡張予定(?) (r33現在未使用) / */
+	#define tama_system_speed65536				user_data00 	/* 加減速 */	//	#define tama_system_speed256				user_data02 	/* 加減速 */
+	#define tama_system_tra65536				user_data01 	/* 加減速調整 */
+	#define tama_system_tama_data				user_data02 	/* 画面外消去判定や反射機能 */
+	#define tama_system_flame_counter			user_data03 	/* 発弾フレームカウンタ(正値で発弾) */
+//	#define tama_system_aaa 					user_data04 	/* 拡張予定(?) (r33現在未使用) / tama_system_add_rot ate1024 加角度、回転角度調整(交差弾用) t256形式() */
+//	#define tama_system_bbb 					user_data05 	/* 拡張予定(?) (r33現在未使用) / */
+//	#define tama_system_ccc 					user_data06 	/* 拡張予定(?) (r33現在未使用) / */
+//(r33) #define tama_system_radius256				user_data07 	/* 半径 */
+//廃止	#define tama_system_kyori256				user_data07 	/* 1[f]あたりに進む距離。(半径) */
 
 #if 1/* 角度弾規格B(仮策定案) */
 	#define TAMA_DATA_0000_TILT 				(0x0000)/* 傾き弾(通常弾) */

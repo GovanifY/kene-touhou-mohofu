@@ -47,17 +47,17 @@ void vfpu_quaternion_to_matrix(ScePspQuatMatrix *q, ScePspFMatrix4 *m);
 
 typedef struct
 {
-	/*float*/unsigned char u;	/* 0(左端) ... 255(右端) */ 		/* テクスチャ(u,v)座標 */
+	/*float*/unsigned char u;	/* 0(左端) ... 255(右端) */ 		/* テクスチャ(u, v)座標 */
 	/*float*/unsigned char v;	/* 0(上端) ... 255(下端) */
 	unsigned int color; 		/* 0x00000000 ... 0xffffffff */ 	/* 頂点カラー(ARGB8888) */
-	/*float*/signed char x; 	/* -128 ... 0(中心) ... 127 */		/* 頂点(x,y,z)座標 */
+	/*float*/signed char x; 	/* -128 ... 0(中心) ... 127 */		/* 頂点(x, y, z)座標 */
 	/*float*/signed char y; 	/* -128 ... 0(中心) ... 127 */
 	/*float*/signed char z; 	/* -128 ... 0(中心) ... 127 */
 } Vertex_cube;
-static Vertex_cube 	__attribute__((aligned(16))) cube_polygon_model[(12*3)] =
+static Vertex_cube	__attribute__((aligned(16))) cube_polygon_model[(12*3)] =
 {
-	/* テクスチャは画像サイズに対して(0...255, 0...255)の(u,v)座標で指定する。*/
-	/* (u,v)座標はテクスチャの貼り付ける位置を指定する。 */
+	/* テクスチャは画像サイズに対して(0...255, 0...255)の(u, v)座標で指定する。*/
+	/* (u, v)座標はテクスチャの貼り付ける位置を指定する。 */
 	/* 画像サイズが512, 64で(u,v)が(  0,  0)なら、画像位置は(  0,  0) */
 	/* 画像サイズが512, 64で(u,v)が(127,127)なら、画像位置は(255, 31) */
 	/* 画像サイズが512, 64で(u,v)が(255,255)なら、画像位置は(511, 63) */
@@ -71,11 +71,11 @@ static Vertex_cube 	__attribute__((aligned(16))) cube_polygon_model[(12*3)] =
 	/* このハードウェアー補完は描画モード(色の解像度16bitとか)に関係なく常に32bitで行われるのできれい。 */
 //
 	/* この辺から解かるように、Gu内部には色32bit(8888)の描画エンジンしか無い。 */
-	/* 色の解像度16bitとか(5650,5551,4444)やclutの描画モードの場合は「外部(つまりvram)転送時」(つまり描画時)に色変換している。 */
+	/* 色の解像度16bitとか(5650, 5551, 4444)やclutの描画モードの場合は「外部(つまりvram)転送時」(つまり描画時)に色変換している。 */
 	/* 「Guからみたvramのアドレスが変わる事で速度低下するペナルティー >>> 描画時の色変換速度」 なので、16bitやclutの方が結果的に描画が速い。 */
 //
 	/* テクスチャの位置 				頂点の位置座標 */
-	/* u	v  色(ABGR8888) 		     x    y    z */
+	/* u	v  色(ABGR8888) 			 x	  y    z */
 	{  0,	0, MY_COLOR_ARGB888_WHITE,-127,-127, 127}, // #0	// 0	/* 青 */
 	{255, 255, MY_COLOR_ARGB888_BLUE,  127, 127, 127}, // #2	// 5	/* 青 青 */
 	{255,	0, MY_COLOR_ARGB888_WHITE,-127, 127, 127}, // #1	// 4[]

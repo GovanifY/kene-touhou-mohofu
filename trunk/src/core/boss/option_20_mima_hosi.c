@@ -10,36 +10,20 @@
 ---------------------------------------------------------*/
 #if 0/*メモ*/
 /* ボス共通規格 */
-	#define target_x256 		user_data00 	/* 目標x座標 */
-	#define target_y256 		user_data01 	/* 目標y座標 */
-	#define vvv256				user_data02 	/* 目標座標への到達割合 */
-	#define boss_time_out		user_data03 	/* 制限時間 */
+	#define target_x256 			user_data00 	/* 目標x座標 */
+	#define target_y256 			user_data01 	/* 目標y座標 */
+	#define toutatu_wariai256		user_data02 	/* 目標座標への到達割合 */
+	#define kougeki_anime_count 	user_data03 	/* 攻撃アニメーション用カウンタ */
+	#define boss_time_out			user_data04 	/* 制限時間 */
+	#define boss_base_state777		user_data04 	/* 制限時間(boss_time_outと同じ) */
+//
+	#define boss_spell_timer		user_data05 	/* スペル時間 */
 #endif
 
-#define rotate_angle1024		user_data04 	/* ボスを中心として、回転角度。(下CCW1024形式) */
-#define shot_angle1024			user_data05 	/* */
-#define HANKEI_MAX_45_DOT		user_data06 	/* 半径 */
+#define rotate_angle1024		user_data05 	/* ボスを中心として、回転角度。(下CCW1024形式) */
+#define shot_angle1024			user_data06 	/* */
+#define HANKEI_MAX_45_DOT		user_data07 	/* 半径 */
 
-
-/*---------------------------------------------------------
-	敵やられ
----------------------------------------------------------*/
-
-static void lose_mima_doll(SPRITE *src)
-{
-//	item_create_for_boss(src, ITEM_CREATE_MODE_02);/* easyはボムを出さなくて済む位軟らかくした */
-	#if 1
-	item_create(src, SP_ITEM_05_TENSU, 5, ITEM_MOVE_FLAG_06_RAND_XY);
-//	item_create(src, SP_ITEM_00_P001, 5, ITEM_MOVE_FLAG_06_RAND_XY);
-	#else
-	{	int i;
-		for (i=0; i<(5); i++)
-		{
-			lose_random_item(src);
-		}
-	}
-	#endif
-}
 
 
 /*---------------------------------------------------------
@@ -58,15 +42,13 @@ static void move_mima_doll(SPRITE *src)
 		{
 			src->shot_angle1024 += (1024/18);	/* ショットを撃つ方向を、回転させる。 */
 		//
-			obj_send1->cx256					= (src->cx256);/* 魔方陣の中心から弾撃つ */
-			obj_send1->cy256					= (src->cy256);/* 魔方陣の中心から弾撃つ */
 			br.BULLET_REGIST_00_speed256				= (t256(1.5))+((((cg_game_difficulty))<<6));	/* 弾速 */
 			br.BULLET_REGIST_02_VECTOR_angle1024		= (src->shot_angle1024);			/* */
-			br.BULLET_REGIST_07_VECTOR_div_angle1024	= (int)(1024/160);					/* 密着弾 */
+		//	br.BULLET_REGIST_03_VECTOR_regist_type		= VEC TOR_REGIST_TYPE_00_MULTI_VECTOR;
 			br.BULLET_REGIST_04_bullet_obj_type 		= BULLET_KUNAI12_01_AKA;			/* [赤クナイ弾] */
 			br.BULLET_REGIST_06_n_way					= (2+(cg_game_difficulty)); 				/* [2-5way] */
-			br.BULLET_REGIST_05_regist_type 			= REGIST_TYPE_00_MULTI_VECTOR;
-			bullet_regist_vector();
+			br.BULLET_REGIST_07_VECTOR_div_angle1024	= (int)(1024/160);					/* 密着弾 */
+			bullet_regist_multi_vector_send1_xy_src(src); 	/* 弾源x256 y256 中心から発弾。 */
 		}
 	}
 	//
@@ -108,7 +90,7 @@ void add_zako_mima_dolls(SPRITE *src)
 			h->flags				= (SP_FLAG_COLISION_CHECK/*|SP_FLAG_VISIBLE*/);
 	//
 			h->callback_mover		= move_mima_doll;
-			h->callback_loser		= lose_mima_doll;
+			h->callback_loser		= lose_option_00;//lose_mima_doll;
 			h->callback_hit_teki	= callback_hit_zako;
 	//
 			h->target_x256			= (src->cx256);

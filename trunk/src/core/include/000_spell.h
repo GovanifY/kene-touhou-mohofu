@@ -82,7 +82,7 @@ enum
 	SPELL_26_aya_saifu, 				/*	7[文] 塞符 */
 	SPELL_27_,							/*	8[パチェ] のレーザーもどき */
 //
-	SPELL_28_rumia_night_bird,			/*	9[ルーミア] 紅1面ボス 夜符「ナイトバード」にちょっとだけ似た弾幕(予定) */
+	SPELL_28_remilia_tamaoki1,			/*	9[咲夜] 紅 面ボス  れみりゃっぽい咲夜の玉置弾幕(予定) */	//	SPE LL_28_rumia_night_bird, 		/*	9[ルーミア] 紅1面ボス 夜符「ナイトバード」にちょっとだけ似た弾幕(予定) */
 	SPELL_29_rumia_demarcation, 		/* 10[ルーミア] 紅1面ボス 闇符「ディマーケイション」にちょっとだけ似た弾幕(予定) */
 	SPELL_2a_sakuya_baramaki1,			/* 11[咲夜] 紅5面中-ボス ばら撒き1 弾幕 () */
 	SPELL_2b_sakuya_baramaki2,			/* 12[咲夜] 紅5面中-ボス ばら撒き2 弾幕 () */
@@ -117,16 +117,14 @@ enum
 	SPELL_44,				/* */
 	SPELL_45,				/* */
 	SPELL_46,				/* */
-	SPELL_47,				/* */
+	SPELL_47_sakuya_meek,				/* [咲夜] むりやり変換3 */
 //	SPELL_2e_SONOTA_DEBUG_CW_AO,		/* [その他] デバッグ弾幕CW青 */
 //	SPELL_2f_SONOTA_DEBUG_CCW_AKA,		/* [その他] デバッグ弾幕CCW赤 */
 //
 	SPELL_MAX,
 };
 
-/* target->tmp_angleCCW1024 に 自機狙い弾の角度を計算 */
-extern void tmp_angleCCW1024_src_nerai(SPRITE *src, SPRITE *dest);
-extern void tmp_angleCCW1024_jiki_nerai(SPRITE *target);
+/* target->tmp_angleCCW65536 に 自機狙い弾の角度を計算 */
 extern void tmp_angleCCW65536_src_nerai(SPRITE *src, SPRITE *dest);
 extern void tmp_angleCCW65536_jiki_nerai(SPRITE *target);
 
@@ -149,8 +147,8 @@ enum
 	DESTROY_CHECK_01_IS_TIME_OUT,
 };
 /*static*/extern  void boss_destroy_check_type(SPRITE *src/*敵自体*/, int check_type);/*	★ 攻撃の場合の死亡判定 	★ 時間切れの場合の死亡判定 */
-/*static*/extern  void callback_hit_boss_dummy(SPRITE *src, SPRITE *tama /*, int angle*/);
-/*static*/extern  void callback_hit_boss(SPRITE *src, SPRITE *tama /*, int angle*/);
+/*static*/extern  void callback_hit_boss_dummy(SPRITE *src, SPRITE *tama); /*, int angle*/
+/*static*/extern  void callback_hit_boss(SPRITE *src, SPRITE *tama); /*, int angle*/
 
 /*static*/extern  void common_boss_put_items(SPRITE *src);
 

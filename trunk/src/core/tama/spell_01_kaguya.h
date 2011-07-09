@@ -19,7 +19,7 @@
 static void kaguya_uroko_dan_seisei(SPRITE *src)
 {
 	/* 4面の場合---- */
-	const Uint16 my_ra_nd = ra_nd();
+	const u16 my_ra_nd = ra_nd();
 	if (my_ra_nd & 0x8000)		/* 50%の確率で */
 	{
 		int kakudo65536;
@@ -28,13 +28,9 @@ static void kaguya_uroko_dan_seisei(SPRITE *src)
 	//	kakudo65536 = (((1024/4)-(1024/32))<<6);
 		kakudo65536 = ((65536/4)-(65536/32));
 		kakudo65536 += ((my_ra_nd)&((/*64<<6*/4096)-1));
-//
-		obj_send1->cx256							= (src->cx256); 	/* 弾源x256 ボス中心から発弾。 */
-		obj_send1->cy256							= (src->cy256); 	/* 弾源y256 ボス中心から発弾。 */
 		br.BULLET_REGIST_01_speed_offset			= t256(0);			/* (-5) (-3)調整減速弾 */	/* この方式になるか検討中 */
 		br.BULLET_REGIST_02_angle65536				= (kakudo65536);
-		br.BULLET_REGIST_03_tama_data   			= (TAMA_DATA_0000_TILT);/* (r33-)標準弾 */
-	//未定br.BULLET_REGIST_05_regist_type 			= TAMA_TYPE_00_ANGLE_TILT;/* (r33-)標準弾 */
+		br.BULLET_REGIST_03_tama_data				= (TAMA_DATA_0000_TILT);/* (r33-)標準弾 */
 		br.BULLET_REGIST_06_n_way					= (24);
 		br.BULLET_REGIST_07_div_angle65536			= (int)(65536/24);				/* 分割角度([360/360]度を24分割) */
 //
@@ -45,7 +41,7 @@ static void kaguya_uroko_dan_seisei(SPRITE *src)
 	};
 	//	goto ((src->base_hp)&(0xe000) )
 		goto *JumpTable[((src->base_hp>>13)&(0x07))];
-	//	switch (src->boss_base_bo ss_life)
+	//	sw itch (src->boss_base_bo ss_life)
 		{
 		OP0x03:/*not_break;*/
 			br.BULLET_REGIST_00_speed256		= t256(0.6);	br.BULLET_REGIST_04_bullet_obj_type = BULLET_UROKO14_05_MIDORI; 	tama_system_regist_katayori_n_way();
@@ -77,7 +73,7 @@ static void kaguya_hari_shot(SPRITE *src)
 	static int hari=0;
 	hari--;
 	hari &= 32;
-	voice_play(VOICE11_BOSS_KIRARIN/*VOICE14_BOSS_KOUGEKI_01*/, TRACK04_TEKIDAN);/*テキトー*/
+	voice_play(VOICE11_BOSS_KIRARIN, TRACK04_TEKIDAN);/* テキトー */
 //
 	int hari_no_iro;
 	hari_no_iro = BULLET_HARI32_00_AOI;
@@ -99,12 +95,9 @@ static void kaguya_hari_shot(SPRITE *src)
 		hari_no_iro = iro_tbl[(((src->base_hp)&(0x0001c000) )>>(14))];/*(r33)*/
 	//											0x0001c000 == 114688 == 3.5*32*1024
 	}
-		obj_send1->cx256							= (src->cx256); 	/* 弾源x256 ボス中心から発弾。 */
-		obj_send1->cy256							= (src->cy256); 	/* 弾源y256 ボス中心から発弾。 */
 		br.BULLET_REGIST_01_speed_offset			= t256(0);/*(テスト)*/
-		br.BULLET_REGIST_03_tama_data   			= (TAMA_DATA_0000_TILT);/* (r33-)標準弾 */
+		br.BULLET_REGIST_03_tama_data				= (TAMA_DATA_0000_TILT);/* (r33-)標準弾 */
 		br.BULLET_REGIST_04_bullet_obj_type 		= hari_no_iro;		/* [ 弾] */
-	//未定br.BULLET_REGIST_05_regist_type 			= TAMA_TYPE_00_ANGLE_TILT;/* (r33-)標準弾 */
 //
 	int jj;
 	int spd;
@@ -156,7 +149,7 @@ static void kaguya_hari_dan_seisei(SPRITE *src)
 			//	jj = (1024*3)/(bomb_n+(2*3));
 			//	for (ii=0; i <= (int)((bomb_n*(0x100/3))>>8); i++)
 //	bomb_n				= 0;
-//	h->callback_mover	= move_kaguya;
+
 
 static int fire_wait3;
 static int bomb_aaa;
@@ -165,7 +158,7 @@ static void kaguya_pong_boll(SPRITE *src)
 	/* 4面の場合跳ねる珠 */
 	{
 		/* 体力ゲージが 3本以下になったら、跳ねる珠を落とし始める。 */
-		//switch ( (src->base_hp)&0xe000 )
+		//sw itch ( (src->base_hp)&0xe000 )
 		//if (src->boss_base_bo ss_life < 2)
 	//	if (src->base_hp < (3*(8192)))/*(r32)*/
 		if (src->base_hp < (3*(1024*32)))/*(r33)*/
@@ -175,18 +168,19 @@ static void kaguya_pong_boll(SPRITE *src)
 			{
 			//	fire_wait3 = ((src->base_hp)>>(2+3));
 			//	fire_wait3 = ((src->base_hp)>>(7)); 	/* 3*(8192)>>7 == 192 */
-				fire_wait3 = ((src->base_hp)>>(7+2)); 	/* 3*(32768)>>9 == 192 */
+				fire_wait3 = ((src->base_hp)>>(7+2));	/* 3*(32768)>>9 == 192 */
 				//
 				#define LIMIT_LOW50 (/*50*/64)
 				if (fire_wait3 < (LIMIT_LOW50))
 				{	fire_wait3 = (LIMIT_LOW50);}
 			//	1 ... 40
-					obj_send1->cx256							= (src->cx256); 	/* 弾源x256 ボス中心から発弾。 */
-					obj_send1->cy256							= (src->cy256); 	/* 弾源y256 ボス中心から発弾。 */
-					br.BULLET_REGIST_00_speed256							= t256(0.05)+((cg_game_difficulty)<<6); 		/* 速度 t256(5.0) */
-					br.BULLET_REGIST_05_regist_type 						= REGIST_TYPE_01_HAZUMI;
-					br.BULLET_REGIST_06_VECTOR_jyuryoku_dan_bound_counts	= ((cg_game_difficulty));						/* bound_counts (2) */
-					br.BULLET_REGIST_07_VECTOR_jyuryoku_dan_delta256		= (t256(0.07)); 						/* delta256 */	/*17.92==t256(0.07)*/
+					br.BULLET_REGIST_00_speed256					= t256(0.05)+((cg_game_difficulty)<<6); 		/* 速度 t256(5.0) */
+					br.BULLET_REGIST_03_VECTOR_regist_type			= LEGACY_REGIST_TYPE_00_HANERU;
+					br.BULLET_REGIST_04_bullet_obj_type 			= BULLET_MINI8_00_SIRO+(4+(cg_game_difficulty));
+					#if (1==USE_HAZUMI)
+					br.BULLET_REGIST_06_VECTOR_HANERU_KAISUU		= ((cg_game_difficulty));						/* bound_counts (2) */
+					#endif /* (1==USE_HAZUMI) */
+					br.BULLET_REGIST_07_VECTOR_legacy_dan_delta256	= (t256(0.07)); 						/* delta256 */	/*17.92==t256(0.07)*/
 				bomb_aaa += 9;
 			//	if (448 < bomb_aaa) 	{	bomb_aaa = 448; 	}	/* 512-448 == 64 == 1024/16...方向 / 最大16方向の場合。 */
 			//	if (433 < bomb_aaa) 	{	bomb_aaa = 433; 	}	/* 512-433 == 79 == 1024/13...方向 / 最大13方向の場合。 */
@@ -196,7 +190,7 @@ static void kaguya_pong_boll(SPRITE *src)
 				for (ii=0; ii<(1024); ii+=(512-bomb_aaa))	/* 精々最大16方向ぐらい出ないとくぐって避けれない。 */
 				{
 					br.BULLET_REGIST_02_VECTOR_angle1024					= (ii); 				/* 角度 */
-					bullet_regist_vector();
+					bullet_regist_legacy_vector_direct();
 				}
 			}
 		}
@@ -219,8 +213,8 @@ global void boss_init_kaguya(SPRITE *h)
 ---------------------------------------------------------*/
 static void spell_create_18_kaguya01(SPRITE *src)
 {
-//	if (50==((src->boss_base_spell_time_out) ))
-	if ((64-10)==((src->boss_base_spell_time_out) ))
+//	if (50==((src->boss_spell_timer) ))
+	if ((64-10)==((src->boss_spell_timer) ))
 	{
 		kaguya_uroko_dan_seisei(src);
 	}
@@ -228,8 +222,8 @@ static void spell_create_18_kaguya01(SPRITE *src)
 }
 static void spell_create_19_kaguya04(SPRITE *src)
 {
-//	if (50==((src->boss_base_spell_time_out) ))
-	if ((64-10)==((src->boss_base_spell_time_out) ))
+//	if (50==((src->boss_spell_timer) ))
+	if ((64-10)==((src->boss_spell_timer) ))
 	{
 		kaguya_uroko_dan_seisei(src);
 	}
@@ -256,14 +250,11 @@ static void spell_create_19_kaguya04(SPRITE *src)
 //	240.941176470588235294117647058824 == ((65536/16)-(16636/17)) 差分
 static void spell_create_23_kaguya_tamanoe(SPRITE *src)
 {
-//	if ((0x02)==((src->boss_base_spell_time_out)&0x03))/* (2回に1回)(8回毎に発弾) */
-	if ((0x04)==((src->boss_base_spell_time_out)&0x07))/* (2回に1回)(8回毎に発弾) */
+//	if ((0x02)==((src->boss_spell_timer)&0x03))/* (2回に1回)(8回毎に発弾) */
+	if ((0x04)==((src->boss_spell_timer)&0x07))/* (2回に1回)(8回毎に発弾) */
 	{
-		obj_send1->cx256						= (src->cx256); 	/* 弾源x256 ボス中心から発弾。 */
-		obj_send1->cy256						= (src->cy256); 	/* 弾源y256 ボス中心から発弾。 */
-		//
 		static unsigned int bbb;
-		bbb += 77;
+		bbb += (77);
 		static unsigned int aaa;
 		aaa++;
 		aaa &= (0x07);
@@ -273,21 +264,20 @@ static void spell_create_23_kaguya_tamanoe(SPRITE *src)
 		br.BULLET_REGIST_00_speed256				= (t256(0.50)); 										/* 弾速 */
 //		br.BULLET_REGIST_01_speed_offset			= t256(0);/*(テスト)*/
 		br.BULLET_REGIST_01_speed_offset			= t256(1);/*(テスト)*/
-	//	br.BULLET_REGIST_03_tama_data   			= (TAMA_DATA_0000_TILT);/* (r33-)標準弾 */
-		br.BULLET_REGIST_03_tama_data   			= (TAMA_DATA_8000_NON_TILT);/* (r33-)非傾き弾 */
+	//	br.BULLET_REGIST_03_tama_data				= (TAMA_DATA_0000_TILT);/* (r33-)標準弾 */
+		br.BULLET_REGIST_03_tama_data				= (TAMA_DATA_8000_NON_TILT);/* (r33-)非傾き弾 */
 		br.BULLET_REGIST_04_bullet_obj_type 		= (BULLET_MARU10_01_AKA-1)+aaa; 								/* [ 弾] */
-	//未定br.BULLET_REGIST_05_regist_type 			= TAMA_TYPE_00_ANGLE_TILT;/* (r33-)標準弾 */
 	//	br.BULLET_REGIST_06_n_way					= (17); 				/*(6)*/ 				/* [17way] */	/* 発弾数 */
 		br.BULLET_REGIST_06_n_way					= (16/*8*/);			/*(6)*/ 				/* [16way] */	/* 発弾数 */
-	//	br.BULLET_REGIST_07_div_angle65536			= (int)(65536/(16))-(((sin1024(( ra_nd() & src->boss_base_spell_time_out)))&0xff)); 	/*(int)(1024/(6))*/ 	/* 分割角度(1024[360/360度]を 6 分割) */	/* 1周をn分割した角度 */
+	//	br.BULLET_REGIST_07_div_angle65536			= (int)(65536/(16))-(((sin1024(( ra_nd() & src->boss_spell_timer)))&0xff)); 	/*(int)(1024/(6))*/ 	/* 分割角度(1024[360/360度]を 6 分割) */	/* 1周をn分割した角度 */
 		br.BULLET_REGIST_07_div_angle65536			= (int)(65536/(16/*8*/));	/* 分割角度(65536[360/360度]を 8 分割) */	/* 1周をn分割した角度 */
 //
 //		br.BULLET_REGIST_02_angle65536				= ((65536/2));				/* 発射中心角度 / 特殊機能(自機狙い/他) */
-//		br.BULLET_REGIST_02_angle65536				= (int)((65536*1/4))+(src->boss_base_spell_time_out&0xff);				/* 発射中心角度 / 特殊機能(自機狙い/他) */
+//		br.BULLET_REGIST_02_angle65536				= (int)((65536*1/4))+(src->boss_spell_timer&0xff);				/* 発射中心角度 / 特殊機能(自機狙い/他) */
 		br.BULLET_REGIST_02_angle65536				= ((bbb));				/* 発射中心角度 / 特殊機能(自機狙い/他) */
-		if (0==((src->boss_base_spell_time_out)&0x08))
+		if (0==((src->boss_spell_timer)&0x08))
 		{
-//			br.BULLET_REGIST_02_angle65536			= (int)((65536*3/4))+(src->boss_base_spell_time_out&0xff);				/* 発射中心角度 / 特殊機能(自機狙い/他) */
+//			br.BULLET_REGIST_02_angle65536			= (int)((65536*3/4))+(src->boss_spell_timer&0xff);				/* 発射中心角度 / 特殊機能(自機狙い/他) */
 			br.BULLET_REGIST_02_angle65536			= -(bbb);				/* 発射中心角度 / 特殊機能(自機狙い/他) */
 		}
 		tama_system_regist_katayori_n_way();/* (r33-) */

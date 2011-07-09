@@ -18,9 +18,9 @@ static void move_midori_kedama2(SPRITE *src)
 	{
 		if (0 == src->wait1)
 		{
-		//	src->cy256 += (t256(3.00)+t256(teki_rank)); 		/*fps_factor*/ /*‚Í‚â‚·‚¬*/
+		//	src->cy256 += (t256(3.00)+t256(teki_rank)); 		/*fps_factor*/ /* ‚Í‚â‚·‚¬ */
 			src->cy256 += (t256(1.5));		/*fps_factor*/
-			if (src->cy256 > (((cg_game_difficulty)<<5) + t256(64)) )		/* ‰ºŒÀ  t256(160) t256(200) */
+			if (src->cy256 > (signed)(((cg_game_difficulty)<<5) + t256(64)) )		/* ‰ºŒÀ  t256(160) t256(200) */
 			{
 				src->wait1		= 1;
 				src->kaisu_nnn -= 1;
@@ -28,7 +28,7 @@ static void move_midori_kedama2(SPRITE *src)
 		}
 		else
 		{
-		//	src->cy256 -= (t256(2.00)+t256(teki_rank)); 		/*fps_factor*/ /*‚Í‚â‚·‚¬*/
+		//	src->cy256 -= (t256(2.00)+t256(teki_rank)); 		/*fps_factor*/ /* ‚Í‚â‚·‚¬ */
 			src->cy256 -= (t256(0.75)); 	/*fps_factor*/
 			if (src->cy256 < t256(32))						/* ãŒÀ  t256(50) */
 			{
@@ -49,16 +49,13 @@ static void move_midori_kedama2(SPRITE *src)
 		//	if (kakuritu_tbl[3/*teki_rank*/] > (ra_nd()&(65536-1)))
 			if (936 > (ra_nd()&(65536-1)))
 			{
-				obj_send1->cx256						= (src->cx256);
-				obj_send1->cy256						= (src->cy256);
 				br.BULLET_REGIST_00_speed256			= t256(2.5)+(2/*teki_rank*/<<6);				/* ’e‘¬ */	/*‚‘¬’e*/
-			//	br.BULLET_REGIST_00_speed256			= speed256; 				/* ’e‘¬ */
 				br.BULLET_REGIST_02_VECTOR_angle1024	= ANGLE_JIKI_NERAI_DAN; 	/* Ž©‹@‘_‚¢’e */	/* ”­ŽË’†SŠp“x / “ÁŽê‹@”\(Ž©‹@‘_‚¢/‘¼) */
+			//	br.BULLET_REGIST_03_VECTOR_regist_type	= VEC TOR_REGIST_TYPE_00_MULTI_VECTOR;
 				br.BULLET_REGIST_04_bullet_obj_type 	= BULLET_MINI8_01_AKA;		/* [Ô’e] */ /* ’eƒOƒ‰ */
-				br.BULLET_REGIST_05_regist_type 		= REGIST_TYPE_00_MULTI_VECTOR;
 				br.BULLET_REGIST_06_n_way				= (1);						/* [1way] */
 			//	br.BULLET_REGIST_07_VECTOR_div_angle1024		= (0);						/* ƒ_ƒ~[Šp“x(–¢Žg—p) */
-				bullet_regist_vector();
+				bullet_regist_multi_vector_send1_xy_src(src); 	/* ’eŒ¹x256 y256 ’†S‚©‚ç”­’eB */
 			}
 		}
 	}
@@ -68,9 +65,9 @@ static void move_midori_kedama2(SPRITE *src)
 		src->cy256 -= t256(1.5);
 		gamen_gai_nara_zako_osimai(src);/* ‰æ–ÊŠO‚È‚ç‚¨‚µ‚Ü‚¢ */
 	}
-//
-	src->rotationCCW1024 += (10);
-	mask1024(src->rotationCCW1024);
+	/* ƒAƒjƒ[ƒVƒ‡ƒ“ */
+	src->zako_anime_rotate_angle1024 = ( 10);
+	zako_anime_type04(src); 	/* ƒOƒ‰‰ñ“] */
 }
 
 /*---------------------------------------------------------

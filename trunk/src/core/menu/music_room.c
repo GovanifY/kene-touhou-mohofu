@@ -5,18 +5,10 @@
 	東方模倣風 ～ Toho Imitation Style.
 	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
-	ミュージックルーム
+	ミュージックルーム 幻想音樂室
 ---------------------------------------------------------*/
 
 #include "kanji_system.h"
-
-enum
-{
-	MUSIC_ROOM_STATE_00_INIT = 0,
-	MUSIC_ROOM_STATE_01_FADE_IN,
-	MUSIC_ROOM_STATE_02_SELECT_MENU,
-	MUSIC_ROOM_STATE_03_FADE_OUT,
-};
 
 enum
 {
@@ -26,7 +18,7 @@ enum
 	MOJI_12,	MOJI_13,	MOJI_14,	MOJI_15,
 	MOJI_16,	MOJI_17,	MOJI_18,	MOJI_19,
 	MOJI_20,	MOJI_21,	MOJI_22,	MOJI_23,
-	MOJI_24,
+	MOJI_24,	MOJI_25,
 	MOJI_23_MAX 	/* 最大数 */
 };
 
@@ -40,7 +32,7 @@ enum
 
 #define X_LOCATE_OFFSET_02	(64)
 #define X_LOCATE_OFFSET_04	(224)
-#define Y_LOCATE_OFFSET 	(128)/*100*/
+#define Y_LOCATE_OFFSET 	(128)/*(100)*/
 #define MAX_KEY_NAMES_21	(MOJI_23_MAX+MUSIC_ROOM_03_MAX)
 /*
 だめ文字(シフトJISの2バイト目が0x5c、すなわち'\'('＼')である文字のこと。)
@@ -59,7 +51,7 @@ static void music_room_draw_message(int cursor1, int cursor2)
 "No.3 ヴォヤージュ1969\\n"						"3面のテーマです。",
 "No.4 フォールオブフォール ～ 秋めく滝\\n"		"4面のテーマです。",
 "No.5 ヴアル魔法図書館\\n"						"5面のテーマです。",
-"No.6 亡き王女の為のセプテット\\n"				"6面のテーマです。",
+"No.6 メイドと血の懐中時計\\n"					"6面のテーマです。",
 "No.7 童祭 ～ Innocent Treasures\\n"			"スタッフロールのテーマです。", 			// 夢違科学世紀「童祭 Innocent Treasures」
 "No.8 ルーネイトエルフ\\n"						"エキストラステージのテーマです。",
 "No.9 遠野幻想物語\\n"							"ファンタズムステージのテーマです。",
@@ -74,10 +66,11 @@ static void music_room_draw_message(int cursor1, int cursor2)
 "No.18 グリモア オブ アリス\\n" 				"アリスのテーマです。", 					// Grimoire of Alice
 "No.19 恋色マスタースパーク\\n" 				"魔理沙のテーマです。",
 "No.20 広有射怪鳥事 ～ Till When?\\n"			"妖夢のテーマです。",
-"No.21 U.N.オーエンは彼女なのか？\\n"			"フランドール・スカーレットのテーマです。",
-"No.22 プレイヤーズスコア\\n"					"エンディングのテーマです。",
-"No.23 無何有の郷 ～ Deep Mountain\\n"			"キーコンフィグのテーマです。",
-"No.24 紅より儚い永遠\\n"						"タイトル画面のテーマです。",
+"No.21 亡き王女の為のセプテット\\n" 			"レミリア・スカーレットのテーマです。",
+"No.22 U.N.オーエンは彼女なのか？\\n"			"フランドール・スカーレットのテーマです。",
+"No.23 プレイヤーズスコア\\n"					"エンディングのテーマです。",
+"No.24 無何有の郷 ～ Deep Mountain\\n"			"キーコンフィグのテーマです。",
+"No.25 紅より儚い永遠\\n"						"タイトル画面のテーマです。",
 		},
 		{	/*"SOUND 解説"*/
 "ショット", 		"メニュー決定", 	"メニュー選択", 	"ボス退場",
@@ -86,10 +79,10 @@ static void music_room_draw_message(int cursor1, int cursor2)
 "ボスショット1",	"ボスショット2",	"ボスショット3",	"ボスショット4",
 "ボスショット5",	"ボス溜め1",		"18音", 			"19音",
 "20音", 			"21音", 			"22音", 			"23音",
-"24音",
+"24音", 			"25音",
 		},
 	};
-	print_kanji000((char *)const_kaisetu_str[cursor1][cursor2], /*int color_type*/7, /*int wait*/0);
+	print_kanji000((char *)const_kaisetu_str[cursor1][cursor2], /*int color_type*/(7), /*int wait*/(0) );
 }
 #if 0
 global void music_game_draw_message(int cursor1)
@@ -122,216 +115,229 @@ global void music_game_draw_message(int cursor1)
 		" ♪無何有の郷　～ Deep Mountain", // No.21 "キーコンフィグのテーマです。"
 		" 　　　　　　　♪紅より儚い永遠", // No.22 "タイトル画面のテーマです。"
 	};
-	print_kanji000((char *)const_music_title_str[cursor1], /*int color_type*/7, /*int wait*/0);
+	print_kanji000((char *)const_music_title_str[cursor1], /*int color_type*/(7), /*int wait*/(0) );
 }
 #endif
 
+static int music_room_setting[(2)+(2)];/*MUSIC_ROOM_03_MAX*/
+static SDL_Surface *music_room_name_surface[MAX_KEY_NAMES_21];	/* 文字の表示用画像 */
+static int menu_cursor1;
+static int bg_alpha_aaa;
 
-static u8 my_ppp_loop;
-static void music_room_local_work(void)
+/*---------------------------------------------------------
+	幻想音樂室 フェードアウトしておしまい中
+---------------------------------------------------------*/
+
+static void music_room_state_03_fade_out(void)
 {
-	static int music_room_setting[2+2/*MUSIC_ROOM_03_MAX*/];
-	static SDL_Surface *music_room_name_surface[MAX_KEY_NAMES_21];	/* 文字の表示用画像 */
-	static int menu_cursor1;
-	static int bg_alpha_aaa;
-//
-	switch (my_ppp_loop)
+	bg_alpha_aaa += (2);	/*(1) (8)*/ 	/*fps_factor*/
+	if ((224) < bg_alpha_aaa)/*(250-8)*/
 	{
-	case (MUSIC_ROOM_STATE_00_INIT):
-		play_music_num(BGM_02_stage2);
-		load_SDL_bg(BG_TYPE_03_music_room);
-		music_room_setting[0] = 0;
-		music_room_setting[1] = 0;
-		music_room_setting[2] = (USE_MUSIC_FILES/*MOJI_23_MAX*/-1);
-		music_room_setting[3] = (VOICE16_MAX_FILES/*MOJI_23_MAX*/-1);
+		bg_alpha_aaa = (255);
+		#if 1/* 文字の表示用画像を開放する */
 		{
-			static const char *const_menu_str[(MAX_KEY_NAMES_21)] =
+			unsigned int i;
+			for (i=0; i<(MAX_KEY_NAMES_21); i++)
 			{
-				/* [[ 項目 ]] */
-				" 0",	" 1",	" 2",	" 3",
-				" 4",	" 5",	" 6",	" 7",
-				" 8",	" 9",	"10",	"11",
-				"12",	"13",	"14",	"15",
-				"16",	"17",	"18",	"19",
-				"20",	"21",	"22",	"23",
-				"24",
-				/* [[ メニュー ]] */
-				"BGM",
-				"SOUND",
-				"QUIT"
-			};
-			{
-				int i;
-				for (i=0; i<(MAX_KEY_NAMES_21); i++)
-				{
-					music_room_name_surface[i] = font_render( (char *)const_menu_str[i], FONT16R);
-				}
+				/* ここでハングアップ */
+				SDL_FreeSurface(music_room_name_surface[i]);/*xxx_ok?*/
 			}
 		}
-		menu_cursor1		= MUSIC_ROOM_02_QUIT;/*0*/
-		bg_alpha_aaa		= 0;
-		kanji_window_clear();	/* 漢字ウィンドウの内容を消す。 */
-		home_cursor();			/* カーソルをホームポジションへ移動 */
-		cg.msg_time = byou60(5);	/* 約 5 秒 */
-		print_kanji000("ようこそ\\n"//"幻想音樂室\\n"
-			"完コピとか私の能\力的に無理ですので、\\nBGMは全曲勝手にアレンジ版です。",
-		//	"原曲の面影がないほど変わっちゃってるのもあります。",
-			/*int color_type*/7, /*int wait*/0);
-		my_ppp_loop++;// = (MUSIC_ROOM_STATE_01_FADE_IN);
-		break;
-	case (MUSIC_ROOM_STATE_01_FADE_IN):
-		bg_alpha_aaa += /*1*/(2)/*6*/;/*fps_factor*/
-		if ((/*250-6*/200/*224*/) < bg_alpha_aaa)
+		#endif
+		main_call_func = title_menu_start;	/* タイトルメニューへ移動 */
+	}
+	SDL_SetAlpha(sdl_screen[SDL_01_BACK_SCREEN], SDL_SRCALPHA, bg_alpha_aaa);
+	psp_pop_screen();
+}
+
+
+/*---------------------------------------------------------
+	幻想音樂室 メニュー選択して、再生したり、描画したり中
+---------------------------------------------------------*/
+
+static void music_room_state_02_select_menu(void)
+{
+	psp_pop_screen();
+	cg.msg_time = byou60(5);	/* 約 5 秒 */
+	if (0==psp_pad.pad_data_alter)/* さっき何も押されてなかった場合にキーチェック(原作準拠) */
+	{
+		if (psp_pad.pad_data & PSP_KEY_UP)			/* 上ボタン入力 */
 		{
-			bg_alpha_aaa = (255);
-			psp_push_screen();
-			my_ppp_loop++;// = (MUSIC_ROOM_STATE_02_SELECT_MENU);
+			if (MUSIC_ROOM_00_BGM == menu_cursor1)		{	menu_cursor1 = (MUSIC_ROOM_03_MAX-1);	}
+			else										{	menu_cursor1--; 	}
 		}
-		SDL_SetAlpha(sdl_screen[SDL_01_BACK_SCREEN], SDL_SRCALPHA, bg_alpha_aaa);
-		psp_pop_screen();
-		break;
-	case (MUSIC_ROOM_STATE_02_SELECT_MENU):
-		psp_pop_screen();
-		cg.msg_time = byou60(5);	/* 約 5 秒 */
-		if (0==cg_my_pad_alter)/* さっき何も押されてなかった場合にキーチェック(原作準拠) */
+		else
+		if (psp_pad.pad_data & PSP_KEY_DOWN)			/* 下ボタン入力 */
 		{
-			if (cg_my_pad & PSP_KEY_UP)			/* 上ボタン入力 */
+			if ((MUSIC_ROOM_03_MAX-1) == menu_cursor1)	{	menu_cursor1 = MUSIC_ROOM_00_BGM;	}
+			else										{	menu_cursor1++; 	}
+		}
+		else	/* 上下以外の通常処理(斜め入力を排除する為、上下の入力があった場合はそれ以外の処理をしない) */
+		{
+			if (MUSIC_ROOM_02_QUIT == menu_cursor1) /* 項目[ QUIT ] を選んでいる場合 */
 			{
-				if (MUSIC_ROOM_00_BGM == menu_cursor1)		{	menu_cursor1 = (MUSIC_ROOM_03_MAX-1);	}
-				else										{	menu_cursor1--; 	}
+				if (psp_pad.pad_data & (PSP_KEY_SHOT_OK|PSP_KEY_BOMB_CANCEL))	/* ショット || キャンセルボタン入力 */
+				{
+					#if (1)
+					voice_play(VOICE04_SHIP_HAKAI, TRACK03_SHORT_MUSIC/*TRACK01_EXPLODE*/);/* 自機死に音は、なるべく重ねない */
+				//	voice_play(VOICE02_MENU_SELECT, TRACK01_EXPLODE);/*テキトー*/
+					#endif
+					play_music_num(BGM_25_menu01);
+					load_SDL_bg(BG_TYPE_00_title_bg);
+					cg.msg_time = (0);	/* 約 0 秒 */
+//					bg_alpha_aaa		= 255;
+					bg_alpha_aaa		= 0;
+					main_call_func = music_room_state_03_fade_out;
+				}
 			}
-			else
-			if (cg_my_pad & PSP_KEY_DOWN)			/* 下ボタン入力 */
+			else	/* 設定項目を変更する場合 */
+			if (psp_pad.pad_data & (PSP_KEY_LEFT|PSP_KEY_RIGHT))		/* 左右ボタン入力 */
 			{
-				if ((MUSIC_ROOM_03_MAX-1) == menu_cursor1)	{	menu_cursor1 = MUSIC_ROOM_00_BGM;	}
-				else										{	menu_cursor1++; 	}
+				if (psp_pad.pad_data & PSP_KEY_LEFT)			/* 左ボタン入力 */
+				{
+					music_room_setting[menu_cursor1]--;
+					if ((0/*MOJI_00*/) > music_room_setting[menu_cursor1])	{	music_room_setting[menu_cursor1] = music_room_setting[menu_cursor1+(2)]; }
+					music_room_draw_message(menu_cursor1,music_room_setting[menu_cursor1]);
+				}
+				else
+				if (psp_pad.pad_data & PSP_KEY_RIGHT)		/* 右ボタン入力 */
+				{
+					music_room_setting[menu_cursor1]++;
+					if (music_room_setting[menu_cursor1+(2)] < music_room_setting[menu_cursor1])	{	music_room_setting[menu_cursor1] = 0/*MOJI_00*/; }
+					music_room_draw_message(menu_cursor1,music_room_setting[menu_cursor1]);
+				}
 			}
-			else	/* 上下以外の通常処理(斜め入力を排除する為、上下の入力があった場合はそれ以外の処理をしない) */
+			else	/* 設定項目を変更する場合 */
+			if (psp_pad.pad_data & PSP_KEY_SHOT_OK) /* ショットボタン入力 */
 			{
-				if (MUSIC_ROOM_02_QUIT == menu_cursor1) /* 項目[ QUIT ] を選んでいる場合 */
+				if (MUSIC_ROOM_00_BGM == menu_cursor1)	/* 項目[ BGM ] を選んでいる場合 */
 				{
-					if (cg_my_pad & (PSP_KEY_SHOT_OK|PSP_KEY_BOMB_CANCEL)) 	/* ショット || キャンセルボタン入力 */
-					{
-						#if (1)
-						voice_play(VOICE04_SHIP_HAKAI, TRACK03_SHORT_MUSIC/*TRACK01_EXPLODE*/);/* 自機死に音は、なるべく重ねない */
-					//	voice_play(VOICE02_MENU_SELECT, TRACK01_EXPLODE);/*テキトー*/
-						#endif
-						play_music_num(BGM_23_menu01);
-						load_SDL_bg(BG_TYPE_00_title_bg);
-						cg.msg_time = (0);	/* 約 0 秒 */
-//						bg_alpha_aaa		= 255;
-						bg_alpha_aaa		= 0;
-						my_ppp_loop++;// = (MUSIC_ROOM_STATE_03_FADE_OUT);
-					}
+					play_music_num(music_room_setting[menu_cursor1]/*BGM_05_stage5*/);
 				}
-				else	/* 設定項目を変更する場合 */
-				if (cg_my_pad & (PSP_KEY_LEFT|PSP_KEY_RIGHT))		/* 左右ボタン入力 */
+				else
+//				if (MUSIC_ROOM_01_SOUND == menu_cursor1)	/* 項目[ SOUND ] を選んでいる場合 */
 				{
-					if (cg_my_pad & PSP_KEY_LEFT)			/* 左ボタン入力 */
-					{
-						music_room_setting[menu_cursor1]--;
-						if ((0/*MOJI_00*/) > music_room_setting[menu_cursor1])	{	music_room_setting[menu_cursor1] = music_room_setting[menu_cursor1+2]; }
-						music_room_draw_message(menu_cursor1,music_room_setting[menu_cursor1]);
-					}
-					else
-					if (cg_my_pad & PSP_KEY_RIGHT) 		/* 右ボタン入力 */
-					{
-						music_room_setting[menu_cursor1]++;
-						if (music_room_setting[menu_cursor1+2] < music_room_setting[menu_cursor1])	{	music_room_setting[menu_cursor1] = 0/*MOJI_00*/; }
-						music_room_draw_message(menu_cursor1,music_room_setting[menu_cursor1]);
-					}
+					#if (1)
+					voice_play(music_room_setting[menu_cursor1]/*VOICE07_BOMB*/, TRACK01_EXPLODE);/*テキトー*/
+					#endif
 				}
-				else	/* 設定項目を変更する場合 */
-				if (cg_my_pad & PSP_KEY_SHOT_OK) /* ショットボタン入力 */
-				{
-					if (MUSIC_ROOM_00_BGM == menu_cursor1)	/* 項目[ BGM ] を選んでいる場合 */
-					{
-						play_music_num(music_room_setting[menu_cursor1]/*BGM_05_stage5*/);
-					}
-					else
-//					if (MUSIC_ROOM_01_SOUND == menu_cursor1)	/* 項目[ SOUND ] を選んでいる場合 */
-					{
-						#if (1)
-						voice_play(music_room_setting[menu_cursor1]/*VOICE07_BOMB*/, TRACK01_EXPLODE);/*テキトー*/
-						#endif
-					}
-				}
-				else	/* 設定項目を変更する場合 */
-				if (cg_my_pad & PSP_KEY_BOMB_CANCEL) /* キャンセルボタン入力 */
-				{
-					play_music_num(BGM_00_stop);
-				}
+			}
+			else	/* 設定項目を変更する場合 */
+			if (psp_pad.pad_data & PSP_KEY_BOMB_CANCEL) /* キャンセルボタン入力 */
+			{
+				play_music_num(BGM_00_stop);
 			}
 		}
-		/* 描画 */
+	}
+	/* 描画 */
+	{
+	//	/*static*/ SDL_Rect rect_src_offset;		/* 位置 */
+		/*static*/ SDL_Rect rect_locate_offset; 	/* 表示位置 */
+		int i;
+		int jj;
+		int kk;
+		/* 機能番号の描画 */
+		kk = (0);
+		#define MAX_MENU_02 			(MUSIC_ROOM_02_QUIT)
+		for (i=0; i<(MAX_MENU_02); i++)/*MUSIC_ROOM_03_MAX*/ /*12*/
 		{
-		//	/*static*/ SDL_Rect rect_src_offset;		/* 位置 */
-			/*static*/ SDL_Rect rect_locate_offset; 	/* 表示位置 */
-			int i;
-			int jj;
-			int kk;
-			/* 機能番号の描画 */
-			kk = 0;
-			#define MAX_MENU_02 			(MUSIC_ROOM_02_QUIT)
-			for (i=0; i</*12*/(MAX_MENU_02/*MUSIC_ROOM_03_MAX*/)/*MUSIC_ROOM_03_MAX*/; i++)
+			/* ボタン設定描画 */
 			{
-				/* ボタン設定描画 */
-				{
-					int kinou_number;
-					kinou_number = music_room_setting[i];
-					if (menu_cursor1==i)	{	jj = 2; 	}
-					else					{	jj = 0; 	}
-					rect_locate_offset.x = X_LOCATE_OFFSET_04-(jj);
-					rect_locate_offset.y = Y_LOCATE_OFFSET+(/*num*/kk)-(jj);
-					SDL_SetAlpha(	music_room_name_surface[kinou_number], SDL_SRCALPHA, /*bg_alpha_aaa*/(127+(jj<<6)));
-					SDL_BlitSurface(music_room_name_surface[kinou_number], NULL,sdl_screen[SDL_00_VIEW_SCREEN],&rect_locate_offset);
-				//	rect_src_offset.x = 0;
-				//	rect_src_offset.y = (kinou_number<<4);
-				//	rect_src_offset.w = (16*9);
-				//	rect_src_offset.h = (16);
-				//	SDL_BlitSurface(sdl_screen[SDL_01_BACK_SCREEN],&rect_src_offset,sdl_screen[SDL_00_VIEW_SCREEN],&rect_locate_offset);
-				}
-				kk += 20;
-			}
-			/* ボタン名称描画 */
-			kk = 0;
-			for (i=0; i<(MUSIC_ROOM_03_MAX)/*MUSIC_ROOM_03_MAX*/; i++)
-			{
+				int kinou_number;
+				kinou_number = music_room_setting[i];
 				if (menu_cursor1==i)	{	jj = 2; 	}
 				else					{	jj = 0; 	}
-				rect_locate_offset.x = (X_LOCATE_OFFSET_02)-(jj);
-				rect_locate_offset.y = (Y_LOCATE_OFFSET)+(/*num*/kk)-(jj);
-				SDL_SetAlpha(	music_room_name_surface[i+(MOJI_23_MAX)], SDL_SRCALPHA, /*bg_alpha_aaa*/(127+(jj<<6)));
-				SDL_BlitSurface(music_room_name_surface[i+(MOJI_23_MAX)], NULL,sdl_screen[SDL_00_VIEW_SCREEN],&rect_locate_offset);
-				kk += 20;
+				rect_locate_offset.x = X_LOCATE_OFFSET_04-(jj);
+				rect_locate_offset.y = Y_LOCATE_OFFSET+(/*num*/kk)-(jj);
+				SDL_SetAlpha(	music_room_name_surface[kinou_number], SDL_SRCALPHA, /*bg_alpha_aaa*/(127+(jj<<6)));
+				SDL_BlitSurface(music_room_name_surface[kinou_number], NULL,sdl_screen[SDL_00_VIEW_SCREEN],&rect_locate_offset);
+			//	rect_src_offset.x = 0;
+			//	rect_src_offset.y = (kinou_number<<4);
+			//	rect_src_offset.w = (16*9);
+			//	rect_src_offset.h = (16);
+			//	SDL_BlitSurface(sdl_screen[SDL_01_BACK_SCREEN],&rect_src_offset,sdl_screen[SDL_00_VIEW_SCREEN],&rect_locate_offset);
 			}
+			kk += (20);
 		}
-		break;
-	case (MUSIC_ROOM_STATE_03_FADE_OUT):
-		bg_alpha_aaa += (2);	/*1 8*/ 	/*fps_factor*/
-		if ((/*250-8*/224) < bg_alpha_aaa)
+		/* ボタン名称描画 */
+		kk = (0);
+		for (i=0; i<(MUSIC_ROOM_03_MAX); i++)/*MUSIC_ROOM_03_MAX*/
 		{
-			bg_alpha_aaa = 255;
-			#if 1/* 文字の表示用画像を開放する */
-			{
-				int i;
-				for (i=0; i<(MAX_KEY_NAMES_21); i++)
-				{
-					/* ここでハングアップ */
-					SDL_FreeSurface(music_room_name_surface[i]);/*xxx_ok?*/
-				}
-			}
-			#endif
-			main_call_func = title_menu_start;	/* タイトルメニューへ移動 */
+			if (menu_cursor1==i)	{	jj = 2; 	}
+			else					{	jj = 0; 	}
+			rect_locate_offset.x = (X_LOCATE_OFFSET_02)-(jj);
+			rect_locate_offset.y = (Y_LOCATE_OFFSET)+(/*num*/kk)-(jj);
+			SDL_SetAlpha(	music_room_name_surface[i+(MOJI_23_MAX)], SDL_SRCALPHA, /*bg_alpha_aaa*/(127+(jj<<6)));
+			SDL_BlitSurface(music_room_name_surface[i+(MOJI_23_MAX)], NULL,sdl_screen[SDL_00_VIEW_SCREEN],&rect_locate_offset);
+			kk += (20);
 		}
-		SDL_SetAlpha(sdl_screen[SDL_01_BACK_SCREEN], SDL_SRCALPHA, bg_alpha_aaa);
-		psp_pop_screen();
-		break;
 	}
 }
 
+
+/*---------------------------------------------------------
+	幻想音樂室 フェードイン中
+---------------------------------------------------------*/
+
+static void music_room_state_01_fade_in(void)
+{
+	bg_alpha_aaa += (2);	/*fps_factor*/
+	if ((200) < bg_alpha_aaa)/*(250-6) (224)*/
+	{
+		bg_alpha_aaa = (255);
+		psp_push_screen();
+		main_call_func = music_room_state_02_select_menu;
+	}
+	SDL_SetAlpha(sdl_screen[SDL_01_BACK_SCREEN], SDL_SRCALPHA, bg_alpha_aaa);
+	psp_pop_screen();
+}
+
+
+/*---------------------------------------------------------
+	幻想音樂室 開始処理
+---------------------------------------------------------*/
+
 global void music_room_start(void)
 {
-	my_ppp_loop = MUSIC_ROOM_STATE_00_INIT;
-	main_call_func = music_room_local_work;
+	play_music_num(BGM_06_stage6);
+	load_SDL_bg(BG_TYPE_03_music_room);
+	music_room_setting[0] = (0);
+	music_room_setting[1] = (0);
+	music_room_setting[2] = (USE_26_MUSIC_FILES-1);/*MOJI_23_MAX*/
+	music_room_setting[3] = (VOICE18_MAX_FILES-1);/*MOJI_23_MAX*/
+	{
+		static const char *const_menu_str[(MAX_KEY_NAMES_21)] =
+		{
+			/* [[ 項目 ]] */
+			" 0",	" 1",	" 2",	" 3",
+			" 4",	" 5",	" 6",	" 7",
+			" 8",	" 9",	"10",	"11",
+			"12",	"13",	"14",	"15",
+			"16",	"17",	"18",	"19",
+			"20",	"21",	"22",	"23",
+			"24",	"25",
+			/* [[ メニュー ]] */
+			"BGM",
+			"SOUND",
+			"QUIT"
+		};
+		{
+			unsigned int i;
+			for (i=0; i<(MAX_KEY_NAMES_21); i++)
+			{
+				music_room_name_surface[i] = font_render( (char *)const_menu_str[i], FONT16R);
+			}
+		}
+	}
+	menu_cursor1		= MUSIC_ROOM_02_QUIT;
+	bg_alpha_aaa		= (0);
+	kanji_window_clear();	/* 漢字ウィンドウの内容を消す。 */
+	home_cursor();			/* カーソルをホームポジションへ移動 */
+	cg.msg_time = byou60(5);	/* 約 5 秒 */
+	print_kanji000("ようこそ\\n"//"幻想音樂室\\n"
+		"完コピとか私の能\力的に無理ですので、\\n"
+		"BGMは全曲勝手にアレンジ版です。",
+	//	"原曲の面影がないほど変わっちゃってるのもあります。",
+		/*int color_type*/(7), /*int wait*/(0) );
+	main_call_func = music_room_state_01_fade_in;
 }

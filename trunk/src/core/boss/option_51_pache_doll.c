@@ -1,5 +1,5 @@
 
-#include "game_main.h"
+#include "boss.h"
 #include "spell_card_value.h"/*スペカ撃つ場合に必要*/
 
 /*---------------------------------------------------------
@@ -8,22 +8,18 @@
 	-------------------------------------------------------
 	パチェ人形
 	-------------------------------------------------------
-
 ---------------------------------------------------------*/
 #if 0/*メモ*/
 /* ボス共通規格 */
-	#define target_x256 		user_data00 	/* 目標x座標 */
-	#define target_y256 		user_data01 	/* 目標y座標 */
-	#define vvv256				user_data02 	/* 目標座標への到達割合 */
-	#define boss_time_out		user_data03 	/* 制限時間 */
-#endif
-//	ボス共通規格と同じ(boss.hインクルードしてもしなくても対応)
-#ifndef boss_time_out
-	#define boss_time_out		user_data03 	/* 制限時間 */
-#endif
+	#define target_x256 			user_data00 	/* 目標x座標 */
+	#define target_y256 			user_data01 	/* 目標y座標 */
+	#define toutatu_wariai256		user_data02 	/* 目標座標への到達割合 */
+	#define kougeki_anime_count 	user_data03 	/* 攻撃アニメーション用カウンタ */
+	#define boss_time_out			user_data04 	/* 制限時間 */
+	#define boss_base_state777		user_data04 	/* 制限時間(boss_time_outと同じ) */
 //
-//----[ZAKO]
-#define DOLL_DATA_fix_angle1024 	user_data07 	/* てすと固定値 */
+	#define boss_spell_timer		user_data05 	/* スペル時間 */
+#endif
 
 //------------ doll02専用
 
@@ -31,17 +27,8 @@
 #define DOLL_DATA_bwait 			user_data05 	/* 弾発射までの待ち時間。 */
 #define shot_angle1024				user_data06 	/* 弾の角度 */
 
-/*---------------------------------------------------------
-	敵やられ
----------------------------------------------------------*/
-
-static void lose_doll(SPRITE *src)
-{
-	item_create_for_boss(src, ITEM_CREATE_MODE_02);
-//
-	/* 普段の処理を速く(R4000系が得意な0比較を多用する)して、ここは(滅多に来ないので)遅くします */
-//	com mon_boss_flags &= (~(src->DOLL_DATA_identity_bit));
-}
+//----[ZAKO]
+#define DOLL_DATA_fix_angle1024 	user_data07 	/* てすと固定値 */
 
 /*---------------------------------------------------------
 	敵移動
@@ -78,9 +65,9 @@ static void move_doll01(SPRITE *src)
 		}
 	}
 	#if 0
-//	if ((SPELL_CARD_00E_pache_000+3) < spell_card_number)/*+3はnormal,hard,lunatic分 */
+//	if ((SPELL_CARD_00E_pache_000+3) < spell_card.number)/*+3はnormal,hard,lunatic分 */
 	#else
-//???	if ((SPELL_CARD_11E_pache_bbb-1) < spell_card_number)/*-1は直前*/
+//???	if ((SPELL_CARD_11E_pache_bbb-1) < spell_card.number)/*-1は直前*/
 	#endif
 	{
 		#if 1//0/*とりあえず*/
@@ -88,15 +75,13 @@ static void move_doll01(SPRITE *src)
 		{
 			/* ショット */
 		//	b05_fire_flags &= (~(doll_data->identity_bit));/* off */
-			obj_send1->cx256					= (src->cx256);
-			obj_send1->cy256					= (src->cy256);
 			br.BULLET_REGIST_00_speed256				= (t256(1.5)+((cg_game_difficulty)<<6));
 			br.BULLET_REGIST_02_VECTOR_angle1024		= ANGLE_JIKI_NERAI_DAN;
+		//	br.BULLET_REGIST_03_VECTOR_regist_type		= VEC TOR_REGIST_TYPE_00_MULTI_VECTOR;
 			br.BULLET_REGIST_04_bullet_obj_type 		= BULLET_KOME_04_MIZU_IRO;	//BULLET_CAP16_04_KOME_SIROI;			/* [青白米弾] */	/* 弾グラ */
-			br.BULLET_REGIST_05_regist_type 			= REGIST_TYPE_00_MULTI_VECTOR;
 			br.BULLET_REGIST_06_n_way					= (4+(cg_game_difficulty)); 				/*(4-difficulty)*/
 			br.BULLET_REGIST_07_VECTOR_div_angle1024	= (int)(1024/64);
-			bullet_regist_vector();
+			bullet_regist_multi_vector_send1_xy_src(src); 	/* 弾源x256 y256 中心から発弾。 */
 		}
 		#endif
 	}
@@ -154,18 +139,18 @@ static void move_doll02(SPRITE *src)
 			src->DOLL_DATA_bwait = 5+(3-(cg_game_difficulty))*5;
 			src->shot_angle1024 -= (16);		/* cv1024r(10)*/
 //
-				obj_send1->cx256						= (src->cx256);
-				obj_send1->cy256						= (src->cy256);
-			//
-				const unsigned char u8_ra_nd03 = (ra_nd()&0x03);
-				br.BULLET_REGIST_00_speed256				= t256(1.0);//t256(1+difficulty)/*(3+difficulty)*/ /*(4+difficulty)*/;
-//				br.BULLET_REGIST_02_VECTOR_angle1024				= (src->shot_angle1024&(256-1))+512+128;// /*deg512_2rad*/( (doll_data->br_angle512&(256-1) )+deg_360_to_512(90) );
-				br.BULLET_REGIST_02_VECTOR_angle1024				= (src->shot_angle1024&(256-1))-512-128;// /*deg512_2rad*/( (doll_data->br_angle512&(256-1) )+deg_360_to_512(90) );
-			//	br.BULLET_REGIST_07_VECTOR_jyuryoku_dan_delta256	= (u8_ra_nd03+1);//t256(0.04)/*10*/
-				br.BULLET_REGIST_07_VECTOR_jyuryoku_dan_delta256	= (u8_ra_nd03+2);//t256(0.04)
-				br.BULLET_REGIST_04_bullet_obj_type 	= (BULLET_MINI8_02_YUKARI+u8_ra_nd03);	/* 弾グラ */
-				br.BULLET_REGIST_05_regist_type 		= REGIST_TYPE_02_GRAVITY02;
-				bullet_regist_vector();
+			const unsigned char u8_ra_nd03 = (ra_nd()&0x03);
+			br.BULLET_REGIST_00_speed256					= t256(1.0);//t256(1+difficulty)/*(3+difficulty)*/ /*(4+difficulty)*/;
+//			br.BULLET_REGIST_02_VECTOR_angle1024			= (src->shot_angle1024&(256-1))+512+128;// /*deg512_2rad*/( (doll_data->br_angle512&(256-1) )+deg_360_to_512(90) );
+			br.BULLET_REGIST_02_VECTOR_angle1024			= (src->shot_angle1024&(256-1))-512-128;// /*deg512_2rad*/( (doll_data->br_angle512&(256-1) )+deg_360_to_512(90) );
+			br.BULLET_REGIST_03_VECTOR_regist_type			= LEGACY_REGIST_TYPE_00_HANERU;
+			br.BULLET_REGIST_04_bullet_obj_type 			= (BULLET_MINI8_02_YUKARI+u8_ra_nd03);	/* 弾グラ */
+			#if (1==USE_HAZUMI)
+			br.BULLET_REGIST_06_VECTOR_HANERU_KAISUU		= VECTOR_TYPE_000_HANE_NAI;
+			#endif /* (1==USE_HAZUMI) */
+		//	br.BULLET_REGIST_07_VECTOR_legacy_dan_delta256	= (u8_ra_nd03+1);//t256(0.04)/*10*/
+			br.BULLET_REGIST_07_VECTOR_legacy_dan_delta256	= (u8_ra_nd03+2);//t256(0.04)
+			bullet_regist_legacy_vector_send1_xy_src(src);  	/* 弾源x256 y256 中心から発弾。 */
 		}
 	}
 }
@@ -196,7 +181,7 @@ global void add_zako_pache_dolls(SPRITE *src)
 			h->flags				|= (SP_FLAG_COLISION_CHECK/*|SP_FLAG_VISIBLE*/);
 			h->type 				= BOSS_16_YOUSEI11; 	/*S P_ZA KO*/	/*S P_BO SS05*/
 //
-			h->callback_loser		= lose_doll;
+			h->callback_loser		= lose_option_00;
 			h->callback_hit_teki	= callback_hit_zako;
 //
 			h->DOLL_DATA_bwait			= 0;

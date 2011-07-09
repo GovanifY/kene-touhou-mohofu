@@ -77,10 +77,7 @@ static void move_obake2(SPRITE *src)
 		}
 	}
 	/* アニメーション */
-	{
-	//	src->type			= TEKI_28_YOUSEI2_5+(((src->cy256>>8)&0x03));
-		zako_anime_type02(src, TEKI_28_YOUSEI2_5);
-	}
+	zako_anime_type02(src);
 }
 
 

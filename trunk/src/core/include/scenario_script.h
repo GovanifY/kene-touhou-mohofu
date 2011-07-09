@@ -18,7 +18,7 @@
 extern void story_script_system_init(void);/* 組み込み */
 extern void script_system_exit(void);/* 外す */
 
-
+extern void script_system_set_re_draw(void);	/* スクリプトシステムにSDL再描画指示。 */
 
 
 #endif /* _SCENARIO_SCRIPT_SYSTEM_H_ */

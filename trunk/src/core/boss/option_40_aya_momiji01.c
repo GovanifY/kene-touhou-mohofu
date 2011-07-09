@@ -49,8 +49,8 @@ static void move_aya_momiji_oya(SPRITE *src)
 		if (NULL!=h)/* “o˜^‚Å‚«‚½ê‡‚Ì‚Ý */
 		{
 			h->m_Hit256R			= ZAKO_ATARI16_PNG;
-		//	h->type 				= TEKI_24_YOUSEI2_1+((angle512>>6)&0x07);/* 0 ... 8 */
-			h->type 				= TEKI_24_YOUSEI2_1+((angle1024>>7)&0x07);/* 0 ... 8 */
+		//	h->type 				= (TEKI_32_YOUSEI2_1)+((angle512>>6)&0x07);/* 0 ... 8 */
+			h->type 				= (TEKI_32_YOUSEI2_1)+((angle1024>>7)&0x07);/* 0 ... 8 */
 		//	h->flags				|= (SP_FLAG_COLISION_CHECK/*|SP_FLAG_VISIBLE|SP_FLAG_TIME_OVER*/);
 			h->flags				&= (~(SP_FLAG_COLISION_CHECK)); 	/* ‚ ‚½‚è”»’è–³‚µ */
 			h->callback_mover		= move_aya_momiji_oya;

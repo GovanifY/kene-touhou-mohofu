@@ -69,16 +69,15 @@
 
 static void move_alice_doll_last_burrets(SPRITE *src)
 {
-	obj_send1->cx256					= (src->cx256); 	/* ’eŒ¹x256 */
-	obj_send1->cy256					= (src->cy256); 	/* ’eŒ¹y256 */
+	send1_xy(src);	/* ’eŒ¹x256 y256 ’†S‚©‚ç”­’eB */
 	#if 0
 	br.BULLET_REGIST_00_speed256				= (t256(2.0));						/* ’e‘¬ */
 	br.BULLET_REGIST_02_VECTOR_angle1024		= (src->rotationCCW1024);			/* Šp“x */
+//	br.BULLET_REGIST_03_VECTOR_regist_type		= VEC TOR_REGIST_TYPE_00_MULTI_VECTOR;
 	br.BULLET_REGIST_04_bullet_obj_type 		= BULLET_UROKO14_03_AOI+((cg_game_difficulty)); 		/* [Â—Ø’e] */
-	br.BULLET_REGIST_05_regist_type 			= REGIST_TYPE_00_MULTI_VECTOR;
 	br.BULLET_REGIST_06_n_way					= (7);								/* [7way] [8way] */
 	br.BULLET_REGIST_07_VECTOR_div_angle1024	= (int)(1024/23);					/* •ªŠ„Šp“x (1024/27) (1024/24) */
-	bul let_reg ist_vec tor();
+	bul let_reg ist_multi_vec tor();
 	#endif
 	#if 1
 	const u8 tama_color[4] =
@@ -91,7 +90,6 @@ static void move_alice_doll_last_burrets(SPRITE *src)
 	br.BULLET_REGIST_01_speed_offset			= t256(1);/*(ƒeƒXƒg)*/
 	br.BULLET_REGIST_03_tama_data				= (TAMA_DATA_0000_TILT);/* (r33-)•W€’e */
 	br.BULLET_REGIST_04_bullet_obj_type 		= BULLET_UROKO14_00_SIRO+(tama_color[((cg_game_difficulty))]);			/* [Â—Ø’e] */
-//–¢’èbr.BULLET_REGIST_05_regist_type			= TAMA_TYPE_00_ANGLE_TILT;/* (r33-)•W€’e */
 //	br.BULLET_REGIST_06_n_way					= (1);								/* [7way] [8way] */
 //	br.BULLET_REGIST_07_div_angle65536			= (int)(65536/23);					/* •ªŠ„Šp“x (1024/27) (1024/24) */
 	int first_angle_65536;
@@ -192,7 +190,7 @@ static void add_zako_alice_doll_2nd_CCW(SPRITE *src)
 		if (NULL!=h)/* “o˜^‚Å‚«‚½ê‡‚Ì‚Ý */
 		{
 			h->m_Hit256R			= ZAKO_ATARI02_PNG;
-			h->type 				= /*TEKI_16_YOUSEI1_5*/TEKI_12_YOUSEI1_1+((1)<<2)+((src->recursive)<<2);	/*SP_ZAKO*/ /*_02_YUKARI1*/
+			h->type 				= TEKI_16_YOUSEI1_1+((1)<<2)+((src->recursive)<<2);
 			h->flags				|= (SP_FLAG_COLISION_CHECK/*|SP_FLAG_VISIBLE|SP_FLAG_TIME_OVER*/);
 			h->callback_mover		= move_alice_doll_all;
 		//	h->callback_loser		= NULL;
@@ -242,7 +240,7 @@ void add_zako_alice_doll(SPRITE *src)
 		if (NULL!=h)/* “o˜^‚Å‚«‚½ê‡‚Ì‚Ý */
 		{
 			h->m_Hit256R			= ZAKO_ATARI02_PNG;
-			h->type 				= TEKI_12_YOUSEI1_1+((0/*2*/)<<2);	/*SP_ZAKO*/ /*BOSS_16_YOUSEI11*/ /*_02_YUKARI1*/
+			h->type 				= TEKI_16_YOUSEI1_1+((0/*2*/)<<2);
 			h->flags				|= (SP_FLAG_COLISION_CHECK/*|SP_FLAG_VISIBLE|SP_FLAG_TIME_OVER*/);
 			h->callback_mover		= move_alice_doll_all;
 		//	h->callback_loser		= NULL;
@@ -294,7 +292,7 @@ static void add_zako_alice_doll_common(SPRITE *src, int is_the_first)
 		if (NULL!=h)/* “o˜^‚Å‚«‚½ê‡‚Ì‚Ý */
 		{
 			h->m_Hit256R			= ZAKO_ATARI02_PNG;
-			h->type 				= TEKI_12_YOUSEI1_1+((src->recursive)<<2);
+			h->type 				= TEKI_16_YOUSEI1_1+((src->recursive)<<2);
 			h->flags				|= (SP_FLAG_COLISION_CHECK/*|SP_FLAG_VISIBLE|SP_FLAG_TIME_OVER*/);
 		//
 			h->callback_mover		= move_alice_doll_all;

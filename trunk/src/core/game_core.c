@@ -17,6 +17,7 @@
 	-------------------------------------------------------
 	遅さ:★★★★★★★★★★★★★★★★★★★★★★★★★★★★
 	スクショはSDLルーチンに行くので論外に速度低下します。
+	(スクショSDL新規サーフェイス作ってる上に、メモカアクセスするので遅いです)
 	-------------------------------------------------------
 	遅さ:★★★★★★★☆☆☆
 	シナリオは、SDLルーチンに行くので40/60[fps]程度まで速度低下します。
@@ -33,63 +34,35 @@
 #include "kanji_system.h"
 
 /*---------------------------------------------------------
-	宣言が必要なもの(グローバル)
----------------------------------------------------------*/
-
-	/* その他(特殊機能) */
-extern void game_command_00_regist_clouds(		GAME_COMMAND *l);/* どの敵でもない場合は、演出用画像 */
-extern void game_command_01_game_all_clear( 	GAME_COMMAND *l);/* 全面クリアーの場合、この敵を追加 */
-extern void game_command_02_bg_control( 		GAME_COMMAND *l);/* 背景コントロール(スクロール速度等を指定) */
-//
-extern void game_command_03_regist_boss(		GAME_COMMAND *l);/* ボス、スクリプト起動 */
-extern void game_command_04_regist_chuu_boss(	GAME_COMMAND *l);/* [中型敵]妖怪、生成処理 */
-extern void game_command_05_regist_zako(		GAME_COMMAND *l);/* ザコ、生成処理 */
-//
-extern void game_command_07_load_bg(			GAME_COMMAND *l);
-extern void game_command_06_kanji_hyouji(		GAME_COMMAND *l);
-
-/* この方式は処理落ち解消しにくい(Gu化も難しい)ので都合により廃止 */
-//extern void game_command_08_load_picture( 	GAME_COMMAND *l);
-
-/*---------------------------------------------------------
 	敵の追加
 	-------------------------------------------------------
 	ここに追記するとシューティングゲーム本体が遅くなるので追記しません。
 	字句解析(parth)等は load_stage.c で予め済ませておきます。
 ---------------------------------------------------------*/
-
+extern void game_command_00_kanji_hyouji(		GAME_COMMAND *l);/* どの敵でもない場合は、漢字表示 */
+extern void game_command_01_game_all_clear( 	GAME_COMMAND *l);/* 全面クリアーの場合、この敵を追加 */
+extern void game_command_02_bg_control( 		GAME_COMMAND *l);/* 背景コントロール(スクロール速度等を指定) */
+extern void game_command_03_regist_boss(		GAME_COMMAND *l);/* ボス、スクリプト起動 */
+extern void game_command_04_regist_chuu_boss(	GAME_COMMAND *l);/* [中型敵]妖怪、生成処理 */
+extern void game_command_05_regist_zako(		GAME_COMMAND *l);/* ザコ、生成処理 */
 static void add_game_command(GAME_COMMAND *l)
 {
 	/* 中間コード形式のコマンドから各関数に分岐する */
 	/* game_commandの生成を番号で管理(load_stage.c の ctype_name[]に対応している) */
-	void (*aaa[ETYPE_MAX])(GAME_COMMAND *l) =
+	void (*aaa[GC_CODE_MAX])(GAME_COMMAND *l) =
 	{
-		game_command_00_regist_clouds,/* [番兵区切り] */	/*NULL*/	/* game_command_00_regist_clouds();内部で見つからない場合は、teki_error(); */
+		game_command_00_kanji_hyouji,		/* 漢字で文字表示 */	//	NULL,/* [番兵区切り] (で必要)*/
 	/* その他 */
 		game_command_01_game_all_clear, 	/* ゲーム 全ステージ クリアー */
-		game_command_02_bg_control,/*CTYPE_02_BG_CONTROL*/
+		game_command_02_bg_control, 		/* */
 	/* 敵 */
-		game_command_03_regist_boss,			/* ボス共通 */
-		game_command_04_regist_chuu_boss,		/* 中-ボスの予定 特殊敵[中型敵] */
-		game_command_05_regist_zako,			/* ザコ */
+		game_command_03_regist_boss,		/* ボス共通 */
+		game_command_04_regist_chuu_boss,	/* 中-ボスの予定 特殊敵[中型敵] */
+		game_command_05_regist_zako,		/* ザコ */
 	//
-		game_command_06_kanji_hyouji,			/* ETYPE_01_SJIS_TEXT */
-		game_command_07_load_bg,				/* ETYPE_02_LOAD_BG */
-	//	game_command_08_load_picture,			/* ETYPE_03_PICTURE */		/* この方式は処理落ち解消しにくい(Gu化も難しい)ので都合により廃止 */
 	};
 	(*aaa[ (int)(l->user_i_code) ])(l); 	/* 中間コード形式のコマンドから各関数に分岐する */
 }
-
-/*---------------------------------------------------------
-
----------------------------------------------------------*/
-
-extern GAME_COMMAND *stage_command_table;
-
-
-
-//static u32 stage_start_time;
-//static u32 game_start_time;
 
 /*---------------------------------------------------------
 
@@ -190,21 +163,17 @@ global void stage_first_init(void)
 
 global void incliment_scene(void)
 {
-	{/*(r32)*/
-		/*ボス戦闘後イベント*/
-	//	if (B09_STAGE_LOAD==pd_bo ssmode) // 9:stage読み込み
-		/*(r32)*/if (/*STATE_FLAG_05_IS_BOSS == */(cg.state_flag & STATE_FLAG_05_IS_BOSS))
-		{
-			main_call_func = stage_clear_result_screen_start;	/* ステージクリアー時のリザルト画面 */
-		}
-		/*ボス戦闘前イベント*/
-		else
-	//	if (B08_START == pd_bo ssmode) // 8:ボス曲を鳴らし、1ボスとの戦闘へ。
-		{
-			/*(r32)*/cg.state_flag |= (STATE_FLAG_05_IS_BOSS|STATE_FLAG_13_DRAW_BOSS_GAUGE);
-			/* 雑魚追加読み込み処理を停止する。 */
-			cg.state_flag			&= (~STATE_FLAG_14_ZAKO_TUIKA); 	/* off / 雑魚追加読み込み処理を停止する。 */
-		}
+	if ((cg.state_flag & STATE_FLAG_05_IS_BOSS))
+	{
+		/*(ボス戦闘後イベント)*/
+		main_call_func = stage_clear_result_screen_start;	/* ステージクリアー時のリザルト画面 */
+	}
+	else
+	{
+		/*(ボス戦闘前イベント)*/
+		/*(r32)*/cg.state_flag |= (STATE_FLAG_05_IS_BOSS|STATE_FLAG_13_DRAW_BOSS_GAUGE);
+		/* 雑魚追加読み込み処理を停止する。 */
+		cg.state_flag			&= (~STATE_FLAG_14_ZAKO_TUIKA); 	/* off / 雑魚追加読み込み処理を停止する。 */
 	}
 }
 
@@ -212,32 +181,29 @@ global void incliment_scene(void)
 /*---------------------------------------------------------
 	特殊イベントの実行処理
 	特殊処理(たまにしか実行しない処理)
+	-------------------------------------------------------
 	コア(メインループに)に追加すると、シューティングゲーム本体が遅くなるので、
-	動作が遅すぎて弾幕シューティングゲームならなくなってしまう。
+	動作が遅すぎて弾幕シューティングゲームに、ならなくなってしまう。
 	そこで動作速度的観点から、頻度の少ない特殊機能はここで実行する。
 ---------------------------------------------------------*/
+extern GAME_COMMAND *stage_command_table;
 static void game_core_zako_tuika(void)
 {
-	{
-		GAME_COMMAND *l;
-		/*
+	/*
 		This routine, search back to begin.
 		このルーチンは逆順に検索します。
-	 */
+	*/
+	{
+		GAME_COMMAND *l;
 		l = stage_command_table;
 		while (NULL != l)	/* コマンドリストの終わり(NULL)まで調べる */	/* [head ==NULL] then end. */
 		{
-			/* コマンド処理済み？ */
-			if (0 < l->v_time )//if (0 == l->done ) 	/* teki set done flag */
+			if (0 < l->v_time ) 	/* コマンド処理済み？ */
 			{
-			//	#if 1
 				if (game_v_time >= (l->v_time)) 	/* (現在時間 >= 設定時間) なら、敵をセット */
-			//	#else
-			//	if (v_time >= ((l->time) ) )
-			//	#endif
 				{
 					add_game_command(l);	/* コマンド生成する(コマンドが雑魚敵の場合、雑魚敵を生成する) */
-					l->v_time = (-1);	/* コマンド処理済みをマーク */	/* teki set done flag */	//l->done = 1;
+					l->v_time = (-1);		/* コマンド処理済みをマーク */
 				}
 			}
 			l = l->next;	/* 次を調べる */	/* choice alter. */
@@ -269,10 +235,7 @@ extern void script_ivent_load(void);
 		if (cg.state_flag & (STATE_FLAG_14_ZAKO_TUIKA))
 		{
 			/* 生きてる */
-			#if 1
 			game_core_zako_tuika();
-			#else
-			#endif
 			/* [旧]特殊処理のあった位置 */
 		}
 	}
@@ -281,7 +244,7 @@ extern void script_ivent_load(void);
 	#if 1
 	/*
 		★「(喰らいボム受付期間中に)ボスと相打ちするとハングアップ」バグ(～r29)対策
- */
+	*/
 	if (0 < /*bomb_wait*/cg.bomber_time)		/* ボムウェイト処理 */
 	{
 		return;/* ボム発動中は待機 */
@@ -291,7 +254,7 @@ extern void script_ivent_load(void);
 	#if 0
 	/*
 		★「(喰らいボム受付期間中に)ボスと相打ちするとハングアップ」バグ(～r29)対策
- */
+	*/
 	/* キー入力無効中(==復活中) は、敵あたり判定はない */
 	if (0==(cg.state_flag & (/*STATE_FLAG_06_IS_SCRIPT|*/STATE_FLAG_16_NOT_ALLOW_KEY_CONTROL)))
 	{
@@ -312,8 +275,7 @@ extern void script_ivent_load(void);
 	/* スクリプトが終わった？ */
 	if (cg.state_flag & (STATE_FLAG_12_END_SCRIPT))
 	{
-		cg.state_flag &= (~(STATE_FLAG_12_END_SCRIPT));/*off*/	/*	pd_bo ssmode=B00_NONE;*/
-	//	cg.state_flag &= (~(STATE_FLAG_12_END_SCRIPT));/*off*/	/*	pd_bo ssmode=B00_NONE;*/	/*B01_BA TTLE*/
+		cg.state_flag &= (~(STATE_FLAG_12_END_SCRIPT));/*off*/
 		incliment_scene();
 	}
 	/* スクリプト動作が必要？ */
@@ -321,7 +283,7 @@ extern void script_ivent_load(void);
 	{
 		script_system_SDL_draw();	/* スクリプト SDL 描画(遅い) */
 		script_move_main(); 		/* スクリプト動作(移動) */
-	}	/*STATE_FLAG_06_IS_SCRIPT==*/
+	}
 }
 
 
@@ -372,24 +334,27 @@ my_game_core_loop:
 			static関数にすると、GCCが勝手に __inline__ 関数に変換する為(-O3の場合)
 			追い出した意味が無くなります。(インライン展開される)
 		 */
-	//	if (B00_NONE != pd_bo ssmode)
-		/*(r32)*/if (cg.state_flag & (STATE_FLAG_10_IS_LOAD_SCRIPT|STATE_FLAG_12_END_SCRIPT|STATE_FLAG_06_IS_SCRIPT|STATE_FLAG_14_ZAKO_TUIKA))/*|ST ATE_FLAG_11_IS_BOSS_DESTROY*/
+		/*(r32)*/if (cg.state_flag & (
+			STATE_FLAG_10_IS_LOAD_SCRIPT |	//
+			STATE_FLAG_12_END_SCRIPT |		//
+			STATE_FLAG_06_IS_SCRIPT |		//
+			STATE_FLAG_14_ZAKO_TUIKA))		// 道中はザコ追加必要なので特殊処理
+			/*|ST ATE_FLAG_11_IS_BOSS_DESTROY*/
 		{
 			my_special();/* 注意：(動作速度低下するので)static関数にしない */
 		}
 		#endif
-//
 		/*
-			動作(移動)させる。
+			[C] 動作(移動)させる。
 			動作(移動)と描画は違う概念なのできちんと分離する事。
 			もし、処理が遅くなって、描画をフレームスキップさせる場合でも、
 			動作(移動)はフレームスキップさせない。
-	 */
-		bg2_move_main();
+		*/
+		bg2_move_main();	/* 背景の移動処理 */
 		sprite_move_all();	/* スプライトオブジェクトの移動処理 */
-		/* 描画 */
+		/* [D] 描画 */
 		// この辺は速度低下するのでコールバックにすべき
-		/*(r32)*/if (0!=draw_side_panel)
+		/*(r32)*/if (0!=(cg.side_panel_draw_flag))
 		{
 			score_display();		/* スコアパネル SDL 描画(遅い) */
 		}	/*ST ATE_FLAG_09_IS_PANEL_WINDOW==*/	/*(cg.state_flag & ST ATE_FLAG_09_IS_PANEL_WINDOW)*/
@@ -397,9 +362,9 @@ my_game_core_loop:
 	// ハングアップ対策：常にポーズ可能に変更する。(2010-02-11)
 	// メニューのキー入力が仕様変更になったので、ここもそれに併せて仕様変更。(2010-06-01)
 	//	if (0==my_pad)
-		if (0==(cg_my_pad_alter & PSP_KEY_PAUSE))/* さっきポーズが押されてなくて */
+		if (0==(psp_pad.pad_data_alter & PSP_KEY_PAUSE))/* さっきポーズが押されてなくて */
 		{
-			if (cg_my_pad & PSP_KEY_PAUSE)/* 今ポーズが押されたら */
+			if (psp_pad.pad_data & PSP_KEY_PAUSE)/* 今ポーズが押されたら */
 			{
 			//	if (0==(cg.state_flag & STATE_FLAG_06_IS_SCRIPT))/*たまにうまくいかない事がある*/
 				{

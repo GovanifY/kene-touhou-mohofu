@@ -17,20 +17,24 @@
 ---------------------------------------------------------*/
 #if 0/*メモ*/
 /* ボス共通規格 */
-	#define target_x256 		user_data00 	/* 目標x座標 */
-	#define target_y256 		user_data01 	/* 目標y座標 */
-	#define vvv256				user_data02 	/* 目標座標への到達割合 */
-	#define boss_time_out		user_data03 	/* 制限時間 */
+	#define target_x256 			user_data00 	/* 目標x座標 */
+	#define target_y256 			user_data01 	/* 目標y座標 */
+	#define toutatu_wariai256		user_data02 	/* 目標座標への到達割合 */
+	#define kougeki_anime_count 	user_data03 	/* 攻撃アニメーション用カウンタ */
+	#define boss_time_out			user_data04 	/* 制限時間 */
+	#define boss_base_state777		user_data04 	/* 制限時間(boss_time_outと同じ) */
+//
+	#define boss_spell_timer		user_data05 	/* スペル時間 */
 #endif
 #ifndef boss_time_out
-	#define boss_time_out		user_data03 	/* 制限時間 */
+	#define boss_time_out		user_data04 	/* 制限時間 */
 #endif
 
 /*---------------------------------------------------------
 	子供魔方陣 移動
 ---------------------------------------------------------*/
 
-static void move_doll03(SPRITE *src)
+static void move_sakuya_doll_04_360knife(SPRITE *src)
 {
 	check_boss_option_time_out(src);	/* 時間経過で終了。ボスを倒すと皆破壊される。 */
 //
@@ -54,19 +58,16 @@ static void move_doll03(SPRITE *src)
 					魔方陣用
 					全方向に青ナイフ弾を撃つ
 				---------------------------------------------------------*/
-				obj_send1->cx256 = (src->cx256);/* 魔方陣の中心から弾撃つ */
-				obj_send1->cy256 = (src->cy256);/* 魔方陣の中心から弾撃つ */
-				br.BULLET_REGIST_00_speed256			= (t256(1.2));					/*(speed256)*/
-				br.BULLET_REGIST_02_VECTOR_angle1024			= (0);							/* 弾源角度 */
-				br.BULLET_REGIST_07_VECTOR_div_angle1024		= (int)(1024/(18)); 			/* 分割角度([360/360]度を18分割) */
-				br.BULLET_REGIST_04_bullet_obj_type = BULLET_KNIFE20_06_YUKARI; 	/* [ピンクナイフ弾] */	/*BULLET_KNIFE20_04_AOI*/
-				br.BULLET_REGIST_06_n_way				= (18); 						/* [18way] */
-				br.BULLET_REGIST_05_regist_type 	= REGIST_TYPE_00_MULTI_VECTOR;
-				bullet_regist_vector();
+				br.BULLET_REGIST_00_speed256				= (t256(1.2));					/*(speed256)*/
+				br.BULLET_REGIST_02_VECTOR_angle1024		= (0);							/* 弾源角度 */
+			//	br.BULLET_REGIST_03_VECTOR_regist_type		= VEC TOR_REGIST_TYPE_00_MULTI_VECTOR;
+				br.BULLET_REGIST_04_bullet_obj_type 		= BULLET_KNIFE20_06_YUKARI; 	/* [ピンクナイフ弾] */	/*BULLET_KNIFE20_04_AOI*/
+				br.BULLET_REGIST_06_n_way					= (18); 						/* [18way] */
+				br.BULLET_REGIST_07_VECTOR_div_angle1024	= (int)(1024/(18)); 			/* 分割角度([360/360]度を18分割) */
+				bullet_regist_multi_vector_send1_xy_src(src);	/* 弾源x256 y256 中心から発弾。 */
 			}
 		}
 	}
-//
 }
 
 
@@ -74,7 +75,7 @@ static void move_doll03(SPRITE *src)
 	敵を追加する
 ---------------------------------------------------------*/
 
-/*static*/ void add_zako_sakuya_doll_03_360knife(SPRITE *src)
+/*static*/ void add_zako_sakuya_doll_04_360knife(SPRITE *src)
 {
 	SPRITE *h;
 	h								= obj_add_01_teki_error();
@@ -87,7 +88,7 @@ static void move_doll03(SPRITE *src)
 		h->flags					= (SP_FLAG_COLISION_CHECK/*|SP_FLAG_VISIBLE*/);
 	//	h->color32					= MAKE32RGBA(0xff, 0xff, 0xff, 0x00);
 		h->color32					= MAKE32RGBA(0x88, 0x33, 0xff, 0x80); /* っぽく */
-		h->callback_mover			= move_doll03;
+		h->callback_mover			= move_sakuya_doll_04_360knife;
 		/* 子供魔方陣、配置位置 */
 		#if 1
 		h->cx256					= src->cx256;

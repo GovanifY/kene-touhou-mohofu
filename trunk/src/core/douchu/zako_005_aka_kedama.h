@@ -22,37 +22,21 @@
 
 static void move_aka_kedama1_2nd(SPRITE *src)
 {
-	{
-		/*
-		0  0/100   0/65536
-		1  1/90  728/65536
-		2  1/80  819/65536
-		3  1/70  936/65536
-		*/
-		static const u16 kakuritu_tbl[4] =
-		{ 0, 728, 819, 936 };
-	//	if (0==(ra_nd()%(100-teki_rank*10)))
-		if (kakuritu_tbl[((cg_game_difficulty))/*(teki_rank)*/] > (ra_nd()&(65536-1)))
-		{
-			obj_send1->cx256							= src->cx256;
-			obj_send1->cy256							= src->cy256;
-			br.BULLET_REGIST_00_speed256				= t256(2.5)+(0/*(teki_rank<<6)*/);				/* ’e‘¬ */	/*‚‘¬’e*/	/*t256(3+teki_rank)*/
-		//	br.BULLET_REGIST_00_speed256				= speed256; 					/* ’e‘¬ */
-			br.BULLET_REGIST_02_VECTOR_angle1024		= ANGLE_JIKI_NERAI_DAN; 		/* Ž©‹@‘_‚¢’e */	/* ”­ŽË’†SŠp“x / “ÁŽê‹@”\(Ž©‹@‘_‚¢/‘¼) */
-			br.BULLET_REGIST_04_bullet_obj_type 		= BULLET_MINI8_07_DAI_DAI;		/* [Ô’e] */ /* ’eƒOƒ‰ */
-			br.BULLET_REGIST_05_regist_type 			= REGIST_TYPE_00_MULTI_VECTOR;
-			br.BULLET_REGIST_06_n_way					= (1);							/* [1way] */
-		//	br.BULLET_REGIST_07_VECTOR_div_angle1024	= (0);							/* ƒ_ƒ~[Šp“x(–¢Žg—p) */
-			bullet_regist_vector();
-		}
-	}
+	br.BULLET_REGIST_00_speed256				= t256(2.5);					/* ’e‘¬ */	/*‚‘¬’e*/	/*t256(3+teki_rank)+(0(teki_rank<<6))*/
+//	br.BULLET_REGIST_00_speed256				= t256((cg_game_difficulty))+t256(1.5); 			/* ’e‘¬ */
+	br.BULLET_REGIST_02_VECTOR_angle1024		= ANGLE_JIKI_NERAI_DAN; 		/* Ž©‹@‘_‚¢’e */	/* ”­ŽË’†SŠp“x / “ÁŽê‹@”\(Ž©‹@‘_‚¢/‘¼) */
+//	br.BULLET_REGIST_03_VECTOR_regist_type		= VEC TOR_REGIST_TYPE_00_MULTI_VECTOR;
+	br.BULLET_REGIST_04_bullet_obj_type 		= BULLET_MINI8_07_DAI_DAI;		/* [Ô’e] */ /* ’eƒOƒ‰ */
+	br.BULLET_REGIST_06_n_way					= (1);							/* [1way] */
+//	br.BULLET_REGIST_07_VECTOR_div_angle1024	= (0);							/* ƒ_ƒ~[Šp“x(–¢Žg—p) */
+	zako_shot_ra_nd(src);
 /* CCW‚Ìê‡ */
 	src->cx256 += (src->vx256);/*fps_factor*/
 	src->cy256 += (src->vy256);/*fps_factor*/
 	gamen_gai_nara_zako_osimai(src);/* ‰æ–ÊŠO‚È‚ç‚¨‚µ‚Ü‚¢ */
-//
-	src->rotationCCW1024 += (16);	/*(20)*/
-	mask1024(src->rotationCCW1024);
+	/* ƒAƒjƒ[ƒVƒ‡ƒ“ */
+	src->zako_anime_rotate_angle1024 = ( 16);/*(20)*/
+	zako_anime_type04(src); 	/* ƒOƒ‰‰ñ“] */
 }
 
 
@@ -70,11 +54,10 @@ static void add_local_aka_kedama1_2nd(SPRITE *src/*, int lv*/)
 		if (NULL!=h)/* “o˜^‚Å‚«‚½ê‡‚Ì‚Ý */
 		{
 			h->m_Hit256R			= ZAKO_ATARI16_PNG;
-		//	h->type 				= TEKI_56_CHEN;
 			h->type 				= src->type;			/* •ª—ô‘O‚ð‚»‚Ì‚Ü‚Üˆø‚«Œp‚® */
 			h->callback_mover		= move_aka_kedama1_2nd;
-			h->callback_loser		= lose_random_item; 	/* ”š”­‚³‚¹‚½‚Ù‚¤‚ªƒAƒCƒeƒ€‚ª‰Ò‚°‚é */
-			h->callback_hit_teki	= callback_hit_zako;		/* uƒUƒR‚ÉŽ©’e‚ª‚ ‚½‚Á‚½ê‡‚Ìˆ—v‚ÉA•W€‚Ìˆ—‚ðÝ’è */
+			h->callback_loser		= src->callback_loser;	/* ”š”­‚³‚¹‚½‚Ù‚¤‚ªƒAƒCƒeƒ€‚ª‰Ò‚°‚é */
+			h->callback_hit_teki	= callback_hit_zako;	/* uƒUƒR‚ÉŽ©’e‚ª‚ ‚½‚Á‚½ê‡‚Ìˆ—v‚ÉA•W€‚Ìˆ—‚ðÝ’è */
 			//
 			h->flags				= src->flags;			/* •ª—ô‘O‚ð‚»‚Ì‚Ü‚Üˆø‚«Œp‚® */
 			h->cx256				= src->cx256;			/* •ª—ô‘O‚ð‚»‚Ì‚Ü‚Üˆø‚«Œp‚® */
@@ -103,23 +86,23 @@ static void move_aka_kedama1_1st(SPRITE *src)
 {
 	if (2 == src->jyumyou)	/* •ª—ô */
 	{
-		add_local_aka_kedama1_2nd(src/*,data->teki_rank*/);/* •Ïg •ª—ô */
+		add_local_aka_kedama1_2nd(src);/* •Ïg •ª—ô */	/*,data->teki_rank*/
 		src->jyumyou = JYUMYOU_NASI;		/* –{‘Ì‚Í‚¨‚µ‚Ü‚¢ */
 	}
 	else
 	if (31+2 > src->jyumyou)
 	{
-		;							/* Ž~‚Ü‚é */
+		src->zako_anime_rotate_angle1024 = (  0);	/* Ž~‚Ü‚é */
 	}
 	else
 	{
 										/* ˆÚ“® move */
 		src->cx256 += (src->vx256); 	/*fps_factor*/
 		src->cy256 += (src->vy256); 	/*fps_factor*/
-		//
-		src->rotationCCW1024 += (10);	/* ƒOƒ‰‰ñ“] */
-		mask1024(src->rotationCCW1024);
+		src->zako_anime_rotate_angle1024 = ( 10); 	/* ƒOƒ‰‰ñ“] */
 	}
+	/* ƒAƒjƒ[ƒVƒ‡ƒ“ */
+	zako_anime_type04(src); 	/* ƒOƒ‰‰ñ“] */
 }
 
 
@@ -129,13 +112,13 @@ static void move_aka_kedama1_1st(SPRITE *src)
 
 static void regist_zako_005_aka_kedama1(GAME_COMMAND *l, SPRITE *h)
 {
-//		/* ‰ŠúˆÊ’u */
+//	/* ‰ŠúˆÊ’u */
 	obj_send1->cx256		= ((ra_nd()&((256*256)-1)))+t256(64);/*320?*/ /*t256(ra_nd()%270)+t256(50)*/	/* ’eŒ¹x256 */
 //	obj_send1->cy256		= ((ra_nd()&((256*256)-1)))+t256(16);/*350?*/ /*t256(ra_nd()%300)+t256(50)*/
 	obj_send1->cy256		= ((ra_nd()&((256*128)-1)))+t256(16);/*350?*/ /*t256(ra_nd()%300)+t256(50)*/	/* ’eŒ¹y256 */
-	tmp_angleCCW1024_src_nerai(obj_send1, h);
-	h->vx256				= ((sin1024(h->tmp_angleCCW1024)*t256(1.5))>>8);/*fps_factor*/	/* CCW‚Ìê‡ */
-	h->vy256				= ((cos1024(h->tmp_angleCCW1024)*t256(1.5))>>8);/*fps_factor*/
+	tmp_angleCCW65536_src_nerai(obj_send1, h);
+	h->vx256				= ((sin65536(h->tmp_angleCCW65536)*t256(1.5))>>8);/*fps_factor*/	/* CCW‚Ìê‡ */
+	h->vy256				= ((cos65536(h->tmp_angleCCW65536)*t256(1.5))>>8);/*fps_factor*/
 //
-	h->jyumyou				= 80+byou60(1)+2;
+	h->jyumyou				= (80)+byou60(1)+(2);
 }

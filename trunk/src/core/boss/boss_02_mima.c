@@ -9,15 +9,6 @@
 	Mitei Madakimattenai.
 	-------------------------------------------------------
 ---------------------------------------------------------*/
-#if 0/*メモ*/
-/* ボス共通規格 */
-	#define target_x256 		user_data00 	/* 目標x座標 */
-	#define target_y256 		user_data01 	/* 目標y座標 */
-	#define vvv256				user_data02 	/* 目標座標への到達割合 */
-	#define boss_time_out		user_data03 	/* 制限時間 */
-	#define boss_base_state777	user_data03 	/* 制限時間(boss_time_outと同じ) */
-#endif
-
 
 /*---------------------------------------------------------
 	ボス行動、第 1形態
@@ -34,7 +25,7 @@ global void mima_01_keitai(SPRITE *src)
 	static int mima_jikan;	/* 弾幕、追加タイマー。テキトー。 */
 	mima_jikan--;
 	/* 弾幕を撃ってない場合に追加 */
-//	if (SPELL_00==src->boss_base_spell_type)		/* 弾幕生成終了なら弾幕生成 */
+//	if (SPELL_00==spell_card.spell_type)		/* 弾幕生成終了なら弾幕生成 */
 	if (0 > mima_jikan) 	/* 弾幕生成終了なら弾幕生成 */
 	{
 		const unsigned char aa_ra_nd = ra_nd();
@@ -70,7 +61,7 @@ global void mima_01_keitai(SPRITE *src)
 			src->target_y256 = ((hosi_no_zahyou[src->boss_base_state777].y)<<8);
 			/* 弾幕を決める */
 			spell_card_get_spell_number(src);	/* スペカシステムから、現在の形態で撃つ弾幕番号を手に入れ、標準のboss_base_spell_time_out時間を設定。 */
-		//	src->boss_base_spell_type	= SPELL_0c_hana_test;	/* 弾幕をセット */
+		//	spell_card.spell_type	= SPELL_0c_hana_test;	/* 弾幕をセット */
 		//	spell_set_time_out(src);		/* 弾幕の制限時間を設定(予め弾幕ごとに設定されている標準時間に設定) */
 		}
 		else
@@ -97,16 +88,16 @@ global void mima_01_keitai(SPRITE *src)
 					}
 					#if 1
 					/* 弾幕を決める */
-					src->boss_base_spell_type	= SPELL_19_mima_sekkin; 	/* 弾幕をセット */
+					spell_card.spell_type	= SPELL_19_mima_sekkin; 	/* 弾幕をセット */
 					spell_set_time_out(src);		/* 弾幕の制限時間を設定(予め弾幕ごとに設定されている標準時間に設定) */
 					#endif
 				}
 			}
 		}
 		/* */
-		src->vvv256 = t256(1.0);
+		src->toutatu_wariai256 = t256(1.0);
 	}
-	alice_yuudou_move_only(src);
-	alice_yuudou_calc(src);
+	boss_yuudou_idou_nomi(src);
+	boss_yuudou_hiritu_keisan(src);
 	bullet_angle_all_gamen_gai_nara_kesu();/*角度弾の喰み出しチェックを行う(毎フレーム行う必要はない)*/
 }

@@ -29,39 +29,30 @@ extern void dec_print_format( unsigned int num, int size, char *my_str);
 /*---------------------------------------------------------
 	ゲームコア終了の後処理
 ---------------------------------------------------------*/
-extern int draw_script_screen;					/* せりふウィンドウ表示フラグ */
 
-extern void bg2_destroy(void);
+//extern void bg2_destroy(void);
 extern void gu_set_bg_u32_clear_color(u32 set_u32_clear_color);
 
-extern u32 last_score;
-//extern int last_stage;
 global void gamecore_term(void)
 {
-	draw_script_screen = 0; /* せりふウィンドウ表示フラグ off */
-//
-	last_score = cg.game_score;
+	cg.draw_flag_script_screen = (0); /* せりふウィンドウ表示フラグ off */
+	cg.bomber_time = (0);
+	/* 現在のversionはボスを倒さないで抜けるとGuがまずいので対策 */
+	cg.state_flag &= (~(STATE_FLAG_13_DRAW_BOSS_GAUGE));	/* Guは書かないとマズイ */
+	#if 1
+	draw_boss_hp_value	= 0;/* よくわかんない */			/* Guは書かないとマズイ */
+	#endif
 //
 	gu_set_bg_u32_clear_color(0xff000000);	/*AABBGGRR*/	/*(黒)*/
-	bg2_destroy();		// [***090126		追加
+//	bg2_destroy();
 	//sprite_controller_remove_all();
 	/*
 		この辺でbossとかcoreとか開放しなくていいんだっけ？
 	*/
 	sprite_all_cleanup();
 //	score_cleanup();
-	//stop_music(); 	// [***090123		コメントアウト
 	set_music_volume(128);
-	play_music_num(BGM_23_menu01);
-//	last_stage = 0;
-//削除	名前入力で使う。	cg.game_now_stage = 0;		// [***090702		追加
-	cg.bomber_time = 0; 		// [***090903		追加
-	/* 現在のversionはボスを倒さないで抜けるとGuがまずいので対策 */
-	cg.state_flag &= (~(STATE_FLAG_13_DRAW_BOSS_GAUGE));	/* Guは書かないとマズイ */
-	#if 1
-	draw_boss_hp_value	= 0;/* よくわかんない */			/* Guは書かないとマズイ */
-	#endif
-
+	play_music_num(BGM_25_menu01);
 }
 
 
@@ -106,13 +97,13 @@ static void render_stage_clear_result(void)
 	#endif
 //
 	char buffer[32/*100*/];
-	strcpy(buffer,	"RESULT" ); 																			font_print_screen_xy(buffer, FONT16R, 0,  32);
+	strcpy(buffer,	"RESULT" ); 																				font_print_screen_xy(buffer, FONT16R, 0,  32);
 //	strcpy(buffer,	"STAGE   0 X 1000 PTS.");	dec_print_format( cg.game_now_stage, 1, (char *)&buffer[ 8]);	font_print_screen_xy(buffer, FONT16W, 8,  60);	/* 原作風 */
 //	strcpy(buffer,	"POWER 000 X  100 PTS.");	dec_print_format( cg.weapon_power,	3, (char *)&buffer[ 6]);	font_print_screen_xy(buffer, FONT16W, 8,  80);	/* 原作風 */
 //	strcpy(buffer,	"GRAZE 000 X   10 PTS.");	dec_print_format( cg.graze_point,	3, (char *)&buffer[ 6]);	font_print_screen_xy(buffer, FONT16W, 8, 100);	/* 原作風 */
 	//				"012345678901234567890
 	strcpy(buffer,	"STAGE   0 X 10000PTS.");	dec_print_format( cg.game_now_stage, 1, (char *)&buffer[ 8]);	font_print_screen_xy(buffer, FONT16W, 8,  60);	/* 模倣風 */
-	strcpy(buffer,	"GRAZE 000 X  1000PTS.");	dec_print_format( cg.graze_point,	3, (char *)&buffer[ 6]);	font_print_screen_xy(buffer, FONT16W, 8,  80);	/* 模倣風 */
+	strcpy(buffer,	"GRAZE0000 X  1000PTS.");	dec_print_format( cg.graze_point,	4, (char *)&buffer[ 5]);	font_print_screen_xy(buffer, FONT16W, 8,  80);	/* 模倣風 */
 	strcpy(buffer,	"POWER 000 X   100PTS.");	dec_print_format( cg.weapon_power,	3, (char *)&buffer[ 6]);	font_print_screen_xy(buffer, FONT16W, 8, 100);	/* 模倣風 */
 	cg.graze_point = 0;/* 清算して消える */
 	const char *level_name[4] =
@@ -152,8 +143,8 @@ static void render_game_over_result(void)
 	cg.player_data_use_continue--;	/* 集計システム(player_data)_ (現プログラムの都合上)コンティニュー回数0で 1回カウントされるので、その分減らして辻褄あわせをする。 */
 //
 	char buffer[32/*100*/];
-//	strcpy(buffer,	"GAME OVER" );																			font_print_screen_xy(buffer, FONT16R, 0,  32);
-	strcpy(buffer,	"PLAYER DATA" );																		font_print_screen_xy(buffer, FONT16R, 0,  32);
+//	strcpy(buffer,	"GAME OVER" );																								font_print_screen_xy(buffer, FONT16R, 0,  32);
+	strcpy(buffer,	"PLAYER DATA" );																							font_print_screen_xy(buffer, FONT16R, 0,  32);
 	strcpy(buffer,	"SCORE     0000000000.");	dec_print_format( cg.game_score,					9, (char *)&buffer[10]);	font_print_screen_xy(buffer, FONT16W, 8,  60);
 	strcpy(buffer,	"TOTAL MISTAKE      0.");	dec_print_format( cg.player_data_count_miss,		3, (char *)&buffer[17]);	font_print_screen_xy(buffer, FONT16W, 8,  80);	/* 集計システム(player_data)総ミス回数 */
 	strcpy(buffer,	"USE BOMBS          0.");	dec_print_format( cg.player_data_used_bomber,		3, (char *)&buffer[17]);	font_print_screen_xy(buffer, FONT16W, 8, 100);	/* 集計システム(player_data)総ボム使用回数 */
@@ -207,9 +198,9 @@ static void stage_clear_result_screen_local_work(void)
 	/* ボタンで飛ばせる時間ならキーチェック */
 	if (MUSIC_FADE_OUT_TIME < result_time_out)
 	{
-		if (0==cg_my_pad_alter)/* さっき何も押されてなかった場合にキーチェック */
+		if (0==psp_pad.pad_data_alter)/* さっき何も押されてなかった場合にキーチェック */
 		{
-			if (cg_my_pad & (PSP_KEY_LEFT|PSP_KEY_RIGHT|PSP_KEY_UP|PSP_KEY_DOWN|PSP_KEY_SHOT_OK|PSP_KEY_BOMB_CANCEL|PSP_KEY_SLOW|PSP_KEY_OPTION))
+			if (psp_pad.pad_data & (PSP_KEY_LEFT|PSP_KEY_RIGHT|PSP_KEY_UP|PSP_KEY_DOWN|PSP_KEY_SHOT_OK|PSP_KEY_BOMB_CANCEL|PSP_KEY_SLOW|PSP_KEY_OPTION))
 			{
 				result_time_out = (MUSIC_FADE_OUT_TIME+1);
 			}
@@ -227,11 +218,26 @@ static void stage_clear_result_screen_local_work(void)
 	else
 	if (0 == result_time_out)	/* おしまい */
 	{
-		#if 1/* 曲のフェードアウト作ったら要らなくなる。 */
+		#if (1)/* 曲のフェードアウト作ったら要らなくなる。 */
 		play_music_num(BGM_00_stop);
 		set_music_volume(127/*SDL_MAXVOLUME*/);/* たぶん */
 		#endif
-		if (/*extra_stage*/(8)==cg.game_now_stage)/* エキストラモードの場合、終了する */
+
+	//	#if (1)/*(r34-)*/
+		if (cg.state_flag & STATE_FLAG_16_GAME_TERMINATE)/* スクリプトで終了指示されたら、終了する */
+	//	#else/*(-r33)*/
+	//	if (
+	//		/*extra_stage*/(8)==cg.game_now_stage/* エキストラモードの場合、終了する */
+	//		#if (1==US E_EASY_BADEND)
+	//		||/*(もしくは)*/
+	//		(
+	//			((5) == (cg.game_now_stage))/*(5面の場合)*/
+	//			&&/*(かつ)*/
+	//			((0)==(cg_game_difficulty)) /*(easyの場合)*/
+	//		)/* は、終了する */
+	//		#endif
+	//	)
+	//	#endif
 		{
 		//	#if 1/* この２つのセットで自動的に終了(GAME OVER)する */
 		//	cg_game_now_max_continue = 1;	/* コンティニューさせない */
@@ -282,9 +288,9 @@ static int game_over_time_out;/*wait*/
 static void gameover_local_work(void)
 {
 //	psp_pop_screen();
-	if (0==cg_my_pad_alter)/* さっき何も押されてなかった場合にキーチェック */
+	if (0==psp_pad.pad_data_alter)/* さっき何も押されてなかった場合にキーチェック */
 	{
-		if (cg_my_pad & (PSP_KEY_LEFT|PSP_KEY_RIGHT|PSP_KEY_UP|PSP_KEY_DOWN|PSP_KEY_SHOT_OK|PSP_KEY_BOMB_CANCEL|PSP_KEY_SLOW|PSP_KEY_OPTION))
+		if (psp_pad.pad_data & (PSP_KEY_LEFT|PSP_KEY_RIGHT|PSP_KEY_UP|PSP_KEY_DOWN|PSP_KEY_SHOT_OK|PSP_KEY_BOMB_CANCEL|PSP_KEY_SLOW|PSP_KEY_OPTION))
 		{
 			game_over_time_out = (0);
 		}
@@ -296,13 +302,15 @@ static void gameover_local_work(void)
 			#if (0==USE_CONTINUED_RANKING)
 			( (/*3*/DEFAULT_MAX_CONTINUE-1) == cg_game_now_max_continue ) &&
 			#endif
-			(last_score > high_score_table[(cg_game_select_player)][4].score)
+			(cg.game_score > high_score_table[(cg_game_select_player)][4].score)
 		)
 		{
+			/* 最終スコアがランクインしてた場合 */
 			main_call_func = name_entry_start;	/* 名前入力画面へ */
 		}
 		else	/* タイトル画面へ */
 		{
+			/* 最終スコアがランクインしてない場合 */
 			cg.game_now_stage = (0);/*要る？*/
 			main_call_func = title_menu_start;	/* タイトルメニューへ移動 */
 		}

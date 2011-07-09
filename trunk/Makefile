@@ -5,9 +5,10 @@
 
 TARGET = kene
 
-PSP_EBOOT_TITLE = kene_r33_debug
+RELESE_DATE = "2011/03/06"
 
-#RELESE_DATE = "2010/12/05"
+#PSP_EBOOT_TITLE = kene_r34_debug
+PSP_EBOOT_TITLE = kene$(RELESE_DATE)(r34)
 
 # (r33)動作確認済みpsp
 # 1.00    (psp-1000最初期のFW)
@@ -24,6 +25,31 @@ PSP_LARGE_MEMORY = 1
 
 # 3.71以降(つまりpsp-2000拡張メモリ)対応ってこと(らしい)。
 PSP_FW_VERSION = 371
+
+#------------------------------------------------------------------------------
+# OFW setting
+#------------------------------------------------------------------------------
+# 参考 http://pspbannoukaizou.blog50.fc2.com/blog-entry-157.html
+# 800200D9 メモリブロックを割り当てられませんでした。  Failure to allocate memory block.
+# 800200D9 = Failure to allocate memory block (ex. missing PSP)
+# 80020148 サポートされていないPRXを使用しています。
+# リカバリーモードより「Advanced configration」→「Execute boot.bin in UMD/ISO」をDisabledにして下さい。 
+# 80020148 = Unsupported PRX type | This error also seems to appear when you are running an iso with a fake mem. stick
+
+# prx->eboot   // 起動に失敗しました(800200D9) (PRXだけどメモリ不足? )
+# eboot->eboot // 起動に失敗しました(80020148) (PRXでないので無理?)
+
+# 下記2項目はペア。古い *.elf があるとリコンパイル失敗するので注意。
+
+# 公式FWで起動出来るように署名を付加する。
+#ENCRYPT = 0
+#ENCRYPT = 1
+
+# (???)EBOOT.PBPじゃなくて、*.prxをビルトする。(ENCRYPT = 1の場合必ず必要???)
+#BUILD_PRX = 1
+
+# 現状EBOOT.PBPのサイズが小さいプログラムで無いと起動できない(???)。模倣風は現状(r33)無理。
+# (*.prxになるような小さなプログラムでは起動できそう)
 
 #------------------------------------------------------------------------------
 # Compile option flag (主にデバッグ用)
@@ -45,10 +71,10 @@ USE_FPU_HACK = 1
 #SIMPLE = 1
 SIMPLE = 0
 
-# 現状 openGL 使ってないから openGL 排除しただけ
-# 0 == CUSTOM_SDL (標準SDLは0)
-CUSTOM_SDL = 1
-#CUSTOM_SDL = 0
+# 0 == cygwin を使う。(通常開発)
+# 1 == pspsdk-setup-0.11.1.exe を使う。( Minimalist PSP homebrew SDK for Windows. version 0.11.1 )
+#USE_MINIMALIST_PSP_SDK = 1
+USE_MINIMALIST_PSP_SDK = 0
 
 #------------------------------------------------------------------------------
 # Debug information (デバッグ用、ここを変えても EBOOT.PBP は同じ)
@@ -61,28 +87,26 @@ CUSTOM_SDL = 1
 # 「グローバル変数の配置」、
 # 「データーセクションの実際の.align調整(「*fill*」ってのがGCCが.alignした奴)」 
 # 等が知りたくなった場合のデバッグ情報。
-DEBUG_MAP = 0
-#DEBUG_MAP = 1
+#DEBUG_MAP = 0
+DEBUG_MAP = 1
 
 #------------------------------------------------------------------------------
-# Compile option flag (r31時点で間に合わなかった。研究中)
+# Compile option flag 
 #------------------------------------------------------------------------------
-# 注意: ここのカテゴリのオプションはr31時点で間に合わなかったのでダミーです。
-# 一応、USE_BUNKAI_KINOU = 1、CUSTOM_231SDL = 1 にすると、
-# 模倣風起動時にSDL のマウスカーソルが表示されなくなるのが確認できます。
-# しかしどこかバグがあるのか、ハングアップ(突然死)が多くなる気がします。不安定です。
+# 模倣風専用SDLライブラリ: (2011-02-16)現在のpspのSDLは色々バグがあります。(仮に描画に一切SDLしか使わなくてもSDL自体にバグがある。)
+# pspの標準SDLでは、ソフトウェアーサーフェイスを明示的に指定しても、ハードウェアーサーフェイスが使われる場合があるのですが、
+# pspのハードウェアーを変な風に使っている為、変な所で処理落ちします。この件は標準SDLを使う限り回避不能です。
+# PSPLでは、SDLのハードウェア支援(gu)を全カットしてあります。その方が変なタイミングでGPUを使わないので実行速度が速いです。
+# 模倣風では USE_PSPL = 1 以外サポートしません。
 #------------------------------------------------------------------------------
 
-# libSDL.a を分解してコピーする機能。
-# 1 == USE_BUNKAI_KINOU (標準は 1 : コンパイル前に libSDL.a を展開して、objにコピー)
-# 0 == USE_BUNKAI_KINOU (開発中はウザイからoff: off は 0)
-USE_BUNKAI_KINOU = 1
-#USE_BUNKAI_KINOU = 0
-
-# <<てすと>>
-# 0 == CUSTOM_231SDL (標準SDLは0)
-CUSTOM_231SDL = 1
-#CUSTOM_231SDL = 0
+# PSPL == SDLを模倣風用にカスタマイズした専用ライブラリ。
+# (模倣風に必要無い機能をバッサリカットしたサブセット版。初期化処理をしない等本家SDLと動作が違う。)
+# 名前とか定数とかがSDLなんちゃらなので、SDL関連は同時には一切使用できない。
+# 1 == USE_PSPL (模倣風用SDL(PSPL)を使う)
+# 0 == USE_PSPL (標準SDLは0,アンサポート)
+USE_PSPL = 1
+#USE_PSPL = 0
 
 #------------------------------------------------------------------------------
 # Custom Lib option flag (カスタマイズ)
@@ -111,31 +135,35 @@ CUSTOM_231SDL = 1
 #------------------------------------------------------------------------------
 
 # 実験中
-# 0 == CUSTOM_LIB
-CUSTOM_LIB = 1
-#CUSTOM_LIB = 0
+# 0 == CUS TOM_LIB
+#CUS TOM_LIB = 1
+#CUS TOM_LIB = 0
 
 # MP3の設定
 # 注意: MP3の使用可否を変更した場合は、audio_mixer のリコンパイルが必ず必要です。(設定変更後、make rr↓してからmake↓推奨)
 
-	## 注意: LINK_SMPEG_MP3 と LINK_MAD_MP3 を両方 1 にする事は出来ません。
-	# ok 	LINK_SMPEG_MP3 = 0	LINK_MAD_MP3 = 0	MP3 とか使わない。
-	# ok 	LINK_SMPEG_MP3 = 1	LINK_MAD_MP3 = 0	smpeg の MP3 (～r30) を使う。(不安定かつ、遅い、かつ、ぶちぶちノイズ)
-	# ok 	LINK_SMPEG_MP3 = 0	LINK_MAD_MP3 = 1	libmad の mp3 (r31～)を使う。(安定度は高い、遅いけど...、45fpsぐらいに低下する。)
-	# NG 	LINK_SMPEG_MP3 = 1	LINK_MAD_MP3 = 1	ソースレベルで対応がないので無理、NG。
+## 注意: LINK_SMPEG_MP3 と LINK_MAD_MP3 を両方 1 にする事は出来ません。
+# ok 	LINK_SMPEG_MP3 = 0	LINK_MAD_MP3 = 0	MP3 とか使わない。
+# ok 	LINK_SMPEG_MP3 = 1	LINK_MAD_MP3 = 0	smpeg の MP3 (～r30) を使う。(不安定かつ、遅い、かつ、ぶちぶちノイズ)
+# ok 	LINK_SMPEG_MP3 = 0	LINK_MAD_MP3 = 1	libmad の mp3 (r31～)を使う。(安定度は高い、遅いけど...、45fpsぐらいに低下する。)
+# NG 	LINK_SMPEG_MP3 = 1	LINK_MAD_MP3 = 1	ソースレベルで対応がないので無理、NG。
 
-	## smpeg の MP3 (～r30)
-	# 0 == LINK_SMPEG_MP3:標準設定 [ smpeg の MP3の使用可否 ] (0:使用しない、1:使用する)
-	LINK_SMPEG_MP3 = 0
-	#LINK_SMPEG_MP3 = 1
+## smpeg の MP3 (～r30)
+# 0 == LINK_SMPEG_MP3:標準設定 [ smpeg の MP3の使用可否 ] (0:使用しない、1:使用する)
+LINK_SMPEG_MP3 = 0
+#LINK_SMPEG_MP3 = 1
+# smpegは、まだバグ(※1)あります。
+# ※1:現在判明しているバグ:
+# MPEGaudio:: MPEGaudio()内で(クラス作成時に) SDL_OpenAudio() 呼ぶのは、 SDLmixerの現在仕様では色々マズイ。
 
-	## libmad の mp3 (r31～)
-	# 1 == LINK_MAD_MP3:標準設定 [ libmad の MP3の使用可否 ] (0:使用しない、1:使用する)
-	#LINK_MAD_MP3 = 0
-	LINK_MAD_MP3 = 1
+## libmad の mp3 (r31～)
+# 1 == LINK_MAD_MP3:標準設定 [ libmad の MP3の使用可否 ] (0:使用しない、1:使用する)
+#LINK_MAD_MP3 = 0
+LINK_MAD_MP3 = 1
+# madlibは中身知らないけど、 SDLmixer と分離してるから、madlib内にバグなければ多分大丈夫。
 
-	# r31:色々やってみたけど、どうしても smpeg が不安定(突然死が多い)なので、 smpeg は止めて、 libmad にしました。
-	# (もし仮に両方にバグが無いと想定すると)たぶんバッファオーバーランなんじゃないかな？
+# r31:色々やってみたけど、どうしても smpeg が不安定(突然死が多い)なので、 smpeg は止めて、 libmad にしました。
+# (もし仮に両方にバグが無いと想定すると)たぶんバッファオーバーランなんじゃないかな？
 
 # 1 == LINK_OGG:標準設定 [ oggの使用可否 ] (0:使用しない、1:使用する)
 # 注意: oggの使用可否を変更した場合は、audio_mixer のリコンパイルが必ず必要です。
@@ -155,32 +183,36 @@ LINK_LIBTREMOR_LOW_MEM = 1
 #------------------------------------------------------------------------------
 
 ifneq ($(SIMPLE),1)
-	PSP_EBOOT_ICON	 = ICON0.PNG
-	PSP_EBOOT_ICON1  = ICON0.PMF
-	PSP_EBOOT_UNKPNG = ICON1.PNG
-	PSP_EBOOT_PIC1	 = PIC1.PNG
-	PSP_EBOOT_SND0	 = SND0.AT3
+PSP_EBOOT_ICON	 = ICON0.PNG
+PSP_EBOOT_ICON1  = ICON0.PMF
+PSP_EBOOT_UNKPNG = ICON1.PNG
+PSP_EBOOT_PIC1	 = PIC1.PNG
+PSP_EBOOT_SND0	 = SND0.AT3
 else
-	PSP_EBOOT_ICON	 = ICON0.PNG
-	PSP_EBOOT_ICON1  = 
-	PSP_EBOOT_UNKPNG = 
-	PSP_EBOOT_PIC1	 = 
-	PSP_EBOOT_SND0	 = 
+PSP_EBOOT_ICON	 = ICON0.PNG
+PSP_EBOOT_ICON1  = 
+PSP_EBOOT_UNKPNG = 
+PSP_EBOOT_PIC1	 = 
+PSP_EBOOT_SND0	 = 
 endif
 
-ifneq ($(USE_BUNKAI_KINOU),1)
-	# 0==通常開発
-	EXTRA_TARGETS	 = mk_dir EBOOT.PBP
-else
-	# 1==とりあえず、自動で全部コンパイル出来る筈
-	EXTRA_TARGETS	 = mk_dir SDL_lib_bunkai EBOOT.PBP
-endif
+# 通常開発 
+EXTRA_TARGETS	 = mk_dir EBOOT.PBP
 
 SRC = src
 OBJ = obj
 
+
+ifneq ($(USE_MINIMALIST_PSP_SDK),1)
+# 通常開発(cygwin)
 PSPDEV = $(shell psp-config --pspdev-path)
 PSPSDK = $(shell psp-config --pspsdk-path)
+else
+# pspsdk-setup-0.11.1
+PSPDEV = C:/pspsdk
+PSPSDK = C:/pspsdk/psp/sdk
+endif
+
 
 #PSPBIN = $(PSPSDK)/../bin
 #SDL_CONFIG = $(PSPBIN)/sdl-config
@@ -211,22 +243,22 @@ LDFLAGS =
 #------------------- for debug
 
 ifneq ($(DEBUG_MAP),1)
-	# 通常
+# 通常
 else
-	# マッピング出力(デバッグ用)
-	LDFLAGS += -Wl,-Map=mohoufu_map.txt
+# マッピング出力(デバッグ用)
+LDFLAGS += -Wl,-Map=mohoufu_map.txt
 endif
 
 #------------------- for debug
 
 ifneq ($(USE_PROFILE),1)
 else
-	#ifneq ($(USE_LIB_PROFILE),1)
-	#else
-		# -lpspprof は SDL とリンクする場合、位置依存がある。
-		LIBS += -lpspprof
-	#endif
-	#	CORE_LIBS += -lpspprof
+#ifneq ($(USE_LIB_PROFILE),1)
+#else
+# -lpspprof は SDL とリンクする場合、位置依存がある。
+LIBS += -lpspprof
+#endif
+#	CORE_LIBS += -lpspprof
 endif
 
 # 位置が悪い場合
@@ -276,100 +308,40 @@ endif
 
 #------------------- ogg codec
 ifneq ($(LINK_OGG),1)
-	##not include	## oggを使わない場合
+##not include	## oggを使わない場合
 else
-	##
-	ifneq ($(LINK_LIBTREMOR_LOW_MEM),1)
-		##only large
-		LIBTREMOR_DIR = libtremor_large
-	else
-		##only LINK_LIBTREMOR_LOW_MEM
-		LIBTREMOR_DIR = libtremor_lowmem
-	endif
-	##
-	ifneq ($(CUSTOM_LIB),1)
-		# CUSTOM_LIB 以外の場合
-		LIBS += -lvorbisidec
-	else
-		#LIBS += $(OBJ)/libtremor/libvorbisidec_test.a
-		LIBS += $(OBJ)/$(LIBTREMOR_DIR)/libvorbisidec_test.a
-	endif
+##
+ifneq ($(LINK_LIBTREMOR_LOW_MEM),1)
+##only large
+LIBTREMOR_DIR = libtremor_large
+else
+##only LINK_LIBTREMOR_LOW_MEM
+LIBTREMOR_DIR = libtremor_lowmem
+endif
+##
+#ifneq ($(CUS TOM_LIB),1)
+#	# CUS TOM_LIB 以外の場合
+#	LIBS += -lvorbisidec
+#else
+#LIBS += $(OBJ)/libtremor/lib_mohou_vorbisidec.a
+LIBS += $(OBJ)/$(LIBTREMOR_DIR)/lib_mohou_vorbisidec.a
+#endif
 endif
 
 #------------------- 位置依存リンク
 
-ifneq ($(CUSTOM_LIB),1)
-	# CUSTOM_LIB 以外の場合
-
-	#### 依存規則１
-		# libSDL_mixer.a は libSDL.a, libSDL_noGL.a より必ず先にリンク
-		#互換なしLIBS += -lSDL_mixer
-endif
-
-ifneq ($(CUSTOM_231SDL),1)
-	# CUSTOM_231SDL 以外の場合
-	# CUSTOM_LIB 以外の場合
-
-	#### 依存規則２
-	ifneq ($(CUSTOM_SDL),1)
-		# GL使う場合(位置依存がある。)
-		# libSDL.a は libGL.aより必ず先にリンク
-		LIBS += -lSDL
-	else
-		# GL使わない場合(位置依存がある。)
-		# libSDL_noGL.a は libSDL.aより必ず先にリンク
-		#SDL231
-		LIBS += -lSDL_noGL
-	#	LIBS += -lSDL_mohou00
-	endif
-endif
-
-ifneq ($(CUSTOM_LIB),1)
-	# CUSTOM_LIB 以外の場合
-
-	#### 依存規則３
-	ifneq ($(CUSTOM_SDL),1)
-		# GL使う場合(位置依存がある。)
-		# libGL.a は libpspvfpu.aより必ず先にリンク
-		LIBS += -lGL
-		LIBS += -lpspvfpu
-		# 若干小さくなる 1277241 -> 1276933 -> 1276917
-	else
-		# GL使わない場合(位置依存がある。)
-		# 若干大きくなる 1228013 -> 1228029 (???)
-	endif
-endif
-
-# SDLのライブラリは、元々依存関係がある。(SDLのライブラリ同士)
-# PSPSDKのライブラリはSDLと使う場合、依存関係がある。(SDLのライブラリ < PSPSDKのライブラリ)
-# libSDL_noGL.aは、SDLのOpenGLを無効にしたもの、依存関係がある。(libSDL_noGL.a < SDLのライブラリ)
-#
-# 纏めると、最低限以下の依存関係を守れば良い。
-# libSDL_mixer.a < libSDL_noGL.a < libSDL.a < libGL.a < libpspvfpu.a
-# もし、複数リンクした場合は依存関係が守られないので、必ず一つだけリンクする必要がある。
-# この為「sdl-configは使用できない」
-#
-# この依存関係が守られない場合、多重リンクで、プログラムが期待どおりに動かない可能性がある。
-# 同内容の関数が名前を変えて多重リンクされてしまう。
-# もし関数内部でstaticな内部変数等を用いていると、正常に動作しない。(ローカル変数が正常に動作しない。)
-#
-# SDL_FreeSurface();が正常動作しない原因はこの辺かも知れない。
-
-#-------------------
-
-
-ifneq ($(CUSTOM_LIB),1)
-	# CUSTOM_LIB 以外の場合
-	LIBS += -lSDL_image
-	LIBS += -lpng
-	LIBS += -ljpeg
-	#標準
-	#LIBS += -lpspmath
-else
-	#カスタム
-	#LIBS += $(OBJ)/libpspmath/libpspmath.a
-endif
-	LIBS += $(OBJ)/vfpu/lib_vfpu.a
+#ifneq ($(CUS TOM_LIB),1)
+#	# CUS TOM_LIB 以外の場合
+#	LIBS += -lSDL_image 	アンサポート
+#	LIBS += -lpng			アンサポート
+#	LIBS += -ljpeg			アンサポート
+#	#標準
+#	#LIBS += -lpspmath		アンサポート
+#else
+#カスタム
+#LIBS += $(OBJ)/libpspmath/libpspmath.a
+#endif
+LIBS += $(OBJ)/vfpu/lib_mohou_vfpu.a
 
 LIBS += -lz
 
@@ -394,18 +366,6 @@ LIBS += -lc
 #---------------------------
 
 ### SDL関連は先(位置依存がある。)
-
-##ifneq ($(CUSTOM_LIB),1)
-#	# CUSTOM_LIB 以外の場合
-#	ifneq ($(CUSTOM_SDL),1)
-#		# GL使う場合(位置依存がある。)
-#		# libSDL.a は libGL.aより必ず先にリンク
-#	else
-#		# GL使わない場合(位置依存がある。)
-#		# 若干小さくなる 1228029 -> 1228013 -> 1227969 (???)
-#	#	LIBS += -lSDL
-#	endif
-##endif
 
 #---------------------------
 
@@ -441,35 +401,12 @@ LIBS += -lpsprtc
 
 #---------------------------
 
-#ifneq ($(CUSTOM_LIB),1)
-#	# CUSTOM_LIB 以外の場合
-#	ifneq ($(CUSTOM_SDL),1)
-#		# GL使う場合
-#		#manager.o obj/core/bg.o -lSDL_mixer -lvorbisidec -lSDL_image -lpng -lz -ljpeg -l
-#		#m -lc -lSDL -lGL -lpspvfpu -lpsppower -lpspgu -lpsphprm -lpspaudio -lpsprtc -lps
-#		#pdebug -lpspdisplay -lpspge -lpspctrl -lpspsdk -lpsplibc -lpspnet -lpspnet_inet
-#		#-lpspnet_apctl -lpspnet_resolver -lpsputility -lpspuser -lpspkernel -o kene.elf
-#	else
-#		# GL使わない場合
-#		#manager.o obj/core/bg.o -lSDL_noGL -lSDL_mixer -lvorbisidec -lSDL_image -lpng -l
-#		#z -ljpeg -lm -lc -lSDL -lpsppower -lpspgu -lpsphprm -lpspaudio -lpsprtc -lpspdeb
-#		#ug -lpspdisplay -lpspge -lpspctrl -lpspsdk -lpsplibc -lpspnet -lpspnet_inet -lps
-#		#pnet_apctl -lpspnet_resolver -lpsputility -lpspuser -lpspkernel -o kene.elf
-#	endif
-#endif
 
 #------------------------------------------------------------------------------
 # Object Directory
 #------------------------------------------------------------------------------
 
 OBJDIRS += $(OBJ)
-OBJDIRS += $(OBJ)/core
-OBJDIRS += $(OBJ)/core/jiki
-OBJDIRS += $(OBJ)/core/douchu
-OBJDIRS += $(OBJ)/core/boss
-OBJDIRS += $(OBJ)/core/tama
-OBJDIRS += $(OBJ)/core/draw
-OBJDIRS += $(OBJ)/core/menu
 OBJDIRS += $(OBJ)/font
 
 # add after the others, in custom.mak
@@ -478,136 +415,23 @@ OBJDIRS += $(OBJ)/font
 # Object
 #------------------------------------------------------------------------------
 
-#	particle.o
-
-OBJS += $(OBJ)/core/my_math.o
-OBJS += $(OBJ)/core/tama/bullet_vector.o
-#OBJS += $(OBJ)/core/tama/bullet_chain_laser.o
-#OBJS += $(OBJ)/core/tama/bullet_system.o
-OBJS += $(OBJ)/core/tama/tama_system.o
-OBJS += $(OBJ)/core/tama/laser_system.o
-#OBJS += $(OBJ)/core/tama/sprite_old.o
-#OBJS += $(OBJ)/core/tama/sprite_SDL.o
-OBJS += $(OBJ)/core/tama/sprite_bullet.o
-OBJS += $(OBJ)/core/tama/spell.o
-OBJS += $(OBJ)/core/boss/spell_card.o
-OBJS += $(OBJ)/core/boss/common.o
-#; ボス(本体)
-#OBJS += $(OBJ)/core/boss/boss_08_kene.o
-#OBJS += $(OBJ)/core/boss/boss_07_cirno.o
-OBJS += $(OBJ)/core/boss/boss_06_sakuya.o
-OBJS += $(OBJ)/core/boss/boss_05_pache.o
-OBJS += $(OBJ)/core/boss/boss_04_aya.o
-OBJS += $(OBJ)/core/boss/boss_03_kaguya.o
-OBJS += $(OBJ)/core/boss/boss_02_mima.o
-#OBJS += $(OBJ)/core/boss/boss_01_alice.o	# 模倣風標準機能ですべて対処出来るので固有機能はなし。
-OBJS += $(OBJ)/core/boss/boss_move.o
-#; ボスのオプション
-OBJS += $(OBJ)/core/boss/option_60_sakuya_baramaki1.o
-OBJS += $(OBJ)/core/boss/option_61_sakuya_baramaki2.o
-OBJS += $(OBJ)/core/boss/option_62_sakuya_ryoute.o
-OBJS += $(OBJ)/core/boss/option_63_sakuya_linear.o
-OBJS += $(OBJ)/core/boss/option_64_sakuya_kurukuru.o
-OBJS += $(OBJ)/core/boss/option_65_sakuya_360knife.o
-OBJS += $(OBJ)/core/boss/option_66_sakuya_star.o
-OBJS += $(OBJ)/core/boss/option_67_sakuya_laser.o
-#OBJS += $(OBJ)/core/boss/option_68_sakuya_hosigata.o
-#
-OBJS += $(OBJ)/core/boss/option_50_pache_laser.o
-OBJS += $(OBJ)/core/boss/option_51_pache_doll.o
-#
-OBJS += $(OBJ)/core/boss/option_41_aya_momiji02.o
-OBJS += $(OBJ)/core/boss/option_40_aya_momiji01.o
-#
-OBJS += $(OBJ)/core/boss/option_30_kaguya_dolls.o
-#OBJS += $(OBJ)/core/boss/option_31_kaguya_tamanoe.o
-OBJS += $(OBJ)/core/boss/option_32_kaguya_houmotu.o
-OBJS += $(OBJ)/core/boss/option_20_mima_hosi.o
-#
-OBJS += $(OBJ)/core/boss/option_10_alice_doll_type_b.o
-OBJS += $(OBJ)/core/boss/option_11_alice_doll.o
-#; 中ボスもどき
-OBJS += $(OBJ)/core/douchu/chuu_boss.o
-#OBJS += $(OBJ)/core/douchu/chuu_03_rumia.o
-#OBJS += $(OBJ)/core/douchu/chuu_02_youkai2.o
-#OBJS += $(OBJ)/core/douchu/chuu_01_youkai1.o
-#; ザコのオプション
-OBJS += $(OBJ)/core/douchu/option_00_homing.o
-#; ザコ
-OBJS += $(OBJ)/core/douchu/zako.o
-
-#; 敵以外だが敵扱い
-OBJS += $(OBJ)/core/douchu/kanji_text.o
-OBJS += $(OBJ)/core/douchu/game_clear.o
-OBJS += $(OBJ)/core/douchu/clouds.o
-OBJS += $(OBJ)/core/douchu/bakuhatsu.o
-#
-OBJS += $(OBJ)/core/game_core.o
-
-OBJS += $(OBJ)/core/jiki/jiki.o
-OBJS += $(OBJ)/core/jiki/jiki_option.o
-OBJS += $(OBJ)/core/jiki/jiki_shot.o
-OBJS += $(OBJ)/core/jiki/jiki_bomber.o
-
-OBJS += $(OBJ)/core/jiki/bonus_item.o
-#---
-OBJS += $(OBJ)/core/draw/gu_load_texture.o
-OBJS += $(OBJ)/core/draw/gu_draw_screen.o
-OBJS += $(OBJ)/core/draw/score_panel.o
-
-
-OBJS += $(OBJ)/core/bg.o
-OBJS += $(OBJ)/core/font.o
-#---
-OBJS += $(OBJ)/core/audio.o
-#---
-#OBJS += $(OBJ)/core/tiny_strcmp.o
-OBJS += $(OBJ)/core/load_stage.o
-
-#---
-OBJS += $(OBJ)/core/menu/title.o
-OBJS += $(OBJ)/core/menu/pause.o
-OBJS += $(OBJ)/core/menu/ask_continue.o
-OBJS += $(OBJ)/core/menu/select_stage.o
-OBJS += $(OBJ)/core/menu/select_jiki.o
-
-OBJS += $(OBJ)/core/menu/game_over.o
-OBJS += $(OBJ)/core/menu/name_entry.o
-
-OBJS += $(OBJ)/core/menu/option_menu.o
-OBJS += $(OBJ)/core/menu/key_config.o
-OBJS += $(OBJ)/core/menu/music_room.o
-#/* スクリプトシステムは分離予定あり */
-OBJS += $(OBJ)/core/menu/scenario_script.o
-#OBJS += $(OBJ)/core/draw/game_script.o
-OBJS += $(OBJ)/core/draw/draw_kanji.o
-OBJS += $(OBJ)/font/shinonome16p.o
-
-OBJS += $(OBJ)/core/my_file.o
-
-#OBJS += $(OBJ)/core/fps.o
-
-OBJS += $(OBJ)/core/draw/graphics00.o 
-
-
-
-OBJS += $(OBJ)/core/boot_main.o
-OBJS += $(OBJ)/core/initialize.o
-
-#OBJS += $(OBJ)/libpspmath.a
-
-#------------------------------------------------------------------------------
-
 #------------------------------------------------------------------------------
 ifneq ($(USE_FPU_HACK),1)
 else
-	OBJS += $(OBJ)/core/asm_first.o
-	CFLAGS += -DHACK_FPU=1
+OBJS += $(OBJ)/core/asm_first.o
+CFLAGS += -DHACK_FPU=1
 endif
+
 #------------------------------------------------------------------------------
-ifeq ($(CUSTOM_LIB),1)
-	include $(SRC)/custom.mak
-endif
+# Include makefiles
+#------------------------------------------------------------------------------
+
+# 模倣風ゲーム本体
+include $(SRC)/core.mak
+
+# 模倣風専用ライブラリ
+include $(SRC)/custom.mak
+
 #------------------------------------------------------------------------------
 # CFLAGS
 #------------------------------------------------------------------------------
@@ -618,13 +442,300 @@ INCDIR += $(SRC)/core/include
 ##	CFLAGS += -O2
 	# 模倣風では、ここで指定しない。(このオプションは最適化の設定)
 
+CFLAGS_OPTIMIZE += -O3
+#???	署名てすと
+# 参考 2011-02-07 記事更新 http://nekoyama2gillien.blog36.fc2.com/blog-entry-417.html
+# CFLAGS_OPTIMIZE += -O2 -march=allegrex -mips2 -mabi=eabi -mgp32 -mlong32
+# うーん良くわかんないな～。
+
+
+#------------------------------------------------------------------------------
+# 参考 http://www.sra.co.jp/wingnut/gcc/gcc-j.html
+# GNU CC(GCC) のバージョン 2.95 に対応している。(日本語版ドラフト-17 July 2001) 
+# MIPS 系コンピュータ用オプション
+# 以下の -m オプションが、定義されている。 
+
+# ============================================= cpuの指定 
+# -mcpu=<cpu type>  // psp用GCC-4.3.5時点ではこのオプションは存在しない。
+# 解説: cpuを指定する。 最近のGCC(4.x.x系)では -mcpu は廃止されて、-march になった。
+# 解説: psp用GCC-4.3.5時点では -mcpu はサポートされない。
+# -mcpu=<cpu type>
+# 命令スケジューリングの際の機種のデフォルトを <cpu type> と想定する。
+# <cpu type> は、r2000、r3000、r3900、r4000、r4100、r4300、r4400、r4600、r4650、r5000、r6000、r8000、orion のどれかである。
+# さらに、r2000、r3000、r4000、r5000、r6000 は、r2k(あるいは r2K)、r3k 等のように省略できる。
+
+#------------
+# http://www7.atwiki.jp/pspprogram/pages/12.html
+# CPU(Allegrex)
+# MIPS 32bitコア R4000 
+# 周波数：1～333MHz 
+# 浮動小数点計算能力：2.6Gflops(333MHz駆動時) 
+# VFPU有り
+# 便利な定数がハードコード済み
+
+# PSPに採用されているCPUは、MIPS社のR4000の32bitカスタムCPU「Allegrex」。
+# 対応クロックは1～333MHz。パワーセービングのための拡張命令を持ち、FPUとVFPUが直結されている。
+CFLAGS_OPTIMIZE += -march=allegrex
+# http://nekoyama2gillien.blog36.fc2.com/blog-date-200911.html
+# -march=<cpu type>
+#	命令スケジューリングの際の機種のデフォルトを <cpu type> と想定する。
+#	<cpu type> は、
+#	mips1, mips2, mips3, mips4, mips5, 
+#	mips32, mips32r2, mips64, mips64r2, 
+#	r2000, r3000, r3900, r4000, r4010, r4400, r4600, r4650,
+#	r6000, r8000, r10000, r12000, orion, allegrex, 
+#	vr4100, vr4111, vr4120, vr4130, vr4181, vr4300, vr5000, vr5400, vr5500, 
+#	rm5200, rm5230, rm5231, rm5261, rm5721, rm7000, rm9000, 
+#	4kc, 4km, 4kp, 5kc, 20kc, sb1, from-abi
+#	のどれかである。
+# 解説: アーキテクチャー(cpuの設計)を指定する。
+# 解説: pspでは -march=allegrex らしい。
+
+#------------
+
+# ある特定の <cpu type> を選ぶとその特定のチップに適したスケジューリングを行なう一方で、
+# -mipsX や -mabi を指定しない限り、MIPS ISA(Instruction Set Architecture、命令セットアーキテクチャ)の
+# レベル 1 に合わないコードは何も生成しない。 
+
+# ============================================= MIPSタイプの指定 
+# ------ MIPS I/II/III/IV
+# -mips1  // (pspでは指定できない。)# error: -mips1 conflicts with the other architecture options, which specify a MIPS2 processor
+# -mips2  // (pspでは指定できる。  )# allegrex アーキテクチャーは MIPS II ベースなのかな？。(MIPS II準拠のr4000系を改造した物?)
+# -mips3  // (pspでは指定できない。)# error: -mips3 conflicts with the other architecture options, which specify a MIPS2 processor
+# -mips4  // (pspでは指定できない。)# error: -mips4 conflicts with the other architecture options, which specify a MIPS2 processor
+#-mips1 
+#	MIPS ISA のレベル 1 の命令を発行する。これがデフォルトである。
+#	r3000 が、この ISA レベルのデフォルトの CPU タイプである。 
+#-mips2 
+#	MIPS ISA のレベル 2 の命令(branch likely, square root 命令)を発行する。
+#	r6000 が、この ISA レベルのデフォルトの CPU タイプである。 
+#-mips3 
+#	MIPS ISA のレベル 3 の命令(64ビット命令)を発行する。
+#	r4000 が、この ISA レベルのデフォルトの CPU タイプである。 
+#-mips4 
+#	MIPS ISA のレベル 4 の命令(条件付き move 命令、プリフェッチ命令、強化された FPU 命令)を発行する。
+#	r8000 は、この ISA レベルのデフォルトの cpu type である。 
+# CFLAGS_OPTIMIZE += -mips2
+# 解説: pspでは -mips2 しか指定できないにもかかわらず、デフォルトという訳ではなく、
+#	指定した場合と省略した場合の扱いが特殊なので注意。
+#	pspの allegrex は MIPS II ベースだが、一部 MIPS III の命令も持つ。
+#	だから -mips2 を指定してそれらがGCCでどういう扱いになるのかちょっと判らない。
+
+#------------ CPU内のFPUレジスタのビット数設定。(VFPUはまるで関係無いので注意)
+# 解説: PCのコプロセッサ(浮動小数点形式)で紅魔境で使っているものは 32bit, 64bit, 96bit(80bitかも), 128bit。
+# 32bit はいわゆる(float)。
+# 64bit はいわゆる(double)。
+# 96bit(80bit?) は(tri double と呼ばれる形式らしい)。
+# 128bit はいわゆる(long double)。
+# 紅魔境のゲームエンジン側では、おそらく32bit, 64bitしか使ってないと思われるが、
+# Direct X と VisualC++のランタイム をスタティックリンクしているので、こちらで  96bit(80bitかも), 128bitを使用している。
+# Direct X (スタティックリンクされている)で SSE や MMX も使用している。
+
+# 解説: -mfp32 は、PCでいう(float)を使う。
+# 解説: -mfp64 は、PCでいう(double)を使う。しかしpspでは設定できない。pspで double と書けば float精度。
+#-mfp32 
+#	32個の32ビット浮動小数点レジスタが利用可能であることを仮定する。これはデフォルトである。 
+#-mfp64  // (pspでは指定できない。) // error: unsupported combination: -mfp64 -msingle-float
+#	32個の64ビット浮動小数点レジスタが利用可能であることを仮定する。これは、-mips3 オプションが指定されたときのデフォルトである。 
+CFLAGS_OPTIMIZE += -mfp32
+
+#------------ CPU内の汎用レジスタ設定。# 1レジスタあたりのビット数
+#-mgp32 
+#	32個の32ビット汎用レジスタが利用可能であることを仮定する。これはデフォルトである。 
+#-mgp64  // (pspでは指定できない。) error: '-mgp64' used with a 32-bit processor.
+#	32個の64ビット汎用レジスタが利用可能であることを仮定する。これは、-mips3 オプションが指定されたときのデフォルトである。 
+CFLAGS_OPTIMIZE += -mgp32
+
+#------------ long型の大きさを指定する。
+#-mlong32 
+#	long 型、int 型、ポインタ型を強制的に 32 ビット幅にする。 
+#	-mlong32、-mlong64、-mint64 のどれも指定されていないと、int、long、ポインタのサイズは、ABI と選択された ISA に依存する。
+#	-mabi=64 の場合、int は 32 ビット幅で long は 64 ビット幅である。
+#	-mabi=eabi の場合、-mips1 か -mips2 が指定されていると、int と long は 32 ビット幅になる。
+#	-mabi=eabi の場合、それより高い ISA が指定されていると、int は 32 ビット幅で、long が 64 ビット幅になる。
+#	ポインタ型の幅は、long の幅と汎用レジスタの幅の小さいほうになる(これは、ISA に依存する)。 
+#-mlong64 
+#	long 型を強制的に 64 ビットにする。デフォルトについての説明とポインタの大きさについては -mlong32 を参照のこと。 
+#-mint64 
+#	long 型と int 型を強制的に 64 ビット幅にする。デフォルトについての説明とポインタの大きさについては -mlong32 を参照のこと。 
+# 解説: pspでは -mlong32 だとlong に 64bitを必要とするアプリがコンパイルできない。Timidityとかは -mlong64 でないとコンパイルできないと思う。
+# 解説: long long はこの辺のオプションに影響されずpspでは恐らく 64 ビットになって関係ないと思われるけど、解らない。
+CFLAGS_OPTIMIZE += -mlong32
+
+#-mabi=32 
+#-mabi=o64  // (pspでは指定できない。たぶん)
+#-mabi=n32  // (pspでは指定できない。たぶん)
+#-mabi=64 
+#-mabi=eabi 
+#	指定された ABI 用のコードを生成する。
+#	デフォルトの命令レベルは、32 に対しては -mips1 であり、
+#	n32 に対しては-mips3、その他に対しては -mips4 である。
+#	逆に、-mips1 か -mips2 を指定するとデフォルトの ABI は 32 になり、それ以外は 64 になる。 
+CFLAGS_OPTIMIZE += -mabi=eabi
+
+#-mmips-as 
+#	MIPS アセンブラ用のコードを生成し、通常のデバッグ情報を追加するためにmips-tfile を起動する。
+#	これは、OSF/rose オブジェクト形式を使っている、OSF/1 参照プラットフォーム以外の全てのプラットフォームでのデフォルトである。
+#	-gstabs か -gstabs+ のどちらかのオプションを使うと、mips-tfile プログラムが、MIPS ECOFF 内に stabs 形式のデバッグ情報を包み込む。 
+#-mgas 
+#	GNU アセンブラ用のコードを生成する。これは、OSF/rose オブジェクト形式を使っている、OSF/1 の参照プラットフォームではデフォルトである。
+#	また、configure のオプション --with-gnu-as が指定されたときのデフォルトでもある。 
+
+#-msplit-addresses 
+#-mno-split-addresses 
+#	アドレス定数の上位部と下位部を別々にロードするコードを生成する。
+#	これにより、gcc が、アドレスの上位ビットを無駄にロードしないように最適化することが可能になる。
+#	この最適化には、GNU as と GNU ld が必要になる。この最適化は、GNU as と GNU ld が標準のツールである幾つかの組み込みターゲットでは
+#	デフォルトで有効になる。 
+#-mrnames 
+#-mno-rnames 
+#	-mrnames を指定すると、レジスタ名として、ハードウェア名の代わりに、MIPS のソフトウェア名(例えば、$4 の代わりに a0)を使ったコードを出力する。
+#	このオプションをサポートしているアセンブラはAlgorithmics のアセンブラだけである。 
+#-mgpopt 
+#-mno-gpopt 
+#	-mgpopt オプションを指定すると、全てのデータ宣言を、テキストセクションの命令部分の前に書き出す。
+#	これにより MIPS のアセンブラが小さいグローバルおよび静的データ項目に対し、二語ではなく、一語によるメモリ参照を生成することが可能になる。
+#	最適化が指定されている場合には、これはデフォルトで有効になる。 
+#-mstats 
+#-mno-stats 
+#	-mstats オプションを指定すると、非インライン関数が処理される度に、標準エラー出力に一行出力し、
+#	プログラムの統計情報(セーブされたレジスタ数、スタックの大きさ等)を表示する。 
+#-mmemcpy 
+#-mno-memcpy 
+#	-mmemcpy オプションを指定すると、全てのブロック移動に対し、インラインコードを生成する代わりに、
+#	適切な文字列関数(memcpy かbcopy)を呼び出すようにする。 
+#-mmips-tfile 
+#-mno-mips-tfile 
+#	-mno-mips-tfile を指定すると、MIPS のアセンブラがデバッグ情報を追加した後のオブジェクトファイルに対し、
+#	mips-tfile プログラムによる後処理を行なわない。
+#	mips-tfile を実行しておかないと、デバッガからローカル変数の情報が扱えなくなる。
+#	さらに、stage2 と stage3 のオブジェクトには、アセンブラに渡された一時ファイル名が、オブジェクトファイル内に埋め込まれた形で入っている。
+#	このため、stage2 のオブジェクトと stage3 のオブジェクトが同じになることはない。
+#	-mno-mips-tfile オプションを指定するのは、mips-tfile プログラムにバグがあり、コンパイルが行えない場合にだけに術器である。 
+
+#-msoft-float 
+#	浮動小数点用ライブラリ呼び出しを含む出力を生成する。
+#	警告: 必要となるライブラリは GCC の一部ではない。
+#	普通はその機種の通常の C コンパイラの機能が使われるが、クロスコンパイルの場合はこれをそのまま行なうことはできない。
+#	クロスコンパイルの場合は、適切なライブラリ関数を自分で用意しなければならない。 
+#-mhard-float 
+#	浮動小数点命令を含む出力を生成する。これは、GCC のソースを変更しなければ、デフォルトである。 
+
+#-mabicalls 
+#-mno-abicalls 
+#	位置独立コード用に、System V.4 用の移植で使っている疑似命令.abicalls、.cpload、.cprestore を生成する(あるいは生成しない)。 
+
+#-mlong-calls 
+#-mno-long-calls 
+#	全ての呼出しを JALR 命令で行う。このためには、呼出しの前に、関数のアドレスをレジスタにロードしておく必要がある。
+#	このオプションを使う必要があるのは、現在の 512 メガバイトのセグメントの外側の関数を、ポインタ経由でなく呼び出す場合である。 
+
+#-mhalf-pic 
+#-mno-half-pic 
+#	外部参照へのポインタを、テキストセクションに置くのではなく、データセクションに置いてロードするようにする。 
+
+#-membedded-pic 
+#-mno-embedded-pic 
+#	いくつかの組み込みシステム向けに適した PIC コードを生成する。全ての呼出しは PC 相対アドレスを使って行われ、
+#	全てのデータのアドレスは$gp レジスタを使って扱われる。
+#	これには、そのための作業のほとんどを行う GNU as と GNU ld が必要である。
+#	これは、現在、ECOFF を使っているターゲットでしか動作していない。ELF では動いていない。 
+
+#-membedded-data 
+#-mno-embedded-data 
+#	可能であれば、変数を、まず最初に読み出し専用データセクションに割り当てる。
+#	次に可能であれば、小データセクションに割り当てる。さもなければ、データセクションに置く。
+#	こうすると、デフォルトよりも幾分遅いコードになるが、実行時に必要な RAM の量が小さくなるので、
+#	いくつかの組み込みシステムにとっては望ましいだろう。 
+
+#-msingle-float 
+#-mdouble-float 
+#	-msingle-float オプションを指定すると、r4650 チップのように、浮動小数点コプロセッサが単精度演算しかサポートしていないと想定する。
+#	-mdouble-float オプションを指定すると、倍精度演算を使うようになる。こちらがデフォルトである。 
+
+#-mmad 
+#-mno-mad 
+#	r4650 チップの場合のように、mad、madu、mul 命令を使うことを許す。 
+
+#-m4650 
+#	-msingle-float、-mmad、それに少なくとも現在のところでは、-mcpu=r4650 を有効にする。 
+
+#-mips16 
+#-mno-mips16 
+#	16ビット命令を有効にする。 
+
+#-mentry 
+#	疑似命令 entry と exit を使う。このオプションは -mips16 を一緒にしか使えない。 
+
+# ------- endian (pspは -EL Little Endian.)
+#-EL
+#	リトルエンディアン・モードのプロセッサ用にコードをコンパイルする。必要となるライブラリが存在すると仮定する。 
+#-EB   // (pspでは指定できない。)
+#	ビッグエンディアン・モードのプロセッサ用にコードをコンパイルする。必要となるライブラリが存在すると仮定する。 
+# 解説: pspのcpuはリトルエンディアンなので -EL (Little Endian)。デフォルトなのであえて指定する意味が無い。
+
+#-G<number>
+#	<number> バイト以下の大きさのグローバルなデータ項目と静的なデータ項目を、
+#	普通のデータセクションや bss セクションではなく、小データセクションや小 bss セクションに置く。
+#	これにより、アセンブラが、通常の 2 命令のメモリ参照の代わりに、
+#	グローバルポインタ(gp あるいは $28)に基づいた一命令のメモリ参照を生成することが可能になる。
+#	<number> のデフォルト値は、MIPS のアセンブラを使う場合には 8 で、GNU アセンブラを使う場合には 0 である。
+#	-G<number> オプションはアセンブラとリンカにも渡される。
+#	全てのモジュールは、同じ値の -G<number> でコンパイルしなければならない。 
+# 解説: pspでは GNUアセンブラを使うので初期値が -G0 と思われる。
+#CFLAGS += -G8
+
+# ------- アセンブラにプリプロセッサを使わない
+#-nocpp 
+#	MIPS アセンブラに対し、ユーザのアセンブラソースファイル(サフィックスが.s のもの)をアセンブルする場合に、
+#	アセンブラのプリプロセッサを実行しないように指示する。
+#	これらのオプションは、マシン記述の TARGET_SWITCHES マクロで定義されている。
+#	これらのオプションのデフォルトも、このマクロで定義されているので、デフォルトを変更するが可能である。 
+
+# =============================================
+
+#------------------------------------------------------------------------------
+
+
+#//??? 最適化オプションとして -O2 を使う場合は、-Olimit 3000 も使う必要がある。
+#//??? この二つのオプションはどちらも、configure が構築するMakefile には自動的に追加される。
+#//??? make の変数 CC を上書きして MIPS のコンパイラを使うには、-Wf,-XNg1500 -Olimit 3000 を追加する必要がある。
+
+
+#------------------------------------------------------------------------------
+# コード品質
+#
+
+## pspはアライメントおかしいと動かないから、念の為設定。
+# 関数は 32[byte]境界にアライメント。
+CFLAGS += -falign-functions=32
+# ループの頭は必ずアライメント。
+CFLAGS += -falign-loops
+# ラベル指定も必ずアライメント。
+CFLAGS += -falign-labels 
+# ジャンプ先も必ずアライメント。
+CFLAGS += -falign-jumps
+
+#------------------------------------------------------------------------------
+
+
+
 CFLAGS += -Wall
 	# Warning があればすべて出力。
 	# 模倣風では -Werror なので Warning扱いは、エラー扱いにして即コンパイル中止。
 
 CFLAGS += -G0
-	# -G0 を指定すると、GPレジスタを使わない(たぶん)
+	# -G0 を指定すると、(gp==$28)レジスタを使った間接アドレッシング命令を使わない(たぶん)
 	# 参考 http://wfasim.dyndns.org/wordpress/?p=182
+# -G<数字> は GPレジスタに関するオプション。<数字>は具体的にはバイト数。
+# データセクション(あるいはbss セクション)と GPレジスタ(==$28) を使った、メモリ参照が可能になる。
+# 解説: GCCでは、 -G<number> はすぺてのライブラリ/オブジェクトで統一しないと正常動作しないという仕様らしい。
+#	にもかかわらず、 -G<number> が異なるライブラリ/オブジェクトはリンク可能で、
+#	それが -G<number> が幾つの設定でコンパイルされたのか検出の手段が無い。
+#	pspの場合、万が一ライブラリに -G0 以外でコンパイルされたライブラリ/オブジェクトが混入されていると、
+#	そのライブラリ/オブジェクトの部分は正常に動作しない。
+#	通常は安全側の為 -G0に指定しておいた方が良い。
+#	但し、一切の外部ライブラリ/オブジェクトを使用しないならば(当然PSPSDKも使うなら自前コンパイル) -G8 とかは可能。
 
 # -G は GPレジスタに関するオプションで -g はデバッグに関するオプション。大文字と小文字で全然意味が違う。
 #???	CFLAGS += -g
@@ -634,10 +745,10 @@ CFLAGS += -G0
 #	-g 付けるとほんの少し※コードが大きくなる。(※少し: r33の場合で 36[bytes])
 #	r33現在 模倣風はC++無いので -gは要らない。(-lstdc++も要らない)
 
-CFLAGS += -std=gnu99
+#CFLAGS += -std=gnu99
 	# 1999年の GNU 規格に沿った C言語コード とする。(暗黙の省略とか、voidポインタの扱いとか...)
 
-CFLAGS += -Werror
+#でばっぐCFLAGS += -Werror
 	# Warning が発生した場合、エラー扱いにしてコンパイル中止。
 
 
@@ -648,10 +759,10 @@ CFLAGS += -Werror
 # C/C++言語で式の型に対する最適化の設定 h ttp://www.radiumsoftware.com/0304.html
 #	CFLAGS += -fstrict-aliasing
 	# このオプションを「指定した場合に」速度向上のためにメモリアクセスの最適化をする。(キャストに注意しないと動かない可能性あり、速い)
-	# -O2 -O3 では自動的に適用される。
+	# -O2 $(CFLAGS_OPTIMIZE) では自動的に適用される。
 #	CFLAGS += -fno-strict-aliasing
 	# このオプションを「指定しない場合に」速度向上のためにメモリアクセスの最適化をする。(安全側、遅い)
-# 何も指定しない場合は -O2 -O3 なら「-fstrict-aliasing」(キャストに注意しないと動かない可能性あり、速い)
+# 何も指定しない場合は -O2 $(CFLAGS_OPTIMIZE) なら「-fstrict-aliasing」(キャストに注意しないと動かない可能性あり、速い)
 ##### 以下GCCの説明文
 	# コンパイルされている言語に適用可能な別名規則（aliasing rule）のうち
 	# 最も厳密なものをコンパイラが前提することを許します。
@@ -668,15 +779,25 @@ CFLAGS += -Werror
 
 # 全部調べた訳じゃないけど、どういう場合に Warning扱い にするかの設定。(たぶん) 
 	# 模倣風では -Werror なので Warning扱いは、エラー扱いにして即コンパイル中止。
-	CFLAGS += -Wno-sign-compare
-	CFLAGS += -Wunused
-	CFLAGS += -Wpointer-arith
-	CFLAGS += -Wundef
-	CFLAGS += -Wformat
-	CFLAGS += -Wwrite-strings
-	CFLAGS += -Wdisabled-optimization
-	CFLAGS += -Wbad-function-cast
 
+
+# 符号比較はデバッグ中なのでとりあえずoff。(本当は良くない)
+# off(符号比較で警告しない):符号比較の扱い
+#CFLAGS += -Wno-sign-compare
+# on(符号比較で警告する):符号比較の扱い
+CFLAGS += -Wsign-compare 
+
+
+
+CFLAGS += -Wunused
+CFLAGS += -Wpointer-arith
+CFLAGS += -Wundef
+CFLAGS += -Wformat
+CFLAGS += -Wwrite-strings
+CFLAGS += -Wdisabled-optimization
+CFLAGS += -Wbad-function-cast
+
+#CFLAGS += -Wmissing-prototypes # プロトタイプ宣言が無い場合に警告(→エラー)。
 
 #	CFLAGS += -ftracer
 #	CFLAGS += -fstrength-reduce
@@ -699,7 +820,11 @@ CFLAGS += -ffast-math
 #	CFLAGS += -fprefetch-loop-arrays
 
 CFLAGS += -I/usr/local/pspdev/psp/include
+
+ifneq ($(USE_PSPL),1)
+# USE_PSPL 以外の場合
 OPTION_CFLAGS += -I/pspdev/psp/include/SDL
+endif
 
 
 # http://www.sra.co.jp/wingnut/gcc/gcc-j.html
@@ -709,17 +834,17 @@ OPTION_CFLAGS += -I/pspdev/psp/include/SDL
 # また、機種によってはデバッグが不可能になる。 (pspでは -pg が使えなくなる)
 
 ifneq ($(USE_PROFILE),1)
-	CORE_CFLAGS += -fomit-frame-pointer
+CORE_CFLAGS += -fomit-frame-pointer
 else
-	CORE_CFLAGS += -DENABLE_PROFILE
-	CORE_CFLAGS += -pg
+CORE_CFLAGS += -DENABLE_PROFILE
+CORE_CFLAGS += -pg
 endif
 
 ifneq ($(USE_LIB_PROFILE),1)
-	LIB_CFLAGS += -fomit-frame-pointer
+LIB_CFLAGS += -fomit-frame-pointer
 else
-	LIB_CFLAGS += -DENABLE_PROFILE
-	LIB_CFLAGS += -pg
+LIB_CFLAGS += -DENABLE_PROFILE
+LIB_CFLAGS += -pg
 endif
 
 # $(shell $(SDL_CONFIG) --cflags) 
@@ -745,11 +870,6 @@ CXXFLAGS += -fno-rtti
 
 #BUILD_PRX = 1
 
-#------------------------------------------------------------------------------
-# libSDL_noGL
-#------------------------------------------------------------------------------
-
-
 
 #------------------------------------------------------------------------------
 # build.mak
@@ -761,9 +881,12 @@ include $(PSPSDK)/lib/build.mak
 # Rules to make libraries
 #---------------------------------------------------------------------
 
-#$(OBJ)/libtremor/libvorbisidec_test.a: $(TREMOR_OBJS)
-$(OBJ)/$(LIBTREMOR_DIR)/libvorbisidec_test.a: $(TREMOR_OBJS)
-$(OBJ)/vfpu/lib_vfpu.a: $(LIB_PSP_MATH_OBJS)
+# build ogg lib
+#$(OBJ)/libtremor/lib_mohou_vorbisidec.a: $(TREMOR_OBJS)
+$(OBJ)/$(LIBTREMOR_DIR)/lib_mohou_vorbisidec.a: $(TREMOR_OBJS)
+
+# build vfpu lib
+$(OBJ)/vfpu/lib_mohou_vfpu.a: $(LIB_PSP_MATH_OBJS)
 
 #---------------------------------------------------------------------
 # Rules to manage files
@@ -771,7 +894,7 @@ $(OBJ)/vfpu/lib_vfpu.a: $(LIB_PSP_MATH_OBJS)
 
 #$ make
 #Making object tree for kene ...
-#psp-gcc -O3 -Werror -Isrc/core/. -I. -I/pspdev/psp/sdk/include -G0 -Wall -g 
+#psp-gcc $(CFLAGS_OPTIMIZE) -Werror -Isrc/core/. -I. -I/pspdev/psp/sdk/include -G0 -Wall -g 
 #-I/usr/local/pspdev/psp/include -I/pspdev/psp/include/SDL	-c src/core/support.c -o
 #obj/core/support.o
 #cc1: warnings being treated as errors
@@ -780,7 +903,7 @@ $(OBJ)/vfpu/lib_vfpu.a: $(LIB_PSP_MATH_OBJS)
 #make: *** [obj/core/support.o] Error 1
 # ???  警告: 制御が非 void 関数の終りに到達しました 
 #$(OBJ)/core/support.o: $(SRC)/core/support.c
-#	psp-gcc -O3   $(CXXFLAGS) -c $< -o $@
+#	psp-gcc $(CFLAGS_OPTIMIZE)   $(CXXFLAGS) -c $< -o $@
 #	//else
 #	//{
 #		return (0);
@@ -788,15 +911,15 @@ $(OBJ)/vfpu/lib_vfpu.a: $(LIB_PSP_MATH_OBJS)
 
 # malloc free で warnings
 #$(OBJ)/jpeg/%.o: $(SRC)/jpeg/%.c
-#	psp-gcc -O3 $(CFLAGS) -c $< -o $@
+#	psp-gcc $(CFLAGS_OPTIMIZE) $(CFLAGS) -c $< -o $@
 
 # malloc free で warnings
 #$(OBJ)/libpng/%.o: $(SRC)/libpng/%.c
-#	psp-gcc -O3 $(CFLAGS) -c $< -o $@
+#	psp-gcc $(CFLAGS_OPTIMIZE) $(CFLAGS) -c $< -o $@
 
 # malloc free で warnings
 #$(OBJ)/SDL_image/IMG_png.o: $(SRC)/SDL_image/IMG_png.c
-#	psp-gcc -O3 $(CFLAGS) -c $< -o $@
+#	psp-gcc $(CFLAGS_OPTIMIZE) $(CFLAGS) -c $< -o $@
 
 
 #rc/libtremor/misc.h(209) : warning: implicit declaration of function '_ilog'
@@ -805,65 +928,148 @@ $(OBJ)/vfpu/lib_vfpu.a: $(LIB_PSP_MATH_OBJS)
 
 # CPPゲームコアの場合c++(ライブラリとgnuプロファイラの扱いを変える)
 #$(OBJ)/core/%.o: $(SRC)/core/%.cpp
-#	psp-gcc -O3  $(CXXFLAGS) $(CORE_CFLAGS) -c $< -o $@
+#	psp-gcc $(CFLAGS_OPTIMIZE)  $(CXXFLAGS) $(CORE_CFLAGS) -c $< -o $@
 
+# 取り敢えず smpeg (バグ抜けるまで氷結)アンサポート中。
 # MP3ライブラリの場合(c++ なのは、 smpeg だけ)
-$(OBJ)/%.o: $(SRC)/%.cpp
-	psp-gcc -O3 $(CXXFLAGS) $(LIB_CFLAGS) -c $< -o $@
+#$(OBJ)/%.o: $(SRC)/%.cpp
+#	psp-gcc $(CFLAGS_OPTIMIZE) -Werror $(CXXFLAGS) $(LIB_CFLAGS) -c $< -o $@
 
 # OGGの場合( alloca(); で warnings )
 #$(OBJ)/libtremor/%.o: $(SRC)/libtremor/%.c
 $(OBJ)/$(LIBTREMOR_DIR)/%.o: $(SRC)/$(LIBTREMOR_DIR)/%.c
-	psp-gcc -O3 $(CFLAGS) $(LIB_CFLAGS) -c $< -o $@
+	psp-gcc $(CFLAGS_OPTIMIZE) -Werror $(CFLAGS) $(LIB_CFLAGS) -c $< -o $@
 
 # Cゲームコアの場合(ライブラリとgnuプロファイラの扱いを変える)
 $(OBJ)/core/%.o: $(SRC)/core/%.c
-	psp-gcc -O3 -Werror $(CFLAGS) $(OPTION_CFLAGS) $(CORE_CFLAGS) -c $< -o $@
+	psp-gcc $(CFLAGS_OPTIMIZE) -Werror $(CFLAGS) $(OPTION_CFLAGS) $(CORE_CFLAGS) -c $< -o $@
 
 # 旧pngの場合
 #$(OBJ)/png/%.o: $(SRC)/png/%.c
 #	psp-gcc -O2 -Werror $(CFLAGS) $(LIB_CFLAGS) -c $< -o $@
 
 # audio_mixerの場合
-$(OBJ)/audio_mixer/%.o: $(SRC)/audio_mixer/%.c
-	psp-gcc -O3 -Werror $(CFLAGS) $(LIB_CFLAGS) -c $< -o $@
+$(OBJ)/PSPL/audio/mixer/%.o: $(SRC)/PSPL/audio/mixer/%.c
+	psp-gcc $(CFLAGS_OPTIMIZE) -Werror $(CFLAGS) $(LIB_CFLAGS) -c $< -o $@
+
+# てすとのライブラリの場合
+#$(OBJ)/SDL231/video/%.o: $(SRC)/SDL231/video/%.c
+#	psp-gcc $(CFLAGS_OPTIMIZE) $(CFLAGS) $(LIB_CFLAGS) -c $< -o $@
+
+#(???????)
+$(OBJ)/PSPL/video/PSPL_pspvideo.o: $(SRC)/PSPL/video/PSPL_pspvideo.c
+	psp-gcc $(CFLAGS_OPTIMIZE) $(CFLAGS) $(LIB_CFLAGS) -c $< -o $@
+
 
 # その他のライブラリの場合
 $(OBJ)/%.o: $(SRC)/%.c
-	psp-gcc -O3 -Werror $(CFLAGS) $(LIB_CFLAGS) -c $< -o $@
+	psp-gcc $(CFLAGS_OPTIMIZE) -Werror $(CFLAGS) $(LIB_CFLAGS) -c $< -o $@
 
 # アセンブラの場合
 $(OBJ)/%.o: $(SRC)/%.S
-	psp-gcc -O3 -Werror $(CFLAGS) $(LIB_CFLAGS) -c $< -o $@
+	psp-gcc $(CFLAGS_OPTIMIZE) -Werror $(CFLAGS) $(LIB_CFLAGS) -c $< -o $@
 
-#	psp-gcc -O3 -Werror $(CFLAGS) -c $< -o $@
-#	psp-gcc -O3 -Werror $(CXXFLAGS) -c $< -o $@
+#	psp-gcc $(CFLAGS_OPTIMIZE) -Werror $(CFLAGS) -c $< -o $@
+#	psp-gcc $(CFLAGS_OPTIMIZE) -Werror $(CXXFLAGS) -c $< -o $@
 
 $(OBJ)/%.a:
 	@echo Archiving $@...
 	@$(AR) -r $@ $^
 
+
+
+#cc1: warnings being treated as errors
+#src/PSPL/video/PSPL_pspvideo.c: In function 'vidmem_alloc':
+#src/PSPL/video/PSPL_pspvideo.c(187) : warning: cast from function call of type 'void *' to non-matching type 'long unsigned int'
+#src/PSPL/video/PSPL_pspvideo.c: In function 'PSP_GuStretchBlit':
+#src/PSPL/video/PSPL_pspvideo.c(278) : warning: pointer of type 'void *' used in arithmetic
+#src/PSPL/video/PSPL_pspvideo.c(285) : warning: pointer of type 'void *' used in arithmetic
+#src/PSPL/video/PSPL_pspvideo.c(286) : warning: pointer of type 'void *' used in arithmetic
+#src/PSPL/video/PSPL_pspvideo.c(313) : warning: pointer of type 'void *' used in arithmetic
+#src/PSPL/video/PSPL_pspvideo.c: In function 'PSP_VideoQuit':
+#src/PSPL/video/PSPL_pspvideo.c(615) : warning: pointer of type 'void *' used in arithmetic
+#make: *** [obj/PSPL/video/PSPL_pspvideo.o] Error 1
+
+
+#cc1.exe: warnings being treated as errors
+#src/PSPL/video/PSPL_pspvideo.c: In function 'vidmem_alloc':
+#src/PSPL/video/PSPL_pspvideo.c:167: error: cast from function call of type 'void *' to non-matching type 'long unsigned int'
+#C:\PSPSDK\BIN\MAKE.EXE: *** [obj/PSPL/video/PSPL_pspvideo.o] Error 1
+
+
 #------------------------------------------------------------------------------
 # Utilities
 #------------------------------------------------------------------------------
+# cygwin: windows下で仮想unixを動作させるツール。遅いと評判^^;。
 
-ifeq ($(PSPDEV),)
-MD = -mkdir
-RM = -rm
-else
-MD = -mkdir.exe
+#(ここはTAB入れて字下げ出来ないので注意)
+#ifeq ($(PSPDEV),)
+# Minimalist ???
+#else
+# 0==通常開発(cygwin)
+#endif
+
+ifneq ($(USE_MINIMALIST_PSP_SDK),1)
+# 通常開発(cygwin)
+# (unix:ディレクトリー  ,msdos: ディレクトリー  ,windows: フォルダ)[OSで名称が違うが同じ物]
+# make directory (unix:mkdir  ,msdos: md) メイク-ディアー、メイク-ディレクトリー(ディレクトリを作成する)
+#435ではbuild.mak内にある。MKDIR = mkdir.exe
 RM = -rm.exe
+# copy    (unix:cp  ,msdos: copy) コピー(ファイルを複製する)[2つに増える]
+#435ではbuild.mak内にある。CP = cp
+# re-move (unix:rm  ,msdos: del)  リムーブ(ファイルを消す)
+#435ではbuild.mak内にある。RM = rm
+# move    (unix:mv  ,msdos:move)  ムーブ(ファイルを移動する)[移動元は削除される]
+MV = mv
+# archiver ア－カイバ(C言語などのコンパイルしたobjファイルをライブラリに纏めたり分解したりするツール。ファイル圧縮は一切しない)
+#435ではbuild.mak内にある。(psp-ar)AR = ar
+else
+# pspsdk-setup-0.11.1
+#Minimalist PSP homebrew SDK for Windows.(以下Minimalistと略)
+# こっちは知らない(たぶんMinimalistはこっち)
+# Minimalistは実際中身cygwin(の簡略版)で動いてるから、大体一緒。
+# ただ、make.exe とか 速度要る奴はcygwin関係無くてnativeで動いてるっぽい。
+#MKDIR = -mkdir
+#RM = -rm
+MKDIR = C:/pspsdk/bin/mkdir
+#RM = -rm.exe
+RM = C:/pspsdk/bin/rm.exe
+#MV = mv
 endif
 
 mk_dir:
 	@echo Making directry for $(TARGET) ...
-	@$(MD) -p $(subst //,\,$(sort $(OBJDIRS)))
+	@$(MKDIR) -p $(subst //,\,$(sort $(OBJDIRS)))
 	@$(RM) -f PARAM.SFO
 
+ifneq ($(USE_MINIMALIST_PSP_SDK),1)
+# 通常開発(cygwin)
 DELTREE_OBJ_ALL 	= @$(RM) -f -rd $(OBJ)
 DELTREE_AUDIO_MIXER	= @$(RM) -f -rd $(OBJ)/audio_mixer
 DELTREE_OBJ_CORE	= @$(RM) -f -rd $(OBJ)/core
 DELTREE_OBJ_JIKI	= @$(RM) -f -rd $(OBJ)/core/jiki
+else
+# pspsdk-setup-0.11.1
+DELTREE_OBJ_ALL 	= $(RM) -f -r -d $(OBJ)
+DELTREE_AUDIO_MIXER	= $(RM) -f -r -d $(OBJ)/audio_mixer
+DELTREE_OBJ_CORE	= $(RM) -f -r -d $(OBJ)/core
+DELTREE_OBJ_JIKI	= $(RM) -f -r -d $(OBJ)/core/jiki
+#C:\pspsdk\srcr34>rm --help
+#Usage: C:\PSPSDK\BIN\RM.EXE [OPTION]... FILE...
+#Remove (unlink) the FILE(s).
+#
+#  -d, --directory       unlink directory, even if non-empty (super-user only)
+#  -f, --force           ignore nonexistent files, never prompt
+#  -i, --interactive     prompt before any removal
+#  -r, -R, --recursive   remove the contents of directories recursively
+#  -v, --verbose         explain what is being done
+#      --help            display this help and exit
+#      --version         output version information and exit
+#
+# うちではディレクトリ消去しようとするとどんな指定でも No such file or directory になる。
+# C:\PSPSDK\BIN\RM.EXE に関しては、うちでは正常動作しない為不明。
+endif
+
 
 # audio mixer のみ、リコンパイル用。
 mixer:
@@ -908,68 +1114,3 @@ rr:
 	@$(RM) -f mohoufu_map.txt
 	@$(DELTREE_OBJ_ALL)
 
-
-#------------------------------------------------------------------------------
-# 231copy(テストr31時点ではダミー)
-#------------------------------------------------------------------------------
-# custom.mak に入れると動作しない為、この位置に必要。
-#------------------------------------------------------------------------------
-
-SDL_lib_bunkai:
-	cp $(PSPDEV)/psp/lib/libSDL.a $(OBJ)/SDL231/
-	ar xv $(OBJ)/SDL231/libSDL.a
-	rm -f arch.o
-	rm -f SDL_active.o
-	rm -f SDL_cdrom.o
-	rm -f SDL_cpuinfo.o
-	rm -f SDL_cursor.o
-	rm -f SDL_events.o
-	rm -f SDL_expose.o
-	rm -f SDL_gamma.o
-	rm -f SDL_getenv.o
-	rm -f SDL_joystick.o
-	rm -f SDL_keyboard.o
-	rm -f SDL_loadso.o
-	rm -f SDL_mixer_m68k.o
-	rm -f SDL_mixer_MMX.o
-	rm -f SDL_mixer_MMX_VC.o
-	rm -f SDL_mouse.o
-	rm -f SDL_pspevents.o
-	rm -f SDL_pspgl.o
-	rm -f SDL_pspmouse.o
-	rm -f SDL_quit.o
-	rm -f SDL_resize.o
-	rm -f SDL_stretch.o
-	rm -f SDL_syscdrom.o
-	rm -f SDL_syscond.o
-	rm -f SDL_sysjoystick.o
-	rm -f SDL_systimer.o
-	rm -f SDL_timer.o
-	rm -f SDL_yuv.o
-	rm -f SDL_yuv_mmx.o
-	rm -f SDL_yuv_sw.o
-	rm -f SDL_error.o
-	rm -f SDL_fatal.o
-	mv *.o $(OBJ)/SDL231/
-	mv $(OBJ)/SDL231/SDL_audio.o     $(OBJ)/SDL231/audio/
-	mv $(OBJ)/SDL231/SDL_audiocvt.o  $(OBJ)/SDL231/audio/
-	mv $(OBJ)/SDL231/SDL_audiodev.o  $(OBJ)/SDL231/audio/
-	mv $(OBJ)/SDL231/SDL_audiomem.o  $(OBJ)/SDL231/audio/
-	mv $(OBJ)/SDL231/SDL_mixer.o     $(OBJ)/SDL231/audio/
-	mv $(OBJ)/SDL231/SDL_pspaudio.o  $(OBJ)/SDL231/audio/
-	mv $(OBJ)/SDL231/SDL_wave.o      $(OBJ)/SDL231/audio/
-	mv $(OBJ)/SDL231/SDL_sysmutex.o  $(OBJ)/SDL231/thread/
-	mv $(OBJ)/SDL231/SDL_syssem.o    $(OBJ)/SDL231/thread/
-	mv $(OBJ)/SDL231/SDL_systhread.o $(OBJ)/SDL231/thread/
-	mv $(OBJ)/SDL231/SDL_thread.o    $(OBJ)/SDL231/thread/
-	mv $(OBJ)/SDL231/SDL_blit.o      $(OBJ)/SDL231/video/
-	mv $(OBJ)/SDL231/SDL_blit_0.o    $(OBJ)/SDL231/video/
-	mv $(OBJ)/SDL231/SDL_blit_1.o    $(OBJ)/SDL231/video/
-	mv $(OBJ)/SDL231/SDL_blit_A.o    $(OBJ)/SDL231/video/
-	mv $(OBJ)/SDL231/SDL_blit_N.o    $(OBJ)/SDL231/video/
-	mv $(OBJ)/SDL231/SDL_bmp.o       $(OBJ)/SDL231/video/
-	mv $(OBJ)/SDL231/SDL_pixels.o    $(OBJ)/SDL231/video/
-	mv $(OBJ)/SDL231/SDL_RLEaccel.o  $(OBJ)/SDL231/video/
-	mv $(OBJ)/SDL231/SDL_surface.o   $(OBJ)/SDL231/video/
-	mv $(OBJ)/SDL231/SDL_pspvideo.o  $(OBJ)/SDL231/video/
-	mv $(OBJ)/SDL231/SDL_video.o     $(OBJ)/SDL231/video/

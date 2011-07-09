@@ -36,17 +36,15 @@ static void move_meido2(SPRITE *src)
 		src->tmp_angleCCW1024					= cv1024r(0);/* 真下に向きを固定 */
 		//if (data_hari_rank256/*src->le vel*/)
 		{
-			obj_send1->cx256						= (src->cx256);
-			obj_send1->cy256						= (src->cy256);
 			//efine HARIDAN_SPEED ( /*speed256*/(t256(5)+((data_le vel/*src->le vel*/)<<8) ) )
 			#define HARIDAN_SPEED ( /*speed256*/t256(4/*5*/) + (/*data_hari_rank256*/(1<<8)/*src->le vel*/) )
-			br.BULLET_REGIST_00_speed256			= HARIDAN_SPEED;				/* 弾速 */
-			br.BULLET_REGIST_02_VECTOR_angle1024	= ANGLE_JIKI_NERAI_DAN;
-			br.BULLET_REGIST_04_bullet_obj_type 	= BULLET_HARI32_00_AOI; 		/* [ 弾] */
-			br.BULLET_REGIST_05_regist_type 		= REGIST_TYPE_00_MULTI_VECTOR;
-			br.BULLET_REGIST_06_n_way				= (1);							/* [1way] */
-		//	br.BULLET_REGIST_07_VECTOR_div_angle1024		= (0);							/* ダミー角度(未使用) */
-			bullet_regist_vector();
+			br.BULLET_REGIST_00_speed256				= HARIDAN_SPEED;				/* 弾速 */
+			br.BULLET_REGIST_02_VECTOR_angle1024		= ANGLE_JIKI_NERAI_DAN;
+		//	br.BULLET_REGIST_03_VECTOR_regist_type		= VEC TOR_REGIST_TYPE_00_MULTI_VECTOR;
+			br.BULLET_REGIST_04_bullet_obj_type 		= BULLET_HARI32_00_AOI; 		/* [ 弾] */
+			br.BULLET_REGIST_06_n_way					= (1);							/* [1way] */
+		//	br.BULLET_REGIST_07_VECTOR_div_angle1024	= (0);							/* ダミー角度(未使用) */
+			bullet_regist_multi_vector_send1_xy_src(src); 	/* 弾源x256 y256 中心から発弾。 */
 		}
 		src->jyumyou	= (512+512-1);/* 次へ */
 	}
@@ -86,7 +84,7 @@ static void move_meido2(SPRITE *src)
 	src->cy256+=((cos1024((src->tmp_angleCCW1024))*src->speed256)>>8);/*fps_factor*/
 //
 	/* アニメーション */
-	zako_anime_type01(src, TEKI_36_YOUSEI3_1);
+	zako_anime_type01(src);
 }
 
 

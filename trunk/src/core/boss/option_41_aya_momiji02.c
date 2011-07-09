@@ -24,15 +24,13 @@
 
 static void move_aya_doll_last_burrets(SPRITE *src)
 {
-	obj_send1->cx256							= (src->cx256); 	/* ’eŒ¹x256 */
-	obj_send1->cy256							= (src->cy256); 	/* ’eŒ¹y256 */
 	br.BULLET_REGIST_00_speed256				= (t256(0.75)+(ra_nd()&0xff));					/* ’e‘¬ */
 	br.BULLET_REGIST_02_VECTOR_angle1024		= ((ra_nd()&(1024-1))); 						/* src->tmp_angleCCW1024 */
+//	br.BULLET_REGIST_03_VECTOR_regist_type		= VEC TOR_REGIST_TYPE_00_MULTI_VECTOR;
 	br.BULLET_REGIST_04_bullet_obj_type 		= BULLET_KOME_01_AKA+(((cg_game_difficulty)&0x02)<<1);	/* [Ô(0x01)/—Î(0x05)•Ä’e] */
-	br.BULLET_REGIST_05_regist_type 			= REGIST_TYPE_00_MULTI_VECTOR;
 	br.BULLET_REGIST_06_n_way					= (1+(cg_game_difficulty)); 							/* [7way] [8way] */
 	br.BULLET_REGIST_07_VECTOR_div_angle1024	= (int)(1024/23);								/* Šp“x (1024/27) (1024/24) */
-	bullet_regist_vector();
+	bullet_regist_multi_vector_send1_xy_src(src); 	/* ’eŒ¹x256 y256 ’†S‚©‚ç”­’eB */
 }
 
 /*---------------------------------------------------------
@@ -94,7 +92,7 @@ static void move_bullet_momiji(SPRITE *src)
 		if (NULL!=h)/* “o˜^‚Å‚«‚½ê‡‚Ì‚Ý */
 		{
 			h->m_Hit256R			= ZAKO_ATARI16_PNG;
-			h->type 				= TEKI_24_YOUSEI2_1+((angle1024>>7)&0x07);/* 0 ... 8 */
+			h->type 				= (TEKI_32_YOUSEI2_1)+((angle1024>>7)&0x07);/* 0 ... 8 */
 			h->flags				|= (SP_FLAG_COLISION_CHECK/*|SP_FLAG_VISIBLE|SP_FLAG_TIME_OVER*/);
 			h->callback_mover		= move_bullet_momiji;
 			h->time_out 			= (50); 	/* 200Žõ–½ */

@@ -22,7 +22,8 @@ typedef struct /*_script_sprite*/
 	int set_speed;		/* 移動速度 */		//	int move_wait;	/* 動きがあったときの制御用 */
 	int angle1024;		/* 正確な方向 */	//	int r_course;	/* 大体の方向 */
 //[12]
-	SDL_Surface *img;	/* SDL 画像 Images. NULLの場合は画像が無い。 */
+	SDL_Surface *img;		/* SDL 画像 Images. NULLの場合は画像が無い。 */
+//	UINT16 *render_image;	/* 画像data */
 //	int used;
 //
 //	u8 alpha255;		/* alpha値 */

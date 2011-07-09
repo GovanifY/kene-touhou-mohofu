@@ -12,8 +12,8 @@
 	Todo:
 	src->giji_jyumyou ‚ğ”p~‚µ‚Ä src->jyumyou ‚Å’u‚«Š·‚¦‚éB
 ---------------------------------------------------------*/
+#if 000
 
-//1857795
 //typedef struct
 //{
 #define aaa_target_x256 						user_data00
@@ -151,3 +151,5 @@ global void bullet_crate_sakuya_linear_yuudou(SPRITE *src)
 		}
 	}
 }
+
+#endif/* 000 */

@@ -44,9 +44,9 @@ static void gu_draw_big_maho_jin(void)
 	/* “à‘¤ */
 //	int hankei_111 = (draw_boss_hp_value>>2);/* 128==1024/8 */
 //	int hankei_111 = (boss_life_value>>(2+3));/* 128==1024/8 */
-//	int hankei_111 = (spell_card_boss_timer>>(2+3))+(64);/* 128==1024/8 */
-//	int hankei_111 = (spell_card_boss_timer>>(7))+(64);/* 128==1024/8 */
-	int hankei_111 = (spell_card_boss_timer>>(8))+(64);/* 128==1024/8 */
+//	int hankei_111 = (spell_card.boss_timer>>(2+3))+(64);/* 128==1024/8 */
+//	int hankei_111 = (spell_card.boss_timer>>(7))+(64);/* 128==1024/8 */
+	int hankei_111 = (spell_card.boss_timer>>(8))+(64);/* 128==1024/8 */
 	/* ŠO‘¤ */
 	int hankei_222 = (hankei_111+(16)/*(8)*/);/* 8[dot]•¶š‚‚³ */
 

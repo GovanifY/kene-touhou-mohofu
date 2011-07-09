@@ -50,14 +50,14 @@ enum
 	SPELL_CARD_04N_sakuya_ddd,		/* 第四形態: 魔方陣生成 */
 	SPELL_CARD_04H_sakuya_ddd,		/* 第四形態: 魔方陣生成 */
 	SPELL_CARD_04L_sakuya_ddd,		/* 第四形態: 魔方陣生成 */
-//	SPELL_CARD_05E_sakuya_eee,		/* 第五形態: (黄色マスカット弾) */
-//	SPELL_CARD_05N_sakuya_eee,		/* 第五形態: (黄色マスカット弾) */
-//	SPELL_CARD_05H_sakuya_eee,		/* 第五形態: (黄色マスカット弾) */
-//	SPELL_CARD_05L_sakuya_eee,		/* 第五形態: (黄色マスカット弾) */
-	SPELL_CARD_06E_sakuya_fff,		/* 第六形態: (黄色マスカット弾) */
-	SPELL_CARD_06N_sakuya_fff,		/* 第六形態: (黄色マスカット弾) */
-	SPELL_CARD_06H_sakuya_fff,		/* 第六形態: (黄色マスカット弾) */
-	SPELL_CARD_06L_sakuya_fff,		/* 第六形態: (黄色マスカット弾) */
+	SPELL_CARD_05E_sakuya_eee,		/* 第五形態: (黄色マスカット弾A) */
+	SPELL_CARD_05N_sakuya_eee,		/* 第五形態: (黄色マスカット弾A) */
+	SPELL_CARD_05H_sakuya_eee,		/* 第五形態: (黄色マスカット弾A) */
+	SPELL_CARD_05L_sakuya_eee,		/* 第五形態: (黄色マスカット弾A) */
+	SPELL_CARD_06E_sakuya_fff,		/* 第六形態: (黄色マスカット弾B) */
+	SPELL_CARD_06N_sakuya_fff,		/* 第六形態: (黄色マスカット弾B) */
+	SPELL_CARD_06H_sakuya_fff,		/* 第六形態: (黄色マスカット弾B) */
+	SPELL_CARD_06L_sakuya_fff,		/* 第六形態: (黄色マスカット弾B) */
 	SPELL_CARD_07E_sakuya_ggg,		/* 第七形態: (分散魔方陣)追加計画中 */
 	SPELL_CARD_07N_sakuya_ggg,		/* 第七形態: (分散魔方陣)追加計画中 */
 	SPELL_CARD_07H_sakuya_ggg,		/* 第七形態: (分散魔方陣)追加計画中 */

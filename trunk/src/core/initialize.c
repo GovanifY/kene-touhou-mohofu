@@ -27,7 +27,7 @@ extern void init_imglist(void);
 //extern void init_math(void);
 extern void ini_load(void);
 extern void ini_save(void);
-extern void bg2_system_init(void);
+//extern void bg2_system_init(void);
 //extern void pr eload_gfx(void);
 extern void psp_pad_init(void);
 extern void psp_video_init01(void);
@@ -37,8 +37,6 @@ extern void old_menu_system_init(void);
 void game_system_init(void)
 {
 	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO ); /*| SDL_INIT_JOYSTICK*/
-	SDL_InitSubSystem(SDL_INIT_AUDIO);
-
 	/* ----- */
 	pspDebugScreenInit();
 //	render_blit_fake_loading_init();
@@ -82,7 +80,7 @@ void game_system_init(void)
 
 	//fps_init();
 	obj_send1		= my_calloc(sizeof(SPRITE));/* 引数受け渡し用 */
-	bg2_system_init();
+//	bg2_system_init();//	psp起動時に一度だけ初期化する
 	/* ゲームコア game_core_init(); */
 	cg.game_continue_stage			= (1-1);	/* (0) 0は1面から開始という意味。 */
 //	pr actice_mode					= 0;
@@ -90,7 +88,7 @@ void game_system_init(void)
 //	za nki							= 2;
 	old_menu_system_init();
 //
-	play_music_num(BGM_23_menu01);
+	play_music_num(BGM_25_menu01);
 	main_call_func = title_menu_start;	/* タイトルメニューへ移動 */
 }
 
@@ -105,7 +103,7 @@ void game_system_exit(void)
 //	script_system_exit();
 	exit_audio();
 //	psp_denug_printf("Thank you for playing");
-	#if (0)/* r31 現状うまくいかないです。*/
+	#if (0)/*(r34)原因解からず、[とりあえずoff](たぶんフォント関係のメモリーリーク)*/	//(1)/* r31 現状うまくいかないです。*/
 	/* たぶんSDL231の開放処理にバグあると思います。
 	登録(具体的にはmallocとかでメモリ確保)してないのに
 	開放(freeとか)して、辻褄が合わなくなってる。

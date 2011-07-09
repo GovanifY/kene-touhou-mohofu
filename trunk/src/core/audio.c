@@ -9,7 +9,7 @@
 ---------------------------------------------------------*/
 
 //	#include "./../SDL_mixer/music_mixer.h"/*何故かこちら*/
-	#include "./../audio_mixer/music_mixer.h"/*何故かこちら*/
+	#include "./../PSPL/audio/mixer/music_mixer.h"/*何故かこちら*/
 
 //#ifdef ENABLE_PSP
 	//# /* カスタムライブラリを使う */
@@ -39,10 +39,10 @@
 #endif
 
 /* --- 曲の管理最大数 (最大読み込みファイル数) */
-//#define MAX_MUSIC_FILES 8/*32*/
+//#define MAX_MUSIC_FILES 26/*32*/
 
-/* --- 効果音の管理最大数 (最大読み込みファイル数)MAX_VOICE_ALLOC_FILES=>VOICE16_MAX_FILES */
-//#define MAX_VOICE_ALLOC_FILES 16/*64*/
+/* --- 効果音の管理最大数 (最大読み込みファイル数)MAX_VOICE_ALLOC_FILES=>VOICE18_MAX_FILES */
+//#define MAX_VOICE_ALLOC_FILES 18/*64*/
 
 /*---------------------------------------------------------
 
@@ -50,13 +50,13 @@
 
 
 /* ----- 効果音の数(読み込みファイル数) */
-//#define VOICE16_MAX_FILES 15 /*いくつか追加*/
+//#define VOICE18_MAX_FILES 15 /*いくつか追加*/
 
 /* ----- 曲のトラック */
 static Mix_Music *music_track;
 
 /* ----- 効果音のトラック */
-static Mix_Chunk *voice_track[VOICE16_MAX_FILES];
+static Mix_Chunk *voice_track[VOICE18_MAX_FILES];
 
 #define NOT_USE_TRACK (-1)/*未使用フラグ*/
 
@@ -166,7 +166,7 @@ global void play_music_num(int num)
 	/* ----- BGM 演奏開始 */
 	char name[64/*72*/];
 	{
-		static const char *music_file_name[USE_MUSIC_FILES] =
+		static const char *music_file_name[USE_26_MUSIC_FILES] =
 		{
 		/*	0 ----- BGM 演奏停止コマンド */
 		/*	1 */	"stage1",	/* 1面道中 */
@@ -179,21 +179,22 @@ global void play_music_num(int num)
 		/*	8 */	"stage8",	/* エキストラステージ道中 */
 		/*	9 */	"stage9",	/* ファンタズムステージ道中 */
 		/* 10 */	"menu4",	/* 上海紅茶館 */
-		/* 11 */	"boss1",	/* 1面ボス */
-		/* 12 */	"boss2",	/* 2面ボス */
-		/* 13 */	"boss3",	/* 3面ボス */
-		/* 14 */	"boss4",	/* 4面ボス */
-		/* 15 */	"boss5",	/* 5面ボス */
-		/* 16 */	"boss6",	/* 6面ボス */
-		/* 17 */	"boss7",	/* エキストラステージ1ボス */
-		/* 18 */	"boss8",	/* エキストラステージ2ボス */
-		/* 19 */	"boss9",	/* エキストラステージ3ボス */
-		/* 20 */	"boss10",	/* 隠しボス */
-		/* 20 */	"boss0",	/* 隠しボス */
+		/* 11 */	"boss1",	/* 1面ボス (アリス) */
+		/* 12 */	"boss2",	/* 2面ボス (魅魔) */
+		/* 13 */	"boss3",	/* 3面ボス (輝夜) */
+		/* 14 */	"boss4",	/* 4面ボス (文) */
+		/* 15 */	"boss5",	/* 5面ボス (パチェ) */
+		/* 16 */	"boss6",	/* 6面ボス (咲夜) */
+		/* 17 */	"boss7",	/* チルノ エキストラステージ1ボス */
+		/* 18 */	"boss8",	/* アリス エキストラステージ2ボス */
+		/* 19 */	"boss9",	/* 魔理沙 エキストラステージ3ボス */
+		/* 20 */	"boss10",	/* 妖夢 隠しボス */
+		/* 20 */	"boss11",	/* レミリア 隠しボス */
+		/* 20 */	"boss0",	/* フラン 隠しボス */
 		/* 21 */	"menu3",	/* エンディング(シナリオ) */
 		/* 22 */	"menu2",	/* キーコンフィグ */
 		/* 23 */	"menu1",	/* タイトル画面 */
-		};		// いろいろ追加
+		};
 		const char *name_extention[] =
 		{
 			NULL, ".mod", ".s3m", ".xm", ".it", ".mp3", ".wav", ".ogg", 	/* 正順 */
@@ -393,7 +394,7 @@ global void set_voice_volume(int volume)
 	#ifdef ENABLE_PSP
 	#else
 	int i;
-	for (i=0; i<VOICE16_MAX_FILES; i++)
+	for (i=0; i<VOICE18_MAX_FILES; i++)
 	{
 		Mix_VolumeChunk(voice_track[i], volume);
 	}
@@ -426,7 +427,7 @@ global void exit_audio(void)
 	/* 効果音の解放 */
 	{
 		int i;
-		for (i=0; i<VOICE16_MAX_FILES; i++)
+		for (i=0; i<VOICE18_MAX_FILES; i++)
 		{
 			if ( voice_track[i] )
 			{
@@ -445,7 +446,7 @@ global void exit_audio(void)
 
 static void voice_load(void)
 {
-	static const char *voice_file_name[VOICE16_MAX_FILES] =
+	static const char *voice_file_name[VOICE18_MAX_FILES] =
 	{
 		"se_a.wav", 	/*	0 */	//	"shot.wav", 	/*	0 */	"ショット",
 		"se_b.wav", 	/*	1 */	//	"hit.wav",		/*	1 */	"メニュー決定",
@@ -459,20 +460,20 @@ static void voice_load(void)
 	//
 		"se_i.wav", 	/*	8 */	//	"death.wav",	/*	8 */	"ザコ倒した",
 		"se_j.wav", 	/*	9 */	//	"graze.wav",	/*	9 */	"グレイズ",
-		"se_p.wav", 	/* 15 */	//	"hit.wav",		/* 15 */	"時間制限",
+		"se_p.wav", 	/* 10 */	//	"hit.wav",		/* 15 */	"時間制限",
 		"se_l.wav", 	/* 11 */	//	"e_shot00.wav", /* 11 */	"キラリン☆",
 	//
-		"se_k.wav", 	/* 10 */	//	"e_shot.wav",	/* 10 */	"ボスショット1",
-		"se_m.wav", 	/* 12 */	//	"b2_shot.wav",	/* 12 */	"ボスショット2",
-		"se_n.wav", 	/* 13 */	//	"_shot.wav",	/* 13 */	"ボスショット3",
-		"se_o.wav", 	/* 14 */	//	"e_shot01.wav", /* 14 */	"ボスショット4",
+		"se_k.wav", 	/* 12 */	//	"e_shot.wav",	/* 10 */	"ボスショット1",
+		"se_m.wav", 	/* 13 */	//	"b2_shot.wav",	/* 12 */	"ボスショット2",
+		"se_n.wav", 	/* 14 */	//	"_shot.wav",	/* 13 */	"ボスショット3",
+		"se_o.wav", 	/* 15 */	//	"e_shot01.wav", /* 14 */	"ボスショット4",
 		"se_q.wav", 	/* 16 */	//	"qupiin.wav"	/* 16 */	"ボスショット5",
 	//
-		"se_r.wav", 	/* 16 */	//	"wiin.wav"		/* 17 */	"ボス溜め1",
-	};		//いろいろ追加
+		"se_r.wav", 	/* 17 */	//	"wiin.wav"		/* 17 */	"ボス溜め1",
+	};					/* 18 */	// MAX
 	int i;
-	char name[64/*52*/];
-	for (i=0; i<VOICE16_MAX_FILES; i++)
+	char name[64];/*52*/
+	for (i=0; i<VOICE18_MAX_FILES; i++)
 	{
 		strcpy(name, DIRECTRY_NAME_DATA_STR "/sounds/");
 		strcat(name, voice_file_name[i]);
@@ -505,11 +506,6 @@ global void init_audio(void)
 	}
 	#endif
 	#endif
-	if ( SDL_InitSubSystem(SDL_INIT_AUDIO) < 0 )
-	{
-		//ps pDebugScreenPrintf( "Unable to initialize SDL_AUDIO: %s\n", SDL_GetError());
-		return;
-	}
 //
 	const int audio_rate		= 44100;	// 22050
 	const u16 audio_format		= AUDIO_S16;

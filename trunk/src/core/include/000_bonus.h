@@ -62,8 +62,17 @@ enum
 #define ITEM_CREATE_MODE_01 	((4*8/*ITEM_MAX*/)*0)
 #define ITEM_CREATE_MODE_02 	((4*8/*ITEM_MAX*/)*1)
 
-extern void item_create(SPRITE *src/*int x, int y*/, int type, int num, int up_flags);
+extern void item_create(SPRITE *src, int type, int num, int up_flags);
+extern void item_create_mono(SPRITE *src, int type);
+extern void item_create_num(SPRITE *src, int type, int num_of_creates );
+
 extern void item_create_for_boss(SPRITE *src, int item_create_mode);
+
+
+extern void item_create_99_random_item(SPRITE *src);
+
+//extern void item_create_999_difficulty(SPRITE *src);
+
 
 extern void bonus_info_score_nodel(SPRITE *src/*int x, int y*/, int score_type);
 extern void bonus_info_any_score_nodel(SPRITE *src/*int x, int y*/, u32 score_num_pts);

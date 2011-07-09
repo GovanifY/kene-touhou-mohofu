@@ -11,22 +11,26 @@
 ---------------------------------------------------------*/
 #if 0/*ƒƒ‚*/
 /* ƒ{ƒX‹¤’Ê‹KŠi */
-	#define target_x256 		user_data00 	/* –Ú•WxÀ•W */
-	#define target_y256 		user_data01 	/* –Ú•WyÀ•W */
-	#define vvv256				user_data02 	/* –Ú•WÀ•W‚Ö‚Ì“ž’BŠ„‡ */
-	#define boss_time_out		user_data03 	/* §ŒÀŽžŠÔ */
+	#define target_x256 			user_data00 	/* –Ú•WxÀ•W */
+	#define target_y256 			user_data01 	/* –Ú•WyÀ•W */
+	#define toutatu_wariai256		user_data02 	/* –Ú•WÀ•W‚Ö‚Ì“ž’BŠ„‡ */
+	#define kougeki_anime_count 	user_data03 	/* UŒ‚ƒAƒjƒ[ƒVƒ‡ƒ“—pƒJƒEƒ“ƒ^ */
+	#define boss_time_out			user_data04 	/* §ŒÀŽžŠÔ */
+	#define boss_base_state777		user_data04 	/* §ŒÀŽžŠÔ(boss_time_out‚Æ“¯‚¶) */
+//
+	#define boss_spell_timer		user_data05 	/* ƒXƒyƒ‹ŽžŠÔ */
 #endif
 //	ƒ{ƒX‹¤’Ê‹KŠi‚Æ“¯‚¶(boss.hƒCƒ“ƒNƒ‹[ƒh‚µ‚Ä‚à‚µ‚È‚­‚Ä‚à‘Î‰ž)
 #ifndef boss_time_out
-	#define boss_time_out		user_data03 	/* §ŒÀŽžŠÔ */
+	#define boss_time_out		user_data04 	/* §ŒÀŽžŠÔ */
 #endif
 //
 
 #define target_x256 	user_data00 	/* Šî€ŒÅ’è xˆÊ’u */
 #define target_y256 	user_data01 	/* Šî€ŒÅ’è yˆÊ’u */
-//#define time_out		user_data03 	/* Œo‰ßŽžŠÔ */
-#define radius			user_data04 	/* ‰~‚Ì”¼Œa */
-#define rotate			user_data05 	/* ‰ñ“]•ûŒü */
+//#define time_out		user_data04 	/* Œo‰ßŽžŠÔ */
+#define radius			user_data06 	/* ‰~‚Ì”¼Œa */
+#define rotate			user_data07 	/* ‰ñ“]•ûŒü */
 
 
 
@@ -56,15 +60,12 @@ static void move_doll01_laser(SPRITE *src)
 	//	if (0x00==(src->boss_time_out&0x03))/* */
 		{
 //			voice_play(VOICE16_BOSS_KYUPIN, TRACK04_TEKIDAN);
-			obj_send1->cx256							= (src->cx256);/* –‚•ûw‚Ì’†S‚©‚ç’eŒ‚‚Â */
-			obj_send1->cy256							= (src->cy256);/* –‚•ûw‚Ì’†S‚©‚ç’eŒ‚‚Â */
-
+			send1_xy(src);	/* ’eŒ¹x256 y256 ’†S‚©‚ç”­’eB */
 			br.BULLET_REGIST_00_speed256				= t256(2.0);				/* ’e‘¬ */
 			br.BULLET_REGIST_01_speed_offset			= t256(0);/*(ƒeƒXƒg)*/
 			br.BULLET_REGIST_02_angle65536				= ((src->my_angle1024)<<6);
 			br.BULLET_REGIST_03_tama_data				= (TAMA_DATA_0000_TILT);/* (r33-)•W€’e */
 			br.BULLET_REGIST_04_bullet_obj_type 		= BULLET_HARI32_00_AOI; 	/* [ Âj’e] */
-		//–¢’èbr.BULLET_REGIST_05_regist_type			= TAMA_TYPE_00_ANGLE_TILT;/* (r33-)•W€’e */
 			br.BULLET_REGIST_06_n_way					= (3);						/* [3way] */
 			br.BULLET_REGIST_07_div_angle65536			= (65536/3);				/* •ªŠ„Šp“x */
 			/* CCW‚Ìê‡ */

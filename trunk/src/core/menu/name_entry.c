@@ -27,7 +27,7 @@ global SCORE_FORMAT high_score_table[MAX_8_SAVE_PLAYERS][MAX_5_RANKING/*5*/];
 	-------------------------------------------------------
 	このサブルーチンは、名前入力画面でも使います。
 ---------------------------------------------------------*/
-/*static*/static/*global*/ void high_score_render_sub(int show_player_num, int iii, int bbb)
+/*static*/static/*global*/ void high_score_render_sub(int show_player_num, unsigned int iii, int bbb)
 {
 	char ttmp[64/*50*/];
 	sprintf(ttmp,
@@ -38,13 +38,22 @@ global SCORE_FORMAT high_score_table[MAX_8_SAVE_PLAYERS][MAX_5_RANKING/*5*/];
 	//
 		(iii+1),												/* 順位 */
 		high_score_table[(show_player_num)][iii].name,			/* プレイヤー名 */
-		high_score_table[(show_player_num)][iii].score, 		/* スコア */
+		(int)high_score_table[(show_player_num)][iii].score,	/* スコア */	/* gcc 4.3.5 */
 		high_score_table[(show_player_num)][iii].final_stage	/* 到達ステージ */
 	);
 
 	result_surfaces[iii]		= font_render( ttmp, (bbb)?(FONT16R/*白*/):(FONT16W/*紅(黄)*/) );
 }
-
+/*
+	warning: format '%09d' expects type 'int', but argument 5 has type 'u32'
+	注意: ５番目の引数は signed int(符号付32bit) なんだけど、渡すのは unsigned int(符号無し32bit) だよ。
+*/
+/*
+	4.3.3 では u32 -> s32 の暗黙変換は、warningにならなかった。(基本的に -std=gnu99 で -Werror の場合)
+	4.3.5 では u32 -> s32 の暗黙変換は、warningになるっぽい。
+	コンパイラオプションで抑制できると思うけど良くわかんないし。
+	実際 psp は signed と unsigned では 最適化できるコードが大分違うから、その方が都合は良いんだけど。
+*/
 
 /*---------------------------------------------------------
 	ハイスコア表示デモ画面(夢の記録)
@@ -73,7 +82,6 @@ static RR_OBJ result_my_obj[MAX_7_LINES/*6*/];
 
 static int move_done_lines; 			/* 移動完了した行の数 */
 static int show_player_num; 			/* スコア戦歴表示中のプレイヤー番号 */
-//static int more_show; 				/* 別の戦歴をまだ見る */
 
 
 /*---------------------------------------------------------
@@ -82,7 +90,7 @@ static int show_player_num; 			/* スコア戦歴表示中のプレイヤー番号 */
 
 static void move_result(void)
 {
-	int i;
+	unsigned int i;
 	for (i=0; i<MAX_7_LINES; i++)
 	{
 		if (0==result_my_obj[i].move_done_flag) 	/* 移動は必要？ */
@@ -129,7 +137,7 @@ static void move_result(void)
 
 static void result_font_render(void)
 {
-	int i;
+	unsigned int i;
 	for (i=0; i<MAX_7_LINES; i++)
 	{
 		if (i<5)
@@ -144,7 +152,7 @@ static void result_font_render(void)
 		else
 		if (6==i)
 		{
-			static const/*const*/ char *score_name[8/*5*/] =
+			static const/*const*/ char *score_name[MAX_08_PLAYER] =
 			{
 			/* 0==*/	"REIMU_A",
 			/* 1==*/	"REIMU_B",
@@ -168,20 +176,20 @@ static void result_font_render(void)
 			static const signed int result_const_status[RESULT_DATA_03_MAX][MAX_7_LINES] =
 			{
 				{/* RESULT_DATA_00_XG256 */
-					/*(t256( 4)*0) +*/ t256(64/* 20*/), 	/*1ST*/
-					/*(t256( 4)*1) +*/ t256(64/* 20*/), 	/*2ND*/
-					/*(t256( 4)*2) +*/ t256(64/* 20*/), 	/*3RD*/
-					/*(t256( 4)*3) +*/ t256(64/* 20*/), 	/*4TH*/
-					/*(t256( 4)*4) +*/ t256(64/* 20*/), 	/*5TH*/
+					/*(t256( 4)*0) +*/ t256(64),	/*1ST*/ 	/* 20*/
+					/*(t256( 4)*1) +*/ t256(64),	/*2ND*/ 	/* 20*/
+					/*(t256( 4)*2) +*/ t256(64),	/*3RD*/ 	/* 20*/
+					/*(t256( 4)*3) +*/ t256(64),	/*4TH*/ 	/* 20*/
+					/*(t256( 4)*4) +*/ t256(64),	/*5TH*/ 	/* 20*/
 					t256( (64+32)/*30*/ ),					/*"RESULT OF SCORE"*/
 					t256( (64-32)/*30*/ ),					/*"REIMU"*/
 				},
 				{/* RESULT_DATA_01_YG256 */
-					(t256( (20*0)+(144+4)/*150*/) ),		/*1ST*/ 	//(25*0)+(110+25+5)/*150*/
-					(t256( (20*1)+(144+4)/*150*/) ),		/*2ND*/ 	//(25*1)+(110+25+5)/*150*/
-					(t256( (20*2)+(144+4)/*150*/) ),		/*3RD*/ 	//(25*2)+(110+25+5)/*150*/
-					(t256( (20*3)+(144+4)/*150*/) ),		/*4TH*/ 	//(25*3)+(110+25+5)/*150*/
-					(t256( (20*4)+(144+4)/*150*/) ),		/*5TH*/ 	//(25*4)+(110+25+5)/*150*/
+					(t256( (20*0)+(144+4)) ),		/*1ST*/ 	//(25*0)+(110+25+5)/*150*/
+					(t256( (20*1)+(144+4)) ),		/*2ND*/ 	//(25*1)+(110+25+5)/*150*/
+					(t256( (20*2)+(144+4)) ),		/*3RD*/ 	//(25*2)+(110+25+5)/*150*/
+					(t256( (20*3)+(144+4)) ),		/*4TH*/ 	//(25*3)+(110+25+5)/*150*/
+					(t256( (20*4)+(144+4)) ),		/*5TH*/ 	//(25*4)+(110+25+5)/*150*/
 					t256(110),								/*"RESULT OF SCORE"*/
 					t256(128-2),							/*"REIMU"*/
 				},
@@ -205,120 +213,35 @@ static void result_font_render(void)
 	}
 	for (i=0; i<MAX_7_LINES/*5*/; i++)
 	{
-
 		result_my_obj[i].phase256			= (i<<6);/*(0)*/
 		result_my_obj[i].phaseout256		= ((4-i)<<6);/*(5<<6)*/
-		result_my_obj[i].amplifier256		= t256(100/*300*/);
+		result_my_obj[i].amplifier256		= t256(100);/*300*/
 		result_my_obj[i].direction			= 0;
 		result_my_obj[i].move_done_flag 	= 0;
 	}
 }
 
 
-static void result_font_free(void)
-{
-	int i;
-	for (i=0; i<MAX_7_LINES; i++)
-	{
-		#if 1/* 文字の表示用画像を開放する */
-		/* ここでハングアップ */
-	//	if (result_surfaces[i])
-		{
-			SDL_FreeSurface(result_surfaces[i]);
-		}
-		#endif
-	}
-}
+
 
 
 /*---------------------------------------------------------
 	ハイスコア表示デモ画面(夢の記録)(本体)
 ---------------------------------------------------------*/
 
-enum
-{
-	RESULT_01_SET_LOCATION = 0,
-	RESULT_02_SLIDE_IN,
-	RESULT_03_PAD_CHECK,
-	RESULT_04_SLIDE_OUT,
-	RESULT_05_RETRY_CHECK,
-};
+/*---------------------------------------------------------
+	SDLサーフェイスに描画する。
+---------------------------------------------------------*/
 
-static u8 my_ppp_loop;
-static void yume_no_kiroku_local_work(void)
+static void yume_no_kiroku_draw(void)
 {
-	{
-		psp_pop_screen();	/* 取って置いた背景で画面を描く */
-	}
-	switch ((u8)(my_ppp_loop))
-	{
-	case RESULT_01_SET_LOCATION:
-		{
-			move_done_lines = 0;
-			result_font_render();
-			my_ppp_loop++;
-		}
-		break;
-	case RESULT_02_SLIDE_IN:
-		if (move_done_lines==MAX_7_LINES)
-		{
-			my_ppp_loop++;
-		}
-		break;
-	case RESULT_03_PAD_CHECK:
-		if (0==cg_my_pad_alter)/* さっき何も押されてなかった場合にキーチェック(原作準拠) */
-		{
-			/* 次の人の戦歴を見る */
-			if (cg_my_pad & (PSP_KEY_RIGHT|PSP_KEY_LEFT|PSP_KEY_UP|PSP_KEY_DOWN))	/* PSP_KEY_SHOT_OKが押された */
-			{
-				show_player_num++;										/* 次の人にする */
-			//	if (/*4*/7<show_player_num) 	{show_player_num=0;}	/* 最後まで見たら始めから見る */
-				show_player_num &= (0x07);								/* 最後まで見たら始めから見る */
-			//	more_show = 1;	/* また見るよ */
-				my_ppp_loop++;
-			}
-			/* 見るのやめてメニューに戻る */
-			else
-			if (cg_my_pad & (PSP_KEY_SHOT_OK|PSP_KEY_BOMB_CANCEL|PSP_KEY_OPTION|PSP_KEY_PAUSE|PSP_KEY_SELECT))
-			{
-			//	more_show = 0;	/* もうおしまい */
-				return_call_func = title_menu_start;	/* タイトルメニューへ移動設定(反映するのは、まだ先) */
-				my_ppp_loop++;
-			}
-		}
-		break;
-	case RESULT_04_SLIDE_OUT:
-		{
-			move_done_lines = 0;
-			int i;
-			for (i=0; i<MAX_7_LINES; i++)
-			{
-				result_my_obj[i].direction = 1;
-				result_my_obj[i].move_done_flag = 0;
-			}
-			my_ppp_loop++;
-		}
-		break;
-	case RESULT_05_RETRY_CHECK:
-		if (move_done_lines==MAX_7_LINES)
-		{
-			result_font_free();
-			my_ppp_loop = (RESULT_01_SET_LOCATION); 	/* 「また見るよ」(「もうおしまい」の場合も描画を飛ばす為に設定する) */
-			main_call_func = return_call_func;	/* 「また見るよ」&「もうおしまい」の状態を反映させる。 */
-		}
-		break;
-	}
-	if ((RESULT_01_SET_LOCATION) < my_ppp_loop)
+	psp_pop_screen();	/* 取って置いた背景で画面を描く */
 	{
 		/* 移動 */
-		{
-		//	sp rite_work_SDL(SP_GROUP_PAUSE_S P_ME NU_TEXT);/*SP_GROUP07_FRONT*/
-		//	pause_sp rite_display();/*SP_GROUP07_FRONT*/
-			move_result();
-		}
+		move_result();
 		/* 描画 */
-		{			/*static*/ SDL_Rect rect_locate_offset; 	/* 表示位置 */
-			int i;
+		{	/*static*/ SDL_Rect rect_locate_offset; 	/* 表示位置 */
+			unsigned int i;
 			for (i=0; i<MAX_7_LINES; i++)
 			{
 				rect_locate_offset.x = ((result_my_obj[i].x256)>>8);
@@ -332,6 +255,114 @@ static void yume_no_kiroku_local_work(void)
 
 
 /*---------------------------------------------------------
+	do slide out now.
+	退場中。
+	終わったら分岐する
+---------------------------------------------------------*/
+
+static void result_05_do_slide_out_now(void)
+{
+	if (move_done_lines==MAX_7_LINES)
+	{
+	//	result_font_free();/* 文字の表示用画像を開放する */
+	//	static void result_font_free(void)
+		{
+			unsigned int i;
+			for (i=0; i<MAX_7_LINES; i++)
+			{
+				#if 1/* 文字の表示用画像を開放する */
+				/* ここでハングアップ */
+			//	if (result_surfaces[i])
+				{
+					SDL_FreeSurface(result_surfaces[i]);
+				}
+				#endif
+			}
+		}
+		main_call_func = return_call_func;	/* 「また見るよ」&「もうおしまい」移動の状態を反映させる。 */
+		/* 注意：既にフォント解放してるから描画できないよ */
+		return;/* 描画するとハングアップするので、ここで強制リターン。 */
+	}
+	yume_no_kiroku_draw();//要る(退場描画)
+}
+
+
+/*---------------------------------------------------------
+	退場準備。
+---------------------------------------------------------*/
+
+static void result_04_set_slide_out(void)
+{
+	{
+		move_done_lines = 0;
+		int i;
+		for (i=0; i<MAX_7_LINES; i++)
+		{
+			result_my_obj[i].direction = 1;
+			result_my_obj[i].move_done_flag = 0;
+		}
+		main_call_func = result_05_do_slide_out_now;
+	}
+//	yume_no_kiroku_draw();//要らない
+}
+
+
+/*---------------------------------------------------------
+	キーチェック。
+---------------------------------------------------------*/
+static void result_01_set_location(void);/*(宣言が必要)*/
+static void result_03_pad_check(void)
+{
+	if (0==psp_pad.pad_data_alter)/* さっき何も押されてなかった場合にキーチェック(原作準拠) */
+	{
+		/* 次の人の戦歴をまた見る */
+		if (psp_pad.pad_data & (PSP_KEY_RIGHT|PSP_KEY_LEFT|PSP_KEY_UP|PSP_KEY_DOWN))	/* PSP_KEY_SHOT_OKが押された */
+		{
+			show_player_num++;										/* 次の人にする */
+		//	if (/*4*/7<show_player_num) 	{show_player_num=0;}	/* 最後まで見たら始めから見る */
+			show_player_num &= (0x07);								/* 最後まで見たら始めから見る */
+			return_call_func = result_01_set_location;	/* また見るの場合の移動先を設定(反映するのは、まだ先) */
+			main_call_func = result_04_set_slide_out;
+		}
+		/* 見るのやめてメニューに戻る */
+		else
+		if (psp_pad.pad_data & (PSP_KEY_SHOT_OK|PSP_KEY_BOMB_CANCEL|PSP_KEY_OPTION|PSP_KEY_PAUSE|PSP_KEY_SELECT))
+		{
+			return_call_func = title_menu_start;	/* タイトルメニューへ移動先を設定(反映するのは、まだ先) */
+			main_call_func = result_04_set_slide_out;
+		}
+	}
+//	yume_no_kiroku_draw();//要らない
+}
+
+
+/*---------------------------------------------------------
+	登場中。
+---------------------------------------------------------*/
+
+static void result_02_do_slide_in_now(void)
+{
+	if (move_done_lines==MAX_7_LINES)
+	{
+		main_call_func		= result_03_pad_check;
+	}
+	yume_no_kiroku_draw();//要る(登場描画)
+}
+
+
+/*---------------------------------------------------------
+	登場準備。新しい戦績の文字をレンダリングする。
+---------------------------------------------------------*/
+
+static void result_01_set_location(void)
+{
+	move_done_lines = 0;
+	result_font_render();
+	main_call_func		= result_02_do_slide_in_now;
+}
+
+
+/*---------------------------------------------------------
 	ハイスコア表示デモ画面(夢の記録)(開始、初期設定)
 ---------------------------------------------------------*/
 
@@ -340,9 +371,8 @@ global void yume_no_kiroku_start(void)
 	//void result_init(void)
 	show_player_num = ((cg_game_select_player) & 0x07);/*0*/	/* 現在選択されているプレイヤーから記録を表示開始する。 */
 	psp_push_screen();	/* 現在の表示画面を裏画面に保存 */
-	my_ppp_loop = RESULT_01_SET_LOCATION;
-	main_call_func		= yume_no_kiroku_local_work;/* 動作先 */
-	return_call_func	= yume_no_kiroku_local_work;/* 戻り動作先、「また見るよ」に設定 */
+	main_call_func		= result_01_set_location;/* 動作先 */
+//	return_call_func	= result_01_set_location;/* 戻り動作先、「また見るよ」に設定 */
 }
 
 
@@ -365,9 +395,6 @@ global void yume_no_kiroku_start(void)
 /*---------------------------------------------------------
 	ハイスコア名前入力、登録画面
 ---------------------------------------------------------*/
-
-global u32 last_score;
-
 
 static char *entry;
 
@@ -473,25 +500,27 @@ static void name_entry_draw(void)
 static void name_entry_local_work(void)
 {
 	{
-		if (0 == cg_my_pad_alter)/* さっき何も押されてなかった場合にキーチェック(原作準拠) */
+		if (0 == psp_pad.pad_data_alter)/* さっき何も押されてなかった場合にキーチェック(原作準拠) */
 		{
 			/* 斜め移動はしない */
-				 if (cg_my_pad & PSP_KEY_LEFT )	{	sel_aaa--;				if (sel_aaa <  (0)) 				sel_aaa  = (KEYBOARD_M40-1);	}
-			else if (cg_my_pad & PSP_KEY_RIGHT)	{	sel_aaa++;				if (sel_aaa == (KEYBOARD_M40))		sel_aaa  = (0); 				}
-			else if (cg_my_pad & PSP_KEY_UP	 )	{	sel_aaa-=KEYBOARD_W10;	if (sel_aaa <  (0)) 				sel_aaa += (KEYBOARD_M40);		}
-			else if (cg_my_pad & PSP_KEY_DOWN )	{	sel_aaa+=KEYBOARD_W10;	if (sel_aaa >  (KEYBOARD_M40-1))	sel_aaa -= (KEYBOARD_M40);		}
+				 if (psp_pad.pad_data & PSP_KEY_LEFT )	{	sel_aaa--;				if (sel_aaa <  (0)) 				sel_aaa  = (KEYBOARD_M40-1);	}
+			else if (psp_pad.pad_data & PSP_KEY_RIGHT)	{	sel_aaa++;				if (sel_aaa == (KEYBOARD_M40))		sel_aaa  = (0); 				}
+			else if (psp_pad.pad_data & PSP_KEY_UP	 )	{	sel_aaa-=KEYBOARD_W10;	if (sel_aaa <  (0)) 				sel_aaa += (KEYBOARD_M40);		}
+			else if (psp_pad.pad_data & PSP_KEY_DOWN )	{	sel_aaa+=KEYBOARD_W10;	if (sel_aaa >  (KEYBOARD_M40-1))	sel_aaa -= (KEYBOARD_M40);		}
 			//
-			if (cg_my_pad & PSP_KEY_SHOT_OK)	/* 入力決定 == (さっき)入力決定ボタンが押された。 */
+			if (psp_pad.pad_data & PSP_KEY_SHOT_OK) /* 入力決定 == (さっき)入力決定ボタンが押された。 */
 			{
-				switch (letter[sel_aaa].ascii)
-				{
-				case MY_CODE_DEL_KEY: /* [削除キー](DEL)を決定した場合。 Delete last character */
+				if (MY_CODE_DEL_KEY==(letter[sel_aaa].ascii))
+				{/* [削除キー](DEL)を決定した場合。 Delete last character */
 					goto delete_last_character;
-					break;
-				case MY_CODE_OK_KEY: /* [入力終了キー](OK)を決定した場合。 Input completed. 入力終了。 Eingabe abgeschlossen. */
+				}
+				else
+				if (MY_CODE_OK_KEY==(letter[sel_aaa].ascii))
+				{/* [入力終了キー](OK)を決定した場合。 Input completed. 入力終了。 Eingabe abgeschlossen. */
 					goto agree_entry;
-					break;
-				default:
+				}
+				else
+				{
 					if (now_select_name_chr < 8) /* 8[3]文字以下決定した場合は文字入力。  3 chrs, name input entry. */
 					{
 						entry[now_select_name_chr] = letter[sel_aaa].ascii;
@@ -501,10 +530,9 @@ static void name_entry_local_work(void)
 					{
 						sel_aaa = (KEYBOARD_M40-1);/* [入力終了キー](OK)を押したのと同じ。 force set [OK] */
 					}
-					break;
 				}
 			}
-			else if (cg_my_pad & PSP_KEY_BOMB_CANCEL/*PSP_KEY_OPTION*/)	/* (さっき)キャンセルボタンが押された。 */
+			else if (psp_pad.pad_data & PSP_KEY_BOMB_CANCEL/*PSP_KEY_OPTION*/)	/* (さっき)キャンセルボタンが押された。 */
 			{
 			delete_last_character:
 				if (0 < now_select_name_chr) /* 名前入力の入力文字がある場合で。  at first chr? */
@@ -513,7 +541,7 @@ static void name_entry_local_work(void)
 					entry[now_select_name_chr] = ' ';	/* 消す */
 				}
 			}
-			else if (cg_my_pad & PSP_KEY_PAUSE)		/* (さっき)終了(強制決定)ボタンが押された。 */
+			else if (psp_pad.pad_data & PSP_KEY_PAUSE)		/* (さっき)終了(強制決定)ボタンが押された。 */
 			{
 			agree_entry:	/* 入力終了決定 */
 				if (0 < now_select_name_chr)	// 名前入力の入力文字がある場合で。何か入力されている場合で。
@@ -534,6 +562,7 @@ static void name_entry_local_work(void)
 					}
 					#endif
 					main_call_func = title_menu_start;	/* タイトルメニューへ移動 */
+					/* 注意：既にフォント解放してるから描画できないよ */
 					return;/* 描画するとハングアップするので、ここで強制リターン。 */
 				}
 			}
@@ -545,8 +574,8 @@ static void name_entry_local_work(void)
 //static void name_entry_init(void)
 global void name_entry_start(void)
 {
-	int i;
-	int j;
+	unsigned int i;
+	unsigned int j;
 	/* キーボード(の文字)の初期化 */
 	{
 		char tmp_str[2];/*64*/ /* 96 == 3 x [32] */
@@ -574,7 +603,7 @@ global void name_entry_start(void)
 	letter[i].ascii = MY_CODE_DEL_KEY;	letter_surface[i++] = font_render( (char*)/*"DEL"*/"/", FONT16R); /* 39 */
 	letter[i].ascii = MY_CODE_OK_KEY;	letter_surface[i++] = font_render( (char*)/*"OK"*/"!",	FONT16R); /* 40 */
 	{
-		int k;
+		unsigned int k;
 		k = 0;
 		for (j=0; j<(KEYBOARD_H04*20);/*(4*36)*/ j+=(20))	 /*(36)*/ /*25*/
 		{
@@ -594,7 +623,7 @@ global void name_entry_start(void)
 	/* 新たにランクインしたスコア位置を調べる */
 	for (i=0; i<5; i++)
 	{
-		if (last_score > high_score_table[(cg_game_select_player)][i].score)
+		if (cg.game_score > high_score_table[(cg_game_select_player)][i].score)
 		{
 			break;
 		}
@@ -607,8 +636,8 @@ global void name_entry_start(void)
 		high_score_table[(cg_game_select_player)][j] = high_score_table[(cg_game_select_player)][j-1];
 	}
 	/* 新たにランクインしたスコア位置へ挿入 */
-	high_score_table[(cg_game_select_player)][my_rank].score			= last_score;
-	high_score_table[(cg_game_select_player)][my_rank].final_stage	= cg.game_now_stage;/**/
+	high_score_table[(cg_game_select_player)][my_rank].score			= cg.game_score;
+	high_score_table[(cg_game_select_player)][my_rank].final_stage		= cg.game_now_stage;/**/
 //
 	entry = high_score_table[(cg_game_select_player)][my_rank].name;
 	entry[0] = ' ';

@@ -66,15 +66,13 @@ static void move_obake1(SPRITE *src)
 		{
 			if (0<(cg_game_difficulty))
 			{
-				obj_send1->cx256 = src->cx256;
-				obj_send1->cy256 = src->cy256;
 				br.BULLET_REGIST_00_speed256					= (t256(1.25));
-				br.BULLET_REGIST_02_VECTOR_angle1024			= (src->tmp_angleCCW1024);		/*(ANGLE_JIKI_NERAI_DAN)*/
+				br.BULLET_REGIST_02_VECTOR_angle1024			= ((src->tmp_angleCCW65536)>>6);		/*(ANGLE_JIKI_NERAI_DAN)*/
+			//	br.BULLET_REGIST_03_VECTOR_regist_type			= VEC TOR_REGIST_TYPE_00_MULTI_VECTOR;
 				br.BULLET_REGIST_04_bullet_obj_type 			= BULLET_KNIFE20_04_AOI;		/* [青ナイフ弾] */
-				br.BULLET_REGIST_05_regist_type 				= REGIST_TYPE_00_MULTI_VECTOR;
 				br.BULLET_REGIST_06_n_way						= ((cg_game_difficulty)+(cg_game_difficulty)-1);	/* [1 3 5way] */
 				br.BULLET_REGIST_07_VECTOR_div_angle1024		= (int)(1024/(18)); 			/* 分割角度 */
-				bullet_regist_vector();
+				bullet_regist_multi_vector_send1_xy_src(src); 	/* 弾源x256 y256 中心から発弾。 */
 			}
 		}
 	}
@@ -85,16 +83,14 @@ static void move_obake1(SPRITE *src)
 	}
 	/* アニメーション */
 	{
-		if (0==src->gra_anime_type)
+		if (0==src->gra_anime_type)			/* offset無しは回転 */
 		{
-			/* offset無しは回転 */
-			src->rotationCCW1024 += (10);/*グラ回転*/
-			mask1024(src->rotationCCW1024);
+			src->zako_anime_rotate_angle1024 = (10);
+			zako_anime_type04(src);
 		}
 		else
 		{
-		//	src->type			= TEKI_28_YOUSEI2_5+(((src->cy256>>8)&(4-1)));
-			zako_anime_type02(src, TEKI_28_YOUSEI2_5);
+			zako_anime_type02(src);
 		}
 	}
 }
@@ -108,9 +104,9 @@ static void regist_zako_012_obake1(GAME_COMMAND *l, SPRITE *h)
 {
 //	h->jyumyou				= (60);
 //
-	tmp_angleCCW1024_jiki_nerai(h);
-	h->vx256 = ((sin1024((h->tmp_angleCCW1024))));
-	h->vy256 = ((cos1024((h->tmp_angleCCW1024))));
+	tmp_angleCCW65536_jiki_nerai(h);
+	h->vx256 = ((sin65536((h->tmp_angleCCW65536))));
+	h->vy256 = ((cos65536((h->tmp_angleCCW65536))));
 	h->vx256 += h->vx256;
 	h->vy256 += h->vy256;
 	h->gra_anime_type		= (1);	/* 0==回転アニメ、グラタイプ */

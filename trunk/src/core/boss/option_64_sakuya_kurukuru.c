@@ -29,16 +29,20 @@ static void bullet_move_kurukuru_knife(SPRITE *src)
 	else
 	if (HATUDAN_TIME256 == src->jyumyou)
 	{
+		/* 変身する。 */
 		{
 			src->type			= BULLET_KNIFE20_07_MIDORI;/* (青→緑ナイフに変身) */
+			reflect_sprite_spec444(src, OBJ_BANK_SIZE_00_TAMA);
 			#if 1/* わざと狙わない */
 			u32 ra_nd32 = ra_nd();
 			SPRITE *zzz_player;
 			zzz_player = &obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_00_PLAYER];
+		//	send1_xy(src);	/* 弾源x256 y256 中心から発弾。 */
 			obj_send1->cx256	= (zzz_player->cx256)+((ra_nd32<<8)&0x1fff)-t256(16);
 			obj_send1->cy256	= (zzz_player->cy256)+((ra_nd32  )&0x0fff)-t256(8);
 			#endif
-			tmp_angleCCW1024_src_nerai(obj_send1, src);
+			tmp_angleCCW65536_src_nerai(obj_send1, src);
+			src->tmp_angleCCW1024 = ((src->tmp_angleCCW65536)>>6);		/* 「1周が65536分割」から「1周が1024分割」へ変換する。 */
 			mask1024(src->tmp_angleCCW1024);/* ねんのため */
 			src->rotationCCW1024 = ((src->tmp_angleCCW1024));	/* 表示角度 */
 		}

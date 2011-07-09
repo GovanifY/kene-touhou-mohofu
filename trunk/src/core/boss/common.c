@@ -1,5 +1,5 @@
 
-#include "boss.h"//#include "game_main.h"//#include "bullet_object.h"
+#include "boss.h"
 
 /*---------------------------------------------------------
 	東方模倣風 ～ Toho Imitation Style.
@@ -7,6 +7,36 @@
 	-------------------------------------------------------
 ---------------------------------------------------------*/
 
+
+/*---------------------------------------------------------
+	敵やられ
+---------------------------------------------------------*/
+
+global void lose_option_00(SPRITE *src)
+{
+	item_create_for_boss(src, ITEM_CREATE_MODE_02);
+}
+
+/*---------------------------------------------------------
+	敵やられ
+---------------------------------------------------------*/
+#if 0
+static void lose_mima_doll(SPRITE *src)
+{
+//	item_create_for_boss(src, ITEM_CREATE_MODE_02);/* easyはボムを出さなくて済む位軟らかくした */
+	#if 1
+	item_create(src, SP_ITEM_05_TENSU, 5, ITEM_MOVE_FLAG_06_RAND_XY);
+//	item_create(src, SP_ITEM_00_P001, 5, ITEM_MOVE_FLAG_06_RAND_XY);
+	#else
+	{	int i;
+		for (i=0; i<(5); i++)
+		{
+			item_create_99_random_item(src);
+		}
+	}
+	#endif
+}
+#endif
 
 /*---------------------------------------------------------
 	ボス形態変更時の共通
@@ -217,90 +247,47 @@ static int ff_angle1024;
 
 #if 0/*メモ*/
 /* ボス共通規格 */
-	#define target_x256 		user_data00 	/* 目標x座標 */
-	#define target_y256 		user_data01 	/* 目標y座標 */
-	#define vvv256				user_data02 	/* 目標座標への到達割合 */
-	#define boss_time_out		user_data03 	/* 制限時間 */
+	#define target_x256 			user_data00 	/* 目標x座標 */
+	#define target_y256 			user_data01 	/* 目標y座標 */
+	#define toutatu_wariai256		user_data02 	/* 目標座標への到達割合 */
+	#define kougeki_anime_count 	user_data03 	/* 攻撃アニメーション用カウンタ */
+	#define boss_time_out			user_data04 	/* 制限時間 */
+	#define boss_base_state777		user_data04 	/* 制限時間(boss_time_outと同じ) */
+//
+	#define boss_spell_timer		user_data05 	/* スペル時間 */
 #endif
 
 
-global unsigned int alice_anime_count;
+/*---------------------------------------------------------
+	ボス誘導移動のみ。
+---------------------------------------------------------*/
 
-global void alice_yuudou_move_only(SPRITE *src)
+global void boss_yuudou_idou_nomi(SPRITE *src)
 {
-	src->vvv256 -= (1);
-	if (1 > src->vvv256 )
+	src->toutatu_wariai256 -= (1);
+	if (1 > src->toutatu_wariai256 )
 	{
-		src->vvv256 = (0);
+		src->toutatu_wariai256 = (0);
 	}
 }
 
-global void alice_yuudou_calc(SPRITE *src)	/* 目標を設定し、誘導移動 */
+/*---------------------------------------------------------
+	ボス誘導比率計算。
+---------------------------------------------------------*/
+
+global void boss_yuudou_hiritu_keisan(SPRITE *src)	/* 目標を設定し、誘導移動 */
 {
 	{	/* 差分 == (弾の現在座標 - 弾の誘導座標) */
 		int x_sa256 = (src->cx256 - src->target_x256);
 		int y_sa256 = (src->cy256 - src->target_y256);
 		/* 加算差分 == (弾の差分座標 * 誘導比率) */
-		int aaa_x256 = ((x_sa256 * ((src->vvv256) ))>>8);	/*fps_factor*/
-		int aaa_y256 = ((y_sa256 * ((src->vvv256) ))>>8);	/*fps_factor*/
-		src->cx256 = (src->target_x256) + (aaa_x256);	/*fps_factor*/
-		src->cy256 = (src->target_y256) + (aaa_y256);	/*fps_factor*/
+		int aaa_x256 = ((x_sa256 * ((src->toutatu_wariai256) ))>>8);	/*fps_factor*/
+		int aaa_y256 = ((y_sa256 * ((src->toutatu_wariai256) ))>>8);	/*fps_factor*/
+		src->cx256 = (src->target_x256) + (aaa_x256);		/*fps_factor*/
+		src->cy256 = (src->target_y256) + (aaa_y256);		/*fps_factor*/
 	}
 }
 
-static void alice_animation_only(SPRITE *src)
-{
-	if (alice_anime_count)	/* 攻撃アニメーション */
-	{
-		alice_anime_count--;
-				if ((32)>alice_anime_count) 	{	src->type = TEKI_09_BOSS32; }	/*src->an im_frame = 0x23;*/
-		else	if ((40)>alice_anime_count) 	{	src->type = TEKI_10_BOSS33; }	/*src->an im_frame = 0x22;*/
-		else									{	src->type = TEKI_09_BOSS32; }	/*src->an im_frame = 0x21;*/
-	}
-	else	/* 移動アニメーション */
-	{
-		int aaa;
-		aaa = (src->cx256> src->target_x256)?(TEKI_00_BOSS11/*0x00*/):(TEKI_04_BOSS21/*0x10*/); /* 左右 */
-
-		#if 0
-				if ( ( 16) > src->vvv256)		{	aaa+=2;}	/* 25.6==t256(0.1)*/
-		else	if ( (200) > src->vvv256)		{	aaa+=3;}	/* 76.8==t256(0.3)*/
-		else	if ( (224) > src->vvv256)		{	aaa+=2;}	/*128.0==t256(0.5)*/
-		else	if ( (240) > src->vvv256)		{	aaa+=1;}	/*179.2==t256(0.7)*/
-		else									{	aaa+=0;}
-		#else
-				if ( (256- 16) < src->vvv256)	{	aaa+=2;}	/* 25.6==t256(0.1)*/
-		else	if ( (256-200) < src->vvv256)	{	aaa+=3;}	/* 76.8==t256(0.3)*/
-		else	if ( (256-224) < src->vvv256)	{	aaa+=2;}	/*128.0==t256(0.5)*/
-		else	if ( (256-240) < src->vvv256)	{	aaa+=1;}	/*179.2==t256(0.7)*/
-		else									{	aaa+=0;}
-		#endif
-		src->type = aaa;
-	}
-}
-
-
-/*---------------------------------------------------------
-	ボス行動
----------------------------------------------------------*/
-
-global void move_alice(SPRITE *src)
-{
-	check_regist_generate_spell_card(src);	/* スペカ登録可能なら登録 / スペカ生成 */
-	#if 1/* [スペカシステム内に移動予定] */
-	/*---------------------------------------------------------
-		パチェ移動処理
-	---------------------------------------------------------*/
-	//	eee_boss04_setpos(src, xxx,yyy);
-	boss_move_vx_vy(src);
-	boss_clip_rect(src);
-	alice_animation_only(src);
-//	move_all_doll(src);
-	#endif
-//
-	move_boss_effect(src);	/* 回エフェクト */
-	spell_generator(src);	/* 弾幕生成 */
-}
 
 
 /*---------------------------------------------------------
@@ -370,7 +357,7 @@ global /*static*/ void lose_boss(SPRITE *src)
 			/* 相打ちの場合、強制喰らい復活、キー入力有効(0) */
 //			cg.state_flag		&= (~(STATE_FLAG_09_IS_WIN_BOSS|STATE_FLAG_16_NOT_ALLOW_KEY_CONTROL));	/* 終わり */
 			cg.state_flag		&= (~(STATE_FLAG_09_IS_WIN_BOSS/*???|STATE_FLAG_16_NOT_ALLOW_KEY_CONTROL*/));	/* 終わり */
-			if (0 >= spell_card_boss_timer)
+			if (0 >= spell_card.boss_timer)
 			{
 				;/* 時間切れの場合はボーナスアイテムと得点なし。 */
 			}
@@ -430,7 +417,17 @@ global /*static*/ void lose_boss(SPRITE *src)
 		{
 			cg.state_flag &= (~(STATE_FLAG_13_DRAW_BOSS_GAUGE));/*off*/
 //			cg.state_flag		&= (~(STATE_FLAG_03_SCORE_AUTO_GET_ITEM));		/* 終わり */
-			if (0==cg.game_practice_mode)/* 練習モードではボス後イベントは見れないよ。 */
+			if (
+				(0==cg.game_practice_mode)/* 練習モードではボス後イベントは見れないよ。 */
+				||/*(または)*/
+				(	/* 隠しエンディング */
+					(1==cg.game_practice_mode)/* 練習モードではボス後イベントは見れないよ。 */
+					&&/*(かつ)*/
+					((0)==(cg_game_difficulty))/*(easyの場合)*/
+					&&/*(かつ)*/
+					((6) == (cg.game_now_stage))/*(6面の場合、隠しエンド)*/
+				)
+			)
 			{
 			//	pd_bo ssmode	= B07_AFTER_LOAD;
 				cg.state_flag |= STATE_FLAG_10_IS_LOAD_SCRIPT;

@@ -30,7 +30,7 @@ disable_FPU_exeptions_in_main:
 	lui 	$8, 0x80		# R8 &= 0x80;
 	and 	$8, $2, $8		# Mask off all bits except for 23 of FCR 
 	ctc1	$8, $31 
-	jr		$31 			# return();
+	jr		$31 			# return ();
 	nop
 	.end	disable_FPU_exeptions_in_main
 	.set	pop

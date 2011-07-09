@@ -29,8 +29,8 @@
 global GAME_CORE_GLOBAL_CLASS cg;
 
 #if 1/* たぶん */
-global int cg_game_select_player;
-global int cg_game_difficulty;
+global unsigned int cg_game_select_player;
+global unsigned int cg_game_difficulty;
 #endif
 /*---------------------------------------------------------
 	共通オブジェクト
@@ -91,7 +91,7 @@ global SPRITE *obj_send1;
 		teki_obj = obj_collision_check_01_teki(shot);//, (SP_GROUP_TEKI));	/* |SP_GROUP_BOSS */	/* SP_GROUP_ENEMYS */
 		if (NULL != teki_obj)			/* 敵自体に当たったら */
 		{
-			if (NULL != (teki_obj->callback_hit_teki)) 	/*	 */
+			if (NULL != (teki_obj->callback_hit_teki))	/*	 */
 			{
 				(teki_obj->callback_hit_teki)(teki_obj/* 敵自体 */, shot/* 自弾 */);
 			}
@@ -157,7 +157,7 @@ global SPRITE *obj_send1;
 	スペカ発動時の立ち絵
 ---------------------------------------------------------*/
 
-static void player_move_tachie(SPRITE *src) 	/* [***100113 追加 */
+static void player_move_tachie(SPRITE *src)
 {
 	if ((128-1) < cg.bomber_time)/* 残り時間が 128 以上なら、移動して待機 */
 	{
@@ -188,7 +188,7 @@ static void player_move_tachie(SPRITE *src) 	/* [***100113 追加 */
 
 /*---------------------------------------------------------
 	プレイヤー弾(ショット/針兼用)生成、子関数
-	プレイヤー、針弾(霊夢)の追加	 [***090220 追加
+	プレイヤー、針弾(霊夢)の追加
 		(霊夢)		[針弾]、
 		(魔理沙)	[森弾]、
 		(レミリア)	[コウモリ弾]、
@@ -286,7 +286,7 @@ extern void register_main_shot(SPRITE *s1);
 //enum /* _player_state_ */
 //{
 //	PLAYER_STATE_00_NORMAL,
-//	PLAYER_STATE_01_KURAI_BOMB_UKETUKE, 	/* [***090125		追加:PLAYER_STATE_01_KURAI_BOMB_UKETUKE */
+//	PLAYER_STATE_01_KURAI_BOMB_UKETUKE,
 //	PLAYER_STATE_02_SAVE_01,
 //	PLAYER_STATE_03_SAVE_02,
 //	PLAYER_STATE_04_GAME_OUT,
@@ -326,7 +326,7 @@ static void player_keycontrol(SPRITE *s1)
 		//}
 		//if (/* bomb_wait */d->bomber_time<=0)
 		//{
-			if (cg_my_pad & PSP_KEY_BOMB_CANCEL)
+			if (psp_pad.pad_data & PSP_KEY_BOMB_CANCEL)
 			{
 				if (0 < cg.bombs)
 				{
@@ -351,7 +351,7 @@ static void player_keycontrol(SPRITE *s1)
 						yuyuko_create_bomber_gyastry_dream_parrent, 			marisa_create_bomber_homing_parrent,		/* チルノ Q */
 					};
 						int index_aaa;
-						index_aaa = (((cg_game_select_player))+((cg_game_select_player))+((cg_my_pad & PSP_KEY_SLOW)?1:0));
+						index_aaa = (((cg_game_select_player))+((cg_game_select_player))+((psp_pad.pad_data & PSP_KEY_SLOW)?1:0));
 					{
 						(regist_call_table[(index_aaa)])(&obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_00_PLAYER]);
 					}
@@ -546,7 +546,7 @@ static void player_keycontrol(SPRITE *s1)
 	};
 	/* 自機速度を決める。 */
 	unsigned int is_slow;
-	is_slow = (cg_my_pad & PSP_KEY_SLOW);
+	is_slow = (psp_pad.pad_data & PSP_KEY_SLOW);
 	/* const */ signed int my_speed = player_speed256[(cg_game_select_player) + ((is_slow)?(PLAYERS8):(0))];
 	/* 移動量を決める。(移動量 = 自機速度 x アナログキー、デジタルの場合は予めアナログキー移動量に変換してある) */
 	#if 1/* [マスタースパーク中は、速度半分。] */
@@ -562,11 +562,11 @@ static void player_keycontrol(SPRITE *s1)
 		#endif
 	{	(my_speed >>= 1);	}
 	#endif
-	short	aaa_cg_analog_x = (((my_speed)*(cg_analog_x))>>8);
-	short	aaa_cg_analog_y = (((my_speed)*(cg_analog_y))>>8);
+	short	aaa_cg_analog_x = (((my_speed)*(psp_pad.analog_absolute_value_x))>>8);
+	short	aaa_cg_analog_y = (((my_speed)*(psp_pad.analog_absolute_value_y))>>8);
 	/* 斜めを考慮して移動する。 */
-	s1->cx256 += ((((signed int)(jiki_move_length[((cg_my_pad&0xf0)>>4)][0]))*(aaa_cg_analog_x))>>8);	/* fps_factor */
-	s1->cy256 += ((((signed int)(jiki_move_length[((cg_my_pad&0xf0)>>4)][1]))*(aaa_cg_analog_y))>>8);	/* fps_factor */
+	s1->cx256 += ((((signed int)(jiki_move_length[((psp_pad.pad_data&0xf0)>>4)][0]))*(aaa_cg_analog_x))>>8);	/* fps_factor */
+	s1->cy256 += ((((signed int)(jiki_move_length[((psp_pad.pad_data&0xf0)>>4)][1]))*(aaa_cg_analog_y))>>8);	/* fps_factor */
 	/* 画面外に、はみだしたら修正。(中心座標で判定) */
 //		 if (s1->cx256 < t256(0))				{	s1->cx256 = t256(0);				}/* 左チェック */
 //	else if (s1->cx256 > t256(GAME_WIDTH)  )	{	s1->cx256 = t256(GAME_WIDTH);		}/* 右チェック */
@@ -623,12 +623,12 @@ static void player_keycontrol(SPRITE *s1)
 		}
 	}
 	/* MAX時のアイテム自動収集 */
-	if (cg_my_pad & PSP_KEY_UP/* PSP_CTRL_UP */)	/* 註：斜め上でも回収可能 */ /* && (s1->y>0) */
+	if (psp_pad.pad_data & PSP_KEY_UP/* PSP_CTRL_UP */) /* 註：斜め上でも回収可能 */ /* && (s1->y>0) */
 	{
 		#if 1
 			/* 全キャラ: アイテム上部収集がいつでも可能 */
 		#else
-		if ((cg.weapon_power==MAX_POWER_IS_128) 	// 128[***090123 変更 /* max==MAX_POWER_IS_128==「129段階」 */
+		if ((cg.weapon_power==MAX_POWER_IS_128) 	// 128 変更 /* max==MAX_POWER_IS_128==「129段階」 */
 			/* 魔理沙 特殊能力：アイテム上部収集がいつでも可能 */
 			|| (MARISA_A==(cg_game_select_player))
 			|| (MARISA_B==(cg_game_select_player))
@@ -642,7 +642,7 @@ static void player_keycontrol(SPRITE *s1)
 			}
 		}
 	}
-	else if (cg_my_pad & PSP_KEY_DOWN/* PSP_CTRL_DOWN */)	/* 註：斜め下でもやめる */ /* && (s1->y<screen->h*-s1->h) */
+	else if (psp_pad.pad_data & PSP_KEY_DOWN/* PSP_CTRL_DOWN */)	/* 註：斜め下でもやめる */ /* && (s1->y<screen->h*-s1->h) */
 	{
 		//if (cg.state_flag & (STATE_FLAG_01_PLAYER_UP_AUTO_GET_ITEM /* | STATE_FLAG_02_BOMB_AUTO_GET_ITEM */) )/* ???たぶん */
 		{
@@ -656,7 +656,7 @@ static void player_keycontrol(SPRITE *s1)
 	/* シナリオスクリプトモードではショットボタン入力無効 */
 	if (0==(cg.state_flag & STATE_FLAG_06_IS_SCRIPT))
 	{
-		if (cg_my_pad & PSP_KEY_SHOT_OK)
+		if (psp_pad.pad_data & PSP_KEY_SHOT_OK)
 		{
 			cg.state_flag |= STATE_FLAG_15_KEY_SHOT;	/* on */
 			register_main_shot(s1);
@@ -688,8 +688,8 @@ static void player_keycontrol(SPRITE *s1)
 			anime_delay = base_speed_anime[/* BASE_SPEED_ANIME+ */(cg_game_select_player)];/* 2 */
 			//
 			static int auto_anime_frame = (4);/* 5 */
-				 if (cg_my_pad & PSP_KEY_LEFT/* PSP_CTRL_LEFT */)	{	if ( (0) < auto_anime_frame )	{auto_anime_frame--;} }
-			else if (cg_my_pad & PSP_KEY_RIGHT/* PSP_CTRL_RIGHT */) {	if ( (8) > auto_anime_frame )	{auto_anime_frame++;} }
+				 if (psp_pad.pad_data & PSP_KEY_LEFT/* PSP_CTRL_LEFT */)		{	if ( (0) < auto_anime_frame )	{auto_anime_frame--;} }
+			else if (psp_pad.pad_data & PSP_KEY_RIGHT/* PSP_CTRL_RIGHT */)	{	if ( (8) > auto_anime_frame )	{auto_anime_frame++;} }
 			else
 			{
 				if (auto_anime_frame>4/* 5 */) auto_anime_frame--;
@@ -737,11 +737,10 @@ static void check_weapon_level(void)
 	/*---------------------------------------------------------
 		武器の段階を決める
 	---------------------------------------------------------*/
-	//weaponの段階から今の装備を決める		//リストを見て装備の変更
-	// [***090123	最大128へ。
-	// [***100123	最大129へ。
+	// weaponの段階から今の装備を決める 	// リストを見て装備の変更
+	// 最大129へ。
 	// (0-128の129段階に修正)
-	#if 0//1968661
+	#if 0//
 	/* いろいろ頑張ってみたが、元の調整(6,11,61,86)は誰得(?)なので変える(2倍を超える値の調整は意味無い気ががする) */
 	u8 pds_weapon;	pds_weapon = cg.weapon_power;
 		 if (pds_weapon < ( 8)) 	{	cg_jiki_weapon_level_offset = (WEAPON_L0<<3);	}	/* WEAPON_L0(P000-P008) */	/* 6 */
@@ -752,7 +751,7 @@ static void check_weapon_level(void)
 	else							{	cg_jiki_weapon_level_offset = (WEAPON_L5<<3);	}	/* WEAPON_L5(P128)		 */ /* max==P128==「129段階」 */
 	cg_jiki_weapon_level_offset += (cg_game_select_player);
 	#endif
-	#if 1//1968181
+	#if 1//
 	u8 pds_weapon;	pds_weapon = cg.weapon_power;
 	/* 0000 0001 1111 1---*/
 	/* 紅、調べたら丁度2倍っぽい。 */
@@ -959,18 +958,17 @@ static void player_colision_check_item(SPRITE *src)/* , int mask */ /* ,SP_GROUP
 {
 	/* 自機がアイテムにあたった場合 */
 	SPRITE *ttt;	//対象
-	ttt = obj_collision_check_00_tama(src, SP_GROUP_ITEMS);	/* 弾幕専用(アイテム) */	/* mask */
+	ttt = obj_collision_check_00_tama(src, SP_GROUP_ITEMS); /* 弾幕専用(アイテム) */	/* mask */
 	if (NULL != ttt)
 	{
 		switch (ttt->type)
 		{
 		case SP_ITEM_00_P001:	//	player_add_power(src, ttt, 1);		break;	// ウェポンアイテム[小p]
-		case SP_ITEM_01_P008:	//	player_add_power(src, ttt, 8);		break;	// ウェポンアイテム[大P]	// [***090123		追加
-		case SP_ITEM_02_P128:	//	player_add_power(src, ttt, 127);	break;	// ウェポンアイテム[F]		// [***090123		追加
+		case SP_ITEM_01_P008:	//	player_add_power(src, ttt, 8);		break;	// ウェポンアイテム[大P]
+		case SP_ITEM_02_P128:	//	player_add_power(src, ttt, 127);	break;	// ウェポンアイテム[F]
 									player_add_power_type(src, ttt);	break;	// ウェポンアイテム[小p][大P][F]
 		//
 		case SP_ITEM_04_BOMB:
-			//player_add_bomb(t);		// [*****本来はコメントアウトしないよ
 			if ((8-1) < cg.bombs)	{	goto add_10000pts;	}/* 既に最大値(8)ならば、10000+ [pts] */
 			cg.bombs++;
 			#if 1/* バグfix? */
@@ -994,7 +992,6 @@ static void player_colision_check_item(SPRITE *src)/* , int mask */ /* ,SP_GROUP
 		/* 星点は、あたり判定なし */
 		case S P_ITEM_05_HOSI:		/* not_break; */
 			ttt->jyumyou = JYUMYOU_NASI;/* 星点のみ特別処理 */
-//
 			voice_play(VOICE05_BONUS, TRACK07_GRAZE);/* テキトー */
 			break;
 		#endif
@@ -1002,7 +999,6 @@ static void player_colision_check_item(SPRITE *src)/* , int mask */ /* ,SP_GROUP
 			{
 				/* PLAYER_SPLIT_LINE256 より上で取ると 10000pts. ... 下で取ると(?)約100pts. */
 				/* (大体90pts、非常に難しいが、がんばれば(消える直前の3ライン)70ptsまで可能らしい) */
-			//
 				int add_score_point;
 				if (PLAYER_SPLIT_LINE256 < src->cy256)	/* PLAYER_SPLIT_LINE256 未満の場合は、PLAYER_SPLIT_LINE256までの距離におおじて減点 */
 				{
@@ -1016,11 +1012,8 @@ static void player_colision_check_item(SPRITE *src)/* , int mask */ /* ,SP_GROUP
 				//	add_score_point = (SCORE_10000);	/* 基本点 10000[pts] */
 					add_score_point = (SCORE_10000+(cg_game_difficulty));	/* 基本点 10000[pts](easy), 11000(normal), 12000(hard), 512000(lunatic). */
 				}
-				//player_dummy_add_score(score(1000));		// [***090123		変更
-			//
 				bonus_info_score_nodel(ttt, add_score_point);
 				/* */ttt->jyumyou = JYUMYOU_NASI;/* おしまい */
-//
 			}
 			voice_play(VOICE05_BONUS, TRACK07_GRAZE);/* テキトー */
 			break;
@@ -1222,9 +1215,9 @@ static void player_fukkatsu_bbb222(SPRITE *s1)
 {
 	player_few_muteki();/* ステージ開始時のみ若干の無敵状態にセット */
 	#if (00)
-	/* obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_00_PLAYER] */s1->flags 		|= ( (SP_FLAG_VISIBLE));			/* 自機、表示 */
+	/* obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_00_PLAYER] */s1->flags		|= ( (SP_FLAG_VISIBLE));			/* 自機、表示 */
 	#endif
-	/* obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_00_PLAYER] */s1->color32		= MAKE32RGBA(0xff, 0xff, 0xff, 0x50);						/* 自機、半透明 */	/*	s1->alpha			= 0x50; */
+	/* obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_00_PLAYER] */s1->color32 	= MAKE32RGBA(0xff, 0xff, 0xff, 0x50);						/* 自機、半透明 */	/*	s1->alpha			= 0x50; */
 //
 	{
 		SPRITE *zzz_obj_maru;
@@ -1262,7 +1255,7 @@ global void player_init_stage(void)
 
 static void player_explode(SPRITE *s1)
 {
-	/* アイテムを吐き出す */	//	[***090124ちょっと追加
+	/* アイテムを吐き出す */
 	{
 		if ((0==cg.zanki)
 			/* &&(0==difficulty) */ /* (紅、調べたら難易度に関係なく[F]が出る)	 */
@@ -1271,8 +1264,8 @@ static void player_explode(SPRITE *s1)
 			/* コンティニューの場合(GAME_OUT)easy の場合 */
 			/* 無駄に8個吐かせる */
 			/* コンティニューの場合easy の場合： (キャッチ出来る数で点数は違うけど、どれか１つキャッチすれば POWER は同じだから) */
-		//	item_create(s1, (0==difficulty)?(SP_ITEM_02_P128):(SP_ITEM_01_P008), 8, ITEM_MOVE_FLAG_06_RAND_XY);
-			item_create(s1, (SP_ITEM_02_P128), 8, ITEM_MOVE_FLAG_06_RAND_XY);
+		//	item_create_num(s1, (0==difficulty)?(SP_ITEM_02_P128):(SP_ITEM_01_P008), 8, ITEM_MOVE_FLAG_06_RAND_XY);
+			item_create_num(s1, (SP_ITEM_02_P128), (8) );
 		}
 		else
 		{
@@ -1310,8 +1303,8 @@ static void player_explode(SPRITE *s1)
 		//	item_create(s1, SP_ITEM_01_P008, 1, ITEM_MOVE_FLAG_06_RAND_XY);
 			#else
 			/* 多少修正してみる */
-			item_create(s1, (((16) > cg.weapon_power)?(SP_ITEM_01_P008):(SP_ITEM_00_P001)), (3), ITEM_MOVE_FLAG_06_RAND_XY);/* 下手な人ががんばれば3つ取れる事が前提 */
-			item_create(s1, SP_ITEM_00_P001, (5), ITEM_MOVE_FLAG_06_RAND_XY);/* P001をばらまく(おまけ、下手な人は、がんばっても同時には取れないという事が前提) */
+			item_create_num(s1, (((16) > cg.weapon_power)?(SP_ITEM_01_P008):(SP_ITEM_00_P001)), (3) );/* 下手な人ががんばれば3つ取れる事が前提 */
+			item_create_num(s1, SP_ITEM_00_P001, (5) );/* P001をばらまく(おまけ、下手な人は、がんばっても同時には取れないという事が前提) */
 			#endif
 		}
 		//
@@ -1322,7 +1315,7 @@ static void player_explode(SPRITE *s1)
 			if (0 != cg.bombs)
 			{
 				/* 使ってない分の持ってるボムを吐き出す */
-				item_create(s1, SP_ITEM_04_BOMB, cg.bombs, ITEM_MOVE_FLAG_06_RAND_XY);
+				item_create_num(s1, SP_ITEM_04_BOMB, (cg.bombs) );
 			}
 		}
 	}
@@ -1333,7 +1326,7 @@ static void player_explode(SPRITE *s1)
 	//	t->jyumyou = JYUMYOU_NASI;/* おしまい */			/* あたった敵爆発 */
 	//	cg.explode=0;
 	//	cg.bonus=0;
-		//	voice_play(VOICE04_SHIP_HAKAI, TRACK03_SHORT_MUSIC/* TRACK01_EXPLODE */);/* 自機死に音は、なるべく重ねない */	// [***090127	場所を移動する。// 変更元
+		//	voice_play(VOICE04_SHIP_HAKAI, TRACK03_SHORT_MUSIC/* TRACK01_EXPLODE */);/* 自機死に音は、なるべく重ねない */	// 場所を移動する。// 変更元
 		/* 爆発エフェクト */
 		/* 自分爆発 */
 		#if 1
@@ -1399,8 +1392,8 @@ static void player_move_special_ivent(SPRITE *s1)
 	#if 0
 //	pds_status_timer = (signed int)(pds_status_timer & (0x1ff)); // 何らかの値でマスク
 	#else
-	if (LIMIT_m255_CONTINUE > pds_status_timer) {	pds_status_timer += (512); }
-//	if (-511 > pds_status_timer) {	pds_status_timer += 1024; }/* デバッグ検証用 */
+	if (LIMIT_m255_CONTINUE > pds_status_timer) 	{	pds_status_timer += (512); }
+//	if (-511 > pds_status_timer)					{	pds_status_timer += 1024; }/* デバッグ検証用 */
 	#endif
 //
 	if (LIMIT_m127_MIN > pds_status_timer)
@@ -1412,7 +1405,7 @@ static void player_move_special_ivent(SPRITE *s1)
 		/* 復活中の処理、拡大してたら X のみ縮小。Y は変更せず。 */
 		if (t256(1.0) < s1->m_zoom_x256)
 		{
-			s1->m_zoom_x256 -= (5*4);//			s1->m_zoom_x256 -= (5);
+			s1->m_zoom_x256 -= (5*4);// 		s1->m_zoom_x256 -= (5);
 		//	s1->m_zoom_y256 -= (5);
 		}
 		else
@@ -1487,7 +1480,7 @@ static void player_move_special_ivent(SPRITE *s1)
 		;/* [なにもしない] */
 		/* 喰らいボム受付の猶予時間 */
 		//喰らいボム受付中の処理
-//		case PLAYER_STATE_01_KURAI_BOMB_UKETUKE:/* 喰らいボム受付中 */			// [***090125		追加
+//		case PLAYER_STATE_01_KURAI_BOMB_UKETUKE:/* 喰らいボム受付中 */
 //			/* 死亡確定 */
 //			cg.state_flag |= STATE_FLAG_16_NOT_ALLOW_KEY_CONTROL;		/* キー入力無効(1) */
 //			break;
@@ -1586,7 +1579,7 @@ global void player_continue_value(void)
 {
 	cg.zanki				= (1+option_config[OPTION_CONFIG_00_PLAYER]);	/* cg.base_zanki */ /* ((zanki&0x03)+2) */ /* static_fix_status[BASE_LIVES+(cg_game_select_player)] */
 	cg.game_score			= score(0);
-//	/* (r32) */cg.state_flag			&= (~ST ATE_FLAG_14_GAME_LOOP_QUIT); 	/* 復帰 */
+//	/* (r32) */cg.state_flag			&= (~ST ATE_FLAG_14_GAME_LOOP_QUIT);	/* 復帰 */
 	/* (r32) */cg.state_flag		|= STATE_FLAG_14_ZAKO_TUIKA;	/* on 復帰 */
 	#if (1==USE_EXTEND_CHECK)
 	player_init_extend_score();
@@ -1670,7 +1663,7 @@ static void jiki_and_option_create(void)
 			h->flags				&= (~(SP_FLAG_OPTION_VISIBLE)); 	/* 可視フラグのOFF(不可視) */
 			h->flags				&= (~(SP_FLAG_COLISION_CHECK)); 	/* あたり判定のOFF(無敵) */
 
-	/* ??? */ h->base_weapon_strength				= (1/* 8*5 */);/* [***090214 追加 */
+	/* ??? */ h->base_weapon_strength				= (1/* 8*5 */);
 			{
 			//
 				h->callback_mover		= player_move_option;
@@ -1700,7 +1693,6 @@ static void jiki_and_option_create(void)
 	プレイヤー初期化
 ---------------------------------------------------------*/
 extern void sprite_initialize_position(SPRITE *h);
-extern int boss_hp_dec_by_frame;/* ボス攻撃減少値、フレーム単位 */
 
 extern void select_jiki_load_surface(void);
 extern void boss_effect_sprite_add(void);
@@ -1741,7 +1733,7 @@ global void player_init_first(void)
 	/* あたり判定の都合上 */
 	{	SPRITE *h;
 		h								= obj_add_01_teki_error();	/* 敵obj番号の0番を必ず取得できる。 */
-	//	h	あたり判定の都合上できない							= obj_add_nn_direct(OBJ_HEAD_02_KOTEI+FIX_OBJ_08_BOSS);	/* 必ず登録できる。 */
+	//	h	あたり判定の都合上できない							= obj_add_nn_direct(OBJ_HEAD_02_KOTEI+FIX_OBJ_08_BOSS); /* 必ず登録できる。 */
 	//	if (NULL!=h)/* 登録できた場合のみ */	/* 強制登録 */		/* 仕様バグ(?) */
 	//	h = &obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_08_BOSS];
 		sprite_initialize_position(h);
@@ -1770,7 +1762,7 @@ global void player_init_first(void)
 //	if (MARISA==(cg_game_select_player))		{	cg.state_flag		|= STATE_FLAG_04_IS_MARISA; 	}	/* 魔理沙は常に自動収集 */
 //
 //
-	boss_hp_dec_by_frame	= 0;/* ボス攻撃減少値、フレーム単位 */
+	spell_card.boss_hp_dec_by_frame = 0;/* ボス攻撃減少値、フレーム単位 */
 //
 	cg_jiki_weapon_level_offset 	= (cg_game_select_player) + (/* 0==武器レベル */0<<3);
 	/* 練習モードの場合はフルパワーで始める(その代わりクリア後のイベントが見れない) */
@@ -1778,6 +1770,8 @@ global void player_init_first(void)
 //
 
 	cg.game_now_max_continue		= DEFAULT_MAX_CONTINUE;/* (3) */
+	cg.chuu_boss_mode				= (0);/* どこかで初期化が必ず必要 */
+
 	#if 1
 	player_continue_value();
 	#else
@@ -1800,7 +1794,6 @@ global void player_init_first(void)
 	#if 1/* (r33仕様変更により)どこかで初期化が必ず必要(ここでない方が良いかも？) */
 			br.BULLET_REGIST_03_tama_data			= (0);/* どこかで初期化が必ず必要 */
 	#endif
-			chu_boss_mode			= (0);/* どこかで初期化が必ず必要 */
 }
 
 

@@ -130,6 +130,59 @@ void vbl_draw_screen(void)
 	sceGuScissor(0, 0, GAME_WIDTH, GAME_HEIGHT);	/* 描画範囲を設定する */
 	#endif /*(000)*/
 //
+/* -- プライオリティー＃??．SDL_tache 画面を描画 */
+	#if (1==USE_GU_TACHIE_TEST)/* (r34)テスト */
+	//sceGuScissor(0, 0, PSP_WIDTH480, PSP_HEIGHT272);	/* 描画範囲を設定する */
+	{
+		int nnn;
+		for (nnn=0; nnn<SCRIPT_SPRITE_99_MAX; nnn++)
+		{
+			if (NULL != standard_script_sprite[nnn].img)	/* 画像があるもののみ描画する。(使用中の場合に描画する) */
+			{
+			//	sceGuTexFunc(GU_TFX_MODULATE, GU_TCC_RGBA);/* 半透明 */
+			//	sceGuTexFunc(GU_TFX_MODULATE, GU_TCC_RGB);
+				sceGuTexFunc(GU_TFX_REPLACE, GU_TCC_RGB);/*???*/		/*勝手にdou ble buffer???*/
+			//
+			//	sceGuBlendFunc(GU_ADD, GU_SRC_ALPHA, GU_ONE_MINUS_SRC_ALPHA, 0, 0);
+
+			//	sceGuBlendFunc(GU_ADD, GU_SRC_ALPHA, GU_ONE_MINUS_SRC_ALPHA, 0, 0);
+			//	sceGuBlendFunc(GU_SUBTRACT, GU_SRC_ALPHA, GU_ONE_MINUS_SRC_ALPHA, 0, 0);
+			//	sceGuBlendFunc(GU_ADD, GU_SRC_COLOR, GU_DST_COLOR, 0, 0);
+			//	sceGuBlendFunc(GU_ADD, GU_FIX, GU_FIX, 0x7f007f7f, 0x3f3f3f00);
+			//	sceGuBlendFunc(GU_ADD, GU_FIX, GU_FIX, 0x7f7f7f7f, 0x7f7f7f7f);
+			//	sceGuBlendFunc(GU_ADD, GU_FIX, GU_ONE_MINUS_SRC_ALPHA, (conv_bg_alpha), 0xffffffff);
+				sceGuBlendFunc(GU_ADD, GU_SRC_ALPHA, GU_ONE_MINUS_SRC_ALPHA, 0, 0);
+
+			//	sceGuBlendFunc(GU_ADD, GU_FIX, GU_FIX, 0, 0);
+			//	sceGuBlendFunc(GU_MIN, GU_FIX, GU_FIX, 0xffffffff, 0xffffffff);
+			//	sceGuBlendFunc(GU_MIN, GU_FIX, GU_FIX, 0, 0);
+			//	sceGuBlendFunc(GU_ADD, GU_FIX, GU_FIX, 0x7f7f7f7f, 0x7f7f7f7f);
+			//
+				sceGuTexMode(/*GU_PSM_5551*/SDL_GU_PSM_0000/*GU_PSM_5650*/, 0, 0, 0/*0 swizzle*/);
+			//	sceGuTexMode(/*GU_PSM_5551*/GU_PSM_5551/*GU_PSM_5650*/, 0, 0, 0/*0 swizzle*/);
+			//	sceGuTexImage(0, 512, 512, 512, standard_script_sprite[nnn].render_image);
+			//	sceGuTexImage(0, 512, 512, 512, standard_script_sprite[nnn].img->pixels);
+				sceGuTexImage(0,
+	/*(立ち絵画像の幅)*/128,
+	/*(立ち絵画像の高さ)*/256,
+	/*(転送元のバッファ幅)*/(128)/*(SDLだから) 512*/, standard_script_sprite[nnn].img->pixels);
+/*
+	転送元のバッファ幅は、pspのvramとかだと512[dots]固定ですが、SDLのサーフェイスの画像幅は、
+	本当に(この立ち絵サーフェイスの画像幅==)128[dots]なのです。
+	したがって128[dots]を指定します。
+*/
+				sceGuTexFilter(GU_NEAREST, GU_NEAREST);/*くっきり拡大画面*/
+				gu_draw_tache_screen(
+					/*dst_r.x =*/ (t256_floor(standard_script_sprite[nnn].cx256)),
+					/*dst_r.y =*/ (t256_floor(standard_script_sprite[nnn].cy256))
+				);
+				sceGuTexFilter(GU_LINEAR, GU_LINEAR);/*ぼやぼや拡大画面*/
+			}
+		}
+	}
+	//sceGuScissor(0, 0, GAME_WIDTH, GAME_HEIGHT);	/* 描画範囲を設定する */
+	#endif /* (1==USE_GU_TACHIE_TEST) */
+//
 
 
 /* -- プライオリティー＃20．フロント面を描画 */
@@ -183,7 +236,7 @@ void vbl_draw_screen(void)
 //
 /* -- プライオリティー＃23．パネル面を描画 */
 	#if (1)
-	if (0 != draw_side_panel)
+	if (0 != (cg.side_panel_draw_flag))
 	{
 //		gu_set_texture(TEX_07_FRONT);	/* テクスチャをセット */
 		gu_draw_side_panel();/* とりあえずボスゲージ描画 */
@@ -197,7 +250,7 @@ void vbl_draw_screen(void)
 		#define FLAG_DRAW_SUPEKA (0x02)/* スペカ文字の描画指示 */
 		int 	use_draw_FONT;/* 文字の描画指示 */
 		use_draw_FONT = 0;/* 描画指示をクリア */
-		if (0 != (draw_script_screen+(cg.msg_time)))
+		if (0 != ((cg.draw_flag_script_screen)+(cg.msg_time)))
 		{
 			if (0 != (cg.msg_time))/* メッセージ(仮対応)表示時間 */
 			{

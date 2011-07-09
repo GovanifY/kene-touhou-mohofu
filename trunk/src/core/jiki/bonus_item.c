@@ -18,7 +18,7 @@
 #define ITEM_DATA_true_y256 	user_data00 	/* 本来のy座標 */
 #define ITEM_DATA_y_sum256		user_data01 	/* アイテム投げ出し用 y軸 積算値(y軸、上方がマイナス) */
 #define ITEM_DATA_angle1024 	user_data02
-#define ITEM_DATA_flags00		user_data03 	/* 収集フラグ	[***090116	変更 */
+#define ITEM_DATA_flags00		user_data03 	/* 収集フラグ */
 /*	自動収集 */
 #define ITEM_DATA_time_in		user_data04 	/* 出現時間 */
 #define ITEM_DATA_x_sa256		user_data05 	/* 差分 x */
@@ -152,7 +152,7 @@ static void move_item_type02(SPRITE *src)	/* 自動収集ならば、自分に集まる */
 	元々激遅なので、あんま効果がない気もする。(速くすると上記の問題点が顕著になる)
 ---------------------------------------------------------*/
 		#if (0)
-		/* [***090123 [***090220	変更5=>4=>3 t256(3.0) */
+		/* 変更5=>4=>3 t256(3.0) */
 	//	if (src->ITEM_DATA_y_sum256 < t256(1.5) )	/* t256(2.2) アイテム落下、最大速度の調整 */
 		if (src->ITEM_DATA_y_sum256 < t256(2.0) )	/* t256(2.2) アイテム落下、最大速度の調整 */
 		/* t256(2.2) == コンティニュー復活時の[F]を画面の下隅(右下、左下)で死んだ場合で、
@@ -197,7 +197,7 @@ static void move_item_type01(SPRITE *src)
 		/* レミリア & 幽々子 の場合、低速移動で落下速度を一時的に下げられる。 */
 		if (0x04==((cg_game_select_player) & 0x06) )/* 4:REMILIA or 5:YUYUKO */
 		{
-			if (/*is_slow =*/ (cg_my_pad & PSP_KEY_SLOW))/* 低速移動の場合 */
+			if (/*is_slow =*/ (psp_pad.pad_data & PSP_KEY_SLOW))/* 低速移動の場合 */
 			{
 				rakka_sokudo_maximum >>= 1;/* 一時的に半分 */
 			}
@@ -264,6 +264,24 @@ static void move_item_type00(SPRITE *src)
 /*int x, int y*/
 static SPRITE *item_mono_create(SPRITE *src, int sel_type)/* */
 {
+	{
+		// チルノの場合、グレイズでパワーアップするので[小p][大P][F]は出さない。[点](氷)になる。
+		// レミリアの場合[P](血)しか出さない。
+		// 幽々子の場合[小p]←→[点]、[大P]←→[ボム]、が入れ替わっている。
+		const u8 item_henkan[(8)*(8)] =
+		{/* 霊夢(霊符)		霊夢(夢符)					魔理沙(魔符)				魔理沙(恋符)				レミリア(血符)				幽々子(符蝶)				チルノ(氷符)				チルノ(⑨系)			*/
+(SP_ITEM_00_P001&0xff), 	(SP_ITEM_00_P001&0xff), 	(SP_ITEM_00_P001&0xff), 	(SP_ITEM_00_P001&0xff), 	(SP_ITEM_00_P001&0xff), 	(SP_ITEM_05_TENSU&0xff),	(SP_ITEM_05_TENSU&0xff),	(SP_ITEM_05_TENSU&0xff),
+(SP_ITEM_01_P008&0xff), 	(SP_ITEM_01_P008&0xff), 	(SP_ITEM_01_P008&0xff), 	(SP_ITEM_01_P008&0xff), 	(SP_ITEM_01_P008&0xff), 	(SP_ITEM_01_P008&0xff), 	(SP_ITEM_05_TENSU&0xff),	(SP_ITEM_05_TENSU&0xff),
+(SP_ITEM_02_P128&0xff), 	(SP_ITEM_02_P128&0xff), 	(SP_ITEM_02_P128&0xff), 	(SP_ITEM_02_P128&0xff), 	(SP_ITEM_01_P008&0xff), 	(SP_ITEM_04_BOMB&0xff), 	(SP_ITEM_05_TENSU&0xff),	(SP_ITEM_05_TENSU&0xff),
+(SP_ITEM_03_1UP&0xff),		(SP_ITEM_03_1UP&0xff),		(SP_ITEM_03_1UP&0xff),		(SP_ITEM_03_1UP&0xff),		(SP_ITEM_03_1UP&0xff),		(SP_ITEM_03_1UP&0xff),		(SP_ITEM_03_1UP&0xff),		(SP_ITEM_03_1UP&0xff),
+(SP_ITEM_04_BOMB&0xff), 	(SP_ITEM_04_BOMB&0xff)	,	(SP_ITEM_04_BOMB&0xff), 	(SP_ITEM_04_BOMB&0xff), 	(SP_ITEM_01_P008&0xff), 	(SP_ITEM_02_P128&0xff), 	(SP_ITEM_04_BOMB&0xff), 	(SP_ITEM_04_BOMB&0xff),
+(SP_ITEM_05_TENSU&0xff),	(SP_ITEM_05_TENSU&0xff),	(SP_ITEM_05_TENSU&0xff),	(SP_ITEM_05_TENSU&0xff),	(SP_ITEM_00_P001&0xff), 	(SP_ITEM_00_P001&0xff), 	(SP_ITEM_05_TENSU&0xff),	(SP_ITEM_05_TENSU&0xff),
+(SP_ITEM_06_HOSI&0xff), 	(SP_ITEM_06_HOSI&0xff), 	(SP_ITEM_06_HOSI&0xff), 	(SP_ITEM_06_HOSI&0xff), 	(SP_ITEM_06_HOSI&0xff), 	(SP_ITEM_06_HOSI&0xff), 	(SP_ITEM_06_HOSI&0xff), 	(SP_ITEM_06_HOSI&0xff),
+(SP_ITEM_07_SPECIAL&0xff),	(SP_ITEM_07_SPECIAL&0xff),	(SP_ITEM_07_SPECIAL&0xff),	(SP_ITEM_07_SPECIAL&0xff),	(SP_ITEM_07_SPECIAL&0xff),	(SP_ITEM_07_SPECIAL&0xff),	(SP_ITEM_07_SPECIAL&0xff),	(SP_ITEM_07_SPECIAL&0xff),
+		};
+		sel_type = (/*SP_ITEM_00_P001*/SP_GROUP_ITEMS | (item_henkan[((sel_type&0x07)<<3)+(cg_game_select_player)]));
+	}
+	//
 	//	アイテムの種類を選ぶ
 	SPRITE *h;
 	h						= obj_add_00_tama_error();
@@ -405,15 +423,6 @@ global void bullets_to_hosi(void)
 /*---------------------------------------------------------
 	アイテムを登録して出現させる
 ---------------------------------------------------------*/
-
-/* [***090125	追加: up_flags の ITEM_MOVE_FLAG_01_COLLECT ビットがオンでプレイヤーに集まります。 */
-global void item_create(
-	SPRITE *src,/*int x, int y*/
-	int item_type,
-	int num_of_creates,
-	int up_flags
-)
-{
 	#if 0
 	if ( (CIRNO_A-1) < ((cg_game_select_player)) )/* 6:CIRNO_A or 7:CIRNO_Q */
 	{
@@ -433,26 +442,14 @@ global void item_create(
 		}
 	}
 	#endif
-	{
-		// チルノの場合、グレイズでパワーアップするので[小p][大P][F]は出さない。[点](氷)になる。
-		// レミリアの場合[P](血)しか出さない。
-		// 幽々子の場合[小p]←→[点]、[大P]←→[ボム]、が入れ替わっている。
-		const u8 item_henkan[(8)*(8)] =
-		{/* 霊夢(霊符)		霊夢(夢符)					魔理沙(魔符)				魔理沙(恋符)				レミリア(血符)				幽々子(符蝶)				チルノ(氷符)				チルノ(⑨系)			*/
-(SP_ITEM_00_P001&0xff), 	(SP_ITEM_00_P001&0xff), 	(SP_ITEM_00_P001&0xff), 	(SP_ITEM_00_P001&0xff), 	(SP_ITEM_00_P001&0xff), 	(SP_ITEM_05_TENSU&0xff),	(SP_ITEM_05_TENSU&0xff),	(SP_ITEM_05_TENSU&0xff),
-(SP_ITEM_01_P008&0xff), 	(SP_ITEM_01_P008&0xff), 	(SP_ITEM_01_P008&0xff), 	(SP_ITEM_01_P008&0xff), 	(SP_ITEM_01_P008&0xff), 	(SP_ITEM_01_P008&0xff), 	(SP_ITEM_05_TENSU&0xff),	(SP_ITEM_05_TENSU&0xff),
-(SP_ITEM_02_P128&0xff), 	(SP_ITEM_02_P128&0xff), 	(SP_ITEM_02_P128&0xff), 	(SP_ITEM_02_P128&0xff), 	(SP_ITEM_01_P008&0xff), 	(SP_ITEM_04_BOMB&0xff), 	(SP_ITEM_05_TENSU&0xff),	(SP_ITEM_05_TENSU&0xff),
-(SP_ITEM_03_1UP&0xff),		(SP_ITEM_03_1UP&0xff),		(SP_ITEM_03_1UP&0xff),		(SP_ITEM_03_1UP&0xff),		(SP_ITEM_03_1UP&0xff),		(SP_ITEM_03_1UP&0xff),		(SP_ITEM_03_1UP&0xff),		(SP_ITEM_03_1UP&0xff),
-(SP_ITEM_04_BOMB&0xff), 	(SP_ITEM_04_BOMB&0xff)	,	(SP_ITEM_04_BOMB&0xff), 	(SP_ITEM_04_BOMB&0xff), 	(SP_ITEM_01_P008&0xff), 	(SP_ITEM_02_P128&0xff), 	(SP_ITEM_04_BOMB&0xff), 	(SP_ITEM_04_BOMB&0xff),
-(SP_ITEM_05_TENSU&0xff),	(SP_ITEM_05_TENSU&0xff),	(SP_ITEM_05_TENSU&0xff),	(SP_ITEM_05_TENSU&0xff),	(SP_ITEM_00_P001&0xff), 	(SP_ITEM_00_P001&0xff), 	(SP_ITEM_05_TENSU&0xff),	(SP_ITEM_05_TENSU&0xff),
-(SP_ITEM_06_HOSI&0xff), 	(SP_ITEM_06_HOSI&0xff), 	(SP_ITEM_06_HOSI&0xff), 	(SP_ITEM_06_HOSI&0xff), 	(SP_ITEM_06_HOSI&0xff), 	(SP_ITEM_06_HOSI&0xff), 	(SP_ITEM_06_HOSI&0xff), 	(SP_ITEM_06_HOSI&0xff),
-(SP_ITEM_07_SPECIAL&0xff),	(SP_ITEM_07_SPECIAL&0xff),	(SP_ITEM_07_SPECIAL&0xff),	(SP_ITEM_07_SPECIAL&0xff),	(SP_ITEM_07_SPECIAL&0xff),	(SP_ITEM_07_SPECIAL&0xff),	(SP_ITEM_07_SPECIAL&0xff),	(SP_ITEM_07_SPECIAL&0xff),
-		};
-		item_type = (/*SP_ITEM_00_P001*/SP_GROUP_ITEMS | (item_henkan[((item_type&0x07)<<3)+(cg_game_select_player)]));
-	}
-	//
-	int i;
-	for (i=0; i<num_of_creates; i++)
+
+/* up_flags の ITEM_MOVE_FLAG_01_COLLECT ビットがオンでプレイヤーに集まります。 */
+global void item_create_flags(
+	SPRITE *src,
+	int item_type,
+	int up_flags
+)
+{
 	{
 		SPRITE *h;
 		h			= item_mono_create(src, item_type);
@@ -474,9 +471,33 @@ global void item_create(
 			h->ITEM_DATA_y_sum256		= -(/*256*/((512)))-(ra_nd()&0xff); 			/* アイテム投げ出し初期値(y軸、上方がマイナス) */
 			#endif
 			h->ITEM_DATA_angle1024		= (6*2);	/* 2*6.51898646904403967309077986986488 cv1024r(0.08);*/
-			h->ITEM_DATA_flags00		= (up_flags&ITEM_MOVE_FLAG_01_COLLECT);
+			h->ITEM_DATA_flags00		= (up_flags & ITEM_MOVE_FLAG_01_COLLECT);
 		}
 	}
+}
+global void item_create_num(
+	SPRITE *src,
+	int item_type,
+	int num_of_creates
+)
+{
+	int ii;
+	for (ii=0; ii<num_of_creates; ii++)
+	{
+		item_create_flags(src, item_type, ITEM_MOVE_FLAG_06_RAND_XY);
+	}
+}
+
+
+
+/*IT EM_MOVE_FLAG_01_COLLECT|*/
+#define MY_ITEM_FLAGS (ITEM_MOVE_FLAG_06_RAND_XY)/*(up_flags)*/
+global void item_create_mono(
+	SPRITE *src,
+	int item_type
+)
+{
+	item_create_flags(src, item_type, MY_ITEM_FLAGS);
 }
 
 /*---------------------------------------------------------
@@ -539,15 +560,18 @@ global void item_create_for_boss(SPRITE *src, int item_create_mode)
 		(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_01_P008&7),	(SP_ITEM_05_TENSU&7),	/*stage6*/
 	#endif
 	};
-//	item_create(src, item_tbl[ITEM_03+difficulty+item_create_mode]/*SP_ITEM_03_1UP	*/, 1, ITEM_MOVE_FLAG_06_RAND_XY);
-//	item_create(src, item_tbl[ITEM_02+difficulty+item_create_mode]/*SP_ITEM_02_P128 */, 1, ITEM_MOVE_FLAG_06_RAND_XY);
+//	item_create_mono(src, item_tbl[ITEM_03+difficulty+item_create_mode]/*SP_ITEM_03_1UP */ );
+//	item_create_mono(src, item_tbl[ITEM_02+difficulty+item_create_mode]/*SP_ITEM_02_P128 */ );
 //	item_create(src, item_tbl[ITEM_01+difficulty+item_create_mode]/*SP_ITEM_01_P008 */, cg.game_now_stage/*5*/, ITEM_MOVE_FLAG_06_RAND_XY);
 	int i;
 	for (i=0; i<1+(((cg.game_now_stage>>1))&0x0f); i++)
 	{
-		item_create(src, SP_GROUP_ITEMS+u8_item_tbl[item_create_mode+(((cg_game_difficulty)+i)&((ITEM_MAX)-1))]/*SP_ITEM_03_1UP */, 1, ITEM_MOVE_FLAG_06_RAND_XY);
+		item_create_mono(src, SP_GROUP_ITEMS+u8_item_tbl[item_create_mode+(((cg_game_difficulty)+i)&((ITEM_MAX)-1))]/*SP_ITEM_03_1UP */ );
 	}
-	item_create(src, SP_ITEM_05_TENSU/*SP_IT EM_06_HOSI*/, (16)/*(7)*/, (ITEM_MOVE_FLAG_01_COLLECT|ITEM_MOVE_FLAG_06_RAND_XY) );/*星点を出す*/
+	for (i=0; i<(16); i++)/*(7)*/
+	{
+		item_create_flags(src, SP_ITEM_05_TENSU/*SP_IT EM_06_HOSI*/, (ITEM_MOVE_FLAG_01_COLLECT|ITEM_MOVE_FLAG_06_RAND_XY) );/*星点を出す*/
+	}
 }
 
 
@@ -590,10 +614,17 @@ static int s_teki_get_random_item(void)
 	敵やられ
 ---------------------------------------------------------*/
 
-global /*static*/ void lose_random_item(SPRITE *src)
+global /*static*/ void item_create_99_random_item(SPRITE *src)
 {
-	item_create(src, s_teki_get_random_item(), (1), (/*IT EM_MOVE_FLAG_01_COLLECT|*/ITEM_MOVE_FLAG_06_RAND_XY)/*(up_flags)*/ );
+	item_create_mono(src, s_teki_get_random_item());//, (1), (/*IT EM_MOVE_FLAG_01_COLLECT|*/ITEM_MOVE_FLAG_06_RAND_XY)/*(up_flags)*/
 }
+
+
+
+
+
+
+
 
 /*-------------------------------------------------------*/
 /*-------------------------------------------------------*/

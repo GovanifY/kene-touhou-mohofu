@@ -39,47 +39,38 @@
 ---------------------------------------------------------*/
 static void spell_create_10_cirno_misogi(SPRITE *src)
 {
-//	if ((64-1)==((src->boss_base_spell_time_out)))
-	if ((SPELL_TIME_0060-1)==((src->boss_base_spell_time_out)))
+//	if ((64-1)==((src->boss_spell_timer)))
+	if ((SPELL_TIME_0060-1)==((src->boss_spell_timer)))
 	{
-		SPRITE *zzz_player;
-		zzz_player = &obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_00_PLAYER];
-		tmp_angleCCW65536_src_nerai(zzz_player, src);/* 自機狙い角作成 */
+		tmp_angleCCW65536_jiki_nerai(src);/* 自機狙い角作成 */
 	}
 //	else
-//	if (0x40==((src->boss_base_spell_time_out)&0xc7))/* 8回(修正1-2-3-4-5-6-7弾:0wayは撃たないので撃つのは7回) */
-	if (0x00==((src->boss_base_spell_time_out)&0x07))/* 8回(修正1-2-3-4-5-6-7弾:0wayは撃たないので撃つのは7回) */
+//	if (0x40==((src->boss_spell_timer)&0xc7))/* 8回(修正1-2-3-4-5-6-7弾:0wayは撃たないので撃つのは7回) */
+	if (0x00==((src->boss_spell_timer)&0x07))/* 8回(修正1-2-3-4-5-6-7弾:0wayは撃たないので撃つのは7回) */
 	{
 		#if (1)
-	//	voice_play(VOICE13_SAKUYA_SHOT02, TRACK04_TEKIDAN);
-		bullet_play_04_auto(VOICE13_SAKUYA_SHOT02);
+	//	voice_play(VOICE14_SAKUYA_SHOT02, TRACK04_TEKIDAN);
+		bullet_play_04_auto(VOICE14_SAKUYA_SHOT02);
 		#endif
 	//
 		int n_way;
 		n_way = 0;
-		n_way = ((/*16*/7-((src->boss_base_spell_time_out)>>3))&7)+(1)+((cg_game_difficulty)>>1);
+		n_way = ((/*16*/7-((src->boss_spell_timer)>>3))&7)+(1)+((cg_game_difficulty)>>1);
 		if (n_way)
 		{
-			obj_send1->cx256							= (src->cx256); 	/* 弾源x256 ボス中心から発弾。 */
-			obj_send1->cy256							= (src->cy256); 	/* 弾源y256 ボス中心から発弾。 */
-		//
 			br.BULLET_REGIST_00_speed256				= (t256(2.0));				/* 弾速(2.5) */
 			br.BULLET_REGIST_01_speed_offset			= t256(6);/*(テスト)*/
-
 		//	br.BULLET_REGIST_02_angle65536				= (src->tmp_angleCCW65536)-(n_way*65536/128);
-			br.BULLET_REGIST_02_angle65536				= (src->tmp_angleCCW65536);
-
+			br.BULLET_REGIST_02_angle65536				= (src->tmp_angleCCW65536); 	/* [破壊] */
 			br.BULLET_REGIST_03_tama_data   			= (TAMA_DATA_0000_TILT);/* (r33-)標準弾 */
 			br.BULLET_REGIST_04_bullet_obj_type 		= BULLET_KOME_03_AOI;		/* [青米弾] になってるのは現在 氷弾 のグラが無いから */
-		//未定br.BULLET_REGIST_05_regist_type 			= TAMA_TYPE_00_ANGLE_TILT;/* 標準弾に設定する(r33-) */
-
-			br.BULLET_REGIST_06_n_way					= n_way;/* [nway] */
-			br.BULLET_REGIST_07_div_angle65536			= (int)(65536/(64));		/* 分割角度(1024[360/360度]を 64 分割) */	/* 1周をn分割した角度 */
+			br.BULLET_REGIST_06_n_way					= n_way;/* [nway] */	/* [破壊] */
+			br.BULLET_REGIST_07_div_angle65536			= (int)(65536/(64));	/* [破壊] */		/* 分割角度(1024[360/360度]を 64 分割) */	/* 1周をn分割した角度 */
 			tama_system_regist_n_way();/* (r33-) */
 		}
 	}
 #if 1
-	if (0x20==((src->boss_base_spell_time_out)&0x37))/* 2回 */
+	if (0x20==((src->boss_spell_timer)&0x37))/* 2回 */
 	{
 		if (0 != spell_bunkatsu_nums_table[b_chrno_00_BLUE_NUMS+(cg_game_difficulty)])
 		{
@@ -93,7 +84,6 @@ static void spell_create_10_cirno_misogi(SPRITE *src)
 
 			br.BULLET_REGIST_03_tama_data   			= (TAMA_DATA_8000_NON_TILT);/* (r33-)非傾き弾 */
 			br.BULLET_REGIST_04_bullet_obj_type 		= BULLET_WAKU12_03_AOI; 	/* [枠付き青丸弾] */
-		//未定br.BULLET_REGIST_05_regist_type 			= TAMA_TYPE_01_ANGLE_NON_TILT;/* (r33-)非傾き弾 */
 
 			br.BULLET_REGIST_06_n_way					= spell_bunkatsu_nums_table[b_chrno_00_BLUE_NUMS+(cg_game_difficulty)];//(36);/* [nway] */
 			br.BULLET_REGIST_07_div_angle65536			= spell_nan_ido_table[chrno_04_BLUE_DIV_ANGLE+(cg_game_difficulty)];//(int)(65536/(36));		/* 分割角度(1024[360/360度]を 64 分割) */	/* 1周をn分割した角度 */
@@ -111,53 +101,45 @@ static void spell_create_10_cirno_misogi(SPRITE *src)
 ---------------------------------------------------------*/
 static void spell_create_1b_cirno_icecle_fall(SPRITE *src)
 {
-//	if ((64-1)==((src->boss_base_spell_time_out)))
-	if ((SPELL_TIME_0060-1)==((src->boss_base_spell_time_out)))
+//	if ((64-1)==((src->boss_spell_timer)))
+	if ((SPELL_TIME_0060-1)==((src->boss_spell_timer)))
 	{
-		SPRITE *zzz_player;
-		zzz_player = &obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_00_PLAYER];
-		tmp_angleCCW65536_src_nerai(zzz_player, src);/* 自機狙い角作成 */
+		tmp_angleCCW65536_jiki_nerai(src);/* 自機狙い角作成 */
 	}
 //	else
-//	if (0x40==((src->boss_base_spell_time_out)&0xc7))/* 8回(修正1-2-3-4-5-6-7弾:0wayは撃たないので撃つのは7回) */
-	if (0x00==((src->boss_base_spell_time_out)&0x07))/* 8回(修正1-2-3-4-5-6-7弾:0wayは撃たないので撃つのは7回) */
+//	if (0x40==((src->boss_spell_timer)&0xc7))/* 8回(修正1-2-3-4-5-6-7弾:0wayは撃たないので撃つのは7回) */
+	if (0x00==((src->boss_spell_timer)&0x07))/* 8回(修正1-2-3-4-5-6-7弾:0wayは撃たないので撃つのは7回) */
 	{
 		#if (1)
-	//	voice_play(VOICE13_SAKUYA_SHOT02, TRACK04_TEKIDAN);
-		bullet_play_04_auto(VOICE13_SAKUYA_SHOT02);
+	//	voice_play(VOICE14_SAKUYA_SHOT02, TRACK04_TEKIDAN);
+		bullet_play_04_auto(VOICE14_SAKUYA_SHOT02);
 		#endif
-	//
-			obj_send1->cx256							= (src->cx256); 	/* 弾源x256 ボス中心から発弾。 */
-			obj_send1->cy256							= (src->cy256); 	/* 弾源y256 ボス中心から発弾。 */
 		//
+			br.BULLET_REGIST_01_speed_offset			= t256(6);/*(テスト)*/
+			br.BULLET_REGIST_03_tama_data   			= (TAMA_DATA_0000_TILT);/* (r33-)標準弾 */
+			br.BULLET_REGIST_04_bullet_obj_type 		= BULLET_KOME_03_AOI;		/* [青米弾] になってるのは現在 氷弾 のグラが無いから */
 		int jj;
 		for (jj=0; jj<5; jj++ )/* 全部調べる。 */
 		{
 			br.BULLET_REGIST_00_speed256				= (t256(2.0)-(jj<<5));				/* 弾速(2.5) */
-			br.BULLET_REGIST_01_speed_offset			= t256(6);/*(テスト)*/
-
-			br.BULLET_REGIST_02_angle65536				= (0);	/* 下向き */
-			br.BULLET_REGIST_03_tama_data   			= (TAMA_DATA_0000_TILT);/* (r33-)標準弾 */
-			br.BULLET_REGIST_04_bullet_obj_type 		= BULLET_KOME_03_AOI;		/* [青米弾] になってるのは現在 氷弾 のグラが無いから */
-		//未定br.BULLET_REGIST_05_regist_type 			= TAMA_TYPE_00_ANGLE_TILT;/* 標準弾に設定する(r33-) */
-			br.BULLET_REGIST_06_n_way					= (2);/* [nway] */
-			br.BULLET_REGIST_07_div_angle65536			= (int)(65536/(5))+((src->boss_base_spell_time_out)<<7);		/* 分割角度(1024[360/360度]を 64 分割) */	/* 1周をn分割した角度 */
+			br.BULLET_REGIST_02_angle65536				= (0);	/* 下向き */	/* [破壊] */
+			br.BULLET_REGIST_06_n_way					= (2);/* [nway] */		/* [破壊] */
+			br.BULLET_REGIST_07_div_angle65536			= (int)(65536/(5))+((src->boss_spell_timer)<<7);	/* [破壊] */		/* 分割角度(1024[360/360度]を 64 分割) */	/* 1周をn分割した角度 */
 			tama_system_regist_n_way();/* (r33-) */
 		}
 	}
-	if (0x20==((src->boss_base_spell_time_out)&0x37))/* 2回 */
+	if (0x20==((src->boss_spell_timer)&0x37))/* 2回 */
 	{
 		if (0 < (cg_game_difficulty) )
 		{
 			set_sub_jikinerai(src);/* 1:いちいち作成するっぽい。 */
 			br.BULLET_REGIST_00_speed256				= (t256(2.0));				/* 弾速(2.5) */
 			br.BULLET_REGIST_01_speed_offset			= t256(1);/*(テスト)*/
-
+			/* br.BULLET_REGIST_02_angle65536 [破壊] */
 			br.BULLET_REGIST_03_tama_data   			= (TAMA_DATA_8000_NON_TILT);/* (r33-)非傾き弾 */
 			br.BULLET_REGIST_04_bullet_obj_type 		= BULLET_WAKU12_06_KI_IRO;		/* [枠付き黄丸弾] */
-		//未定br.BULLET_REGIST_05_regist_type 			= TAMA_TYPE_01_ANGLE_NON_TILT;/* 非傾き弾に設定する(r33-) */
-			br.BULLET_REGIST_06_n_way					= (5);/* [nway] */
-			br.BULLET_REGIST_07_div_angle65536			= (int)(65536/(36));		/* 分割角度(1024[360/360度]を 64 分割) */	/* 1周をn分割した角度 */
+			br.BULLET_REGIST_06_n_way					= (5);/* [nway] */	/* [破壊] */
+			br.BULLET_REGIST_07_div_angle65536			= (int)(65536/(36));	/* [破壊] */		/* 分割角度(1024[360/360度]を 64 分割) */	/* 1周をn分割した角度 */
 			tama_system_regist_n_way();/* (r33-) */
 		}
 	}
@@ -306,11 +288,6 @@ static void exchange_damnaku_chiruno_saikasoku(void)
 		if (is_tama_grouip08(BULLET_WAKU12_00_SIRO) == is_tama_grouip08(s->type) )	/* 枠つき12丸弾なら */
 		{
 		//	s_change_meirin_yajirusi_one(s);
-			/* 弾の現在座標を、新基点座標とする。 */
-			s->tx256 = (s->cx256);		/* 基点座標にセット */
-			s->ty256 = (s->cy256);		/* 基点座標にセット */
-			s->tama_system_radius256 = t256(0); 	/* 基点座標になったので半径は 0 にする。 */
-			/*	*/
 			#if 0
 		//	s->rotationCCW1024				= (ra_nd()&((1024)-1)); 			/* 向き */	/* 向きは乱数でない気がする */
 			#else
@@ -360,13 +337,13 @@ static void spell_create_13_perfect_freeze(SPRITE *src)
 {
 //	int i;
 	// 最初のランダム発射 (64*3フレーム==約3秒)ばら撒く。
-	if (((640)-(64*3))<(src->boss_base_spell_time_out)) // 192== (64*3)
+	if (((640)-(64*3))<(src->boss_spell_timer)) // 192== (64*3)
 	{
 		#if (1)
-		if (0==((src->boss_base_spell_time_out)&0x07))
+		if (0==((src->boss_spell_timer)&0x07))
 		{
-		//	voice_play(VOICE14_BOSS_KOUGEKI_01, TRACK04_TEKIDAN);
-			bullet_play_04_auto(VOICE14_BOSS_KOUGEKI_01);
+		//	voice_play(VOICE15_BOSS_KOUGEKI_01, TRACK04_TEKIDAN);
+			bullet_play_04_auto(VOICE15_BOSS_KOUGEKI_01);
 		}
 		#endif
 		{
@@ -411,58 +388,52 @@ static void spell_create_13_perfect_freeze(SPRITE *src)
 				遅い場合は、始めの弾を避けるのはその分簡単になるが、後半は弾数が増えるのでその分難しくなる。
 			*/
 		//	br.BULLET_REGIST_02_angle65536				= (0/65536);					/* 下向き */
-		//	br.BULLET_REGIST_02_angle65536				= (ra_nd()&((32768)-1)) + ((src->boss_base_spell_time_out)<<(8+6)); 		/* 向き */
-		//	br.BULLET_REGIST_02_angle65536				= (ra_nd()&((32768/32)-1)) + ((src->boss_base_spell_time_out)<<(8+4));		/* 向き */
+		//	br.BULLET_REGIST_02_angle65536				= (ra_nd()&((32768)-1)) + ((src->boss_spell_timer)<<(8+6)); 		/* 向き */
+		//	br.BULLET_REGIST_02_angle65536				= (ra_nd()&((32768/32)-1)) + ((src->boss_spell_timer)<<(8+4));		/* 向き */
 		//	br.BULLET_REGIST_02_angle65536				= (ra_nd()&((65536)-1)) ;		/* 向き */
 			br.BULLET_REGIST_02_angle65536				= (add_angle)/*8分割(0.125秒で1周)*/;		/* 向き */
 			br.BULLET_REGIST_03_tama_data   			= (TAMA_DATA_8000_NON_TILT);/* (r33-)非傾き弾 */
-			br.BULLET_REGIST_04_bullet_obj_type 		= BULLET_WAKU12_00_SIRO+(p_tama_tbl[((src->boss_base_spell_time_out)&0x0f)]);
-		//未定br.BULLET_REGIST_05_regist_type 			= TAMA_TYPE_01_ANGLE_NON_TILT;		/* 非傾き弾 */
+			br.BULLET_REGIST_04_bullet_obj_type 		= BULLET_WAKU12_00_SIRO+(p_tama_tbl[((src->boss_spell_timer)&0x0f)]);
 			#if 0
 			br.BULLET_REGIST_06_n_way					= (2);										/* [2way] */	/* 1フレームに2弾 */
 			#else
 			br.BULLET_REGIST_06_n_way					= (1+(cg_game_difficulty)); /* 模倣風なので、難易度調整 */		/* [2way] */	/* 1フレームに2弾 */
 			#endif
 			br.BULLET_REGIST_07_div_angle65536			= (65536/16)+(ra_nd16>>4);				/* 分割角度([360/360]度を16分割) */ 	/* (ra_nd16>>4) == 乱数(0-4095) */
-			{
-				obj_send1->cx256					= (src->cx256); 	/* 弾源x256 ボス中心から発弾。 */
-				obj_send1->cy256					= (src->cy256); 	/* 弾源y256 ボス中心から発弾。 */
-				tama_system_regist_katayori_n_way();	/* (r33-) */
-			}
+			tama_system_regist_katayori_n_way();	/* (r33-) */
 		}
 	}
 	else
-	if (((640)-(64*4))<(src->boss_base_spell_time_out)) // 192== (64*3)
+	if (((640)-(64*4))<(src->boss_spell_timer)) // 192== (64*3)
 	{
 		;/*何もしない*/
 	}
 	else
-	if (((640)-(64*5))<(src->boss_base_spell_time_out)) // 192== (64*3)
+	if (((640)-(64*5))<(src->boss_spell_timer)) // 192== (64*3)
 	{
 		/*
 		Normalで適当にやってみた。
 		後追い弾は、速度の違う弾(三種)を同時に出す。のセットを6回だった。
 		*/
-		if (0x00==((src->boss_base_spell_time_out)&0x07)) /* 8[frame]に1回 */
+		if (0x00==((src->boss_spell_timer)&0x07)) /* 8[frame]に1回 */
 		{
-			if ((4+(cg_game_difficulty))>((src->boss_base_spell_time_out)&0x07))
+			if ((4+(cg_game_difficulty))>((src->boss_spell_timer)&0x07))
 			{
 				set_sub_jikinerai(src);/* 1:いちいち作成するっぽい。 */
 				int aaa_angle65536;
 				aaa_angle65536 = (src->tmp_angleCCW65536);/* 自機狙い角 */
+					br.BULLET_REGIST_01_speed_offset			= t256(0);/*(テスト)*/
+					br.BULLET_REGIST_03_tama_data   			= (TAMA_DATA_8000_NON_TILT);/* (r33-)非傾き弾 */
+					br.BULLET_REGIST_04_bullet_obj_type 		= BULLET_MARU10_03_AOI;
 				int jj;
 				for (jj=0; jj<3; jj++)
 				{
 				//	br.BULLET_REGIST_00_speed256				= (t256(2.5));				/* 弾速 */
 				//	br.BULLET_REGIST_00_speed256				= (t256(1.75)+(jj<<7)); 	/* 弾速 */
 					br.BULLET_REGIST_00_speed256				= (t256(2.00)+(jj<<8)); 	/* 弾速 */
-					br.BULLET_REGIST_01_speed_offset			= t256(0);/*(テスト)*/
-					br.BULLET_REGIST_02_angle65536				= (aaa_angle65536)+(jj<<8); 		/* 自機狙い角 */
-					br.BULLET_REGIST_03_tama_data   			= (TAMA_DATA_8000_NON_TILT);/* (r33-)非傾き弾 */
-					br.BULLET_REGIST_04_bullet_obj_type 		= BULLET_MARU10_03_AOI;
-				//未定br.BULLET_REGIST_05_regist_type 			= TAMA_TYPE_01_ANGLE_NON_TILT;		/* 非傾き弾 */
-					br.BULLET_REGIST_06_n_way					= (8);								/* [8way] */
-					br.BULLET_REGIST_07_div_angle65536			= (65536/16);						/* 分割角度([360/360]度を16分割) */
+					br.BULLET_REGIST_02_angle65536				= (aaa_angle65536)+(jj<<8); 	/* [破壊] */		/* 自機狙い角 */
+					br.BULLET_REGIST_06_n_way					= (8);			/* [破壊] */						/* [8way] */
+					br.BULLET_REGIST_07_div_angle65536			= (65536/16);	/* [破壊] */						/* 分割角度([360/360]度を16分割) */
 					{
 						tama_system_regist_n_way(); 		/* (r33-) */
 					}
@@ -472,28 +443,28 @@ static void spell_create_13_perfect_freeze(SPRITE *src)
 	}
 //
 	#if 0
-	if (((640)-(64*3))==(src->boss_base_spell_time_out))	// 192== (64*3)
+	if (((640)-(64*3))==(src->boss_spell_timer))	// 192== (64*3)
 	{
 		exchange_damnaku_chiruno_gensoku();/*減速開始*/
 	}
 	else
-//	if (((640)-(64*3)-48)==(src->boss_base_spell_time_out)) // 192== (64*3-48)
-	if (((640)-(64*4))==(src->boss_base_spell_time_out))		// 256== (64*4)
+//	if (((640)-(64*3)-48)==(src->boss_spell_timer)) // 192== (64*3-48)
+	if (((640)-(64*4))==(src->boss_spell_timer))		// 256== (64*4)
 	{
 //		// 48 フレーム経過後、全てストップさせ、白くし、カウントリセット
 		exchange_damnaku_chiruno_tomeru();/*全てストップ*/
 	}
 	else
-	if (((640)-(64*5))==(src->boss_base_spell_time_out))		// 320== (64*5)
+	if (((640)-(64*5))==(src->boss_spell_timer))		// 320== (64*5)
 	{
 		exchange_damnaku_chiruno_saikasoku();/*再加速*/
 	}
 	#else
-	if ((7<<6)==(src->boss_base_spell_time_out))	{	exchange_damnaku_chiruno_gensoku();/*減速開始*/ 	}
+	if ((7<<6)==(src->boss_spell_timer))	{	exchange_damnaku_chiruno_gensoku();/*減速開始*/ 	}
 	else
-	if ((6<<6)==(src->boss_base_spell_time_out))	{	exchange_damnaku_chiruno_tomeru();/*全てストップ*/	}
+	if ((6<<6)==(src->boss_spell_timer))	{	exchange_damnaku_chiruno_tomeru();/*全てストップ*/	}
 	else
-	if ((5<<6)==(src->boss_base_spell_time_out))	{	exchange_damnaku_chiruno_saikasoku();/*再加速*/ 	}
+	if ((5<<6)==(src->boss_spell_timer))	{	exchange_damnaku_chiruno_saikasoku();/*再加速*/ 	}
 	#endif
 
 }
@@ -512,20 +483,22 @@ static void spell_create_13_perfect_freeze(SPRITE *src)
 
 static void spell_create_16_diamond_blizzard(SPRITE *src)
 {
-	if (0==((src->boss_base_spell_time_out)&0x1f))
+	if (0==((src->boss_spell_timer)&0x1f))/*(32回に1回)*/
 	{
-	//	voice_play(VOICE14_BOSS_KOUGEKI_01, TRACK04_TEKIDAN);
+	//	voice_play(VOICE15_BOSS_KOUGEKI_01, TRACK04_TEKIDAN);
 		bullet_play_04_auto(VOICE16_BOSS_KYUPIN);
 	//	voice_play(VOICE16_BOSS_KYUPIN, TRACK04_TEKIDAN);
 	}
-//	if (0==((src->boss_base_spell_time_out)&0x07))
+//	if (0==((src->boss_spell_timer)&0x07))/*(8回に1回)*/
+//	if (0==((src->boss_spell_timer)&0x03))/*(4回に1回)*/
+	if (0==((src->boss_spell_timer)&0x01))/*(2回に1回)*/
 	{
-	//	voice_play(VOICE14_BOSS_KOUGEKI_01, TRACK04_TEKIDAN);
-	//	bullet_play_04_auto(VOICE14_BOSS_KOUGEKI_01);
+	//	voice_play(VOICE15_BOSS_KOUGEKI_01, TRACK04_TEKIDAN);
+	//	bullet_play_04_auto(VOICE15_BOSS_KOUGEKI_01);
 		{
 			const u32 ra_nd32 = (ra_nd()/*&0xffff*/);
-			obj_send1->cx256							= (src->cx256) -t256(64)+(ra_nd32&0x7f00);				/* 弾源x256 */
-			obj_send1->cy256							= (src->cy256) -t256(32)+((ra_nd32>>8)&0x3f00); 		/* 弾源y256 */
+			obj_send1->cx256							+= -t256(64)+(ra_nd32&0x7f00);				/* 弾源x256 */
+			obj_send1->cy256							+= -t256(32)+((ra_nd32>>8)&0x3f00); 		/* 弾源y256 */
 		//
 		//	br.BULLET_REGIST_00_speed256				= (t256(1.0));				/* 弾速(2.5) */
 			br.BULLET_REGIST_00_speed256				= (t256(0.0));				/* 弾速(2.5) */
@@ -534,7 +507,6 @@ static void spell_create_16_diamond_blizzard(SPRITE *src)
 			br.BULLET_REGIST_02_angle65536				= (ra_nd32);
 			br.BULLET_REGIST_03_tama_data   			= (TAMA_DATA_0000_TILT);/* (r33-)標準弾 */
 			br.BULLET_REGIST_04_bullet_obj_type 		= BULLET_KOME_03_AOI;		/* [青米弾] になってるのは現在 氷弾 のグラが無いから */
-		//未定br.BULLET_REGIST_05_regist_type 			= TAMA_TYPE_00_ANGLE_TILT;/* (r33-)標準弾 */
 		//	br.BULLET_REGIST_06_n_way					= (1);/* [nway] */
 			br.BULLET_REGIST_06_n_way					= (3);/* [nway] */
 		//	br.BULLET_REGIST_07_div_angle65536			= (int)(65536/(64));		/* 分割角度(1024[360/360度]を 64 分割) */	/* 1周をn分割した角度 */

@@ -7,6 +7,8 @@
 	-------------------------------------------------------
 	psp‚Ì‹N“®ƒ‹[ƒ`ƒ““™
 ---------------------------------------------------------*/
+#define FIX_TEST (1)
+//#define FIX_TEST (0)
 
 #if 0
 	/* makefile ‚É -Dmain=SDL_main ‚ª‚ ‚éê‡ */
@@ -38,7 +40,7 @@ PSP_THREAD_ATTR_USER			ƒ†[ƒUƒ‚[ƒh‚ÅƒXƒŒƒbƒh‚ğ‹N“®‚µ‚Ü‚·BeƒXƒŒƒbƒh‚ªƒ†[ƒUƒ‚
 SP_THREAD_ATTR_USBWLAN			USB/WlanAPI‚Åg‚í‚ê‚Ä‚¢‚Ü‚·B’ÊíAw’è‚·‚é‚±‚Æ‚Í‚ ‚è‚Ü‚¹‚ñB
 PSP_THREAD_ATTR_VSH 			VSHAPI‚Åg‚í‚ê‚Ä‚¢‚Ü‚·B’ÊíAw’è‚·‚é‚±‚Æ‚Í‚ ‚è‚Ü‚¹‚ñB
 PSP_THREAD_ATTR_SCRATCH_SRAM	ƒXƒNƒ‰ƒbƒ`ƒpƒbƒh‚Ì—˜—p‚ğ‹–‰Â‚µ‚Ü‚·BFW1.0‚Å‚Íg‚í‚ê‚Ä‚¨‚ç‚¸A“Á‚Éw’è‚µ‚È‚­‚Æ‚à©—R‚É—˜—p‚ª‰Â”\‚Å‚·B
-PSP_THREAD_ATTR_NO_FILLSTACK	ƒXƒŒƒbƒh‹N“®‚ÉƒXƒ^ƒbƒN‚ğ0xFF‚Å–„‚ß‚È‚¢‚æ‚¤‚Éw’è‚µ‚Ü‚·B
+PSP_THREAD_ATTR_NO_FILLSTACK	ƒXƒŒƒbƒh‹N“®‚ÉƒXƒ^ƒbƒN‚ğ0xff‚Å–„‚ß‚È‚¢‚æ‚¤‚Éw’è‚µ‚Ü‚·B
 PSP_THREAD_ATTR_CLEAR_STACK 	ƒXƒŒƒbƒhI—¹‚ÉƒXƒ^ƒbƒN‚ğƒ[ƒƒNƒŠƒA‚µ‚Ü‚·B
 THREAD_ATTR_USER				PSP_THREAD_ATTR_USER‚Ì•Ê–¼‚Å‚·B
 THREAD_ATTR_VFPU				PSP_THREAD_ATTR_VFPU‚Ì•Ê–¼‚Å‚·B
@@ -49,7 +51,7 @@ enum PspThreadAttributes
 	/** Allow using scratchpad memory for a thread, NOT USABLE ON V1.0 */
 	PSP_THREAD_ATTR_SCRATCH_SRAM =	0x00008000,
 //
-	/** Disables filling the stack with 0xFF on creation */
+	/** Disables filling the stack with 0xff on creation */
 	PSP_THREAD_ATTR_NO_FILLSTACK =	0x00100000,
 	/** Clear the stack when the thread is deleted */
 	PSP_THREAD_ATTR_CLEAR_STACK =	0x00200000,
@@ -71,7 +73,7 @@ PSP_MAIN_THREAD_ATTR(						/* ‚±‚ÌƒvƒƒOƒ‰ƒ€‚ªg‚¤OS‘Œ¹B*/
 //	PSP_THREAD_ATTR_SCRATCH_SRAM |			/* SCRATCH_SRAM g‚¤(w’è‚µ‚È‚¢‚Ù‚¤‚ª–]‚Ü‚µ‚¢) */
 	/*	SCRATCH_SRAM ‚Íw’è‚µ‚È‚­‚Ä‚àƒfƒtƒHƒ‹ƒg‚Åg—p‰Â”\‚Å‚ ‚éB
 		FW ver 1.00‚É‚Í–³‚¢‚Ì‚ÅŒİŠ·«‚ğl—¶‚·‚é‚È‚ç–³‚­‚Ä\‚í‚È‚¢ */
-//	PSP_THREAD_ATTR_NO_FILLSTACK |			/* ŠJn‚ÉƒXƒ^ƒbƒN‚ğ 0xFF ‚Å–„‚ß‚Â‚­‚³‚È‚¢B */
+//	PSP_THREAD_ATTR_NO_FILLSTACK |			/* ŠJn‚ÉƒXƒ^ƒbƒN‚ğ 0xff ‚Å–„‚ß‚Â‚­‚³‚È‚¢B */
 	/* 0xff‚Å–„‚ß‚Ä‚­‚ê‚½•û‚ªAƒoƒOo‚µ‚É‚Í“s‡‚ª—Ç‚¢‚Ì‚Å‚±‚ÌƒIƒvƒVƒ‡ƒ“‚Íw’è‚µ‚È‚¢B */
 	PSP_THREAD_ATTR_CLEAR_STACK |
 	/* I—¹‚É‚±‚ÌƒvƒƒOƒ‰ƒ€‚ªg‚Á‚½ƒXƒ^ƒbƒN(•Ï”—Ìˆæ)‚ğOS‚ÉÁ‚µ‚Ä‚à‚ç‚¤B */
@@ -100,6 +102,7 @@ global void (*return_call_func)(void);
 	MIPS‚ÌCPU‚ª‚Á‚Ä‚¢‚éƒŒƒWƒXƒ^‚ÅA
 	+32k[bytes]`-32k[bytes]‚Ì”ÍˆÍ(64k[bytes]‚Ì”ÍˆÍ)‚ÅA‘Š‘ÎƒAƒNƒZƒX‚·‚éˆ×‚ÌƒŒƒWƒXƒ^B
 ---------------------------------------------------------*/
+#if (1==FIX_TEST)
 	#if (1==USE_FIX_GP)
 static void FixedGP(void)
 {
@@ -112,7 +115,8 @@ static void FixedGP(void)
 		asm volatile ("move $gp, %0\n" :: "r" (module_info.gp_value));
 	}
 }
-	#endif
+	#endif /*(1==USE_FIX_GP)*/
+#endif /*(1==FIX_TEST)*/
 
 
 /*---------------------------------------------------------
@@ -205,6 +209,9 @@ my_loop:
 #if (1==HACK_FPU)
 extern void disable_FPU_exeptions_in_main(void);	/* FPU—áŠO‚ğ–³Œø‚É‚·‚éB disablefpu.S */
 #endif
+#if 1/*(‚Ä‚·‚Æ)*/
+extern void ini_save(void);
+#endif
 
 extern void game_system_init(void); 	/* ƒQ[ƒ€ƒVƒXƒeƒ€‰Šú‰» */
 extern void game_system_exit(void); 	/* ƒQ[ƒ€ƒVƒXƒeƒ€I—¹ */
@@ -213,107 +220,27 @@ extern void game_main(void);
 /* ‚±‚±‚Í -Dmain=SDL_main ‚Ìê‡Aƒ}ƒNƒ‚È‚Ì‚Å©“®“I‚É int SDL_main(int argc, char *argv[]) ‚É‚È‚éB‚»‚ê‚ğSDL‘¤‚Ìmain()‚©‚çŒÄ‚ÔB */
 global int main(int argc, char *argv[])
 {
+#if (1==FIX_TEST)
 	#if (1==USE_FIX_GP)
 	FixedGP();	/* */
 	#endif
 	#if (1==HACK_FPU)
 	disable_FPU_exeptions_in_main();	/* ‚±‚ÌŠÖ”‚Ímain()’¼‰º‚É‘‚©‚È‚¢‚Æƒ_ƒ‚©‚à‚µ‚ê‚È‚¢($31‚ğ˜M‚é‚Ì‚Å) */
 	#endif
+#endif
 	SetupCallbacks();		/* regist_home_key [HOME]ƒL[‚ÅI—¹‚·‚é‚½‚ß‚ÌƒR[ƒ‹ƒoƒbƒN‚ğ“o˜^ */
 	game_system_init(); 	/* ƒQ[ƒ€ƒVƒXƒeƒ€‰Šú‰» */
 //
 	scePowerSetClockFrequency(333,333,166);/* psp ‚Ì ƒNƒƒbƒN‚ğ 333MHz ‚É‚·‚é‚æ */
 	game_main();
 	scePowerSetClockFrequency(222,222,111);/* psp ‚Ì ƒNƒƒbƒN‚ğ 222MHz ‚É–ß‚·‚æ */
-//
+	/*(‚Ä‚·‚Æ)*/
+	#if (1)/*(r34A‰½ŒÌ‚©I‚­I—¹‚Å‚«‚È‚¢‚Ì‚Å‚Æ‚è‚ ‚¦‚¸)*/
+	ini_save();
+	sceKernelExitGame();
+	#else
 	game_system_exit(); 	/* ƒQ[ƒ€ƒVƒXƒeƒ€I—¹(“à•”‚ÅI—¹‚·‚é) */
+	#endif
 //	sceKernelExitGame();
 	return (0);/* ƒ_ƒ~[(‚±‚±‚É‚Íâ‘Î‚É—ˆ‚È‚¢) */
 }
-
-#if 0
-/*---------------------------------------------------------
-	dummy signal
-	-------------------------------------------------------
-	‚¤[‚ñ...
----------------------------------------------------------*/
-#include <signal.h>
-#ifndef _SIGNAL_H_
-#define _SIGNAL_H_
-
-#include "_ansi.h"
-#include <sys/signal.h>
-
-_BEGIN_STD_C
-
-typedef int sig_atomic_t;		/* Atomic entity type (ANSI) */
-
-#define SIG_DFL ((_sig_func_ptr)0)		/* Default action */
-#define SIG_IGN ((_sig_func_ptr)1)		/* Ignore action */
-#define SIG_ERR ((_sig_func_ptr)-1) 	/* Error return */
-
-struct _reent;
-
-_sig_func_ptr _EXFUN(_signal_r, (struct _reent *, int, _sig_func_ptr));
-int _EXFUN(_raise_r, (struct _reent *, int));
-
-#ifndef _REENT_ONLY
-_sig_func_ptr _EXFUN(signal, (int, _sig_func_ptr));
-int _EXFUN(raise, (int));
-#endif
-
-_END_STD_C
-
-#endif /* _SIGNAL_H_ */
-
-global _sig_func_ptr signal(int aaa, _sig_func_ptr bbb)
-{
-	return (SIG_DFL);
-}
-#endif
-
-
-
-#if 0
-/*---------------------------------------------------------
-	dummy SDL's signal
-	-------------------------------------------------------
-	‚¤[‚ñ...
-	-------------------------------------------------------
----------------------------------------------------------*/
-#define NO_SIGNAL_H
-/* Public functions */
-int SDL_QuitInit(void)
-{
-#ifndef NO_SIGNAL_H
-		void (*ohandler)(int);
-
-		/* Both SIGINT and SIGTERM are translated into quit interrupts */
-		ohandler = signal(SIGINT,  SDL_HandleSIG);
-		if ( ohandler != SIG_DFL )
-				signal(SIGINT, ohandler);
-		ohandler = signal(SIGTERM, SDL_HandleSIG);
-		if ( ohandler != SIG_DFL )
-				signal(SIGTERM, ohandler);
-#endif /* NO_SIGNAL_H */
-
-		/* That's it! */
-		return(0);
-}
-
-#ifdef NO_SIGNAL_H
-
-/* No signals on this platform, nothing to do.. */
-
-void SDL_InstallParachute(void)
-{
-		return;
-}
-
-void SDL_UninstallParachute(void)
-{
-		return;
-}
-#endif /* NO_SIGNAL_H */
-
-#endif

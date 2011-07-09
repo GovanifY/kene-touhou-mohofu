@@ -53,7 +53,7 @@
 #define ENEMY_LAST_SHOT_LINE256 	(t256(272-72))
 
 
-enum /*_select_player_*/		// [***090203		追加
+enum /*_select_player_*/
 {
 	/*0*/	REIMU_A = 0,
 	/*1*/	REIMU_B,
@@ -65,7 +65,7 @@ enum /*_select_player_*/		// [***090203		追加
 	/*6*/	CIRNO_A,
 	/*7*/	CIRNO_Q,
 //
-	MAX_PLAYER
+	MAX_08_PLAYER
 };
 
 /*なし*/
@@ -111,11 +111,12 @@ enum /*_select_player_*/		// [***090203		追加
 #define STATE_FLAG_15_KEY_SHOT						(0x4000)
 //#define STATE_FLAG_16_NOT_ALLOW_KEY_CONTROL		(0x8000)/* 廃止? */
 
+#define STATE_FLAG_16_GAME_TERMINATE		(0x8000)/* result後にゲーム終了 */
 
 
 typedef struct _game_core_global_class_
 {
-	int state_flag; 	/* 設定フラグ */	// [***090116		追加
+	int state_flag; 	/* 設定フラグ(集) */
 	int weapon_power;	/* 0x00-0x80  (0-128 の129段階==本家と同じ)   max==128==「129段階」*/
 	int chain_point;
 	int bomber_time;	/* Use Gu */
@@ -124,8 +125,6 @@ typedef struct _game_core_global_class_
 	u32 graze_point;	/* グレイズ得点 */
 	int bombs;			/* ボム数 */
 	int zanki;			/* 残りチャンス */
-//
-//	int game_difficulty;遅過ぎる。
 //
 //	/* 集計システム(player_data) */
 	int player_data_use_continue;	/* コンティニュー回数 */
@@ -141,33 +140,43 @@ typedef struct _game_core_global_class_
 	/* 集計システム以外の保持状態 */
 //	u8 game_select_player;
 //遅過ぎる。	u8 game_difficulty/* = RANK_EASY*/; 	/*	RANK_NORMAL*/
+//遅過ぎる。	int game_difficulty;
 //
 	s8 game_now_stage;				/* 現在ステージ番号 */
 	s8 game_continue_stage; 		/* 現在コンティニューするステージ番号を保持 */
 	s8 game_now_max_continue;		/* コンティニュー可能な回数 */
 	s8 game_practice_mode;			/* 練習モード */
+//
+	s8 side_panel_draw_flag;/* パネル表示on(0以外)/off(0) */
+	s8 chuu_boss_mode;//1802514
+	s8 draw_flag_script_screen; 	/* せりふウィンドウ表示フラグ */
+	s8 dummy2;/* 予備2(.align合わせで必要) */
 } GAME_CORE_GLOBAL_CLASS;
 extern GAME_CORE_GLOBAL_CLASS cg;
 
 /* 意図的に入れないもの */
-extern int cg_game_select_player;/* cg_game_difficulty: (将来はともかく)現状(r33)は GAME_CORE_GLOBAL_CLASSに入れない方が良いっぽい。 */
-extern int cg_game_difficulty;/* cg_game_difficulty: GAME_CORE_GLOBAL_CLASSに入れると速度低下する。 */
+extern unsigned int cg_game_select_player;/* cg_game_difficulty: (将来はともかく)現状(r33)は GAME_CORE_GLOBAL_CLASSに入れない方が良いっぽい。 */
+extern unsigned int cg_game_difficulty;/* cg_game_difficulty: GAME_CORE_GLOBAL_CLASSに入れると速度低下する。 */
 
-
-extern int draw_script_screen;					/* せりふウィンドウ表示フラグ */
 // /*extern*/ int msg_time; 					/* せりふウィンドウ表示時間(仮) */
 #if 1
-	#if 1/* アライメント関係(???) (s16)で GAME_CORE_GLOBAL_CLASSに入れると巧くいかない */
+	#if 0/* アライメント関係(???) (s16)で GAME_CORE_GLOBAL_CLASSに入れると巧くいかない */
 	/* 意図的に入れないもの */
 	extern	u32 cg_my_pad;			/*今回入力*/
 	extern	u32 cg_my_pad_alter;	/*前回入力*/
 	extern	s16 cg_analog_x;		/* アナログ量、補正済み */
 	extern	s16 cg_analog_y;		/* アナログ量、補正済み */
+	#else/*(r34)*/
+typedef struct _psp_pad_global_class_
+{
+	u32 pad_data;						/*今回入力*/
+	u32 pad_data_alter; 				/*前回入力*/
+	s16 analog_absolute_value_x;		/* アナログ量、補正済み */
+	s16 analog_absolute_value_y;		/* アナログ量、補正済み */
+} PSP_PAD_GLOBAL_CLASS;
+extern PSP_PAD_GLOBAL_CLASS psp_pad;
 	#endif
 //
-
-extern int draw_side_panel;/* パネル表示on(0以外)/off(0) */
-
 extern int draw_boss_hp_value;	/* ボスhp描画値 */
 extern int boss_life_value; 	/* ボスhp体力値 / ボス魔方陣サイズ描画値 */
 #endif
@@ -175,22 +184,14 @@ extern int boss_x256;
 extern int boss_y256;
 
 
-
-
-
-extern int chu_boss_mode;
 #define USE_HOLD_GAME_MODE	(0)
-
 #if (1==USE_HOLD_GAME_MODE)
 extern void hold_game_mode_on(void);/* ゲーム時間の一時停止 */
 extern void hold_game_mode_off(void);/* ゲーム時間の動作開始 */
 #endif
 
-//extern int cg_game_continue_stage;
-//extern int cg_game_practice_mode;//extern int practice_mode;
-//extern int cg_game_now_max_continue;
 //extern u32 my_pad;			/*今回入力*/
-//extern u32 my_pad_alter;	/*前回入力*/
+//extern u32 my_pad_alter;		/*前回入力*/
 //extern /*global*/short cg_analog_x; /* アナログ量、補正済み */
 //extern /*global*/short cg_analog_y; /* アナログ量、補正済み */
 
@@ -200,14 +201,6 @@ extern void hold_game_mode_off(void);/* ゲーム時間の動作開始 */
 	r31:原作ではキーを押した瞬間が確定のものが多いので、おかしいところはキーを押した瞬間が確定に修正した。
 */
 
-//extern int cg_game_difficulty;
-//extern int (cg_game_select_player);
-
-//global int cg_game_difficulty = RANK_EASY;		/*	RANK_NORMAL*/
-
-
-
-//1857939 1857907
 /* 127 かと思っていたけど、128みたい(つまり129段階) */
 //#define MAX_POWER_IS_128 (127)/* 0x00-0x7f  (0-127 の128段階) */
 //#define MAX_POWER_IS_128 (128)/* 0x00-0x80  (0-128 の129段階) */

@@ -43,15 +43,13 @@ static void move_kedama2(SPRITE *src)
 			};
 			if (0==(src->jyumyou & kougeki_tbl[src->kougeki_type][K00_KOUGEKI_KANKAKU_MASK]))/*0x0f*/
 			{
-				obj_send1->cx256 = (src->cx256);
-				obj_send1->cy256 = (src->cy256);
 				br.BULLET_REGIST_00_speed256				= (t256(2.5)+(((cg_game_difficulty))<<6));/* [2.5 - 3.25] */		//	(t256(2.0)+((difficulty)<<6)),/* [2.0 - 2.75] */
 				br.BULLET_REGIST_02_VECTOR_angle1024		= ANGLE_JIKI_NERAI_DAN;
+			//	br.BULLET_REGIST_03_VECTOR_regist_type		= VEC TOR_REGIST_TYPE_00_MULTI_VECTOR;
 				br.BULLET_REGIST_04_bullet_obj_type 		= BULLET_KOME_00_SIRO+(src->cx256&0x07);
-				br.BULLET_REGIST_05_regist_type 			= REGIST_TYPE_00_MULTI_VECTOR;
 				br.BULLET_REGIST_06_n_way					= kougeki_tbl[src->kougeki_type][K02_TAMA_KAZU];		//	(3/*+difficulty+difficulty*/)
 				br.BULLET_REGIST_07_VECTOR_div_angle1024	= kougeki_tbl[src->kougeki_type][K01_SUKIMA_KAKUDO];	//	(int)(1024/24),
-				bullet_regist_vector();
+				bullet_regist_multi_vector_send1_xy_src(src); 	/* 弾源x256 y256 中心から発弾。 */
 			}
 		}
 	}
@@ -78,9 +76,9 @@ static void move_kedama2(SPRITE *src)
 	/* 移動する */
 	src->cx256 += (src->vx256);
 	src->cy256 += (src->vy256);
-	/* アニメ(回転) */
-	src->rotationCCW1024 += (10);
-	mask1024(src->rotationCCW1024);
+	/* アニメーション */
+	src->zako_anime_rotate_angle1024 = ( 10);
+	zako_anime_type04(src); 	/* グラ回転 */
 }
 
 /*---------------------------------------------------------

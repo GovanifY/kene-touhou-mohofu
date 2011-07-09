@@ -28,24 +28,18 @@
 ---------------------------------------------------------*/
 #if 0/*メモ*/
 /* ボス共通規格 */
-	#define target_x256 		user_data00 	/* 目標x座標 */
-	#define target_y256 		user_data01 	/* 目標y座標 */
-	#define vvv256				user_data02 	/* 目標座標への到達割合 */
-	#define boss_time_out		user_data03 	/* 制限時間 */
+	#define target_x256 			user_data00 	/* 目標x座標 */
+	#define target_y256 			user_data01 	/* 目標y座標 */
+	#define toutatu_wariai256		user_data02 	/* 目標座標への到達割合 */
+	#define kougeki_anime_count 	user_data03 	/* 攻撃アニメーション用カウンタ */
+	#define boss_time_out			user_data04 	/* 制限時間 */
+	#define boss_base_state777		user_data04 	/* 制限時間(boss_time_outと同じ) */
+//
+	#define boss_spell_timer		user_data05 	/* スペル時間 */
 #endif
 
 
-#define shot_angle1024		user_data04 	/* ショットを撃つ方向を保持 */
-
-
-/*---------------------------------------------------------
-	敵やられ
----------------------------------------------------------*/
-
-static void lose_sakuya_baramaki2(SPRITE *src)
-{
-	item_create_for_boss(src, ITEM_CREATE_MODE_02);
-}
+#define shot_angle1024		user_data06 	/* ショットを撃つ方向を保持 */
 
 
 /*---------------------------------------------------------
@@ -63,19 +57,18 @@ static void move_sakuya_baramaki2(SPRITE *src)
 	{
 		if (0 == ((src->boss_time_out)&0x07))	/* 次のショットを撃つまでの間隔、時間。 */
 		{
-			if (0 < src->vvv256 )
+			if (0 < src->toutatu_wariai256 )
 			{
-				src->vvv256 -= (1);
+				src->toutatu_wariai256 -= (1);
 			}
 		//
 			src->shot_angle1024 += ((AO_OR_AKA)?(-(1024/18)):((1024/18)));	/* ショットを撃つ方向を、回転させる。 */
 		//
-			obj_send1->cx256					= (src->cx256);/* 魔方陣の中心から弾撃つ */
-			obj_send1->cy256					= (src->cy256);/* 魔方陣の中心から弾撃つ */
+			send1_xy(src);	/* 弾源x256 y256 中心から発弾。 */
 		//	br.BULLET_REGIST_00_speed256				= (t256(1.5))+(((difficulty)<<6));		/* 弾速(r32) */
 			br.BULLET_REGIST_00_speed256				= (t256(2.0))+((((cg_game_difficulty))<<6));		/* 弾速(r33) */
+		//	br.BULLET_REGIST_03_VECTOR_regist_type		= VEC TOR_REGIST_TYPE_00_MULTI_VECTOR;
 			br.BULLET_REGIST_04_bullet_obj_type 		= BULLET_KUNAI12_01_AKA+(AO_OR_AKA)+(AO_OR_AKA);	/* [青赤クナイ弾] */
-			br.BULLET_REGIST_05_regist_type 			= REGIST_TYPE_00_MULTI_VECTOR;
 			/* ここは 6 wayではなくて、 3 way を2回追加する。でないとプライオリティーが変になる。 */
 		//	br.BULLET_REGIST_06_n_way					= (2+difficulty);						/* [2-5way](r32) */
 			br.BULLET_REGIST_06_n_way					= (3);									/* [3way x 2] */
@@ -90,7 +83,7 @@ static void move_sakuya_baramaki2(SPRITE *src)
 				br.BULLET_REGIST_07_VECTOR_div_angle1024		= kakusan_tbl[(cg_game_difficulty)];						/* 密着弾(もっと密着)2 */
 				if (0!=jj)	{br.BULLET_REGIST_07_VECTOR_div_angle1024	-=br.BULLET_REGIST_07_VECTOR_div_angle1024;}	/* 負方向 */
 				br.BULLET_REGIST_02_VECTOR_angle1024			= (src->shot_angle1024)+(br.BULLET_REGIST_07_VECTOR_div_angle1024); 			/* */
-				bullet_regist_vector();
+				bullet_regist_multi_vector_direct();
 			}
 		}
 	}
@@ -103,8 +96,8 @@ static void move_sakuya_baramaki2(SPRITE *src)
 	set_timeout_alpha(src);
 	/* オプション位置、移動 */
 	/* 目標を設定し、誘導移動 */
-//	alice_yuudou_move_only(src);
-	alice_yuudou_calc(src);
+//	boss_yuudou_idou_nomi(src);
+	boss_yuudou_hiritu_keisan(src);
 }
 
 
@@ -126,12 +119,12 @@ void add_zako_sakuya_baramaki2(SPRITE *src)
 			h->flags				= (SP_FLAG_COLISION_CHECK/*|SP_FLAG_VISIBLE*/);
 	//
 			h->callback_mover		= move_sakuya_baramaki2;
-			h->callback_loser		= lose_sakuya_baramaki2;
+			h->callback_loser		= lose_option_00;
 			h->callback_hit_teki	= callback_hit_zako;
 	//
 			h->cx256				= ((src->cx256) & 0xfffffffe);/* [青赤情報]インターリーブ用ビットを1ビット確保 */
 			h->cy256				= (src->cy256);
-			h->vvv256				= t256(1.0);
+			h->toutatu_wariai256	= t256(1.0);
 		//
 			{
 				const s8 locate_xy_table[(4+4)] =

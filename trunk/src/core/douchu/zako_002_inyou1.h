@@ -12,33 +12,6 @@
 	かなりテキトー。
 ---------------------------------------------------------*/
 
-/*---------------------------------------------------------
-	敵やられ
----------------------------------------------------------*/
-
-static void lose_inyou1(SPRITE *src)
-{
-//	if ( 0==(ra_nd()&(16-1)) ) /*確率上げた。[1/16]←[1/20]*/ /*%20*/
-	if ( 0==(ra_nd()&( 8-1)) ) /*確率上げた。[1/8]←[1/20]*/ /*%20*/
-	{
-		obj_send1->cx256							= (src->cx256);
-		obj_send1->cy256							= (src->cy256);
-		br.BULLET_REGIST_00_speed256				= t256(5.0);				/* 弾速 */
-		br.BULLET_REGIST_02_VECTOR_angle1024		= ANGLE_JIKI_NERAI_DAN; 	/* */
-		br.BULLET_REGIST_04_bullet_obj_type 		= BULLET_HARI32_01_AKA; 	/* [赤針弾] */
-		br.BULLET_REGIST_05_regist_type 			= REGIST_TYPE_00_MULTI_VECTOR;
-		br.BULLET_REGIST_06_n_way					= (5);						/* [5way] */
-		br.BULLET_REGIST_07_VECTOR_div_angle1024	= (int)(1024/(24)); 		/* 分割角度 */
-		bullet_regist_vector();
-	}
-	else
-	{
-		item_create(src, (SP_ITEM_00_P001+(ra_nd()&1)), 1, ITEM_MOVE_FLAG_06_RAND_XY);
-	}
-}
-/*50%(SP_ITEM_00_P001 or SP_ITEM_01_P008)*/
-//66%==SP_ITEM_04_BOMB or 33%==SP_ITEM_01_P008	 (SP_ITEM_EXTRA_HOMING+(ra_nd()&3/*%3*/)),
-
 
 /*---------------------------------------------------------
 	敵移動
@@ -56,13 +29,8 @@ static void move_inyou1(SPRITE *src)
 	}
 	/* 移動向きに合わせてグラ回転 */
 	if (0 < src->vx256)
-	{
-		src->rotationCCW1024 += (24);	/*fps_factor*/
-	}
-	else
-	{
-		src->rotationCCW1024 -= (24);	/*fps_factor*/
-	}
+			{	src->zako_anime_rotate_angle1024 = ( 24);	}
+	else	{	src->zako_anime_rotate_angle1024 = (-24);	}
 	/* 落ちる */
 	if ((t256(2.50)) > src->vy256)	/* 最大重力加速度 */
 	{
@@ -81,6 +49,8 @@ static void move_inyou1(SPRITE *src)
 	{
 		src->jyumyou = JYUMYOU_NASI;	/* おしまい */
 	}
+	/* アニメーション */
+	zako_anime_type04(src);
 }
 
 
@@ -90,7 +60,7 @@ static void move_inyou1(SPRITE *src)
 
 static void regist_zako_002_inyou1(GAME_COMMAND *l, SPRITE *h)
 {
-	h->callback_loser		= lose_inyou1;
+	h->callback_loser		= item_create_002_inyou_zako;
 	h->limit_y256			= (t256(128)-((/*yyy*/(l->user_kougeki_type)&0x0f)<<(5+8)));		/* 閾値 */
 							/*t256(200)-(j*t256(40))*/
 							/*(-(xxx*t256(20))-(yyy*t256(50)))*/

@@ -470,7 +470,7 @@ add1-------------------------------------------------------------------------
 */
 /* (幽々子低速)十字炎ボムの炎の部分 */
 /*		r_or_l	[xxx_r] l=2, [xxx_l] r=0, u=3, d=1	*/
-static void yuyuko_add_meifu(SPRITE *src/*, int ggg*/ /*r_or_l*/)	/* [***090221 追加 */
+static void yuyuko_add_meifu(SPRITE *src)
 {
 	int angCCW1024;
 	for (angCCW1024=0; angCCW1024<(1024); angCCW1024+=(256)/*(20)*/)
@@ -529,7 +529,7 @@ static void yuyuko_add_meifu(SPRITE *src/*, int ggg*/ /*r_or_l*/)	/* [***090221 
 }
 /* 十字ショットボムの炎の部分 */
 /*		r_or_l	[xxx_r] l=2, [xxx_l] r=0, u=3, d=1	*/
-static void remilia_add_burn_shot(SPRITE *src/*, int ggg*/ /*r_or_l*/)	/* [***090221 追加 */
+static void remilia_add_burn_shot(SPRITE *src)
 {
 	{
 		int i;
@@ -621,11 +621,7 @@ static void reimu_add_reifu_musofuuin(SPRITE *src)
 //	j = (ra_nd()&(2-1));//for (j=0;j<2;j++)
 	{
 		//#define hlaser_NUM_OF_ENEMIES (24)
-//		#define hlaser_NUM_OF_ENEMIES (12)		/* [***090128		半分にしてみる */
 	//	int ii;
-	//	for (i=0; i<(12)/*hlaser_NUM_OF_ENEMIES*/; i++)
-	//	for (i=0; i<(16)/*hlaser_NUM_OF_ENEMIES*/; i++)
-	//	for (ii=0; ii<(1)/*hlaser_NUM_OF_ENEMIES*/; ii++)
 		static int musou_id;
 		musou_id++;
 		musou_id &= 0x07;
@@ -682,7 +678,7 @@ static void marisa_add_teisoku_yuudoudan(SPRITE *src)
 		SPRITE *h_old;	h_old = NULL;
 		SPRITE *h;		h = NULL;
 		//#define hlaser_NUM_OF_ENEMIES (24)
-		//#define hlaser_NUM_OF_ENEMIES (12)		/* [***090128		半分にしてみる */
+		//#define hlaser_NUM_OF_ENEMIES (12)		/* 半分にしてみる */
 		#define hlaser_NUM_OF_ENEMIES (8)			/* 8枚位で十分かも(?) */
 		unsigned int i;
 		unsigned int tmp_color32;
@@ -748,7 +744,7 @@ static void marisa_add_teisoku_yuudoudan(SPRITE *src)
 	(霊夢)夢想封印の追加[ボム追加本体]
 ---------------------------------------------------------*/
 
-static void reimu_tuika_musofuuin_shot(SPRITE *src) /* [***090220 追加 */
+static void reimu_tuika_musofuuin_shot(SPRITE *src)
 {
 	SPRITE *zzz_player;
 	zzz_player = &obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_00_PLAYER];
@@ -795,9 +791,8 @@ static void marisa_tuika_bomber_teisoku_yuudoudan(SPRITE *src)
 	レミリアボムの十字ショットの追加[ボム追加本体]
 ---------------------------------------------------------*/
 
-static void remilia_tuika_cross_shot(SPRITE *src) /* [***090220 追加 */
+static void remilia_tuika_cross_shot(SPRITE *src)
 {
-	//
 //	if (0x3f==(((int)pd_bomber_time)&0x3f))
 //	if (0x0f==(((int)pd_bomber_time)&0x0f))
 //	if (0x0f==(((int)pd_bomber_time)&0x0f))/* 波動を撃つタイミング */
@@ -821,7 +816,7 @@ static void remilia_tuika_cross_shot(SPRITE *src) /* [***090220 追加 */
 	(幽々子低速)レミリアボムの十字炎の追加[ボム追加本体]
 ---------------------------------------------------------*/
 
-static void yuyuko_tuika_meifu(SPRITE *src) /* [***090220 追加 */
+static void yuyuko_tuika_meifu(SPRITE *src)
 {
 	SPRITE *zzz_player;
 	zzz_player = &obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_00_PLAYER];
@@ -867,7 +862,7 @@ parrent 親系 -------------------------------------------------------------------
 			if (0 == (ii&1))// if (i%90 == 0)
 			{
 				h->PL_KEKKAI_DATA_add_r1024 	= ( 46);							/* 時計回り */
-				h->PL_KEKKAI_DATA_radius		= (16);		/*(48)*/	//d->radius=38; 	/* 半径初期値 */	/* 少しずつ広がるようにした */
+				h->PL_KEKKAI_DATA_radius		= (16); 	/*(48)*/	//d->radius=38; 	/* 半径初期値 */	/* 少しずつ広がるようにした */
 			}
 			else		/* 1つだと不安なので2つ作った。 */
 			{
@@ -886,7 +881,7 @@ parrent 親系 -------------------------------------------------------------------
 				h->cx256					= zzz_player->cx256;
 				h->cy256					= zzz_player->cy256;
 			}
-			h->base_weapon_strength 	= (8*1);	/*5*/	/* [***090214 追加 */
+			h->base_weapon_strength 	= (8*1);	/*5*/
 		}
 	}
 }
@@ -921,7 +916,7 @@ parrent 親系 -------------------------------------------------------------------
 			h->tmp_angleCCW1024 		= ((iii)<<8);
 			h->m_zoom_x256				= (256*4);	/* 描画用ボムの初期サイズ / size of bomb at first. */
 			h->m_zoom_y256				= (256*4);	/* 描画用ボムの初期サイズ / size of bomb at first. */
-			h->base_weapon_strength 	= player_fix_status[BASE_STD_BOMB_STRENGTH+(cg_game_select_player)]; /*k_strength*/ /*5*/ /*15-k-k*/ /* [***090214 追加 */
+			h->base_weapon_strength 	= player_fix_status[BASE_STD_BOMB_STRENGTH+(cg_game_select_player)];
 
 			h->vx256					= (0);	/*fps_factor*/	/* CCWの場合 */
 			h->vy256					= (0);	/*fps_factor*/
@@ -982,7 +977,7 @@ parrent 親系 -------------------------------------------------------------------
 				{/* REIMU(A/B) MARISA(A/B) REMILIA YUYUKO CIRNO(A/Q) */
 					256, 256, 256, 256, 32, 256, 32, 32,	/* 描画用ボムの初期サイズ / size of bomb at first. */
 				};
-				h->m_zoom_x256		= player_fix_status_ggg[(cg_game_select_player)]/*8*/;/* 64 == (1/4) */
+				h->m_zoom_x256		= player_fix_status_ggg[(cg_game_select_player)];/*8*/ /* 64 == (1/4) */
 			}
 			#else
 			if (YUYUKO!=(cg_game_select_player))
@@ -992,7 +987,7 @@ parrent 親系 -------------------------------------------------------------------
 			}
 			#endif
 
-			h->base_weapon_strength 	= player_fix_status[BASE_STD_BOMB_STRENGTH+(cg_game_select_player)] /*k_strength*/ /*5*/ /*15-k-k*/;/* [***090214 追加 */
+			h->base_weapon_strength 	= player_fix_status[BASE_STD_BOMB_STRENGTH+(cg_game_select_player)];
 			/* MARISAは強いが拡散してしまうのであたらない。 */
 			/* チルノは当てやすいのでその分弱くしないと強すぎちゃう。 */
 			int d_speed256;
@@ -1094,7 +1089,7 @@ parrent 親系 -------------------------------------------------------------------
 				h->callback_mover			= marisa_yuyuko_move_levarie_gyastry_dream;
 				h->m_zoom_x256				= (0x100<<(kkk));	/* 描画用ボムの初期サイズ / size of bomb at first. */
 				h->m_zoom_y256				= (0x100<<(kkk));	/* 描画用ボムの初期サイズ / size of bomb at first. */
-				h->base_weapon_strength 	= player_fix_status[BASE_STD_BOMB_STRENGTH+(cg_game_select_player)] /*k_strength*/ /*5*/ /*15-k-k*/;/* [***090214 追加 */
+				h->base_weapon_strength 	= player_fix_status[BASE_STD_BOMB_STRENGTH+(cg_game_select_player)];
 				{
 //					const int d_speed256	= t256(1.5);	/* 速度一定 */
 					const int d_speed256	= t256(1.5);	/* 速度一定 */
@@ -1128,7 +1123,7 @@ parrent 親系 -------------------------------------------------------------------
 	プレイヤーシールド生成(レミリア)の親[レミリアボムの十字ショット本体]
 ---------------------------------------------------------*/
 
-/*static*/global void remilia_create_bomber_cross_shot_parrent(SPRITE *src) /* レミリア */ /* [***090220 追加 */
+/*static*/global void remilia_create_bomber_cross_shot_parrent(SPRITE *src)
 {
 	cg.state_flag		|= STATE_FLAG_02_BOMB_AUTO_GET_ITEM;	/*ボムによる自動収集可能*/
 	SPRITE *h;
@@ -1141,7 +1136,7 @@ parrent 親系 -------------------------------------------------------------------
 //		h->flags			&= (~(SP_FLAG_VISIBLE));	/* 非表示 */
 //		h->color32			= MAKE32RGBA(0xff, 0xff, 0xff, 0xdc);		/*	h->alpha			= 0xdc;*/	/* 非表示 */
 		h->callback_mover	= remilia_tuika_cross_shot;
-		h->type 			= (/*SP_GROUP_JIKI_GET_ITEM*/JIKI_BOMBER_01|SP_GROUP_SHOT_SPECIAL);/*ボスに有効*/
+		h->type 			= (/*SP_GROUP_JIKI_GET_ITEM*/JIKI_BOMBER_01|SP_GROUP_SHOT_SPECIAL);/* ボスに有効 */
 	//	#if 1/*Gu(中心座標)*/
 	//	h->cx256			= t256(GAME_NOT_VISIBLE480);//(src->cx256); /* 非表示 */
 //	//	h->cy256			= (src->cy256); /* 非表示 */
@@ -1253,7 +1248,7 @@ parrent 親系 -------------------------------------------------------------------
 /*---------------------------------------------------------
 	幽々子専用 低速ボムの親 	[(幽々子低速)ボムの十字炎本体]
 ---------------------------------------------------------*/
-/*static*/global void yuyuko_create_bomber_meifu_parrent(SPRITE *src) /* (幽々子低速) */ /* [***090220 追加 */
+/*static*/global void yuyuko_create_bomber_meifu_parrent(SPRITE *src)
 {
 	cg.state_flag		|= STATE_FLAG_02_BOMB_AUTO_GET_ITEM;	/* ボムによる自動収集可能 */
 	SPRITE *h;

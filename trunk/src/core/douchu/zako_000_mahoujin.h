@@ -19,17 +19,6 @@
 #define MAHOU_TIME_LIMIT_03_EPS 	(0x04)
 
 /*---------------------------------------------------------
-	“G‚â‚ç‚ê
----------------------------------------------------------*/
-
-static void lose_kougeki_mahoujin(SPRITE *src)
-{
-	if (rand_percent(30))	{	item_create(src, SP_ITEM_00_P001,	 1, (ITEM_MOVE_FLAG_06_RAND_XY) );}
-	if (rand_percent(30))	{	item_create(src, SP_ITEM_00_P001,	 1, (ITEM_MOVE_FLAG_06_RAND_XY) );}
-	if (rand_percent(30))	{	item_create(src, SP_ITEM_05_TENSU,	 1, (ITEM_MOVE_FLAG_06_RAND_XY) );}
-}
-
-/*---------------------------------------------------------
 	“GUŒ‚‚µ‚È‚¢
 ---------------------------------------------------------*/
 
@@ -38,7 +27,7 @@ static void attack_kougeki_mahoujin00(SPRITE *src)
 	/* UŒ‚‚µ‚È‚¢ */
 }
 /*---------------------------------------------------------
-	cUŒ‚‚ÌƒXƒyƒJ
+	1:cUŒ‚‚ÌƒXƒyƒJ
 ---------------------------------------------------------*/
 
 static void attack_kougeki_mahoujin01(SPRITE *src)
@@ -48,16 +37,16 @@ static void attack_kougeki_mahoujin01(SPRITE *src)
 	{
 		br.BULLET_REGIST_00_speed256					= (t256(2.5));			/* ’e‘¬ */
 		br.BULLET_REGIST_02_VECTOR_angle1024			= (int)(1024/(4));		/* ‰EŒü‚«(ã‰º’e)A‹ô”’e‚È‚Ì‚ÅŒ‹‰Ê“I‚Éã‰º’eB */
+	//	br.BULLET_REGIST_03_VECTOR_regist_type			= VEC TOR_REGIST_TYPE_00_MULTI_VECTOR;
 		br.BULLET_REGIST_04_bullet_obj_type 			= BULLET_KOME_01_AKA;	/* Ô•Ä’e */
-		br.BULLET_REGIST_05_regist_type 				= REGIST_TYPE_00_MULTI_VECTOR;
 		br.BULLET_REGIST_06_n_way						= (2);					/* [2way] */
 		br.BULLET_REGIST_07_VECTOR_div_angle1024		= (int)(1024/(2));		/* Šp“x(ˆêü‚ğ 2 •ªŠ„) */	/* 1ü‚ğn•ªŠ„‚µ‚½Šp“x */
-		bullet_regist_vector();
+		bullet_regist_multi_vector_direct();
 	}
 }
 
 /*---------------------------------------------------------
-	“GUŒ‚("–‚•ûw2")‚ÌƒXƒyƒJ
+	2:ƒ‰ƒ“ƒ_ƒ€‚Î‚ç‚Ü‚«UŒ‚("–‚•ûw2")‚ÌƒXƒyƒJ
 ---------------------------------------------------------*/
 
 static void attack_kougeki_mahoujin02(SPRITE *src)
@@ -67,22 +56,37 @@ static void attack_kougeki_mahoujin02(SPRITE *src)
 		src->MAHOU_TEKI_wait1--;			/* ‚Î‚ç‚Ü‚«ŠÔŠuƒJƒEƒ“ƒ^ */
 		if (src->MAHOU_TEKI_wait1 <= 0) 	/* ‚Î‚ç‚Ü‚«ŠÔŠuƒJƒEƒ“ƒ^ */
 		{
-			src->MAHOU_TEKI_wait1 = (8)/*5*/;/*ƒvƒƒOƒ‰ƒ€‚ª‘¬‚­‚È‚Á‚Ä‚é•ª’x‚­‚·‚é*/
+			src->MAHOU_TEKI_wait1 = (8);/*(5) (ƒvƒƒOƒ‰ƒ€‚ª‘¬‚­‚È‚Á‚Ä‚é•ª’x‚­‚·‚é)*/
 			src->MAHOU_TEKI_wait2--;
-			voice_play(VOICE10_MAGICF_E_SHOT, TRACK06_ALEART_IVENT_02);/*ƒeƒLƒg[*/
+			voice_play(VOICE12_MAGICF_E_SHOT, TRACK06_ALEART_IVENT_02);/*ƒeƒLƒg[*/
 			/* ‘¬“x‚Í 1.0-3.0‚Ü‚Å‚Ì–³’iŠK—”‚É•ÏX */
-			br.BULLET_REGIST_00_speed256							= ((ra_nd()&(512-1))+256);		/* ’e‘¬ */	/*t256(sp)*/
-			br.BULLET_REGIST_02_VECTOR_angle1024					= (ra_nd()&(1024-1));			/* Šp“x */
-			br.BULLET_REGIST_05_regist_type 						= REGIST_TYPE_03_TOMARI;
+			br.BULLET_REGIST_00_speed256							= ((ra_nd()&(512-1))+t256(1.0)+t256(1.0));	/* ’e‘¬ */
+			br.BULLET_REGIST_02_VECTOR_angle1024					= ((ra_nd()&(1024-1))); 					/* Šp“x */
+			br.BULLET_REGIST_03_VECTOR_regist_type					= LEGACY_REGIST_TYPE_01_TOMARI;
+			br.BULLET_REGIST_04_bullet_obj_type 					= (BULLET_MINI8_01_AKA+(0));				/* ’eƒOƒ‰ */
 			br.BULLET_REGIST_06_VECTOR_tomari_dan_next_angle1024	= ANGLE_NO_SHOT_DAN;
-			br.BULLET_REGIST_07_VECTOR_tomari_dan_delta256			= t256(0.04);					/* Œ¸‘¬’è” */
-			bullet_regist_vector();
+			br.BULLET_REGIST_07_VECTOR_legacy_dan_delta256			= (2);//10.24==t256(0.04);					/* Œ¸‘¬’è” */
+			bullet_regist_legacy_vector_direct();
 		}
 	}
 }
 
 /*---------------------------------------------------------
-	“GUŒ‚("–‚•ûw1")‚ÌƒXƒyƒJ
+	‚Æ‚è‚ ‚¦‚¸‹¤’Ê•”•ª
+---------------------------------------------------------*/
+
+static void attack_kougeki_mahoujin_common(SPRITE *src)
+{
+	//		br.BULLET_REGIST_02_VECTOR_angle1024					= (int)(1024/(7));							/* Šp“x(ˆêü‚ğ 7 •ªŠ„) */	/* 1ü‚ğn•ªŠ„‚µ‚½Šp“x */
+			br.BULLET_REGIST_03_VECTOR_regist_type					= LEGACY_REGIST_TYPE_01_TOMARI;
+			br.BULLET_REGIST_04_bullet_obj_type 					= (BULLET_MINI8_01_AKA+(0));				/* ’eƒOƒ‰ */
+			br.BULLET_REGIST_06_VECTOR_tomari_dan_next_angle1024	= ANGLE_NO_SHOT_DAN;
+			br.BULLET_REGIST_07_VECTOR_legacy_dan_delta256			= (1);//t256(0.03); 						/* Œ¸‘¬’è” */
+			bullet_regist_legacy_vector_direct();
+
+}
+/*---------------------------------------------------------
+	3:ƒ‰ƒ“ƒ_ƒ€‚Î‚ç‚Ü‚«UŒ‚+©‹@‘_‚¢("–‚•ûw1")‚ÌƒXƒyƒJ
 ---------------------------------------------------------*/
 
 static void attack_kougeki_mahoujin03(SPRITE *src)
@@ -98,70 +102,71 @@ static void attack_kougeki_mahoujin03(SPRITE *src)
 		src->jyumyou									= MAHOU_TIME_LIMIT_01_ADJ;	/* Á‚¦‚é */
 		br.BULLET_REGIST_00_speed256					= t256(1.0);				/* ’e‘¬ */
 		br.BULLET_REGIST_02_VECTOR_angle1024			= ANGLE_JIKI_NERAI_DAN; 	/* ©‹@‘_‚¢’e */	/* ”­Ë’†SŠp“x / “Áê‹@”\(©‹@‘_‚¢/‘¼) */
-		br.BULLET_REGIST_04_bullet_obj_type 			= BULLET_MINI8_03_AOI;		/* [Ô’e] */ /* ’eƒOƒ‰ */
-		br.BULLET_REGIST_05_regist_type 				= REGIST_TYPE_00_MULTI_VECTOR;
+	//	br.BULLET_REGIST_03_VECTOR_regist_type			= VEC TOR_REGIST_TYPE_00_MULTI_VECTOR;
+		br.BULLET_REGIST_04_bullet_obj_type 			= BULLET_MINI8_03_AOI;		/* [Ô’e] */		/* ’eƒOƒ‰ */
 		br.BULLET_REGIST_06_n_way						= (1);						/* [1way] */
 	//	br.BULLET_REGIST_07_VECTOR_div_angle1024		= (0);						/* ƒ_ƒ~[Šp“x(–¢g—p) */
-		bullet_regist_vector();
+		bullet_regist_multi_vector_direct();
 	}
 	{
 		src->MAHOU_TEKI_wait1--;			/* ‚Î‚ç‚Ü‚«ŠÔŠuƒJƒEƒ“ƒ^ */
 		if (src->MAHOU_TEKI_wait1 <= 0) 	/* ‚Î‚ç‚Ü‚«ŠÔŠuƒJƒEƒ“ƒ^ */
 		{
 			src->MAHOU_TEKI_wait1 = (25-((cg_game_difficulty)*5)); /* ‚Î‚ç‚Ü‚«ŠÔŠuƒJƒEƒ“ƒ^ */
-			voice_play(VOICE10_MAGICF_E_SHOT, TRACK06_ALEART_IVENT_02);/*ƒeƒLƒg[*/
+			voice_play(VOICE12_MAGICF_E_SHOT, TRACK06_ALEART_IVENT_02);/*ƒeƒLƒg[*/
 			/* ‘¬“x‚Í 1.0-4.0‚Ü‚Å‚Ì—”(‚½‚¾‚µã•ûˆæ‚É•Î·)‚É•ÏX */
-			br.BULLET_REGIST_00_speed256							= ((ra_nd()&(1024-1))|(0x100)); 	/* ’e‘¬ */	/*t256(sp)*/
-			br.BULLET_REGIST_02_VECTOR_angle1024					= ((ra_nd()&(1024-1))); 			/* Šp“x */
-			br.BULLET_REGIST_05_regist_type 						= REGIST_TYPE_03_TOMARI;
-			br.BULLET_REGIST_06_VECTOR_tomari_dan_next_angle1024	= ANGLE_NO_SHOT_DAN;
-			br.BULLET_REGIST_07_VECTOR_tomari_dan_delta256			= t256(0.03);	/* Œ¸‘¬’è” */
-			bullet_regist_vector();
+			br.BULLET_REGIST_00_speed256							= ((ra_nd()&(1024-1))|(0x100))+t256(1.0);	/* ’e‘¬ */
+			br.BULLET_REGIST_02_VECTOR_angle1024					= ((ra_nd()&(1024-1))); 					/* Šp“x */
+			attack_kougeki_mahoujin_common(src);
 		}
 	}
 }
 
 /*---------------------------------------------------------
-	‰~óUŒ‚‚ÌƒXƒyƒJ
+	4:‰~óUŒ‚‚ÌƒXƒyƒJ(¬¶)
 ---------------------------------------------------------*/
 
 static void attack_kougeki_mahoujin04(SPRITE *src)
 {
 	/* UŒ‚ŠJnƒtƒŒ[ƒ€‚©‚ç16ƒtƒŒ[ƒ€Œo‰ßŒã‚É 1‰ñ‚¾‚¯UŒ‚ */
 	//if ((MAHOU_TIME_LIMIT_02_ADJ-16) == src->time_out)
-	//if (0 == (src->time_out&0x07))
+	//if (0 == (src->jyumyou&0x07))
 	{
-			br.BULLET_REGIST_00_speed256							= (t256(2.5));			/* ’e‘¬ */
+			br.BULLET_REGIST_00_speed256							= (t256(1.5)+(cos1024(src->jyumyou<<4)));					/* ’e‘¬ */
 			br.BULLET_REGIST_02_VECTOR_angle1024					= ( (src->jyumyou+src->jyumyou)+((src->jyumyou&0x07)<<7));	/* Œü‚« */
-	//		br.BULLET_REGIST_02_VECTOR_angle1024					= (int)(1024/(7));		/* Šp“x(ˆêü‚ğ 7 •ªŠ„) */	/* 1ü‚ğn•ªŠ„‚µ‚½Šp“x */
-			br.BULLET_REGIST_05_regist_type 						= REGIST_TYPE_03_TOMARI;
-			br.BULLET_REGIST_06_VECTOR_tomari_dan_next_angle1024	= ANGLE_NO_SHOT_DAN;
-			br.BULLET_REGIST_07_VECTOR_tomari_dan_delta256			= t256(0.03);	/* Œ¸‘¬’è” */
-	//		BULLET_KOME_01_AKA; 	/* [Ô•Ä’e] */
-	//		(7));/* [7way] */
-			bullet_regist_vector();
+			attack_kougeki_mahoujin_common(src);
 	}
 }
 
 /*---------------------------------------------------------
-	‰~óUŒ‚‚ÌƒXƒyƒJ
+	5:‰~óUŒ‚‚ÌƒXƒyƒJ(’†‰E)
 ---------------------------------------------------------*/
 
 static void attack_kougeki_mahoujin05(SPRITE *src)
 {
 	/* UŒ‚ŠJnƒtƒŒ[ƒ€‚©‚ç16ƒtƒŒ[ƒ€Œo‰ßŒã‚É 1‰ñ‚¾‚¯UŒ‚ */
 	//if ((MAHOU_TIME_LIMIT_02_ADJ-16) == src->time_out)
-	//if (0 == (src->time_out&0x07))
+	//if (0 == (src->jyumyou&0x07))
 	{
-			br.BULLET_REGIST_00_speed256								= (t256(2.5));			/* ’e‘¬ */
-			br.BULLET_REGIST_02_VECTOR_angle1024						= (-(src->jyumyou+src->jyumyou)+((src->jyumyou&0x07)<<7));	/* Œü‚« */
-	//		br.BULLET_REGIST_02_VECTOR_angle1024						= (int)(1024/(7)),		/* Šp“x(ˆêü‚ğ 7 •ªŠ„) */	/* 1ü‚ğn•ªŠ„‚µ‚½Šp“x */
-			br.BULLET_REGIST_05_regist_type 							= REGIST_TYPE_03_TOMARI;
-			br.BULLET_REGIST_06_VECTOR_tomari_dan_next_angle1024		= ANGLE_NO_SHOT_DAN;
-			br.BULLET_REGIST_07_VECTOR_tomari_dan_delta256				= t256(0.03);	/* Œ¸‘¬’è” */
-	//		BULLET_KOME_01_AKA, 	/* [Ô•Ä’e] */
-	//		(7));/* [7way] */
-			bullet_regist_vector();
+			br.BULLET_REGIST_00_speed256							= (t256(1.0)+(cos1024(src->jyumyou<<3)<<2));					/* ’e‘¬ */
+			br.BULLET_REGIST_02_VECTOR_angle1024					= (-(src->jyumyou+src->jyumyou)+((src->jyumyou&0x07)<<7));	/* Œü‚« */
+			attack_kougeki_mahoujin_common(src);
+	}
+}
+
+/*---------------------------------------------------------
+	6:‰~óUŒ‚‚ÌƒXƒyƒJ(‘å¶)
+---------------------------------------------------------*/
+
+static void attack_kougeki_mahoujin06(SPRITE *src)
+{
+	/* UŒ‚ŠJnƒtƒŒ[ƒ€‚©‚ç16ƒtƒŒ[ƒ€Œo‰ßŒã‚É 1‰ñ‚¾‚¯UŒ‚ */
+	//if ((MAHOU_TIME_LIMIT_02_ADJ-16) == src->time_out)
+	//if (0 == (src->jyumyou&0x07))
+	{
+			br.BULLET_REGIST_00_speed256							= (t256(1.0)+(cos1024(src->jyumyou<<2)<<2));					/* ’e‘¬ */
+			br.BULLET_REGIST_02_VECTOR_angle1024					= ( (src->jyumyou+src->jyumyou)+((src->jyumyou&0x07)<<7));	/* Œü‚« */
+			attack_kougeki_mahoujin_common(src);
 	}
 }
 
@@ -170,10 +175,7 @@ static void attack_kougeki_mahoujin05(SPRITE *src)
 	“GˆÚ“®
 ---------------------------------------------------------*/
 		#if 0
-		if (S P_MUTEKI == src->type)
 		{			attack_kougeki_mahoujin02(src); }	/* ("–‚•ûw2") Á‚¦‚é–‚•ûw */
-		else
-	//	if (SP_ZAKO == src->type)
 		{			attack_kougeki_mahoujin03(src); }	/* ("–‚•ûw1") ‚Î‚ç‚Ü‚«UŒ‚–‚•ûw */
 		#endif
 
@@ -194,8 +196,7 @@ static void move_kougeki_mahoujin(SPRITE *src)
 	else
 	if (MAHOU_TIME_LIMIT_01_ADJ < src->jyumyou)
 	{
-		obj_send1->cx256					= (src->cx256);
-		obj_send1->cy256					= (src->cy256);
+		send1_xy(src);	/* ’eŒ¹x256 y256 ’†S‚©‚ç”­’eB */
 		/* ƒXƒyƒJ‘I‘ğ */
 		void (*aaa[8])(SPRITE *src) =
 		{
@@ -203,9 +204,9 @@ static void move_kougeki_mahoujin(SPRITE *src)
 			attack_kougeki_mahoujin01,		/* c’e */
 			attack_kougeki_mahoujin02,		/* ‚Î‚ç‚Ü‚« #01(·•ªA‹Œ"–‚•ûw2") */
 			attack_kougeki_mahoujin03,		/* ‚Î‚ç‚Ü‚« #02(·•ªA‹Œ"–‚•ûw1") */
-			attack_kougeki_mahoujin04,		/* 8way‰Ô’e */
-			attack_kougeki_mahoujin05,		/* 8way‰Ô’e */
-			attack_kougeki_mahoujin04,		/* 8way‰Ô’e */
+			attack_kougeki_mahoujin04,		/* 8way‰Ô’e(’†) */
+			attack_kougeki_mahoujin05,		/* 8way‰Ô’e(’†) */
+			attack_kougeki_mahoujin06,		/* 8way‰Ô’e(’†) */
 			attack_kougeki_mahoujin04,		/* 8way‰Ô’e */
 		};
 		(*aaa[ (int)((src->cx256)&0x07) ])(src);	/* ŠeŠÖ”‚É•ªŠò‚·‚é */
@@ -252,22 +253,21 @@ static void add_common_mahoujin(GAME_COMMAND *l, SPRITE *h)
 	h->color32						= 0x00ffffff;	/*	h->alpha				= 0x02 0x00;*/
 }
 
-static void regist_zako_000_mahoujin1(GAME_COMMAND *l, SPRITE *h)//CTYPE_19_MAHOUJIN_A
+/* ‚Î‚ç‚Ü‚«UŒ‚–‚•ûw */	/* "–‚•ûw1" "GROUNDER",*/
+static void regist_zako_000_mahoujin1(GAME_COMMAND *l, SPRITE *h)// MAHOUJIN A
 {
-//	if (CTYPE_19_MAHOUJIN_A==((char)l->user_i_code))
-	{		/* ‚Î‚ç‚Ü‚«UŒ‚–‚•ûw */	/* "–‚•ûw1" "GROUNDER",*/
+	{
 		h->m_Hit256R				= ZAKO_ATARI04_PNG;/* ‚ ‚½‚è”»’èƒTƒCƒY‚ğ•Ï‚¦‚é */
-		h->callback_loser			= lose_kougeki_mahoujin;
+		h->callback_loser			= item_create_000_kougeki_mahoujin;
 //		h->MAHOU_TEKI_wait1 		= 100;
 	//	h->MAHOU_TEKI_wait2 		= 0;/* –¢g—p */
 	}
 	add_common_mahoujin(l, h);
 }
 
-static void regist_zako_001_mahoujin2(GAME_COMMAND *l, SPRITE *h)//CTYPE_20_MAHOUJIN_B
+/* Á‚¦‚é–‚•ûw */	/* "–‚•ûw2" "MAGICF",*/
+static void regist_zako_001_mahoujin2(GAME_COMMAND *l, SPRITE *h)// MAHOUJIN B
 {
-//	if (CTYPE_19_MAHOUJIN_A==((char)l->user_i_code))
-//	else	//CTYPE_20_MAHOUJIN_B:		/* Á‚¦‚é–‚•ûw */	/* "–‚•ûw2" "MAGICF",*/
 	{
 		h->m_Hit256R				= ZAKO_ATARI16_PNG;
 //		h->MAHOU_TEKI_wait1 		= 10/*+90*/;

@@ -11,14 +11,14 @@
 //#include <psptypes.h>
 
 //#define PSP_LINE_SIZE 512
-//#define SCREEN_WIDTH 480
+//#define SCREEN_WIDTH	480
 //#define SCREEN_HEIGHT 272
 
 //typedef u32 Color;
-//#define A(color) ((u8)(color >> 24 & 0xFF))
-//#define B(color) ((u8)(color >> 16 & 0xFF))
-//#define G(color) ((u8)(color >> 8 & 0xFF))
-//#define R(color) ((u8)(color & 0xFF))
+//#define A(color) ((u8)(color >> 24 & 0xff))
+//#define B(color) ((u8)(color >> 16 & 0xff))
+//#define G(color) ((u8)(color >>  8 & 0xff))
+//#define R(color) ((u8)(color		 & 0xff))
 
 typedef struct
 {

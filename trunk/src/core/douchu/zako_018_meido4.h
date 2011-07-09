@@ -10,15 +10,6 @@
 	右側から下に向かい。画面外へ退場。
 ---------------------------------------------------------*/
 
-/*---------------------------------------------------------
-	敵やられ
----------------------------------------------------------*/
-
-static void lose_meido4(SPRITE *src)
-{
-	item_create(src, SP_ITEM_05_TENSU, 1, ITEM_MOVE_FLAG_06_RAND_XY);
-}
-
 
 /*---------------------------------------------------------
 	敵移動
@@ -77,7 +68,7 @@ static void move_meido4(SPRITE *src)
 	src->cx256+=((sin1024((src->tmp_angleCCW1024))*src->speed256)>>8);/*fps_factor*/	/* CCWの場合 */
 	src->cy256+=((cos1024((src->tmp_angleCCW1024))*src->speed256)>>8);/*fps_factor*/
 	/* アニメーション */
-	zako_anime_type01(src, TEKI_36_YOUSEI3_1);
+	zako_anime_type01(src);
 }
 
 
@@ -87,7 +78,6 @@ static void move_meido4(SPRITE *src)
 
 static void regist_zako_018_meido4(GAME_COMMAND *l, SPRITE *h)
 {
-	h->callback_loser		= lose_meido4;
 	h->tmp_angleCCW1024 	= cv1024r(0);		/* 真下 */	/* CCWの場合 */
 	h->speed256 			= t256(3.0);	/*6.0*/
 	h->jyumyou				= (512+512+512+512+512-1);

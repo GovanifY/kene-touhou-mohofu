@@ -13,10 +13,14 @@
 ---------------------------------------------------------*/
 #if 0/* めも */
 /* ボス共通規格 */
-	#define target_x256 		user_data00 	/* 目標x座標 */
-	#define target_y256 		user_data01 	/* 目標y座標 */
-	#define vvv256				user_data02 	/* 目標座標への到達割合 */
-	#define boss_time_out		user_data03 	/* 制限時間 */
+	#define target_x256 			user_data00 	/* 目標x座標 */
+	#define target_y256 			user_data01 	/* 目標y座標 */
+	#define toutatu_wariai256		user_data02 	/* 目標座標への到達割合 */
+	#define kougeki_anime_count 	user_data03 	/* 攻撃アニメーション用カウンタ */
+	#define boss_time_out			user_data04 	/* 制限時間 */
+	#define boss_base_state777		user_data04 	/* 制限時間(boss_time_outと同じ) */
+//
+	#define boss_spell_timer		user_data05 	/* スペル時間 */
 #endif
 
 #define target_x256 		user_data00 	/* 目標地点(出現時のプレイヤー位置) */
@@ -59,20 +63,21 @@ static void teki_homing_move(SPRITE *src)
 	{
 		obj_send1->cx256 	= (src->target_x256);					/* 弾源x256 */
 		obj_send1->cy256 	= (src->target_y256);					/* 弾源y256 */
-		tmp_angleCCW1024_src_nerai(obj_send1, src);
+		tmp_angleCCW65536_src_nerai(obj_send1, src);
+		src->tmp_angleCCW1024 = ((src->tmp_angleCCW65536)>>6);		/* 「1周が65536分割」から「1周が1024分割」へ変換する。 */
 		#define ROTATE_1024HARF 	(1024/2)/*半周*/
 		const int sabun_aaa = (src->tmp_angleCCW1024-src->rotationCCW1024);
-		if (0 > sabun_aaa/*(src->tmp_angleCCW1024-src->rotationCCW1024)*/ )/* 0レジスタ+共通最適化 */
+		if (0 > (sabun_aaa) )/* 0レジスタ+共通最適化 */
 		{
 			/* 目標角度 < 制御角度 */
-			if ((ROTATE_1024HARF) > sabun_aaa/*(src->tmp_angleCCW1024-src->rotationCCW1024)*/ )/* 共通最適化 */
+			if ((ROTATE_1024HARF) > (sabun_aaa) )/* 共通最適化 */
 			{
 				src->rotationCCW1024 -= 10;
 			}
 		}
 		else	/* 目標角度 > 制御角度 */
 		{
-			if ((ROTATE_1024HARF) > -(sabun_aaa)/*(src->rotationCCW1024-src->tmp_angleCCW1024)*/ )
+			if ((ROTATE_1024HARF) > -(sabun_aaa) )
 			{
 				src->rotationCCW1024 += 10;
 			}

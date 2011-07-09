@@ -13,7 +13,7 @@
 	-------------------------------------------------------
 	自分で思ったよりも第2形態の攻撃パターンがカオスになってしまった。
 	もっと丁寧に作り直した方がいいかも。
-	[*** 090114 	天狗の速度を難易度ごとに変えてみた。
+	天狗の速度を難易度ごとに変えてみた。
 //
 	差分氏の乱数大弾(文用の揺らぐ大弾)について私見(231)
 	乱数大弾は (easy＋高速弾) 辺りまでなら面白いのですが、
@@ -22,14 +22,6 @@
 	弾密度をあげられないので、東方っぽくならないです。
 	そういう理由で止めました。
 ---------------------------------------------------------*/
-#if 0/* めも：あやは、共通部分で使ってる。 */
-/* ボス共通規格 */
-	#define target_x256 		user_data00 	/* 目標x座標 */
-	#define target_y256 		user_data01 	/* 目標y座標 */
-	#define vvv256				user_data02 	/* 目標座標への到達割合 */
-	#define boss_time_out		user_data03 	/* 制限時間 */
-	#define boss_base_state777	user_data03 	/* 制限時間(boss_time_outと同じ) */
-#endif
 
 
 /* 1なのは随分古い仕様。現在はシステムで ketm 方式の CONTROLLER は無い。
@@ -49,18 +41,16 @@
 #define bullet_create_aya_kougeki_21	s_bullet_create_aya_oodama3
 static void s_bullet_create_aya_oodama3(SPRITE *src)
 {
-	obj_send1->cx256					= (src->cx256);
-	obj_send1->cy256					= (src->cy256);
+	send1_xy(src);	/* 弾源x256 y256 中心から発弾。 */
 	//
 	br.BULLET_REGIST_06_n_way					= (12); 				/* [12way] */
 	br.BULLET_REGIST_07_div_angle65536			= (65536/12);			/* 分割角度 */	/* 30度づつ一周(12==360/30だから12方向) */
 	//
 //	br.BULLET_REGIST_03_tama_data				= (TAMA_DATA_0000_TILT);/* (r33-)標準弾 */
 	br.BULLET_REGIST_03_tama_data				= (TAMA_DATA_8000_NON_TILT);/* (r33-)非傾き弾 */
-	//未定br.BULLET_REGIST_05_regist_type			= TAMA_TYPE_00_ANGLE_TILT;/* (r33-)標準弾 */
 //
-	tmp_angleCCW1024_jiki_nerai(src);
-	br.BULLET_REGIST_02_angle65536				= ((src->tmp_angleCCW1024)<<6);
+	tmp_angleCCW65536_jiki_nerai(src);
+	br.BULLET_REGIST_02_angle65536				= (src->tmp_angleCCW65536);
 	const u32 aaa								= ((u32)((((src->tmp_angleCCW65536)>>8)&(0x03))));
 	br.BULLET_REGIST_04_bullet_obj_type 		= (BULLET_OODAMA32_00_AOI+(aaa));	/* 弾グラ */
 //	br.BULLET_REGIST_00_speed256				= speed256; 			/* 弾速 */
@@ -85,17 +75,16 @@ static void s_bullet_create_aya_oodama3(SPRITE *src)
 
 static void bullet_create_aya_kougeki_01(SPRITE *src)
 {
-	obj_send1->cx256					= (src->cx256);
-	obj_send1->cy256					= (src->cy256);
+	send1_xy(src);	/* 弾源x256 y256 中心から発弾。 */
 //	h->aya_speed								= t256(4.0)+(difficulty<<8);
 //	br.BULLET_REGIST_00_speed256				= (src->aya_speed)-t256(2.0);				/* 弾速 */	/*t256(5.0)*/
 	br.BULLET_REGIST_00_speed256				= (t256(2.0)+((cg_game_difficulty)<<8));				/* 弾速 */	/*t256(5.0)*/
 	br.BULLET_REGIST_02_VECTOR_angle1024		= ANGLE_JIKI_NERAI_DAN;
-	br.BULLET_REGIST_07_VECTOR_div_angle1024	= cv1024r(30);//cv1024r(360-(30));			/* CCWの場合 */
+//	br.BULLET_REGIST_03_VECTOR_regist_type		= VEC TOR_REGIST_TYPE_00_MULTI_VECTOR;
 	br.BULLET_REGIST_04_bullet_obj_type 		= BULLET_KOME_00_SIRO + (ra_nd()&0x0f); 	/* 弾グラ */	/* 弾に毒塗ってある設定 */
 	br.BULLET_REGIST_06_n_way					= (5);										/* [5way] */
-	br.BULLET_REGIST_05_regist_type 			= REGIST_TYPE_00_MULTI_VECTOR;
-	bullet_regist_vector();
+	br.BULLET_REGIST_07_VECTOR_div_angle1024	= cv1024r(30);//cv1024r(360-(30));			/* CCWの場合 */
+	bullet_regist_multi_vector_direct();
 }
 /*---------------------------------------------------------
 	?弾
@@ -103,13 +92,12 @@ static void bullet_create_aya_kougeki_01(SPRITE *src)
 
 static void bullet_create_aya_kougeki_00(SPRITE *src)
 {
-	voice_play(VOICE11_BOSS_KIRARIN/*VOICE14_BOSS_KOUGEKI_01*/, TRACK04_TEKIDAN);/*テキトー*/
+	voice_play(VOICE11_BOSS_KIRARIN, TRACK04_TEKIDAN);/*テキトー*/
 //
-	obj_send1->cx256					= (src->cx256);
-	obj_send1->cy256					= (src->cy256);
-	br.BULLET_REGIST_02_VECTOR_angle1024			= ANGLE_JIKI_NERAI_DAN;
-	br.BULLET_REGIST_07_VECTOR_div_angle1024		= (int)(1024/24);
-	br.BULLET_REGIST_05_regist_type 		= REGIST_TYPE_00_MULTI_VECTOR;
+	send1_xy(src);	/* 弾源x256 y256 中心から発弾。 */
+	br.BULLET_REGIST_02_VECTOR_angle1024		= ANGLE_JIKI_NERAI_DAN;
+//	br.BULLET_REGIST_03_VECTOR_regist_type		= VEC TOR_REGIST_TYPE_00_MULTI_VECTOR;
+	br.BULLET_REGIST_07_VECTOR_div_angle1024	= (int)(1024/24);
 	/* 毎回 */
 	{
 		unsigned int aaa;
@@ -123,7 +111,7 @@ static void bullet_create_aya_kougeki_00(SPRITE *src)
 			br.BULLET_REGIST_00_speed256			= (aaa);										/* 弾速 */
 			br.BULLET_REGIST_04_bullet_obj_type = BULLET_KOME_00_SIRO + (ra_nd()&0x0f); 	/* 弾グラ */
 			br.BULLET_REGIST_06_n_way				= (11-jj);										/* [10way] */
-			bullet_regist_vector();
+			bullet_regist_multi_vector_direct();
 		}
 	}
 }
@@ -150,10 +138,10 @@ global void aya_05_keitai(SPRITE *src)
 		src->target_x256 = t256((GAME_WIDTH-50)/2);
 	//	src->target_y256 = t256(20.0);
 		src->target_y256 = t256(30.0); /* */
-	//	if (/*150*/200 > src->vvv256 )	/* 時間で */
+	//	if (/*150*/200 > src->toutatu_wariai256 )	/* 時間で */
 		if (t256(31.0) > src->cy256)
 		{
-			src->vvv256 = t256(1.00);
+			src->toutatu_wariai256 = t256(1.00);
 			src->boss_base_state777++;/* = SS03*/
 			bullet_create_aya_kougeki_00(src);	/* 攻撃 */
 		}
@@ -162,9 +150,9 @@ global void aya_05_keitai(SPRITE *src)
 	if (SS01 ==src->boss_base_state777) 	/* 移動 */
 	{
 	//	ca se SS03: /* 初期位置:大弾3つ->SS02, SS02, SS04 */
-		if (/*150*/240 > src->vvv256 )	/* 時間で */
+		if (/*150*/240 > src->toutatu_wariai256 )	/* 時間で */
 		{
-			src->vvv256 = t256(1.00);
+			src->toutatu_wariai256 = t256(1.00);
 			src->boss_base_state777++;
 			bullet_create_aya_kougeki_23(src);	/* 攻撃 */
 		//	int angle_jikinerai_1024;
@@ -182,10 +170,12 @@ global void aya_05_keitai(SPRITE *src)
 			//	src->target_x256 = t256(GAME_WIDTH/2); /* 真中へワープ */
 				src->target_x256 = zzz_player->cx256;
 				src->target_y256 = zzz_player->cy256;
-				if (src->target_y256 > (t256(128.0)+((cg_game_difficulty)<<(8+4/*5*/))))
+				#define KYORI_AAA (t256(128.0)+((cg_game_difficulty)<<(8+4/*5*/)))
+				if (src->target_y256 > (signed)KYORI_AAA)
 				{
-					src->target_y256 = (t256(128.0)+((cg_game_difficulty)<<(8+4/*5*/)));
+					src->target_y256 = KYORI_AAA;
 				}
+				#undef KYORI_AAA
 			}
 			else
 			if (zzz_aaa == 1)
@@ -221,9 +211,9 @@ global void aya_05_keitai(SPRITE *src)
 //	ca se SS04: /* プレイヤー位置付近移動中 -> プレイヤー位置付近:大弾3つ -> SS00へ */
 //		sakuya_anime00(src);//		sakuya_anime08(src);
 		/* ayaの稼動範囲 */
-		if (/*150*/220 > src->vvv256 )	/* 時間で */
+		if (/*150*/220 > src->toutatu_wariai256 )	/* 時間で */
 		{
-			src->vvv256 = t256(1.00);
+			src->toutatu_wariai256 = t256(1.00);
 		//	src->boss_base_state777++;	//	sakuya_wait_state_bbb(src/*,SS06*/);
 			src->boss_base_state777 = SS00; /* SS00へ */
 			//ca se SS06: /* 左:右回転攻撃->SS00, SS03 */
@@ -255,8 +245,8 @@ global void aya_05_keitai(SPRITE *src)
 		}
 	}
 	#if 1
-	alice_yuudou_move_only(src);
-	alice_yuudou_calc(src);
+	boss_yuudou_idou_nomi(src);
+	boss_yuudou_hiritu_keisan(src);
 	#endif
 	bullet_angle_all_gamen_gai_nara_kesu();/*角度弾の喰み出しチェックを行う(毎フレーム行う必要はない)*/
 }

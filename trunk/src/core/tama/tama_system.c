@@ -39,33 +39,8 @@
 ---------------------------------------------------------*/
 
 #if 1/* 角度弾規格(策定案tama_system) */
-	#define tx256				vx256/* 基点座標x */
-	#define ty256				vy256/* 基点座標y */
-
-#endif
-
-/*---------------------------------------------------------
-	ベクトル弾、基本定義
----------------------------------------------------------*/
-
-#if 1/* ベクトル弾規格(策定案) */
-
-
-#endif
-
-/*---------------------------------------------------------
-	ベクトル弾
-	-------------------------------------------------------
-	ベクトル弾の移動を行う。
----------------------------------------------------------*/
-
-#if 0
-/* 何もしない(等速直線移動) */
-static void move_bullet_vector_wide100(SPRITE *src)
-{
-	src->cx256 += (src->tx256);/*fps_factor*/
-	src->cy256 += (src->ty256);/*fps_factor*/
-}
+	#define ox256				vx256/* 発弾位置 座標x */
+	#define oy256				vy256/* 発弾位置 座標y */
 #endif
 
 
@@ -78,7 +53,7 @@ static void move_bullet_vector_wide100(SPRITE *src)
 #define tama_system_kousadan_angle65536 tmp_angleCCW1024
 
 /*---------------------------------------------------------
-	#001 角度弾の移動を行う(通常弾用)「正直分けたくないけど、分けてみる。」
+	#001 角度弾の移動を行う(通常弾用)
 ---------------------------------------------------------*/
 
 static void tama_system_move_angle_001(SPRITE *src)
@@ -86,70 +61,34 @@ static void tama_system_move_angle_001(SPRITE *src)
 	#if 1/* 検討中(無くても出来るけど、あった方が簡単) */
 	src->tama_system_speed65536 		+= (src->tama_system_tra65536); 		/* 加減速調整 */
 	#endif
-//	src->tama_system_radius256			+= (src->tama_system_speed256); 		/* 速度 */
-	src->tama_system_radius256			+= (src->tama_system_speed65536>>8);	/* 速度 */
-	#if 0/* 検討中(無くても出来るけど、あった方が簡単) */
-	/* パチェ() とか ルーミア(交差弾) とかに必要(無くても出来るけど、あった方が簡単) */
-	/* 交差弾の場合この方式だとグラが難しい。(?) */
-	src->rotationCCW1024				+= ((src->tama_system_add_rotate1024)>>8);			/* 回転角度調整 */
-	#endif
+	/*( 1[flame]あたりに進む距離。(半径) )*/int aaa 		 = (src->tama_system_speed65536>>8);	/* 速度 */
 //
-	src->cx256 = (src->tx256) + ((sin1024((src->rotationCCW1024))*(src->tama_system_radius256))>>8);/*fps_factor*/
-	src->cy256 = (src->ty256) + ((cos1024((src->rotationCCW1024))*(src->tama_system_radius256))>>8);/*fps_factor*/
+	src->cx256 += ((sin1024((src->rotationCCW1024))*(aaa))>>8);/*fps_factor*/
+	src->cy256 += ((cos1024((src->rotationCCW1024))*(aaa))>>8);/*fps_factor*/
 }
-
-//	move_bullet_vector_wide100(src);
-	#if 0/* 検討中 */
-	check_bullet_angle01(src);
-	#endif
-
-//	src->base_time_out--;/*fps_factor*/
-//	if (src->base_time_out < 0)
-//	{
-//		src->callback_mover 				= move_bullet_vector_wide100;
-//	}
-//	/* 表示用 */
-
-
-//
-//	mask1024(src->rotationCCW1024);
 
 
 /*---------------------------------------------------------
 	発弾エフェクト
 	-------------------------------------------------------
-	発弾エフェクトを行う。
+	傾かない弾 / 傾き弾(通常)
 ---------------------------------------------------------*/
 
-/*---------------------------------------------------------
-	発弾エフェクト(共通部分)
----------------------------------------------------------*/
-static void tama_system_common_hatudan_000(SPRITE *src)
+static void move_bullet_hatsudan_effect(SPRITE *src)
 {
-	int aaa = (src->tama_system_hatsudan_counter);
-	src->cx256 = (src->tx256) + ((sin1024((src->rotationCCW1024))*(256-aaa)) );/*fps_factor*/
-	src->cy256 = (src->ty256) + ((cos1024((src->rotationCCW1024))*(256-aaa)) );/*fps_factor*/
-//	src->cx256 = (src->tx256);/*fps_factor*/
-//	src->cy256 = (src->ty256);/*fps_factor*/
-	src->color32		= ((aaa)<<(24))|0x00ffffff;
-	src->m_zoom_x256	= t256(3.0)-(aaa)-(aaa);
-	src->m_zoom_y256	= t256(3.0)-(aaa)-(aaa);
-	src->tama_system_hatsudan_counter += 4;
-}
-
-/*---------------------------------------------------------
-	発弾エフェクト	傾かない弾
----------------------------------------------------------*/
-/*---------------------------------------------------------
-	発弾エフェクト	傾き弾(通常)
----------------------------------------------------------*/
-
-static void move_bullet_hatsudan100(SPRITE *src)
-{
-	tama_system_common_hatudan_000(src);
-	if (255 < src->tama_system_hatsudan_counter)
+//	tama_system_common_hatudan_000(src);
 	{
-		src->tama_system_hatsudan_counter = (0xff);
+		int aaabbb = (src->tama_system_flame_counter);
+		src->cx256 = (src->ox256) + ((sin1024((src->rotationCCW1024))*(aaabbb)) );/*fps_factor*/
+		src->cy256 = (src->oy256) + ((cos1024((src->rotationCCW1024))*(aaabbb)) );/*fps_factor*/
+		src->color32		= ((256-aaabbb)<<(24))|0x00ffffff;
+		src->m_zoom_x256	= t256(1.0) + (aaabbb) + (aaabbb);
+		src->m_zoom_y256	= t256(1.0) + (aaabbb) + (aaabbb);
+	}
+	src->tama_system_flame_counter -= (4);
+	if (0 > src->tama_system_flame_counter)
+	{
+	//	src->tama_system_flame_counter = 0;
 		src->flags |= (SP_FLAG_COLISION_CHECK);/* あたり判定有効 */
 		src->callback_mover 			= tama_system_move_angle_001;
 		if (src->tama_system_tama_data & TAMA_DATA_8000_NON_TILT)/* 非傾き弾 */
@@ -160,13 +99,9 @@ static void move_bullet_hatsudan100(SPRITE *src)
 }
 
 
-
-
-
 /*---------------------------------------------------------
 	弾を登録する。
 	-------------------------------------------------------
-	関数を(クラスっぽく)隠蔽。
 	弾発動時のエフェクト等の関係上、発弾部分は全部纏める必要がある。
 	-------------------------------------------------------
 	ベクトル弾と角度弾を統合するかもしれない。
@@ -187,9 +122,7 @@ static void move_bullet_hatsudan100(SPRITE *src)
 		サイドのパネルがSDL描画。
 		会話がSDL描画。
 		Gu回転描画で横sliceしてない。
-		ボス中にも雑魚の処理(リスト処理)を行う。
 		ボスがスペカシステムに移行出来てないので無駄な処理がある。
-		スクリプト処理が移動と描画が分離できてない。
 	あたりが、主な処理落ち。
 	-------------------------------------------------------
 	あくまで暫定仕様(r32)
@@ -208,18 +141,6 @@ static void move_bullet_hatsudan100(SPRITE *src)
 	BULLET_REGIST_01_speed_offset:	加速度(又は減速度)
 
 ---------------------------------------------------------*/
-//		h->rotationCCW1024				= (0);/* (i<<4) deg_360_to_512(90) */
-//		h->tmp_angleCCW1024 			= ((br.BULLET_REGIST_02_angle65536)>>6);/* (i<<4) deg_360_to_512(90) */
-
-/* (r33) */
-//static void regist_01_non_tilt_bullet(SPRITE		*h)/* 傾かない弾 */
-//{
-//		h->callback_mover				= move_bullet_hatsudan100;
-//}
-//static void regist_00_tilt_bullet(SPRITE		*h)/* 傾き弾(通常) */
-//{
-//		h->callback_mover				= move_bullet_hatsudan000;
-//}
 
 /*---------------------------------------------------------
 	弾システム:
@@ -234,33 +155,23 @@ global void tama_system_regist_single(void)
 	h									= obj_add_00_tama_error();
 	if (NULL != h)
 	{
-		h->tx256						= obj_send1->cx256;
-		h->ty256						= obj_send1->cy256;
+		h->ox256						= (obj_send1->cx256);/* 発弾位置 座標x */
+		h->oy256						= (obj_send1->cy256);/* 発弾位置 座標y */
 		h->type 						= (br.BULLET_REGIST_04_bullet_obj_type);
 		h->flags &= ~(SP_FLAG_COLISION_CHECK);/* あたり判定無効(発弾エフェクト用) */
 		reflect_sprite_spec444(h, OBJ_BANK_SIZE_00_TAMA);
 	//
-//	#if 1
-//		void (*aaa[(TAMA_TYPE_99_MAX)])(SPRITE	*h) =
-//		{
-//			regist_00_tilt_bullet,		// TAMA_TYPE_00_ANGLE_TILT
-//			regist_01_non_tilt_bullet,	// TAMA_TYPE_01_ANGLE_NON_TILT	// 非傾き弾
-//		};
-//		(*aaa[ (int)((br.BULLET_REGIST_05_regist_type)&(4-1)) ])(h);	/* エフェクトの動きの種類によって分岐する */
-//	#else
-	//	h->callback_mover						= move_bullet_hatsudan000;
-		h->callback_mover						= move_bullet_hatsudan100;
-//	#endif
+		h->callback_mover						= move_bullet_hatsudan_effect;
 	//
 		h->tama_system_kousadan_angle65536		= (br.BULLET_REGIST_02_angle65536); /* 交差弾用 */
 		h->rotationCCW1024						= ((br.BULLET_REGIST_02_angle65536)>>6);/* (i<<4) deg_360_to_512(90) */
 		h->m_Hit256R							= TAMA_ATARI_JIPPOU32_PNG;
 	//
 	//	h->tama_system_speed256 				= ((br.BULLET_REGIST_00_speed256)	 ); 	/* 速度 */	/* 初速(打ち出し速度) */
-		h->tama_system_speed65536				= ((br.BULLET_REGIST_00_speed256)<<8);	/* 速度 */	/* 初速(打ち出し速度) */
-		h->tama_system_hatsudan_counter 		= (0);
+		h->tama_system_speed65536				= ((br.BULLET_REGIST_00_speed256)<<8);		/* 速度 */	/* 初速(打ち出し速度) */
+		h->tama_system_flame_counter			= (0xff);//(0);//(-(0x100));
 //		h->tama_system_base_time_out			= (120);/*(100)*/
-		h->tama_system_radius256				= t256(0);/* 半径 */
+	//	h->tama_system_kyori256 				= t256(0);/* 半径 */
 //		h->tama_system_tra65536 				= ((br.BU LLET_REGIST_speed_offset)<<8);	/* t256形式で。 調整減速弾 */	/* この方式になるか検討中 */
 		h->tama_system_tra65536 				= ((br.BULLET_REGIST_01_speed_offset)); 	/* t256形式で。 調整減速弾 */	/* この方式になるか検討中 */
 		h->tama_system_tama_data				= ((br.BULLET_REGIST_03_tama_data));		/* 角度弾規格B(仮策定案)特殊機能 この方式になるか検討中 */
@@ -268,6 +179,7 @@ global void tama_system_regist_single(void)
 	//	h->tama_system_add_rotate1024			= ((br.BULLET_REGIST_angle_offset1024)>>(8-6)); 	/* t256形式で。 交差弾 */		/* この方式になるか検討中 */
 	}
 }
+
 
 /*---------------------------------------------------------
 	弾システム:
@@ -335,8 +247,6 @@ global void tama_system_regist_n_way(void)
 			偶数弾の場合、分割角度の半分の角度がオフセット角度。
 			奇数弾の場合オフセット角度は必ずゼロ。
 		*/
-	//	int j_guusuu_harf_angle_offset;
-	//	j_guusuu_harf_angle_offset = 0;
 	//	const int j_guusuu_harf_angle_offset = ((br.BULLET_REGIST_07_div_angle65536)>>1);	/* 偶数弾なら分割角の半分が差分、奇数弾はなし */
 		const int j_guusuu_harf_angle_offset = (0==(j_n_way&1)) ? ((br.BULLET_REGIST_07_div_angle65536)>>1) : (0);	/* 偶数弾なら分割角の半分が差分、奇数弾はなし */
 

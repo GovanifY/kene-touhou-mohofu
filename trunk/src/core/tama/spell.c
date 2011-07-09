@@ -1,5 +1,5 @@
 
-#include "game_main.h"
+#include "./../boss/boss.h"//#include "game_main.h"
 
 /*---------------------------------------------------------
  東方模倣風 ～ Toho Imitation Style.
@@ -25,6 +25,11 @@
 	今の方式(r33)だとむしろ専用コアにした方が速度低下する。
 ---------------------------------------------------------*/
 
+global void send1_xy(SPRITE *src)
+{
+	obj_send1->cx256 = (src->cx256); 	/* 弾源x256 ボス中心から発弾。 */
+	obj_send1->cy256 = (src->cy256); 	/* 弾源y256 ボス中心から発弾。 */
+}
 
 /*---------------------------------------------------------
 	自機(src)狙い弾(dest)の角度(中心→中心)を(destのtmp_angleCCW65536に)計算。
@@ -40,23 +45,11 @@ global /*static*/ void tmp_angleCCW65536_src_nerai(SPRITE *src, SPRITE *dest)
 {
 	dest->tmp_angleCCW65536 	= (atan_65536(src->cy256-dest->cy256, src->cx256-dest->cx256));
 }
-
-
-/*---------------------------------------------------------
-	自機(src)狙い弾(dest)の角度(中心→中心)を(destのtmp_angleCCW1024に)計算。
----------------------------------------------------------*/
-
-global /*static*/ void tmp_angleCCW1024_src_nerai(SPRITE *src, SPRITE *dest)
-{
-//	dest->tmp_angleCCW1024		= (at an_1024(src->cy256-dest->cy256, src->cx256-dest->cx256));
-	tmp_angleCCW65536_src_nerai(src, dest);
-	dest->tmp_angleCCW1024	>>= (6);
-}
-global /*static*/ void tmp_angleCCW1024_jiki_nerai(SPRITE *dest)
+global /*static*/ void tmp_angleCCW65536_jiki_nerai(SPRITE *dest)
 {
 	SPRITE *zzz_player;
 	zzz_player = &obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_00_PLAYER];
-	tmp_angleCCW1024_src_nerai(zzz_player, dest);
+	tmp_angleCCW65536_src_nerai(zzz_player, dest);
 }
 
 
@@ -68,15 +61,11 @@ global /*static*/ void tmp_angleCCW1024_jiki_nerai(SPRITE *dest)
 
 static void set_sub_jikinerai(SPRITE *src)
 {
-	obj_send1->cx256					= (src->cx256); 	/* 弾源x256 ボス中心から発弾。 */
-	obj_send1->cy256					= (src->cy256); 	/* 弾源y256 ボス中心から発弾。 */
-	{
-		SPRITE *zzz_player;
-		zzz_player = &obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_00_PLAYER];
-		tmp_angleCCW65536_src_nerai(zzz_player, src);/* 自機狙い角作成 */
-	}
+	tmp_angleCCW65536_jiki_nerai(src);/* 自機狙い角作成 */
 	br.BULLET_REGIST_02_angle65536		= (src->tmp_angleCCW65536); 	/* 自機狙い弾 */
 }
+
+
 /*---------------------------------------------------------
 	スペル弾幕生成時間
 ---------------------------------------------------------*/
@@ -95,23 +84,6 @@ static void set_sub_jikinerai(SPRITE *src)
 #define SPELL_TIME_1024 	(1024)
 #define SPELL_TIME_9999 	(16384)
 
-/*---------------------------------------------------------
-	角度弾を直接扱う
----------------------------------------------------------*/
-#if 1/* 角度弾を直接扱うので、本来 bullet_angle.c に入るべきもの。 */
-
-/*
-	角度弾では、ベクトル移動をしない。
-	代わりに基点座標として使う。
-*/
-#if 1/* 角度弾規格(策定案tama_system) */
-	#define tx256				vx256/* 基点座標x */
-	#define ty256				vy256/* 基点座標y */
-	//
-#endif
-
-#endif
-
 
 /*---------------------------------------------------------
 	スペル難易度別テーブル
@@ -119,18 +91,23 @@ static void set_sub_jikinerai(SPRITE *src)
 
 	enum
 	{
-		H0=0,H1,H2,H3,H4,H5,H6
+		H0=0,H1,H2,H3,H4,H5,H6,H7,H8,H9
 	};
 	#define b_HOUGA_00_YEL_NUMS 		(H0*4)
 	#define b_HOUGA_08_RED_NUMS 		(H1*4)
 	#define HOUGA_04_YEL_DIV_ANGLE		(H2*4)
 	#define HOUGA_16_YEL_ROTATE_ANGLE	(H3*4)
 	#define HOUGA_12_RED_DIV_ANGLE		(HOUGA_16_YEL_ROTATE_ANGLE)
-//
+	//
 	#define b_chrno_00_BLUE_NUMS		(H4*4)
 	#define chrno_04_BLUE_DIV_ANGLE 	(H5*4)
+	//
+	#define AKA_01_DIV_NUMS 			(H6*4)
+	#define AKA_02_DIV_ANGLE 			(H7*4)
+	#define AKA_03_DIV_ANGLE 			(H8*4)
+
 	#define spell_bunkatsu_nums_table spell_nan_ido_table
-	const static /*s32*/u16/*s16 でいいかも？*/ spell_nan_ido_table[(H6*4)] =
+	const static /*s32*/u16/*s16 でいいかも？*/ spell_nan_ido_table[(H9*4)] =
 	{
 		// ★ 紅 美鈴、華符「芳華絢爛」用
 		// easy 	華符「芳華絢爛」と同じ。(easyは時間で簡単になるように調整する)
@@ -138,15 +115,17 @@ static void set_sub_jikinerai(SPRITE *src)
 		// hard 	--。
 		// lunatic	ちゃんと避けれるの確認済み。(これ以上高密度だと辛いかも)
 		/* easy 				normal					hard					lunatic 			*/
-		#if 1/*(r33)*/
 		(6),					(6),					(10),					(17),					/* 華符「芳華絢爛」用 */
 		(6*8),					(6*8),					(10*8), 				(17*8), 				/* 華符「芳華絢爛」用 */
 		(int)(65536/(6)),		(int)(65536/(6)),		(int)(65536/(10)),		(int)(65536/(17)),		/* 華符「芳華絢爛」用 */
 		(int)(65536/(6*8)), 	(int)(65536/(6*8)), 	(int)(65536/(10*8)),	(int)(65536/(17*8)),	/* 華符「芳華絢爛」用 */
-		#endif
 		// ★ チルノ「」用
 		(0),					(0),					(18),					(36),					/* 註:3より4の方が簡単 */
 		(0),					(0),					(int)(65536/(18)),		(int)(65536/(36)),		/* 註:3より4の方が簡単 */
+		// ★ アリス 「赤の魔法」用
+		(3),								(4),								(5),								(6),								/* 分割数: */
+		(int)(65536/(18)),					(int)(65536/(24)),					(int)(65536/(40)),					(int)(65536/(64)),					/* 分割角度: */
+		(int)(65536-(int)(65536/(18))), 	(int)(65536-(int)(65536/(24))), 	(int)(65536-(int)(65536/(40))), 	(int)(65536-(int)(65536/(64))), 	/* 分割角度_R: */
 	};
 
 
@@ -199,7 +178,7 @@ typedef struct
 	{	spell_create_06_luna_clock_32way,			SPELL_TIME_0128},	/* 06 */	/* [咲夜] 紅5面ボス 幻象「ルナクロック(1/2)」にちょっとだけ似た弾幕(予定) */
 	{	spell_create_07_80way_dual_five,			SPELL_TIME_0128},	/* 07 */	/* [咲夜] 紅5面ボス 「通常攻撃3(1/2)」にちょっとだけ似た弾幕(予定) */
 	// 0x08- 中ザコ / ボス共用スペル弾幕
-	{	spell_create_08_rumia_night_bird/*spell_create_08_rumia_night_bird_zako*/,		SPELL_TIME_0128},	/* 08 */	/* [ルーミア] 紅1面ボス 夜符「ナイトバード」にちょっとだけ似た弾幕(予定) */
+	{	spell_create_08_rumia_night_bird,			SPELL_TIME_0128},	/* 08 */	/* [ルーミア] 紅1面ボス 夜符「ナイトバード」にちょっとだけ似た弾幕(予定) */
 	{	spell_create_09_zako_sentakki,				SPELL_TIME_0128},	/* 09 */	/* [雑魚] 洗濯機弾幕(とりあえず弾幕システム作成の実験で作ってみた奴) */
 	{	spell_create_1a_dai_yousei_midori,			SPELL_TIME_0064},	/* 1a */	/* [大妖精] 緑巻き */
 	{	spell_create_1b_dai_yousei_aka, 			SPELL_TIME_0064},	/* 1b */	/* [大妖精] 赤巻き */
@@ -235,8 +214,8 @@ typedef struct
 	{	spell_create_26_aya_saifu,					SPELL_TIME_9999},	/* 26 */	/* [文] 塞符 */
 	{	spell_create_99_mitei,						SPELL_TIME_0128},	/* 27 */	/* -------- */
 	// 0x28- ボス専用スペル弾幕
-	{	spell_create_08_rumia_night_bird/*spell_create_08_rumia_night_bird*/,			SPELL_TIME_0128},	/* 30 */	/* [ルーミア] 紅1面ボス 夜符「ナイトバード」にちょっとだけ似た弾幕(予定) */
-	{	spell_create_29_rumia_demarcation,			SPELL_TIME_0512},	/* 31 */	/* [ルーミア] 紅1面ボス 闇符「ディマーケイション」にちょっとだけ似た弾幕(予定) */
+	{	spell_create_28_remilia_tama_oki,			SPELL_TIME_0256},	/* 30 */	/* [咲夜レミリア] 紅 面ボス  弾幕(予定) */
+	{	spell_create_29_rumia_demarcation,			SPELL_TIME_0512},	/* 31 */	/* [ルーミア] 紅1面ボス 闇符「ディマーケイション」にちょっとだけ似た弾幕(予定) dimmercation / demarcation   境界 */
 	{	spell_create_2a_sakuya_baramaki1,			SPELL_TIME_0640},	/* 26 */	/* [咲夜] 紅5面中-ボス ばら撒き1 弾幕 () */
 	{	spell_create_2b_sakuya_baramaki2,			SPELL_TIME_0640},	/* 26 */	/* [咲夜] 紅5面中-ボス ばら撒き2 弾幕 () */
 	{	spell_create_2c_sakuya_blue_red_knife,		SPELL_TIME_0512},	/* 26 */	/* [咲夜] 紅5面中-ボス 「通常攻撃3」青赤ナイフ */
@@ -269,19 +248,9 @@ typedef struct
 	{	spell_create_99_mitei,						SPELL_TIME_0640},	/* 26 */	/* 未定弾幕 */
 	{	spell_create_99_mitei,						SPELL_TIME_0640},	/* 26 */	/* 未定弾幕 */
 	{	spell_create_99_mitei,						SPELL_TIME_0640},	/* 26 */	/* 未定弾幕 */
-	{	spell_create_99_mitei,						SPELL_TIME_0640},	/* 26 */	/* 未定弾幕 */
-
-
-//	{	spell_create_20_sonota_debug_cw_ao, 		SPELL_TIME_0128},	/* 20 */	/* [その他] デバッグ弾幕CW青 */
-//	{	spell_create_21_sonota_debug_ccw_aka,		SPELL_TIME_0128},	/* 21 */	/* [その他] デバッグ弾幕CCW赤 */
+	{	spell_create_47_sakuya_meek,				SPELL_TIME_0256},	/* 47 */	/* [咲夜] とりあえず強引に変換(仮) */	/* 256 == 0x100 == ( 4 x 64). [ 4秒ぐらい] */
+//
 };
-
-/*
-dimmercation
-Demarcation.
-demarcation   境界
-
-*/
 
 
 /*---------------------------------------------------------
@@ -290,7 +259,7 @@ demarcation   境界
 
 global void spell_set_time_out(SPRITE *src)
 {
-	src->boss_base_spell_time_out = system_spell_resource[(src->boss_base_spell_type/*-1*/)].spell_limit_max_time;
+	src->boss_spell_timer = system_spell_resource[(spell_card.spell_type/*-1*/)].spell_limit_max_time;
 }
 
 
@@ -302,17 +271,19 @@ global void spell_set_time_out(SPRITE *src)
 
 global void spell_generator(SPRITE *src)
 {
-	if (SPELL_00 != src->boss_base_spell_type)		/* スペル弾幕生成は必要？ */
+	if (SPELL_00 != spell_card.spell_type)		/* スペル弾幕生成は必要？ */
 	{
-		src->boss_base_spell_time_out--;			/* 時間経過する */	/*fps_factor*/
-		if (0 < src->boss_base_spell_time_out)		/* 時間切れ？ */
+		src->boss_spell_timer--;				/* 時間経過する */	/*fps_factor*/
+		if (0 < src->boss_spell_timer)			/* 時間切れ？ */
 		{
+			/* 弾源x256 y256 ボス中心から発弾。 */
+			send1_xy(src);
 			/* スペル弾幕生成中 */
-			(system_spell_resource[(src->boss_base_spell_type/*-1*/)].spell_generate_callback)(src);
+			(system_spell_resource[(spell_card.spell_type/*-1*/)].spell_generate_callback)(src);
 		}
 		else
 		{
-			src->boss_base_spell_type = SPELL_00;		/* スペル弾幕生成終了 */
+			spell_card.spell_type = SPELL_00;		/* スペル弾幕生成終了 */
 		}
 	}
 }

@@ -20,21 +20,6 @@
 	バグあり。
 ---------------------------------------------------------*/
 
-
-/*---------------------------------------------------------
-	敵やられ
----------------------------------------------------------*/
-
-//static void lose_meido3(SPRITE *src)
-//{
-//	destoroy[static_last]++;
-//	if ( (N UM_OF_ENEMIES-1) < destoroy[static_last]/*all_destoroy*/)
-//	{
-//		destoroy[static_last] = 0;
-//		item_create(src, SP_ITEM_01_P008, 1, ITEM_MOVE_FLAG_06_RAND_XY);
-//	}
-//}
-
 /*---------------------------------------------------------
 	敵攻撃
 ---------------------------------------------------------*/
@@ -43,15 +28,13 @@ static void shot_meido3(SPRITE *src)
 {
 //	if (0 < teki_rank)
 	{
-		obj_send1->cx256						= (src->cx256);
-		obj_send1->cy256						= (src->cy256);
-		br.BULLET_REGIST_00_speed256			= t256(2.0);
-		br.BULLET_REGIST_02_VECTOR_angle1024	= ANGLE_JIKI_NERAI_DAN;
-		br.BULLET_REGIST_04_bullet_obj_type 	= BULLET_UROKO14_01_AKA;
-		br.BULLET_REGIST_05_regist_type 		= REGIST_TYPE_00_MULTI_VECTOR;
-		br.BULLET_REGIST_06_n_way				= ((cg_game_difficulty)<<1);			/*[n]*/
-		br.BULLET_REGIST_07_VECTOR_div_angle1024		= (int)(1024/24);
-		bullet_regist_vector();
+		br.BULLET_REGIST_00_speed256				= t256(2.0);
+		br.BULLET_REGIST_02_VECTOR_angle1024		= ANGLE_JIKI_NERAI_DAN;
+	//	br.BULLET_REGIST_03_VECTOR_regist_type		= VEC TOR_REGIST_TYPE_00_MULTI_VECTOR;
+		br.BULLET_REGIST_04_bullet_obj_type 		= BULLET_UROKO14_01_AKA;
+		br.BULLET_REGIST_06_n_way					= ((cg_game_difficulty)<<1);			/*[n]*/
+		br.BULLET_REGIST_07_VECTOR_div_angle1024	= (int)(1024/24);
+		bullet_regist_multi_vector_send1_xy_src(src); 	/* 弾源x256 y256 中心から発弾。 */
 	}	/* easy以外は狙い弾を撃つ */
 }
 
@@ -126,7 +109,7 @@ static void move_meido3(SPRITE *src)
 	src->cx256 += ((sin1024((src->tmp_angleCCW1024))*src->speed256)>>8);/*fps_factor*/ /* CCWの場合 */
 	src->cy256 += ((cos1024((src->tmp_angleCCW1024))*src->speed256)>>8);/*fps_factor*/
 	/* アニメーション */
-	zako_anime_type01(src, TEKI_36_YOUSEI3_1);
+	zako_anime_type01(src);
 /*現在仕様上おかしい*/
 }
 

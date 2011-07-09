@@ -5,20 +5,6 @@
 	東方模倣風 ～ Toho Imitation Style.
 	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
----------------------------------------------------------*/
-
-//#include "psp_vfpu.h"
-//#include <malloc.h>
-
-/*---------------------------------------------------------
-	math.h
----------------------------------------------------------*/
-
-/* この関数はCPU内蔵の命令キャッシュに乗るよ(てい。というか乗ってるはず)。 */
-//extern int at an_512( int y, int x );
-
-
-/*
 psp では、 atan2(), sin(), sqrt() 等の超越関数系命令は、
 psp の MIPS CPU 内 のコプロセッサが処理をする。
 コプロセッサ変換処理があちこちにあると、非常にパフォーマンスが悪いので、
@@ -26,7 +12,10 @@ psp の MIPS CPU 内 のコプロセッサが処理をする。
 (CPU内蔵の命令キャッシュに乗るために実行速度が速くなる)
 
 参考:TECH I Vol.39 MIPSプロセッサ入門	http://www.cqpub.co.jp/interface/TechI/Vol39/
-*/
+---------------------------------------------------------*/
+
+//#include "psp_vfpu.h"
+//#include <malloc.h>
 
 /*---------------------------------------------------------
 	将来的にリプレイに対応できるように、
@@ -58,16 +47,18 @@ global void set_rnd_seed(int set_seed)
 	キー入力関連の処理(汎用)
 ---------------------------------------------------------*/
 
-
 global int pad_config[KEY_NUM12_MAX];
 
 extern void save_screen_shot(void);
-/*extern */	u32 cg_my_pad;  		/* 今回入力 */
-/*extern */	u32 cg_my_pad_alter;	/* 前回入力 */
-/*extern */	s16 cg_analog_x;	/* アナログ量、補正済み */
-/*extern */	s16 cg_analog_y;	/* アナログ量、補正済み */
-
-
+	#if 0/* アライメント関係(???) (s16)で GAME_CORE_GLOBAL_CLASSに入れると巧くいかない */
+	/* 意図的に入れないもの */
+global u32 cg_my_pad;			/* 今回入力 */
+global u32 cg_my_pad_alter; 	/* 前回入力 */
+global s16 cg_analog_x; 		/* アナログ量、補正済み */
+global s16 cg_analog_y; 		/* アナログ量、補正済み */
+	#else/*(r34)*/
+global PSP_PAD_GLOBAL_CLASS psp_pad;
+	#endif
 
 static int	use_analog; 	/* アナログ使用フラグ(0:使用しない、1:使用する) */
 
@@ -106,7 +97,7 @@ global void psp_pad_init(void)
 
 global void do_input_vbl(void)
 {
-	cg_my_pad_alter = cg_my_pad;
+	psp_pad.pad_data_alter = psp_pad.pad_data;
 //
 	SceCtrlData pad;
 	#if (0)//(1==USE_VSYNC)
@@ -116,8 +107,8 @@ global void do_input_vbl(void)
 		/* 欠点：vblankをとらない限り、新しくpollingした保証がない。
 			vblankをとらない場合は、何らかの時間待ち制御が必要。
 	 */
-		static Uint32 last_time = 0;/* 最終時間(前回の時間) */
-		Uint32 now_time;/* 現在の時間(今回の時間) */
+		static u32 last_time = 0;/* 最終時間(前回の時間) */
+		u32 now_time;/* 現在の時間(今回の時間) */
 		now_time = pad.TimeStamp;/* 現在の時間(今回の時間)を取得 */
 		/* 時間カウンタがオーバーフローした場合の修正処理 */
 		if (now_time < last_time)	/* 時間カウンタがオーバーフローした場合 */
@@ -173,61 +164,61 @@ global void do_input_vbl(void)
 		u32 pad_data;
 	#else
 		/* キーコンフィグなしの場合、「PSPのデジタル入力」を「ゲーム動作用のデジタル入力」にそのまま使う */
-		#define pad_data cg_my_pad
+		#define pad_data psp_pad.pad_data
 	#endif /* (1==USE_KEY_CONFIG) */
 	pad_data = pad.Buttons;
 	{
-		cg_analog_x = 0;
-		cg_analog_y = 0;
+		psp_pad.analog_absolute_value_x = 0;
+		psp_pad.analog_absolute_value_y = 0;
 		/* 標準アナログキー機能 */
 	//	if (1==use_analog)
 		if (0 != use_analog)
 		{
 			/* PSPのアナログ入力はデジタル入力へ変換、アナログ量は中心を削除し256固定小数点形式へ補正 */
-			if (pad.Lx < 64/*70*/)			{	pad_data |= PSP_CTRL_LEFT;		cg_analog_x = ((64-pad.Lx)<<2); 	}
-			else if (pad.Lx > 192/*185*/)	{	pad_data |= PSP_CTRL_RIGHT; 	cg_analog_x = ((pad.Lx-192)<<2);	}
+			if (pad.Lx < 64/*70*/)			{	pad_data |= PSP_CTRL_LEFT;		psp_pad.analog_absolute_value_x = ((64-pad.Lx)<<2); 	}
+			else if (pad.Lx > 192/*185*/)	{	pad_data |= PSP_CTRL_RIGHT; 	psp_pad.analog_absolute_value_x = ((pad.Lx-192)<<2);	}
 			//
-			if (pad.Ly < 64/*70*/)			{	pad_data |= PSP_CTRL_UP;		cg_analog_y = ((64-pad.Ly)<<2); 	}
-			else if (pad.Ly > 192/*185*/)	{	pad_data |= PSP_CTRL_DOWN;		cg_analog_y = ((pad.Ly-192)<<2);	}
+			if (pad.Ly < 64/*70*/)			{	pad_data |= PSP_CTRL_UP;		psp_pad.analog_absolute_value_y = ((64-pad.Ly)<<2); 	}
+			else if (pad.Ly > 192/*185*/)	{	pad_data |= PSP_CTRL_DOWN;		psp_pad.analog_absolute_value_y = ((pad.Ly-192)<<2);	}
 		}
 	}
 	#if (1==USE_KEY_CONFIG)
 	/* 上下左右のキーコンフィグは現在無効というか設定値を無視。(アナログ入力の都合) */
 	/* キーコンフィグありの場合でも、上下左右は(アナログ入力の)都合によりPSPのデジタル入力をそのまま使う */
-//	cg_my_pad = 0;
-//	cg_my_pad |= (pad_data & (PSP_CTRL_UP|PSP_CTRL_RIGHT|PSP_KEY_DOWN|PSP_CTRL_LEFT));
-	cg_my_pad	= (pad_data & (PSP_CTRL_UP|PSP_CTRL_RIGHT|PSP_KEY_DOWN|PSP_CTRL_LEFT));/* 上下左右は都合によりキーコンフィグなし */
+//	psp_pad.pad_data = 0;
+//	psp_pad.pad_data |= (pad_data & (PSP_CTRL_UP|PSP_CTRL_RIGHT|PSP_KEY_DOWN|PSP_CTRL_LEFT));
+	psp_pad.pad_data	= (pad_data & (PSP_CTRL_UP|PSP_CTRL_RIGHT|PSP_KEY_DOWN|PSP_CTRL_LEFT));/* 上下左右は都合によりキーコンフィグなし */
 	/* PSPのデジタル入力からキーコンフィグを考慮して入力値を決める */
-	if (pad_data & PSP_CTRL_SELECT) 	{	cg_my_pad |= pad_config[KEY_NUM00_SELECT];  	}	//	if (keyboard[KINOU_01_SELECT])		{my_pad |= (PSP_KEY_SELECT);}
-	if (pad_data & PSP_CTRL_START)		{	cg_my_pad |= pad_config[KEY_NUM01_START];		}	//	if (keyboard[KINOU_02_PAUSE])		{my_pad |= (PSP_KEY_PAUSE);}
+	if (pad_data & PSP_CTRL_SELECT) 	{	psp_pad.pad_data |= pad_config[KEY_NUM00_SELECT];		}	//	if (keyboard[KINOU_01_SELECT])		{my_pad |= (PSP_KEY_SELECT);}
+	if (pad_data & PSP_CTRL_START)		{	psp_pad.pad_data |= pad_config[KEY_NUM01_START];		}	//	if (keyboard[KINOU_02_PAUSE])		{my_pad |= (PSP_KEY_PAUSE);}
 //
-	if (pad_data & PSP_CTRL_LTRIGGER)	{	cg_my_pad |= pad_config[KEY_NUM06_L_TRIG];  	}	//	if (keyboard[KINOU_07_SNAP_SHOT])	{my_pad |= (PSP_KEY_SNAP_SHOT);}
-	if (pad_data & PSP_CTRL_RTRIGGER)	{	cg_my_pad |= pad_config[KEY_NUM07_R_TRIG];  	}	//	if (keyboard[KINOU_08_SYSTEM])		{my_pad |= (PSP_KEY_SYSTEM);}
-	if (pad_data & PSP_CTRL_TRIANGLE)	{	cg_my_pad |= pad_config[KEY_NUM08_TRIANGLE];	}	//	if (keyboard[KINOU_09_SLOW])		{my_pad |= (PSP_KEY_SLOW);}
-	if (pad_data & PSP_CTRL_CIRCLE) 	{	cg_my_pad |= pad_config[KEY_NUM09_CIRCLE];  	}	//	if (keyboard[KINOU_10_OPTION])		{my_pad |= (PSP_KEY_OPTION);}
-	if (pad_data & PSP_CTRL_CROSS)		{	cg_my_pad |= pad_config[KEY_NUM10_CROSS];		}	//	if (keyboard[KINOU_11_SHOT])		{my_pad |= (PSP_KEY_SHOT_OK);}
-	if (pad_data & PSP_CTRL_SQUARE) 	{	cg_my_pad |= pad_config[KEY_NUM11_SQUARE];  	}	//	if (keyboard[KINOU_12_BOMB])		{my_pad |= (PSP_KEY_BOMB_CANCEL);}
+	if (pad_data & PSP_CTRL_LTRIGGER)	{	psp_pad.pad_data |= pad_config[KEY_NUM06_L_TRIG];		}	//	if (keyboard[KINOU_07_SNAP_SHOT])	{my_pad |= (PSP_KEY_SNAP_SHOT);}
+	if (pad_data & PSP_CTRL_RTRIGGER)	{	psp_pad.pad_data |= pad_config[KEY_NUM07_R_TRIG];		}	//	if (keyboard[KINOU_08_SYSTEM])		{my_pad |= (PSP_KEY_SYSTEM);}
+	if (pad_data & PSP_CTRL_TRIANGLE)	{	psp_pad.pad_data |= pad_config[KEY_NUM08_TRIANGLE]; }	//	if (keyboard[KINOU_09_SLOW])		{my_pad |= (PSP_KEY_SLOW);}
+	if (pad_data & PSP_CTRL_CIRCLE) 	{	psp_pad.pad_data |= pad_config[KEY_NUM09_CIRCLE];		}	//	if (keyboard[KINOU_10_OPTION])		{my_pad |= (PSP_KEY_OPTION);}
+	if (pad_data & PSP_CTRL_CROSS)		{	psp_pad.pad_data |= pad_config[KEY_NUM10_CROSS];		}	//	if (keyboard[KINOU_11_SHOT])		{my_pad |= (PSP_KEY_SHOT_OK);}
+	if (pad_data & PSP_CTRL_SQUARE) 	{	psp_pad.pad_data |= pad_config[KEY_NUM11_SQUARE];		}	//	if (keyboard[KINOU_12_BOMB])		{my_pad |= (PSP_KEY_BOMB_CANCEL);}
 	#endif /* (1==USE_KEY_CONFIG) */
 	/* スクリーンショット機能。 */
 	// keypollに入れると何故かうまくいかなかったのでこっちに場所を変更。
-	if (/*keyboard[KINOU_07_SNAP_SHOT]*/cg_my_pad & PSP_KEY_SNAP_SHOT) 	{	save_screen_shot(); }
+	if (/*keyboard[KINOU_07_SNAP_SHOT]*/psp_pad.pad_data & PSP_KEY_SNAP_SHOT)	{	save_screen_shot(); }
 
 	/* アナログサポート機能 */
 //	if (1==use_analog)
 	{
 		/* デジタルよりアナログ優先 */
-		if (0 == (cg_analog_x+cg_analog_y) )
+		if (0 == (psp_pad.analog_absolute_value_x+psp_pad.analog_absolute_value_y) )
 		/*アナログ押してないと思われる場合(アナログ押してる場合はアナログ量をそのまま使う)*/
 		{
 			/* デジタルよりアナログ量を算出 */
 			#if (0)
-				 if (pad_data & PSP_CTRL_UP)				{	cg_analog_y 	= 256;	}
-			else if (pad_data & PSP_CTRL_DOWN)				{	cg_analog_y 	= 256;	}
-				 if (pad_data & PSP_CTRL_RIGHT) 			{	cg_analog_x 	= 256;	}
-			else if (pad_data & PSP_CTRL_LEFT)				{	cg_analog_x 	= 256;	}
+				 if (pad_data & PSP_CTRL_UP)				{	psp_pad.analog_absolute_value_y 	= 256;	}
+			else if (pad_data & PSP_CTRL_DOWN)				{	psp_pad.analog_absolute_value_y 	= 256;	}
+				 if (pad_data & PSP_CTRL_RIGHT) 			{	psp_pad.analog_absolute_value_x 	= 256;	}
+			else if (pad_data & PSP_CTRL_LEFT)				{	psp_pad.analog_absolute_value_x 	= 256;	}
 			#else
-			if (pad_data & (PSP_CTRL_UP|PSP_CTRL_DOWN)) 	{	cg_analog_y 	= 256;	}	/* 上下のアナログ量 */
-			if (pad_data & (PSP_CTRL_RIGHT|PSP_CTRL_LEFT))	{	cg_analog_x 	= 256;	}	/* 左右のアナログ量 */
+			if (pad_data & (PSP_CTRL_UP|PSP_CTRL_DOWN)) 	{	psp_pad.analog_absolute_value_y 	= 256;	}	/* 上下のアナログ量 */
+			if (pad_data & (PSP_CTRL_RIGHT|PSP_CTRL_LEFT))	{	psp_pad.analog_absolute_value_x 	= 256;	}	/* 左右のアナログ量 */
 			#endif
 		}
 	}
@@ -279,7 +270,7 @@ global void do_input_vbl(void)
 ---------------------------------------------------------*/
 global void error(int errorlevel, char *msg, ...)
 {
-	char msgbuf[128];
+	char msgbuf[128];	/* 128==4*32 (pspの構造上32の倍数で指定) */
 	va_list argptr;
 
 	va_start(argptr, msg);
@@ -298,7 +289,7 @@ global void error(int errorlevel, char *msg, ...)
 		pspDebugScreenPrintf("WARNING");
 		hit_any_key();
 		{
-		char msgbuf2[32/*128*/];
+		char msgbuf2[32/*128*/];	/* 128==4*32 (pspの構造上32の倍数で指定) */
 			int j;
 			for (j=0;j<5;j++)
 			{
@@ -368,7 +359,7 @@ typedef struct _imglist
 	SDL_Surface *img;			/* 読み込んだサーフェイスを保持 */
 	struct _imglist *next;		/* 次の画像へのリストポインタ */
 	int refcount;				/* 同じ画像の参照数 */
-	char name[128/*256*/];		/* 名前 */
+	char name[128]; 			/* 名前 */	/* 128==4*32 (pspの構造上32の倍数で指定) */ 	/*256*/
 } MY_IMAGE_LIST;
 
 /* 画像キャッシュのリスト */
@@ -467,9 +458,9 @@ static void imglist_garbagecollect(void)
 
 ---------------------------------------------------------*/
 
-global SDL_Surface *load_chache_bmp(char *set_filename)//, int use_alpha, int use_chache)
+global SDL_Surface *load_chache_bmp(char *set_filename)
 {
-	char file_name[128/*64 50*/];
+	char file_name[128];	/* 128==4*32 (pspの構造上32の倍数で指定) */ 	/*64 50*/
 	strcpy(file_name, DIRECTRY_NAME_DATA_STR "/");
 	strcat(file_name, set_filename);
 //
@@ -552,9 +543,9 @@ global void unloadbmp_by_surface(SDL_Surface *img_surface)
 /*---------------------------------------------------------
 	ファイル名で指定
 ---------------------------------------------------------*/
-global void load_SDL_bg_file_name(char *file_name)//, int alpha
+global void load_SDL_bg_file_name(char *file_name)
 {
-	SDL_Surface *loadpic	= load_chache_bmp( file_name );//, 0, 0/*1*/);
+	SDL_Surface *loadpic	= load_chache_bmp( file_name );
 //	psp_clear_screen();
 //	SDL_SetAlpha(loadpic, SDL_SRCALPHA, 255);
 //	SDL_BlitSurface(loadpic, NULL, sdl_screen[SDL_00_VIEW_SCREEN], NULL);
@@ -575,7 +566,7 @@ global void load_SDL_bg(int bg_type_number)
 //		"bg/loading.png",
 	};
 	#if 1
-	char file_name[128/*64 50*/];
+	char file_name[128];	/* 128==4*32 (pspの構造上32の倍数で指定) */ 	/*64 50*/
 	strcpy(file_name, (char *)const_aaa_str[bg_type_number]);
 	load_SDL_bg_file_name(file_name);
 	#else

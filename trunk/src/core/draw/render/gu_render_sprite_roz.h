@@ -87,8 +87,8 @@ static void render_object_use_rot_zoom(SPRITE *spr)
 	/* 回転するので x,y 座標は、「画面の座標ではなく」、「obj中心を原点o(0,0)とした、相対座標」で計算しておく。 */
 //	unsigned int/*short*/ x_pos = ((spr->cx256>>8));
 //	unsigned int/*short*/ y_pos = ((spr->cy256>>8));
-//(r32)	unsigned int/*short*/ x_pos = ((spr->cx256>>8)-(spr->w >> 1));/* 中心座標から画像サイズの半分を引き、左上座標を計算 */
-//(r32)	unsigned int/*short*/ y_pos = ((spr->cy256>>8)-(spr->h >> 1));/* 中心座標から画像サイズの半分を引き、左上座標を計算 */
+//(r32) unsigned int/*short*/ x_pos = ((spr->cx256>>8)-(spr->w >> 1));/* 中心座標から画像サイズの半分を引き、左上座標を計算 */
+//(r32) unsigned int/*short*/ y_pos = ((spr->cy256>>8)-(spr->h >> 1));/* 中心座標から画像サイズの半分を引き、左上座標を計算 */
 	unsigned int/*short*/ x_pos = ( -(spr->w >> 1));/* 中心座標から画像サイズの半分を引き、左上座標を計算 */
 	unsigned int/*short*/ y_pos = ( -(spr->h >> 1));/* 中心座標から画像サイズの半分を引き、左上座標を計算 */
 	i = 0;
@@ -140,10 +140,10 @@ static void render_object_use_rot_zoom(SPRITE *spr)
 		/* --- 回転拡大処理 */
 		int center_x;
 		int center_y;
-//		center_x = ((spr->cx256>>8)		) + (spr->w >> 1);/*/2*/
-//		center_y = ((spr->cy256>>8)		) + (spr->h >> 1);/*/2*/
-		center_x = ((spr->cx256>>8)		) ;/*/2*/
-		center_y = ((spr->cy256>>8)		) ;/*/2*/
+//		center_x = ((spr->cx256>>8) 	) + (spr->w >> 1);/*/2*/
+//		center_y = ((spr->cy256>>8) 	) + (spr->h >> 1);/*/2*/
+		center_x = ((spr->cx256>>8) 	) ;/*/2*/
+		center_y = ((spr->cy256>>8) 	) ;/*/2*/
 		int zoom_x256;
 		int zoom_y256;
 	//	zoom_x256 = (spr->m_zoom_x256) * ((65536/256)); /* 拡大率は0-256倍なので0-65536倍へ変換。 */
@@ -159,8 +159,8 @@ static void render_object_use_rot_zoom(SPRITE *spr)
 			int iry;
 			ifx = vertices[(i)+j].x;
 			ify = vertices[(i)+j].y;
-//(r33)			ifx -= center_x;
-//(r33)			ify -= center_y;
+//(r33) 		ifx -= center_x;
+//(r33) 		ify -= center_y;
 //1859267 -> 1859251
 //			rx = ((fx * sprite_cos[rot]) - (fy * sprite_sin[rot])) * spr->zoomx;
 //			ry = ((fx * sprite_sin[rot]) + (fy * sprite_cos[rot])) * spr->zoomy;

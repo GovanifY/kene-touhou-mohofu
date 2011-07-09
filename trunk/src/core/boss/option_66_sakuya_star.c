@@ -17,14 +17,18 @@
 ---------------------------------------------------------*/
 #if 0/*メモ*/
 /* ボス共通規格 */
-	#define target_x256 		user_data00 	/* 目標x座標 */
-	#define target_y256 		user_data01 	/* 目標y座標 */
-	#define vvv256				user_data02 	/* 目標座標への到達割合 */
-	#define boss_time_out		user_data03 	/* 制限時間 */
+	#define target_x256 			user_data00 	/* 目標x座標 */
+	#define target_y256 			user_data01 	/* 目標y座標 */
+	#define toutatu_wariai256		user_data02 	/* 目標座標への到達割合 */
+	#define kougeki_anime_count 	user_data03 	/* 攻撃アニメーション用カウンタ */
+	#define boss_time_out			user_data04 	/* 制限時間 */
+	#define boss_base_state777		user_data04 	/* 制限時間(boss_time_outと同じ) */
+//
+	#define boss_spell_timer		user_data05 	/* スペル時間 */
 #endif
 //	ボス共通規格と同じ(boss.hインクルードしてもしなくても対応)
 #ifndef boss_time_out
-	#define boss_time_out		user_data03 	/* 制限時間 */
+	#define boss_time_out		user_data04 	/* 制限時間 */
 #endif
 //
 #define my_angle1024		tmp_angleCCW1024	/* 保持角度[星型を描く場合に使う角度] */
@@ -102,7 +106,7 @@ static void bullet_crate_sakuya_hosi_gata(SPRITE *src)
 ---------------------------------------------------------*/
 
 static SPRITE hosi_position_obj;/* 星型描いてる座標位置を保持。 */
-static void move_doll02(SPRITE *src)
+static void move_sakuya_doll_03_star(SPRITE *src)
 {
 	check_boss_option_time_out(src);	/* 時間経過で終了。ボスを倒すと皆破壊される。 */
 //
@@ -151,7 +155,7 @@ cdef ffff 7777	3+4
 	敵を追加する
 ---------------------------------------------------------*/
 
-/*static*/ void add_zako_sakuya_doll_02_star(SPRITE *src)
+/*static*/ void add_zako_sakuya_doll_03_star(SPRITE *src)
 {
 	SPRITE *h;
 	h								= obj_add_01_teki_error();
@@ -165,7 +169,7 @@ cdef ffff 7777	3+4
 	//	h->color32					= MAKE32RGBA(0xff, 0xff, 0xff, 0x00);
 	//	h->color32					= MAKE32RGBA(0x88, 0x33, 0xff, 0x80); /* 紅っぽく */
 		h->color32					= MAKE32RGBA(0xff, 0x33, 0x66, 0x80); /* 紅っぽく */
-		h->callback_mover			= move_doll02;
+		h->callback_mover			= move_sakuya_doll_03_star;
 	//
 		/* 子供魔方陣、配置位置 */
 		#if 1

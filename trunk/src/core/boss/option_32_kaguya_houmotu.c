@@ -10,23 +10,18 @@
 ---------------------------------------------------------*/
 #if 0/*メモ*/
 /* ボス共通規格 */
-	#define target_x256 		user_data00 	/* 目標x座標 */
-	#define target_y256 		user_data01 	/* 目標y座標 */
-	#define vvv256				user_data02 	/* 目標座標への到達割合 */
-	#define boss_time_out		user_data03 	/* 制限時間 */
+	#define target_x256 			user_data00 	/* 目標x座標 */
+	#define target_y256 			user_data01 	/* 目標y座標 */
+	#define toutatu_wariai256		user_data02 	/* 目標座標への到達割合 */
+	#define kougeki_anime_count 	user_data03 	/* 攻撃アニメーション用カウンタ */
+	#define boss_time_out			user_data04 	/* 制限時間 */
+	#define boss_base_state777		user_data04 	/* 制限時間(boss_time_outと同じ) */
+//
+	#define boss_spell_timer		user_data05 	/* スペル時間 */
 #endif
 
-#define rotate_angle1024	user_data04 	/* ボスを中心として、回転角度。(下CCW1024形式) */
-//#define shot_angle1024	user_data05 	/* */
-
-/*---------------------------------------------------------
-	敵やられ
----------------------------------------------------------*/
-
-static void lose_kaguya_doll(SPRITE *src)
-{
-	item_create_for_boss(src, ITEM_CREATE_MODE_02);
-}
+#define rotate_angle1024	user_data06 	/* ボスを中心として、回転角度。(下CCW1024形式) */
+//#define shot_angle1024	user_data07 	/* */
 
 
 /*---------------------------------------------------------
@@ -75,7 +70,7 @@ void add_zako_kaguya_houmotsu(SPRITE *src)
 			h->flags				= (SP_FLAG_COLISION_CHECK/*|SP_FLAG_VISIBLE*/);
 	//
 			h->callback_mover		= move_kaguya_doll;
-			h->callback_loser		= lose_kaguya_doll;
+			h->callback_loser		= lose_option_00;
 			h->callback_hit_teki	= callback_hit_zako;
 	//
 			h->target_x256			= (src->cx256);

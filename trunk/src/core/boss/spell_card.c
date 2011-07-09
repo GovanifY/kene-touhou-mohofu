@@ -1,6 +1,7 @@
 
 #include "boss.h"
 
+
 /*---------------------------------------------------------
 	東方模倣風 ～ Toho Imitation Style.
 	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
@@ -70,7 +71,8 @@ extern void boss_init_aya(SPRITE *src);
 
 // 輝夜 3面
 extern void add_zako_kaguya_houmotsu(SPRITE *src);
-extern void add_zako_kaguya_dolls(SPRITE *src);
+extern void add_zako_kaguya_dolls02(SPRITE *src);
+extern void add_zako_kaguya_dolls01(SPRITE *src);
 //tern void kaguya_06_keitai(SPRITE *src);
 //tern void kaguya_05_keitai(SPRITE *src);
 extern void kaguya_04_keitai(SPRITE *src);
@@ -107,14 +109,18 @@ global void init_00_boss_clip111(SPRITE *h);/* 上に広いタイプ */
 
 //------------ スペルカード関連
 #include "spell_card_value.h"
+//
+// int spell_card.limit_health; 	/* 規定値以下になればスペルカードモード解除 */
+// int spell_card.boss_state;		/* 負値になればボススペルカードモードに入らない */
+// int spell_card.mode; 			/* スペルカードモード */
+// int spell_card.boss_timer;		/* 共用 */	// 制限時間
 
-global int spell_card_limit_health; 	/* 規定値以下になればスペルカードモード解除 */
-global int spell_card_boss_state;		/* 負値になればボススペルカードモードに入らない */
-global int spell_card_mode; 			/* スペルカードモード */
-global int spell_card_boss_timer;		/* 共用 */	// 制限時間
+// int spell_card.number;			/* 共用 */	// スペルカード番号
 
-global int spell_card_number;			/* 共用 */	// スペルカード番号
+global SPELL_CARD_GLOBAL_CLASS spell_card;
 /*global*/ static int spell_card_syoji_maisuu;				/* 共用 */	// スペルカード番号最大限界値
+
+
 
 typedef struct
 {
@@ -125,7 +131,9 @@ typedef struct
 	int spell_type; 							/* スペルカードに登録された弾幕 */
 //
 	void (*spell_init_callback)(SPRITE *sss);	/* 初期化移動処理 */
-	void (*spell_move_callback)(SPRITE *sss);	/* スペルカード移動処理 */
+	void (*spell_move02_callback)(SPRITE *sss);	/* スペルカード移動処理 */
+//	void (*spell_yuudou_callback)(SPRITE *sss);	/* スペルカード誘導移動処理 */
+//	void (*spell_tama_callback)(SPRITE *sss);	/* スペルカード弾画面外処理(弾消し / 弾反射 / ...) */
 } SPELL_CARD_RESOURCE;
 
 	/* 名前はテキトーです */
@@ -217,10 +225,15 @@ static SPELL_CARD_RESOURCE my_spell_card_resource[SPELL_CARD_MAX] =
 	{	s_hp(32),	s_time(20), 	NULL,									SPELL_2a_sakuya_baramaki1,			NULL,						sakuya_04_keitai,			},	/* "第四形態: 魔方陣生成"	*/
 	{	s_hp(32),	s_time(20), 	NULL,									SPELL_2a_sakuya_baramaki1,			NULL,						sakuya_04_keitai,			},	/* "第四形態: 魔方陣生成"	*/
 //	7.5 	// meek==素直。
-	{	s_hp(16),	s_time(20), 	"　　幻定「デンジャラスミーク」" "\n",	SPELL_00,							NULL,						sakuya_06_keitai,			},	/* "第五形態: (黄色マスカット弾)"					*/
-	{	s_hp(24),	s_time(20), 	"　幻種「デンジャラスワールド」" "\n",	SPELL_00,							NULL,						sakuya_06_keitai,			},	/* "第五形態: (黄色マスカット弾)"					*/
-	{	s_hp(24),	s_time(20), 	"　　幻象「デンジャラスタイム」" "\n",	SPELL_00,							NULL,						sakuya_06_keitai,			},	/* "第五形態: (黄色マスカット弾)"					*/
-	{	s_hp(24),	s_time(20), 	"　幻舞「デンジャラスストーム」" "\n",	SPELL_00,							NULL,						sakuya_06_keitai,			},	/* "第五形態: (黄色マスカット弾)"					*/
+	{	s_hp(8),	s_time(20), 	"　　　　奇術「咲夜テストE005」" "\n",	SPELL_28_remilia_tamaoki1,			NULL,						boss_move_02_xy_hidouki,	},	/* sakuya_06_keitai"第五形態: (黄色マスカット弾A)"	"　　幻定「デンジャラスミーク」"	*/
+	{	s_hp(12),	s_time(20), 	"　　　　奇術「咲夜テストN005」" "\n",	SPELL_28_remilia_tamaoki1,			NULL,						boss_move_02_xy_hidouki,	},	/* sakuya_06_keitai"第五形態: (黄色マスカット弾A)"	"　幻種「デンジャラスワールド」"	*/
+	{	s_hp(12),	s_time(20), 	"　　　　奇術「咲夜テストH005」" "\n",	SPELL_28_remilia_tamaoki1,			NULL,						boss_move_02_xy_hidouki,	},	/* sakuya_06_keitai"第五形態: (黄色マスカット弾A)"	"　　幻象「デンジャラスタイム」"	*/
+	{	s_hp(12),	s_time(20), 	"　　　　奇術「咲夜テストL005」" "\n",	SPELL_28_remilia_tamaoki1,			NULL,						boss_move_02_xy_hidouki,	},	/* sakuya_06_keitai"第五形態: (黄色マスカット弾A)"	"　幻舞「デンジャラスストーム」"	*/
+	//
+	{	s_hp(8),	s_time(20), 	"　　　　奇術「咲夜テストE006」" "\n",	SPELL_28_remilia_tamaoki1,			NULL,						boss_move_02_xy_hidouki,	},	/* sakuya_06_keitai"第六形態: (黄色マスカット弾B)"					*/
+	{	s_hp(12),	s_time(20), 	"　　　　奇術「咲夜テストN006」" "\n",	SPELL_28_remilia_tamaoki1,			NULL,						boss_move_02_xy_hidouki,	},	/* sakuya_06_keitai"第六形態: (黄色マスカット弾B)"					*/
+	{	s_hp(12),	s_time(20), 	"　　　　奇術「咲夜テストH006」" "\n",	SPELL_28_remilia_tamaoki1,			NULL,						boss_move_02_xy_hidouki,	},	/* sakuya_06_keitai"第六形態: (黄色マスカット弾B)"					*/
+	{	s_hp(12),	s_time(20), 	"　　　　奇術「咲夜テストL006」" "\n",	SPELL_28_remilia_tamaoki1,			NULL,						boss_move_02_xy_hidouki,	},	/* sakuya_06_keitai"第六形態: (黄色マスカット弾B)"					*/
 //	6.5 	// ジャック・ザ・リッパー==Jack the Ripper==切り裂きジャック(殺人鬼)19世紀(1888年)に実在(?)/抽象名詞化。ワールドヒーローズ。 リック==スプラッターハウス
 	{	s_hp(16),	s_time(20), 	"　奇抜「ジャック・ガーリック」" "\n",	SPELL_0c_sakuya_jack32, 			NULL,						boss_move_02_xy_hidouki,	},	/* "第七形態: (分散魔方陣)追加計画中"				*/
 	{	s_hp(24),	s_time(20), 	"奇術「ジャック・ザ・ラッパー」" "\n",	SPELL_0c_sakuya_jack32, 			NULL,						boss_move_02_xy_hidouki,	},	/* "第七形態: (分散魔方陣)追加計画中"				*/
@@ -246,10 +259,10 @@ static SPELL_CARD_RESOURCE my_spell_card_resource[SPELL_CARD_MAX] =
 	{	s_hp(24),	s_time(20), 	NULL,									SPELL_0e_remilia_00,				NULL,						sakuya_10_keitai,			},	/* "第10形態: 最終形態(その2)"	*/
 	{	s_hp(24),	s_time(20), 	NULL,									SPELL_0e_remilia_00,				NULL,						sakuya_10_keitai,			},	/* "第10形態: 最終形態(その2)"	*/
 //	0.5
-	{	 s_hp(8),	s_time(20), 	"　　メイド秘密「残虐行為手当」" "\n",	SPELL_00,							NULL,						sakuya_11_keitai,			},	/* "第11形態: 最終形態(その3)"					*/	// (easy)実はここにはこない
-	{	 s_hp(8),	s_time(20), 	"　　メイド秘技「鯱！鯱！鯱！」" "\n",	SPELL_00,							NULL,						sakuya_11_keitai,			},	/* "第11形態: 最終形態(その3)"					*/
-	{	 s_hp(8),	s_time(20), 	"　メイド秘宝「あつくて死ぬぜ」" "\n",	SPELL_00,							NULL,						sakuya_11_keitai,			},	/* "第11形態: 最終形態(その3)"					*/
-	{	 s_hp(8),	s_time(20), 	"　　メイド日々「もうすぐボス」" "\n",	SPELL_00,							NULL,						sakuya_11_keitai,			},	/* "第11形態: 最終形態(その3)"					*/
+	{	 s_hp(8),	s_time(20), 	"　　メイド秘密「残虐行為手当」" "\n",	SPELL_47_sakuya_meek,				NULL,						sakuya_11_keitai,			},	/* "第11形態: 最終形態(その3)"					*/	// (easy)実はここにはこない
+	{	 s_hp(8),	s_time(20), 	"　　メイド秘技「鯱！鯱！鯱！」" "\n",	SPELL_47_sakuya_meek,				NULL,						sakuya_11_keitai,			},	/* "第11形態: 最終形態(その3)"					*/
+	{	 s_hp(8),	s_time(20), 	"　メイド秘宝「あつくて死ぬぜ」" "\n",	SPELL_47_sakuya_meek,				NULL,						sakuya_11_keitai,			},	/* "第11形態: 最終形態(その3)"					*/
+	{	 s_hp(8),	s_time(20), 	"　　メイド日々「もうすぐボス」" "\n",	SPELL_47_sakuya_meek,				NULL,						sakuya_11_keitai,			},	/* "第11形態: 最終形態(その3)"					*/
 //	0.25
 
 	// パチェeasyは短い上に1段階少ない。
@@ -275,10 +288,10 @@ static SPELL_CARD_RESOURCE my_spell_card_resource[SPELL_CARD_MAX] =
 	{	s_hp(16),	s_time(30), 	NULL,/* "通常攻撃2" "\n"*/				SPELL_43_PACHE_LASER2,				add_laser_on,				boss_move_02_xy_hidouki,	},
 	{	s_hp(16),	s_time(30), 	NULL,/* "通常攻撃2" "\n"*/				SPELL_43_PACHE_LASER2,				add_laser_on,				boss_move_02_xy_hidouki,	},
 //	2.0
-	{	s_hp(10),	s_time(30), 	"　　土符「レイジィトリリトン」" "\n",	SPELL_31_pache_rage_tririton_1, 	add_laser_off,				pache_01_keitai,			},
-	{	s_hp(16),	s_time(30), 	"土符「レイジィトリリトン上級」" "\n",	SPELL_35_pache_rage_tririton_2, 	add_laser_off,				pache_01_keitai,			},
-	{	s_hp(16),	s_time(30), 	"　　土符「トリリトンシェイク」" "\n",	SPELL_39_pache_tririton_shake,		add_laser_off,				pache_01_keitai,			},
-	{	s_hp(16),	s_time(30), 	"　　土符「トリリトンシェイク」" "\n",	SPELL_39_pache_tririton_shake,		add_laser_off,				pache_01_keitai,			},
+	{	s_hp(10),	s_time(30), 	"　　土符「レイジィトリリトン」" "\n",	SPELL_31_pache_rage_tririton_1, 	add_laser_off,				/*boss_move_01_not_move*/pache_01_keitai/*pache_01_keitai*/,			},/*(テスト)*/
+	{	s_hp(16),	s_time(30), 	"土符「レイジィトリリトン上級」" "\n",	SPELL_35_pache_rage_tririton_2, 	add_laser_off,				/*boss_move_01_not_move*/pache_01_keitai/*pache_01_keitai*/,			},/*(テスト)*/
+	{	s_hp(16),	s_time(30), 	"　　土符「トリリトンシェイク」" "\n",	SPELL_39_pache_tririton_shake,		add_laser_off,				/*boss_move_01_not_move*/pache_01_keitai/*pache_01_keitai*/,			},/*(テスト)*/
+	{	s_hp(16),	s_time(30), 	"　　土符「トリリトンシェイク」" "\n",	SPELL_39_pache_tririton_shake,		add_laser_off,				/*boss_move_01_not_move*/pache_01_keitai/*pache_01_keitai*/,			},/*(テスト)*/
 //	1.0
 	{	s_hp(10),	s_time(30), 	"火＆土符「ラーヴァクロムレク」" "\n",	SPELL_3b_pache_lava_cromlech,		add_zako_pache_dolls,		pache_04_keitai,			},
 	{	s_hp(16),	s_time(30), 	"火＆土符「ラーヴァクロムレク」" "\n",	SPELL_3b_pache_lava_cromlech,		add_zako_pache_dolls,		pache_04_keitai,			},
@@ -431,9 +444,9 @@ static SPELL_CARD_RESOURCE my_spell_card_resource[SPELL_CARD_MAX] =
 //	{	s_hp(16),	s_time(99), 	" 　氷符「パチュリー未作成H07」" "\n",	SPELL_00,							NULL,						pache_04_keitai,			},
 //	{	s_hp(16),	s_time(99), 	" 　氷符「パチュリー未作成L07」" "\n",	SPELL_00,							NULL,						pache_04_keitai,			},
 
-//	src->boss_base_spell_type	= SPELL_15_aya_misogi;		/* 弾幕をセット */
-//	src->boss_base_spell_type	= SPELL_25_houka_kenran;		/* 弾幕をセット */	/*aya_02_keitai*/
-//	src->boss_base_spell_type	= SPELL_23_aya_merin_test;	/* 弾幕をセット */	/*aya_01_keitai*/
+//	spell_card.spell_type	= SPELL_15_aya_misogi;		/* 弾幕をセット */
+//	spell_card.spell_type	= SPELL_25_houka_kenran;		/* 弾幕をセット */	/*aya_02_keitai*/
+//	spell_card.spell_type	= SPELL_23_aya_merin_test;	/* 弾幕をセット */	/*aya_01_keitai*/
 
 // 文 4面							"eeddccbbaa99887766554433221100",'\n\0' ワーク文字列バッファ長をこれだけしか用意しない予定なので、あふれたら字が出ない。 */
 	//																											/*ボス登場前の初期化[会話の前]*/
@@ -487,8 +500,8 @@ static SPELL_CARD_RESOURCE my_spell_card_resource[SPELL_CARD_MAX] =
 //	{	s_hp(64),	s_time(99), 	"　　　岐符「未作成スペカH007」" "\n",	SPELL_00,							NULL,						aya_05_keitai,				},/*(5)*/
 //	{	s_hp(64),	s_time(99), 	"　　　岐符「未作成スペカL007」" "\n",	SPELL_00,							NULL,						aya_05_keitai,				},/*(5)*/
 
-//	src->boss_base_spell_type	= SPELL_1e_kaguya01;		/* 弾幕をセット */	ボス行動、第 1形態
-//	src->boss_base_spell_type	= SPELL_1f_kaguya04;		/* 弾幕をセット */	ボス行動、第 4形態
+//	spell_card.spell_type	= SPELL_1e_kaguya01;		/* 弾幕をセット */	ボス行動、第 1形態
+//	spell_card.spell_type	= SPELL_1f_kaguya04;		/* 弾幕をセット */	ボス行動、第 4形態
 	// 3面ボス、easyはそこそこ簡単に。他はそれなりに。
 // 輝夜 3面 						"eeddccbbaa99887766554433221100",'\n\0' ワーク文字列バッファ長をこれだけしか用意しない予定なので、あふれたら字が出ない。 */
 	{s_hp(32*2.5),	s_time(500),	NULL,/* "形態変更" "\n"*/				SPELL_00,							init_00_boss_clip000,		common_00_keitai,			},/* 28672==8192*3.5 */
@@ -511,25 +524,25 @@ static SPELL_CARD_RESOURCE my_spell_card_resource[SPELL_CARD_MAX] =
 	{	s_hp(16),	s_time(40), 	" 　　　　　　難題「未作成H02」" "\n",	SPELL_1e_kaguya01,					add_zako_kaguya_houmotsu,	kaguya_01_keitai,			},// 2.仏の御石の鉢
 	{	s_hp(16),	s_time(40), 	" 　　　　　　難題「未作成L02」" "\n",	SPELL_1e_kaguya01,					add_zako_kaguya_houmotsu,	kaguya_01_keitai,			},// 2.仏の御石の鉢
 	// 2.0
-	{	s_hp(10),	s_time(40), 	" 　　　　　　難題「未作成E03」" "\n",	SPELL_1f_kaguya04,					add_zako_kaguya_dolls,		kaguya_04_keitai,			},// 3.火鼠の皮衣
-	{	s_hp(16),	s_time(40), 	" 　　　　　　難題「未作成N03」" "\n",	SPELL_1f_kaguya04,					add_zako_kaguya_dolls,		kaguya_04_keitai,			},// 3.火鼠の皮衣
-	{	s_hp(16),	s_time(40), 	" 　　　　　　難題「未作成H03」" "\n",	SPELL_1f_kaguya04,					add_zako_kaguya_dolls,		kaguya_04_keitai,			},// 3.火鼠の皮衣
-	{	s_hp(16),	s_time(40), 	" 　　　　　　難題「未作成L03」" "\n",	SPELL_1f_kaguya04,					add_zako_kaguya_dolls,		kaguya_04_keitai,			},// 3.火鼠の皮衣
+	{	s_hp(10),	s_time(40), 	" 　　　　　　難題「未作成E03」" "\n",	SPELL_1f_kaguya04,					add_zako_kaguya_dolls02,	kaguya_04_keitai,			},// 3.火鼠の皮衣
+	{	s_hp(16),	s_time(40), 	" 　　　　　　難題「未作成N03」" "\n",	SPELL_1f_kaguya04,					add_zako_kaguya_dolls02,	kaguya_04_keitai,			},// 3.火鼠の皮衣
+	{	s_hp(16),	s_time(40), 	" 　　　　　　難題「未作成H03」" "\n",	SPELL_1f_kaguya04,					add_zako_kaguya_dolls02,	kaguya_04_keitai,			},// 3.火鼠の皮衣
+	{	s_hp(16),	s_time(40), 	" 　　　　　　難題「未作成L03」" "\n",	SPELL_1f_kaguya04,					add_zako_kaguya_dolls02,	kaguya_04_keitai,			},// 3.火鼠の皮衣
 	// 1.5
-	{	s_hp(10),	s_time(40), 	" 　　　　　　難題「未作成E04」" "\n",	SPELL_1f_kaguya04,					add_zako_kaguya_dolls,		kaguya_04_keitai,			},// 4.燕の子安貝
-	{	s_hp(16),	s_time(40), 	" 　　　　　　難題「未作成N04」" "\n",	SPELL_1f_kaguya04,					add_zako_kaguya_dolls,		kaguya_04_keitai,			},// 4.燕の子安貝
-	{	s_hp(16),	s_time(40), 	" 　　　　　　難題「未作成H04」" "\n",	SPELL_1f_kaguya04,					add_zako_kaguya_dolls,		kaguya_04_keitai,			},// 4.燕の子安貝
-	{	s_hp(16),	s_time(40), 	" 　　　　　　難題「未作成L04」" "\n",	SPELL_1f_kaguya04,					add_zako_kaguya_dolls,		kaguya_04_keitai,			},// 4.燕の子安貝
+	{	s_hp(10),	s_time(40), 	" 　　　　　　難題「未作成E04」" "\n",	SPELL_1f_kaguya04,					add_zako_kaguya_dolls02,	kaguya_04_keitai,			},// 4.燕の子安貝
+	{	s_hp(16),	s_time(40), 	" 　　　　　　難題「未作成N04」" "\n",	SPELL_1f_kaguya04,					add_zako_kaguya_dolls02,	kaguya_04_keitai,			},// 4.燕の子安貝
+	{	s_hp(16),	s_time(40), 	" 　　　　　　難題「未作成H04」" "\n",	SPELL_1f_kaguya04,					add_zako_kaguya_dolls02,	kaguya_04_keitai,			},// 4.燕の子安貝
+	{	s_hp(16),	s_time(40), 	" 　　　　　　難題「未作成L04」" "\n",	SPELL_1f_kaguya04,					add_zako_kaguya_dolls02,	kaguya_04_keitai,			},// 4.燕の子安貝
 	// 1.0
-	{	s_hp(10),	s_time(40), 	" 　　　　　　難題「未作成E05」" "\n",	SPELL_1c_kakuya_tamanoe,			add_zako_kaguya_dolls,		boss_move_01_not_move,		},// 5.蓬莱の玉の枝
-	{	s_hp(16),	s_time(40), 	" 　　　　　　難題「未作成N05」" "\n",	SPELL_1c_kakuya_tamanoe,			add_zako_kaguya_dolls,		boss_move_01_not_move,		},// 5.蓬莱の玉の枝
-	{	s_hp(16),	s_time(40), 	" 　　　　　　難題「未作成H05」" "\n",	SPELL_1c_kakuya_tamanoe,			add_zako_kaguya_dolls,		boss_move_01_not_move,		},// 5.蓬莱の玉の枝
-	{	s_hp(16),	s_time(40), 	" 　　　　　　難題「未作成L05」" "\n",	SPELL_1c_kakuya_tamanoe,			add_zako_kaguya_dolls,		boss_move_01_not_move,		},// 5.蓬莱の玉の枝
+	{	s_hp(10),	s_time(40), 	" 　　　　　　難題「未作成E05」" "\n",	SPELL_1c_kakuya_tamanoe,			add_zako_kaguya_dolls01,	boss_move_01_not_move,		},// 5.蓬莱の玉の枝
+	{	s_hp(16),	s_time(40), 	" 　　　　　　難題「未作成N05」" "\n",	SPELL_1c_kakuya_tamanoe,			add_zako_kaguya_dolls01,	boss_move_01_not_move,		},// 5.蓬莱の玉の枝
+	{	s_hp(16),	s_time(40), 	" 　　　　　　難題「未作成H05」" "\n",	SPELL_1c_kakuya_tamanoe,			add_zako_kaguya_dolls01,	boss_move_01_not_move,		},// 5.蓬莱の玉の枝
+	{	s_hp(16),	s_time(40), 	" 　　　　　　難題「未作成L05」" "\n",	SPELL_1c_kakuya_tamanoe,			add_zako_kaguya_dolls01,	boss_move_01_not_move,		},// 5.蓬莱の玉の枝
 	// 0.5
-	{	s_hp(10),	s_time(40), 	" 　　　難題「蓬莱の玉の枝E06」" "\n",	SPELL_1c_kakuya_tamanoe,			add_zako_kaguya_dolls,		boss_move_01_not_move,		},//
-	{	s_hp(16),	s_time(40), 	" 　　　難題「蓬莱の玉の枝N06」" "\n",	SPELL_1c_kakuya_tamanoe,			add_zako_kaguya_dolls,		boss_move_01_not_move,		},//
-	{	s_hp(16),	s_time(40), 	" 　　　難題「蓬莱の玉の枝H06」" "\n",	SPELL_1c_kakuya_tamanoe,			add_zako_kaguya_dolls,		boss_move_01_not_move,		},//
-	{	s_hp(16),	s_time(40), 	" 　　　難題「蓬莱の玉の枝L06」" "\n",	SPELL_1c_kakuya_tamanoe,			add_zako_kaguya_dolls,		boss_move_01_not_move,		},//
+	{	s_hp(10),	s_time(40), 	" 　　　難題「蓬莱の玉の枝E06」" "\n",	SPELL_1c_kakuya_tamanoe,			add_zako_kaguya_dolls01,	boss_move_01_not_move,		},//
+	{	s_hp(16),	s_time(40), 	" 　　　難題「蓬莱の玉の枝N06」" "\n",	SPELL_1c_kakuya_tamanoe,			add_zako_kaguya_dolls01,	boss_move_01_not_move,		},//
+	{	s_hp(16),	s_time(40), 	" 　　　難題「蓬莱の玉の枝H06」" "\n",	SPELL_1c_kakuya_tamanoe,			add_zako_kaguya_dolls01,	boss_move_01_not_move,		},//
+	{	s_hp(16),	s_time(40), 	" 　　　難題「蓬莱の玉の枝L06」" "\n",	SPELL_1c_kakuya_tamanoe,			add_zako_kaguya_dolls01,	boss_move_01_not_move,		},//
 	// 2面ボスなので、適当に易しく。
 // 魅魔 2面 						"eeddccbbaa99887766554433221100",'\n\0' ワーク文字列バッファ長をこれだけしか用意しない予定なので、あふれたら字が出ない。 */
 	{s_hp(32*1.4),	s_time(400),	NULL,/* "形態変更" "\n"*/				SPELL_00,							init_00_boss_clip000,		common_00_keitai,			},/* 20480==8192*2.5 */
@@ -552,12 +565,12 @@ static SPELL_CARD_RESOURCE my_spell_card_resource[SPELL_CARD_MAX] =
 	{	s_hp(18),	s_time(40), 	"　　闇符「ディマーケイション」" "\n",	SPELL_29_rumia_demarcation, 		init_00_boss_clip111,		boss_move_01_not_move,		},	/* 上広タイプ */
 	{	s_hp(18),	s_time(40), 	"　　闇符「ディマーケイション」" "\n",	SPELL_29_rumia_demarcation, 		init_00_boss_clip111,		boss_move_01_not_move,		},	/* 上広タイプ */
 	// 1.00
-	{	 s_hp(8),	s_time(40), 	NULL,/* "通常攻撃" "\n"*/				SPELL_23_aya_merin_test,			NULL,						boss_move_01_not_move,		},	/* 上広タイプ */
+	{	s_hp(12),	s_time(40), 	NULL,/* "通常攻撃" "\n"*/				SPELL_23_aya_merin_test,			NULL,						boss_move_01_not_move,		},	/* 上広タイプ */
 	{	s_hp(10),	s_time(40), 	NULL,/* "通常攻撃" "\n"*/				SPELL_23_aya_merin_test,			NULL,						boss_move_01_not_move,		},	/* 上広タイプ */
 	{	s_hp(10),	s_time(40), 	NULL,/* "通常攻撃" "\n"*/				SPELL_23_aya_merin_test,			NULL,						boss_move_01_not_move,		},	/* 上広タイプ */
 	{	s_hp(10),	s_time(40), 	NULL,/* "通常攻撃" "\n"*/				SPELL_23_aya_merin_test,			NULL,						boss_move_01_not_move,		},	/* 上広タイプ */
 	// 1.--
-	{	 s_hp(8),	s_time(40), 	"　　　　　　　華符「芳華絢爛」" "\n",	SPELL_25_houka_kenran,				init_00_boss_clip000,		boss_move_01_not_move,		},	/* 通常タイプ */
+	{	 s_hp(6),	s_time(40), 	"　　　　　　　華符「芳華絢爛」" "\n",	SPELL_25_houka_kenran,				init_00_boss_clip000,		boss_move_01_not_move,		},	/* 通常タイプ */
 	{	 s_hp(8),	s_time(40), 	"　　　　　　　華符「芳華絢爛」" "\n",	SPELL_25_houka_kenran,				init_00_boss_clip000,		boss_move_01_not_move,		},	/* 通常タイプ */
 	{	 s_hp(8),	s_time(40), 	"　　　　　　　薫符「芳薫絢爛」" "\n",	SPELL_25_houka_kenran,				init_00_boss_clip000,		boss_move_01_not_move,		},	/* 通常タイプ */
 	{	 s_hp(8),	s_time(40), 	"　　　　　　　蘭符「芳華兼蘭」" "\n",	SPELL_25_houka_kenran,				init_00_boss_clip000,		boss_move_01_not_move,		},	/* 通常タイプ */
@@ -573,7 +586,7 @@ static SPELL_CARD_RESOURCE my_spell_card_resource[SPELL_CARD_MAX] =
 	{	s_hp(32),	s_time(60), 	" 　　　未定「てすとスペカL06」" "\n",	SPELL_16_alice_doll,				NULL,						boss_move_02_xy_hidouki,	},// 都合上来ない。
 	// 1面ボスなので、(少なくとも easy、normal あたりは)難しく出来ない。
 // アリス 1面						"eeddccbbaa99887766554433221100",'\n\0' ワーク文字列バッファ長をこれだけしか用意しない予定なので、あふれたら字が出ない。 */
-	{s_hp(32*1.00),  s_time(300),	NULL,/* "形態変更" "\n"*/				SPELL_00,							init_00_boss_clip000,		common_00_keitai,			},/* 16384==8192*2 */	/* "通常攻撃"の時間(?) */ /* "通常攻撃"のライフ */
+	{s_hp(32*1.125), s_time(300),	NULL,/* "形態変更" "\n"*/				SPELL_00,							init_00_boss_clip000,		common_00_keitai,			},/* 16384==8192*2 */	/* "通常攻撃"の時間(?) */ /* "通常攻撃"のライフ */
 	{s_hp(32*1.25),  s_time(300),	NULL,/* "形態変更" "\n"*/				SPELL_00,							init_00_boss_clip000,		common_00_keitai,			},/* 16384==8192*2 */	/* "通常攻撃"の時間(?) */ /* "通常攻撃"のライフ */
 	{s_hp(32*1.50),  s_time(300),	NULL,/* "形態変更" "\n"*/				SPELL_00,							init_00_boss_clip000,		common_00_keitai,			},/* 16384==8192*2 */	/* "通常攻撃"の時間(?) */ /* "通常攻撃"のライフ */
 	{s_hp(32*1.50),  s_time(300),	NULL,/* "形態変更" "\n"*/				SPELL_00,							init_00_boss_clip000,		common_00_keitai,			},/* 16384==8192*2 */	/* "通常攻撃"の時間(?) */ /* "通常攻撃"のライフ */
@@ -593,7 +606,7 @@ static SPELL_CARD_RESOURCE my_spell_card_resource[SPELL_CARD_MAX] =
 	{	  s_hp(8),	 s_time(20),	"　凍符「パーティクルフリーク」" "\n",	SPELL_11_perfect_freeze,			NULL,						boss_move_02_xy_hidouki,	},/* "蒼符「溺愛の仏蘭西人形」"のライフ */
 	{	 s_hp(12),	 s_time(20),	"　凍符「ブリザードフローズン」" "\n",	SPELL_11_perfect_freeze,			NULL,						boss_move_02_xy_hidouki,	},/* "蒼符「溺愛の仏蘭西人形」"のライフ */
 	// 1.00
-	{	 s_hp(4),	 s_time(60),	"　蒼符「薄愛のマトリョーシカ」" "\n",	SPELL_16_alice_doll,				NULL,						boss_move_02_xy_hidouki/*boss_move_04_xy_douki_differential32*/,	},/* " 　蒼符「薄愛のマトリョーシカ」"白符「博愛の円谷人形」 */ 	//(r33p)boss_move_04_xy_douki_differential
+	{	 s_hp(7),	 s_time(60),	"　蒼符「薄愛のマトリョーシカ」" "\n",	SPELL_16_alice_doll,				NULL,						boss_move_02_xy_hidouki/*boss_move_04_xy_douki_differential32*/,	},/* " 　蒼符「薄愛のマトリョーシカ」"白符「博愛の円谷人形」 */ 	//(r33p)boss_move_04_xy_douki_differential
 	{	 s_hp(8),	 s_time(60),	"　蒼符「溺愛のマトリョーシカ」" "\n",	SPELL_16_alice_doll,				NULL,						boss_move_02_xy_hidouki/*boss_move_04_xy_douki_differential32*/,	},/* " 　蒼符「溺愛のマトリョーシカ」"白符「博愛の円谷人形」 */ 	//(r33p)boss_move_04_xy_douki_differential
 	{	 s_hp(8),	 s_time(60),	"　蒼符「自戒のマトリョーシカ」" "\n",	SPELL_16_alice_doll,				NULL,						boss_move_02_xy_hidouki/*boss_move_04_xy_douki_differential32*/,	},/* " 　蒼符「自戒のマトリョーシカ」"白符「博愛の円谷人形」 */ 	//(r33p)boss_move_04_xy_douki_differential
 	{	 s_hp(8),	 s_time(60),	"　蒼符「自害のマトリョーシカ」" "\n",	SPELL_16_alice_doll,				NULL,						boss_move_02_xy_hidouki/*boss_move_04_xy_douki_differential32*/,	},/* " 　蒼符「自害のマトリョーシカ」"白符「博愛の円谷人形」 */ 	//(r33p)boss_move_04_xy_douki_differential
@@ -654,7 +667,7 @@ static void zako_all_timeup(void)/*int ty pe*/
 
 global void spell_card_get_spell_number(SPRITE *src)
 {
-	src->boss_base_spell_type	= my_spell_card_resource[(spell_card_number)].spell_type;	/* 弾幕をセット */
+	spell_card.spell_type	= my_spell_card_resource[(spell_card.number)].spell_type;	/* 弾幕をセット */
 	spell_set_time_out(src);		/* 弾幕の制限時間を設定(予め弾幕ごとに設定されている標準時間に設定) */
 }
 
@@ -693,14 +706,14 @@ global void common_boss_put_items(SPRITE *src)
 		kanji_window_clear_line(1); 	/* 漢字ウィンドウの2行目(==1)の内容を消す。 */
 		set_cursor(0, 1);				/* カーソルを2行目(==1)へ移動 */
 	//
-		if (NULL != my_spell_card_resource[(spell_card_number)].spell_str_name)
+		if (NULL != my_spell_card_resource[(spell_card.number)].spell_str_name)
 		{
 			/* スペルカード背景がある場合 */
 			callback_gu_draw_haikei = callback_gu_draw_haikei_supeka;
 			//
 			cg.msg_time = byou60(5);	/* 約 5 秒 */
 			print_kanji000(
-				my_spell_card_resource[(spell_card_number)].spell_str_name,
+				my_spell_card_resource[(spell_card.number)].spell_str_name,
 				/*int color_type*/(7)|STR_CODE_NO_ENTER,	/* 改行しない */
 				/*int wait*/(0)
 			);
@@ -781,7 +794,7 @@ global void common_boss_put_items(SPRITE *src)
 //#define LIMIT_MAX_HP_DEC_BOSS_BY_FLAME (48)
 //	int LIMIT_MAX_HP_DEC_BOSS_BY_FLAME[8] = { (1), (2), (4), (8),  (16), (24), (32), (48), };
 
-extern int boss_hp_dec_by_frame;/*ボス攻撃減少値、フレーム単位*/
+
 global void boss_hp_frame_check(void)
 {
 //	SPRITE *obj_boss;
@@ -797,49 +810,22 @@ global void boss_hp_frame_check(void)
 		limit_max_hp_dec_boss_by_flame = (test_draw_boss_hp_value) | (0x10);
 		#endif
 		//
-		if (limit_max_hp_dec_boss_by_flame < boss_hp_dec_by_frame)
+		if (limit_max_hp_dec_boss_by_flame < spell_card.boss_hp_dec_by_frame)
 		{
-			boss_hp_dec_by_frame = limit_max_hp_dec_boss_by_flame;
+			spell_card.boss_hp_dec_by_frame = limit_max_hp_dec_boss_by_flame;
 		}
 	}
 //
-	global_obj_boss->base_hp -= boss_hp_dec_by_frame;
-	boss_hp_dec_by_frame = 0;/* 使ったので消す(フレーム単位) */
-	if (spell_card_limit_health >= global_obj_boss->base_hp)		/* 規定値以下になればスペルカードモード解除 */
+	global_obj_boss->base_hp -= spell_card.boss_hp_dec_by_frame;
+	spell_card.boss_hp_dec_by_frame = 0;/* 使ったので消す(フレーム単位) */
+	if (spell_card.limit_health >= global_obj_boss->base_hp)		/* 規定値以下になればスペルカードモード解除 */
 	{
-		spell_card_mode 			= (SPELL_CARD_MODE_00_OFF);
+		spell_card.mode 			= (SPELL_CARD_MODE_00_OFF);
 		boss_destroy_check_type(global_obj_boss, DESTROY_CHECK_00_WIN_BOSS);
 		callback_gu_draw_haikei = callback_gu_draw_haikei_modosu;
 	}
 }
 
-/*---------------------------------------------------------
-	ボス移動処理の共通ルーチン
-	-------------------------------------------------------
-★ 移動範囲の登録、機能：
-	あらかじめボス移動範囲を登録しておく。
-★ 範囲内ならば移動、機能：
-	移動範囲内ならば、ボスが移動する。
-	移動範囲外ならば、ボスは移動しない。
-★ 移動判定、機能：
-	ボスが移動しない場合は、「移動できなかったフラグ」がＯＮになる。
----------------------------------------------------------*/
-/*extern*/global int boss_hamidasi; 			/* 「移動できなかったフラグ」(使用前に手動でOFF==0にしとく) */
-/*extern*/global POINT256 boss_clip_min;		/* ボス移動範囲(最小値) */
-/*extern*/global POINT256 boss_clip_max;		/* ボス移動範囲(最大値) */
-global void boss_move_vx_vy(SPRITE *src)
-{
-	src->cx256 += (src->vx256);
-	src->cy256 += (src->vy256);
-}
-global void boss_clip_rect(SPRITE *src)
-{
-		 if (src->cx256 < boss_clip_min.x256 )	{	src->cx256 = boss_clip_min.x256;	boss_hamidasi=1;	}
-	else if (src->cx256 > boss_clip_max.x256 )	{	src->cx256 = boss_clip_max.x256;	boss_hamidasi=1;	}
-//
-		 if (src->cy256 < boss_clip_min.y256 )	{	src->cy256 = boss_clip_min.y256;	boss_hamidasi=1;	}
-	else if (src->cy256 > boss_clip_max.y256 )	{	src->cy256 = boss_clip_max.y256;	boss_hamidasi=1;	}
-}
 
 // 現状のシナリオスクリプト規格だとスペルカードシステムと相性が悪い。
 // 仕方ないので、強引にフラグで対応させる。
@@ -851,7 +837,7 @@ global void boss_clip_rect(SPRITE *src)
 ---------------------------------------------------------*/
 static void spell_card_incliment(void)
 {
-			spell_card_number += (4)/*1*/;
+			spell_card.number += (4)/*1*/;
 }
 
 /*---------------------------------------------------------
@@ -863,7 +849,7 @@ static void spell_card_incliment(void)
 static int speka_first_move_flag;
 #endif /* (1==USE_OLD_SCRIPT_SYSTEM) */
 
-global /*static*/ void check_regist_generate_spell_card(SPRITE *src)
+/*global*/global/*static*/ void check_regist_generate_spell_card(SPRITE *src)
 {
 	#if (1==USE_OLD_SCRIPT_SYSTEM)
 	// 現状のシナリオスクリプト規格だとスペルカードシステムと相性が悪い。
@@ -872,25 +858,25 @@ global /*static*/ void check_regist_generate_spell_card(SPRITE *src)
 	exec_speka = 0;
 	#endif /* (1==USE_OLD_SCRIPT_SYSTEM) */
 //
-	if (0/*off*/==spell_card_mode)
+	if (0/*off*/==spell_card.mode)
 	{
 	//	if (1)
 		{
 			int aaa;	/* 現在体力 から 撃ちたいスペルカード分 引いた体力値 */
-			aaa = spell_card_limit_health - (my_spell_card_resource[(spell_card_number+(4)/*1*/)].spell_life);	/*1000 500*/
-		//	spell_card_limit_health -= 1000/*500*/;
+			aaa = spell_card.limit_health - (my_spell_card_resource[(spell_card.number+(4)/*1*/)].spell_life);	/*1000 500*/
+		//	spell_card.limit_health -= 1000/*500*/;
 			/* ボスがスペルカードを撃てる一定体力がある場合 */
 			if (0 < aaa)
 			{
-				spell_card_limit_health = aaa;
+				spell_card.limit_health = aaa;
 			//	if (b_health_alter_low1024 < (data->boss_base.boss_health & (1024-1)))/* 形態変更したら */
-				spell_card_mode 		= (SPELL_CARD_MODE_01_IDO_JYUNNBI);/*on*/
+				spell_card.mode 		= (SPELL_CARD_MODE_01_IDO_JYUNNBI);/*on*/
 				spell_card_incliment();
-			//	if (spell_card_syoji_maisuu < spell_card_number)
+			//	if (spell_card_syoji_maisuu < spell_card.number)
 				if (0 == spell_card_syoji_maisuu )
 				{
 					/* 形態変更しない、アイテム吐かない */
-					spell_card_number -= (4);
+					spell_card.number -= (4);
 				//	src->callback_loser 			= lose_boss;
 				}
 				else
@@ -910,80 +896,80 @@ global /*static*/ void check_regist_generate_spell_card(SPRITE *src)
 				}
 				#if 0/* (旧[スペルカード終わったら初期化]) (形態変更する前に必ず初期化したいのでこの位置は止める。)*/
 				/* スペルカード初期化 */
-				if (NULL != my_spell_card_resource[(spell_card_number)].spell_init_callback)
+				if (NULL != my_spell_card_resource[(spell_card.number)].spell_init_callback)
 				{
-					(my_spell_card_resource[(spell_card_number)].spell_init_callback)(src);
+					(my_spell_card_resource[(spell_card.number)].spell_init_callback)(src);
 				}
 				#endif
 			}
 			else
 			{
-				spell_card_limit_health = (0);
-			//	spell_card_mode 		= (0);/*off*/
-				spell_card_mode 		= (SPELL_CARD_MODE_01_IDO_JYUNNBI);/*on*/	/* とりあえず */
+				spell_card.limit_health = (0);
+			//	spell_card.mode 		= (0);/*off*/
+				spell_card.mode 		= (SPELL_CARD_MODE_01_IDO_JYUNNBI);/*on*/	/* とりあえず */
 				/* [(とりあえず)スペルカード攻撃のみに仕様変更]したので、最後撃てるスペルカードがなくなった場合に攻撃させる為。 */
 			}
 		}
 		/*---------------------------------------------------------
 			スペルカードチェック
 		---------------------------------------------------------*/
-		if (0/*off*/==spell_card_boss_timer)
+		if (0/*off*/==spell_card.boss_timer)
 		{
-			spell_card_limit_health = 0;
-			spell_card_mode 		= (SPELL_CARD_MODE_01_IDO_JYUNNBI);/*on*/
+			spell_card.limit_health = 0;
+			spell_card.mode 		= (SPELL_CARD_MODE_01_IDO_JYUNNBI);/*on*/
 		}
 	}
 	else
-	if (SPELL_CARD_MODE_01_IDO_JYUNNBI == spell_card_mode)
+	if (SPELL_CARD_MODE_01_IDO_JYUNNBI == spell_card.mode)
 	{
 		#if (1==USE_OLD_SCRIPT_SYSTEM)
 		speka_first_move_flag = 0;
 		#endif /* (1==USE_OLD_SCRIPT_SYSTEM) */
-		src->boss_base_spell_time_out = (0);	/* スペル弾幕生成を強制的に止める。 */
+		src->boss_spell_timer = (0);	/* スペル弾幕生成を強制的に止める。 */
 		bullets_to_hosi();		/* 総ての敵弾を、hosiアイテムに変える */
 		/* 真中付近に退避 */
-	//	src->vvv256 				= t256(  0);/* 初期化済みの必要あり */
-		src->vvv256 				= t256(1.0);/* 初期化済みの必要あり */
+	//	src->toutatu_wariai256				= t256(  0);/* 初期化済みの必要あり */
+		src->toutatu_wariai256				= t256(1.0);/* 初期化済みの必要あり */
 	//	src->target_x256			= t256(153);
 		src->target_x256			= BOSS_XP256; //t256(0);
 	//	src->target_y256			= src->cy256;
 		src->target_y256			= t256(16.0); //t256(0);
 		#if 1/* (新[スペルカード始まる前に初期化]) 第0形態から、必ず呼ぶ筈。 */
 		/* スペルカード初期化 */
-		if (NULL != my_spell_card_resource[(spell_card_number)].spell_init_callback)
+		if (NULL != my_spell_card_resource[(spell_card.number)].spell_init_callback)
 		{
-			(my_spell_card_resource[(spell_card_number)].spell_init_callback)(src);
+			(my_spell_card_resource[(spell_card.number)].spell_init_callback)(src);
 		}
 		#endif
-		spell_card_mode 			= (SPELL_CARD_MODE_02_TAIHI);/*on*/
+		spell_card.mode 			= (SPELL_CARD_MODE_02_TAIHI);/*on*/
 	}
 	else
-	if (SPELL_CARD_MODE_02_TAIHI==spell_card_mode)	/* 発弾位置まで移動中。 */
+	if (SPELL_CARD_MODE_02_TAIHI==spell_card.mode)	/* 発弾位置まで移動中。 */
 	{
-	//	src->vvv256 -= (1); 		/* [約	4 秒]== 4.2666==(256/60[flame]) */
-	//	src->vvv256 -= (1*4);		/* [約	1 秒]== 1.0666==(256/(4*60)[flame]) */
-//		src->vvv256 -= (1*(4-1));	/* [約	1 秒]== 1.0666==(256/(4*60)[flame]) */
+	//	src->toutatu_wariai256 -= (1);		/* [約	4 秒]== 4.2666==(256/60[flame]) */
+	//	src->toutatu_wariai256 -= (1*4);		/* [約	1 秒]== 1.0666==(256/(4*60)[flame]) */
+//		src->toutatu_wariai256 -= (1*(4-1));	/* [約	1 秒]== 1.0666==(256/(4*60)[flame]) */
 		#if 1/*(r32)*/
-	//	alice_yuudou_move_only(src);/*(r32)*/
-		alice_yuudou_calc(src);
-	//	src->vvv256 -= (1); 	/* [約	4 秒]== 4.2666==(256/60[flame]) */
-		src->vvv256 -= (1*4);	/* [約	1 秒]== 1.0666==(256/(4*60)[flame]) */
-		if (0 > src->vvv256 )	/* ほぼ画面中心付近まで、移動した。 */
+	//	boss_yuudou_idou_nomi(src);/*(r32)*/
+		boss_yuudou_hiritu_keisan(src);
+	//	src->toutatu_wariai256 -= (1);	/* [約	4 秒]== 4.2666==(256/60[flame]) */
+		src->toutatu_wariai256 -= (1*4);	/* [約	1 秒]== 1.0666==(256/(4*60)[flame]) */
+		if (0 > src->toutatu_wariai256 )	/* ほぼ画面中心付近まで、移動した。 */
 		{
-			src->vvv256 = (0);
-			spell_card_mode 		= (SPELL_CARD_MODE_03_HATUDAN);/*on*/
+			src->toutatu_wariai256 = (0);
+			spell_card.mode 		= (SPELL_CARD_MODE_03_HATUDAN);/*on*/
 		}
 		#endif/*(r32)*/
 		#if 0/*(r32p)*/
-		alice_yuudou_move_only(src);/*(r32p)*/
-		alice_yuudou_calc(src);
-	//	src->vvv256 -= (1); 	/* [約	4 秒]== 4.2666==(256/60[flame]) */
-	//	src->vvv256 -= (1*4);	/* [約	1 秒]== 1.0666==(256/(4*60)[flame]) */
-	//	if (0 > src->vvv256 )	/* ほぼ画面中心付近まで、移動した。 */
-		if ((0==src->vvv256))
+		boss_yuudou_idou_nomi(src);/*(r32p)*/
+		boss_yuudou_hiritu_keisan(src);
+	//	src->toutatu_wariai256 -= (1);	/* [約	4 秒]== 4.2666==(256/60[flame]) */
+	//	src->toutatu_wariai256 -= (1*4);	/* [約	1 秒]== 1.0666==(256/(4*60)[flame]) */
+	//	if (0 > src->toutatu_wariai256 )	/* ほぼ画面中心付近まで、移動した。 */
+		if ((0==src->toutatu_wariai256))
 		{
-	//		src->vvv256 = (0);
-			spell_card_mode 		= (SPELL_CARD_MODE_03_HATUDAN);/*on*/
+	//		src->toutatu_wariai256 = (0);
+			spell_card.mode 		= (SPELL_CARD_MODE_03_HATUDAN);/*on*/
 		}
 		#endif/*(r32p)*/
 	}
@@ -997,37 +983,24 @@ global /*static*/ void check_regist_generate_spell_card(SPRITE *src)
 		(スペルカード無くなった後も扱い)
 	*/
 	/* ボス行動 */
-	if (SPELL_CARD_MODE_03_HATUDAN==spell_card_mode)
+	if (SPELL_CARD_MODE_03_HATUDAN==spell_card.mode)
 	#if (1==USE_OLD_SCRIPT_SYSTEM)
 	{
 		exec_speka = 1;
-		//(my_spell_card_resource[(spell_card_number)].spell_move_callback)(src);
+		//(my_spell_card_resource[(spell_card.number)].spell_move02_callback)(src);
 	}
 	if (exec_speka + speka_first_move_flag)
 	#endif /* (1==USE_OLD_SCRIPT_SYSTEM) */
 	{
-		(my_spell_card_resource[(spell_card_number)].spell_move_callback)(src);
+		(my_spell_card_resource[(spell_card.number)].spell_move02_callback)(src);
 	}
 }
 
-	//	if (t256(/*(GAME_WIDTH/2)-32*/144) > src->cx256)	/* 画面半分の位置より若干左。 */
-	//	{
-	//		src->cx256 += t256(1.0);	/* 右 に退避 */
-	//	}
-	//	else
-	//	if (t256(/*(GAME_WIDTH/2)+32*/208) < src->cx256)	/* 画面半分の位置より若干右。 */
-	//	{
-	//		src->cx256 -= t256(1.0);	/* 左 に退避 */
-	//	}
 
 /*---------------------------------------------------------
 	[スペルカードシステム内に移動予定]
 ---------------------------------------------------------*/
 
-//global /*static*/ void NULL(SPRITE *src)
-//{
-//	/* 現在ダミー */
-//}
 
 /*---------------------------------------------------------
 	ボスを攻撃した場合の共通ルーチン
@@ -1035,7 +1008,6 @@ global /*static*/ void check_regist_generate_spell_card(SPRITE *src)
 	SPRITE *src;	ボス敵自体
 	SPRITE *tama;	自弾
 ---------------------------------------------------------*/
-global int boss_hp_dec_by_frame;/*ボス攻撃減少値、フレーム単位*/
 
 /*static*/static/*global*/	void s_callback_hit_boss(SPRITE *src, SPRITE *tama)
 {
@@ -1044,7 +1016,7 @@ global int boss_hp_dec_by_frame;/*ボス攻撃減少値、フレーム単位*/
 //
 	/* 上と分離した方がコード効率があがる。 */
 	{
-		boss_hp_dec_by_frame += /*w->*/tama->base_weapon_strength;	/* 攻撃して体力減らす(強さ分引く) */
+		spell_card.boss_hp_dec_by_frame += /*w->*/tama->base_weapon_strength;	/* 攻撃して体力減らす(強さ分引く) */
 	}
 }
 
@@ -1052,7 +1024,7 @@ global int boss_hp_dec_by_frame;/*ボス攻撃減少値、フレーム単位*/
 {
 //		if ( ((cg.state_flag) & STATE_FLAG_05_IS_BOSS) )	/* 会話終了? */
 		{
-			src->vvv256 = t256(1.0);
+			src->toutatu_wariai256 = t256(1.0);
 		//	common_boss_init_2nd(src);	/* プレイヤー弾受け付け、コールバックを登録 */
 			/*---------------------------------------------------------
 				ボスの共通、２回目初期化ルーチン(攻撃可能)
@@ -1062,8 +1034,8 @@ global int boss_hp_dec_by_frame;/*ボス攻撃減少値、フレーム単位*/
 				/* プレイヤー弾受け付け、コールバックを登録 */
 				src->callback_hit_teki = s_callback_hit_boss;	/* コールバック登録 */
 				/* spell_card common init */
-				spell_card_mode 		= (SPELL_CARD_MODE_01_IDO_JYUNNBI);/*on*/
-			//	spell_card_mode 		= (0);/*off*/
+				spell_card.mode 		= (SPELL_CARD_MODE_01_IDO_JYUNNBI);/*on*/
+			//	spell_card.mode 		= (0);/*off*/
 			}
 		//	/*時間制限カウント有効化*/
 		//	data->boss_base.state001++/* = ST_02*/;
@@ -1074,25 +1046,25 @@ global int boss_hp_dec_by_frame;/*ボス攻撃減少値、フレーム単位*/
 {
 	//	if ( ((cg.state_flag) & STATE_FLAG_05_IS_BOSS) )	/* 会話終了? */
 	//	{
-	//		my_spell_card_resource[(spell_card_number)].spell_move_callback = common_03_keitai;
+	//		my_spell_card_resource[(spell_card.number)].spell_move02_callback = common_03_keitai;
 	//	}
 }
 global /*static*/ void common_00_keitai(SPRITE *src)
 {
-//	if (0 == src->vvv256)
+//	if (0 == src->toutatu_wariai256)
 	if (0 > src->boss_base_state777)
 	{
 		src->boss_base_state777 = (0);
-	//	src->vvv256 = t256(1.0);
+	//	src->toutatu_wariai256 = t256(1.0);
 	}
 	else	/* 会話終了を待つ */
 	{
-		my_spell_card_resource[(spell_card_number)].spell_move_callback = common_02_keitai;
+		my_spell_card_resource[(spell_card.number)].spell_move02_callback = common_02_keitai;
 	}
 }
 global void script_boss_start(void)
 {
-		my_spell_card_resource[(spell_card_number)].spell_move_callback = common_03_keitai;
+		my_spell_card_resource[(spell_card.number)].spell_move02_callback = common_03_keitai;
 }
 
 
@@ -1106,7 +1078,7 @@ global /*static*/ void common_99_keitai(SPRITE *src)
 	if (0 > (src->cy256+t256(50.0)))/* +t256(50.0) ボスグラの最大サイズ(50[dot]) */
 	{
 		bullets_to_hosi();/* 弾全部、星アイテムにする */
-		src->callback_mover 		= NULL; 		/* おしまい */
+		src->callback_mover		= NULL; 		/* おしまい */
 	//	#if (0==US E_BOSS_COMMON_MALLOC)
 	//	src->type					= SP_DELETE;	/* おしまい */
 	//	#else
@@ -1138,7 +1110,7 @@ global /*static*/ void common_99_keitai(SPRITE *src)
 #if 0
 	/*static*/global void danmaku_state_check_holding(SPRITE *src)
 	{
-		if (SPELL_00 == src->boss_base_spell_type)
+		if (SPELL_00 == spell_card.spell_type)
 		{
 			src->boss_base_state777++;
 		}
@@ -1232,11 +1204,9 @@ global void script_boss_load(int boss_number)
 	}
 //
 	int sss;
-//	sss = l->user_255_code;
 	sss = boss_number;
 	sss &= (8-1);
 //
-	alice_anime_count	= 0;
 	//----[BOSS]
 	SPRITE *h;
 //	#if (0==U SE_BOSS_COMMON_MALLOC)
@@ -1244,8 +1214,6 @@ global void script_boss_load(int boss_number)
 //	obj_boss							= h;/*輝夜本人*/
 //	#else
 	h									= global_obj_boss;/*輝夜本人*/
-
-
 //	SPRITE *obj_boss;
 //	obj_boss = &obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_08_BOSS];
 //	SPRITE *h;
@@ -1257,7 +1225,7 @@ global void script_boss_load(int boss_number)
 		h->m_Hit256R					= ZAKO_ATARI16_PNG;
 		h->flags						|= (SP_FLAG_COLISION_CHECK/*|SP_FLAG_VISIBLE*/);
 		h->type 						= BOSS_00_BOSS11;
-		h->callback_mover				= move_alice;
+		h->callback_mover				= common_boss_move;
 		h->callback_loser				= common_boss_put_items;
 		h->callback_hit_teki			= NULL; 	/* ダミーコールバック登録 */
 	//
@@ -1268,6 +1236,7 @@ global void script_boss_load(int boss_number)
 		h->cx256						= BOSS_XP256;/*t256(GAME_WIDTH/2)*/
 		h->cy256						= t256(-100);
 	//
+		h->kougeki_anime_count			= (0);	/* 攻撃アニメーション用カウンタ / 0以下なら移動アニメーション */
 	//	h->boss_base_state777			= (0);	/*ST_00*/
 		h->boss_base_state777			= (-1); /*ST_00*/
 	//
@@ -1314,7 +1283,7 @@ global void script_boss_load(int boss_number)
 				(5),//(0-0),													/* フラン(?) */ 	/* ファンタズム用(boss7) */
 			//
 			};
-			spell_card_number				= aaa[sss  ] + ((cg_game_difficulty)&0x03)
+			spell_card.number				= aaa[sss  ] + ((cg_game_difficulty)&0x03)
 				+ ((5!=sss)?(0):(((cg_game_select_player)&(4-1))<<(2+3)));/* 難易度(2bit==4段階)、スペルカード(3bit==8段階) */
 			spell_card_syoji_maisuu 		= aaa[sss+8];
 		}
@@ -1324,18 +1293,18 @@ global void script_boss_load(int boss_number)
 	//	//	spell_card_mode 			= 0;/*off*/
 	//	}
 		{
-			h->base_hp				= (my_spell_card_resource[(spell_card_number)].spell_life); 		/* 全体の体力 */
-			spell_card_limit_health = (h->base_hp) - (my_spell_card_resource[(spell_card_number + (4)/*1*/)].spell_life);		/* 通常攻撃(初回攻撃)の攻撃分 */
+			h->base_hp				= (my_spell_card_resource[(spell_card.number)].spell_life); 		/* 全体の体力 */
+			spell_card.limit_health = (h->base_hp) - (my_spell_card_resource[(spell_card.number + (4)/*1*/)].spell_life);		/* 通常攻撃(初回攻撃)の攻撃分 */
 			//
-			spell_card_boss_timer	= (((my_spell_card_resource[(spell_card_number)].spell_limit_time)));	/* 75*64==75[count] 	約99[秒(64/60)](単位は秒ではない) */
-			spell_card_mode 		= (SPELL_CARD_MODE_01_IDO_JYUNNBI);/*on*/	/* 特殊？ */
+			spell_card.boss_timer	= (((my_spell_card_resource[(spell_card.number)].spell_limit_time)));	/* 75*64==75[count] 	約99[秒(64/60)](単位は秒ではない) */
+			spell_card.mode 		= (SPELL_CARD_MODE_01_IDO_JYUNNBI);/*on*/	/* 特殊？ */
 			/*???*/
-			my_spell_card_resource[(spell_card_number)].spell_move_callback = common_00_keitai;
+			my_spell_card_resource[(spell_card.number)].spell_move02_callback = common_00_keitai;
 		}
 		#if 1
 	//------------ 弾幕関連
-		h->boss_base_spell_type 	= SPELL_00; /* 弾幕生成終了フラグ */
-		h->boss_base_spell_temporaly		= 0;			/*(SPELL_08_rumia-1)*/ /*0*/
+		spell_card.spell_type			= SPELL_00; 	/* 弾幕生成終了フラグ */
+		spell_card.number_temporaly 	= (0);			/*(SPELL_08_rumia-1)*/ /*0*/
 		#endif
 	//
 	}

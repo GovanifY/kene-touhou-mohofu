@@ -201,7 +201,7 @@ static void generic_menu_workMENU_STATE_03_FININSH(void)
 			case MAIN_MENU_START:			cg.game_practice_mode = 0;	cg.game_continue_stage = (1-1); 			/*(0)*/ 	/* STAGE1 == 0 == (1-1)*/
 											main_call_func = difficulty_select_menu_start;			break; /* Start */				/* 難易度選択メニューへ */
 			case MAIN_MENU_EXTRA_START: 	cg.game_practice_mode = 0;	cg.game_continue_stage = (8-1); 			/*(6)*/ 	/* STAGE8 == 7 == (8-1)*/
-											if (cg_my_pad & PSP_KEY_RIGHT)	{	cg.game_continue_stage++;	}/* PHANTASM DEBUG */
+											if (psp_pad.pad_data & PSP_KEY_RIGHT)	{	cg.game_continue_stage++;	}/* PHANTASM DEBUG */
 											main_call_func = difficulty_select_menu_start;			break; /* Extra Start */		/* 難易度選択メニューへ */
 			case MAIN_MENU_PRACTICE_START:	cg.game_practice_mode = 1;
 											main_call_func = stage_select_menu_start;				break; /* Practice Start */
@@ -221,7 +221,6 @@ static void generic_menu_workMENU_STATE_03_FININSH(void)
 	タイトルメニュー	フェードアウト
 	-------------------------------------------------------
 	選択が決定したので、メニューを暗くしながらフェードアウトさせる。
-	selection done, decreasing menu_brite, fade menu out
 ---------------------------------------------------------*/
 
 static void generic_menu_workMENU_STATE_02_FADE_OUT(void)
@@ -243,13 +242,13 @@ static void generic_menu_workMENU_STATE_02_FADE_OUT(void)
 static void generic_menu_workMENU_STATE_01_WORK_MENU(void)
 {
 	{
-		if (0==cg_my_pad_alter)/* さっき何も押されてなかった場合にキーチェック(原作準拠) */
+		if (0==psp_pad.pad_data_alter)/* さっき何も押されてなかった場合にキーチェック(原作準拠) */
 		{
-			if (cg_my_pad & (PSP_KEY_DOWN|PSP_KEY_UP|PSP_KEY_PAUSE|PSP_KEY_RIGHT))
+			if (psp_pad.pad_data & (PSP_KEY_DOWN|PSP_KEY_UP|PSP_KEY_PAUSE|PSP_KEY_RIGHT))
 			{
 				voice_play(VOICE02_MENU_SELECT, TRACK01_EXPLODE);
 			}
-			if (cg_my_pad & PSP_KEY_DOWN)
+			if (psp_pad.pad_data & PSP_KEY_DOWN)
 			{
 				if (active_item == MENU_ITEM_99_MAX-1)
 				{	active_item = 0;}
@@ -275,7 +274,7 @@ static void generic_menu_workMENU_STATE_01_WORK_MENU(void)
 				}
 				time_out_flag = M1_NOT_TIME_OUT;/* 時間切れなし */
 			}
-			else if (cg_my_pad & PSP_KEY_UP)
+			else if (psp_pad.pad_data & PSP_KEY_UP)
 			{
 				if (0 == active_item)
 				{	active_item = MENU_ITEM_99_MAX-1;}
@@ -295,7 +294,7 @@ static void generic_menu_workMENU_STATE_01_WORK_MENU(void)
 				}
 				time_out_flag = M1_NOT_TIME_OUT;/* 時間切れなし */
 			}
-			if (cg_my_pad & PSP_KEY_SHOT_OK)
+			if (psp_pad.pad_data & PSP_KEY_SHOT_OK)
 			{
 				voice_play(VOICE01_MENU_OK/*VOICE02_MENU_SELECT*/, TRACK01_EXPLODE);
 				main_call_func = generic_menu_workMENU_STATE_02_FADE_OUT;	/* メニュー消去準備 */

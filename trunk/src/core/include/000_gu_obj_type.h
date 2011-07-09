@@ -11,80 +11,85 @@
 /* === Gu敵面 === */		/* --- まだ作ってない --- */
 enum	/* ☆ 魔方陣面エフェクト */
 {
-	TEKI_00_BOSS11			/* ボス & 中-ボス[右側1] */ 					= /*0x0400*/SP_GROUP_TEKI,
-	TEKI_01_BOSS12, 		/* ボス & 中-ボス[右側2] */
-	TEKI_02_BOSS13, 		/* ボス & 中-ボス[右側3] */
-	TEKI_03_BOSS14, 		/* ボス & 中-ボス[右側4] */
-	TEKI_04_BOSS21, 		/* ボス & 中-ボス[左側1] */
-	TEKI_05_BOSS22, 		/* ボス & 中-ボス[左側2] */
-	TEKI_06_BOSS23, 		/* ボス & 中-ボス[左側3] */
-	TEKI_07_BOSS24, 		/* ボス & 中-ボス[左側4] */
+/*
+xx:未使用。
+ok:変換済み。
+*/
+/*r34	r33*/
+/*00xx	*/	TEKI_00_BOSS11			/* ボス & 中-ボス[右側1] */ 					= /*0x0400*/SP_GROUP_TEKI,
+/*01xx	*/	TEKI_01_BOSS12, 		/* ボス & 中-ボス[右側2] */
+/*02xx	*/	TEKI_02_BOSS13, 		/* ボス & 中-ボス[右側3] */
+/*03xx	*/	TEKI_03_BOSS14, 		/* ボス & 中-ボス[右側4] */
+/*04xx	*/	TEKI_04_BOSS21, 		/* ボス & 中-ボス[左側1] */
+/*05xx	*/	TEKI_05_BOSS22, 		/* ボス & 中-ボス[左側2] */
+/*06xx	*/	TEKI_06_BOSS23, 		/* ボス & 中-ボス[左側3] */
+/*07xx	*/	TEKI_07_BOSS24, 		/* ボス & 中-ボス[左側4] */
 //
-	TEKI_08_BOSS31, 		/* ボス & 中-ボス[中心1] */
-	TEKI_09_BOSS32, 		/* ボス & 中-ボス[中心2] */
-	TEKI_10_BOSS33, 		/* ボス & 中-ボス[中心3] */
-	TEKI_11_BOSS34, 		/* ボス & 中-ボス[中心4] */
-	TEKI_12_YOUSEI1_1,		/* 妖精1 */
-	TEKI_13_YOUSEI1_2,		/* 妖精1 */
-	TEKI_14_YOUSEI1_3,		/* 妖精1 */
-	TEKI_15_YOUSEI1_4,		/* 妖精1 */
+/*08xx	*/	TEKI_08_BOSS31, 		/* ボス & 中-ボス[攻撃1] */
+/*09xx	*/	TEKI_09_BOSS32, 		/* ボス & 中-ボス[攻撃2] */
+/*10	*/	TEKI_10_BOSS33, 		/* ボス & 中-ボス[攻撃3] */
+/*11	*/	TEKI_11_BOSS34, 		/* ボス & 中-ボス[攻撃4] */
+/*12	*/	TEKI_12_EFFECT1_resurved,	/* r29現在 未使用 */
+/*13	*/	TEKI_13_EFFECT2_resurved,	/* r29現在 未使用 */
+/*14	*/	TEKI_14_EFFECT3_resurved,	/* r29現在 未使用 */
+/*15	*/	TEKI_15_EFFECT4_resurved,	/* r29現在 未使用 */
 //
-	TEKI_16_YOUSEI1_5,		/* 妖精1 */ 	/* BOSS_16_YOUSEI11 */
-	TEKI_17_YOUSEI1_6,		/* 妖精1 */
-	TEKI_18_YOUSEI1_7,		/* 妖精1 */
-	TEKI_19_YOUSEI1_8,		/* 妖精1 */
-	TEKI_20_YOUSEI1_9,		/* 妖精1 */
-	TEKI_21_YOUSEI1_a,		/* 妖精1 */
-	TEKI_22_YOUSEI1_b,		/* 妖精1 */
-	TEKI_23_YOUSEI1_c,		/* 妖精1 */
+/*16ok	*/	TEKI_16_YOUSEI1_1,		/* 妖精1[右向き1] */
+/*17xx	*/	TEKI_17_YOUSEI1_2,		/* 妖精1[右向き2] */
+/*18xx	*/	TEKI_18_YOUSEI1_3,		/* 妖精1[右向き3] */
+/*19xx	*/	TEKI_19_YOUSEI1_4,		/* 妖精1[右向き4] */
+/*20xx	*/	TEKI_20_YOUSEI1_5,		/* 妖精1[正面向き1] */ 	/* BOSS_16_YOUSEI11 */
+/*21xx	*/	TEKI_21_YOUSEI1_6,		/* 妖精1[正面向き2] */
+/*22xx	*/	TEKI_22_YOUSEI1_7,		/* 妖精1[正面向き3] */
+/*23xx	*/	TEKI_23_YOUSEI1_8,		/* 妖精1[正面向き4] */
 //
-	TEKI_24_YOUSEI2_1,		/* 妖精2 */
-	TEKI_25_YOUSEI2_2,		/* 妖精2 */
-	TEKI_26_YOUSEI2_3,		/* 妖精2 */
-	TEKI_27_YOUSEI2_4,		/* 妖精2 */
-	TEKI_28_YOUSEI2_5,		/* 妖精2 */
-	TEKI_29_YOUSEI2_6,		/* 妖精2 */
-	TEKI_30_YOUSEI2_7,		/* 妖精2 */
-	TEKI_31_YOUSEI2_8,		/* 妖精2 */
+/*24	*/	TEKI_24_YOUSEI1_9,		/* 妖精1[左向き1] */
+/*25	*/	TEKI_25_YOUSEI1_a,		/* 妖精1[左向き2] */
+/*26	*/	TEKI_26_YOUSEI1_b,		/* 妖精1[左向き3] */
+/*27	*/	TEKI_27_YOUSEI1_c,		/* 妖精1[左向き4] */
+/*28ok	*/	TEKI_28_MAHOJIN,		/* 後ろの魔方陣 */
+/*29ok	*/	TEKI_29_INYOU_DAI,
+/*30ok	*/	TEKI_30_CHOU1,
+/*31xx	*/	TEKI_31_CHOU2,
 //
-	TEKI_32_YOUSEI2_9,		/* 妖精2 */
-	TEKI_33_YOUSEI2_a,		/* 妖精2 */
-	TEKI_34_YOUSEI2_b,		/* 妖精2 */
-	TEKI_35_YOUSEI2_c,		/* 妖精2 */
-	TEKI_36_YOUSEI3_1,		/* 妖精3 */
-	TEKI_37_YOUSEI3_2,		/* 妖精3 */
-	TEKI_38_YOUSEI3_3,		/* 妖精3 */
-	TEKI_39_YOUSEI3_4,		/* 妖精3 */
+/*32ok	*/	TEKI_32_YOUSEI2_1,		/* 妖精2[右向き1] */
+/*33	*/	TEKI_33_YOUSEI2_2,		/* 妖精2[右向き2] */
+/*34	*/	TEKI_34_YOUSEI2_3,		/* 妖精2[右向き3] */
+/*35	*/	TEKI_35_YOUSEI2_4,		/* 妖精2[右向き4] */
+/*36ok	*/	TEKI_36_YOUSEI2_5,		/* 妖精2[正面向き1] */
+/*37	*/	TEKI_37_YOUSEI2_6,		/* 妖精2[正面向き2] */
+/*38	*/	TEKI_38_YOUSEI2_7,		/* 妖精2[正面向き3] */
+/*39	*/	TEKI_39_YOUSEI2_8,		/* 妖精2[正面向き4] */
 //
-	TEKI_40_YOUSEI3_5,		/* 妖精3 */
-	TEKI_41_YOUSEI3_6,		/* 妖精3 */
-	TEKI_42_YOUSEI3_7,		/* 妖精3 */
-	TEKI_43_YOUSEI3_8,		/* 妖精3 */
-	TEKI_44_YOUSEI3_9,		/* 妖精3 */
-	TEKI_45_YOUSEI3_a,		/* 妖精3 */
-	TEKI_46_YOUSEI3_b,		/* 妖精3 */
-	TEKI_47_YOUSEI3_c,		/* 妖精3 */
+/*40	*/	TEKI_40_YOUSEI2_9,		/* 妖精2[左向き1] */
+/*41	*/	TEKI_41_YOUSEI2_a,		/* 妖精2[左向き2] */
+/*42	*/	TEKI_42_YOUSEI2_b,		/* 妖精2[左向き3] */
+/*43	*/	TEKI_43_YOUSEI2_c,		/* 妖精2[左向き4] */
+/*44ok	*/	TEKI_44_CHEN,
+/*45xx	*/	TEKI_45_BLUE_BOOK,
+/*46ok	*/	TEKI_46_RED_BOOK,
+/*47ok	*/	TEKI_47_HAI_KEDAMA,
 //
-	TEKI_48_EFFECT1_resurved,	/* r29現在 未使用 */
-	TEKI_49_EFFECT2_resurved,	/* r29現在 未使用 */
-	TEKI_50_EFFECT3_resurved,	/* r29現在 未使用 */
-	TEKI_51_EFFECT4_resurved,	/* r29現在 未使用 */
-	TEKI_52_MAHOJIN,			/* 後ろの魔方陣 */
-	TEKI_53_INYOU_DAI,
-	TEKI_54_CHOU1,
-	TEKI_55_CHOU2,
+/*48ok	*/	TEKI_48_YOUSEI3_1,		/* 妖精3[右向き1] */
+/*49	*/	TEKI_49_YOUSEI3_2,		/* 妖精3[右向き2] */
+/*50	*/	TEKI_50_YOUSEI3_3,		/* 妖精3[右向き3] */
+/*51	*/	TEKI_51_YOUSEI3_4,		/* 妖精3[右向き4] */
+/*52	*/	TEKI_52_YOUSEI3_5,		/* 妖精3[正面向き1] */
+/*53	*/	TEKI_53_YOUSEI3_6,		/* 妖精3[正面向き2] */
+/*54	*/	TEKI_54_YOUSEI3_7,		/* 妖精3[正面向き3] */
+/*55	*/	TEKI_55_YOUSEI3_8,		/* 妖精3[正面向き4] */
 //
-	TEKI_56_CHEN,
-	TEKI_57_BLUE_BOOK,
-	TEKI_58_RED_BOOK,
-	TEKI_59_HAI_KEDAMA,
-	TEKI_60_AKA_KEDAMA,
-	TEKI_61_NIJI_HOSI,
-	TEKI_62_TATSUMAKI,
-	TEKI_63_HOMING_STUFF,
+/*56	*/	TEKI_56_YOUSEI3_9,		/* 妖精3[左向き1] */
+/*57	*/	TEKI_57_YOUSEI3_a,		/* 妖精3[左向き2] */
+/*58	*/	TEKI_58_YOUSEI3_b,		/* 妖精3[左向き3] */
+/*59	*/	TEKI_59_YOUSEI3_c,		/* 妖精3[左向き4] */
+/*60ok	*/	TEKI_60_AKA_KEDAMA,
+/*61ok	*/	TEKI_61_NIJI_HOSI,
+/*62ok	*/	TEKI_62_TATSUMAKI,
+/*63	*/	TEKI_63_HOMING_STUFF,
 };
 #define BOSS_00_BOSS11		TEKI_00_BOSS11
-#define BOSS_16_YOUSEI11	TEKI_16_YOUSEI1_5
+#define BOSS_16_YOUSEI11	TEKI_20_YOUSEI1_5
 
 /* === Gu魔方陣面 === */		/* --- まだ作ってない --- */
 

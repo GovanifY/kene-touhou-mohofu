@@ -10,39 +10,9 @@
 #ifndef _BGM_VOICE_H_
 #define _BGM_VOICE_H_
 
-enum
-{
-	BGM_00_stop = 0,	/* ----- BGM 演奏停止コマンド */
-	BGM_01_stage1,		/* 1面道中 */
-	BGM_02_stage2,		/* 2面道中 */
-	BGM_03_stage3,		/* 3面道中 */
-	BGM_04_stage4,		/* 4面道中 */
-	BGM_05_stage5,		/* 5面道中 */
-	BGM_06_stage6,		/* 6面道中 */
-	BGM_07_stage7,		/* エンディング(道中) */
-	BGM_08_stage8,		/* エキストラステージ道中 */
-	BGM_09_stage9,		/* ファンタズムステージ道中 */
-	BGM_10_menu04,		/* エンディング(上海紅茶館) */
-	BGM_11_boss01,		/* 1面ボス */
-	BGM_12_boss02,		/* 2面ボス */
-	BGM_13_boss03,		/* 3面ボス */
-	BGM_14_boss04,		/* 4面ボス */
-	BGM_15_boss05,		/* 5面ボス */
-	BGM_16_boss06,		/* 6面ボス */
-	BGM_17_boss07,		/* エキストラステージ1ボス */
-	BGM_18_boss08,		/* エキストラステージ2ボス */
-	BGM_19_boss09,		/* エキストラステージ3ボス */
-	BGM_20_boss10,		/* 隠しボス */
-	BGM_21_boss00,		/* 隠しボス */
-	BGM_21_menu03,		/* エンディング(シナリオ) */
-	BGM_22_menu02,		/* キーコンフィグ */
-	BGM_23_menu01,		/* タイトル画面 */
-/* ----- 曲の数(読み込みファイル数) */
-//#define USE_MUSIC_FILES 15/*14*/ /**/
-	USE_MUSIC_FILES
-};
+//;「音楽素材」必要なファイル
 
-enum
+enum	//; 効果音(Voice)
 {
 	VOICE00_SHOT = 0,			//	"ショット", 		/* a				ショット音							[ちりちりちり] */
 	VOICE01_MENU_OK,			//	"メニュー決定", 	/*[b]	[s(?)]		音									[びょいー] */
@@ -55,19 +25,53 @@ enum
 //
 	VOICE08_DEATH,				//	"ザコ倒した",		/* i				サコ死に音専用						[どすーーー] */
 	VOICE09_GRAZE,				//	"グレイズ", 		/* j				グレイズ音							[か] */
-	VOICE15_COUNT_TIMER,		//	"時間制限", 		/* p :				時間制限カウント音					[へにょん] */
+	VOICE10_COUNT_TIMER,		//	"時間制限", 		/* p :				時間制限カウント音					[へにょん] */
 	VOICE11_BOSS_KIRARIN,		//	"キラリン☆",		/* l				きらりん音 */
 //
-	VOICE10_MAGICF_E_SHOT,		//	"ボスショット1",	/* k				音									[ふわ] */
-	VOICE12_SAKUYA_B2_SHOT, 	//	"ボスショット2",	/* m				咲夜 音 							[ぱあん] */
-	VOICE13_SAKUYA_SHOT02,		//	"ボスショット3",	/* n				咲夜じゅわショット音				[ちゅるちゅるちゅる] */
-	VOICE14_BOSS_KOUGEKI_01,	//	"ボスショット4",	/*[o];	[s(?)]		ボス攻撃音? 						[ばあん] */
+	VOICE12_MAGICF_E_SHOT,		//	"ボスショット1",	/* k				音									[ふわ] */
+	VOICE13_SAKUYA_B2_SHOT, 	//	"ボスショット2",	/* m				咲夜 音 							[ぱあん] */
+	VOICE14_SAKUYA_SHOT02,		//	"ボスショット3",	/* n				咲夜じゅわショット音				[ちゅるちゅるちゅる] */
+	VOICE15_BOSS_KOUGEKI_01,	//	"ボスショット4",	/*[o];	[s(?)]		ボス攻撃音? 						[ばあん] */
 	VOICE16_BOSS_KYUPIN,		//	"ボスショット5",	/* l				キュピーン音 */
 //
 	VOICE17_BOSS_TAME01,		//	"ボス溜め1",		/* r				うぃーん音 */
-	VOICE16_MAX_FILES,
+	VOICE18_MAX_FILES,
 };
 	/* 本家に低音系の効果音は無い＝＝合わないので廃止。 咲夜 音 [どどどどど] */
+
+
+enum	//; 曲(Music) [.it や .ogg形式]
+{
+	BGM_00_stop = 0,	/* ----- BGM 演奏停止コマンド */
+	BGM_01_stage1,		/* 1面道中 */
+	BGM_02_stage2,		/* 2面道中 */
+	BGM_03_stage3,		/* 3面道中 */
+	BGM_04_stage4,		/* 4面道中 */
+	BGM_05_stage5,		/* 5面道中 */
+	BGM_06_stage6,		/* 6面道中 */
+	BGM_07_stage7,		/* エンディング(道中) */
+	BGM_08_stage8,		/* エキストラステージ道中 */
+	BGM_09_stage9,		/* ファンタズムステージ道中 */
+	BGM_10_menu04,		/* 上海紅茶館 */
+	BGM_11_boss01,		/* 1面ボス (アリス) */
+	BGM_12_boss02,		/* 2面ボス (魅魔) */
+	BGM_13_boss03,		/* 3面ボス (輝夜) */
+	BGM_14_boss04,		/* 4面ボス (文) */
+	BGM_15_boss05,		/* 5面ボス (パチェ) */
+	BGM_16_boss06,		/* 6面ボス (咲夜) */
+	BGM_17_boss07,		/* チルノ エキストラステージ1ボス */
+	BGM_18_boss08,		/* アリス エキストラステージ2ボス */
+	BGM_19_boss09,		/* 魔理沙 エキストラステージ3ボス */
+	BGM_20_boss10,		/* 妖夢 隠しボス */
+	BGM_21_boss11,		/* レミリア 隠しボス */
+	BGM_22_boss00,		/* フラン 隠しボス */
+	BGM_23_menu03,		/* エンディング(シナリオ) */
+	BGM_24_menu02,		/* キーコンフィグ */
+	BGM_25_menu01,		/* タイトル画面 */
+/* ----- 曲の数(読み込みファイル数) */
+	USE_26_MUSIC_FILES
+};
+
 enum
 {
 	TRACK00_BULLETS = 0,
@@ -86,7 +90,7 @@ extern void exit_audio(void);
 extern void set_voice_volume(int volume);
 extern void set_music_volume(int volume);
 
-//extern void stop_music(void);/*廃止*/
+//extern void stop_music(void);/*(廃止)*/
 //#define stop_music(aaa)	play_music_num(BGM_00_stop)
 extern void fadeout_music(void);
 extern void pause_music(void);

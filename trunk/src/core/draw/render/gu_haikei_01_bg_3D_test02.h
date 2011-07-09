@@ -1,7 +1,7 @@
-static Vertex_cube 	__attribute__((aligned(16))) aaa_polygon_model[(8*3)] =
+static Vertex_cube	__attribute__((aligned(16))) aaa_polygon_model[(8*3)] =
 {
 	/* テクスチャの位置 				頂点の位置座標 */
-	/* u	v  色(ABGR8888) 		     x    y    z */
+	/* u	v  色(ABGR8888) 			 x	  y    z */
 	{  0,	0, MY_COLOR_ARGB888_WHITE,-63,-63, 63}, // #0	// 0	/* 青 */
 	{255, 255, MY_COLOR_ARGB888_BLUE,  63, 63, 63}, // #2	// 5	/* 青 青 */
 	{255,	0, MY_COLOR_ARGB888_WHITE,-63, 63, 63}, // #1	// 4[]
@@ -50,8 +50,8 @@ static void test_auto_rot_bbbb(void)
 	//	(int)vfpu_randf(0.0f, 512.0f),
 	//	(int)vfpu_randf(0.0f, 512.0f),
 	//	(int)vfpu_randf(0.0f, 512.0f));
-		(( (  0))&(512-1)),	/* x */
-		(( (  0))&(512-1)),	/* y */
+		(( (  0))&(512-1)), /* x */
+		(( (  0))&(512-1)), /* y */
 		(( (  0))&(512-1)));	/* z */
 //	vfpu_quaternion_exp(&p9_qb, &p9_qb);
 	vfpu_quaternion_ln(&p9_qb, &p9_qb);

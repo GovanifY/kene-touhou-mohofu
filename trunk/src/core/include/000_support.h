@@ -67,14 +67,15 @@
 
 #ifdef ENABLE_PSP
 	//# /* カスタムライブラリを使う */
-	#include <SDL/SDL.h>//#include "SDL.h"
-	#include "SDL_image.h"
+	#include "./../../PSPL/include/PSPL.h"//#include <SDL/SDL.h>//#include "SDL.h"
+	#include "./../../PSPL/image/PSP_SDL_image.h"	//#include "SDL_image.h"
 //	#include <SD L/SD L_mixer.h>//#include "SD L_mixer.h"
 #else
+	/* (r34)アンサポート */
 	//# /* 標準ライブラリを使う */
 	#include <SDL/SDL.h>
 	#include <SDL/SDL_image.h>
-//	#include <SD L/SD L_mixer.h>/*#include "SD L_mixer.h"*/
+//	#include <SDL/SDL_mixer.h>/*#include "SD L_mixer.h"*/
 #endif
 
 	//
@@ -264,7 +265,7 @@ R8G8B8A8フォーマットで色を設定する事になりますが、PSPはリトルエンディアンのCPUを
 	//#define rad2deg512(x) 	( (int)((x)*((512.0)/(T_GU_M_PI*2))+512)&(512-1) )
 //	#define rad2deg512(x)		( (int)((x)*((512.0)/(T_GU_M_PI*2))/*+512*/)&(512-1) )
 
-	/* １周が1024度の単位系(deg4096)を１周が２πの単位系(radian)へ変換。及び逆変換。 */
+	/* １周が1024度の単位系(deg1024)を１周が２πの単位系(radian)へ変換。及び逆変換。 */
 	#define deg1024_2rad(x) 	(((T_GU_M_PI*2)/(1024.0))*(x))
 	//#define rad2deg1024(x)	( (int)((x)*((1024.0)/(T_GU_M_PI*2))+1024)%1024 )
 	//#define rad2deg1024(x)	( (int)((x)*((1024.0)/(T_GU_M_PI*2))+1024)&(1024-1) )
@@ -308,11 +309,11 @@ R8G8B8A8フォーマットで色を設定する事になりますが、PSPはリトルエンディアンのCPUを
 //#endif
 
 /* １周の範囲内にクリッピング */
-#define mask256(aaa)	{aaa &= (256-1);}/* pspでは unsigned char にキャストするのとコードは大抵同じになる。 */
-//#define mask512(aaa)	{aaa &= (512-1);}/*模倣風でr31現在、無い筈*/
-#define mask1024(aaa)	{aaa &= (1024-1);}/*標準精度弾*/
-//#define mask4096(aaa) {aaa &= (4096-1);}/*模倣風でr31現在、無い筈*/
-#define mask65536(aaa)	{aaa &= (65536-1);}/*精密弾*/	/* 註:※１ */
+#define mask256(aaa)		{aaa &= (256-1);}/* pspでは unsigned char にキャストするのとコードは大抵同じになる。 */
+//#define mask512(aaa)		{aaa &= (512-1);}/*模倣風でr31現在、無い筈*/
+#define mask1024(aaa)		{aaa &= (1024-1);}/*標準精度弾*/
+//#define mask4096(aaa) 	{aaa &= (4096-1);}/*模倣風でr31現在、無い筈*/
+#define mask65536(aaa)		{aaa &= (65536-1);}/*精密弾*/	/* 註:※１ */
 
 /*
 	註:※１こう書いておくとpspでは、GCC(4.xx以降なら)が and演算などしない。
@@ -374,6 +375,8 @@ intで値を保持して、使う度に変換、逆変換した方が、ずっと速い。
 	//	#define sin512(x)		((int)(int256_sin1024((((x+x)						 )&(1024-1)))))
 		#define cos1024(x)		((int)(int256_sin1024((((x)+OFFS_COS1024)&(1024-1)))))
 		#define sin1024(x)		((int)(int256_sin1024((((x) 			)&(1024-1)))))
+//		#define cos65536(x) 	((int)(int256_sin1024((((x)+OFFS_COS65536)&(65536-1))>>6)))
+//		#define sin65536(x) 	((int)(int256_sin1024((((x) 			 )&(65536-1))>>6)))
 		#define cos65536(x) 	((int)(int256_sin1024((((x)+OFFS_COS65536)&(65536-1))>>6)))
 		#define sin65536(x) 	((int)(int256_sin1024((((x) 			 )&(65536-1))>>6)))
 	//	#define cos65536(x) 	((int)(int256_sin65536((((x)+OFFS_COS65536)&(65536-1)) )))

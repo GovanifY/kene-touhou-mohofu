@@ -12,22 +12,22 @@
 
 enum
 {
-	BAKUHATSU_MINI00 = 0,/*小爆発*/
+	BAKUHATSU_MINI00 = 0,/* 小爆発 */
 	BAKUHATSU_MINI01,
 	BAKUHATSU_MINI02,
 	BAKUHATSU_MINI03,
 //
-	BAKUHATSU_ZAKO04,/*ザコ消滅爆発*/
+	BAKUHATSU_ZAKO04,/* ザコ消滅爆発 */
 	BAKUHATSU_ZAKO05,
 	BAKUHATSU_ZAKO06,
 	BAKUHATSU_ZAKO07,
 //
-	BAKUHATSU_FIRE08,/*火炎爆発*/
+	BAKUHATSU_FIRE08,/* 火炎爆発 */
 	BAKUHATSU_FIRE09,
 	BAKUHATSU_FIRE10,
 	BAKUHATSU_FIRE11,
 //
-	BAKUHATSU_MOVE12,/*移動爆発*/
+	BAKUHATSU_MOVE12,/* 移動爆発 */
 	BAKUHATSU_MOVE13,
 	BAKUHATSU_MOVE14,
 	BAKUHATSU_MOVE15,
@@ -83,15 +83,6 @@ enum
 	#define HATUDAN_FRAME64 	(64)
 
 
-/* とりあえず */
-#if 1
-	#define boss_base_spell_type				user_data10
-	#define boss_base_spell_time_out			user_data11
-	#define boss_base_spell_temporaly			user_data12
-//	#define boss_base_resurved000				user_data13/*(r32)現在、未使用。*/
-//	#define bo ss_base_state001 				user_data13/*廃止*/
-#endif
-
 
 /**/extern int boss_hamidasi;		/* 「移動できなかったフラグ」(使用前に手動でOFF==0にしとく) */
 extern POINT256 boss_clip_min;		/* ボス移動範囲(最小値) */
@@ -111,11 +102,6 @@ extern void bakuhatsu_add_zako04(SPRITE *src);
 
 extern void callback_hit_zako(SPRITE *src, SPRITE *t);
 
-/* ボス移動処理の共通ルーチン */
-
-extern void boss_move_vx_vy(SPRITE *src);
-extern void boss_clip_rect(SPRITE *src);
-
 
 // 共通形態
 extern void common_99_keitai(SPRITE *src);/* 撃破後に画面外にボスが逃げる */
@@ -123,9 +109,6 @@ extern void common_99_keitai(SPRITE *src);/* 撃破後に画面外にボスが逃げる */
 /* thegame.c のみで ザコ／ボスで宣言が必要なもの(グローバル)は、thegame.c へ移動した。 */
 
 /* ボスで宣言が必要なもの(グローバル) */
-
-//extern int en emy_get_random_item(void);
-extern void lose_random_item(SPRITE *src);
 
 //#include "danmaku.h"
 
@@ -152,16 +135,32 @@ enum
 {
 	SPELL_CARD_MODE_00_OFF = 0, 		/* スペカを使用しない(通常攻撃等)。(スペカが撃てるかどうか判断) */
 	SPELL_CARD_MODE_01_IDO_JYUNNBI, 	/* 撃てる場合。発弾位置まで移動 */
-	SPELL_CARD_MODE_02_TAIHI,			/* 中。 */
+	SPELL_CARD_MODE_02_TAIHI,			/* 退避中。 */
 	SPELL_CARD_MODE_03_HATUDAN, 		/* 発弾中。 */
 };
 
-extern int spell_card_mode; 			/* スペカモード */
-extern int spell_card_limit_health; 	/* 規定値以下になればスペカモード解除 */
-extern int spell_card_boss_state;		/* 負値になればボススペカモードに入らない */
-extern int spell_card_boss_timer;		/* [共用]制限時間 */
+typedef struct /*_spell_card_global_class_*/
+{
+	int mode;				/* スペカモード */
+	int limit_health;		/* 規定値以下になればスペカモード解除 */
+	int boss_state; 		/* 負値になればボススペカモードに入らない */
+	int boss_timer; 		/* [共用]制限時間 */
+	//
+	int number; 			/* [共用]スペカ番号 */
+	int number_temporaly;	/* [一時使用]スペカ番号 */
+	int spell_type; 		/* */
+	int boss_hp_dec_by_frame;/* ボス攻撃減少値、フレーム単位 */
+/* とりあえず */
+#if 0
+//	#define boss_base_resurved000				user_data10/*(r32)現在、未使用。*/
+//	#define bo ss_base_state001 				user_data10/*廃止*/
+	#define boss_base_spell_temporaly			user_data11
+	#define boss_base_spell_type				user_data12
+	#define boss_base_spell_time_out			user_data13
+#endif
 
-extern int spell_card_number;			/* [共用]スペカ番号 */
+} SPELL_CARD_GLOBAL_CLASS;
+extern SPELL_CARD_GLOBAL_CLASS spell_card;
 
 /* 出現時x座標 */
 #define BOSS_XP256		(t256(GAME_WIDTH/2))	/* 中心座標なので */

@@ -9,6 +9,7 @@
 ---------------------------------------------------------*/
 
 #include "gu_draw_screen.h"
+#include "../menu/script_sprite.h"/* 立ち絵 */
 
 
 #include <malloc.h>/* memalign() free() */
@@ -103,7 +104,7 @@ static UINT16 *render_image_back;
 	スクリーン管理
 ---------------------------------------------------------*/
 
-int draw_side_panel;
+
 int draw_boss_hp_value;
 int boss_life_value;
 
@@ -114,12 +115,12 @@ unsigned int conv_bg_alpha;
 	スクリーン管理
 ---------------------------------------------------------*/
 
-
-static VIRTUAL_OBJ_STATE obj_status_table[(OBJ_BANK_MAX*OBJ_BANK_SIZE)/*(6*8*8)*/];
+//1803442
+static VIRTUAL_OBJ_STATE obj_status_table[(OBJ_BANK_MAX*OBJ_BANK_SIZE)];/*(6*8*8)*/
 
 //static	MY_DIB_SURFACE *my_texture[TEXTURE_MAX];
-/*static*/global	MY_TEXTURE_RESOURCE 	my_resource[TEXTURE_MAX];
-/*static*/	const MY_TEXTURE_RESOURCE	initial_resource[TEXTURE_MAX] =
+/*static*/global			MY_TEXTURE_RESOURCE 	 my_resource[TEXTURE_MAX];
+/*static*/static	const 	MY_TEXTURE_RESOURCE	initial_resource[TEXTURE_MAX] =
 {
 	{NULL, 256, 256, 256,	0, 0, &obj_status_table[0], (char*)DIRECTRY_NAME_DATA_STR "/bg/back0_256.png"}, 	//		TEX_00_BACK_GROUND = 0, 	/* 3D背景1 */
 //	{NULL, 256, 256, 512,	0, 0, &obj_status_table[0], (char*)DIRECTRY_NAME_DATA_STR "/bg/back0_256.png"}, 	//	//	TEX_01_BACK_TEXTURE,		/* 背景障害物 */
@@ -326,8 +327,8 @@ void psp_video_init01(void)
 			PSP_WIDTH480,
 			PSP_HEIGHT272,
 			/*int depth 		=*/ SDL_5551_15/*PSP_DEPTH16*/,
-			/*UINT32 videoflags =*/ (SDL_FULLSCREEN | SDL_DOUBLEBUF | SDL_HWSURFACE | SDL_HWPALETTE | SDL_HWACCEL)
-		//	/*UINT32 videoflags =*/ (SDL_FULLSCREEN /*| SDL_DOUBLEBUF*/ | SDL_HWSURFACE | SDL_HWPALETTE | SDL_HWACCEL)
+			/*UINT32 videoflags =*/ (SDL_FULLSCREEN | SDL_DOUBLEBUF | SDL_HWSURFACE /*| SDL_HW PALETTE | SDL_HW ACCEL*/)
+		//	/*UINT32 videoflags =*/ (SDL_FULLSCREEN /*| SDL_DOUBLEBUF*/ | SDL_HWSURFACE | SDL_HW PALETTE | SDL_HW ACCEL)
 			);
 	//	if (NULL == dummy_SDL_VRAM_SCREEN)
 	//	{
@@ -632,7 +633,7 @@ void psp_video_init02(void)
 	}
 
 	/* --- その他の初期設定 */
-	draw_side_panel 		= 0;
+	cg.side_panel_draw_flag 		= (0);
 	draw_boss_hp_value		= 0;
 //	callback_gu_draw_haikei = NULL;//dr aw_bg_screen = 0;
 	callback_gu_draw_haikei_supeka = gu_draw_bg_3D_test01;
@@ -1029,24 +1030,24 @@ static void set_boss_gauge(void)
 	{
 		/* (とりあえず)スペカモード時のみ時間経過 */
 	//	if (SPELL_CARD_MODE_00_OFF/*off*/ != spell_card_mode)/*on時のみ*/
-		if (SPELL_CARD_MODE_03_HATUDAN == spell_card_mode)/*発弾時のみ*/
+		if (SPELL_CARD_MODE_03_HATUDAN == spell_card.mode)/*発弾時のみ*/
 		{
-			spell_card_boss_timer--;/*fps_factor*/
-			if (0 > ( spell_card_boss_timer))	/*1*/
+			spell_card.boss_timer--;/*fps_factor*/
+			if (0 > ( spell_card.boss_timer))	/*1*/
 			{
-				spell_card_boss_timer		= 0;
-				spell_card_mode 			= SPELL_CARD_MODE_00_OFF/*off*/;
-				h->base_hp					= spell_card_limit_health;		/* (とりあえず) */
+				spell_card.boss_timer		= 0;
+				spell_card.mode 			= SPELL_CARD_MODE_00_OFF/*off*/;
+				h->base_hp					= spell_card.limit_health;		/* (とりあえず) */
 				boss_destroy_check_type(h/*敵自体*/, DESTROY_CHECK_01_IS_TIME_OUT);/*	★ 攻撃の場合の死亡判定 	★ 時間切れの場合の死亡判定 */
 				#if 000
-				spell_card_boss_timer		= byou64(60);		/* (とりあえず) */
+				spell_card.boss_timer		= byou64(60);		/* (とりあえず) */
 				h->base_hp					= (0);			/* (とりあえず) */
 				#endif
 			}
 		}
 	}
-	unsigned char boss_timer_low	= ((spell_card_boss_timer)&0x3f);/* */
-	unsigned int boss_timer_value	= ((spell_card_boss_timer)>>6);/* */
+	unsigned char boss_timer_low	= ((spell_card.boss_timer)&0x3f);/* */
+	unsigned int boss_timer_value	= ((spell_card.boss_timer)>>6);/* */
 	#endif
 	//	99 以上は 99 表示
 	if (99<boss_timer_value)
@@ -1080,7 +1081,7 @@ static void set_boss_gauge(void)
 	//	if ((10  )>boss_timer_value)	/* (10	)==設定値 10 で、カウント 8 から音が鳴るように聞こえる． */
 		if ((10+1)>boss_timer_value)	/* (10+1)==設定値 11 で、カウント 9 から音が鳴るように聞こえる． */
 		{
-			voice_play(VOICE15_COUNT_TIMER, TRACK03_SHORT_MUSIC);/*テキトー*/
+			voice_play(VOICE10_COUNT_TIMER, TRACK03_SHORT_MUSIC);/*(テキトー)*/
 		}
 	}
 
@@ -1110,8 +1111,8 @@ static void set_boss_gauge(void)
 		}
 	#endif
 	//	残りライフ表示
-	//	es_panel[1] = ((boss_life_value>>(13))&0x0f); 	/* (10+3)ボス体力目安 */
-		es_panel[1] = ((boss_life_value>>(15))&0x0f); 	/* (10+3+2)ボス体力目安 */
+	//	es_panel[1] = ((boss_life_value>>(13))&0x0f);	/* (10+3)ボス体力目安 */
+		es_panel[1] = ((boss_life_value>>(15))&0x0f);	/* (10+3+2)ボス体力目安 */
 		es_panel[0] = (10);/* "ene my" ボスの位置表示 */
 	}
 }
@@ -1262,6 +1263,7 @@ static void gu_draw_score_chache(void)
 
 	/* SDL画面を描画 */
 	#include "render/gu_render_SDL_screen.h"
+	#include "render/gu_render_tache_screen.h"/*(立ち絵のテスト)*/
 
 	/* 会話の文字を描画 */
 	#include "render/gu_render_serifu_moji.h"
@@ -1292,13 +1294,13 @@ static void gu_draw_score_chache(void)
 
 static void gu_draw_script_window(void)
 {
-	if (0 != draw_script_screen)
+	if (0 != (cg.draw_flag_script_screen))
 	{
 		gu_draw_rect_window(HAIKEI_03_MESSAGE);
 	}
 	else
-//	if (SPELL_CARD_MODE_00_OFF == spell_card_mode)
-	if (SPELL_CARD_MODE_03_HATUDAN != spell_card_mode)
+//	if (SPELL_CARD_MODE_00_OFF == spell_card.mode)
+	if (SPELL_CARD_MODE_03_HATUDAN != spell_card.mode)
 	{
 		if (0 != cg.bomber_time)
 		{

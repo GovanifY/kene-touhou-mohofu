@@ -17,25 +17,22 @@ static void spell_create_1a_dai_yousei_midori(SPRITE *src)
 {
 	static int aaa_tmp_angleCCW65536 = 0;
 	static int bbb = 0;
-	if (64==(src->boss_base_spell_time_out))
+	if (64==(src->boss_spell_timer))
 	{
 		aaa_tmp_angleCCW65536 = 0;
 		bbb = 0;
 	}
-	if ((64-(48))<((src->boss_base_spell_time_out)))
+	if ((64-(48))<((src->boss_spell_timer)))
 	{
-				obj_send1->cx256							= (src->cx256); 	/* 弾源x256 ボス中心から発弾。 */
-				obj_send1->cy256							= (src->cy256); 	/* 弾源y256 ボス中心から発弾。 */
-	//	if (0x00==((src->boss_base_spell_time_out)&(2-1)))/* 2回に1回 */
+	//	if (0x00==((src->boss_spell_timer)&(2-1)))/*(2回に1回)*/
 		{
 				br.BULLET_REGIST_01_speed_offset			= t256(1);/*(テスト)*/
-				br.BULLET_REGIST_03_tama_data   			= (TAMA_DATA_0000_TILT);/* (r33-)標準弾 */
+				br.BULLET_REGIST_03_tama_data				= (TAMA_DATA_0000_TILT);/* (r33-)標準弾 */
 				br.BULLET_REGIST_04_bullet_obj_type 		= BULLET_KUNAI12_05_MIDORI; 	/* [ 弾] */
-			//未定br.BULLET_REGIST_05_regist_type 			= TAMA_TYPE_00_ANGLE_TILT;/* (r33-)標準弾 */
-			int i;
-			for (i=0; i<2; i++)
+			u32 i;
+			for (i=0; i<(1+cg_game_difficulty); i++)/*(2段づつ)*/
 			{
-				br.BULLET_REGIST_00_speed256				= (t256(0.6)+(bbb<<2)+(i<<4));			/* 弾速 */
+				br.BULLET_REGIST_00_speed256				= (t256(0.6)+(bbb<<2)+(i<<6));			/* 弾速 */
 				br.BULLET_REGIST_02_angle65536				= (aaa_tmp_angleCCW65536);
 				tama_system_regist_single();
 			}
@@ -44,6 +41,7 @@ static void spell_create_1a_dai_yousei_midori(SPRITE *src)
 		}
 	}
 }
+
 
 /*---------------------------------------------------------
 	紅2面中-ボス 大妖精 通常攻撃1(2/3)
@@ -56,26 +54,23 @@ static void spell_create_1b_dai_yousei_aka(SPRITE *src)
 {
 	static int aaa_tmp_angleCCW65536 = 0;
 	static int bbb = 0;
-	if (64==(src->boss_base_spell_time_out))
+	if (64==(src->boss_spell_timer))
 	{
 		aaa_tmp_angleCCW65536 = 0;
 		bbb = 0;
 	}
-	if ((64-(48))<((src->boss_base_spell_time_out)))
+	if ((64-(48))<((src->boss_spell_timer)))
 	{
-				obj_send1->cx256							= (src->cx256); 	/* 弾源x256 ボス中心から発弾。 */
-				obj_send1->cy256							= (src->cy256); 	/* 弾源y256 ボス中心から発弾。 */
-	//	if (0x00==((src->boss_base_spell_time_out)&(2-1)))/* 2回に1回 */
+	//	if (0x00==((src->boss_spell_timer)&(2-1)))/*(2回に1回)*/
 		{
 				br.BULLET_REGIST_01_speed_offset			= t256(1);/*(テスト)*/
-				br.BULLET_REGIST_03_tama_data   			= (TAMA_DATA_0000_TILT);/* (r33-)標準弾 */
+				br.BULLET_REGIST_03_tama_data				= (TAMA_DATA_0000_TILT);/* (r33-)標準弾 */
 				br.BULLET_REGIST_04_bullet_obj_type 		= BULLET_KUNAI12_01_AKA;	/* [ 弾] */
-			//未定br.BULLET_REGIST_05_regist_type 			= TAMA_TYPE_00_ANGLE_TILT;/* (r33-)標準弾 */
-			int i;
-			for (i=0; i<2; i++)
+			u32 i;
+			for (i=0; i<(1+cg_game_difficulty); i++)/*(2段づつ)*/
 			{
 			//
-				br.BULLET_REGIST_00_speed256				= (t256(0.6)+(bbb<<2)+(i<<4));			/* 弾速 */
+				br.BULLET_REGIST_00_speed256				= (t256(0.6)+(bbb<<2)+(i<<6));			/* 弾速 */
 				br.BULLET_REGIST_02_angle65536				= (aaa_tmp_angleCCW65536);
 				tama_system_regist_single();
 			}

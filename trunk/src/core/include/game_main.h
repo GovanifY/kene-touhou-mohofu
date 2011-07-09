@@ -84,12 +84,17 @@
 
 
 
-/* 0:しない。 1:する。 もやもやエフェクトについてのデバッグ機能。 */
-//#define USE_DEBUG_PAUSE_FILTER (1)
-#define USE_DEBUG_PAUSE_FILTER (0)
 
 
 #define USE_32BIT_DRAW_MODE (0)
+
+/* 0:しない。 1:する。 easyの場合、5面終わりでBAD END。 */
+//#define US E_EASY_BADEND (1)
+
+
+/* 0:しない。 1:する。 作り中(r34)のテスト。 */
+#define USE_GU_TACHIE_TEST (0)
+
 
 #include "000_support.h"	/* (一番最初にインクルード) */
 
@@ -206,7 +211,7 @@ enum PspCtrlButtons
 	PSP_CTRL_SCREEN 	= 0x00400000,	/* Screen button. */
 	PSP_CTRL_VOLUP		= 0x00100000,	/* Volume up button. */
 	PSP_CTRL_VOLDOWN	= 0x00200000,	/* Volume down button. */
-	PSP_CTRL_WLAN_UP	= 0x00040000,	/* Wlan switch up. */
+	PSP_CTRL_WLAN_UP	= 0x00040000,	/* Wlan swi tch up. */
 	PSP_CTRL_REMOTE 	= 0x00080000,	/* Remote hold position. */
 	PSP_CTRL_DISC		= 0x01000000,	/* Disc present. */
 	PSP_CTRL_MS 		= 0x02000000,	/* Memory stick present. */
@@ -282,7 +287,7 @@ extern void ask_continue_menu_start(void);
 //
 
 #define pause_out_call_func 	return_call_func/* ポーズ時の戻り先 */
-#define menu_out_call_func		return_call_func/* 自機選択時の戻り先 */
+#define menu_out_call_func		return_call_func/* 自機選択時の戻り先 / オプションメニューの戻り先 */
 
 extern void (*main_call_func)(void);/* メインコールバック */
 extern void (*return_call_func)(void);/* ポーズ復帰後の戻り先コールバック */
@@ -313,7 +318,9 @@ extern SPRITE *global_obj_boss;
 extern SPRITE *obj_send1;
 //extern SPRITE *obj_send2;
 
-
+	/* 弾源x256 弾源y256 ボス中心から発弾。 */
+//#define send1_xy(aaa) {obj_send1->cx256 = (aaa->cx256);	obj_send1->cy256 = (aaa->cy256); }
+extern void send1_xy(SPRITE *src);
 
 //#include "font.h"
 //#include "menu.h"
@@ -463,4 +470,5 @@ extern void psp_move_screen(int src_screen_number, int dst_screen_number );
 
 #else
 	include error!!
+error! "このファイルは何度もインクルードしません。"
 #endif /* _MY_GAME_MAIN_H_ */

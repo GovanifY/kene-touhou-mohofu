@@ -15,25 +15,6 @@
 ---------------------------------------------------------*/
 
 /*---------------------------------------------------------
-	“G‚â‚ç‚ê
----------------------------------------------------------*/
-
-//static void lose_tatsumaki1(SPRITE *src)
-//{
-//	destoroy++;
-//	if ( (N UM_OF_ENEMIES-1) < destoroy/*all_destoroy*/)
-//	{
-//		destoroy = 0;
-//		if (rand_percent(50/*10*/))
-//		{
-//			item_create(/*zzz*/ src, (SP_ITEM_04_BOMB), 1, ITEM_MOVE_FLAG_06_RAND_XY);
-//		}
-//	}
-//}
-/*50%(SP_ITEM_01_P008 or SP_ITEM_04_BOMB) (SP_ITEM_01_P008+(ra_nd()&1)) */
-//66%==SP_ITEM_04_BOMB or 33%==SP_ITEM_01_P008 (SP_ITEM_EXTRA_HOMING+(ra_nd()&3/*%3*/)),
-
-/*---------------------------------------------------------
 	“GˆÚ“®
 ---------------------------------------------------------*/
 
@@ -71,11 +52,13 @@ static void move_tatsumaki1(SPRITE *src)
 		src->speed256 = (-(src->speed256));/* ”½“] */
 	}
 //
-	src->rotationCCW1024 += (src->vx_r);
 	if (0 < (src->vx_r) )
 			{	src->cx256	= (src->px256); 	}
 	else	{	src->cx256	= t256(GAME_WIDTH)-(src->px256); }
-	mask1024(src->rotationCCW1024);
+	//
+	/* ƒAƒjƒ[ƒVƒ‡ƒ“ */
+	src->zako_anime_rotate_angle1024 = (src->vx_r);
+	zako_anime_type04(src);
 }
 
 
@@ -85,7 +68,6 @@ static void move_tatsumaki1(SPRITE *src)
 
 static void regist_zako_003_tatsumaki1(GAME_COMMAND *l, SPRITE *h)
 {
-//	h->callback_loser		= lose_tatsumaki1;/*old*/
 //	h->rotationCCW1024		= ((i&(16-1))<<6);
 //
 //	h->jyumyou = (512+512+512-1);

@@ -26,36 +26,30 @@
 static void spell_create_08_rumia_night_bird(SPRITE *src)
 {
 	static int aaa_angle65536;
-	if (0x10==((src->boss_base_spell_time_out)&0x1f))/* 自機狙い角作成 */
+	if (0x10==((src->boss_spell_timer)&0x1f))/* 自機狙い角作成 */
 	{
 		#if 1
-		{
-			SPRITE *zzz_player;
-			zzz_player = &obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_00_PLAYER];
-			tmp_angleCCW65536_src_nerai(zzz_player, src);/* 自機狙い角作成 */
-		}
+		tmp_angleCCW65536_jiki_nerai(src);/* 自機狙い角作成 */
 		aaa_angle65536 = src->tmp_angleCCW65536;/* 自機狙い角 */
 		#endif
 		//	2048 == (65536)/(32)		: 1周を32分割した角度。
-		//  8192 == (2048) * (4)		: 5弾目(4弾分の幅)。
+		//	8192 == (2048) * (4)		: 5弾目(4弾分の幅)。
 		// 57344 == (65536) - (8192)	: 開始角度。(加算しないと誤差が出る。)
 	//	aaa_angle65536 += (const int)(65536-(int)((65536*4)/(32)));/* 5弾目が自機狙い */
-		if (0x00==((src->boss_base_spell_time_out)&0x20))
+		if (0x00==((src->boss_spell_timer)&0x20))
 				{	aaa_angle65536 += (57344);		}/* 5弾目(4弾分の幅)が自機狙い(65536-(4*(65536/32))) */
 		else	{	aaa_angle65536 += (8192);		}/* 5弾目(4弾分の幅)が自機狙い(65536+(4*(65536/32))) */
 		mask65536(aaa_angle65536);
 		/* 角度(65536[360/360度]を 32分割) */
 	}
 	else
-	if (0x00==((src->boss_base_spell_time_out)&0x10))/* 16回 撃つ */
+	if (0x00==((src->boss_spell_timer)&0x10))/* 16回 撃つ */
 	{
-		bullet_play_04_auto(VOICE13_SAKUYA_SHOT02);/*VOICE14_BOSS_KOUGEKI_01*/
-		obj_send1->cx256						= (src->cx256); 	/* 弾源x256 ボス中心から発弾。 */
-		obj_send1->cy256						= (src->cy256); 	/* 弾源y256 ボス中心から発弾。 */
+		bullet_play_04_auto(VOICE14_SAKUYA_SHOT02);/*VOICE15_BOSS_KOUGEKI_01*/
 		{
 			int tama_color;/* 方向 */
 			int iii;
-				iii = ((src->boss_base_spell_time_out)&0x0f);
+				iii = ((src->boss_spell_timer)&0x0f);
 			#if 0/* デバッグ(自機狙い弾の色を変える) */
 			if (0x0b==iii)/* 0x0b==5弾目 (0x0fが1弾目だから0x0bが5弾目) */
 			{
@@ -65,7 +59,7 @@ static void spell_create_08_rumia_night_bird(SPRITE *src)
 			#endif
 			#if 1
 			{
-				if (0x00==((src->boss_base_spell_time_out)&0x20))
+				if (0x00==((src->boss_spell_timer)&0x20))
 						{	tama_color = -1;/* 枠つき青弾 */ }
 				else	{	tama_color =  1;/* 枠つき緑弾 */ }
 			}
@@ -75,17 +69,14 @@ static void spell_create_08_rumia_night_bird(SPRITE *src)
 			/* 弾速 0.75 - 2.75 倍 */
 			br.BULLET_REGIST_01_speed_offset			= t256(0);/*(テスト)*/
 			br.BULLET_REGIST_02_angle65536				= (aaa_angle65536); 	/* 発射中心角度 / 特殊機能(自機狙い/他) */
-			br.BULLET_REGIST_03_tama_data   			= (TAMA_DATA_8000_NON_TILT);/* (r33-)非傾き弾 */
+			br.BULLET_REGIST_03_tama_data				= (TAMA_DATA_8000_NON_TILT);/* (r33-)非傾き弾 */
 			br.BULLET_REGIST_04_bullet_obj_type 		= BULLET_WAKU12_03_AOI+1+tama_color;			/* [枠付き青丸弾] [枠付き緑丸弾] */
-		//未定br.BULLET_REGIST_05_regist_type 			= TAMA_TYPE_01_ANGLE_NON_TILT;/* (r33-)非傾き弾 */
-			br.BULLET_REGIST_06_n_way					= (1);										/* [1way] */
-	//		br.BULLET_REGIST_07_VECTOR_div_angle1024	= (0);										/* ダミー分割角度(未使用) */
 			tama_system_regist_single();/* (r33-) */
 		}
 		/* 次の弾の角度 */
 		//	 2048 == (65536)/(32)		: 1周を32分割した角度。
 		//	63488 == (65536) - (2048)	: 減算の場合(加算しないと誤差が出る。)
-		if (0x00==((src->boss_base_spell_time_out)&0x20))
+		if (0x00==((src->boss_spell_timer)&0x20))
 				{	aaa_angle65536 += (2048);		}/* 角度(65536[360/360度]を 32分割) (int)(65536/(32)); */
 		else	{	aaa_angle65536 += (63488);		}/* 角度(65536[360/360度]を 32分割) (65536)-(int)(65536/(32)); */
 		mask65536(aaa_angle65536);
@@ -132,7 +123,7 @@ static void spell_create_08_rumia_night_bird(SPRITE *src)
 
 ---------------------------------------------------------*/
 
-static void s_check_aaa(SPRITE *src)/* 交差弾 */
+static void s_check_aaa_kome_dan(SPRITE *src)/* 交差弾 */
 {
 	if (0==(src->flags&SP_FLAG_COLISION_CHECK))/* あたり判定の無い弾は消さない。(発弾エフェクト用) */
 	{
@@ -159,13 +150,6 @@ static void s_check_aaa(SPRITE *src)/* 交差弾 */
 		//	src->rotationCCW1024 -= (8);/* 90/360 度 曲げてみるテスト(32カウントかけて曲げる。256==8*32) */
 			src->rotationCCW1024 -= (10);/* 90/360 度 曲げてみるテスト(32カウントかけて曲げる。256==8*32) */
 		}
-		#if 1
-		/* 起点座標更新 */
-		src->tx256 = (src->cx256);
-		src->ty256 = (src->cy256);
-		/* (交差弾なので)積算半径のクリア */
-		src->tama_system_radius256			 = (0);
-		#endif
 	}
 	else
 	/* 64-256 カウントまで */
@@ -179,13 +163,6 @@ static void s_check_aaa(SPRITE *src)/* 交差弾 */
 		{
 			src->rotationCCW1024--;/* 曲げてみるテスト */
 		}
-		#if 1
-		/* 起点座標更新 */
-		src->tx256 = (src->cx256);
-		src->ty256 = (src->cy256);
-		/* (交差弾なので)積算半径のクリア */
-		src->tama_system_radius256			 = (0);
-		#endif
 	}
 	#if 0
 	/* 256- カウントまで */
@@ -196,7 +173,7 @@ static void s_check_aaa(SPRITE *src)/* 交差弾 */
 	#endif
 }
 
-static void s_check_bbb(SPRITE *src)/* 連弾 */
+static void s_check_bbb_maru_dan(SPRITE *src)/* 連弾 */
 {
 	if (0==(src->flags&SP_FLAG_COLISION_CHECK))/* あたり判定の無い弾は消さない。(発弾エフェクト用) */
 	{
@@ -208,22 +185,16 @@ static void s_check_bbb(SPRITE *src)/* 連弾 */
 		if ((src->tama_system_tama_data) & TAMA_DATA_RUMIA_DIMMER_RENDAN_BIT)
 		{
 			src->tama_system_tama_data = (TAMA_DATA_8000_NON_TILT);/* (r33-)非傾き弾 */
-			#if 1
-			/* 起点座標更新 */
-			src->tx256 = (src->cx256);
-			src->ty256 = (src->cy256);
-			/* (交差弾なので)積算半径のクリア */
-			src->tama_system_radius256			 = (0);
+			tmp_angleCCW65536_jiki_nerai(src);/* 自機狙い角作成 */
+			#if 0
+			/*(ダメ)*/
+		//	src->rotationCCW1024 = (0);//描画用角度((src->tmp_angleCCW65536)>>6);/* 自機狙い角 */
+			#else
+			/*(特別ケース、このまま(見た目)の角度で移動する)*/
+			src->rotationCCW1024 = ((src->tmp_angleCCW65536)>>6);/* 自機狙い角 */
+			/* ここの描画用角度は後で利用する。 */
 			#endif
-		{
-			SPRITE *zzz_player;
-			zzz_player = &obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_00_PLAYER];
-			tmp_angleCCW65536_src_nerai(zzz_player, src);/* 自機狙い角作成 */
-		}
-		src->rotationCCW1024 = ((src->tmp_angleCCW65536)>>6);/* 自機狙い角 */
-		//	src->tama_system_speed65536				= ((br.BULLET_REGIST_00_speed256)<<8);	/* 速度 */	/* 初速(打ち出し速度) */
-		//	src->tama_system_speed65536				= (t256(1.0)<<8);			/* 弾速 */
-			src->tama_system_speed65536				= (t256(2.0)<<8);			/* 弾速 */
+			src->tama_system_speed65536 			= (t256(2.0)<<8);			/* 弾速 */
 		}
 	}
 }
@@ -237,12 +208,12 @@ static void dimmer_tama_check(void)
 		s = &obj99[OBJ_HEAD_00_TAMA+ii];
 		if (is_tama_grouip08(BULLET_KOME_00_SIRO) == is_tama_grouip08(s->type) )	/* 米弾なら */
 		{
-			s_check_aaa(s);
+			s_check_aaa_kome_dan(s);
 		}
 		else
 		if (is_tama_grouip08(BULLET_WAKU12_00_SIRO) == is_tama_grouip08(s->type) )	/* 枠付き丸弾なら */
 		{
-			s_check_bbb(s);
+			s_check_bbb_maru_dan(s);
 		}
 	}
 }
@@ -264,47 +235,38 @@ static void dimmer_tama_check(void)
 
 static void dimmer_shot_02_rendan(SPRITE *src)
 {
-		obj_send1->cx256						= (src->cx256); 	/* 弾源x256 ボス中心から発弾。 */
-		obj_send1->cy256						= (src->cy256); 	/* 弾源y256 ボス中心から発弾。 */
 	unsigned int ii;
-	for(ii=0;ii<8;ii++)
+	for (ii=0; ii<8; ii++)
 	{
 		int aaa_angle65536;
 		#if 1
-		{
-			SPRITE *zzz_player;
-			zzz_player = &obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_00_PLAYER];
-			tmp_angleCCW65536_src_nerai(zzz_player, src);/* 自機狙い角作成 */
-		}
+		tmp_angleCCW65536_jiki_nerai(src);/* 自機狙い角作成 */
 		aaa_angle65536 = src->tmp_angleCCW65536;/* 自機狙い角 */
 		#endif
 		//	2048 == (65536)/(32)		: 1周を32分割した角度。
-		//  8192 == (2048) * (4)		: 5弾目(4弾分の幅)。
+		//	8192 == (2048) * (4)		: 5弾目(4弾分の幅)。
 		// 57344 == (65536) - (8192)	: 開始角度。(加算しないと誤差が出る。)
 	//	aaa_angle65536 += (const int)(65536-(int)((65536*4)/(32)));/* 5弾目が自機狙い */
-		if (0x00==((src->boss_base_spell_time_out)&0x20))
+		if (0x00==((src->boss_spell_timer)&0x20))
 				{	aaa_angle65536 += (57344);		}/* 5弾目(4弾分の幅)が自機狙い(65536-(4*(65536/32))) */
 		else	{	aaa_angle65536 += (8192);		}/* 5弾目(4弾分の幅)が自機狙い(65536+(4*(65536/32))) */
 		mask65536(aaa_angle65536);
 		/* 角度(65536[360/360度]を 32分割) */
 		unsigned int jj;
-		for(jj=0;jj<16;jj++)
+		for (jj=0; jj<16; jj++)
 		{
 		//	br.BULLET_REGIST_00_speed256				= (t256(1.5));								/* 弾速 */
-			br.BULLET_REGIST_00_speed256				= (t256(0.75))+((16-(jj))<<5);  			/* 弾速 */
+			br.BULLET_REGIST_00_speed256				= (t256(0.75))+((16-(jj))<<5);				/* 弾速 */
 			/* 弾速 0.75 - 2.75 倍 */
 			br.BULLET_REGIST_01_speed_offset			= (ii<<6);//t256(0);/*(テスト)*/
 			br.BULLET_REGIST_02_angle65536				= (aaa_angle65536); 	/* 発射中心角度 / 特殊機能(自機狙い/他) */
-			br.BULLET_REGIST_03_tama_data   			= (TAMA_DATA_RUMIA_DIMMER_RENDAN_BIT)|(TAMA_DATA_8000_NON_TILT);/* (r33-)非傾き弾 */
+			br.BULLET_REGIST_03_tama_data				= (TAMA_DATA_RUMIA_DIMMER_RENDAN_BIT)|(TAMA_DATA_8000_NON_TILT);/* (r33-)非傾き弾 */
 			br.BULLET_REGIST_04_bullet_obj_type 		= BULLET_WAKU12_03_AOI; 			/* [枠付き青丸弾] [枠付き緑丸弾] */
-		//未定br.BULLET_REGIST_05_regist_type 			= TAMA_TYPE_01_ANGLE_NON_TILT;/* (r33-)非傾き弾 */
-			br.BULLET_REGIST_06_n_way					= (1);										/* [1way] */
-	//		br.BULLET_REGIST_07_VECTOR_div_angle1024	= (0);										/* ダミー分割角度(未使用) */
 			tama_system_regist_single();/* (r33-) */
 			/* 次の弾の角度 */
 			//	 2048 == (65536)/(32)		: 1周を32分割した角度。
 			//	63488 == (65536) - (2048)	: 減算の場合(加算しないと誤差が出る。)
-			if (0x00==((src->boss_base_spell_time_out)&0x20))
+			if (0x00==((src->boss_spell_timer)&0x20))
 					{	aaa_angle65536 += (2048);		}/* 角度(65536[360/360度]を 32分割) (int)(65536/(32)); */
 			else	{	aaa_angle65536 += (63488);		}/* 角度(65536[360/360度]を 32分割) (65536)-(int)(65536/(32)); */
 			mask65536(aaa_angle65536);
@@ -312,11 +274,29 @@ static void dimmer_shot_02_rendan(SPRITE *src)
 	}
 }
 
+
 /*---------------------------------------------------------
 	交差弾。 青弾 / 緑弾 / 赤弾
 ---------------------------------------------------------*/
 
-
+static void dimmer_shot_01_kousadan(SPRITE *src, u8 tama_type)
+		{
+			int tama_kakudo = (((tama_type)&0x06)<<8);/* 弾色別に発弾角を変える。(((tama_type)&0x06)<<6) */
+			br.BULLET_REGIST_00_speed256				= (t256(1.0));			/* 弾速 (t256(1.5)) */
+			br.BULLET_REGIST_01_speed_offset			= t256(0);/*(テスト)*/
+			br.BULLET_REGIST_02_angle65536				= (tama_kakudo);					/* 発射中心角度 / 特殊機能(自機狙い/他) */
+		//	br.BULLET_REGIST_03_tama_data				= (TAMA_DATA_RUMIA_SAYUU_BIT);/* 特殊 */
+			br.BULLET_REGIST_03_tama_data				= /* 特殊 */(TAMA_DATA_RUMIA_SAYUU_BIT)|(TAMA_DATA_0000_TILT);/* (r33-)標準弾 */
+			br.BULLET_REGIST_04_bullet_obj_type 		= BULLET_KOME_00_SIRO+tama_type;			/* [枠つき青弾] [枠つき緑弾] */
+			br.BULLET_REGIST_06_n_way					= (32); 				/* [32way] */	/* (16)[16way] */
+			br.BULLET_REGIST_07_div_angle65536			= (65536/32);			/* 分割角度 (65536/16) */
+			tama_system_regist_katayori_n_way();/*(r33-)*/
+			/* br.BULLET_REGIST_02_angle65536はtama_system_regist_katayori_n_way();で破壊される(仕様な)ので再設定が必要。 */
+			br.BULLET_REGIST_02_angle65536				= (tama_kakudo);					/* 発射中心角度 / 特殊機能(自機狙い/他) */
+		//	br.BULLET_REGIST_03_tama_data				= (0);/* 戻す(必ず戻す事。戻し忘れるとシステム自体正常動作しない) */
+			br.BULLET_REGIST_03_tama_data				= (TAMA_DATA_0000_TILT);/* (r33-)標準弾 */
+			tama_system_regist_katayori_n_way();
+		}
 
 
 /*---------------------------------------------------------
@@ -328,10 +308,10 @@ static void spell_create_29_rumia_demarcation(SPRITE *src)
 	dimmer_tama_check();/* ディマーケイション用弾チェック */
 	u8 tama_type;/* 弾色 */
 	tama_type = (0);
-	if ((0x1f)==((src->boss_base_spell_time_out)&0x1f))
+	if ((0x1f)==((src->boss_spell_timer)&0x1f))
 	{
-		#define P0x80 		0x80
-		#define YASUMI000 	0x00
+		#define P0x80		0x80
+		#define YASUMI000	0x00
 		const u8 ttt[16] =
 		{
 		/*0x00*/	P0x80,	/* 自機狙い連弾 */
@@ -351,7 +331,7 @@ static void spell_create_29_rumia_demarcation(SPRITE *src)
 		/*0x0e*/	YASUMI000,	/* 休み */
 		/*0x0f*/	YASUMI000	/* 休み */
 		};
-		tama_type = ttt[(((src->boss_base_spell_time_out)>>5)&0x0f)];
+		tama_type = ttt[(((src->boss_spell_timer)>>5)&0x0f)];
 	}
 	if ((0) == tama_type)	/* お休み */
 	{
@@ -360,50 +340,12 @@ static void spell_create_29_rumia_demarcation(SPRITE *src)
 	else
 	if (P0x80 == tama_type) 	/* 自機狙い連弾 */
 	{
-		bullet_play_04_auto(VOICE13_SAKUYA_SHOT02);/*VOICE14_BOSS_KOUGEKI_01*/
+		bullet_play_04_auto(VOICE14_SAKUYA_SHOT02);/*VOICE15_BOSS_KOUGEKI_01*/
 		dimmer_shot_02_rendan(src);
 	}
 	else		/* 交差弾。 青弾 / 緑弾 / 赤弾 */
 	{
-	//	bullet_play_04_auto(VOICE13_SAKUYA_SHOT02);/*VOICE14_BOSS_KOUGEKI_01*/
-		#if (1)
-	//	voice_play(VOICE14_BOSS_KOUGEKI_01, TRACK04_TEKIDAN);
-		bullet_play_04_auto(VOICE14_BOSS_KOUGEKI_01);
-		#endif
-		//
-//		dimmer_shot_01_kousadan(src);
-//static void dimmer_shot_01_kousadan(SPRITE *src)
-{
-		obj_send1->cx256						= (src->cx256); 	/* 弾源x256 ボス中心から発弾。 */
-		obj_send1->cy256						= (src->cy256); 	/* 弾源y256 ボス中心から発弾。 */
-		{
-		//	int tama_kakudo = (((tama_type)&0x06)<<6);/* 弾色別に発弾角を変える。 */
-			int tama_kakudo = (((tama_type)&0x06)<<8);/* 弾色別に発弾角を変える。 */
-		//	br.BULLET_REGIST_00_speed256				= (t256(1.5));			/* 弾速 */
-			br.BULLET_REGIST_00_speed256				= (t256(1.0));			/* 弾速 */
-			br.BULLET_REGIST_01_speed_offset			= t256(0);/*(テスト)*/
-			br.BULLET_REGIST_02_angle65536				= (tama_kakudo);					/* 発射中心角度 / 特殊機能(自機狙い/他) */
-		//	br.BULLET_REGIST_03_tama_data				= (TAMA_DATA_RUMIA_SAYUU_BIT);/* 特殊 */
-			br.BULLET_REGIST_03_tama_data   			= /* 特殊 */(TAMA_DATA_RUMIA_SAYUU_BIT)|(TAMA_DATA_0000_TILT);/* (r33-)標準弾 */
-			br.BULLET_REGIST_04_bullet_obj_type 		= BULLET_KOME_00_SIRO+tama_type;			/* [枠つき青弾] [枠つき緑弾] */
-		//	br.BULLET_REGIST_06_n_way					= (16); 				/* [16way] */
-			br.BULLET_REGIST_06_n_way					= (32); 				/* [32way] */
-		//未定br.BULLET_REGIST_05_regist_type 			= TAMA_TYPE_00_ANGLE_TILT;/* (r33-) */
-		//	br.BULLET_REGIST_07_div_angle65536			= (65536/16);			/* 分割角度 */
-			br.BULLET_REGIST_07_div_angle65536			= (65536/32);			/* 分割角度 */
-			tama_system_regist_katayori_n_way();/*(r33-)*/
-			/* br.BULLET_REGIST_02_angle65536はtama_system_regist_katayori_n_way();で破壊される(仕様な)ので再設定が必要。 */
-			br.BULLET_REGIST_02_angle65536				= (tama_kakudo);					/* 発射中心角度 / 特殊機能(自機狙い/他) */
-		//	br.BULLET_REGIST_03_tama_data				= (0);/* 戻す(必ず戻す事。戻し忘れるとシステム自体正常動作しない) */
-			br.BULLET_REGIST_03_tama_data   			= (TAMA_DATA_0000_TILT);/* (r33-)標準弾 */
-			tama_system_regist_katayori_n_way();
-//			br.BULLET_REGIST_ang le_offset1024		= t256(0);					/* (r33)交差弾、テスト中に付き、使ったら必ず(0)に戻す。 */
-		}
-}
+		bullet_play_04_auto(VOICE15_BOSS_KOUGEKI_01);
+		dimmer_shot_01_kousadan(src, tama_type);
 	}
 }
-		//	br.BULLET_REGIST_ang le_offset1024		=  t256(0.5);		/* 加角度(交差弾用) */
-		//	br.BULLET_REGIST_ang le_offset1024		=  t256(5); 		/* 加角度(交差弾用) */
-		//	br.BULLET_REGIST_ang le_offset1024		=  t256(0.5);		/* ??? */
-		//	br.BULLET_REGIST_ang le_offset1024		= -t256(0.5);		/* 加角度(交差弾用) */
-		//	br.BULLET_REGIST_ang le_offset1024		= -t256(5); 		/* 加角度(交差弾用) */
