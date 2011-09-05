@@ -1,7 +1,7 @@
 
 /*---------------------------------------------------------
 	東方模倣風 ～ Toho Imitation Style.
-	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	http://mohou.huuryuu.com/
 	-------------------------------------------------------
 ---------------------------------------------------------*/
 
@@ -206,7 +206,9 @@ static void OGG_getsome(OGG_music *music)
 			vi->rate,
 			//--変換先
 			mixer.format,
-		//	(2),//	mixer.channels,//(2)pspステレオ再生固定
+			#ifdef _OLD_SDL_LINK_MODE_/*(旧互換機能)*/
+			(2),//	mixer.channels,//(2)pspステレオ再生固定
+			#endif
 			mixer.freq);
 		if ( cvt->buf )
 		{

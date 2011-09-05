@@ -1,7 +1,7 @@
 
 /*---------------------------------------------------------
 	東方模倣風 ～ Toho Imitation Style.
-	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	このファイルは直接インクルードしません。
 	"game_main.h" からのみ間接的にインクルードします。
@@ -26,8 +26,12 @@
 	このカードCPUには、レジスタ(Resister)と呼ばれるカードCPUの内部メモリがあり。
 	カードCPUを実行させる場合(つまりスペルカードを撃つ場合)に、カードCPUはレジスタ以外アクセスできない。
 	-------------------------------------------------------
-	仕様:全レジスタ(reg00-reg1f)は、カードスクリプト開始時に必ず(0)で消去される。
-	その後、カードスクリプト用の[初期化セクション]で指示された初期化処理が一度だけ行われる。
+	仕様:
+		全レジスタ(reg00-reg1f)は、カードスクリプト開始時に必ず(0)で消去される。
+		次に、難易度レジスタに難易度が入る。
+		その後、カードスクリプト用の[初期化セクション]で指示された初期化処理が一度だけ行われる。
+		([初期化セクション]では難易度レジスタが必ず使用できる)
+		発弾処理で難易度レジスタを使わない場合は、汎用レジスタとして使用して値を破壊しても良い。
 ---------------------------------------------------------*/
 
 enum
@@ -48,7 +52,7 @@ enum
 	REG_NUM_0c_REG4,				// 汎用レジスタ4。
 	REG_NUM_0d_REG5,				// 汎用レジスタ5。
 	REG_NUM_0e_REG6,				// 汎用レジスタ6。
-	REG_NUM_0f_REG7,				// 汎用レジスタ7。(難易度レジスタ)
+	REG_NUM_0f_REG7_difficulty_only,				// 汎用レジスタ7。(難易度レジスタ)
 	// I/Oポート
 	REG_NUM_10_BOSS_SPELL_TIMER,	// スペル経過時間用レジスタ。
 	REG_NUM_11_TAMA1,				// 発弾用レジスタ1。tama_system に接続。HATSUDAN_01_speed256
@@ -122,9 +126,6 @@ enum
 #define REG_0c_REG4 				spell_register[REG_NUM_0c_REG4]
 #define REG_0d_REG5 				spell_register[REG_NUM_0d_REG5]
 #define REG_0e_REG6 				spell_register[REG_NUM_0e_REG6]
-#define REG_0f_REG7 				spell_register[REG_NUM_0f_REG7]
-//
-#define REG_10_BOSS_SPELL_TIMER 	spell_register[REG_NUM_10_BOSS_SPELL_TIMER] 	/* スペル経過時間 */
 /*---------------------------------------------------------
 	難易度レジスタ。
 	仕様が決まっていないので、取り敢えず割り当てる。
@@ -132,8 +133,14 @@ enum
 	-------------------------------------------------------
 	このレジスタは、カード初期化時に難易度が入る。
 ---------------------------------------------------------*/
-#define REG_0f_GAME_DIFFICULTY		REG_0f_REG7
+//#define REG_0f_REG7				spell_register[REG_NUM_0f_REG7]
+#define REG_0f_GAME_DIFFICULTY		spell_register[REG_NUM_0f_REG7_difficulty_only]
+//
+#define REG_10_BOSS_SPELL_TIMER 	spell_register[REG_NUM_10_BOSS_SPELL_TIMER] 	/* スペル経過時間 */
 
+
+/*(CARD CPU 内部命令)*/
+extern void sincos256(void);
 #endif /* _CARD_CPU_H_ */
 
 ///////////////////////////////////////////////////////////////////
@@ -155,7 +162,7 @@ enum
 	将来的にもっと効率的な別システムになる。
 	「弾幕」に特化して「弾(個弾)」の(移動)処理が出来なくなる。
 	これは「弾幕」シューティングの場合、個弾の移動処理は必要無い為、
-	個弾の移動処理は無い。あると遅い。(r35現在旧互換であるので遅い)
+	個弾の移動処理は無い。あると遅い。
 ---------------------------------------------------------*/
 
 /*---------------------------------------------------------
@@ -185,9 +192,13 @@ enum
 	#define HATSUDAN_03_angle1024		HATSUDAN_03_angle65536	/* 描画用角度 */	/* <描画用の分解能1024度に落としてある事を明示する。> */
 #endif
 
+#if 1
+	/* 同じ物だけど、  。 */
+	#define REG_11_GOUSEI_WARIAI256 	HATSUDAN_01_speed256
+#endif
 
 /*---------------------------------------------------------
-	登録種類(角度弾の場合)
+	登録種類
 ---------------------------------------------------------*/
 
 extern void hatudan_system_regist_single(void); 			/* 単発 */
@@ -196,14 +207,12 @@ extern void hatudan_system_regist_n_way(void);				/* 通常 n way弾 */
 
 
 /*---------------------------------------------------------
-	角度弾規格(策定案、仮運用中。)
-	基点座標関連は特殊機能に振って変更するかも知れない。
+	発弾登録規格
 ---------------------------------------------------------*/
-
 	#define hatudan_register_speed65536 		user_data00 	/* 加減速 */	//	#define hatudan_system_speed256 user_data02 	/* 加減速 */
 	#define hatudan_register_tra65536			user_data01 	/* 加減速調整 */
 	#define hatudan_register_spec_data			user_data02 	/* 画面外消去判定や反射機能 */
-	#define hatudan_register_flame_counter		user_data03 	/* 発弾フレームカウンタ(正値で発弾) */
+	#define hatudan_register_frame_counter		user_data03 	/* 発弾フレームカウンタ(正値で発弾) */
 	#define hatudan_register_user_data10		user_data04 	/* (r35) */
 //	#define hatudan_system_bbb					user_data05 	/* 拡張予定(?) (r33現在未使用) / */
 //	#define hatudan_system_ccc					user_data06 	/* 拡張予定(?) (r33現在未使用) / */
@@ -221,7 +230,8 @@ extern void hatudan_system_regist_n_way(void);				/* 通常 n way弾 */
 	#define TAMA_SPEC_0000_TILT 				(0x0000)/* 傾き弾(通常弾) */
 	#define TAMA_SPEC_8000_NON_TILT 			(0x8000)/* 非傾き弾 */		/* 傾かない弾(大玉弾、チルノ弾、等用) */
 //	#define TAMA_SPEC_4000_NON_MOVE 			(0x4000)/* 移動処理なし */
-	#define TAMA_SPEC_4000_NON_MOVE 			(0x0000)/* 移動処理なし(r35標準) */
+//	#define TAMA_SPEC_4000_NON_MOVE 			(0x0000)/* 移動処理なし(r35標準) */
+	#define TAMA_SPEC_4000_GRAZE 				(0x4000)/* グレイズ済みかとうかのフラグ */
 	#define TAMA_SPEC_3000_EFFECT_MASK			(0x3000)/* エフェクト選択 */
 	#define TAMA_SPEC_3000_EFFECT_NONE			(0x3000)/* エフェクトなし */
 	#define TAMA_SPEC_2000_EFFECT_MINI			(0x2000)/* エフェクト小 */
@@ -293,3 +303,127 @@ extern LASER lz[MAX_99_LASER];
 /* lz[0]==0;の場合、すべてoff。(レーザーモード 0:off, 1:on) */
 
 #endif /* _LASER_SYSTEM_H_ */
+
+///////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////
+
+
+#ifndef _SPELL_SYSTEM_H_
+#define _SPELL_SYSTEM_H_
+/*
+	スペルシステム==カードの管理システム。(カードシステムとは違うので注意)
+*/
+
+/*---------------------------------------------------------
+	スペル生成システム(カードを生成)
+---------------------------------------------------------*/
+
+	/* 弾源x256 弾源y256 ボス中心から発弾。 */
+//#define set_REG_DEST_XY(aaa) {REG_02_SEND1_BOSS_X_LOCATE = (aaa->cx256);	REG_03_SEND1_BOSS_Y_LOCATE = (aaa->cy256); }
+extern void set_REG_DEST_XY(OBJ *src);
+#if 0/*あとで有効にする*/
+extern void tmp_angleCCW65536_src_nerai(void);
+extern void calculate_jikinerai(void);
+
+extern void spell_cpu_douchuu_init(void);
+extern void card_maikai_init(OBJ *src);
+extern void card_generate(OBJ *src);
+#endif
+
+
+/* HATSUDAN_03_angle65536 に 自機狙い弾の角度を計算 */
+extern void tmp_angleCCW65536_src_nerai(void);
+
+/* HATSUDAN_03_angle65536 に 自機狙い弾の角度を計算 */
+extern void calculate_jikinerai(void);
+
+/*---------------------------------------------------------
+	(r36)カードスクリプト用命令(multiprex_rate_vector)
+	複合割合合成。
+---------------------------------------------------------*/
+extern void multiprex_rate_vector(void);
+
+
+/* スペルをCPU実行し、カードを１フレーム生成する。 */
+extern void card_generate(OBJ *src);
+
+
+
+#endif /* _SPELL_SYSTEM_H_ */
+
+///////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////
+
+#ifndef _CARD_SYSTEM_H_
+#define _CARD_SYSTEM_H_
+
+//------------ カード関連
+
+extern void create_card(OBJ *src, int card_number);
+
+
+//extern void ch eck_regist_card(OBJ *src);/* カードの更新チェック */
+extern void card_boss_move_generate_check_regist(OBJ *src); /* カード登録可能なら登録 / カード生成 */
+
+
+// extern void card_state_check_holding(OBJ *src);/* カードが終わるまで待つ。 */
+
+enum
+{
+	CARD_BOSS_TIMER_0000_HATUDAN		= (0),			/* 発弾中。 */
+//	CARD_BOSS_TIMER_0254_TAIHI			= (254),		/* 退避中。 */
+	CARD_BOSS_TIMER_0255_IDO_JYUNNBI	= (255),		/* 撃てる場合。発弾位置まで移動 */
+	CARD_BOSS_TIMER_0256_SET			= (256),		/* カードを使用しない(通常攻撃等)。(カードが撃てるかどうか判断) */
+};
+
+
+
+enum
+{
+	DANMAKU_LAYER_00 = 0,			//(0)/* 弾幕コントロールしない通常弾(画面外で弾消し) */
+	DANMAKU_LAYER_01,				//(1)/* 弾幕コントロールグループ(1)弾 */
+	DANMAKU_LAYER_02,				//(2)/* 弾幕コントロールグループ(2)弾 */
+	DANMAKU_LAYER_03,				//(3)/* 弾幕コントロールグループ(3)弾 */
+	DANMAKU_LAYER_04_MAX/* 弾幕コントロールグループ最大数 */
+};
+
+typedef struct /*_card_global_class_*/
+{
+	int mode_timer; 		/* カードモード */
+	int limit_health;		/* 規定値以下になればカードモード解除 */
+	int boss_state; 		/* 負値になればボスがカードモードに入らない */
+	int boss_timer; 		/* [共用]制限時間 */
+	//
+	int address_set;		/* [共用]カードアドレス番号 */
+	int address_temporaly;	/* [一時使用]カードアドレス番号 */
+	int spell_used_number;	/* [使用中のスペル番号] */
+	int boss_hp_dec_by_frame;/* ボス攻撃減少値、フレーム単位 */
+	//
+	void (*boss_move_card_callback)(OBJ *sss);	/* ボスcard内移動処理 */
+	void (*danmaku_callback[(DANMAKU_LAYER_04_MAX)])(OBJ *sss); /*	弾幕コールバックシステム(スペル変身処理) */
+	// 「移動できなかったフラグ」(使用前に手動でOFF==0にしとく)
+	int/*u8*/ boss_hamidasi;			/* 「移動できなかったフラグ」(使用前に手動でOFF==0にしとく) */
+	int tukaima_used_number;/*(使い魔システム)*/
+} CARD_SYSTEM_GLOBAL_CLASS;
+extern CARD_SYSTEM_GLOBAL_CLASS card;
+
+//	int dummy2;
+/* とりあえず */
+
+
+//------------ "回"みたいなマークのエフェクト
+/*
+「"回"みたいなマーク」は、ボスが持ってるカードだそうです。
+だから本当は、カードの枚数が減ったら、枚数を減らさなきゃいけないのかな？
+でも本家そうなってないよね。
+*/
+/*static*/extern  void move_card_square_effect(OBJ *src);
+/*static*/extern  void boss_effect_kotei_obj_r36_taihi(void);
+
+extern void game_core_danmaku_system_callback(void);
+#endif /* _CARD_SYSTEM_H_ */
+
+
+

@@ -3,7 +3,7 @@
 
 /*---------------------------------------------------------
 	東方模倣風 ～ Toho Imitation Style.
-	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	もみじカード
 	-------------------------------------------------------
@@ -20,8 +20,8 @@
 
 ---------------------------------------------------------*/
 
-/*static*/extern void add_zako_aya_5_momiji(SPRITE *src);
-static void move_aya_momiji_oya(SPRITE *src)
+/*static*/extern void add_zako_aya_5_momiji(OBJ *src);
+static void move_aya_momiji_oya(OBJ *src)
 {
 	src->BOSS_DATA_05_move_jyumyou--;/*fps_factor*/
 	if ((0 > src->BOSS_DATA_05_move_jyumyou))
@@ -41,20 +41,20 @@ static void move_aya_momiji_oya(SPRITE *src)
 
 ---------------------------------------------------------*/
 
-/*static*/ void add_zako_aya_doll(SPRITE *src)
+/*static*/ void add_zako_aya_doll(OBJ *src)
 {
 	int angle1024;
 //	for (angle1024=(int)((1024)-(1024*2/24)); angle1024<(int)((1024)+(1024*3/24)); angle1024+=(int)(1024*1/24) )
 	for (angle1024=(0); angle1024<(1024); angle1024+=(int)(1024*1/24) )
 	{
-		SPRITE *h;
-		h							= obj_add_01_teki_error();
+		OBJ *h;
+		h							= obj_add_A01_teki_error();
 		if (NULL!=h)/* 登録できた場合のみ */
 		{
 			h->m_Hit256R			= ZAKO_ATARI16_PNG;
-			h->type 				= (TEKI_32_20)+((angle1024>>7)&0x07);/* 0 ... 8 */
-		//	h->flags				|= (SP_FLAG_COLISION_CHECK/*|SP_FLAG_VISIBLE|SP_FLAG_TIME_OVER*/);
-			h->flags				&= (~(SP_FLAG_COLISION_CHECK)); 	/* あたり判定無し */
+			h->obj_type_set 		= (TEKI_32_20)+((angle1024>>7)&0x07);/* 0 ... 8 */
+			/* あたり判定無し */
+			h->atari_hantei 		= (ATARI_HANTEI_OFF/*スコア兼用*/);
 			h->callback_mover		= move_aya_momiji_oya;
 		//	h->callback_loser		= NULL;
 	//		h->callback_hit_teki	= callback_hit_zako;/*???*/

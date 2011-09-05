@@ -1,9 +1,10 @@
 
-#include "game_main.h"
+/*(道中コールバックでカードシステムを使う)*/
+#include "./boss/boss.h"//#include "game_main.h"
 
 /*---------------------------------------------------------
 	東方模倣風 ～ Toho Imitation Style.
-	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	ゲームコア
 	シューティングゲーム中は、「ゲームコア」で行います。
@@ -32,6 +33,7 @@
 ---------------------------------------------------------*/
 
 #include "kanji_system.h"
+//#include "./menu/kaiwa_sprite.h"
 
 /*---------------------------------------------------------
 	ゲームコマンドの新規追加。
@@ -52,20 +54,20 @@ extern void game_command_07_regist_zako(			GAME_COMMAND *l);/* ザコ、生成処理 */
 
 ---------------------------------------------------------*/
 
-static u32 game_v_time;/* ゲーム時間 game flame time counter. */
+static u32 game_v_time;/* ゲーム時間 game frame time counter. */
 
 #if (1==USE_HOLD_GAME_MODE)
 static int v_time_hold_mode;/* 咲夜用に止めたり動かしたり出来るようにしとく */
 #endif /* (1==USE_HOLD_GAME_MODE) */
 
-static void init_stage_start_time(void)
+global void init_stage_start_time(void)
 {
 //	stage_start_time = psp_get_uint32_ticks();
 	game_v_time = 0;
 }
 /*static*/global void set_core_game_time_MAX(void)
 {
-	game_v_time = 65535;/* 適当に大きな値[flame](65535[flame]==約18[分]==18.xxx x 60 x 60 ) */
+	game_v_time = 65535;/* 適当に大きな値[frame](65535[frame]==約18[分]==18.xxx x 60 x 60 ) */
 }
 
 #if (1==USE_HOLD_GAME_MODE)
@@ -85,9 +87,14 @@ global void hold_game_mode_off(void)/* ゲーム時間の動作開始 */
 	シューティングゲーム本体の初期化
 ---------------------------------------------------------*/
 
+	#if (1==USE_AFTER_LOAD_STAGE)
+	#else
+extern void load_stage_make_filename(void);
+extern void load_stage_data(void);
+	#endif
 
 extern void set_rnd_seed(int set_seed);
-extern void load_stage(void);
+extern void load_stage_init(void);
 
 extern void player_init_stage(void);
 
@@ -95,26 +102,37 @@ global void common_load_init(void)
 {
 	set_rnd_seed(cg.game_now_stage);	/* 乱数系列の初期化 */
 //
-	/* Load next stage */
-	load_stage();
-	// ロード中は処理落ちしているので、ロード後に時間を再作成する。
-	init_stage_start_time();
+	#if (1==USE_r36_SCENE_FLAG)
+	/*(仮仕様、ステージタイトル表示はまだ作ってないので強制的に表示後の状態にする)*/
+	/* off / 道中コマンド追加読み込み処理を停止する。 */
+//	cg.state_flag		&= (~SCENE_NUMBER_MASK); 	/*(シーンを消す)*/
+	cg.state_flag		&= (0xffff00ffu); 	/*(シーンを消す)*/
+//	cg.state_flag		|= (SCENE_NUMBER_0x0400_DOUCHUU); // ステージタイトル表示後の状態にする。
+	cg.state_flag		|= (SCENE_FLAG_0x0100_KAIWA_LOAD); // タイトル読みこみテスト
+	#endif
+	/*(雑魚停止)*/
+	//set_core_game_time_MAX();
+
+	/* Load stage init */
+	load_stage_init();//	ステージ読み込みより前に初期化する部分。
+	#if (1==USE_AFTER_LOAD_STAGE)
+	#else
+	{
+		load_stage_make_filename();
+		load_stage_data();
+		init_stage_start_time();	// ロード後に時間を再作成する。
+	}
+	#endif
 //
 	player_init_stage();/* ステージ開始時のみ若干の無敵状態にセット */
 	//
-	#if (1)/*(漢字関連の初期化)*/
-	set_kanji_origin_xy((10+6), (10+192));/*(表示原点の設定)*/
-	set_kanji_origin_kankaku(18);/*(字間を標準にする)*/
-//	set_kanji_hide_line(ML_LINE_02);/*(2行目以下を非表示にする。)*/
-	set_kanji_hide_line(ML_LINE_04);/*(4行目以下を非表示にする。)*/
-	kanji_window_all_clear();				/* 漢字画面を全行消す。漢字カーソルをホームポジションへ移動。 */
-	#endif
+	kanji_init_standard();/*(漢字関連の標準初期化)*/
 	//
 	#if (1==USE_HOLD_GAME_MODE)
 	hold_game_mode_off();/* ゲーム時間の動作開始 */
 	#endif /* (1==USE_HOLD_GAME_MODE) */
 	//
-	#if 1/*Gu化完了したら要らなくなる*/
+	#if (1)/*(ゲームが始まる前にSDL画面を消す)*/ /*Gu化完了したら要らなくなる*/
 	{
 		psp_clear_screen(); /* [PAUSE] 復帰時にSDL画面を消す。 */
 	}
@@ -139,29 +157,6 @@ global void stage_first_init(void)
 //
 	cg.game_now_stage	= cg.game_continue_stage;
 	cb.main_call_func	= common_load_init;
-}
-
-
-/*---------------------------------------------------------
-	(シナリオ会話処理が終わったので)
-	イベントシーンを次に進める。
----------------------------------------------------------*/
-
-global void incliment_scene(void)
-{
-	set_kanji_hide_line(ML_LINE_02);/*(2行目以下を非表示にする。)*/
-	if ((cg.state_flag & STATE_FLAG_05_IS_BOSS))
-	{	/*(「ボス戦闘後の会話が終了した状態」の場合)*/
-		cb.main_call_func = stage_clear_result_screen_start;	/* ステージクリアー時のリザルト画面 */
-	}
-	else
-	{
-	//	cg.state_flag |= STATE_FLAG_05_IS_BOSS; 	/* ボス戦闘前の会話終了を設定 */
-		/*(「ボス戦闘前の会話が終了した状態」の場合)*/
-		/*(r32)*/cg.state_flag |= (STATE_FLAG_05_IS_BOSS|STATE_FLAG_13_DRAW_BOSS_GAUGE);
-		/* 道中コマンド追加読み込み処理を停止する。 */
-		cg.state_flag			&= (~STATE_FLAG_14_DOUCHU_TUIKA);	/* off */
-	}
 }
 
 
@@ -215,38 +210,8 @@ static void game_core_teki_tuika(void)
 			aaa = aaa->next;	/* 次を調べる */	/* choice alter. */
 		}
 	}
-	#if (1)/*(とりあえず)*/
-	if (SPELL_00 == card.card_number)		/* カード生成しない場合、道中用コールバックを呼ぶ。 */
-	{
-		danmaku_system_callback();/* 弾幕コールバックシステム(を単純に呼ぶ) */
-	}
-	#endif
 }
-	#if (0)/*(r35巧くいってない。何故かボス中に有効になる)*/
-	/* 道中の場合勝手に喰み出しチェックを行い弾を消す(暫定的) */
-	#if 0
-//	if (0!=(cg.state_flag & STATE_FLAG_05_IS_NOT_BOSS))
-	if (0==(cg.state_flag & STATE_FLAG_05_IS_BOSS))/*(r32)*/
-	#endif
-	{
-		/*
-			弾消しは「弾幕コールバックシステム」に標準搭載されているものを使う。
-			このシステムを使用して弾消しを行う場合は、システムの初期化が必要なので、
-			その為の初期化は各面開始前のローディング時に行う。
-		*/
-		#if (1)
-		/* 弾消しは、毎フレーム行う必要がないので、道中が遅いなら、danmaku_system_callback();を数フレームに一度呼ぶように変更すれば良い。 */
-		static int aaaa=0;
-		aaaa++;
-		aaaa &= (0x07);
-		if (0==aaaa)
-		#endif
-		{
-			danmaku_system_callback();/* 弾幕コールバックシステム(を単純に呼ぶ) */
-		}
-	//	danmaku_action_00_gamen_gai_nara_tama_wo_kesu();/* 角度弾の喰み出しチェックを行う(毎フレーム行う必要はない) */
-	}
-	#endif
+
 
 /*---------------------------------------------------------
 	特殊イベントの実行処理
@@ -257,13 +222,13 @@ static void game_core_teki_tuika(void)
 	動作が遅すぎてゲームに、ならなくなってしまう。
 	そこで動作速度的観点から、頻度の少ない特殊機能はここで実行する。
 ---------------------------------------------------------*/
-extern void kaiwa_system_SDL_draw(void);
+extern void kaiwa_system_SDL_BG_draw(void);
 extern void kaiwa_system_execute_move_only_main(void);
 extern void kaiwa_load_ivent(void);
 /* 注意：(動作速度低下するので)static関数にしない */global void my_special(void)
 {
 	/* 道中コマンド追加読み込み処理 */
-	if (cg.state_flag & (STATE_FLAG_14_DOUCHU_TUIKA))
+	if (IS_SCENE_DOUCHU_TUIKA)
 	{
 		game_core_teki_tuika();
 	}
@@ -273,25 +238,100 @@ extern void kaiwa_load_ivent(void);
 		return;/* ボム発動中は待機 */
 	}
 	/* シナリオ会話をロードして開始処理 */
-	if (cg.state_flag & (STATE_FLAG_10_IS_LOAD_KAIWA_TXT))
+	if (IS_SCENE_KAIWA_LOAD)
 	{
-		cg.state_flag &= (~(STATE_FLAG_10_IS_LOAD_KAIWA_TXT));/*off*/
+		#if (1==USE_r36_SCENE_FLAG)
+	//	NEXT_SCENE;/*(次の場面へ設定)*/kaiwa_load_ivent();内部で進める。のでダブる。
+		#else
+		cg.state_flag &= (~(STATE_FLAG_0x0100_IS_LOAD_KAIWA_TXT));/*off*/
+		#endif
 		kaiwa_load_ivent();/*(シナリオ会話をロードして開始する)*/
 	}
+	#if (1==USE_r36_SCENE_FLAG)
+	else
+	#endif
 	/*(会話モード処理が終わった？)*/
-	if (cg.state_flag & (STATE_FLAG_12_END_KAIWA_MODE))
+	if (IS_SCENE_END_KAIWA_MODE)
 	{
-		cg.state_flag &= (~(STATE_FLAG_12_END_KAIWA_MODE));/*off*/
-		incliment_scene();/*(次の状態に進める)*/
+		#if (1==USE_r36_SCENE_FLAG)
+		NEXT_SCENE;/*(次の場面へ設定)*/ //ダブる。？？？？？？？？？？？？？？？
+		#else
+		cg.state_flag &= (~(STATE_FLAG_0x0300_END_KAIWA_MODE));/*off*/
+		#endif
+		//inc liment_scene();/*(次の状態に進める)*/
+		/* (シナリオ会話処理が終わったので)
+			イベントシーンを次に進める。 */
+		{
+			set_kanji_hide_line(ML_LINE_02);/*(2行目以下を非表示にする。)*/
+			#if (1==USE_r36_SCENE_FLAG)
+			if (0x0c00==((cg.state_flag & SCENE_NUMBER_MASK)))/*(good end の場合)*/
+			{
+				cg.state_flag += 0x0400;/*(ボス終了後へ進める)*/
+			}
+		//	if (0x1000==((cg.state_flag & SCENE_NUMBER_MASK)))
+			if (0x1000u <= ((unsigned)(cg.state_flag & SCENE_NUMBER_MASK)))
+			#else
+			if ((cg.state_flag & STATE_FLAG_0x0800_IS_BOSS))
+			#endif
+			{	/*(「ボス戦闘後の会話が終了した状態」の場合)*/
+				cb.main_call_func = stage_clear_result_screen_start;	/* ステージクリアー時のリザルト画面 */
+			}
+			#if (1==USE_r36_SCENE_FLAG)
+			#else
+			else
+			{
+			//	cg.state_flag |= STATE_FLAG_0x0800_IS_BOSS; 	/* ボス戦闘前の会話終了を設定 */
+				/*(「ボス戦闘前の会話が終了した状態」の場合)*/
+				/*(r32)*/cg.state_flag |= (STATE_FLAG_0x0800_IS_BOSS|STATE_FLAG_15_DRAW_BOSS_GAUGE);
+				/* 道中コマンド追加読み込み処理を停止する。 */
+				cg.state_flag			&= (~STATE_FLAG_14_DOUCHU_TUIKA);	/* off */
+			}
+			#endif
+		}
 	}
+	#if (1==USE_r36_SCENE_FLAG)
+	else
+	#endif
 	/* 会話モード動作が必要？ */
-	if (cg.state_flag & STATE_FLAG_06_IS_KAIWA_MODE)
+	if (IS_SCENE_KAIWA_MODE) 	// 会話モード動作が必要？
 	{
-		kaiwa_system_SDL_draw();					/* シナリオ会話 SDL 描画(遅い) */
-		kaiwa_system_execute_move_only_main();		/* シナリオ会話 動作(移動) */
+		kaiwa_system_SDL_BG_draw(); 				/* シナリオ会話システム SDL_BG 描画(遅い) */
+		kaiwa_system_execute_move_only_main();		/* シナリオ会話システム 動作(移動) */
 	}
 }
 
+
+/*---------------------------------------------------------
+	弾幕レイヤーシステム
+	-------------------------------------------------------
+	初弾時に弾幕コントロール(コールバック)を登録しておき、
+	それを操作する。
+---------------------------------------------------------*/
+
+/*global*/static void game_core_danmaku_layer_system(void)
+{
+	unsigned int jj;
+	for (jj=0; jj<DANMAKU_LAYER_04_MAX; jj++)/*(登録を全部調べる。)*/
+	{
+		/*(登録されていない場合は何もしない。)*/
+		if (NULL != card.danmaku_callback[jj])
+		{
+			unsigned int ii;
+			for (ii=0; ii<OBJ_POOL_00_TAMA_1024_MAX; ii++)/*(弾を全弾調べる。)*/
+			{
+				OBJ *obj;
+				obj = &obj99[OBJ_HEAD_00_0x0000_TAMA+ii];
+				if (ATARI_HANTEI_OFF!=(obj->atari_hantei))/*(あたり判定の無い弾は対象外。発弾エフェクト用。)*/
+				{
+					if (jj == ((obj->hatudan_register_spec_data)&(0x03)) )	/* 弾幕[n]なら */
+					{
+						(card.danmaku_callback[jj])(obj);
+					}
+				}
+			}
+		}
+	}
+}
 
 /*---------------------------------------------------------
 	シューティングゲーム本体のメインルーチン
@@ -302,7 +342,7 @@ extern void kaiwa_load_ivent(void);
 ---------------------------------------------------------*/
 extern void vbl_draw_screen(void);/*support.c*/
 extern void score_display(void);
-extern void bg2_move_main(void);
+extern void bg_move_all(void);
 extern void draw_SDL_score_chache(void);
 global void shooting_game_core_work(void)
 {
@@ -329,11 +369,15 @@ my_game_core_loop:
 			static関数にすると、GCCが勝手に __inline__ 関数に変換する為(-O3の場合)
 			追い出した意味が無くなります。(インライン展開される)
 		 */
+		#if (1==USE_r36_SCENE_FLAG)
+		if (0x0800!=(cg.state_flag & (0xff00))) 	// ボス戦闘中以外の状態ならば、すべて特殊処理が必要。
+		#else
 		if (cg.state_flag & (
-			STATE_FLAG_10_IS_LOAD_KAIWA_TXT |	//
-			STATE_FLAG_12_END_KAIWA_MODE |		//
-			STATE_FLAG_06_IS_KAIWA_MODE |		//
-			STATE_FLAG_14_DOUCHU_TUIKA))		// 道中はザコ追加必要なので特殊処理
+			STATE_FLAG_0x0100_IS_LOAD_KAIWA_TXT |	//
+			STATE_FLAG_0x0300_END_KAIWA_MODE |		//
+			STATE_FLAG_0x0200_IS_KAIWA_MODE |		//
+			STATE_FLAG_14_DOUCHU_TUIKA))			// 道中はザコ追加必要なので特殊処理
+		#endif
 		{
 			my_special();/* 注意：(動作速度低下するので)static関数にしない */
 		}
@@ -344,8 +388,11 @@ my_game_core_loop:
 			もし、処理が遅くなって、描画をフレームスキップさせる場合でも、
 			動作(移動)はフレームスキップさせない。
 		*/
-		bg2_move_main();	/* 背景の移動処理 */
-		sprite_move_all();	/* スプライトオブジェクトの移動処理 */
+		bg_move_all();	/* 背景の移動処理 */
+		#if (1)
+		game_core_danmaku_layer_system();/*(弾幕レイヤーシステム)*/
+		#endif
+		obj_area_move_A00_A01_A02();	/* [A00弾領域][A01敵領域][A02固定領域]オブジェクトの移動処理 */
 		/* [D] 描画 */
 		// この辺は速度低下するのでコールバックにすべき
 		if (0!=(cg.side_panel_draw_flag))

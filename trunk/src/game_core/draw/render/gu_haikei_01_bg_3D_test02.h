@@ -68,7 +68,7 @@ static void gu_draw_bg_3D_test02(void)
 	//		reset the time counter
 
 	nnn++;
-	if (nnn >= byou60(5) ) /* 300==(5[sec] x 60[flame])*/
+	if (nnn >= byou60(5) ) /* 300==(5[sec] x 60[frame])*/
 	{
 		nnn = 0;
 		test_auto_rot_bbbb();

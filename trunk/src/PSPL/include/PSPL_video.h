@@ -1,7 +1,7 @@
 
 /*---------------------------------------------------------
 	東方模倣風 ～ Toho Imitation Style.
-	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	http://mohou.huuryuu.com/
 	-------------------------------------------------------
 	PSPL - PSP customised SDL Layer port.
 	SDL Copyright (C) 1997-2004 Sam Lantinga.
@@ -720,9 +720,9 @@ extern SDL_Surface * /*SD LCALL*/ SDL_DisplayFormat(SDL_Surface *surface);
 extern SDL_Surface * /*SD LCALL*/ SDL_DisplayFormatAlpha(SDL_Surface *surface);
 
 
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-/* YUV video surface overlay functions					   */
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+/* ------------------------------------------ */
+/* YUV video surface overlay functions */
+/* ------------------------------------------ */
 
 /* This function creates a video output overlay
    Calling the returned surface an overlay is something of a misnomer because

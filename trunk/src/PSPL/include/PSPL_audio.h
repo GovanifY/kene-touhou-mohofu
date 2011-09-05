@@ -1,7 +1,7 @@
 
 /*---------------------------------------------------------
 	“Œ•û–Í•í•— ` Toho Imitation Style.
-	ƒvƒƒWƒFƒNƒgƒy[ƒW http://code.google.com/p/kene-touhou-mohofu/
+	http://mohou.huuryuu.com/
 	-------------------------------------------------------
 	PSPL - PSP customised SDL Layer port.
 	SDL Copyright (C) 1997-2004 Sam Lantinga.
@@ -37,6 +37,18 @@ error! "‚±‚ÌƒvƒƒOƒ‰ƒ€‚Í SDL_audio.h ‚ªƒCƒ“ƒNƒ‹[ƒh‚³‚ê‚Ä‚¢‚é‚ÆAƒRƒ“ƒpƒCƒ‹‚Å‚«‚
 /* Set up for C function definitions, even when using C++ */
 #ifdef __cplusplus
 extern "C" {
+#endif
+
+#ifdef _OLD_SDL_LINK_MODE_/*(‹ŒŒİŠ·‹@”\)*/
+	#define PSPL_LockAudio		SDL_LockAudio
+	#define PSPL_UnlockAudio	SDL_UnlockAudio
+	#define PSPL_BuildAudioCVT	SDL_BuildAudioCVT
+	#define PSPL_ConvertAudio	SDL_ConvertAudio
+	#define PSPL_FreeWAV		SDL_FreeWAV
+	#define PSPL_LoadWAV_RW 	SDL_LoadWAV_RW
+	#define PSPL_OpenAudio		SDL_OpenAudio
+	#define PSPL_MixAudio		SDL_MixAudio
+	#define PSPL_PauseAudio 	SDL_PauseAudio
 #endif
 
 /* The calculated values in this structure are calculated by PSPL_OpenAudio() */
@@ -87,13 +99,19 @@ typedef struct PSPL_AUDIO_CONVERT_tag
 	int 	needed; 			/* Set to 1 if conversion possible. */
 	u16 	src_format; 		/* Source audio format. */
 	u16 	dst_format; 		/* Target audio format. */
+	#ifdef _OLD_SDL_LINK_MODE_/*(‹ŒŒİŠ·‹@”\)*/
+	double dummy_rate_incr;		/**< Rate conversion increment */
+	#endif
 	u8		*buf;				/* Buffer to hold entire audio data. */
 	int 	len;				/* Length of original audio buffer. */
 	int 	len_cvt;			/* Length of converted audio buffer. */
 	int 	len_mult;			/* buffer must be len*len_mult big. */
+//	#ifdef _OLD_SDL_LINK_MODE_/*(‹ŒŒİŠ·‹@”\)*/
+//	double dummy_len_ratio; 	/**< Given len, final size is len*len_ratio */
+//	#endif
+	float	len_ratio;			/* Given len, final size is len*len_ratio. */
 	void (/*SD LCALL*/ *filters[10])(struct PSPL_AUDIO_CONVERT_tag *cvt, u16 format);	/* ü”g”•ÏŠ·Àsƒ‹[ƒ`ƒ“ */
 	int 	filter_index;		/* Current audio conversion function. */
-	float	len_ratio;			/* Given len, final size is len*len_ratio. */
 	#if (1==USE_AUTO_RATE_CONVERSION)
 	float	rate_incr;			/* Rate conversion increment. */
 	#endif /*(1==USE_AUTO_RATE_CONVERSION)*/
@@ -205,7 +223,9 @@ extern int /*SD LCALL*/ PSPL_BuildAudioCVT(
 	int src_rate,
 	//--•ÏŠ·æ
 	u16 dst_format,
-//	u8 dst_channels,//(2)pspƒXƒeƒŒƒIÄ¶ŒÅ’è
+	#ifdef _OLD_SDL_LINK_MODE_/*(‹ŒŒİŠ·‹@”\)*/
+	u8 dummy_dst_channels,//(2)pspƒXƒeƒŒƒIÄ¶ŒÅ’è
+	#endif
 	int dst_rate);
 
 /* Once you have initialized the 'cvt' structure using SDL_BuildAudioCVT(),

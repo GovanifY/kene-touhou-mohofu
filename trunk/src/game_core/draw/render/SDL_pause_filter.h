@@ -49,15 +49,15 @@ src1	p1 -- p2
 src2	-- p3 p4
 -----------------------
 		全画面処理を2回繰り返す。
-		ただし、x端の2dot及び、y端の1dotは処理しない。
+		ただし、x端の2[pixel]及び、y端の1[pixel]は処理しない。
 	*/
 
 	/* パネル部分を除く */		/* GAME_WIDTH==352 == 480-128 */
 
 //	#define MY_FILTER_WINDOW_SIZE_X_03_DOT	(3)
 //	#define MY_FILTER_WINDOW_SIZE_Y_02_DOT	(2)
-	#define MY_FILTER_X_SIZE_350_DOT	(GAME_WIDTH-(2))/*(xは2[dot]処理しない)*/
-	#define MY_FILTER_Y_SIZE_271_DOT	(GAME_HEIGHT-(1))/*(yは1[dot]処理しない)*/
+	#define MY_FILTER_X_SIZE_350_DOT	(GAME_WIDTH-(2))/*(xは2[pixel]処理しない)*/
+	#define MY_FILTER_Y_SIZE_271_DOT	(GAME_HEIGHT-(1))/*(yは1[pixel]処理しない)*/
 
 /* 仮想スクリーン(SDL_00_VIEW_SCREEN)にもやもやエフェクトをかける */
 global void psp_pause_filter(void)
@@ -65,7 +65,7 @@ global void psp_pause_filter(void)
 	#if (1)/* 1==全画面にエフェクトをかける。 0==SDL部分のみエフェクトをかける。 */
 	s_gu_save_screen();/* vramからSDL画面に強制コピー */
 	#endif
-	if (SDL_MUSTLOCK(cb.sdl_screen[SDL_00_VIEW_SCREEN]))	{	SDL_LockSurface(cb.sdl_screen[SDL_00_VIEW_SCREEN]);	}	/* ロック */
+	if (SDL_MUSTLOCK(cb.sdl_screen[SDL_00_VIEW_SCREEN]))	{	SDL_LockSurface(cb.sdl_screen[SDL_00_VIEW_SCREEN]); 	}	/* ロック */
 	{
 		// psp_BGR565 == bbbb bggg gggr rrrr
 		#define MY_16_G_(aaa) ( (((aaa&0x07e0) )) )
@@ -74,10 +74,10 @@ global void psp_pause_filter(void)
 			u16 *src1;	src1 = render_image;								/* 始めのライン */
 			u16 *src2;	src2 = render_image + (PSP_BUFFER_WIDTH512);		/* 1ライン下 */
 			int jj;
-			for (jj=0; jj<(MY_FILTER_Y_SIZE_271_DOT); jj++)/*(yは1[dot]処理しない)*/
+			for (jj=0; jj<(MY_FILTER_Y_SIZE_271_DOT); jj++)/*(yは1[pixel]処理しない)*/
 			{
 				int ii;
-				for (ii=0; ii<(MY_FILTER_X_SIZE_350_DOT); ii++)/*(xは2[dot]処理しない)*/ 	/* パネル部分を除く */
+				for (ii=0; ii<(MY_FILTER_X_SIZE_350_DOT); ii++)/*(xは2[pixel]処理しない)*/  	/* パネル部分を除く */
 				{
 					u16 pixel1;
 					u16 pixel2;
@@ -101,18 +101,18 @@ global void psp_pause_filter(void)
 					src1++;
 					src2++;
 				}
-				src1 += (PSP_BUFFER_WIDTH512-(MY_FILTER_X_SIZE_350_DOT));/* 残り */ 	/*(xは2[dot]処理しない)*/
-				src2 += (PSP_BUFFER_WIDTH512-(MY_FILTER_X_SIZE_350_DOT));/* 残り */ 	/*(xは2[dot]処理しない)*/
+				src1 += (PSP_BUFFER_WIDTH512-(MY_FILTER_X_SIZE_350_DOT));/* 残り */ 	/*(xは2[pixel]処理しない)*/
+				src2 += (PSP_BUFFER_WIDTH512-(MY_FILTER_X_SIZE_350_DOT));/* 残り */ 	/*(xは2[pixel]処理しない)*/
 			}
 			/*[パス2]下から処理する。*/
-			{	/*(最後に処理した移動分は余計なので相殺させる。同時に1[dot]余計なのでその分も消す。)*/
+			{	/*(最後に処理した移動分は余計なので相殺させる。同時に1[pixel]余計なのでその分も消す。)*/
 				src1 -= (PSP_BUFFER_WIDTH512-(MY_FILTER_X_SIZE_350_DOT)+(1));/* 残り */ /* 引く */
 				src2 -= (PSP_BUFFER_WIDTH512-(MY_FILTER_X_SIZE_350_DOT)+(1));/* 残り */ /* 引く */
 			}
-			for (jj=0; jj<(MY_FILTER_Y_SIZE_271_DOT); jj++)/*(yは1[dot]処理しない)*/
+			for (jj=0; jj<(MY_FILTER_Y_SIZE_271_DOT); jj++)/*(yは1[pixel]処理しない)*/
 			{
 				int ii;
-				for (ii=0; ii<(MY_FILTER_X_SIZE_350_DOT); ii++)/*(xは2[dot]処理しない)*/ 	/* パネル部分を除く */
+				for (ii=0; ii<(MY_FILTER_X_SIZE_350_DOT); ii++)/*(xは2[pixel]処理しない)*/ 	/* パネル部分を除く */
 				{
 					u16 pixel1;
 					u16 pixel2;
@@ -136,8 +136,8 @@ global void psp_pause_filter(void)
 					src1--;
 					src2--;
 				}
-				src1 -= (PSP_BUFFER_WIDTH512-(MY_FILTER_X_SIZE_350_DOT));/* 残り */ 	/*(xは2[dot]処理しない)*/
-				src2 -= (PSP_BUFFER_WIDTH512-(MY_FILTER_X_SIZE_350_DOT));/* 残り */ 	/*(xは2[dot]処理しない)*/
+				src1 -= (PSP_BUFFER_WIDTH512-(MY_FILTER_X_SIZE_350_DOT));/* 残り */ 	/*(xは2[pixel]処理しない)*/
+				src2 -= (PSP_BUFFER_WIDTH512-(MY_FILTER_X_SIZE_350_DOT));/* 残り */ 	/*(xは2[pixel]処理しない)*/
 			}
 		}
 	}

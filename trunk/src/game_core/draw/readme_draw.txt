@@ -1,7 +1,7 @@
 
 /*---------------------------------------------------------
 	東方模倣風 ～ Toho Imitation Style.
-	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	r32現在のメモ
 ---------------------------------------------------------*/
@@ -16,18 +16,18 @@ gu_blit_render_screen_01()
 	＃３．	背景3D障害物面			非使用					--- 		あり。					(現時点で未作成、主に道中背景、木とか竹とか丸いのとかetc...)
 	＃４．	魔方陣面				非使用					--- 		TEX_02_MAHOUJIN
 	＃５．	ポリゴンライン面		非使用					--- 		TEX_02_MAHOUJIN 		(魔方陣画像の一部を間借りする予定、ポリゴンライン、パチェレーザー)
-	＃６．	自機面					SP_GROUP_JIKI_GET_ITEM	専用111 	TEX_03_JIKI 			(仮、r32現在バッティング中)
-	＃６．	自機面					SP_GROUP_JIKI_GET_ITEM	共通(仮)	TEX_03_JIKI 			(仮、r32現在バッティング中)
+	＃６．	自機面					OBJ_Z01_JIKI_GET_ITEM	専用111 	TEX_03_JIKI 			(仮、r32現在バッティング中)
+	＃６．	自機面					OBJ_Z01_JIKI_GET_ITEM	共通(仮)	TEX_03_JIKI 			(仮、r32現在バッティング中)
 	＃７．	ライン面				非使用					--- 		なし。					(現時点で未作成2Dライン)
-	＃８．	敵面					SP_GROUP_TEKI			共通(仮)	TEX_04_TEKI
-	＃９．	ITEM面					SP_GROUP_ITEMS			弾444		TEX_06_BULLET
-	＃10．	敵弾面					SP_GROUP_BULLETS		弾444		TEX_06_BULLET
+	＃８．	敵面					OBJ_Z02_TEKI			共通(仮)	TEX_04_TEKI
+	＃９．	ITEM面					OBJ_Z03_ITEM			弾444		TEX_06_BULLET
+	＃10．	敵弾面					OBJ_Z04_TAMA			弾444		TEX_06_BULLET
 }
 ＃11．		(仮)パネルベース		??? 					??? 		TEX_	... 			(テスト)
 ＃15．		SDL 画面				非使用					--- 		なし。					(将来的に(少なくともゲーム中は)廃止する予定。但しエンディングやメニュー等は活用したほうが良いのか考慮中。立ち絵 / スコアパネル / メニュー画面 の描画、r32現状まだ 2/3ぐらいは SDL描画)
 //
-＃20．		フロント面				SP_GROUP07_FRONT		共通(仮)	TEX_07_FRONT			;
-＃20．		爆発面(フロント面)		SP_GROUP07_FRONT		共通(仮)	TEX_07_FRONT			;爆発テクスチャは半透明なので後に描画しないとならない制限がある。
+＃20．		フロント面				OBJ_Z05_FRONT			共通(仮)	TEX_07_FRONT			;
+＃20．		爆発面(フロント面)		OBJ_Z05_FRONT			共通(仮)	TEX_07_FRONT			;爆発テクスチャは半透明なので後に描画しないとならない制限がある。
 //
 ＃21．		スコア面(フロント面)	??? 					??? 		TEX_07_FRONT			(FRONT 面を間借りして、スコア表示)
 ＃22．		フロント面エフェクト	非使用					--- 		TEX_07_FRONT			(ボム時のロゴ文字)

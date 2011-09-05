@@ -1,7 +1,7 @@
 
 /*---------------------------------------------------------
- 東方模倣風 ～ Toho Imitation Style.
-  プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	東方模倣風 ～ Toho Imitation Style.
+	http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	ルイズっぽいカードを定義します。
 	と思ったけど、全然それっぽくない。
@@ -39,7 +39,7 @@
 	定数	t256(1.2)
 	定数	((65536/4)/32)
 ---------------------------------------------------------*/
-local void spell_create_44_ruiz3(SPRITE *src)
+local void spell_create_44_ruiz3(OBJ *src)
 {
 	count_up_limit_NUM(REG_NUM_08_REG0, 4);//	取り敢えず4回に一回でいいや。
 	if (0==(REG_08_REG0))

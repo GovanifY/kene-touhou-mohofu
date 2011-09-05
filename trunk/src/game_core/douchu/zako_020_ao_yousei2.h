@@ -1,7 +1,7 @@
 
 /*---------------------------------------------------------
 	東方模倣風 ～ Toho Imitation Style.
-	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	道中のザコ
 	-------------------------------------------------------
@@ -14,7 +14,7 @@
 	敵移動
 ---------------------------------------------------------*/
 
-static void move_ao_yousei2(SPRITE *src)
+static void move_ao_yousei2(OBJ *src)
 {
 	if (50+10  < src->jyumyou)		/* 登場の動き */
 	{
@@ -58,7 +58,7 @@ static void move_ao_yousei2(SPRITE *src)
 	敵を追加する
 ---------------------------------------------------------*/
 
-static void regist_zako_020_ao_yousei2(GAME_COMMAND *l, SPRITE *h)
+static void regist_zako_020_ao_yousei2(GAME_COMMAND *l, OBJ *h)
 {
 	/* 登場の動き / 退場の動き */
 		 if (t256(64)			 > h->cx256)	{	h->vx256 =	t256(2.0);	}	/* 出現位置が左なら、右へ移動 */

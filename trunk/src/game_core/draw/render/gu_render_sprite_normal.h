@@ -5,7 +5,7 @@
 ---------------------------------------------------------*/
 
 /* --- 汎用スプライトを一枚スクリーンに貼り付ける */
-static void render_object_no_rot_zoom(SPRITE *spr)
+static void render_object_no_rot_zoom(OBJ *spr)
 {
 	/* --- 表示スイッチ */
 //	if (spr->used ==  0/*FA LSE*/) return;

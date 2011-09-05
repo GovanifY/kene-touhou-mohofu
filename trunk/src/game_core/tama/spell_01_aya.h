@@ -1,7 +1,7 @@
 
 /*---------------------------------------------------------
- 東方模倣風 ～ Toho Imitation Style.
-  プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	東方模倣風 ～ Toho Imitation Style.
+	http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	射命丸 文のカードを定義します。
 ---------------------------------------------------------*/
@@ -25,7 +25,7 @@
 	REG_0c_REG4 	音用カウンタ。(48回に1回) 発音。
 ---------------------------------------------------------*/
 
-local void spell_create_15_aya_misogi1(SPRITE *src)
+local void spell_create_15_aya_misogi1(OBJ *src)
 {
 //	if ((0x08)==((REG_10_BOSS_SPELL_TIMER)&0x0f))/* (16回に1回)(16回毎に発弾) */
 	count_up_limit_NUM(REG_NUM_08_REG0, 16);//	/* (16回に1回)(16回毎に発弾) */
@@ -76,8 +76,8 @@ local void spell_create_15_aya_misogi1(SPRITE *src)
 			}
 		}
 		// 回転量
-		REG_09_REG1 += (int)(	   (65536/(22)));/* HOUGA_16_YEL_ROTATE_ANGLE */				/*(1024/(6*8))*/		/* 角度(1024[360/360度]を 48分割) */
-		REG_0a_REG2 += (int)(65536-(65536/(15)));/* HOUGA_16_YEL_ROTATE_ANGLE */				/*(1024/(6*8))*/		/* 角度(1024[360/360度]を 48分割) */
+		REG_09_REG1 += (int)(	   (65536/(22)));/* ROTATE_ANGLE */				/*(1024/(6*8))*/		/* 角度(1024[360/360度]を 48分割) */
+		REG_0a_REG2 += (int)(65536-(65536/(15)));/* ROTATE_ANGLE */				/*(1024/(6*8))*/		/* 角度(1024[360/360度]を 48分割) */
 	// 音用
 	//	if ((0x10)==((REG_10_BOSS_SPELL_TIMER)&0x1f))/* (32回に1回発音) */
 	//	if ((0x40)==((REG_10_BOSS_SPELL_TIMER)&0x7f))/* (128回に1回発音) */
@@ -114,7 +114,7 @@ local void spell_create_15_aya_misogi1(SPRITE *src)
 	REG_0c_REG4 	音用カウンタ。(40回に1回) 発音。
 ---------------------------------------------------------*/
 
-local void spell_create_23_aya_misogi2(SPRITE *src)
+local void spell_create_23_aya_misogi2(OBJ *src)
 {
 //	if ((0x04)==((REG_10_BOSS_SPELL_TIMER)&0x07))/* (8回に1回 発弾) */
 	count_up_limit_NUM(REG_NUM_08_REG0, 8);//	/* (8回に1回 発弾) */
@@ -157,10 +157,10 @@ local void spell_create_23_aya_misogi2(SPRITE *src)
 			hatudan_system_regist_single();/* (r33-) */
 		}
 		// 回転量
-	//	REG_09_REG1 += (((int)( 	(65536/(22)))+((int)(65536/(2)))));/* HOUGA_16_YEL_ROTATE_ANGLE */				/*(1024/(6*8))*/		/* 角度(1024[360/360度]を 48分割) */
-	//	REG_0a_REG2 += (((int)(65536-(65536/(15)))+((int)(65536/(2)))));/* HOUGA_16_YEL_ROTATE_ANGLE */ 			/*(1024/(6*8))*/		/* 角度(1024[360/360度]を 48分割) */
-	//	REG_09_REG1 += (((int)( 	(65536/(44)))+((int)(65536/(2)))));/* HOUGA_16_YEL_ROTATE_ANGLE */				/*(1024/(6*8))*/		/* 角度(1024[360/360度]を 48分割) */
-	//	REG_0a_REG2 += (((int)(65536-(65536/(30)))+((int)(65536/(2)))));/* HOUGA_16_YEL_ROTATE_ANGLE */ 			/*(1024/(6*8))*/		/* 角度(1024[360/360度]を 48分割) */
+	//	REG_09_REG1 += (((int)( 	(65536/(22)))+((int)(65536/(2)))));/* ROTATE_ANGLE */				/*(1024/(6*8))*/		/* 角度(1024[360/360度]を 48分割) */
+	//	REG_0a_REG2 += (((int)(65536-(65536/(15)))+((int)(65536/(2)))));/* ROTATE_ANGLE */ 			/*(1024/(6*8))*/		/* 角度(1024[360/360度]を 48分割) */
+	//	REG_09_REG1 += (((int)( 	(65536/(44)))+((int)(65536/(2)))));/* ROTATE_ANGLE */				/*(1024/(6*8))*/		/* 角度(1024[360/360度]を 48分割) */
+	//	REG_0a_REG2 += (((int)(65536-(65536/(30)))+((int)(65536/(2)))));/* ROTATE_ANGLE */ 			/*(1024/(6*8))*/		/* 角度(1024[360/360度]を 48分割) */
 		// 回転量が 22分割(但し半周毎, 実質44分割)の場合.
 		REG_09_REG1 += ((int)(		  (65536/(44)) + (65536/(2))   ));		/* 角度(65536[360/360度]を 22分割、但し半周毎に描く ==	((65536/44)+(65536/2)) ) */
 		// 回転量が 15分割(但し半周毎, 実質30分割)の場合.
@@ -222,9 +222,9 @@ local void spell_create_23_aya_misogi2(SPRITE *src)
 	[弾幕グループ(1)セクション]
 	-------------------------------------------------------
 ---------------------------------------------------------*/
-local void aya_danmaku_01_callback(SPRITE *src)/* 岐符「天の八衢」 */
+local void aya_danmaku_01_callback(OBJ *src)/* 岐符「天の八衢」 */
 {
-	if (((32*18)-HATUDAN_FRAME64)==((REG_0a_REG2) ))/* 約0.33[秒](==20flame)停止 */
+	if (((32*18)-HATUDAN_FRAME64)==((REG_0a_REG2) ))/* 約0.33[秒](==20[frame])停止 */
 	{
 		/* ここでは効果音なし */
 		/*(弾幕グループ(1)を全弾停止。向きを変える。)*/
@@ -234,7 +234,7 @@ local void aya_danmaku_01_callback(SPRITE *src)/* 岐符「天の八衢」 */
 		}
 	}
 	else
-	if (((32*18)-HATUDAN_FRAME64-20)==((REG_0a_REG2) ))/* 止まってから20flame後 */ /*(32*17)*/
+	if (((32*18)-HATUDAN_FRAME64-20)==((REG_0a_REG2) ))/* 止まってから20[frame]後 */ /*(32*17)*/
 	{
 		/* 移動。 再加速。 */
 			/*(弾幕グループ(1)を全弾加速させる。)
@@ -256,7 +256,7 @@ local void aya_danmaku_01_callback(SPRITE *src)/* 岐符「天の八衢」 */
 			#endif
 			src->hatudan_register_tra65536			= t256(1);	/* (1) 調整加速弾 */
 		/* チルノ(パーフェクトフリーズ)の場合は先に変身するが、文(天の八衢)の場合は後で変身する。 */
-			src->type							= (BULLET_MARU10_BASE + TAMA_IRO_03_AOI);	/* 青丸弾 */
+			src->obj_type_set							= (BULLET_MARU10_BASE + TAMA_IRO_03_AOI);	/* 青丸弾 */
 			reflect_sprite_spec444(src, OBJ_BANK_SIZE_00_TAMA); 	/* 弾グラと弾あたり判定を変更する。 */
 			/* (通常弾へ変身する) */
 			src->hatudan_register_spec_data 		= (DANMAKU_LAYER_00)|(TAMA_SPEC_8000_NON_TILT);/* (r33-)非傾き弾 */
@@ -279,9 +279,8 @@ local void aya_danmaku_01_callback(SPRITE *src)/* 岐符「天の八衢」 */
 	[初期化セクション]
 	-------------------------------------------------------
 ---------------------------------------------------------*/
-local void spell_init_22_aya_yatimata(SPRITE *src)
+local void spell_init_22_aya_yatimata(OBJ *src)
 {
-//	card.danmaku_callback[0] = danmaku_00_standard_angle_mover;/*(通常弾用)*/	/*(後追い弾は通常弾)*/
 	card.danmaku_callback[1] = aya_danmaku_01_callback;/*(岐符「天の八衢」用。)*/
 //	card.danmaku_callback[2] = NULL;/*(未使用)*/
 //	card.danmaku_callback[3] = NULL;/*(未使用)*/
@@ -295,10 +294,10 @@ local void spell_init_22_aya_yatimata(SPRITE *src)
 	REG_0a_REG2 	ボスタイマー値、コールバック側に連絡用。(とりあえず)
 //	REG_0b_REG3 	再加速の速度用に一時使用。
 ---------------------------------------------------------*/
-local void spell_create_22_aya_yatimata(SPRITE *src)
+local void spell_create_22_aya_yatimata(OBJ *src)
 {
 	REG_0a_REG2 = (REG_10_BOSS_SPELL_TIMER);/*(とりあえず)*/
-	if ((32*20)-1==((REG_10_BOSS_SPELL_TIMER) ))/* 約1.0[秒](==64flame)全弾を展開 */
+	if ((32*20)-1==((REG_10_BOSS_SPELL_TIMER) ))/* 約1.0[秒](==64[frame])全弾を展開 */
 	{
 		/* 弾生成 */
 			HATSUDAN_01_speed256				= (t256(0.5));			/* 弾速(pspの画面は狭い) */
@@ -340,7 +339,7 @@ local void spell_create_22_aya_yatimata(SPRITE *src)
 // 4096 == 65536/16
 // 3855.05882352941176470588235294118 == 65536/17
 //	240.941176470588235294117647058824 == ((65536/16)-(16636/17)) 差分
-local void spell_create_26_aya_saifu(SPRITE *src)
+local void spell_create_26_aya_saifu(OBJ *src)
 {
 	if ((SPELL_TIME_9999-1)==((REG_10_BOSS_SPELL_TIMER) ))/* 初期化 */
 	{
@@ -422,8 +421,9 @@ local void spell_create_26_aya_saifu(SPRITE *src)
 	-------------------------------------------------------
 	テキトー
 ---------------------------------------------------------*/
-extern void add_zako_aya_doll(SPRITE *src);/* 文人形カード */
-local void spell_create_0f_aya_doll(SPRITE *src)
+//tern void add_zako_aya_doll(OBJ *src);/* 椛弾 */
+extern void add_zako_aya_doll(OBJ *src);/* 文人形カード */
+local void spell_create_0f_aya_doll(OBJ *src)
 {
 	if (50==((REG_10_BOSS_SPELL_TIMER) ))
 	{
@@ -440,7 +440,7 @@ local void spell_create_0f_aya_doll(SPRITE *src)
 	大玉弾
 ---------------------------------------------------------*/
 
-local void bullet_create_aya_kougeki_03(SPRITE *src)
+local void bullet_create_aya_kougeki_03(OBJ *src)
 {
 	s_bullet_create_aya_oodama3(src, /* 仕様変更 */(t256(4.0)+((REG_0f_GAME_DIFFICULTY)<<7))/*, 10*/);
 }
@@ -450,7 +450,7 @@ local void bullet_create_aya_kougeki_03(SPRITE *src)
 	危険な種弾
 ---------------------------------------------------------*/
 
-local void bullet_create_aya_kougeki_02(SPRITE *src)
+local void bullet_create_aya_kougeki_02(OBJ *src)
 {
 	add_zako_aya_doll(src);
 };
@@ -462,11 +462,10 @@ local void bullet_create_aya_kougeki_02(SPRITE *src)
 	-------------------------------------------------------
 ---------------------------------------------------------*/
 #if 0
-local void spell_init_1d_amefuri_test(SPRITE *src)
+local void spell_init_1d_amefuri_test(OBJ *src)
 {
 	REG_09_REG1 	= (t256(1.5)+((REG_0f_GAME_DIFFICULTY)<<6));//[定数1]雨の速度
 //	REG_0a_REG2 	= ((1024/2)+(1024/24)+(REG_0f_GAME_DIFFICULTY<<3));//[定数2]赤青クナイが曲がる角度
-//	card.danmaku_callback[0] = danmaku_00_standard_angle_mover;/*(通常弾用)*/
 //	card.danmaku_callback[1] = meirin_danmaku_02_aka_ao_kunai_callback;/*(赤青クナイ用)*/
 	card.danmaku_callback[2] = common_danmaku_01_amefuri_callback;/*(雨用)*/
 //	card.danmaku_callback[3] = NULL;/*(未使用)*/

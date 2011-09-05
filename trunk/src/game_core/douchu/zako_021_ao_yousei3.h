@@ -1,21 +1,21 @@
 
 /*---------------------------------------------------------
 	東方模倣風 ～ Toho Imitation Style.
-	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	道中のザコ
 	-------------------------------------------------------
 		"青妖精3",		"FAIRY",	(r27から新規追加)
 	-------------------------------------------------------
 	user_x: 	速度256[speed256]
-	user_y: 	横位置[dots]
+	user_y: 	横位置[pixel]
 ---------------------------------------------------------*/
 
 /*---------------------------------------------------------
 	敵移動
 ---------------------------------------------------------*/
 
-static void move_ao_yousei3(SPRITE *src)
+static void move_ao_yousei3(OBJ *src)
 {
 	if (512 > src->jyumyou) 	/* 離脱 */
 	{
@@ -47,7 +47,7 @@ static void move_ao_yousei3(SPRITE *src)
 	敵を追加する
 ---------------------------------------------------------*/
 
-static void regist_zako_021_ao_yousei3(GAME_COMMAND *l, SPRITE *h)
+static void regist_zako_021_ao_yousei3(GAME_COMMAND *l, OBJ *h)
 {
 	h->vx256				= ((h->cx256)>>8);
 	#if (1==USE_X_HOUKOU_ao3)

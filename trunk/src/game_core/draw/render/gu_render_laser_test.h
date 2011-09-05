@@ -1,7 +1,7 @@
 
 /*---------------------------------------------------------
 	東方模倣風 ～ Toho Imitation Style.
-	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	このファイルは直接インクルードしません。
 	"draw_screen.c" からのみ間接的にインクルードします。
@@ -13,13 +13,12 @@
 ---------------------------------------------------------*/
 static void gu_blit_laser_test(void)
 {
-	SPRITE *obj_boss;
-	obj_boss			= global_obj_boss;
-//	obj_boss			= あたり判定の都合上無理&obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_08_BOSS];
+	OBJ *obj_boss;
+	obj_boss			= &obj99[OBJ_HEAD_01_0x0800_TEKI+TEKI_OBJ_00_BOSS_HONTAI];/*(ボス本体)*/
 	int boss_center_x = ((obj_boss->cx256)>>8);/*+(16)*/
 	int boss_center_y = ((obj_boss->cy256)>>8);/*+(24)*/
-	SPRITE *zzz_player;
-	zzz_player = &obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_00_PLAYER];
+	OBJ *zzz_player;
+	zzz_player = &obj99[OBJ_HEAD_02_0x0900_KOTEI+FIX_OBJ_00_PLAYER];
 	int player_center_x = ((zzz_player->cx256)>>8);/*+(16)*/
 	int player_center_y = ((zzz_player->cy256)>>8);/*+(24)*/
 

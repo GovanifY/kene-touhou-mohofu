@@ -1,7 +1,7 @@
 
 /*---------------------------------------------------------
- 東方模倣風 ～ Toho Imitation Style.
-  プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	東方模倣風 ～ Toho Imitation Style.
+	http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	その他のカードを定義します。
 ---------------------------------------------------------*/
@@ -25,7 +25,7 @@
 			/* 3:  8 == 20-(3*4) */
 		//	REG_08_REG0 = ((20-1)-(((REG_0f_GAME_DIFFICULTY))<<2));/*(8-1)*/ /*(10-1)*/
 
-local void spell_create_11_tengu_shot(SPRITE *src)
+local void spell_create_11_tengu_shot(OBJ *src)
 {
 	#if 0/*(なぜかうまくいかない???)*/
 	count_up_limit_NUM(REG_NUM_09_REG1, 128);// カウンタ。(色値用)
@@ -38,7 +38,7 @@ local void spell_create_11_tengu_shot(SPRITE *src)
 			{	REG_0a_REG2 = (1);	}/* 偶数弾 青 8方向 */
 	else	{	REG_0a_REG2 = (0);	}/* 奇数弾 緑 7方向 */
 	#endif
-	/* 初めの 28 flameはお休み */
+	/* 初めの 28[frame]はお休み */
 	if (100 > ((REG_10_BOSS_SPELL_TIMER)&0x7f))
 	{
 		count_up_limit_NUM(REG_NUM_08_REG0, ((20-1)-(((REG_0f_GAME_DIFFICULTY))<<2)));//	if (0==((REG_10_BOSS_SPELL_TIMER)&0x03))
@@ -74,7 +74,7 @@ local void spell_create_11_tengu_shot(SPRITE *src)
 ---------------------------------------------------------*/
 
 /* [CW 時計回り] */
-local void spell_create_20_sonota_debug_cw_ao/*CW*/(SPRITE *src)
+local void spell_create_20_sonota_debug_cw_ao/*CW*/(OBJ *src)
 {
 	if (0==((REG_10_BOSS_SPELL_TIMER)&0x03))
 	{
@@ -109,7 +109,7 @@ local void spell_create_20_sonota_debug_cw_ao/*CW*/(SPRITE *src)
 }
 
 /*[CCW 反時計回り]*/
-local void spell_create_21_sonota_debug_ccw_aka/*CCW*/(SPRITE *src)
+local void spell_create_21_sonota_debug_ccw_aka/*CCW*/(OBJ *src)
 {
 	if (0==((REG_10_BOSS_SPELL_TIMER)&0x03))
 	{
@@ -169,25 +169,20 @@ local void spell_create_21_sonota_debug_ccw_aka/*CCW*/(SPRITE *src)
 #define HGT_DATA_add_delta256		user_data05 		/* 加算、加速度 */
 
 #define HOSIGATA_DAN_LIMIT_01_512	(512+0)
-static void move_bullet_sakuya_hosi_gata(SPRITE *src)
+static void move_bullet_sakuya_hosi_gata(OBJ *src)
 {
 	src->HGT_giji_jyumyou--;/* 時間経過 */
 	if (HOSIGATA_DAN_LIMIT_01_512 > (src->HGT_giji_jyumyou))/* 予め設定された時間で動く */
 	{
 		src->HGT_giji_jyumyou = HOSIGATA_DAN_LIMIT_01_512;
 		src->HGT_DATA_speed256 += (src->HGT_DATA_add_delta256); //(4) (3.84) == t256(0.015);
-		#if (0)//
-		src->vx256 = ((si n1024((src->HGT_DATA_angle1024))*(src->HGT_DATA_speed256))>>8);/*fps_factor*/ 	/* CCWの場合 */
-		src->vy256 = ((co s1024((src->HGT_DATA_angle1024))*(src->HGT_DATA_speed256))>>8);/*fps_factor*/
-		#else
-		{
-			int sin_value_t256; 	//	sin_value_t256 = 0;
-			int cos_value_t256; 	//	cos_value_t256 = 0;
-			int256_sincos1024( (src->HGT_DATA_angle1024), &sin_value_t256, &cos_value_t256);
-			src->vx256 = ((sin_value_t256*(src->HGT_DATA_speed256))>>8);/*fps_factor*/
-			src->vy256 = ((cos_value_t256*(src->HGT_DATA_speed256))>>8);/*fps_factor*/
-		}
-		#endif
+		//------------------
+		HATSUDAN_01_speed256	= (src->HGT_DATA_speed256);
+		HATSUDAN_03_angle65536	= deg1024to65536((((src->HGT_DATA_angle1024))));
+		sincos256();/*(破壊レジスタ多いので注意)*/
+		src->vx256 = REG_03_DEST_Y;//sin_value_t256 // 下CCWの場合(右CWの場合ととxyが逆)
+		src->vy256 = REG_02_DEST_X;//cos_value_t256 // 下CCWの場合(右CWの場合ととxyが逆)
+		//------------------
 	}
 	//move_bullet_vector(src);
 	src->cx256 += (src->vx256); 	/*fps_factor*/
@@ -195,6 +190,19 @@ static void move_bullet_sakuya_hosi_gata(SPRITE *src)
 //	gamen_gai_nara_osimai(src);/* 画面外ならおしまい */
 	hatudan_system_B_gamen_gai_tama_kesu(src);/*(画面外弾消し)*/
 }
+		#if (0)//
+		src->vx256 = ((si n1024((src->HGT_DATA_angle1024))*(src->HGT_DATA_speed256))>>8);/*fps_factor*/ 	/* CCWの場合 */
+		src->vy256 = ((co s1024((src->HGT_DATA_angle1024))*(src->HGT_DATA_speed256))>>8);/*fps_factor*/
+		//#el se
+		{
+			int sin_value_t256; 	//	sin_value_t256 = 0;
+			int cos_value_t256; 	//	cos_value_t256 = 0;
+			int256_si nco s1024( (src->HGT_DATA_angle1024), &sin_value_t256, &cos_value_t256);
+			src->vx256 = ((sin_value_t256*(src->HGT_DATA_speed256))>>8);/*fps_factor*/
+			src->vy256 = ((cos_value_t256*(src->HGT_DATA_speed256))>>8);/*fps_factor*/
+		}
+		#endif
+
 /*
 	-------------------------------------------------------
 	ToDo:
@@ -216,7 +224,7 @@ static void move_bullet_sakuya_hosi_gata(SPRITE *src)
 	src->giji_jyumyou を廃止して src->jyumyou で置き換える。
 ---------------------------------------------------------*/
 
-local void spell_init_27_hosigata_test(SPRITE *src)
+local void spell_init_27_hosigata_test(OBJ *src)
 {
 	spell_init_mima_kaguya(src);/*(特殊)*/	/*(DANMAKU01に雨用を割り当てる)*/
 		/* 弾を撃ち始める位置(星型描き始める位置) */
@@ -241,9 +249,8 @@ local void spell_init_27_hosigata_test(SPRITE *src)
 	//
 //		h->boss_time_out			= ((64*8)+(5*16)+1);	/* 制限時間 */
 
-local void spell_create_27_hosigata_test(SPRITE *src)
+local void spell_create_27_hosigata_test(OBJ *src)
 {
-
 //	if ((64*8) < src->boss_time_out)
 	{
 		/* 星型を描くよ */
@@ -276,24 +283,24 @@ cdef ffff 7777	3+4
 */
 			/* CCWの場合 */
 		//	bullet_crate_sakuya_hosi_gata(/*&hosi_position_obj*/);
-		//	static void bullet_crate_sakuya_hosi_gata(void/*SPRITE *src*/)
+		//	static void bullet_crate_sakuya_hosi_gata(void/*OBJ *src*/)
 			{		/*丸弾８(赤ＲＧＢ緑若黄青)*/
-				SPRITE *h;
-				h					= obj_add_00_tama_error();
+				OBJ *h;
+				h					= obj_add_A00_tama_error();
 				if (NULL != h)
 				{
-					h->cx256			= REG_001_hosi_set_position_cx256;
-					h->cy256			= REG_002_hosi_set_position_cy256;
-					h->type 			= (BULLET_MINI8_BASE + TAMA_IRO_01_AKA);
+					h->cx256						= REG_001_hosi_set_position_cx256;
+					h->cy256						= REG_002_hosi_set_position_cy256;
+					h->obj_type_set 				= (BULLET_MINI8_BASE + TAMA_IRO_01_AKA);
 					reflect_sprite_spec444(h, OBJ_BANK_SIZE_00_TAMA);
-					h->m_Hit256R		= TAMA_ATARI_MARU16_PNG;
+					h->m_Hit256R					= TAMA_ATARI_MARU16_PNG;
 				//
-					h->callback_mover	= move_bullet_sakuya_hosi_gata;
+					h->callback_mover				= move_bullet_sakuya_hosi_gata;
 					h->hatudan_register_speed65536	= (0);
 					h->hatudan_register_tra65536	= (0);
-					h->hatudan_register_spec_data	= (DANMAKU_LAYER_03)|(TAMA_SPEC_3000_EFFECT_NONE)|(TAMA_SPEC_4000_NON_MOVE)|(TAMA_SPEC_8000_NON_TILT);
-					h->vx256			= (0);
-					h->vy256			= (0);
+					h->hatudan_register_spec_data	= (DANMAKU_LAYER_03)|(TAMA_SPEC_3000_EFFECT_NONE)|(TAMA_SPEC_8000_NON_TILT);
+					h->vx256						= (0);
+					h->vy256						= (0);
 					/* hosi_gata_time_out */
 					h->HGT_giji_jyumyou 			= HOSIGATA_DAN_LIMIT_01_512 + ((REG_10_BOSS_SPELL_TIMER)&0x1ff); //((REG_10_BOSS_SPELL_TIMER)-(64*8))
 					/* hosi_gata_angle1024 */

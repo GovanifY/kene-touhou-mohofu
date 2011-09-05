@@ -3,7 +3,7 @@
 
 /*---------------------------------------------------------
 	東方模倣風 ～ Toho Imitation Style.
-	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	漢字ウィンドウ処理
 ---------------------------------------------------------*/
@@ -158,7 +158,7 @@ static void s_draw_shinonome_moji(
 					+ (((dy+y))*(512*2))/*surface->pitch*/
 					+ (dx+dx)
 					+ (x+x)
-					+ (BG_FONT_HAIKEI_OFFSET*2);	/* 512[dot]x 2[bytes](short) */
+					+ (BG_FONT_HAIKEI_OFFSET*2);	/* 512[pixel]x 2[bytes](short) */
 				*(u16 *)dst_p = (u32)(*(u16 *)src_p);
 				#else
 				/*
@@ -177,7 +177,7 @@ static void s_draw_shinonome_moji(
 					+ (((dy+y))*(2*512*2))/*surface->pitch*/
 					+ (dx+dx+dx+dx)
 					+ (x+x+x+x)
-					+ (BG_FONT_HAIKEI_OFFSET*4);	/* 512[dot]x 2[bytes](short) */
+					+ (BG_FONT_HAIKEI_OFFSET*4);	/* 512[pixel]x 2[bytes](short) */
 			//	*(u16 *)dst_p = (u32)(*(u16 *)src_p);
 				*(u32 *)dst_p = (u32)(*(u16 *)src_p);
 				#endif
@@ -260,7 +260,7 @@ static void s_draw_sjis_kanji(int x, int y, int high_byte, int low_byte)
 		//	code_offset <<= 4;	//code_offset *= 16;	/* 9 */ 	// ここでの9は多分1つの文字に使うバイト数。(1byte == 8bit)*9=72 == 6*12
 			s_draw_shinonome_moji(x, y, (idx), 0);
 		}
-		else	/* if ( 2 == size_of_kanji(high_byte))*/	// 2バイト全角
+		else	/* if (2 == size_of_kanji(high_byte))*/ 	// 2バイト全角
 		#endif
 		{
 			idx 	+= (low_byte+low_byte);/* x2 */
@@ -284,21 +284,21 @@ static void s_draw_sjis_kanji(int x, int y, int high_byte, int low_byte)
 	(描画バッファは連続している)
 	-------------------------------------------------------
 	「マルチライン」と違うのは、描画する場合に、
-	行ごとに(dot単位でx,y)位置が指定できる方式です。
+	行ごとに(pixel単位でx,y)位置が指定できる方式です。
 	(字ごとには位置指定できません)
 ---------------------------------------------------------*/
 static unsigned int default_window_locate_x;
 static unsigned int default_window_locate_y;
 static unsigned int default_window_font_tate_kankaku;
 static unsigned int default_window_max_line;
-global void set_kanji_origin_xy(unsigned int set_x_offset_dot, unsigned int set_y_offset_dot)
+global void set_kanji_origin_xy(unsigned int set_x_offset_pixel, unsigned int set_y_offset_pixel)
 {
-	default_window_locate_x = (set_x_offset_dot);/* X位置 */
-	default_window_locate_y = (set_y_offset_dot);/* Y位置 */
+	default_window_locate_x = (set_x_offset_pixel);/* X位置[pixel] */
+	default_window_locate_y = (set_y_offset_pixel);/* Y位置[pixel] */
 }
-global void set_kanji_origin_kankaku(unsigned int set_y_offset_dot)
+global void set_kanji_origin_kankaku(unsigned int set_y_offset_pixel)
 {
-	default_window_font_tate_kankaku = (set_y_offset_dot);/* Y位置 */
+	default_window_font_tate_kankaku = (set_y_offset_pixel);/* Y位置[pixel] */
 }
 global void set_kanji_hide_line(unsigned int set_max_line_num)
 {
@@ -328,6 +328,20 @@ global void set_kanji_hide_line(unsigned int set_max_line_num)
 }
 
 /*---------------------------------------------------------
+	スクリプト等用、標準初期化
+---------------------------------------------------------*/
+global void kanji_init_standard(void)
+{
+	#if (1)/*(漢字関連の初期化)*/
+	set_kanji_origin_xy((10+6), (10+192));/*(表示原点の設定)*/
+	set_kanji_origin_kankaku(18);/*(字間を標準にする)*/
+//	set_kanji_hide_line(ML_LINE_02);/*(2行目以下を非表示にする。)*/
+	set_kanji_hide_line(ML_LINE_04);/*(4行目以下を非表示にする。)*/
+	kanji_window_all_clear();				/* 漢字画面を全行消す。漢字カーソルをホームポジションへ移動。 */
+	#endif
+}
+
+/*---------------------------------------------------------
 	マルチライン関連
 ---------------------------------------------------------*/
 
@@ -335,8 +349,8 @@ global void set_kanji_hide_line(unsigned int set_max_line_num)
 	文字列の描画
 ---------------------------------------------------------*/
 // static extern int cursor_continue;	/* カーソル継続 */
-static int cursor_x_dots;				/* カーソル位置[dot] */
-static int cursor_y_lines;				/* カーソル位置[dot] (マルチラインの場合行数 / 独立ラインの場合指定行) */
+static int cursor_x_pixel;				/* カーソル位置[pixel] */
+static int cursor_y_lines;				/* カーソル位置[pixel] (マルチラインの場合行数 / 独立ラインの場合指定行) */
 
 
 static int my_string_offset;/*=0*/
@@ -348,9 +362,9 @@ static int my_string_offset;/*=0*/
 /*---------------------------------------------------------
 	カーソルを指定位置へ移動
 ---------------------------------------------------------*/
-/*static*/global void set_kanji_xy(unsigned int set_x_dots, unsigned int set_y_number)
+/*static*/global void set_kanji_xy(unsigned int set_x_pixel, unsigned int set_y_number)
 {
-	cursor_x_dots		= set_x_dots;
+	cursor_x_pixel		= set_x_pixel;
 	cursor_y_lines		= set_y_number;
 }
 
@@ -360,7 +374,7 @@ static int my_string_offset;/*=0*/
 /*static*/global void kanji_cursor_move_home_position(void)
 {
 	#if 1
-	cursor_x_dots	= (0)*(KANJI_FONT_08_HARF_WIDTH);
+	cursor_x_pixel	= (0)*(KANJI_FONT_08_HARF_WIDTH);
 	cursor_y_lines	= (0)*(KANJI_FONT_18_HEIGHT_P2);
 	#else
 	set_kanji_xy((0)*(KANJI_FONT_08_HARF_WIDTH), (0)*(KANJI_FONT_18_HEIGHT_P2));
@@ -379,17 +393,17 @@ static int my_string_offset;/*=0*/
 				#if 0
 		line_num *= (512*(16+2)*(1/*3 2[行]*/)/**16*/ *2/*[short]==2[byte]の分*/ );
 	{
-	//	u8 *p = (u8 *)cb.kanji_window_screen_image/*surface->pixels*/;//+y*(512*2)/*surface->pitch*/+x+x;	/* 512[dot]x 2[bytes](short) */
+	//	u8 *p = (u8 *)cb.kanji_window_screen_image/*surface->pixels*/;//+y*(512*2)/*surface->pitch*/+x+x;	/* 512[pixel]x 2[bytes](short) */
 		unsigned int dx;
 		for (dx=(/*0*/TEST_OFFSET); dx<(TEST_OFFSET)+(512*(16+2)*(1/*3 2[行]*/)/**16*/); dx++)
 		{
-			u8 *p = (u8 *)cb.kanji_window_screen_image/*surface->pixels*/+/*y*(512*2)*/ /*surface->pitch*/+dx+dx+(BG_FONT_HAIKEI_OFFSET*2)+line_num;	/* 512[dot]x 2[bytes](short) */
+			u8 *p = (u8 *)cb.kanji_window_screen_image/*surface->pixels*/+/*y*(512*2)*/ /*surface->pitch*/+dx+dx+(BG_FONT_HAIKEI_OFFSET*2)+line_num;	/* 512[pixel]x 2[bytes](short) */
 			*(u16 *)p = 0/*pixel*/;
 		}
 	}
 				#endif
 	{
-	//	u8 *p = (u8 *)cb.kanji_window_screen_image/*surface->pixels*/;//+y*(512*2)/*surface->pitch*/+x+x;	/* 512[dot]x 2[bytes](short) */
+	//	u8 *p = (u8 *)cb.kanji_window_screen_image/*surface->pixels*/;//+y*(512*2)/*surface->pitch*/+x+x;	/* 512[pixel]x 2[bytes](short) */
 		u16 *p16;	/* VRAMが16bitモード */
 		p16 = cb.kanji_window_screen_image;
 		p16 += (BG_FONT_HAIKEI_OFFSET); 							/* 註:16bitポインタとしての値、つまり(unsigned shortだから)2倍[byte]される。 */
@@ -405,11 +419,11 @@ static int my_string_offset;/*=0*/
 		#else
 		line_num *= (512*(16+2)*(1/*3 2[行]*/)/**16*/ *4/*[int]==4[byte]の分*/ );
 	{
-	//	u8 *p = (u8 *)cb.kanji_window_screen_image/*surface->pixels*/;//+y*(512*2)/*surface->pitch*/+x+x;	/* 512[dot]x 2[bytes](short) */
+	//	u8 *p = (u8 *)cb.kanji_window_screen_image/*surface->pixels*/;//+y*(512*2)/*surface->pitch*/+x+x;	/* 512[pixel]x 2[bytes](short) */
 		unsigned int dx;
 		for (dx=(/*0*/TEST_OFFSET); dx<(TEST_OFFSET)+(512*(16+2)*(1/*3 2[行]*/)/**16*/); dx++)
 		{
-			u8 *p = (u8 *)cb.kanji_window_screen_image/*surface->pixels*/+/*y*(512*2)*/ /*surface->pitch*/+dx+dx+dx+dx+(BG_FONT_HAIKEI_OFFSET*4)+line_num+line_num; /* 512[dot]x 2[bytes](short) */
+			u8 *p = (u8 *)cb.kanji_window_screen_image/*surface->pixels*/+/*y*(512*2)*/ /*surface->pitch*/+dx+dx+dx+dx+(BG_FONT_HAIKEI_OFFSET*4)+line_num+line_num; /* 512[pixel]x 2[bytes](short) */
 			*(u32 *)p = 0/*pixel*/;
 		}
 	}
@@ -432,28 +446,28 @@ static int my_string_offset;/*=0*/
 	#define TEST_OFFSET (0) 	/* put_pixel使うから(0) */
 		#if (0==USE_32BIT_DRAW_MODE)
 	{
-	//	u8 *p = (u8 *)cb.kanji_window_screen_image/*surface->pixels*/;//+y*(512*2)/*surface->pitch*/+x+x;	/* 512[dot]x 2[bytes](short) */
+	//	u8 *p = (u8 *)cb.kanji_window_screen_image/*surface->pixels*/;//+y*(512*2)/*surface->pitch*/+x+x;	/* 512[pixel]x 2[bytes](short) */
 		unsigned int dx;
 		for (dx=(/*0*/TEST_OFFSET); dx<(TEST_OFFSET)+(512*(16+2)*(3/*3 2[行]*/)/**16*/); dx++)
 		{
-			u8 *p = (u8 *)cb.kanji_window_screen_image/*surface->pixels*/+/*y*(512*2)*/ /*surface->pitch*/+dx+dx+(BG_FONT_HAIKEI_OFFSET*2); /* 512[dot]x 2[bytes](short) */
+			u8 *p = (u8 *)cb.kanji_window_screen_image/*surface->pixels*/+/*y*(512*2)*/ /*surface->pitch*/+dx+dx+(BG_FONT_HAIKEI_OFFSET*2); /* 512[pixel]x 2[bytes](short) */
 			*(u16 *)p = 0/*pixel*/;
 		}
 	}
 		#else
 	{
-	//	u8 *p = (u8 *)cb.kanji_window_screen_image/*surface->pixels*/;//+y*(512*2)/*surface->pitch*/+x+x;	/* 512[dot]x 2[bytes](short) */
+	//	u8 *p = (u8 *)cb.kanji_window_screen_image/*surface->pixels*/;//+y*(512*2)/*surface->pitch*/+x+x;	/* 512[pixel]x 2[bytes](short) */
 		unsigned int dx;
 		for (dx=(/*0*/TEST_OFFSET); dx<(TEST_OFFSET)+(512*(16+2)*(3/*3 2[行]*/)/**16*/); dx++)
 		{
-			u8 *p = (u8 *)cb.kanji_window_screen_image/*surface->pixels*/+/*y*(512*2)*/ /*surface->pitch*/+dx+dx+dx+dx+(BG_FONT_HAIKEI_OFFSET*4);	/* 512[dot]x 4[bytes](int) */
+			u8 *p = (u8 *)cb.kanji_window_screen_image/*surface->pixels*/+/*y*(512*2)*/ /*surface->pitch*/+dx+dx+dx+dx+(BG_FONT_HAIKEI_OFFSET*4);	/* 512[pixel]x 4[bytes](int) */
 			*(u32 *)p = 0/*pixel*/;
 		}
 	}
 		#endif
 #endif
 
-			//	ccc_putpixel16(dx);//, 0, /*0xaaaa*/(0x0000)/*dot color16 */);
+			//	ccc_putpixel16(dx);//, 0, /*0xaaaa*/(0x0000)/*[pixel] color16 */);
 		//	*(u16 *)p = 0xaa55;
 		//	p++;
 		//	u8 *p = (u8 *)drawmap_image/*surface->pixels*/+y*drawmap_pitch/*surface->pitch*/+x+x;
@@ -523,18 +537,18 @@ global /*static*/ int kanji_draw(void)
 	font_color_number = (kanji_color_type & 0x0f);
 //
 	int terminate_this_frame;	terminate_this_frame	= 0;
-	int need_draw_this_flame;	need_draw_this_flame	= 0;
+	int need_draw_this_frame;	need_draw_this_frame	= 0;
 	{	/* wait が 0 の場合は一回で全文字描画する */
 		static unsigned int count_wait_time;
 		count_wait_time++;
 		if (count_wait_time > (unsigned/*(要確認)*/)kanji_wait_value)
 		{
 			count_wait_time 		= 0;
-			need_draw_this_flame	= 1;
+			need_draw_this_frame	= 1;
 		}
 	}
-//	if (1==need_draw_this_flame)	/* pspは0レジスタがあるので0と比較したほうが速い */
-	if (0!=need_draw_this_flame)
+//	if (1==need_draw_this_frame)	/* pspは0レジスタがあるので0と比較したほうが速い */
+	if (0!=need_draw_this_frame)
 	{
 			#define IS_LOCK_LOCAL_SCREEN (0)/* 読み込みだけなら、ロックする必要はない(?) */
 			#if (1==IS_LOCK_LOCAL_SCREEN)
@@ -548,7 +562,7 @@ global /*static*/ int kanji_draw(void)
 		{
 			int xx;
 			int yy;
-			xx	= 0/*(rect->x)*/+(cursor_x_dots);//*(KANJI_FONT_08_HARF_WIDTH);
+			xx	= 0/*(rect->x)*/+(cursor_x_pixel);//*(KANJI_FONT_08_HARF_WIDTH);
 			yy	= 0/*(rect->y)*/+(cursor_y_lines);//*(KANJI_FONT_18_HEIGHT_P2);
 		//	パフォーマンスが低下するのでなるべくロックしない。(ロックは最小限に)
 		/* 旧ロック */
@@ -558,10 +572,10 @@ global /*static*/ int kanji_draw(void)
 				s_draw_sjis_kanji(xx, yy, high_byte, low_byte);
 				#if (1==USE_HARF_KANJI)
 				my_string_offset		+= size_of_kanji(high_byte);	/* 拡張半角文字領域 fdxx の場合は半角になる */
-				cursor_x_dots			+= (KANJI_FONT_08_HARF_WIDTH)*size_of_kanji(high_byte); /* 拡張半角文字領域 fdxx の場合は半角になる */
+				cursor_x_pixel			+= (KANJI_FONT_08_HARF_WIDTH)*size_of_kanji(high_byte); /* 拡張半角文字領域 fdxx の場合は半角になる */
 				#else
 				my_string_offset		+= (2);
-				cursor_x_dots			+= (KANJI_FONT_08_HARF_WIDTH)*(2);
+				cursor_x_pixel			+= (KANJI_FONT_08_HARF_WIDTH)*(2);
 				#endif
 			}
 			else				/* ascii文字 */
@@ -572,8 +586,8 @@ global /*static*/ int kanji_draw(void)
 					if ('n' == escape_sequence) 	/* 改行コード */
 					{
 						my_string_offset += 2;
-						cursor_x_dots = 999;/* 適当に大きな値を指定して改行させる */
-					//	cursor_x_dots = 0;
+						cursor_x_pixel = 999;/* 適当に大きな値を指定して改行させる */
+					//	cursor_x_pixel = 0;
 					//	cursor_y_lines++;
 					}
 				}
@@ -581,16 +595,16 @@ global /*static*/ int kanji_draw(void)
 				{
 					s_draw_sjis_kanji(xx, yy, 0, high_byte);
 					my_string_offset++;
-					cursor_x_dots += (KANJI_FONT_08_HARF_WIDTH);
+					cursor_x_pixel += (KANJI_FONT_08_HARF_WIDTH);
 				}
 			}/* 旧ロック解除 */
 			if (0==(kanji_color_type & STR_CODE_NO_ENTER))
 			{
 				/* 改行処理 */
 				#define STR_LIMIT_MAX_X_WIDTH  (((int)((300/*(rect->w)*/) ) + (KANJI_FONT_08_HARF_WIDTH)))
-				if ( (STR_LIMIT_MAX_X_WIDTH) < cursor_x_dots)
+				if ((STR_LIMIT_MAX_X_WIDTH) < cursor_x_pixel)
 				{
-					cursor_x_dots = ((0)*(KANJI_FONT_08_HARF_WIDTH));
+					cursor_x_pixel = ((0)*(KANJI_FONT_08_HARF_WIDTH));
 					cursor_y_lines += (KANJI_FONT_18_HEIGHT_P2);
 				//	#define MAX_cursor_y_lines	((2)*(KANJI_FONT_18_HEIGHT_P2))
 				//	#define MAX_cursor_y_lines	((default_window_max_line)*(KANJI_FONT_18_HEIGHT_P2))
@@ -632,7 +646,7 @@ global /*static*/ int kanji_draw(void)
 
 
 /*---------------------------------------------------------
-	現在 3行 x 18 dot == 54 laster + 背景用 10 laster(?) < 64(??)
+	現在 3行 x 18 pixel == 54 laster + 背景用 10 laster(?) < 64(??)
 	-------------------------------------------------------
 	192 -10 == 180 / 18 == 10 行分(?)
 ---------------------------------------------------------*/
@@ -668,10 +682,11 @@ global void kanji_system_init(void)/* 組み込み */
 	/*static*/ /*SDL_Surface*/my_image *font_bg_bitmap_surface;/*=NULL*/
 	//	{
 	//		char fn[128/*64*/];
-	//		strcpy(fn, DIRECTRY_NAME_DATA_STR "/fonts/" "font_bg16.png" );
+	//		strcpy(fn, DIRECTRY_NAME_DATA_STR "/fonts/" "font_b g16.png" );
 	//		font_bg_bitmap_surface = IM G_Load(fn);/*ここでロードすると確実に処理落ちするよ*/
-	//		font_bg_bitmap_surface = IM G_Load(DIRECTRY_NAME_DATA_STR "/fonts/" "font_bg16.png");/*ここでロードすると確実に処理落ちするよ*/
-			font_bg_bitmap_surface = png_load_my_image(DIRECTRY_NAME_DATA_STR "/fonts/" "font_bg16.png");/*ここでロードすると確実に処理落ちするよ*/
+	//		font_bg_bitmap_surface = IM G_Load(DIRECTRY_NAME_DATA_STR "/fonts/" "font_b g16.png");/*ここでロードすると確実に処理落ちするよ*/
+	//		font_bg_bitmap_surface = png_load_my_image(DIRECTRY_NAME_DATA_STR "/fonts/" "font_b g16.png");/*ここでロードすると確実に処理落ちするよ*/
+			font_bg_bitmap_surface = png_load_my_image(DIRECTRY_NAME_DATA_STR "/fonts/" "r35font.png");/*ここでロードすると確実に処理落ちするよ*/
 	//	}
 	//	font_bg_bitmap_surface			= SDL_DisplayFormat(font_bg_bitmap_surface);/*サーフェスを表示フォーマットに変換する。*/
 	//	font_bg_bitmap_surface_pitch	= font_bg_bitmap_surface->pitch;
@@ -683,7 +698,8 @@ global void kanji_system_init(void)/* 組み込み */
 		//	font_bg_bitmap_surface_image	= font_bg_bitmap_surface->pixels;
 			u32 *pixsrc;
 			u16 *pixdst;
-			pixsrc = (void *)((font_bg_bitmap_surface->pixels));
+		//	pixsrc = (void *)((font_bg_bitmap_surface->pixels));
+			pixsrc = (void *)((font_bg_bitmap_surface->pixels)+(4*16*256));
 			pixdst = (cb.kanji_window_screen_image);
 			trans_format8888to5650(pixsrc, pixdst, (BG_FONT_HAIKEI_LENGTH));
 		}
@@ -749,10 +765,6 @@ global void kanji_system_exit(void)/* 外す */
 global void kanji_ascii_font16_draw(void)
 {
 //???	if (SDL_MUSTLOCK(FONT_fontimg)) 	{	SDL_LockSurface(FONT_fontimg);	}	/* ロック */
-//	SDL_Rect s;
-//	SDL_Rect d;
-//	s.w = 16/*fonts[cg.SDL_font_type].w*/; d.w = (s.w); 	/*fonts[cg.SDL_font_type].w*/
-//	s.h = 16/*fonts[cg.SDL_font_type].h*/; d.h = (s.h); 	/*fonts[cg.SDL_font_type].h*/
 	unsigned int/*char*/ i;
 	unsigned int/*char*/ j;
 	i = 0;
@@ -764,31 +776,20 @@ global void kanji_ascii_font16_draw(void)
 		{
 			return;
 		}
-//		j -= 0x20;//0x20==' ';(space)
-//	//	s.x = j*(s.w);						/*fonts[cg.SDL_font_type].w*/
-//		s.x = (j & 0x0f)*(s.w);				/*fonts[cg.SDL_font_type].w*/
-//	//	s.y = 0;
-//		s.y = ((j>>4))*(s.h) + (160)/*fonts[cg.SDL_font_type].y_offset*/;//((cg.SDL_font_type)<<6);
 
 int x;
 int y;
-//		d.x = (cursor_x_dots)/*cg.SDL_font_x*/ + (i)*(s.w);  	/*fonts[cg.SDL_font_type].w*/
-//		d.y = (cursor_y_lines/**16*/)/*cg.SDL_font_y*/; 			/*0*/
-	//	PSPL_UpperBlit(fonts[cg.SDL_font_type].fontimg, &s, txt_image_surface, &d);
-	//	PSPL_UpperBlit(FONT_fontimg, &s, txt_image_surface, &d);
-	x = (cursor_x_dots);//(d.x);
-	cursor_x_dots += (16);// 8が16[dots] ??? (s.w);
+	x = (cursor_x_pixel);//(d.x);
+	cursor_x_pixel += (16);// 8が16[pixel] ??? (s.w);
 	y = (cursor_y_lines/**16*/);
 
 //		#define BG_FONT_HAIKEI_OFFSET		((512*10))		/* 10[laster]==(8+1+1) */
 
 	int haikei_offset;
 		haikei_offset	= (0);
-//		haikei_offset	+= (s.x);
-//		haikei_offset	+= ((s.y)*256);
 		haikei_offset	+= ((j & 0x0f)*(16));
-	//	haikei_offset	+= ((((j>>4))*(16) + (160))*256);/*(テクスチャ横が256[dots])*/
-		haikei_offset	+= (((j & 0xf0) | (0x80) )*256);/*(テクスチャ横が256[dots])*/
+	//	haikei_offset	+= ((((j>>4))*(16) + (160))*256);/*(テクスチャ横が256[pixel])*/
+		haikei_offset	+= (((j & 0xf0) | (0x80) )*256);/*(テクスチャ横が256[pixel])*/
 
 	//	haikei_offset	= (512*8);
 		unsigned int dy;
@@ -815,7 +816,7 @@ int y;
 						+ (((dy+y))*(512*2))/*surface->pitch*/
 						+ (dx+dx)
 						+ (x+x)
-						+ (BG_FONT_HAIKEI_OFFSET*2);	/* 512[dot]x 2[bytes](short) */
+						+ (BG_FONT_HAIKEI_OFFSET*2);	/* 512[pixel]x 2[bytes](short) */
 					*(u16 *)dst_p = (u32)(*(u16 *)src_p);
 					#else/*(32bit mode)*/
 					/*
@@ -834,7 +835,7 @@ int y;
 						+ (((dy+y))*(2*512*2))/*surface->pitch*/
 						+ (dx+dx+dx+dx)
 						+ (x+x+x+x)
-						+ (BG_FONT_HAIKEI_OFFSET*4);	/* 512[dot]x 2[bytes](short) */
+						+ (BG_FONT_HAIKEI_OFFSET*4);	/* 512[pixel]x 2[bytes](short) */
 				//	*(u16 *)dst_p = (u32)(*(u16 *)src_p);
 					*(u32 *)dst_p = (u32)(*(u16 *)src_p);
 					#endif

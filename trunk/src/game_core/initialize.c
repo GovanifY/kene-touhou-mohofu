@@ -3,7 +3,7 @@
 
 /*---------------------------------------------------------
 	東方模倣風 ～ Toho Imitation Style.
-	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	ゲームシステム初期化処理、関連
 ---------------------------------------------------------*/
@@ -36,15 +36,25 @@ extern void old_menu_system_init(void);
 
 void game_system_init(void)
 {
-	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO ); /*| SDL_INIT_JOYSTICK*/
+	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO); /*| SDL_INIT_JOYSTICK*/
+	#if 0
+	if (atexit(SDL_Quit))
+	{
+		CHECKPOINT;
+		error(ERR_WARN, "atexit dont returns zero");
+	}
+	#endif
 	/* ----- */
-	pspDebugScreenInit();
+//	pspDe bugScreenInit();
 //	render_blit_fake_loading_init();
 //	render_blit_fake_loading_full();
 	ini_load();
 
 	/* ----- 初期化 */
 	psp_video_init01();
+//	kanji_system_init();/* 組み込み */	/*(漢字システムが無いとエラーが表示できない。)*/
+//
+
 //	render_blit_fake_loading_full();
 	psp_video_init02();
 	psp_pad_init(); 	/* psp_video_init()より後でないと正常に pad check 出来ない。 */
@@ -53,12 +63,13 @@ void game_system_init(void)
 	/* ----- ゲーム本体初期化 */
 	init_audio();
 //	init_math();/*keyboard_clear();*/
+	#if (1==USE_KETM_IMAGE_CHACHE)
 	init_imglist();
+	#endif /*(1==USE_KETM_IMAGE_CHACHE)*/
 //
 	kaiwa_system_init();/* 組み込み */
+	kanji_system_init();/* 組み込み */	/*(漢字システムが無いとエラーが表示できない。)*/
 //未定	ending_system_init();/* 組み込み */
-	kanji_system_init();/* 組み込み */
-//
 	#if 1//(1==US E_GU)
 	#else
 	load_SDL_bg(BG_TYPE_xx_loading);
@@ -79,7 +90,7 @@ void game_system_init(void)
 	font_init();
 
 	//fps_init();
-//	obj_se nd1		= my_calloc(sizeof(SPRITE));/* 引数受け渡し用 */
+//	obj_se nd1		= my_calloc(sizeof(OBJ));/* 引数受け渡し用 */
 //	bg2_system_init();//	psp起動時に一度だけ初期化する
 	/* ゲームコア game_core_init(); */
 	cg.game_continue_stage			= (1-1);	/* (0) 0は1面から開始という意味。 */
@@ -88,7 +99,7 @@ void game_system_init(void)
 //	za nki							= 2;
 	old_menu_system_init();
 //
-	play_music_num(BGM_26_menu01);
+	play_music_num(BGM_27_menu01);
 	cb.main_call_func = title_menu_start;	/* タイトルメニューへ移動 */
 }
 

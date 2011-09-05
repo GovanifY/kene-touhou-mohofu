@@ -1,7 +1,7 @@
 
 /*---------------------------------------------------------
- 東方模倣風 ～ Toho Imitation Style.
-  プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	東方模倣風 ～ Toho Imitation Style.
+	http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	魅魔のカードを定義します。
 ---------------------------------------------------------*/
@@ -10,19 +10,19 @@
 	魅魔様の向きによって、発弾位置を修正する。
 	-------------------------------------------------------
 	発弾位置は魅魔様中心位置からの差分なので、
-	上に12[dots]
-	右に22[dots]
-	左に22[dots]
+	上に12[pixel]
+	右に22[pixel]
+	左に22[pixel]
 	とする。
 	パターン0-3の場合、右向き(+22)。
 	パターン4-7の場合、左向き(-22)。
 
-    左に22[dots]    右に22[dots]
+    左に22[pixel]    右に22[pixel]
     +--------- 50 --------+
     |                     |
     | ()               () | -- ---(発弾位置)
     |  |  -22  |  22   |  |
-    |          |          | -12 (上に12[dots])
+    |          |          | -12 (上に12[pixel])
     |          |          |
     50         + -------  | -- ---(魅魔様中心位置)
     |                     |
@@ -31,13 +31,13 @@
     |                     |
     |                     |
     +--------- 50 --------+
-    魅魔様は 50x50[dots]とする。
+    魅魔様は 50x50[pixel]とする。
 ---------------------------------------------------------*/
 
-local void mima_set_REG_DEST_XY(SPRITE *src)
+local void mima_set_REG_DEST_XY(OBJ *src)
 {
 	/* 弾源 発弾 位置を修正 */
-	REG_02_DEST_X += ((0==(src->type&4))?(t256(22)):-(t256(22)));/* 右移動中は右側から撃つ */
+	REG_02_DEST_X += ((0==(src->obj_type_set&4))?(t256(22)):-(t256(22)));/* 右移動中は右側から撃つ */
 	REG_03_DEST_Y -= t256(12);
 }
 
@@ -53,7 +53,7 @@ local void mima_set_REG_DEST_XY(SPRITE *src)
 	#001 角度弾の移動を行う(通常弾用)
 ---------------------------------------------------------*/
 
-static void mima_danmaku_01_callback(SPRITE *src)
+static void mima_danmaku_01_callback(OBJ *src)
 {
 	#if (1)
 	if ((HATUDAN_ITI_NO_JIKAN-64) < src->jyumyou)/* 発弾エフェクト時は無効 */
@@ -72,7 +72,7 @@ static void mima_danmaku_01_callback(SPRITE *src)
 //	danmaku_00_standard_angle_mover(src);/*(角度弾移動+画面外弾消し)*/
 	hatudan_system_B_move_angle_001(src);/*(角度弾移動)*/
 }
-local void mima_boss01_nway_fire(SPRITE *src)
+local void mima_boss01_nway_fire(OBJ *src)
 {
 	REG_02_DEST_X	= ((src->cx256));
 	REG_03_DEST_Y	= ((src->cy256));
@@ -83,7 +83,7 @@ local void mima_boss01_nway_fire(SPRITE *src)
 	mima_set_REG_DEST_XY(src);	/* 向きで撃つ位置を変える。 */
 //
 //	HATSUDAN_02_speed_offset			= t256(1/*0*/);/*(テスト)*/
-	HATSUDAN_04_tama_spec				= (DANMAKU_LAYER_01)|(TAMA_SPEC_4000_NON_MOVE)|(TAMA_SPEC_0000_TILT);/* (r33-)標準弾 */
+	HATSUDAN_04_tama_spec				= (DANMAKU_LAYER_01)|(TAMA_SPEC_0000_TILT);/* (r33-)標準弾 */
 	HATSUDAN_05_bullet_obj_type 		= BULLET_HARI32_00_AOI + ((REG_10_BOSS_SPELL_TIMER)>>5);	/* [水色針弾] */	/*hari_no_iro*/
 //
 	int ii65536;
@@ -126,15 +126,14 @@ local void mima_boss01_nway_fire(SPRITE *src)
 -01 1 0000 luna hard norm
 -00 1 0000 luna hard norm easy
 ---------------------------------------------------------*/
-local void spell_init_0c_hana_test(SPRITE *src)
+local void spell_init_0c_hana_test(OBJ *src)
 {
-//	card.danmaku_callback[0] = danmaku_00_standard_angle_mover;/*(通常弾用)*/
 	card.danmaku_callback[1] = mima_danmaku_01_callback;/*(。)*/
 //	card.danmaku_callback[2] = NULL;/*(0)*/
 //	card.danmaku_callback[3] = NULL;/*(0)*/
 }
 
-local void spell_create_0c_hana_test(SPRITE *src)
+local void spell_create_0c_hana_test(OBJ *src)
 {
 //	if (0x40==((REG_10_BOSS_SPELL_TIMER)&0xcf))/* 4回 */
 //	if (0x10==((REG_10_BOSS_SPELL_TIMER)&0x1f))/* (16回に1回)(128なら計8回) */
@@ -161,7 +160,7 @@ local void spell_create_0c_hana_test(SPRITE *src)
 //	REG_08_REG0 	カウンタ。
 	REG_0e_REG6 	src_shot_angle65536 開始地点
 ---------------------------------------------------------*/
-local void spell_create_0d_mima_sekkin(SPRITE *src)
+local void spell_create_0d_mima_sekkin(OBJ *src)
 {
 //	if (0x40==((REG_10_BOSS_SPELL_TIMER)&0xcf))/* 4回 */
 //	if (0x10==((REG_10_BOSS_SPELL_TIMER)&0x1f))/* (32回に1回)(128なら計 回) */
@@ -200,7 +199,7 @@ local void spell_create_0d_mima_sekkin(SPRITE *src)
 	REG_09_REG1 	kaiten_aaa
 	REG_0a_REG2 	kaiten_bbb
 ---------------------------------------------------------*/
-local void spell_create_24_mima_toge(SPRITE *src)
+local void spell_create_24_mima_toge(OBJ *src)
 {
 	if (0x00==((REG_10_BOSS_SPELL_TIMER)&0x03))
 	{
@@ -267,7 +266,7 @@ local void spell_create_24_mima_toge(SPRITE *src)
 	REG_09_REG1 	kaiten_aaa
 	REG_0a_REG2 	kakudo_111
 ---------------------------------------------------------*/
-local void spell_create_24_mima_toge(SPRITE *src)
+local void spell_create_24_mima_toge(OBJ *src)
 {
 	if (0x00==((REG_10_BOSS_SPELL_TIMER)&0x33))
 	{

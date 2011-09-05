@@ -3,7 +3,7 @@
 
 /*---------------------------------------------------------
 	東方模倣風 ～ Toho Imitation Style.
-	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	http://mohou.huuryuu.com/
 	-------------------------------------------------------
 	MikMod のミキサーを psp 向けに改変してあります。
 	★ psp専用命令で負荷軽減。(かなり効果あり)
@@ -518,7 +518,7 @@ static void AddChannel(s32* ptr, NATIVE todo)
 
 /*---------------------------------------------------------
 	東方模倣風 ～ Toho Imitation Style.
-	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	http://mohou.huuryuu.com/
 	-------------------------------------------------------
 	-------------------------------------------------------
 	MikMod sound library (c) 1998, 1999, 2000 Miodrag Vallat and others.

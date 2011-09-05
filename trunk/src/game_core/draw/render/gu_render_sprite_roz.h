@@ -14,7 +14,7 @@ typedef struct DXP_FVF_2DTEX_F
 } DXP_FVF_2DTEX_F;
 
 int DrawModiGraphFI(
-	SPRITE *spr,
+	OBJ *spr,
 	int x1,
 	int y1,
 	int x2,
@@ -199,7 +199,7 @@ int DrawModiGraphFI(
 //	DXP_TRANCE_DATA dxpt;
 	ScePspIMatrix4 dxp_gi_pos;
 
-static void render_object_use_rot_zoom(SPRITE *spr)
+static void render_object_use_rot_zoom(OBJ *spr)
 //int DrawRotaGraphI256(void)
 //	int x,
 //	int y,
@@ -353,7 +353,7 @@ static void render_object_use_rot_zoom(SPRITE *spr)
 	 slice しないと(チルノやレミリアボムの速度低下っぷりから判断して)
 	ダメですね。あとで改良しよう。
 	-------------------------------------------------------
-	逆に弾は(64[dots]以下の > 大弾ぐらいなら) slice しなくても
+	逆に弾は(64[pixel]以下の > 大弾ぐらいなら) slice しなくても
 	いいのかもしれない。
 	弾はシステム的にも「汎用スプライトで描かない方が効率が良い」ので、
 	専用ルーチンに分岐する予定(2009-11-13現在)です。
@@ -364,7 +364,7 @@ static void render_object_use_rot_zoom(SPRITE *spr)
 	最後にobjの中心座標(cx,cy)を加えて画面上の描画座標(Guの使い方が1:1なので)とします。
 ---------------------------------------------------------*/
 
-static void render_object_use_rot_zoom(SPRITE *spr)
+static void render_object_use_rot_zoom(OBJ *spr)
 {
 	/* --- 表示スイッチ */
 //	if (spr->used ==  0/*FA LSE*/) return;

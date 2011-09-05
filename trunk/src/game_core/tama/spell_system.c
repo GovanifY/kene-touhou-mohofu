@@ -2,12 +2,13 @@
 #include "./../boss/boss.h"//#include "game_main.h"
 
 /*---------------------------------------------------------
- 東方模倣風 ～ Toho Imitation Style.
-  プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	東方模倣風 ～ Toho Imitation Style.
+	http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	スペル生成システム(カードを生成)
 	-------------------------------------------------------
-	現状「ボス」以外にも「中ザコ」、「小ザコ」がスペル生成できるので、「スペル生成」と「カード管理」は別システムです。
+	現状「ボス」以外にも「中ザコ」、「小ザコ」がスペル生成できるので、
+	「スペル生成」と「カード管理」は別システムです。
 	(現状「中-ボス」は作る予定があるが作ってない。カード履歴システムもまだ作ってない)
     -------------------------------------------------------
     分類        カード履歴      カード  スペル生成
@@ -25,6 +26,18 @@
 	今の方式(r33)だとむしろ専用コアにした方が速度低下する。
 ---------------------------------------------------------*/
 
+/*---------------------------------------------------------
+	東方模倣風 ～ Toho Imitation Style.
+	http://code.google.com/p/kene-touhou-mohofu/
+	-------------------------------------------------------
+	レイヤーシステム
+	-------------------------------------------------------
+	レイヤーシステムは「弾幕」の文字通り、
+	弾を単体としては認識せず、幕として認識するシステム。
+	-------------------------------------------------------
+---------------------------------------------------------*/
+
+#include "./../boss/card_address.h"//#include "spell_address.h"
 
 /*---------------------------------------------------------
 	(r35)定数等
@@ -106,12 +119,38 @@ DEBUG_global/*static*/ void sincos65536_NUM(int register_number_angle65536, int 
 	#endif
 }
 #endif
+/*---------------------------------------------------------
+	(r36)カードスクリプト用命令(sincos)
+	-------------------------------------------------------
+	使用レジスタ:
+	REG_11		== HATSUDAN_01_speed256		入力(速度、半径, t256形式)
+	REG_13		== HATSUDAN_03_angle65536	入力(角度65536, d65536形式)
+	REG_02: 	出力(cos(angle) x radius, t256形式)
+	REG_03: 	出力(sin(angle) x radius, t256形式)
+---------------------------------------------------------*/
 
+global void sincos256(void)
+{
+	#if (0)//
+	h->vx256	 = si n1024((int_angle1024))*(/*p->speed*/(16*KETM075));/*fps_factor*/		/* CCWの場合 */
+	h->vy256	 = co s1024((int_angle1024))*(/*p->speed*/(16*KETM075));/*fps_factor*/
+	REG_02_DEST_X	= (((int)(co s(de g1024tor ad(REG_10_ANGLE1024))*REG_11_SPEED256)));/*(fps_factor)*/
+	REG_03_DEST_Y	= (((int)(si n(de g1024tor ad(REG_10_ANGLE1024))*REG_11_SPEED256)));/*(fps_factor)*/
+	#else
+	{
+		int sin_value_t256; 		// sin_value_t256 = 0;
+		int cos_value_t256; 		// cos_value_t256 = 0;
+		int256_sincos1024( (deg65536to1024(HATSUDAN_03_angle65536)), &sin_value_t256, &cos_value_t256);
+		REG_02_DEST_X	 = (((cos_value_t256)*(HATSUDAN_01_speed256))>>8);/*fps_factor*/
+		REG_03_DEST_Y	 = (((sin_value_t256)*(HATSUDAN_01_speed256))>>8);/*fps_factor*/
+	}
+	#endif
+}
 /*---------------------------------------------------------
 
 ---------------------------------------------------------*/
 
-global void set_REG_DEST_XY(SPRITE *src)
+global void set_REG_DEST_XY(OBJ *src)
 {
 	REG_02_DEST_X	= (src->cx256); 	/* 弾源x256 ボス中心から発弾。 */
 	REG_03_DEST_Y	= (src->cy256); 	/* 弾源y256 ボス中心から発弾。 */
@@ -132,7 +171,7 @@ global void set_REG_DEST_XY(SPRITE *src)
 	この変更で問題のある部分も出ているが、
 	本家ではこれと似た仕様になっていると思われる。
 ---------------------------------------------------------*/
-// 旧仕様メモ(SPRITE *src, SPRITE *dest)
+// 旧仕様メモ(OBJ *src, OBJ *dest)
 extern int atan_65536(int y, int x);/*(vfpu/math_atan65536i.c)*/
 global /*static*/ void tmp_angleCCW65536_src_nerai(void)
 {
@@ -151,11 +190,11 @@ global /*static*/ void tmp_angleCCW65536_src_nerai(void)
 	dest(x,y)の位置から、プレイヤー(x,y)に向けた角度を
 	HATSUDAN_03_angle65536に計算する。
 ---------------------------------------------------------*/
-// 旧仕様メモ(SPRITE *dest)
+// 旧仕様メモ(OBJ *dest)
 global void calculate_jikinerai(void)
 {
-	SPRITE *zzz_player;
-	zzz_player = &obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_00_PLAYER];
+	OBJ *zzz_player;
+	zzz_player = &obj99[OBJ_HEAD_02_0x0900_KOTEI+FIX_OBJ_00_PLAYER];
 	REG_00_SRC_X	= (zzz_player->cx256);		/*(狙い先)*/
 	REG_01_SRC_Y	= (zzz_player->cy256);		/*(狙い先)*/
 	#if (0)/*(旧仕様メモ)*/
@@ -165,6 +204,45 @@ global void calculate_jikinerai(void)
 	// 旧仕様メモ(zzz_player, dest);
 	tmp_angleCCW65536_src_nerai();
 }
+
+/*---------------------------------------------------------
+	(r36)カードスクリプト用命令(multiprex_rate_vector)
+	複合割合合成。
+	-------------------------------------------------------
+	使用レジスタ:
+	REG_00: 	入力(x0)
+	REG_01: 	入力(y0)
+	REG_02: 	入力(x1)/出力(x2)
+	REG_03: 	入力(y1)/出力(y2)
+	REG_11: 	入力(合成割合, t256形式)
+---------------------------------------------------------*/
+			#if (0)/*(到達割合を考慮して、合成する。)*/
+			REG_00_SRC_X	= ((my_menu_resource[i].x_offset[move_mode	])<<8); 	/*(合成位置[A]t256()形式)*/
+		//	REG_01_SRC_Y	= ((my_menu_resource[i].y_offset[move_mode	])<<8); 	/*(合成位置[A]t256()形式)*/
+			REG_02_DEST_X	= ((my_menu_resource[i].x_offset[move_mode+1])<<8); 	/*(合成位置[B]t256()形式)*/
+		//	REG_03_DEST_Y	= ((my_menu_resource[i].y_offset[move_mode+1])<<8); 	/*(合成位置[B]t256()形式)*/
+			REG_11_TAMA1	= move_rate256;/*(合成割合t256()形式)*/
+			multiprex_rate();
+			#endif
+
+global void multiprex_rate_vector(void)
+{
+	#if 1/*([X]ベクトル合成)*/
+	/*(合成順序は割合[A]と割合[B]で、どちらが先でも構わない。)*/
+	int x_sa256;/*(t256()形式)*/
+	/*合成位置[A]*/x_sa256	= (((REG_00_SRC_X )*(256-REG_11_GOUSEI_WARIAI256))>>8);/*(割合[A]を合成)*/
+	/*合成位置[B]*/x_sa256 += (((REG_02_DEST_X)*(	 REG_11_GOUSEI_WARIAI256))>>8);/*(割合[B]を合成)*/
+	REG_02_DEST_X	= x_sa256;/*(結果[X])*/
+	#endif
+	#if 1/*([Y]ベクトル合成)*/
+	/*(合成順序は割合[A]と割合[B]で、どちらが先でも構わない。)*/
+	int y_sa256;/*(t256()形式)*/
+	/*合成位置[A]*/y_sa256	= (((REG_01_SRC_Y )*(256-REG_11_GOUSEI_WARIAI256))>>8);/*(割合[A]を合成)*/
+	/*合成位置[B]*/y_sa256 += (((REG_03_DEST_Y)*(	 REG_11_GOUSEI_WARIAI256))>>8);/*(割合[B]を合成)*/
+	REG_03_DEST_Y	= y_sa256;/*(結果[Y])*/
+	#endif
+}
+
 
 
 /*---------------------------------------------------------
@@ -180,11 +258,12 @@ global void calculate_jikinerai(void)
 #define SPELL_TIME_0128 	(128)
 #define SPELL_TIME_0192 	(192)
 #define SPELL_TIME_0256 	(256)
+#define SPELL_TIME_0352 	(352)/*(352==32*11)*/
 #define SPELL_TIME_0512 	(512)
-#define SPELL_TIME_0640 	(640)
 //#define SPELL_TIME_64_640 (512+64)
 //#define SPELL_TIME_64_640 (640-64)
-#define SPELL_TIME_64_640	(512+64)
+#define SPELL_TIME_64_640	(512+32)
+#define SPELL_TIME_0640 	(640)
 //efine SPELL_TIME_0768 	(768)
 #define SPELL_TIME_1024 	(1024)
 #define SPELL_TIME_9999 	(16384)
@@ -209,25 +288,39 @@ global void calculate_jikinerai(void)
 #if (1)/*(カードスクリプトに移行した場合、無くなる。(カードスクリプト内の[初期化セクション]で行う。))*/
 	enum
 	{
-		H0=0,H1,H2,H3,H4,H5,H6,H7,H8,H9,H10
+		H0 = 0,
+		H1,
+		H2,
+		H3,
+		H4,
+		H5,
+		H6,
+		H7,
+		H8,
+		H9,
+		H10,
+		H11_MAX,
 	};
-	#define b_HOUGA_00_YEL_NUMS 		(H0*4)
-	#define b_HOUGA_08_RED_NUMS 		(H1*4)
-	#define HOUGA_04_YEL_DIV_ANGLE		(H2*4)
-	#define HOUGA_16_YEL_ROTATE_ANGLE	(H3*4)
-	#define HOUGA_12_RED_DIV_ANGLE		(HOUGA_16_YEL_ROTATE_ANGLE)
-	//
-	#define b_chrno_00_BLUE_NUMS		(H4*4)
-	#define chrno_04_BLUE_DIV_ANGLE 	(H5*4)
-	//
-	#define AKA_01_DIV_NUMS 			(H6*4)
-	#define AKA_02_DIV_ANGLE			(H7*4)
-	#define AKA_03_DIV_ANGLE			(H8*4)
-	//
-	#define JACK_14_TAMAKAZU			(H9*4)
+	// ★ 紅 美鈴、華符「芳華絢爛」用
+	#define tama_const_H00_NUMS_HOUGA_YELLOW		(H0*4)/*(分割数、黄色)*/
+	#define tama_const_H01_NUMS_HOUGA_RED			(H1*4)/*(分割数、紅色)*/
+	#define tama_const_H02_DIVS_HOUGA_YELLOW		(H2*4)/*(分割角、黄色)*/
+	#define tama_const_H03_DIVS_HOUGA_RED			(H3*4)/*(分割角、紅色)*/
+	// ★ チルノ「」用
+	#define tama_const_H04_NUMS_CIRNO_BLUE			(H4*4)/*(分割数、青色)*/
+	#define tama_const_H05_DIVS_CIRNO_BLUE			(H5*4)/*(分割角、青色)*/
+	// ★ アリス 「赤の魔法」用
+	#define tama_const_H06_NUMS_ALICE_RED			(H6*4)/*(分割数、紅色)*/
+	#define tama_const_H07_DIVS_ALICE_RED			(H7*4)/*(分割角、紅色)*/
+//	#define AK A_03_DIV_ANGLE			(H8*4)
+	// ★ 「レッドマジック」もどき用
+	#define tama_const_H09_NUMS_REMI_MAGIC			(H8*4)/*(分割数、紅色)*/
+	#define tama_const_H10_DIVS_REMI_MAGIC			(H9*4)/*(分割角、紅色)*/
+	// ★ 幻幽「ジャック・ザ・ルドビレ」もどき用
+	#define tama_const_H08_NUMS_SAKUYA_JACK 		(H10*4)/*(分割数、色)*/
 
 	#define const_init_nan_ido_bunkatu_nums_table	const_init_nan_ido_table
-	static const /*s32*/u16/*s16 でいいかも？*/ const_init_nan_ido_table[(H10*4)] =
+	static const /*s32*/u16/*s16 でいいかも？*/ const_init_nan_ido_table[(H11_MAX*4)] =
 	{
 		// ★ 紅 美鈴、華符「芳華絢爛」用
 		// easy 	華符「芳華絢爛」と同じ。(easyは時間で簡単になるように調整する)
@@ -253,7 +346,11 @@ global void calculate_jikinerai(void)
 	//	(int)(65536/(18)),					(int)(65536/(24)),					(int)(65536/(40)),					(int)(65536/(64)),					/* 分割角度:  (-r34) */
 	//	(int)(65536-(int)(65536/(18))), 	(int)(65536-(int)(65536/(24))), 	(int)(65536-(int)(65536/(40))), 	(int)(65536-(int)(65536/(64))), 	/* 分割角度_R:(-r34) */
 		(int)(65536/(12)),					(int)(65536/(18)),					(int)(65536/(20)),					(int)(65536/(24)),					/* 分割角度:  (r35-) */
-		(int)(65536-(int)(65536/(12))), 	(int)(65536-(int)(65536/(18))), 	(int)(65536-(int)(65536/(20))), 	(int)(65536-(int)(65536/(24))), 	/* 分割角度_R:(r35-) */
+	//	(int)(65536-(int)(65536/(12))), 	(int)(65536-(int)(65536/(18))), 	(int)(65536-(int)(65536/(20))), 	(int)(65536-(int)(65536/(24))), 	/* 分割角度_R:(r35-) */
+		// ★ 「レッドマジック」もどき用
+		(10),					(10),					(13),					(18),					/* 「レッドマジック」もどき用 */
+		(int)(65536/(10)),		(int)(65536/(10)),		(int)(65536/(13)),		(int)(65536/(18)),		/* 「レッドマジック」もどき用 */
+		// ★ 幻幽「ジャック・ザ・ルドビレ」もどき用
 		/* easy 				normal					hard					lunatic 			*/
 	//	(6),					(12),					(24),					(32),					/* 幻幽「ジャック・ザ・ルドビレ」もどき用 */
 		(16),					(32),					(40),					(48),					/* 幻幽「ジャック・ザ・ルドビレ」もどき用 */
@@ -277,16 +374,16 @@ global void calculate_jikinerai(void)
 	弾幕が画面外の場合は、弾を消す。
 ---------------------------------------------------------*/
 global RECT_CLIP_CLASS rect_clip;
-local void hatudan_system_B_side_hansya(SPRITE *obj)/*	弾反射コールバック */
+local void hatudan_system_B_side_hansya(OBJ *obj)/*	弾反射コールバック */
 {
 	{
-		/* [左の壁で反射する] 弾が弾幕設定領域画面より少し(4[dot])手前の位置に来た場合。 */
+		/* [左の壁で反射する] 弾が弾幕設定領域画面より少し(4[pixel])手前の位置に来た場合。 */
 		if (0 < (rect_clip.bullet_clip_min.x256) + t256(4) - (obj->cx256) )
 		{
 			goto common_hansya;
 		}
 		else
-		/* [右の壁で反射する] 弾が弾幕設定領域画面より少し(4[dot])手前の位置に来た場合。 */
+		/* [右の壁で反射する] 弾が弾幕設定領域画面より少し(4[pixel])手前の位置に来た場合。 */
 		if (0 > (rect_clip.bullet_clip_max.x256) - t256(4) - (obj->cx256) )
 		{
 			goto common_hansya;
@@ -342,7 +439,7 @@ local void hatudan_system_B_side_hansya(SPRITE *obj)/*	弾反射コールバック */
 	弾幕の喰み出しチェックを行う(毎フレーム行う必要はない)。
 	弾幕が画面外の場合は、弾を消す。
 ---------------------------------------------------------*/
-local void hatudan_system_B_gamen_gai_tama_kesu(SPRITE *src)/* 画面外弾消しコールバック */
+local void hatudan_system_B_gamen_gai_tama_kesu(OBJ *src)/* 画面外弾消しコールバック */
 {
 	/* 画面外の場合は弾を消す。 */
 	if (
@@ -402,21 +499,23 @@ enum
 
 typedef struct
 {
-	void (*spell_generate_section)(SPRITE *sss);		/* [発弾(弾生成)セクション]実行処理 */		/* カードスクリプトに移行した場合の[発弾セクション]。 */
-	void (*spell_initialze_section)(SPRITE *sss);		/* [初期化セクション]初期化処理 */			/* カードスクリプトに移行した場合の[初期化セクション]。 */
-	u16 spell_limit_max_time;							/* カード寿命時間 */						/* カードスクリプトに移行した場合、本来[初期化セクション]内で行う。 */
-	u8 tama_map;										/* 弾画像のマップ番号 */					/* カードスクリプトに移行した場合、本来[初期化セクション]内で行う。 */
-	u8 scr_ipt_run_flag;								/* 実行言語(カードインタプリタ / C言語) */
+	void (*spell_generate_section)(OBJ *sss);		/* [発弾(弾生成)セクション]実行処理 */		/* カードスクリプトに移行した場合の[発弾セクション]。 */
+	void (*spell_initialze_section)(OBJ *sss);		/* [初期化セクション]初期化処理 */			/* カードスクリプトに移行した場合の[初期化セクション]。 */
+	u16 spell_limit_max_time;						/* カード寿命時間 */						/* カードスクリプトに移行した場合、本来[初期化セクション]内で行う。 */
+	u8 tama_map;									/* 弾画像のマップ番号 */					/* カードスクリプトに移行した場合、本来[初期化セクション]内で行う。 */
+	u8 scr_ipt_run_flag;							/* 実行言語(カードインタプリタ / C言語) */
 } SPELL_RESOURCE;
-//	/*const*/ static void (*spell_create_bbb[(SPELL_MAX/*16+1*/)])(SPRITE *sss) =
+//	/*const*/ static void (*spell_create_bbb[(SPELL_MAX/*16+1*/)])(OBJ *sss) =
 	/*const*/ static SPELL_RESOURCE system_spell_resource[(SPELL_MAX/*16+1*/)] =
 {
 	#define spell_create_99_mitei spell_create_08_rumia_night_bird
 /* 00 00 */ {	NULL,									NULL,										SPELL_TIME_0128,	TAMA_MAP_06_KOUMA, RUN_01_C_LANGUAGE},	/* 00 */	/* カード生成しない */
 			// 0x00- 中ザコ / ボス共用カード
 /* 01 01 */ {	spell_create_01_sakuya_misogi_normal,	NULL,										SPELL_TIME_0128,	TAMA_MAP_06_KOUMA, RUN_01_C_LANGUAGE},	/* 01 */	/* [咲夜] 紅5面中-ボス 「通常攻撃1」咲夜禊カード */
-/* 02 02 */ {	spell_create_02_24nerai,				NULL,										SPELL_TIME_0048,	TAMA_MAP_06_KOUMA, RUN_01_C_LANGUAGE},	/* 02 */	/* [咲夜] 紅5面中-ボス 24カード (奇術「ミスディレクションもどき(1/2)」) */
-/* 03 03 */ {	spell_create_03_11nife, 				NULL,										SPELL_TIME_0064,	TAMA_MAP_06_KOUMA, RUN_01_C_LANGUAGE},	/* 03 */	/* [咲夜] 紅5面中-ボス 11カード (奇術「ミスディレクションもどき(2/2)」) */
+/* 02 02 */ //{	spell_create_02_24nerai,				NULL,										SPELL_TIME_0048,	TAMA_MAP_06_KOUMA, RUN_01_C_LANGUAGE},	/* 02 */	/* [咲夜] 紅5面中-ボス 24カード (奇術「ミスディレクションもどき(1/2)」) */
+/* 03 03 */ //{	spell_create_03_11nife, 				NULL,										SPELL_TIME_0064,	TAMA_MAP_06_KOUMA, RUN_01_C_LANGUAGE},	/* 03 */	/* [咲夜] 紅5面中-ボス 11カード (奇術「ミスディレクションもどき(2/2)」) */
+/* 02 02 */ {	spell_create_99_mitei,					NULL,										SPELL_TIME_0128,	TAMA_MAP_06_KOUMA, RUN_01_C_LANGUAGE},	/* 02 */	/* [雑魚] (未使用) */
+/* 03 03 */ {	spell_create_99_mitei,	 				NULL,										SPELL_TIME_0128,	TAMA_MAP_06_KOUMA, RUN_01_C_LANGUAGE},	/* 03 */	/* [雑魚] (未使用) */
 /* 04 04 */ {	spell_create_04_pink_hearts,			NULL,										SPELL_TIME_0640,	TAMA_MAP_06_KOUMA, RUN_01_C_LANGUAGE},	/* 04 */	/* [咲夜] 紅5面ボス 「通常攻撃1(1/2)」にちょっとだけ似たカード(予定) SPELL_TIME_0128(r32) */
 /* 05 05 */ {	spell_create_05_32way_dual, 			NULL,										SPELL_TIME_0128,	TAMA_MAP_06_KOUMA, RUN_01_C_LANGUAGE},	/* 05 */	/* [咲夜] 紅5面ボス 「通常攻撃1/2(2/2)」にちょっとだけ似たカード(予定) */
 /* 06 06 */ {	spell_create_06_luna_clock_32way,		NULL,										SPELL_TIME_0128,	TAMA_MAP_06_KOUMA, RUN_01_C_LANGUAGE},	/* 06 */	/* [咲夜] 紅5面ボス 幻象「ルナクロック(1/2)」にちょっとだけ似たカード(予定) */
@@ -431,19 +530,19 @@ typedef struct
 /* 14 0e */ {	spell_create_1f_remilia_kougeki2,		NULL,										SPELL_TIME_0256,	TAMA_MAP_06_KOUMA, RUN_01_C_LANGUAGE},	/* 1f */	/* [レミリア] 通常攻撃2 っぽいもの */
 /* 15 0f */ {	spell_create_11_tengu_shot, 			NULL,										SPELL_TIME_0256,	TAMA_MAP_06_KOUMA, RUN_01_C_LANGUAGE},	/* 11 */	/* [天狗様] 差分氏の妖怪1(天狗様?)が撃つカード */
 			// 0x10- 中ザコ / ボス共用カード
-/* 16 10 */ {	spell_create_10_cirno_misogi,			spell_init_10_cirno_misogi, 				SPELL_TIME_0060,	TAMA_MAP_06_KOUMA, RUN_01_C_LANGUAGE},	/* 10 */	/* [チルノ] 紅2面ボス チルノ禊カード */
+/* 16 10 */ {	spell_create_10_cirno_misogi,			spell_init_10_cirno_misogi, 				SPELL_TIME_0096,	TAMA_MAP_06_KOUMA, RUN_01_C_LANGUAGE},	/* 10 */	/* [チルノ] 紅2面ボス チルノ禊カード */
 /* 17 11 */ {	spell_create_13_perfect_freeze, 		spell_init_13_perfect_freeze,				SPELL_TIME_64_640,	TAMA_MAP_06_KOUMA, RUN_01_C_LANGUAGE},	/* 13 */	/* [チルノ] 紅2面ボス パーフェクトフリーズ */
 /* 18 12 */ {	spell_create_16_diamond_blizzard,		NULL,										SPELL_TIME_0128,	TAMA_MAP_06_KOUMA, RUN_01_C_LANGUAGE},	/* 16 */	/* [チルノ] 紅2面ボス 雪符「ダイアモンドブリザード」 */
 /* 19 13 */ {	spell_create_25_alice_suwako,			NULL,										SPELL_TIME_0256,	TAMA_MAP_06_KOUMA, RUN_01_C_LANGUAGE},	/* 25 */	/* [アリス] アリス	諏訪子っぽい(?)カード */
 /* 20 14 */ {	spell_create_17_alice_nejiri10sec,		NULL,										SPELL_TIME_0192,	TAMA_MAP_06_KOUMA, RUN_01_C_LANGUAGE},	/* 17 */	/* [アリス] 通常攻撃(もどき) ねじり弾10秒 SPELL_TIME_0640 */
 /* 21 15 */ {	spell_create_0e_aka_2nd,				spell_init_0e_aka_2nd,						SPELL_TIME_1024,	TAMA_MAP_06_KOUMA, RUN_01_C_LANGUAGE},	/* 0e */	/* [アリス] 怪EX面ボス 赤の魔法2段階目もどき */
-/* 22 16 */ {	spell_create_0b_alice_doll, 			NULL/*spell_init_r35_hang_up*/, 			SPELL_TIME_0256,	TAMA_MAP_06_KOUMA, RUN_01_C_LANGUAGE},	/* 0b */	/* [アリス] SPELL_TIME_0128 妖3面ボス 人形カード(もどき)(256>240=4x60) */
-/* 23 17 */ {	spell_create_1e_alice_doll, 			NULL,										SPELL_TIME_0256,	TAMA_MAP_06_KOUMA, RUN_01_C_LANGUAGE},	/* 1e */	/* [アリス] 妖3面ボス 人形カード(もどき)(256>240=4x60) 蒼符「博愛の仏蘭西人形」 */
+/* 22 16 */ {	spell_create_0b_alice_zako_doll, 		NULL/*spell_init_r35_hang_up*/, 			SPELL_TIME_0256,	TAMA_MAP_06_KOUMA, RUN_01_C_LANGUAGE},	/* 0b */	/* [アリス] SPELL_TIME_0128 妖3面ボス 人形カード(もどき)(256>240=4x60) */
+/* 23 17 */ {	spell_create_1e_alice_tama_doll, 		NULL,										SPELL_TIME_0256,	TAMA_MAP_06_KOUMA, RUN_01_C_LANGUAGE},	/* 1e */	/* [アリス] 妖3面ボス 人形カード(もどき)(256>240=4x60) 蒼符「博愛の仏蘭西人形」 */
 			// 0x18- 中ザコ / ボス共用カード
 /* 24 18 */ {	spell_create_0c_hana_test,				spell_init_0c_hana_test,					SPELL_TIME_0256,	TAMA_MAP_06_KOUMA, RUN_01_C_LANGUAGE},	/* 0c */	/* [魅魔] 花てすとカード */
 /* 64 40 */ {	spell_create_20_sonota_debug_cw_ao, 	NULL,										SPELL_TIME_0128,	TAMA_MAP_06_KOUMA, RUN_01_C_LANGUAGE},	/* 40 */	/* [その他] デバッグカードCW青 */
 /* 65 41 */ {	spell_create_21_sonota_debug_ccw_aka,	NULL,										SPELL_TIME_0128,	TAMA_MAP_06_KOUMA, RUN_01_C_LANGUAGE},	/* 41 */	/* [その他] デバッグカードCCW赤 */
-/* 27 1b */ {	spell_create_1b_cirno_icecle_fall,		spell_init_1b_cirno_icecle_fall,			SPELL_TIME_0128,	TAMA_MAP_06_KOUMA, RUN_01_C_LANGUAGE},	/* 26 */	/* [チルノ] 氷符「アイシクルフォール」 */
+/* 27 1b */ {	spell_create_1b_cirno_icecle_fall,		spell_init_1b_cirno_icecle_fall,			SPELL_TIME_0352,	TAMA_MAP_06_KOUMA, RUN_01_C_LANGUAGE},	/* 26 */	/* [チルノ] 氷符「アイシクルフォール」 */
 /* 68 44 */ {	spell_create_44_ruiz3,					NULL,										SPELL_TIME_0256,	TAMA_MAP_06_KOUMA, RUN_01_C_LANGUAGE},	/* 44 */	/* [ルイズ] 左右白カード */
 /* 29 1d */ {	spell_create_1d_amefuri_test,			spell_init_1d_amefuri_test, 				SPELL_TIME_0640,	TAMA_MAP_06_KOUMA, RUN_01_C_LANGUAGE},	/* 1d */	/* [(文、仮)] 雨てすと */
 /* 30 1e */ {	spell_create_1e_momiji_no_nonoji,		NULL,										SPELL_TIME_0640,	TAMA_MAP_06_KOUMA, RUN_01_C_LANGUAGE},	/* 26 */	/* [椛] ののじカード */
@@ -458,7 +557,7 @@ typedef struct
 /* 38 26 */ {	spell_create_26_aya_saifu,				NULL,										SPELL_TIME_9999,	TAMA_MAP_06_KOUMA, RUN_01_C_LANGUAGE},	/* 26 */	/* [文] 塞符 */
 /* 39 27 */ {	spell_create_27_hosigata_test,			spell_init_27_hosigata_test,				SPELL_TIME_0256,	TAMA_MAP_06_KOUMA, RUN_01_C_LANGUAGE},	/* 27 */	/* [その他] 星型テスト */
 			// 0x28- ボス専用カード
-/* 40 28 */ {	spell_create_28_remilia_tama_oki,		spell_init_28_remilia_tama_oki, 			SPELL_TIME_0256,	TAMA_MAP_06_KOUMA, RUN_01_C_LANGUAGE},	/* 30 */	/* [咲夜レミリア] 紅6面ボス 呪詛「ブラド・ツェペシュの呪い」 */
+/* 40 28 */ {	spell_create_99_mitei,					NULL, 										SPELL_TIME_0128,	TAMA_MAP_06_KOUMA, RUN_01_C_LANGUAGE},	/* 30 */	/* [] */
 /* 41 29 */ {	spell_create_29_rumia_demarcation,		spell_init_29_rumia_demarcation,			SPELL_TIME_0512,	TAMA_MAP_06_KOUMA, RUN_01_C_LANGUAGE},	/* 31 */	/* [ルーミア] 紅1面ボス 闇符「ディマーケイション」にちょっとだけ似たカード(予定) dimmercation / demarcation 境界 */
 /* 42 2a */ {	spell_create_2a_sakuya_baramaki1,		NULL,										SPELL_TIME_0640,	TAMA_MAP_06_KOUMA, RUN_01_C_LANGUAGE},	/* 26 */	/* [咲夜] 紅5面中-ボス ばら撒き1 カード () */
 /* 43 2b */ {	spell_create_2b_sakuya_baramaki2,		NULL,										SPELL_TIME_0640,	TAMA_MAP_06_KOUMA, RUN_01_C_LANGUAGE},	/* 26 */	/* [咲夜] 紅5面中-ボス ばら撒き2 カード () */
@@ -492,18 +591,17 @@ typedef struct
 /* 69 45 */ {	spell_create_18_kaguya01,				spell_init_mima_kaguya,/*(特殊)*/			SPELL_TIME_0064,	TAMA_MAP_06_KOUMA, RUN_01_C_LANGUAGE},	/* 18 */	/* [輝夜] とりあえず強引に変換 */
 /* 70 46 */ {	spell_create_19_kaguya04,				spell_init_mima_kaguya,/*(特殊)*/			SPELL_TIME_0064,	TAMA_MAP_06_KOUMA, RUN_01_C_LANGUAGE},	/* 19 */	/* [輝夜] とりあえず強引に変換 */
 /* 28 1c */ {	spell_create_23_kaguya_tamanoe, 		spell_init_mima_kaguya,/*(特殊)*/			SPELL_TIME_0640,	TAMA_MAP_06_KOUMA, RUN_01_C_LANGUAGE},	/* 1d */	/* [輝夜] 蓬莱の玉の枝もどき */
-/* 71 47 */ {	spell_create_99_mitei,					NULL,										SPELL_TIME_0256,	TAMA_MAP_06_KOUMA, RUN_01_C_LANGUAGE},	/* 47 */	/* [咲夜] とりあえず強引に変換(仮) */	/* 256 == 0x100 == ( 4 x 64). [ 4秒ぐらい] */
+/* 71 47 */ {	spell_create_47_sakuya_festival_knife,	spell_init_47_sakuya_festival_knife,		SPELL_TIME_9999,	TAMA_MAP_06_KOUMA, RUN_01_C_LANGUAGE},	/* 47 */	/* [咲夜] 幻想「フェスティバルナイフ」(?) むりやり変換 */
 			// 0x48
-	#if (1)
 /* 48 48 */ {	spell_create_48_r34_gokan_kinou,		NULL,										SPELL_TIME_9999,	TAMA_MAP_06_KOUMA, RUN_01_C_LANGUAGE},	/* 48 */	/* [r34]r34以前の互換機能。(r35-)システムで必ず必要。 */
-/* 49 49 */ {	spell_create_99_mitei,					NULL,										SPELL_TIME_0128,	TAMA_MAP_06_KOUMA, RUN_01_C_LANGUAGE},	/* 49 */	/* [] */
+/* 49 49 */ {	spell_create_99_mitei, 					NULL,										SPELL_TIME_0128,	TAMA_MAP_06_KOUMA, RUN_01_C_LANGUAGE},	/* 49 */	/* [] */
 /* 4a 4a */ {	spell_create_99_mitei,					NULL,										SPELL_TIME_0128,	TAMA_MAP_06_KOUMA, RUN_01_C_LANGUAGE},	/* 4a */	/* [] */
 /* 4b 4b */ {	spell_create_99_mitei,					NULL,										SPELL_TIME_0128,	TAMA_MAP_06_KOUMA, RUN_01_C_LANGUAGE},	/* 4b */	/* [] */
 /* 4c 4c */ {	spell_create_99_mitei,					NULL,										SPELL_TIME_0128,	TAMA_MAP_06_KOUMA, RUN_01_C_LANGUAGE},	/* 4c */	/* [] */
-/* 4d 4d */ {	spell_create_99_mitei,					NULL,										SPELL_TIME_0128,	TAMA_MAP_06_KOUMA, RUN_01_C_LANGUAGE},	/* 4d */	/* [] */
-/* 4e 4e */ {	spell_create_99_mitei,					NULL,										SPELL_TIME_0128,	TAMA_MAP_06_KOUMA, RUN_01_C_LANGUAGE},	/* 4e */	/* [] */
-/* 4f 4f */ {	spell_create_99_mitei,					NULL,										SPELL_TIME_0128,	TAMA_MAP_06_KOUMA, RUN_01_C_LANGUAGE},	/* 4f */	/* [] */
-	#endif
+/* 4d 4d */ {	spell_create_4d_remilia_rasen_knife,	NULL,										SPELL_TIME_0256,	TAMA_MAP_06_KOUMA, RUN_01_C_LANGUAGE},	/* 4d */	/* [咲夜/レミリア] 紅6面ボス 通常攻撃  */
+/* 4e 4e */ {	spell_create_4e_remilia_vlad_tepes, 	spell_init_4e_remilia_vlad_tepes,			SPELL_TIME_0256,	TAMA_MAP_06_KOUMA, RUN_01_C_LANGUAGE},	/* 30 */	/* [咲夜/レミリア] 紅6面ボス 呪詛「ブラド・ツェペシュの呪い」 */
+/* 4f 4f */ {	spell_create_4f_remilia_red_magic,		spell_init_4f_remilia_red_magic,			SPELL_TIME_0256,	TAMA_MAP_06_KOUMA, RUN_01_C_LANGUAGE},	/* 4f */	/* [咲夜/レミリア] 紅6面ボス 「レッドマジック」 */
+
 };
 
 /*---------------------------------------------------------
@@ -511,18 +609,25 @@ typedef struct
 ---------------------------------------------------------*/
 static void spell_cpu_common_init(void)
 {
+	#if (1==USE_BOSS_JIKANGIRE)/*(使用予定あり。未検証)*/
+	cg.state_flag &= (~JIKI_FLAG_16_0x8000_BOSS_JIKAN_GIRE);/*(時間切れフラグoff)*/
+	#endif
 	/* カードレジスタ全初期化 */
 	spell_cpu_initialize_all_register();
 	#if (1)
 	/* 弾幕コールバックシステムの初期化 */
 	{
-		card.danmaku_callback[0] = danmaku_00_standard_angle_mover;
+		card.danmaku_callback[0] = danmaku_00_standard_angle_mover;/*(r36-書き換え禁止)*/
 		card.danmaku_callback[1] = NULL;
 		card.danmaku_callback[2] = NULL;
 		card.danmaku_callback[3] = NULL;
 	}
 	#endif
 }
+//	card.danmaku_callback[0] = danmaku_00_standard_angle_mover;/*(通常弾用)*/	/*(後追い弾は通常弾)*/
+//	card.danmaku_callback[0] = danmaku_00_standard_angle_mover;/*(通常弾用)*/	/*(画面外なら弾を消す)*/
+
+
 /*---------------------------------------------------------
 	道中の前に初期化する必要がある部分。
 ---------------------------------------------------------*/
@@ -536,35 +641,35 @@ global void spell_cpu_douchuu_init(void)
 	カードの初期化。カードが変わると毎回行う必要がある。
 ---------------------------------------------------------*/
 
-global void card_maikai_init(SPRITE *src)
+global void card_maikai_init(OBJ *src)
 {
 	spell_cpu_common_init();/*(共通部分)*/
 	//
 	#if (1)/* カードスクリプトに移行した場合の[初期化セクション]。 */
 	/* カード初期化セクションを実行する。 */
-	if (NULL!=(system_spell_resource[(card.card_number/*-1*/)].spell_initialze_section))
+	if (NULL!=(system_spell_resource[(card.spell_used_number/*-1*/)].spell_initialze_section))
 	{
-		(system_spell_resource[(card.card_number/*-1*/)].spell_initialze_section)(src);
+		(system_spell_resource[(card.spell_used_number/*-1*/)].spell_initialze_section)(src);
 	}
 	//
 
 	/* カード時間に予め登録された寿命時間を設定する。 */
 	/* カードの制限時間を設定(予めカードごとに設定されている標準時間に設定) */
 	/* カードの時間切れを設定 */
-	REG_10_BOSS_SPELL_TIMER = system_spell_resource[(card.card_number/*-1*/)].spell_limit_max_time;
+	REG_10_BOSS_SPELL_TIMER = system_spell_resource[(card.spell_used_number/*-1*/)].spell_limit_max_time;
 	#endif
 }
 
 /*---------------------------------------------------------
-	スペルをCPU実行し、カードを１フレーム生成する。
+	スペルCPUを実行し、カードを１フレーム生成する。
 	-------------------------------------------------------
 	カード生成すると時間経過し、カード寿命時間が自動で減る。
 	カード寿命時間が無くなった場合は、カードタイプが無し(SPELL_00)になる。
 ---------------------------------------------------------*/
 
-global void card_generate(SPRITE *src)
+global void card_generate(OBJ *src)
 {
-	if (SPELL_00 != card.card_number)		/* カード生成は必要？ */
+	if (SPELL_00 != card.spell_used_number) 	/* スペル生成は必要？ */
 	{
 		REG_10_BOSS_SPELL_TIMER--;				/* 時間経過する */	/*fps_factor*/
 		if ((0) < (REG_10_BOSS_SPELL_TIMER))	/* 時間切れ？ */
@@ -573,14 +678,12 @@ global void card_generate(SPRITE *src)
 			set_REG_DEST_XY(src);
 			#if (1)/* カードスクリプトに移行した場合の[発弾セクション]。 */
 			/* カード生成中 */
-			(system_spell_resource[(card.card_number/*-1*/)].spell_generate_section)(src);
+			(system_spell_resource[(card.spell_used_number/*-1*/)].spell_generate_section)(src);
 			#endif
-			/* 弾幕コールバックシステム */
-			danmaku_system_callback();
 		}
 		else
 		{
-			card.card_number = SPELL_00;		/* カード生成終了 */
+			card.spell_used_number = SPELL_00;		/* カード生成終了 */
 		}
 	}
 }

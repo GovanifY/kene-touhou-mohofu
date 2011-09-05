@@ -1,7 +1,7 @@
 
 /*---------------------------------------------------------
 	東方模倣風 ～ Toho Imitation Style.
-	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	このファイルは漢字表示に関係がある場合のみ、インクルードします。
 	"game_main.h"より、後でインクルードします。
@@ -51,16 +51,16 @@ extern void kanji_window_all_clear(void);
 
 /* カーソルを指定位置へ移動 */
 /*
-	x座標は[dot]
-	y座標は[dot]
+	x座標の単位は[pixel]
+	y座標の単位は[pixel]
 	y座標を KANJI_FONT_18_HEIGHT_P2 の倍数で指定しない場合、変な表示になる。
 	暫定仕様なので、変わる可能性大。
 */
 // 仮想バッファのレンダリング位置を指定。
-extern void set_kanji_xy(unsigned int set_x_offset_dot, unsigned int set_y_offset_dot);
+extern void set_kanji_xy(unsigned int set_x_offset_pixel, unsigned int set_y_offset_pixel);
 // 画面表示の基準位置仮想を指定。
-extern void set_kanji_origin_xy(unsigned int set_x_offset_dot, unsigned int set_y_offset_dot);
-extern void set_kanji_origin_kankaku(unsigned int set_y_offset_dot);
+extern void set_kanji_origin_xy(unsigned int set_x_offset_pixel, unsigned int set_y_offset_pixel);
+extern void set_kanji_origin_kankaku(unsigned int set_y_offset_pixel);
 /* 外部からメッセージウィンドウに漢字を描画する場合のリセット */
 //extern void sc ript_message_window_clear(void);
 
@@ -93,15 +93,15 @@ enum
 	ML_HAIKEI_01_BOSS_SPELL_CARD,	/*[青/ボスカード用背景]*/
 	ML_HAIKEI_02_JIKI_SPELL_CARD,	/*[赤/自機カード用背景]*/
 	ML_HAIKEI_03_MESSAGE,			/*[黒/会話用背景]*/
-	ML_HAIKEI_04_MAX,
+	ML_HAIKEI_04_MAX/*(最大)*/
 };
 
 typedef struct
 {
 	int timer;		// 0で非表示。1フレーム表示する毎にデクリメント。(自動で値を1減らす)。
 	int haikei; 	// 文字の背景の種類。
-	int x;			/* x位置[dot] */
-	int y;			/* y位置[dot] */
+	int x;			/* x位置[pixel] */
+	int y;			/* y位置[pixel] */
 } ML_FONT;
 //	char *str;		/* 文字列(実体へのポインタのみ保持) */
 //	void *render;	/* レンダリング位置 */
@@ -111,6 +111,12 @@ extern ML_FONT ml_font[ML_LINE_99_MAX];
 //	kanji_system_hide_message(ML_LINE_02);/*(2行目以下を非表示にする。)*/
 extern void set_kanji_hide_line(unsigned int line_num);
 #endif
+
+/*---------------------------------------------------------
+	スクリプト等用、標準初期化
+---------------------------------------------------------*/
+
+extern void kanji_init_standard(void);/*(漢字関連の標準初期化)*/
 
 /*---------------------------------------------------------
 

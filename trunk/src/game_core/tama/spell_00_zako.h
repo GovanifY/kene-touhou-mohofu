@@ -1,7 +1,7 @@
 
 /*---------------------------------------------------------
- 東方模倣風 ～ Toho Imitation Style.
-  プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	東方模倣風 ～ Toho Imitation Style.
+	http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	雑魚のカードを定義します。
 ---------------------------------------------------------*/
@@ -11,7 +11,7 @@
 	-------------------------------------------------------
 	テキトー
 ---------------------------------------------------------*/
-local void spell_create_09_zako_sentakki(SPRITE *src)
+local void spell_create_09_zako_sentakki(OBJ *src)
 {
 	if (0==((REG_10_BOSS_SPELL_TIMER)&0x03))
 	{

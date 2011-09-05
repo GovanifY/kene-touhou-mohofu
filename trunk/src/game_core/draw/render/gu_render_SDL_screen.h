@@ -1,7 +1,7 @@
 
 /*---------------------------------------------------------
 	東方模倣風 ～ Toho Imitation Style.
-	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	このファイルは直接インクルードしません。
 	"draw_screen.c" からのみ間接的にインクルードします。
@@ -78,5 +78,3 @@ static void gu_draw_sdl_screen(void)
 	}
 	sceGuDrawArray(GU_SPRITES, TEXTURE_FLAGS5650, (count2), NULL, vertices);
 }
-
-

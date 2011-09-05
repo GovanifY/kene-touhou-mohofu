@@ -3,7 +3,7 @@
 
 /*---------------------------------------------------------
 	東方模倣風 ～ Toho Imitation Style.
-	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 psp では、 at an2(), si n(), sq rt() 等の超越関数系命令は、
 psp の MIPS CPU 内 のコプロセッサが処理をする。
@@ -14,6 +14,8 @@ psp の MIPS CPU 内 のコプロセッサが処理をする。
 参考:TECH I Vol.39 MIPSプロセッサ入門	http://www.cqpub.co.jp/interface/TechI/Vol39/
 ---------------------------------------------------------*/
 #include "111_my_file.h"/*(my_file_common_name)*/
+
+#include "kanji_system.h"
 
 //#include "psp_vfpu.h"
 //#include <malloc.h>
@@ -27,7 +29,7 @@ psp の MIPS CPU 内 のコプロセッサが処理をする。
 static int rnd;
 global int ra_nd(void)
 {
-	rnd = (rnd * 8513/*multiplier*/) + 179/*addend*/;
+	rnd = (rnd * 8513/*multiplier*/) + (179)/*addend*/;
 	rnd = ((rnd) ^ (rnd>>8));
 	return (rnd);
 }
@@ -107,7 +109,7 @@ global void do_input_vbl(void)
 		{
 			now_time	+= 16666;
 			last_time	+= 16666;/* 必ずオーバーフローして小さな値になる筈 */
-			#if (1)
+			#if (0)
 			if (now_time < last_time)	/* ありえない筈 */
 			{	/* 念の為 */
 				now_time	= 16666;
@@ -181,15 +183,15 @@ global void do_input_vbl(void)
 //	psp_pad.pad_data |= (pad_data & (PSP_CTRL_UP|PSP_CTRL_RIGHT|PSP_CTRL_DOWN|PSP_CTRL_LEFT));
 	psp_pad.pad_data	= (pad_data & (PSP_CTRL_UP|PSP_CTRL_RIGHT|PSP_CTRL_DOWN|PSP_CTRL_LEFT/*|PSP_CTRL_SELECT|PSP_CTRL_START*/));/* 上下左右/SELECT/STARTは都合によりキーコンフィグなし */
 	/* PSPのデジタル入力からキーコンフィグを考慮して入力値を決める */
-	if (pad_data & PSP_CTRL_SELECT) 	{	psp_pad.pad_data |= pad_config[KINOU_00_SELECT];			}	//	if (keyboard[KINOU_01_SELECT])		{psp_pad.pad_data |= (PSP_KEY_SELECT);}
-	if (pad_data & PSP_CTRL_START)		{	psp_pad.pad_data |= pad_config[KINOU_01_START]; 			}	//	if (keyboard[KINOU_02_PAUSE])		{psp_pad.pad_data |= (PSP_KEY_PAUSE);}
+	if (pad_data & PSP_CTRL_SELECT) 	{	psp_pad.pad_data |= pad_config[KINOU_00_SELECT];		}	//	if (keyboard[KINOU_01_SELECT])		{psp_pad.pad_data |= (PSP_KEY_SELECT);}
+	if (pad_data & PSP_CTRL_START)		{	psp_pad.pad_data |= pad_config[KINOU_01_START]; 		}	//	if (keyboard[KINOU_02_PAUSE])		{psp_pad.pad_data |= (PSP_KEY_PAUSE);}
 //
-	if (pad_data & PSP_CTRL_LTRIGGER)	{	psp_pad.pad_data |= pad_config[KINOU_02_LTRIGGER];			}	//	if (keyboard[KINOU_07_SNAP_SHOT])	{psp_pad.pad_data |= (PSP_KEY_SNAP_SHOT);}
-	if (pad_data & PSP_CTRL_RTRIGGER)	{	psp_pad.pad_data |= pad_config[KINOU_03_RTRIGGER];			}	//	if (keyboard[KINOU_08_SYSTEM])		{psp_pad.pad_data |= (PSP_KEY_SYSTEM);}
-	if (pad_data & PSP_CTRL_TRIANGLE)	{	psp_pad.pad_data |= pad_config[KINOU_04_TRIANGLE];			}	//	if (keyboard[KINOU_09_SLOW])		{psp_pad.pad_data |= (PSP_KEY_SLOW);}
-	if (pad_data & PSP_CTRL_CIRCLE) 	{	psp_pad.pad_data |= pad_config[KINOU_05_CIRCLE];			}	//	if (keyboard[KINOU_10_OPTION])		{psp_pad.pad_data |= (PSP_KEY_OPTION);}
-	if (pad_data & PSP_CTRL_CROSS)		{	psp_pad.pad_data |= pad_config[KINOU_06_CROSS]; 			}	//	if (keyboard[KINOU_11_SHOT])		{psp_pad.pad_data |= (PSP_KEY_SHOT_OK);}
-	if (pad_data & PSP_CTRL_SQUARE) 	{	psp_pad.pad_data |= pad_config[KINOU_07_SQUARE];			}	//	if (keyboard[KINOU_12_BOMB])		{psp_pad.pad_data |= (PSP_KEY_BOMB_CANCEL);}
+	if (pad_data & PSP_CTRL_LTRIGGER)	{	psp_pad.pad_data |= pad_config[KINOU_02_LTRIGGER];		}	//	if (keyboard[KINOU_07_SNAP_SHOT])	{psp_pad.pad_data |= (PSP_KEY_SNAP_SHOT);}
+	if (pad_data & PSP_CTRL_RTRIGGER)	{	psp_pad.pad_data |= pad_config[KINOU_03_RTRIGGER];		}	//	if (keyboard[KINOU_08_SYSTEM])		{psp_pad.pad_data |= (PSP_KEY_SYSTEM);}
+	if (pad_data & PSP_CTRL_TRIANGLE)	{	psp_pad.pad_data |= pad_config[KINOU_04_TRIANGLE];		}	//	if (keyboard[KINOU_09_SLOW])		{psp_pad.pad_data |= (PSP_KEY_SLOW);}
+	if (pad_data & PSP_CTRL_CIRCLE) 	{	psp_pad.pad_data |= pad_config[KINOU_05_CIRCLE];		}	//	if (keyboard[KINOU_10_OPTION])		{psp_pad.pad_data |= (PSP_KEY_OPTION);}
+	if (pad_data & PSP_CTRL_CROSS)		{	psp_pad.pad_data |= pad_config[KINOU_06_CROSS]; 		}	//	if (keyboard[KINOU_11_SHOT])		{psp_pad.pad_data |= (PSP_KEY_SHOT_OK);}
+	if (pad_data & PSP_CTRL_SQUARE) 	{	psp_pad.pad_data |= pad_config[KINOU_07_SQUARE];		}	//	if (keyboard[KINOU_12_BOMB])		{psp_pad.pad_data |= (PSP_KEY_BOMB_CANCEL);}
 	#endif /* (1==USE_KEY_CONFIG) */
 	/* スクリーンショット機能。 */
 	// keypollに入れると何故かうまくいかなかったのでこっちに場所を変更。
@@ -223,125 +225,51 @@ global void do_input_vbl(void)
 
 
 /*---------------------------------------------------------
-	キー入力関連の処理(本来デバッグ用)
-	上のキー入力に統合しても良いが、キー入力自体が
-	おかしくなる場合もあるので、暫定的に最低限の入力として
-	残してある。
----------------------------------------------------------*/
-
-/*global*/static void hit_any_key(void)
-{
-	SceCtrlData cpad;
-	/* 離されるまで待つ */
-	while (1)
-	{
-		sceCtrlReadBufferPositive(&cpad, 1);
-		if (0 == cpad.Buttons)
-		{
-			goto l_end1;
-		//	break;
-		}
-	}
-	l_end1:
-	;
-	/* 押されるまで待つ */
-	while (1)
-	{
-		sceCtrlReadBufferPositive(&cpad, 1);
-		/* Any Key */
-		if (cpad.Buttons & (PSP_CTRL_SQUARE|PSP_CTRL_CROSS|PSP_CTRL_CIRCLE|PSP_CTRL_TRIANGLE) )
-		{
-			goto l_end2;
-		//	break;
-		}
-	}
-	l_end2:
-	;
-}
-
-/*---------------------------------------------------------
-	エラー処理
----------------------------------------------------------*/
-global void error(int errorlevel, char *msg, ...)
-{
-	char msgbuf[128];	/* 128==4*32 (pspの構造上32の倍数で指定) */
-	va_list argptr;
-
-	va_start(argptr, msg);
-	vsprintf(msgbuf, msg, argptr);
-	va_end(argptr);
-
-//	sw itch (errorlevel)
-	{
-	//ca se ERR_DEBUG:	if (debug)	{ fprintf(stdout,"DEBUG: %s\n",msgbuf); } break;
-	//ca se ERR_INFO:		fprintf(stdout,"INFO: %s\n",msgbuf); break;
-
-	#if 0
-	/* デバッグ用 */
-	//ca se ERR_WARN:	//fprintf(stdout,"WARNING: %s\n",msgbuf);
-		psp_debug_screen_set_xy(2,3);
-		psp_debug_screen_printf("WARNING");
-		hit_any_key();
-		{
-		char msgbuf2[32/*128*/];	/* 128==4*32 (pspの構造上32の倍数で指定) */
-			int j;
-			for (j=0;j<5;j++)
-			{
-				psp_debug_screen_set_xy(2,5+j);
-				strncpy(msgbuf2, &msgbuf[j*24], 24);	/*24文字ずつ表示*/
-				/* [0] ... [23] で24文字 */
-				msgbuf2[24] = 0;/* strncpyが '\0' 入れてくれないみたいなので、区切りを入れる */
-				msgbuf2[25] = 0;/* strncpyが '\0' 入れてくれないみたいなので、区切りを入れる */
-				msgbuf2[26] = 0;/* strncpyが '\0' 入れてくれないみたいなので、区切りを入れる */
-				msgbuf2[27] = 0;/* strncpyが '\0' 入れてくれないみたいなので、区切りを入れる */
-				psp_debug_screen_printf("%s",	msgbuf2 );
-			}
-			hit_any_key();
-		}
-		//br eak;
-	#endif
-	//ca se ERR_FATAL: //	fprintf(stdout,"FATAL: %s\n",msgbuf);
-		psp_debug_screen_set_xy(2,3);
-		psp_debug_screen_printf("FATAL ERROR");
-		hit_any_key();
-		psp_debug_screen_init();/* 要る */
-		psp_debug_screen_clear();
-		psp_debug_screen_set_xy(0,0);
-		psp_debug_screen_printf("%s",	msgbuf	);
-		hit_any_key();
-		sceKernelExitGame();	//if (errorlevel==ERR_FATAL) exit(1);/*exit(1)はpspで使えないので注意*/
-		//br eak;
-	}
-}
-
-
-/*---------------------------------------------------------
 	システムの基礎部分
 ---------------------------------------------------------*/
 
+#if (1==USE_KETM_IMAGE_CHACHE)
 static void imglist_garbagecollect(void);
+#endif /*(1==USE_KETM_IMAGE_CHACHE)*/
 global void *my_calloc(size_t size)
 {
 	void *ptr;
 	ptr = malloc(size);
 	if (NULL == ptr)
 	{
-		error(ERR_WARN, (char*)"can't alloc %d bytes, trying garbage collection", size);
+		#if (1==USE_KETM_IMAGE_CHACHE)
+		#if (0)
+		psp_warning( (char*)
+		//	"0123456789012345678901234567890123456789"	// 半角40字"最大表示文字数"
+			"memory: メモリを %d バイト確保" "\\n"
+			"しようと思いましたが足りません。" "\\n"
+			"必要無いメモリを解放する事で、" "\\n"
+			"メモリ確保を再挑戦してみます。", size);
+		#endif
 		imglist_garbagecollect();
 		ptr = malloc(size);
 		if (NULL == ptr)
 		{
-			error(ERR_FATAL, (char*)"I'm sorry, but you're out of memory!");
+			psp_fatal_error( (char*)
+			//	"0123456789012345678901234567890123456789"	// 半角40字"最大表示文字数"
+				"memory: メモリが足りません。" );
 		}
+		#else
+		psp_fatal_error( (char*)
+		//	"0123456789012345678901234567890123456789"	// 半角40字"最大表示文字数"
+			"memory: メモリを %d バイト確保" "\\n"
+			"しようと思いましたが足りませんでした。", size);
+		#endif /*(1==USE_KETM_IMAGE_CHACHE)*/
 	}
 	memset(ptr, 0, size);/* calloc()風に、必ず0クリアーするように変更 */
 	return (ptr);
 }
 
 
+#if (1==USE_KETM_IMAGE_CHACHE)
 /*---------------------------------------------------------
 	画像キャッシュ関連
-
+	-------------------------------------------------------
 	同じ画像を複数読み込んだ場合にメモリが無駄になりもったいない。
 	そこで同じ画像を読み込んだ場合には、実際には読み込まないで、
 	前に読み込んだ画像と同じものを使う。
@@ -395,7 +323,7 @@ static void imglist_add_by_file_name(SDL_Surface *img_surface, char *name)
 static SDL_Surface *imglist_search_by_file_name(char *name)
 {
 	MY_IMAGE_LIST		*tmp_list;
-	tmp_list			= my_image_list;/* 図形キャッシュリストの先頭から調べる。 */
+	tmp_list			= my_image_list;/* 画像キャッシュリストの先頭から調べる。 */
 	while (NULL != tmp_list)
 	{
 		if (0 == tiny_strcmp(name, tmp_list->name))
@@ -464,16 +392,19 @@ global SDL_Surface *load_chache_bmp(void)/*char *file_name*/
 	SDL_Surface *s2;
 //
 	s1 = imglist_search_by_file_name(my_file_common_name);
-	if ( NULL != s1 )
+	if (NULL != s1)
 	{
 		return (s1);
 	}
 	//if ((s1=SDL_LoadBMP(my_file_common_name))==NULL)
 //
 	s1 = IMG_Load(my_file_common_name);
-	if ( NULL == s1 )
+	if (NULL == s1)
 	{
-		error(ERR_FATAL, (char*)"load0:cant load image %s:\n", my_file_common_name);
+		psp_fatal_error(/*ERR_FATAL,*/ (char*)
+		//	"0123456789012345678901234567890123456789"	// 半角40字"最大表示文字数"
+			"load chache bmp: 画像がありません。" "\\n"
+			"%s", my_file_common_name);
 	}
 //	if (use_alpha)
 //	{
@@ -483,9 +414,13 @@ global SDL_Surface *load_chache_bmp(void)/*char *file_name*/
 	{
 		s2 = SDL_DisplayFormat(s1);/* サーフェスを表示フォーマットに変換する。 */
 	}
-	if ( NULL == s2 )
+	if (NULL == s2)
 	{
-		error(ERR_FATAL, (char*)"cant convert image %s to display format:", my_file_common_name);
+		psp_fatal_error(/*ERR_FATAL,*/ (char*)
+		//	"0123456789012345678901234567890123456789"	// 半角40字"最大表示文字数"
+			"load chache bmp: 画像変換するメモリが" "\\n"
+			"足りません。" "\\n"
+			"%s", my_file_common_name);
 	}
 	SDL_FreeSurface(s1);
 	s1 = NULL;
@@ -496,24 +431,25 @@ global SDL_Surface *load_chache_bmp(void)/*char *file_name*/
 
 /*---------------------------------------------------------
 	img_surface が MY_IMAGE_LIST内にあるか確認をし、
-	画像が見つかった場合、図形キャッシュリストの参照数を一つ減らす。
+	画像が見つかった場合、画像キャッシュリストの参照数を一つ減らす。
 ---------------------------------------------------------*/
 
 global void unloadbmp_by_surface(SDL_Surface *img_surface)
 {
 	MY_IMAGE_LIST	*tmp_list;
-	tmp_list		= my_image_list;/* 図形キャッシュリストの先頭 */
+	tmp_list		= my_image_list;/* 画像キャッシュリストの先頭 */
 	while (NULL != tmp_list)
 	{
 		if (img_surface == tmp_list->img)	/* 画像が見つかった */
 		{
-			if (0 == tmp_list->refcount)	/* 図形キャッシュリストの参照数 */
+			if (0 == tmp_list->refcount)	/* 画像キャッシュリストの参照数 */
 			{
 				/* ロードしてないのに開放。 */
-				error(ERR_WARN,
-					(char*)"unloadbmp_by_surface: "
-					"refcount for object %s is already zero",
-					tmp_list->name);
+				psp_fatal_error( (char*)
+				//	"0123456789012345678901234567890123456789"	// 半角40字"最大表示文字数"
+					"chache: 画像を読みこんでいないのに、" "\\n"
+					"解放しようとしました。" "\\n"
+					"%s", tmp_list->name);
 			}
 			else
 			{
@@ -524,9 +460,13 @@ global void unloadbmp_by_surface(SDL_Surface *img_surface)
 		tmp_list = tmp_list->next;			/* 次 */
 	}
 	/* 見つからない。 */
-	error(ERR_WARN, (char*)"unloadbmp_by_surface: object not found");
+	psp_fatal_error( (char*)
+	//	"0123456789012345678901234567890123456789"	// 半角40字"最大表示文字数"
+		"chache: プログラムミス。" "\\n"
+		"解放する画像が、見つかりません。");
 //	return; 	/* 異常終了 */
 }
+#endif /*(1==USE_KETM_IMAGE_CHACHE)*/
 
 
 /*---------------------------------------------------------
@@ -537,13 +477,25 @@ global void unloadbmp_by_surface(SDL_Surface *img_surface)
 ---------------------------------------------------------*/
 global void load_SDL_bg_file_name(void)/*char *file_name*/
 {
-	SDL_Surface *loadpic	= load_chache_bmp();/* file_name */
+	SDL_Surface *loadpic;
+	#if (1==USE_KETM_IMAGE_CHACHE)
+	loadpic 	= load_chache_bmp();/* file_name */
+	#else
+	loadpic 	= IMG_Load(my_file_common_name);/* file_name */
+	#endif
 //	psp_clear_screen();
 //	SDL_SetAlpha(loadpic, SDL_SRCALPHA, 255);
 //	PSPL_UpperBlit(loadpic, NULL, cb.sdl_screen[SDL_00_VIEW_SCREEN], NULL);
 	PSPL_UpperBlit(loadpic, NULL, cb.sdl_screen[SDL_01_BACK_SCREEN], NULL);
+	#if (1==USE_KETM_IMAGE_CHACHE)
 	unloadbmp_by_surface(loadpic);	// キャッシュに入ってるのでNULLに出来ない。loadpic = NULL;
+	#else
+	SDL_FreeSurface(loadpic);	// キャッシュに入ってるのでNULLに出来ない。
+	loadpic = NULL;
+	#endif
 }
+
+
 /*---------------------------------------------------------
 	ファイル番号で指定
 ---------------------------------------------------------*/

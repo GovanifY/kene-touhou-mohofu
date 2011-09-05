@@ -1,21 +1,21 @@
 
 /*---------------------------------------------------------
 	東方模倣風 ～ Toho Imitation Style.
-	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	道中のザコ
 	-------------------------------------------------------
 		"青妖精1",		"FAIRY",
 	-------------------------------------------------------
 	user_x: 	速度256[speed256]
-	user_y: 	横位置[dots]
+	user_y: 	横位置[pixel]
 ---------------------------------------------------------*/
 
 /*---------------------------------------------------------
 	敵移動
 ---------------------------------------------------------*/
 
-static void move_ao_yousei1(SPRITE *src)
+static void move_ao_yousei1(OBJ *src)
 {
 	if (512 > src->jyumyou) 	/* 離脱 */
 	{
@@ -47,21 +47,20 @@ static void move_ao_yousei1(SPRITE *src)
 				zako_shot_supeka(src, ZAKO_SPEKA_1b_ao2);
 			}
 		}
-		src->speed256 -= (5);
+		src->speed256 -= (5/*5*/);
 		if (1 > src->speed256)
 		{
 			src->speed256 = 1;
 		}
 	}
 	/*以下rwingx.cと同じ*/
-//	src->cx256 += ((si n1024((src->tmp_angleCCW1024))*src->speed256)>>8);/*fps_factor*/	/* CCWの場合 */
-//	src->cy256 += ((cos1024((src->tmp_angleCCW1024))*src->speed256)>>8);/*fps_factor*/
-		{
-			int sin_value_t256; 		//	sin_value_t256 = 0;
-			int cos_value_t256; 		//	cos_value_t256 = 0;
-			int256_sincos1024( ((src->tmp_angleCCW1024)+255), &sin_value_t256, &cos_value_t256);
-			src->cy256 += (( (sin_value_t256)*(src->speed256))>>8);/*fps_factor*/
-		}
+	//------------------
+	HATSUDAN_01_speed256	= (src->speed256);
+	HATSUDAN_03_angle65536	= deg1024to65536((src->tmp_angleCCW1024));
+	sincos256();/*(破壊レジスタ多いので注意)*/
+	src->cx256 += REG_03_DEST_Y;//sin_value_t256 // 下CCWの場合(右CWの場合ととxyが逆)
+	src->cy256 += REG_02_DEST_X;//cos_value_t256 // 下CCWの場合(右CWの場合ととxyが逆)
+	//------------------
 	/* アニメーション */
 	zako_anime_type02(src);
 }
@@ -71,14 +70,14 @@ static void move_ao_yousei1(SPRITE *src)
 	敵を追加する
 ---------------------------------------------------------*/
 
-static void regist_zako_019_ao_yousei1(GAME_COMMAND *l, SPRITE *h)
+static void regist_zako_019_ao_yousei1(GAME_COMMAND *l, OBJ *h)
 {
-//	h->cx256				= (((u32)l->user_x)<<8);/*lv*t256(35)+t256(40)*/
+//	h->cx256				= ((l->user_x)<<8);
 //	h->cy256				= ((l->user_y)<<8);
 	h->cy256				+= t256(-128);
 //
-	h->speed256 			= ((512));			/*t256(0.5)*/	/*+0.15*di fficulty*/ /*0.7+0.3*di fficulty*/
+	h->speed256 			= t256(2.0);
 
-	h->tmp_angleCCW1024 	= cv1024r(0);/* 真下 */
+	h->tmp_angleCCW1024 	= (0);/* 真下 */
 	h->jyumyou				= (512+320);
 }

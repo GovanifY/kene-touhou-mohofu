@@ -1,7 +1,7 @@
 
 /*---------------------------------------------------------
 	東方模倣風 ～ Toho Imitation Style.
-	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	http://mohou.huuryuu.com/
 	-------------------------------------------------------
 	PSPL - PSP customised SDL Layer port.
 	SDL Copyright (C) 1997-2004 Sam Lantinga.

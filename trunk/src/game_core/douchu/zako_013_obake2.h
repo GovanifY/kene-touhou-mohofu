@@ -1,10 +1,10 @@
 
 
-/*static*/extern void bullet_create_teki_homing(SPRITE *src);
+/*static*/extern void bullet_create_teki_homing(OBJ *src);
 
 /*---------------------------------------------------------
 	東方模倣風 ～ Toho Imitation Style.
-	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	道中のザコ
 	-------------------------------------------------------
@@ -17,7 +17,7 @@
 	敵移動
 ---------------------------------------------------------*/
 
-static void move_obake2(SPRITE *src)
+static void move_obake2(OBJ *src)
 {
 //	if (0 > src->jyumyou)
 //	{
@@ -89,7 +89,7 @@ static void move_obake2(SPRITE *src)
 	敵を追加する
 ---------------------------------------------------------*/
 
-static void regist_zako_013_obake2(GAME_COMMAND *l, SPRITE *h)
+static void regist_zako_013_obake2(GAME_COMMAND *l, OBJ *h)
 {
 	h->radius256			= t256(10);
 	h->flag1				= (0);

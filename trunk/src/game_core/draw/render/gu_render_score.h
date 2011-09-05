@@ -1,7 +1,7 @@
 
 /*---------------------------------------------------------
 	東方模倣風 ～ Toho Imitation Style.
-	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	スコア関連(取った得点を小さな漢字で説明表示)
 ---------------------------------------------------------*/
@@ -78,7 +78,7 @@ static void regist_score(int number, u32 color8888, int x256, int y256)
 	スコアを一桁の数字に分解し、キャッシュに登録する
 ---------------------------------------------------------*/
 
-static void bonus_info_shered_add_score10_value(SPRITE *src, s32 score_value)
+static void bonus_info_shered_add_score10_value(OBJ *src, s32 score_value)
 {
 	int y256;	y256 = src->cy256;
 	if (t256((0)) > y256)	{ return; }
@@ -106,7 +106,7 @@ static void bonus_info_shered_add_score10_value(SPRITE *src, s32 score_value)
 	取ったアイテムの得点を説明表示(任意得点の場合)
 ---------------------------------------------------------*/
 
-void bonus_info_any_score_nodel(SPRITE *src/*int x, int y*/, u32 score_num_pts)
+void bonus_info_any_score_nodel(OBJ *src/*int x, int y*/, u32 score_num_pts)
 {
 	player_dummy_add_score(score_num_pts);
 	bonus_info_shered_add_score10_value(src, (s32)score_num_pts);
@@ -117,7 +117,7 @@ void bonus_info_any_score_nodel(SPRITE *src/*int x, int y*/, u32 score_num_pts)
 	取ったアイテムの得点を説明表示(固定得点の場合)
 ---------------------------------------------------------*/
 
-void bonus_info_score_nodel(SPRITE *src/*int x, int y*/, int score_type)
+void bonus_info_score_nodel(OBJ *src/*int x, int y*/, int score_type)
 {
 	static const unsigned short score_tbl[32] =
 	{

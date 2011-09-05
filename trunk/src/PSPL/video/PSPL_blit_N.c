@@ -6,10 +6,9 @@ psp - ƒŠƒrƒWƒ‡ƒ“ 441Subversion ƒŠƒ|ƒWƒgƒŠˆê——: pspps2ps2wareps3ps3warepspwareƒŠƒ
 ƒŠƒrƒWƒ‡ƒ“ 440 - Ú×•\¦ - ‘O‚ÌƒŠƒrƒWƒ‡ƒ“‚Æ‚Ì·•ª - ÅIXV“ú - ƒƒO‚ğŒ©‚é -
 */
 #define USE_MY_DIV (1)
-//1575915 1576139
 /*---------------------------------------------------------
 	“Œ•û–Í•í•— ` Toho Imitation Style.
-	ƒvƒƒWƒFƒNƒgƒy[ƒW http://code.google.com/p/kene-touhou-mohofu/
+	http://mohou.huuryuu.com/
 	-------------------------------------------------------
 	PSPL - PSP customised SDL Layer port.
 	SDL Copyright (C) 1997-2004 Sam Lantinga.

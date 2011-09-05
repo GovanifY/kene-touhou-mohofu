@@ -9,7 +9,7 @@
 
 /*---------------------------------------------------------
 	東方模倣風 ～ Toho Imitation Style.
-	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	ハイスコア表示デモ画面(夢の記録)
 ---------------------------------------------------------*/
@@ -19,8 +19,6 @@
 #define MAX_7_LINES (7/*6*/)
 
 global SCORE_FORMAT high_score_table[MAX_8_SAVE_PLAYERS][MAX_5_RANKING/*5*/];
-
-	/*static*/static/*global*/ SDL_Surface *result_surfaces[MAX_7_LINES/*6*/];
 
 
 /*---------------------------------------------------------
@@ -146,23 +144,20 @@ static void move_result(void)
 ---------------------------------------------------------*/
 	static char result_chars[MAX_7_LINES/*6*/][64];
 
-static void result_font_render_new_surface(void)
+static void result_font16_render_new_surface(void)
 {
 	unsigned int i;
 	for (i=0; i<MAX_7_LINES; i++)
 	{
 		if (i<5)
 		{
-		//	cg.SDL_font_type		= (((1)))?(FONT16W/*白*/):(FONT16R/*紅(黄)*/);
 			high_score_render_sub(show_player_num, i);/*FONT16W*/	/*白*/
-		//	result_surfaces[j]		= font_render_new_surface();
 			result_my_obj[i].font_color 	= (7);
 		}
 		else
 		if (5==i)
 		{
-		//	cg.SDL_font_type	= FONT16R;
-			strcpy(my_font_text, (char*)"夢の記録");/*"TOP FIVE FIGHTERS"*/
+			strcpy(my_font_text, (char*)"夢の記録");
 			result_my_obj[i].font_color 	= (9);
 		}
 		else
@@ -176,10 +171,9 @@ static void result_font_render_new_surface(void)
 			/* 3==*/	"霧雨 魔理沙 B (恋符)",
 			/* 4==*/	"レミリア スカーレット",
 			/* 5==*/	"西行寺 幽々子",
-			/* 6==*/	"チルノ A",
-			/* 7==*/	"チルノ ⑨",
+			/* 6==*/	"チルノ (氷符)",
+			/* 7==*/	"チルノ (⑨符)",
 			};
-		//	cg.SDL_font_type	= FONT16W;
 			strcpy(my_font_text, (char *)score_name[(show_player_num)]);
 			result_my_obj[i].font_color 	= (8);
 		}
@@ -271,8 +265,6 @@ static void yume_no_kiroku_draw(void)
 				ml_font[i].x		= ((result_my_obj[i].x256)>>8);
 				ml_font[i].y		= ((result_my_obj[i].y256)>>8);
 				ml_font[i].timer	= ML_ON;
-			//	SDL_SetAlpha(	result_surfaces[i], SDL_SRCALPHA, /*bg_alpha_aaa*/(255));
-			//	PSPL_UpperBlit(result_surfaces[i], NULL, cb.sdl_screen[SDL_00_VIEW_SCREEN], &rect_locate_offset);
 				strcpy(my_font_text, (char *)&result_chars[i][0] );
 				kanji_color(result_my_obj[i].font_color/*9*/);
 				kanji_draw();
@@ -293,21 +285,6 @@ static void result_05_do_slide_out_now(void)
 {
 	if (move_done_lines==MAX_7_LINES)
 	{
-	//	result_font_free();/* 文字の表示用画像を開放する */
-	//	static void result_font_free(void)
-		{
-			unsigned int i;
-			for (i=0; i<MAX_7_LINES; i++)
-			{
-				#if 1/* 文字の表示用画像を開放する */
-				/* ここでハングアップ */
-			//	if (result_surfaces[i])
-				{
-					SDL_FreeSurface(result_surfaces[i]);
-				}
-				#endif
-			}
-		}
 		cb.main_call_func = cb.return_call_func;	/* 「また見るよ」&「もうおしまい」移動の状態を反映させる。 */
 		/* 注意：既にフォント解放してるから描画できないよ */
 		return;/* 描画するとハングアップするので、ここで強制リターン。 */
@@ -386,7 +363,7 @@ static void result_02_do_slide_in_now(void)
 static void result_01_set_location(void)
 {
 	move_done_lines 		= 0;
-	result_font_render_new_surface();
+	result_font16_render_new_surface();
 	cb.main_call_func		= result_02_do_slide_in_now;
 }
 
@@ -414,13 +391,12 @@ global void yume_no_kiroku_start(void)
 
 /*---------------------------------------------------------
 	東方模倣風 ～ Toho Imitation Style.
-	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	ハイスコア名前入力、登録画面
 ---------------------------------------------------------*/
 
 //	/*static*/extern void high_score_render_sub(int show_player_num, int iii, int bbb);
-//	/*static*/extern SDL_Surface *result_surfaces[];
 
 /*---------------------------------------------------------
 	ハイスコア名前入力、登録画面
@@ -444,7 +420,6 @@ typedef struct
 static LETTER letter[MAX_40_LETTER];
 
 static int now_select_name_chr;
-
 static /*un*/signed int sel_aaa;
 
 static int plate_x;
@@ -510,10 +485,9 @@ static void name_entry_draw(void)
 	/* 決定文字を描画 */
 /*	if (0 <= sel_aaa)*/
 	{
-		cg.SDL_font_type	= FONT16W;
 		strcpy(my_font_text, ranking_enter_name_string);
 		SDL_Surface *tmp_surface;
-		tmp_surface 	= font_render_new_surface();
+		tmp_surface 	= font16_render_new_surface();
 	//	s.x 	= 0;
 	//	s.y 	= 0;
 		r.w 	=	s.w 	= tmp_surface->w;
@@ -530,59 +504,6 @@ static void name_entry_draw(void)
 /*---------------------------------------------------------
 	ハイスコア名前入力、登録画面、動作[キー入力＆状態変更部分]
 ---------------------------------------------------------*/
-
-#define MY_CODE_DEL_KEY 	(0x7e)
-#define MY_CODE_OK_KEY		(0x7f)
-
-static void name_entry_local_work(void)
-{
-	{
-		if (0 == psp_pad.pad_data_alter)/* さっき何も押されてなかった場合にキーチェック(原作準拠) */
-		{
-			/* 斜め移動はしない */
-				 if (psp_pad.pad_data & PSP_KEY_LEFT )	{	sel_aaa--;				if (sel_aaa <  (0)) 				sel_aaa  = (KEYBOARD_M40-1);	}
-			else if (psp_pad.pad_data & PSP_KEY_RIGHT)	{	sel_aaa++;				if (sel_aaa == (KEYBOARD_M40))		sel_aaa  = (0); 				}
-			else if (psp_pad.pad_data & PSP_KEY_UP	 )	{	sel_aaa-=KEYBOARD_W10;	if (sel_aaa <  (0)) 				sel_aaa += (KEYBOARD_M40);		}
-			else if (psp_pad.pad_data & PSP_KEY_DOWN )	{	sel_aaa+=KEYBOARD_W10;	if (sel_aaa >  (KEYBOARD_M40-1))	sel_aaa -= (KEYBOARD_M40);		}
-			//
-			if (psp_pad.pad_data & PSP_KEY_SHOT_OK) /* 入力決定 == (さっき)入力決定ボタンが押された。 */
-			{
-				if (MY_CODE_DEL_KEY==(letter[sel_aaa].ascii))
-				{/* [削除キー](DEL)を決定した場合。 Delete last character */
-					goto delete_last_character;
-				}
-				else
-				if (MY_CODE_OK_KEY==(letter[sel_aaa].ascii))
-				{/* [入力終了キー](OK)を決定した場合。 Input completed. 入力終了。 Eingabe abgeschlossen. */
-					goto agree_entry;
-				}
-				else
-				{
-					if (now_select_name_chr < 8) /* 8[3]文字以下決定した場合は文字入力。  3 chrs, name input entry. */
-					{
-						ranking_enter_name_string[now_select_name_chr] = letter[sel_aaa].ascii;
-						now_select_name_chr++;
-					}
-					else /* 8[3]文字以上の決定した場合は自動的に入力終了キーを押したことにする。 */
-					{
-						sel_aaa = (KEYBOARD_M40-1);/* [入力終了キー](OK)を押したのと同じ。 force set [OK] */
-					}
-				}
-			}
-			else if (psp_pad.pad_data & PSP_KEY_BOMB_CANCEL/*PSP_KEY_OPTION*/)	/* (さっき)キャンセルボタンが押された。 */
-			{
-			delete_last_character:
-				if (0 < now_select_name_chr) /* 名前入力の入力文字がある場合で。  at first chr? */
-				{
-					now_select_name_chr--;				/* [削除キー](DEL) が入力されているので、その分戻る。 */
-					ranking_enter_name_string[now_select_name_chr] = ' ';	/* 消す */
-				}
-			}
-			else if (psp_pad.pad_data & PSP_KEY_PAUSE)		/* (さっき)終了(強制決定)ボタンが押された。 */
-			{
-			agree_entry:	/* 入力終了決定 */
-				if (0 < now_select_name_chr)	// 名前入力の入力文字がある場合で。何か入力されている場合で。
-				{
 					#if 0
 					/* キーボードの文字を開放する */
 					{	int i;
@@ -598,22 +519,79 @@ static void name_entry_local_work(void)
 						}
 					}
 					#endif
-					cb.main_call_func = title_menu_start;	/* タイトルメニューへ移動 */
-					/* 注意：既にフォント解放してるから描画できないよ */
-					return;/* 描画するとハングアップするので、ここで強制リターン。 */
+
+
+//static void name_entry_local_final(void)
+//{
+//					cb.main_call_func = title_menu_start;	/* タイトルメニューへ移動 */
+//					/* 注意：既にフォント解放してるから描画できないよ */
+//					return;/* 描画するとハングアップするので、ここで強制リターン。 */
+//}
+#define MY_CODE_DEL_KEY 	(0x7e)
+#define MY_CODE_OK_KEY		(0x7f)
+
+static void name_entry_local_work(void)
+{
+	if (0 == psp_pad.pad_data_alter)/* さっき何も押されてなかった場合にキーチェック(原作準拠) */
+	{
+		/* 斜め移動はしない */
+			 if (psp_pad.pad_data & PSP_KEY_LEFT )	{	sel_aaa--;				if (sel_aaa <  (0)) 				{	sel_aaa  = (KEYBOARD_M40-1);}	}
+		else if (psp_pad.pad_data & PSP_KEY_RIGHT)	{	sel_aaa++;				if (sel_aaa == (KEYBOARD_M40))		{	sel_aaa  = (0); 			}	}
+		else if (psp_pad.pad_data & PSP_KEY_UP	 )	{	sel_aaa-=KEYBOARD_W10;	if (sel_aaa <  (0)) 				{	sel_aaa += (KEYBOARD_M40);	}	}
+		else if (psp_pad.pad_data & PSP_KEY_DOWN )	{	sel_aaa+=KEYBOARD_W10;	if (sel_aaa >  (KEYBOARD_M40-1))	{	sel_aaa -= (KEYBOARD_M40);	}	}
+		//
+		if (psp_pad.pad_data & PSP_KEY_SHOT_OK) /* 入力決定 == 入力決定ボタンが押された。 */
+		{
+			if (MY_CODE_DEL_KEY==(letter[sel_aaa].ascii))
+			{/* [削除キー](DEL)を決定した場合。 Delete last character */
+				goto delete_last_character;
+			}
+			else
+			if (MY_CODE_OK_KEY==(letter[sel_aaa].ascii))
+			{/* [入力終了キー](OK)を決定した場合。 Input completed. 入力終了。 Eingabe abgeschlossen. */
+				goto agree_entry;
+			}
+			else
+			{
+				if (8 > now_select_name_chr) /* 8[3]文字以下決定した場合は文字入力。  3 chrs, name input entry. */
+				{
+					ranking_enter_name_string[now_select_name_chr] = letter[sel_aaa].ascii;
+					now_select_name_chr++;
+				}
+				else /* 8[3]文字以上の決定した場合は自動的に入力終了キーを押したことにする。 */
+				{
+					sel_aaa = (KEYBOARD_M40-1);/* [入力終了キー](OK)を押したのと同じ。 force set [OK] */
 				}
 			}
 		}
-		name_entry_draw();/*描画部分*/
+		else if (psp_pad.pad_data & PSP_KEY_BOMB_CANCEL/*PSP_KEY_OPTION*/)	/* キャンセルボタンが押された。 */
+		{
+		delete_last_character:
+			if (0 < now_select_name_chr) /* 名前入力の入力文字がある場合で。  at first chr? */
+			{
+				now_select_name_chr--;				/* [削除キー](DEL) が入力されているので、その分戻る。 */
+				ranking_enter_name_string[now_select_name_chr] = ' ';	/* 消す */
+			}
+		}
+		else if (psp_pad.pad_data & PSP_KEY_PAUSE)		/* 終了(強制決定)ボタンが押された。 */
+		{
+		agree_entry:	/* 入力終了決定 */
+			if (0 < now_select_name_chr)	// 名前入力の入力文字がある場合で。何か入力されている場合で。
+			{
+			//	cb.main_call_func = name_entry_local_final;
+				cb.main_call_func = title_menu_start;	/* タイトルメニューへ移動 */
+			}
+		}
 	}
+	name_entry_draw();/*描画部分*/
 }
+
 
 //static void name_entry_init(void)
 global void name_entry_start(void)
 {
 	unsigned int i;
 	unsigned int j;
-	cg.SDL_font_type	= FONT16W;
 	/* キーボード(の文字)の初期化 */
 	{
 		my_font_text[1] = '\0';/* 0 == EOS 文字列の終わり / End of String */
@@ -637,7 +615,7 @@ global void name_entry_start(void)
 			c = str_aaa[i];
 			my_font_text[0] = c;
 			letter[i].ascii = c;
-			letter_surface[i] = font_render_new_surface(); /* */
+			letter_surface[i] = font16_render_new_surface(); /* */
 		}
 	}
 	{
@@ -647,17 +625,14 @@ global void name_entry_start(void)
 		{
 			for (i=0; i<(KEYBOARD_W10*20);/*(10*30)*/ i+=(20))/*(30)*/ /*25*/
 			{
-				letter[k].xpos = (i) + (KEYBORD_LOCATE_OFS_X_064);
-				letter[k].ypos = (j) + (KEYBORD_LOCATE_OFS_Y_168);
+				letter[k].xpos		= (i) + (KEYBORD_LOCATE_OFS_X_064);
+				letter[k].ypos		= (j) + (KEYBORD_LOCATE_OFS_Y_168);
+			//	letter[k].scale256	= t256(1.0);/*0.0*/ 	/* キーボード(の文字)の拡大率を初期化 */
 				k++;
 			}
 		}
 	}
-	/* キーボード(の文字)の拡大率を初期化 */
-//	for (i=0; i<KEYBOARD_M40; i++)
-//	{
-//		letter[i].scale256 = t256(1.0);/*0.0*/
-//	}
+
 	/* 新たにランクインしたスコア位置を調べる */
 	for (i=0; i<5; i++)
 	{
@@ -689,12 +664,15 @@ global void name_entry_start(void)
 	ranking_enter_name_string[7] = ' ';
 	ranking_enter_name_string[8] = 0;
 	now_select_name_chr = 0;
-
+//
 	/** 描画 **/
-
+	{
+		set_kanji_hide_line(ML_LINE_99_MAX);/*(全行表示する。)*/
+		kanji_window_all_clear();				/* 漢字画面を全行消す。漢字カーソルをホームポジションへ移動。 */
+	}
 	/* PLAY RESULTが付いたから、画面おもいっきり消すことにした。 */
 	{
-	//	psp_clear_screen();	/* 表画面を消す */
+	//	psp_clear_screen(); /* 表画面を消す */
 		load_SDL_bg(BG_TYPE_01_name_regist);/* 裏画面にロード */
 		psp_pop_screen();/* 裏画面を表にコピー */
 	}
@@ -702,20 +680,10 @@ global void name_entry_start(void)
 	{
 		for (j=0; j<5; j++)
 		{
-			#if (0)/*(r35で現状意味無い為。判断して色変える)*/
-			cg.SDL_font_type		= (((my_rank==j)))?(FONT16W/*白*/):(FONT16R/*紅(黄)*/);
-			#endif
 			high_score_render_sub((cg_game_select_player), j );/* FONT16W 白  FONT16R 紅(黄) */
-			result_surfaces[j]		= font_render_new_surface();
-		//
-			SDL_Rect r;
-			r.x = (RANK_LOCATE_OFS_X_32);
-			r.y = (RANK_LOCATE_OFS_Y_40)+(j*20);
-			r.w = result_surfaces[j]->w;
-			r.h = result_surfaces[j]->h;
-			SDL_SetAlpha(	result_surfaces[j], SDL_SRCALPHA, /*bg_alpha_aaa*/(255));
-			PSPL_UpperBlit(result_surfaces[j], NULL, cb.sdl_screen[SDL_00_VIEW_SCREEN], &r);
-			SDL_FreeSurface(result_surfaces[j]);
+			cg.PSPL_font_x = (RANK_LOCATE_OFS_X_32);
+			cg.PSPL_font_y = (RANK_LOCATE_OFS_Y_40)+(j*20);
+			font_render_view_screen();
 		}
 	}
 	#if 1

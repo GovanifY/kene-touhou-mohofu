@@ -1,11 +1,72 @@
 
 /*---------------------------------------------------------
 	東方模倣風 ～ Toho Imitation Style.
-	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	このファイルは直接インクルードしません。
 	"game_main.h" からのみ間接的にインクルードします。
 ---------------------------------------------------------*/
+
+#ifndef _GAME_CORE_
+#define _GAME_CORE_
+/*---------------------------------------------------------
+	ゲームランク
+---------------------------------------------------------*/
+
+enum /*_game_rank_*/
+{
+	RANK_EASY = 0,
+	RANK_NORMAL,	/*=1*/
+	RANK_HARD,		/*=2*/
+	RANK_LUNATIC,	/*=3*/
+	RANK_MAX		/* ランクの最大数==(最高ランク+1) */
+};
+/*---------------------------------------------------------
+	コールバック
+---------------------------------------------------------*/
+
+#if 1/*単純コールバック方式*/
+extern void common_load_init(void);
+extern void stage_clear_result_screen_start(void);/* for game_core.c ??stage_clear.c */
+//
+extern void stage_first_init(void);/* for game_core.c select_player.c */
+extern void shooting_game_core_work(void);/* for pause.c ask_continue.c */
+extern void gameover_start(void);/* for ask_continue.c */
+extern void name_entry_start(void);/* for game_over.c */
+//
+extern void stage_select_menu_start(void);
+extern void option_menu_start(void);
+extern void story_mode_start(void);
+extern void yume_no_kiroku_start(void);
+extern void key_config_start(void);
+extern void music_room_start(void);
+extern void title_menu_start(void);/*for pause.c ... */
+extern void pause_menu_start(void);
+extern void ask_continue_menu_start(void);
+extern void rank_select_menu_start(void);
+//
+
+#define pause_out_call_func 	return_call_func/* ポーズ時の戻り先 */
+#define menu_out_call_func		return_call_func/* 自機選択時の戻り先 / オプションメニューの戻り先 */
+
+/*
+	return_call_func
+	★ 用途1: pause_out_call_func : ポーズ時の戻り先を保持。
+	★ 用途2: menu_out_call_func  : メニューシステムでメニューがバックする(戻る)場合に何処のメニューへ戻るかを保持。
+*/
+#endif
+
+/*---------------------------------------------------------
+	メニュー関連
+---------------------------------------------------------*/
+
+#if 1/*(メニュー関連)*/
+/* キャンセル音を鳴らしてメニューに強制復帰 */
+extern void menu_cancel_and_voice(void);
+#endif
+
+
+#endif /* _GAME_CORE_ */
 
 #ifndef _JIKI_H_
 #define _JIKI_H_
@@ -15,15 +76,15 @@
 // > そろそろSアイテム消して欲しいな。
 // > あとFULLパワー時のアイテム引き寄せラインはもうちょっと下の方がいいと思う。
 // > 具体的にはこの辺り↓
-// > ttp://www4.uploader.jp/user/isisuke/images/isisuke_uljp00081.bmp
+// > http://www4.uploader.jp/user/isisuke/images/isisuke_uljp00081.bmp
 // この意見はわたしも同様に思ったので、みんながそう思ったに違いない。
-// この画像は484x283[dots]で、y==63[line]に赤線が引いてあった。
-// pspの解像度は、 480x272[dots]なので x/272=63/283, x=(63*272)/283 == 60.55[line]
+// この画像は484x283[pixel]で、y==63[line]に赤線が引いてあった。
+// pspの解像度は、 480x272[pixel]なので x/272=63/283, x=(63*272)/283 == 60.55[line]
 // 差分/製作氏	50(49)[line] 少し上すぎる。
 // スレ8の200氏 約60[line] (感覚的に)
 // ここでキャラの高さ分もあるし、64(63)かもっと下72(71)ぐらいでもいいのでは？という訳で64にして実験してみる。
-// 結果：やっぱもう少し下がいい。8[dots]といわず16[dots]ぐらい下がいい。再び実験してみる。
-// 結果：こんなもんかな？というわけで80(79)[dots]に決定。もう8[dots]下88(87)でもいいかもね。
+// 結果：やっぱもう少し下がいい。8[pixel]といわず16[pixel]ぐらい下がいい。再び実験してみる。
+// 結果：こんなもんかな？というわけで80(79)[pixel]に決定。もう8[pixel]下88(87)でもいいかもね。
 // 本家の感覚を大事にするならこんなもんだと思う。
 //---------------
 //「アイテム引き寄せライン」以下で取ると「アイテム引き寄せライン」から322ラインまで距離で減点。
@@ -31,17 +92,17 @@
 //プレイフィールドは 384x448 なので、448-322 == 126
 //「アイテム引き寄せライン」は多分上から128ドットかな？
 //
-//(Bアイテムの大きさが16x16[dot]なので、Bアイテムの消失判定は 448+(16/2)ラインで行うから、
+//(Bアイテムの大きさが16x16[pixel]なので、Bアイテムの消失判定は 448+(16/2)ラインで行うから、
 //最後にBアイテムの判定があるのが、BアイテムのＹ軸中心が456[ライン]にきた場合。
-//456-322 == 134, 134-128 == 6. この6[ライン]はそもそも自機中心が画面下部に行けない分が数ドット(5[dot?])ある。
-//残り1[dot]は不等号で判定したから? )
+//456-322 == 134, 134-128 == 6. この6[ライン]はそもそも自機中心が画面下部に行けない分が数ドット(5[pixel]?)ある。
+//残り1[pixel]は不等号で判定したから? )
 //---------------
 // もし同比率なら、
 // (模倣風アイテム引き寄せライン)/(本家アイテム引き寄せライン) == (模倣風ゲームフィールド縦)/(本家ゲームフィールド縦)
 // が成立する。(模倣風アイテム引き寄せライン)が知りたいのだから移行して、
 // (模倣風アイテム引き寄せライン) == (本家アイテム引き寄せライン) * (模倣風ゲームフィールド縦)/(本家ゲームフィールド縦)
-// (模倣風アイテム引き寄せライン) == 128 * 272/448 == 77.7142857142857142857142857142857 =:= 78[dots] 単純な比率計算の場合。
-// http://hossy.info/game/toho/k_score.php ここの画像を逆算して計算すると 77 dots あたり。
+// (模倣風アイテム引き寄せライン) == 128 * 272/448 == 77.7142857142857142857142857142857 =:= 78[pixel] 単純な比率計算の場合。
+// http://hossy.info/game/toho/k_score.php ここの画像を逆算して計算すると 77 [pixel] あたり。
 /* アイテム引き寄せライン */
 //#define ITEM_GET_BORDER_LINE256		(t256(77))/* 画像から仮定 */
 //#define ITEM_GET_BORDER_LINE256		(t256(78))/* 本家と同比率と仮定し逆算 */
@@ -71,47 +132,113 @@ enum /*_select_player_*/
 /*(全フラグを消す特殊機能)*/
 #define JIKI_FLAG_0x00_ALL_OFF							(0x0000)
 //--------
-/*(割り込みシステム(r36新規)用に確保)*/
+/*(割り込みシステム(未定)用に確保)*/
 #define II_SYSTEM_TASK_NUMBER							(0x000f)
 //--------
 /* プレイヤーが上部へ移動し、手動でアイテム収集行う場合にon。 */
-#define JIKI_FLAG_0x01_JYOU_BU_SYUU_SYUU				(0x0010)
+#define JIKI_FLAG_0x0010_JYOU_BU_SYUU_SYUU				(0x0010)
 /* ボムが発動した際に、自動でアイテム収集を行う場合にon。 */
-#define JIKI_FLAG_0x02_BOMBER_SYUU_SYUU 				(0x0020)
+#define JIKI_FLAG_0x0020_BOMBER_SYUU_SYUU				(0x0020)
 /* ボス倒し後に点数(★アイテム)やボスが出すアイテムを自動で収集する。この場合にon。 */
-#define JIKI_FLAG_0x04_BOSS_GO_ITEM_JIDOU_SYUU_SYUU 	(0x0040)
+#define JIKI_FLAG_0x0040_BOSS_GO_ITEM_JIDOU_SYUU_SYUU	(0x0040)
 //-------
 /* ★ [プレイヤーのオプションがショットを撃つ場合の通信用フラグ] */
-#define JIKI_FLAG_0x08_SHOT_KEY_SEND_FOR_OPTION 		(0x0080)
+#define JIKI_FLAG_0x0080_SHOT_KEY_SEND_FOR_OPTION		(0x0080)
 /* 1==オプションがショットを撃つ。 */
 /* 0==オプションがショットを撃たない。 */
 //-------
-/* ゲーム中、会話モードで on になる。ゲームが再開されると off になる。*/
-#define STATE_FLAG_06_IS_KAIWA_MODE 					(0x0100)
-/* on */
-/* ボスを倒した場合にon(時間切れではOFF) */
-//#define STATE_FL AG_09_IS_WIN_BOSS					(0x0200)
-/* on */
-#define STATE_FLAG_10_IS_LOAD_KAIWA_TXT 				(0x0400)
-/* on */
-#define STATE_FLAG_12_END_KAIWA_MODE					(0x0800)
-/* on */
+
+
+	#define SCENE_FLAG_0x0000_KAIWA_TATAKAU 	(0x0000)/*(共通)*/
+	#define SCENE_FLAG_0x0100_KAIWA_LOAD		(0x0100)/*(共通)*/
+	#define SCENE_FLAG_0x0200_KAIWA_MODE		(0x0200)/*(共通)*/
+	#define SCENE_FLAG_0x0300_KAIWA_END 		(0x0300)/*(共通)*/
+	#define SCENE_FLAG_0x0300_KAIWA_MASK		(0x0300)/*(共通)*/
+	#define SCENE_NUMBER_0x0400_DOUCHUU 		(0x0400)
+	#define SCENE_NUMBER_0x0800_BOSS_TATAKAU	(0x0800)
+	#define SCENE_NUMBER_MASK					(0xff00)
+
+#define USE_r36_SCENE_FLAG (1)
+//#define USE_r36_SCENE_FLAG	(0)
+#if (1==USE_r36_SCENE_FLAG)
+	/*
+	SCENE_FLAG:
+0000: 0x0000: ステージタイトル、道中。
+0001: 0x0100: ステージタイトル、会話読みこみ。"0"
+0010: 0x0200: ステージタイトル、会話モード。
+0011: 0x0300: ステージタイトル、会話モードおしまい指示。
+0100: 0x0400: ボス戦闘前、道中、ボス指示。				[特殊処理on:道中追加]
+0101: 0x0500: ボス戦闘前、会話読みこみ。"1" 			[特殊処理on:会話読みこみ]
+0110: 0x0600: ボス戦闘前、会話モード。					[特殊処理on:会話モード]
+0111: 0x0700: ボス戦闘前、会話モードおしまい指示。		[特殊処理on:会話モードおしまい指示]
+//
+1000: 0x0800: ボス戦闘中。								[特殊処理off:なし]
+1001: 0x0900: ボス戦闘後、good会話読みこみ。"2"(or"3")	[特殊処理on:会話読みこみ]
+1010: 0x0a00: ボス戦闘後、good会話モード。				[特殊処理on:会話モード]
+1011: 0x0b00: ボス戦闘後、good会話おしまい指示。		[特殊処理on:会話モードおしまい指示]
+1100: 0x0c00: ボス戦闘中。(ダミー。この状態には絶対にならない。この状態だとボス体力ゲージが描けない)
+1101: 0x0d00: ボス戦闘後、bad会話読みこみ。"3"
+1110: 0x0e00: ボス戦闘後、bad会話モード。
+1111: 0x0f00: ボス戦闘後、bad会話モードおしまい指示。
+	  0x1000:
+	  0x8000:プレイヤーループを抜ける処理(とりあえず)
+*/
+//	#define SCENE_FLAG_TEST_IS_BOSS 			(0x0800)
+//	#define SCENE_NUMBER_MASK_IS_BOSS			(0x0d00)
+
+
+	#define IS_SCENE(aaa)		((cg.state_flag & SCENE_NUMBER_MASK))
+	#define NEXT_SCENE			cg.state_flag += 0x0100;
+
+//
+	#define IS_SCENE_DOUCHU_TUIKA		(SCENE_NUMBER_0x0400_DOUCHUU>=(cg.state_flag & (SCENE_NUMBER_MASK)))
+	#define IS_SCENE_KAIWA_TATAKAU		(SCENE_FLAG_0x0000_KAIWA_TATAKAU	==(cg.state_flag & (SCENE_FLAG_0x0300_KAIWA_MASK)))
+	#define IS_SCENE_KAIWA_LOAD 		(SCENE_FLAG_0x0100_KAIWA_LOAD		==(cg.state_flag & (SCENE_FLAG_0x0300_KAIWA_MASK)))
+	#define IS_SCENE_KAIWA_MODE 		(SCENE_FLAG_0x0200_KAIWA_MODE		==(cg.state_flag & (SCENE_FLAG_0x0300_KAIWA_MASK)))
+	#define IS_SCENE_END_KAIWA_MODE 	(SCENE_FLAG_0x0300_KAIWA_END		==(cg.state_flag & (SCENE_FLAG_0x0300_KAIWA_MASK)))
+#else
+	#define STATE_FLAG_0x0100_IS_LOAD_KAIWA_TXT 			(0x0100)
+	/* on */
+
+	/* ゲーム中、会話モードで on になる。ゲームが再開されると off になる。*/
+	#define STATE_FLAG_0x0200_IS_KAIWA_MODE 				(0x0200)
+	/* on */
+
+	#define STATE_FLAG_0x0300_END_KAIWA_MODE				(0x0400)
+	/* on */
+
+	/* ボスと戦う際にon(ボス前イベントではOFF) */
+	#define STATE_FLAG_0x0800_IS_BOSS						(0x0800)
+
+	/* ボスを倒した場合にon(時間切れではOFF) */
+	//#define STATE_FLAG_09_IS_WIN_BOSS 					(0x0400)
+	/* on */
 //-------
-#define STATE_FLAG_13_DRAW_BOSS_GAUGE					(0x1000)
+	#define STATE_FLAG_13_GAME_TERMINATE					(0x1000)/* result後にゲーム終了 */
+	#define STATE_FLAG_14_DOUCHU_TUIKA						(0x2000)/* 道中でコマンド追加紺処理を行う場合on */
+	#define STATE_FLAG_15_DRAW_BOSS_GAUGE					(0x4000)
+//-------
+	#define IS_SCENE_DOUCHU_TUIKA		(cg.state_flag & STATE_FLAG_14_DOUCHU_TUIKA)
+	#define IS_SCENE_KAIWA_TATAKAU		(0==(cg.state_flag & STATE_FLAG_0x0200_IS_KAIWA_MODE))
+	#define IS_SCENE_KAIWA_LOAD 		(cg.state_flag & STATE_FLAG_0x0100_IS_LOAD_KAIWA_TXT)
+	#define IS_SCENE_KAIWA_MODE 		(cg.state_flag & STATE_FLAG_0x0200_IS_KAIWA_MODE)
+	#define IS_SCENE_END_KAIWA_MODE 	(cg.state_flag & STATE_FLAG_0x0300_END_KAIWA_MODE)
+#endif
 
-#define STATE_FLAG_14_DOUCHU_TUIKA						(0x2000)/* 道中でコマンド追加紺処理を行う場合on */
 
-/* ボスと戦う際にon(ボス前イベントではOFF) */
-#define STATE_FLAG_05_IS_BOSS							(0x4000)
-
-#define STATE_FLAG_16_GAME_TERMINATE					(0x8000)/* result後にゲーム終了 */
+/*(使用予定あり。未検証)*/
+#define USE_BOSS_JIKANGIRE	(0)
+/* 1:使う。 0:使わない。スペカ時間切れの場合アイテム出さない機能。未検証。 */
 
 
-//#define ST ATE_FLAG_11_IS_BOSS_DESTROY				(0x0400)/* 廃止 */
+#if (1==USE_BOSS_JIKANGIRE)/*(使用予定あり。未検証)*/
+	/*(発弾時にspellcpuで消す)*/
+	#define JIKI_FLAG_16_0x8000_BOSS_JIKAN_GIRE 			(0x8000)
+#endif
 
-//#define STATE_FLAG_0123_AUTO_GET_ITEM (JIKI_FLAG_0x01_JYOU_BU_SYUU_SYUU|JIKI_FLAG_0x02_BOMBER_SYUU_SYUU|JIKI_FLAG_0x04_BOSS_GO_ITEM_JIDOU_SYUU_SYUU)
-//#define ST ATE_FLAG_14_GAME_LOOP_QUIT 				(0x2000)
-//#define ST ATE_FLAG_16_NOT_ALLOW_KEY_CONTROL			(0x8000)/* 廃止 */
+
+//#define STATE_FLAG_0123_AUTO_GET_ITEM (JIKI_FLAG_0x0010_JYOU_BU_SYUU_SYUU|JIKI_FLAG_0x0020_BOMBER_SYUU_SYUU|JIKI_FLAG_0x0040_BOSS_GO_ITEM_JIDOU_SYUU_SYUU)
+
 
 
 //	/*extern*/global void *callback_gu_draw_haikei_modosu;	/* (カード時から通常時へ)戻す用 */
@@ -146,7 +273,7 @@ typedef struct _game_core_global_callback_
 		#else
 	u32 *kanji_window_screen_image; 					/* メッセージウィンドウ(画像) */
 		#endif
-//extern SDL_Surface *screen;
+//extern S_DL_Surface *screen;
 /*extern*/ SDL_Surface *sdl_screen[SDL_99_MAX_SCREEN];/*(4)*/
 
 } GAME_CORE_GLOBAL_CALLBACK;
@@ -156,7 +283,7 @@ typedef struct _game_core_global_class_
 	int state_flag; 	/* 設定フラグ(集) */
 	int weapon_power;	/* 0x00-0x80  (0-128 の129段階==本家と同じ)   max==128==「129段階」*/
 	int chain_point;
-	int bomber_time;	/* Use Gu */
+	s32 bomber_time;	/* Use Gu */  // /* bomb_wait */ /* ボムの有効時間 */
 //[0x10 4]
 	u32 game_score; 	/* スコア得点 */
 	u32 graze_point;	/* グレイズ得点 */
@@ -165,13 +292,18 @@ typedef struct _game_core_global_class_
 //[0x20 8]
 	s32 game_difficulty;/* cg.game_difficulty: GAME_CORE_GLOBAL_CLASSに入れると速度低下する。(pspのmax,min命令を使っているので signed int の必要がある ) */
 	s32 game_rank;		/* ランク変動システムのゲームランク */
-	/*u8*/unsigned int jiki_weapon_level_offset;/* 装備した武器レベル(番号)の８倍にプレイヤー値を足した値をオフセットとして保持 */
+	unsigned int jiki_weapon_level; 	/* (r35u2)強さのみ */		//	/*u8*/unsigned int jiki_weapon_level_offset;/* 装備した武器レベル(番号)の８倍にプレイヤー値を足した値をオフセットとして保持 */
 	unsigned int conv_bg_alpha;
 //[0x30 12]
 	int current_bg0_y_scroll_speed256;	/* bg0のスクロール、現在速度 */
 	/*(描画用)*/
 	int draw_boss_hp_value; /* ボスhp描画値 */ ///??????????
-	int dummy111;/*無いと巧く動作しない*/
+	#if (1)/*(仮対応)*/
+	/* 暫定 SDL フォント */
+//	int dummy111;/*無いと巧く動作しない*/
+//	暫定 [ラインレンダーに移行予定。]
+	int msg_time;/* メッセージ(仮対応)表示時間 */	/* せりふウィンドウ表示時間(仮) */
+	#endif
 //	/* 集計システム(player_data) */
 	int player_data_use_continue;	/* コンティニュー回数 */
 //[0x40 16]
@@ -180,16 +312,6 @@ typedef struct _game_core_global_class_
 	int player_data_use_kurai_bomb; /* 喰らいボム成功回数 */
 	int player_data_count_bonus;	/* カードボーナス回数 */
 //[0x48 18]
-	#if (1)/*(仮対応)*/
-	/* 暫定 SDL フォント */
-	int SDL_font_type;
-	int SDL_font_x;
-	int SDL_font_y;
-//[0x60 24]
-//	暫定 [ラインレンダーに移行予定。]
-	int msg_time;/* メッセージ(仮対応)表示時間 */	/* せりふウィンドウ表示時間(仮) */
-	#endif
-//[0x50 20]
 //	この場所は 4[byte]境界ではダメで、何故か32[byte]境界に合わせないと正常動作しない。(4[byte]境界では異常動作する)
 	s8 game_now_stage;				/* 現在ステージ番号 */
 	s8 game_continue_stage; 		/* 現在コンティニューするステージ番号を保持 */
@@ -199,9 +321,16 @@ typedef struct _game_core_global_class_
 	s8 side_panel_draw_flag;/* パネル表示on(0以外)/off(0) */
 	s8 chuu_boss_mode;
 	s8 dummy_status;				/* [未使用]ダミー */
-	u8 player_option_mode;/* ここに入れない方がいいかも？、とりあえず1575659 */
-	int dummy2222;/*無いと何故か巧く動作しない*/
-	int dummy3333;/*無いと何故か巧く動作しない*/
+	u8 player_option_mode;/* ここに入れない方がいいかも？、とりあえず */
+//	int dummy2222;/*無いと何故か巧く動作しない*/
+//	int dummy3333;/*無いと何故か巧く動作しない*/
+	#if (1)/*(仮対応)*/
+	/* 暫定 SDL フォント */
+	int PSPL_font_x;
+	int PSPL_font_y;
+	#endif
+//[0x50 20]
+//[0x60 24]
 } GAME_CORE_GLOBAL_CLASS;
 extern GAME_CORE_GLOBAL_CLASS cg;
 // /* 予備2(.align合わせで必要) */
@@ -215,11 +344,6 @@ extern GAME_CORE_GLOBAL_CLASS cg;
 //	u8 game_select_player;
 //遅過ぎる。	u8 game_difficulty/* = RANK_EASY*/; 	/*	RANK_NORMAL*/
 //遅過ぎる。	int game_difficulty;
-
-
-
-
-
 
 
 /* 意図的に入れないもの */
@@ -249,8 +373,6 @@ extern PSP_PAD_GLOBAL_CLASS psp_pad;
 //??????????extern int draw_boss_hp_value;	/* ボスhp描画値 */
 //extern int bo ss_life_value;	/* ボスhp体力値 / ボス魔方陣サイズ描画値 */
 #endif
-extern int boss_x256;
-extern int boss_y256;
 
 
 #define USE_HOLD_GAME_MODE	(0)
@@ -302,23 +424,25 @@ enum
 
 #define ITEM_MOVE_FLAG_00_NONE			0x00
 #define ITEM_MOVE_FLAG_01_COLLECT		0x01
-#define ITEM_MOVE_FLAG_02_RAND_X		0x02
-#define ITEM_MOVE_FLAG_04_RAND_Y		0x04
+#define ITEM_MOVE_FLAG_02_WAIT			0x02
+//
+#define ITEM_MOVE_FLAG_02_RAND_X		0x04
+#define ITEM_MOVE_FLAG_04_RAND_Y		0x08
 #define ITEM_MOVE_FLAG_06_RAND_XY		(ITEM_MOVE_FLAG_02_RAND_X|ITEM_MOVE_FLAG_04_RAND_Y)
 
 #define ITEM_CREATE_MODE_01 	((4*8/*ITEM_MAX*/)*0)
 #define ITEM_CREATE_MODE_02 	((4*8/*ITEM_MAX*/)*1)
 
 /*(アイテム作成系)*/
-//廃止extern void item_create(			SPRITE *src, int type, int num, int up_flags);
-extern void item_create_mono(			SPRITE *src, int type);
-extern void item_create_num(			SPRITE *src, int type, int num_of_creates );
-extern void item_create_for_boss(		SPRITE *src, int item_create_mode);
-extern void item_create_random_table(	SPRITE *src);
+//廃止extern void item_create(			OBJ *src, int type, int num, int up_flags);
+extern void item_create_mono(			OBJ *src, int type);
+extern void item_create_flags_num(		OBJ *src, int type, int num_of_creates, int set_item_flags);
+extern void item_create_for_boss(		OBJ *src, int item_create_mode);
+extern void item_create_random_table(	OBJ *src);
 
 /*()*/
-extern void bonus_info_score_nodel( 		SPRITE *src, int score_type);		/*int x, int y*/
-extern void bonus_info_any_score_nodel( 	SPRITE *src, u32 score_num_pts);	/*int x, int y*/
+extern void bonus_info_score_nodel( 		OBJ *src, int score_type);		/*int x, int y*/
+extern void bonus_info_any_score_nodel( 	OBJ *src, u32 score_num_pts);	/*int x, int y*/
 
 /*(弾を全て星点に変換する)*/
 extern void bullets_to_hosi(void);
@@ -388,250 +512,15 @@ enum /*_game_command_code_*/
 #endif /* _LOAD_STAGE_FILE_H_ */
 
 
-#ifndef _SPELL_SYSTEM_H_
-#define _SPELL_SYSTEM_H_
-/*
-	スペルシステム==カードの管理システム。(カードシステムとは違うので注意)
-*/
-	/*---------------------------------------------------------
-	スペルシステム(あらかじめカードの定義をしておくシステム)
-	-------------------------------------------------------
-	模倣風ではスペルはシステムでサポートしています。
-	スペルとして定義(カード)しておくと、どのボスが、どのスペルでも撃てるようになります。
-	-------------------------------------------------------
-	またスペルはカードシステムに番号を登録しておくと、カードシステムでスペルが取得できます。
-	(つまりカードシステム経由でスペルが撃てます)
-	-------------------------------------------------------
-	(r32)現在、雑魚(模倣風のdatの中-ボス)もスペルを撃てますが、
-	この機能は将来なくなるかも知れません。
-	雑魚(模倣風のdatの中-ボス)がスペルを撃てる機能は「風神禄」で思いついたのですが、
-	こういう機能が無い方がゲームの速度が速く出来る気もするし、
-	もしかしたらこういう機能は本家に無いのかもと思うこともあります。良く判りません。
-	-------------------------------------------------------
-	boss->boss_base_card_number に撃ちたいスペルをセットすると、スペル生成開始。
-	スペル生成が終了すると自動的に boss->boss_base_card_number が DANMAKU_00 になる。
-	-------------------------------------------------------
-	スペル生成中は boss->boss_base_spell_time_out が勝手に毎フレーム減算され、0 になるとスペル生成終了。
-	この時間はスペルごとに違う標準時間が設定されている。
-	これはカードの初期化内で自動初期化される。
-	-------------------------------------------------------
-	カードの初期化。
-	カードが変わると毎回行う必要がある。
-	---------------------------------------------------------*/
-
-/* カード番号(各スペルを区別する為の番号) */
-enum
-{
-	SPELL_00 = 0,						/* スペル生成終了フラグ。 */
-//	/* 雑魚用 */
-	SPELL_01_sakuya_misogi_normal,		/* [咲夜] 紅5面中-ボス 禊カード / 紅5面中-ボス 咲夜 「通常攻撃」 */
-	SPELL_02_sakuya_old_test,			/* [咲夜] 紅5面中-ボス 24カード (奇術「ミスディレクションもどき(1/2)」) */
-	SPELL_03_sakuya_old_test,			/* [咲夜] 紅5面中-ボス 11カード (奇術「ミスディレクションもどき(2/2)」) */
-	SPELL_04_sakuya_pink_hearts,		/* [咲夜] 紅5面ボス [咲夜] 「通常攻撃1(1/2)」にちょっとだけ似たカード(予定) */
-	SPELL_05_sakuya,					/* [咲夜] 紅5面ボス [咲夜] 「通常攻撃1/2(2/2)」にちょっとだけ似たカード(予定) */
-	SPELL_06_sakuya,					/* [咲夜] 紅5面ボス [咲夜] 幻象「ルナクロック(1/2)」にちょっとだけ似たカード(予定) */
-	SPELL_07_sakuya,					/* [咲夜] 紅5面ボス [咲夜] 「通常攻撃3(1/2)」にちょっとだけ似たカード(予定) */
-//
-	SPELL_08_rumia, 					/* [ルーミア] 紅1面ボス [ルーミア] 夜符「ナイトバード」にちょっとだけ似たカード(予定) */
-	SPELL_09_alice, 					/* [アリス] っぽい？テキトーカード */
-	SPELL_0a_dai_yousei_01, 			/* [大妖精] 全周 48分割、時計回り、緑クナイ弾 */
-	SPELL_0b_dai_yousei_02, 			/* [大妖精] 全周 48分割、反時計回り、赤クナイ弾 */
-	SPELL_0c_sakuya_jack32, 			/* [咲夜] 幻幽「ジャック・ザ・ルドビレ」になるかもしれないテスト */
-	SPELL_0d_sakuya_miss_direction, 	/* [咲夜] 奇術「ミスディレクション」 */
-	SPELL_0e_remilia_00,				/* [レミリア] テスト */
-	SPELL_0f_tengu, 					/* [その他] 差分氏の妖怪1(天狗様?)が撃つカード(予定) */ 	/*???*/
-//
-	SPELL_10_cirno, 					/* [チルノ] 禊カード */
-	SPELL_11_perfect_freeze,			/* [チルノ] パーフェクトフリーズ */
-	SPELL_12_diamond_blizzard,			/* [チルノ] 雪符「ダイアモンドブリザード」 */
-	SPELL_13_alice_suwako,				/* [アリス] 諏訪子っぽい(?)カード */
-	SPELL_14_alice_youmu300,			/* [アリス] 妖3面ボス  normal通常攻撃3(の一部) */
-	SPELL_15_alice_aka_2nd, 			/* [アリス] 怪EX面ボス 赤の魔法2段階目もどき */
-	SPELL_16_alice_doll,				/* [アリス] 妖3面ボス [アリス]人形カード(もどき) */ // 40[sec]
-	SPELL_17_alice_doll_02, 			/* [アリス] 作成中 */
-//
-	SPELL_18_hana_test, 				/* [魅魔] 花てすとカード */
-	SPELL_40_SONOTA_DEBUG_CW_AO,		/* [その他] デバッグカードCW青 */
-	SPELL_41_SONOTA_DEBUG_CCW_AKA,		/* [その他] デバッグカードCCW赤 */
-	SPELL_1b_cirno_icecle_fall, 		/* [チルノ] 氷符「アイシクルフォール」 */
-	SPELL_44_ruiz3_test,				/* [ルイズ] カード語のてすと。 */
-	SPELL_1d_amefuri_test,				/* [] 雨てすと */
-	SPELL_1e_momiji_no_nonoji,			/* [椛] ののじカード */
-	SPELL_1f_koakuma,					/* [小悪魔] てすと用 */
-//	/* ボス用 */
-	SPELL_20_aya_misogi1,				/*	1[文] の通常弾っぽいカード撃たせてみるテスト1 */
-	SPELL_21_aya_misogi2,				/*	2[文] の通常弾っぽいカード撃たせてみるテスト2 */
-	SPELL_22_ame_no_yatimata,			/*	3[文] 岐符「天の八衢」 */
-	SPELL_23_meirin_magaru_kunai,		/*	4[美鈴] 通常攻撃 */
-	SPELL_24_aya_doll,					/*	5[文] 人形カード */ //40[sec]
-	SPELL_25_houka_kenran,				/*	6[紅美鈴] 華符「芳華絢爛」にちょっとだけ似たカード(予定) */
-	SPELL_26_aya_saifu, 				/*	7[文] 塞符 */
-	SPELL_27_hosigata_test, 			/*	8 [その他] 星型テスト */
-//
-	SPELL_28_remilia_tamaoki1,			/*	9[咲夜] 紅 面ボス  れみりゃっぽい咲夜の玉置カード(予定) */
-	SPELL_29_rumia_demarcation, 		/* 10[ルーミア] 紅1面ボス 闇符「ディマーケイション」にちょっとだけ似たカード(予定) */
-	SPELL_2a_sakuya_baramaki1,			/* 11[咲夜] 紅5面中-ボス ばら撒き1 カード () */
-	SPELL_2b_sakuya_baramaki2,			/* 12[咲夜] 紅5面中-ボス ばら撒き2 カード () */
-	SPELL_2c_sakuya_blue_red,			/* 13[咲夜] 紅5面中-ボス 「通常攻撃3」青赤ナイフ */
-	SPELL_2d_sakuya_misogi_lunatic, 	/* 14[咲夜] 紅5面中-ボス 禊カード / 紅5面中-ボス 咲夜 「通常攻撃」lunatic */
-	SPELL_2e_pache_agni_shine_1,		/* [パチェ] "　　　　火符「アグニシャイン」" No.15 */	// agni shine (アグニの輝き)、 (アグニ==インド神話の火の神)
-	SPELL_2f_pache_princess_undine, 	/* [パチェ] "　水符「プリンセスウンディネ」" No.16 */	// princess undine (ウンディネの姫)、(ウンディネ==錬金術師パラケルススの「妖精の書」に登場する水の精の名前)
-//
-	SPELL_30_pache_sylphy_horn_1,		/* [パチェ] "　　　　木符「シルフィホルン」" No.17 */	// sylphy horn (シルフィのホルン)、(シルフィ==風を司る精霊)、(ホルン==楽器==角笛)
-	SPELL_31_pache_rage_tririton_1, 	/* [パチェ] "　　土符「レイジィトリリトン」" No.18 */	// rage tririton (怒るトリリトン)、 (トリリトン==世界遺産ストーンヘンジの三つ石)
-	SPELL_32_pache_metal_fatigue,		/* [パチェ] "　　金符「メタルファティーグ」" No.19 */	// metal fatigue (金属疲労)
-	SPELL_33_pache_agni_shine_2,		/* [パチェ] "　　火符「アグニシャイン上級」" No.20 */
-	SPELL_34_pache_sylphy_horn_2,		/* [パチェ] "　　木符「シルフィホルン上級」" No.21 */
-	SPELL_35_pache_rage_tririton_2, 	/* [パチェ] "土符「レイジィトリリトン上級」" No.22 */
-	SPELL_36_pache_agni_radiance,		/* [パチェ] "　火符「アグニレイディアンス」" No.23 */	// agni radiance (アグニの輝き)、 (アグニ==インド神話の火の神)
-	SPELL_37_pache_bury_in_lake,		/* [パチェ] "　　　水符「ベリーインレイク」" No.24 */	// bury in lake (水葬)
-//
-	SPELL_38_pache_green_storm, 		/* [パチェ] "　　　木符「グリーンストーム」" No.25 */	// green storm (緑の嵐)
-	SPELL_39_pache_tririton_shake,		/* [パチェ] "　　土符「トリリトンシェイク」" No.26 */	// tririton shake (揺れるトリリトン)、 (トリリトン==世界遺産ストーンヘンジの三つ石)
-	SPELL_3a_pache_silver_dragon,		/* [パチェ] "　　　金符「シルバードラゴン」" No.27 */	// silver dragon (銀翼竜)
-	SPELL_3b_pache_lava_cromlech,		/* [パチェ] "火＆土符「ラーヴァクロムレク」" No.28 */	// lava cromlech (溶岩環状列石)
-	SPELL_3c_pache_forest_blaze,		/* [パチェ] "木＆火符「フォレストブレイズ」" No.29 */	// forest blaze (森林火災)
-	SPELL_3d_pache_water_elf,			/* [パチェ] "　水＆木符「ウォーターエルフ」" No.30 */	// water (水) / elf (妖精)	(ギャグ:水溶性==水に溶けちゃう妖精)
-	SPELL_3e_pache_mercury_poison,		/* [パチェ] "金＆水符「マーキュリポイズン」" No.31 */	// mercury poison (水銀中毒)
-	SPELL_3f_pache_emerald_megalith,	/* [パチェ] "土＆金符「エメラルドメガリス」" No.32 */	// emerald megalith (巨大なエメラルド石)
-//
-	SPELL_42_PACHE_LASER1,				/* [パチェ] 「通常攻撃1」のレーザーもどき */
-	SPELL_43_PACHE_LASER2,				/* [パチェ] 「通常攻撃3」のレーザーもどき */
-	SPELL_19_mima_sekkin,				/* [魅魔] 接近カード */
-	SPELL_1a_mima_toge, 				/* [魅魔] トゲてすとカード */
-	SPELL_1e_kaguya01,					/* [輝夜] むりやり変換1 */
-	SPELL_1f_kaguya04,					/* [輝夜] むりやり変換2 */
-	SPELL_1c_kakuya_tamanoe,			/* [輝夜]、蓬莱の玉の枝もどき。作成中 */
-	SPELL_47_,							/* 未定 */
-//
-	#if (1)
-	SPELL_48_r34_gokan_kinou, 			/* [r34]r34以前の互換機能。(r35-)システムで必ず必要。 */
-	SPELL_49,							/* 未定 */
-	SPELL_4a,							/* 未定 */
-	SPELL_4b,							/* 未定 */
-	SPELL_4c,							/* 未定 */
-	SPELL_4d,							/* 未定 */
-	SPELL_4e,							/* 未定 */
-	SPELL_4f,							/* 未定 */
-	#endif
-//
-	SPELL_MAX,
-};
-//	SPELL_1f_silent_selena, 			/* [パチェ] サイレントセレナ の てすと用 */
-//
-
-
-/* HATSUDAN_03_angle65536 に 自機狙い弾の角度を計算 */
-extern void tmp_angleCCW65536_src_nerai(void);
-
-/* HATSUDAN_03_angle65536 に 自機狙い弾の角度を計算 */
-extern void calculate_jikinerai(void);
-
-
-/* スペルをCPU実行し、カードを１フレーム生成する。 */
-extern void card_generate(SPRITE *src);
-
-
-
-#endif /* _SPELL_SYSTEM_H_ */
-
-
-#ifndef _CARD_SYSTEM_H_
-#define _CARD_SYSTEM_H_
-
-//------------ カード関連
-
-extern void create_card(SPRITE *src, int card_number);
-
-
-//extern void ch eck_regist_card(SPRITE *src);/* カードの更新チェック */
-extern void card_boss_move_generate_check_regist(SPRITE *src);	/* カード登録可能なら登録 / カード生成 */
-
-
-// extern void card_state_check_holding(SPRITE *src);/* カードが終わるまで待つ。 */
-
-enum
-{
-	CARD_BOSS_MODE_00_OFF = 0,			/* カードを使用しない(通常攻撃等)。(カードが撃てるかどうか判断) */
-	CARD_BOSS_MODE_01_IDO_JYUNNBI,		/* 撃てる場合。発弾位置まで移動 */
-	CARD_BOSS_MODE_02_TAIHI,			/* 退避中。 */
-	CARD_BOSS_MODE_03_HATUDAN,			/* 発弾中。 */
-};
-
-
-
-enum
-{
-	DANMAKU_LAYER_00 = 0,			//(0)/* 弾幕コントロールしない通常弾(画面外で弾消し) */
-	DANMAKU_LAYER_01,				//(1)/* 弾幕コントロールグループ(1)弾 */
-	DANMAKU_LAYER_02,				//(2)/* 弾幕コントロールグループ(2)弾 */
-	DANMAKU_LAYER_03,				//(3)/* 弾幕コントロールグループ(3)弾 */
-	DANMAKU_LAYER_04_MAX/* 弾幕コントロールグループ最大数 */
-};
-
-typedef struct /*_card_global_class_*/
-{
-	int mode;				/* カードモード */
-	int limit_health;		/* 規定値以下になればカードモード解除 */
-	int boss_state; 		/* 負値になればボスがカードモードに入らない */
-	int boss_timer; 		/* [共用]制限時間 */
-	//
-	int number; 			/* [共用]カード番号 */
-	int number_temporaly;	/* [一時使用]カード番号 */
-	int card_number;		/* */
-	int boss_hp_dec_by_frame;/* ボス攻撃減少値、フレーム単位 */
-	//
-	void (*danmaku_callback[(DANMAKU_LAYER_04_MAX)])(SPRITE *sss);	/*	弾幕コールバックシステム(スペル変身処理) */
-	// 「移動できなかったフラグ」(使用前に手動でOFF==0にしとく)
-	int/*u8*/ boss_hamidasi;			/* 「移動できなかったフラグ」(使用前に手動でOFF==0にしとく) */
-} CARD_SYSTEM_GLOBAL_CLASS;
-extern CARD_SYSTEM_GLOBAL_CLASS card;
-
-//	int dummy2;
-/* とりあえず */
-#if 0
-//	#define boss_base_resurved000				user_data10/*(r32)現在、未使用。*/
-//	#define bo ss_base_state001 				user_data10/*廃止*/
-	#define boss_base_spell_temporaly			user_data11
-	#define boss_base_card_number				user_data12
-	#define boss_base_spell_time_out			user_data13
-#endif
-
-
-//------------ "回"みたいなマークのエフェクト
-/*
-「"回"みたいなマーク」は、ボスが持ってるカードだそうです。
-だから本当は、カードの枚数が減ったら、枚数を減らさなきゃいけないのかな？
-でも本家そうなってないよね。
-*/
-/*static*/extern  void move_card_square_effect(SPRITE *src);
-/*static*/extern  void boss_effect_initialize_position(void);
-
-extern void danmaku_system_callback(void);
-#endif /* _CARD_SYSTEM_H_ */
-
-
 #ifndef _BOSS_COMMON_H_
 #define _BOSS_COMMON_H_
-
-/* ボスで宣言が必要なもの(グローバル) */
-
-enum
-{
-	DESTROY_CHECK_00_WIN_BOSS = 0,
-	DESTROY_CHECK_01_IS_TIME_OUT,
-};
-/*	★ 攻撃の場合の死亡判定 	★ 時間切れの場合の死亡判定 */
-/*static*/extern  void boss_destroy_check_type(SPRITE *src/*敵自体*/, int check_type);
 
 /* カードシステム */
 
 /* カードの初期化。カードが変わると毎回行う必要がある。 */
-extern void card_maikai_init(SPRITE *src);						/*(毎回初期化)*/
-extern void card_maikai_init_and_get_spell_number(SPRITE *src); /*(毎回初期化)+(現在撃つべく番号をカードシステムから取得)*/
+extern void card_maikai_init(OBJ *src); 						/*(毎回初期化)*/
+extern void card_maikai_init_and_get_spell_number(OBJ *src);	/*(毎回初期化)+(現在撃つべく番号をカードシステムから取得)*/
 
-// 共通形態
-extern void common_99_keitai(SPRITE *src);/* 撃破後に画面外にボスが逃げる */
 
 #endif /* _BOSS_H_ */
 
@@ -699,11 +588,10 @@ typedef struct /*_clip_class_*/
 extern RECT_CLIP_CLASS rect_clip;
 
 extern void bakuhatsu_add_type_ccc(int type);
-extern void bakuhatsu_add_rect(SPRITE *src);
-extern void bakuhatsu_add_circle(SPRITE *src, int mode);
-extern void bakuhatsu_add_zako04(SPRITE *src);
+extern void bakuhatsu_add_rect(OBJ *src);
+extern void bakuhatsu_add_circle(OBJ *src, int mode);
+extern void bakuhatsu_add_zako04(OBJ *src);
 
-extern void callback_hit_zako(SPRITE *src, SPRITE *t);
+extern void callback_hit_zako(OBJ *src, OBJ *t);
 
 #endif /* _ATARI_HANTEI_H_ */
-

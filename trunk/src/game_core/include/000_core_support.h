@@ -1,7 +1,7 @@
 
 /*---------------------------------------------------------
 	東方模倣風 ～ Toho Imitation Style.
-	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	このファイルは直接インクルードしません。
 	"game_main.h" からのみ間接的にインクルードします。
@@ -43,36 +43,38 @@ enum	//; 効果音(Voice)
 enum	//; 曲(Music) [.it や .ogg形式]
 {
 	BGM_00_stop = 0,	/* ----- BGM 演奏停止コマンド */
-	BGM_01_stage1,		/* 1面道中 */
-	BGM_02_stage2,		/* 2面道中 */
-	BGM_03_stage3,		/* 3面道中 */
-	BGM_04_stage4,		/* 4面道中 */
-	BGM_05_stage5,		/* 5面道中 */
-	BGM_06_stage6,		/* 6面道中 */
-	BGM_07_stage7,		/* エンディング(道中) */
-	BGM_08_stage8,		/* エキストラステージ道中 */
-	BGM_09_stage9,		/* ファンタズムステージ道中 */
-	BGM_10_menu04,		/* 上海紅茶館 */
-	BGM_11_boss01,		/* 1面ボス (アリス) */
-	BGM_12_boss02,		/* 2面ボス (魅魔) */
-	BGM_13_boss03,		/* 3面ボス (輝夜) */
-	BGM_14_boss04,		/* 4面ボス (文) */
-	BGM_15_boss05,		/* 5面ボス (パチェ) */
-	BGM_16_boss06,		/* 6面ボス (咲夜) */
-	BGM_17_boss07,		/* チルノ エキストラステージ1ボス */
-	BGM_18_boss08,		/* アリス エキストラステージ2ボス */
-	BGM_19_boss09,		/* 魔理沙 エキストラステージ3ボス */
-	BGM_20_boss10,		/* 妖夢 隠しボス */
-	BGM_21_boss11,		/* レミリア 隠しボス */
-	BGM_22_boss00,		/* フラン 隠しボス */
-	BGM_23_boss12,		/* 霊夢 */
-	BGM_24_boss13,		/* ルーミア */
-	BGM_24_menu03,		/* エンディング(シナリオ) */
-	BGM_25_menu02,		/* キーコンフィグ */
-	BGM_26_menu01,		/* タイトル画面 */
-	BGM_27_stage10,		/* 未使用曲です。 */
+	BGM_01_stage1,		/* th12_02.IT 1面道中 春の湊に */
+	BGM_02_stage2,		/* th05_06.IT 2面道中 ロマンティック・チルドレン */
+	BGM_03_stage3,		/* th08_13.IT 3面道中 ヴォヤージュ1969 */
+	BGM_04_stage4,		/* th10_08.IT 4面道中 フォールオブフォール ～ 秋めく滝 */
+	BGM_05_stage5,		/* th06_08.IT 5面道中 ヴアル魔法図書館 */
+	BGM_06_stage6,		/* th06_10.IT 6面道中 メイドと血の懐中時計 */
+	BGM_07_stage7,		/* th00_01.IT エンディング(道中) [夢違科学世紀] 童祭 ～ Innocent Treasures */
+	BGM_08_stage8,		/* th06_04.IT エキストラステージ道中 ルーネイトエルフ */
+	BGM_09_stage9,		/* th07_04.IT ファンタズムステージ道中 遠野幻想物語 */
+	BGM_10_menu04,		/* th06_06.IT 上海紅茶館 */
+	BGM_11_boss01,		/* th07_07.IT 1面ボス (アリス) 人形裁判 ～ 人の形弄びし少女 */
+	BGM_12_boss02,		/* th02_11.IT 2面ボス (魅魔) コンプリート・ダークネス */
+	BGM_13_boss03,		/* th08_15.IT 3面ボス (輝夜) 竹取飛翔 ～ Lunatic Princess */
+	BGM_14_boss04,		/* th00_11.IT 4面ボス (文) [文花帖] 風神少女 (Full Version) */
+	BGM_15_boss05,		/* th06_09.IT 5面ボス (パチェ) ラクトガール ～ 少女密室 */
+	BGM_16_boss06,		/* th06_11.IT 6面ボス (咲夜) 月時計 ～ ルナ・ダイアル */
+	BGM_17_boss07,		/* th06_05.IT チルノ エキストラステージ1ボス おてんば恋娘 */
+	BGM_18_boss08,		/* th05_17.IT アリス エキストラステージ2ボス グリモア オブ アリス */
+	BGM_19_boss09,		/* th08_10.IT 魔理沙 エキストラステージ3ボス 恋色マスタースパーク */
+	BGM_20_boss10,		/* th07_11.IT 妖夢 隠しボス 広有射怪鳥事 ～ Till When? */
+	BGM_21_boss11,		/* th06_13.IT レミリア 隠しボス 亡き王女の為のセプテット */
+	BGM_22_boss00,		/* th06_15.IT フラン 隠しボス U.N.オーエンは彼女なのか？ */
+	BGM_23_boss12,		/* th04_10.IT 霊夢 少女綺想曲 ～ capriccio */
+	BGM_24_boss13,		/* th06_03.IT ルーミア 妖魔夜行 */
+	BGM_25_menu03,		/* th10_18.IT エンディング(シナリオ) プレイヤーズスコア */
+	BGM_26_menu02,		/* th07_02.IT キーコンフィグ 無何有の郷 ～ Deep Mountain */
+	BGM_27_menu01,		/* th06_16.IT タイトル画面 紅より儚い永遠 */
+	BGM_28_stage10, 	/* th04_07.IT 使用曲です。 バッド・アップル ～ Bad Apple!! */
+	BGM_29_stage11, 	/* th08_08.IT 使用曲です。 永夜の報い */
+	BGM_30_stage12, 	/* th13_02.IT 使用曲です。 死霊の夜桜 */
 /* ----- 曲の数(読み込みファイル数) */
-	USE_28_MUSIC_FILES
+	USE_31_MUSIC_FILES
 };
 
 enum
@@ -120,7 +122,7 @@ extern void voice_play(int req, int play_track );
 
 /*---------------------------------------------------------
 	東方模倣風 ～ Toho Imitation Style.
-	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	このファイルは直接インクルードしません。
 	"game_main.h" からのみ間接的にインクルードします。
@@ -153,12 +155,13 @@ extern void voice_play(int req, int play_track );
 	"font03.png"
 	"font05.png"
 /fonts/ の場合、/src/core/draw/draw_kanji.c のみ。
-	"font_bg16.png"
+
+
 /fonts/ の場合、/src/core/draw/score_panel.c のみ。
 	"panel_base.png"
-	"hosi_gauge.png"
-/douchuu/ の場合、/src/core/load_stage.c のみ。
-/kaiwa/ の場合、/src/core/menu/kaiwa.c のみ。
+
+/kaiwa/s/ の場合、/src/core/load_stage.c のみ。
+/kaiwa/0/ の場合、/src/core/menu/kaiwa.c のみ。
 
 */
 /*---------------------------------------------------------
@@ -230,15 +233,9 @@ extern void load_SDL_bg(int bg_type_number);
 #endif /* _GAME_FILE_H_ */
 
 
-
-
-
-
-
-
 /*---------------------------------------------------------
 	東方模倣風 ～ Toho Imitation Style.
-	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	このファイルは直接インクルードしません。
 	"game_main.h" からのみ間接的にインクルードします。
@@ -251,24 +248,25 @@ extern void load_SDL_bg(int bg_type_number);
 	フォント
 ---------------------------------------------------------*/
 
-enum FONTS
-{
-	FONT10W = 0,		/*	8x10 x WHITE 白 (mini) */
-	FONT16B,			/* 16x16 x 漢字のＢＧ用  */
-	FONT16K,			/* 16x16 x キーコンフィグ用 */
-	FONT16W,			/* 16x16 x WHITE 白 */
-	FONT_MAX
-};
+//enum FONTS
+//{
+//	FONT10W = 0,		/*	8x10 x WHITE 白 (mini) */
+//	FONT16B,			/* 16x16 x 漢字のＢＧ用  */
+//	FONT16K,			/* 16x16 x キーコンフィグ用 */
+//	FONT16W,			/* 16x16 x WHITE 白 */
+//	FONT_MAX
+//};
 /*(-r34互換用)*/	/* 16x16 x RED   紅(廃止) */
-#define FONT16R 	FONT16W
+//#define FONT16R 	FONT16W
 
 extern void font_init(void);
 
 /* サーフェイスを作らないで、直接画面に表示 */
-extern void font88_print_screen_xy(void);//	char *text, int font_type, int x, int y);
+//extern void font88_print_screen_xy(void);//	char *text, int font_type, int x, int y);
+extern void font_render_view_screen(void);
 
 /* [廃止予定]新規サーフェイスを作成し、文字列をレンダリング */
-extern SDL_Surface *font_render_new_surface(void);//	char *text, int font_type);
+extern SDL_Surface *font16_render_new_surface(void);//	char *text, int font_type);
 
 /* */
 extern void font_print(void);// 			char *text, int font_type, int x, int y);

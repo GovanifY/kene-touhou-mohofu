@@ -1,7 +1,7 @@
 
 /*---------------------------------------------------------
 	東方模倣風 ～ Toho Imitation Style.
-	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	http://mohou.huuryuu.com/
 	-------------------------------------------------------
 	PSPL - PSP customised SDL Layer port.
 	SDL Copyright (C) 1997-2004 Sam Lantinga.
@@ -46,9 +46,9 @@ extern "C" {
 #define SDL_MUTEX_MAXWAIT	(~(u32)0)
 
 
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-/* Mutex functions					       */
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+/* ------------------------------------------ */
+/* Mutex functions */
+/* ------------------------------------------ */
 
 /* The SDL mutex structure, defined in SDL_mutex.c */
 struct SDL_mutex;
@@ -72,9 +72,9 @@ extern int /*SD LCALL*/ SDL_mutexV(SDL_mutex *mutex);
 extern void /*SD LCALL*/ SDL_DestroyMutex(SDL_mutex *mutex);
 
 
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-/* Semaphore functions					   */
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+/* ------------------------------------------ */
+/* Semaphore functions */
+/* ------------------------------------------ */
 
 /* The SDL semaphore structure, defined in SDL_sem.c */
 struct SDL_semaphore;

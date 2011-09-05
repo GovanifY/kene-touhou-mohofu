@@ -3,7 +3,7 @@
 
 /*---------------------------------------------------------
 	東方模倣風 ～ Toho Imitation Style.
-	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	オプションメニュー
 	-------------------------------------------------------
@@ -114,7 +114,7 @@ global /*static*/ void check_limit_value_option(int *option_setting_map)
 	unsigned int i;
 	for (i=0; i<(OPTION_MENU_CONFIG_MAX+EXT_MAX); i++)
 	{
-		if ( (unsigned)option_status_setting[i].item <= (unsigned)option_setting_map[i])
+		if ((unsigned)option_status_setting[i].item <= (unsigned)option_setting_map[i])
 		{
 			option_setting_map[i] = option_status_setting[i].item_default;
 		}
@@ -457,12 +457,11 @@ global void option_menu_start(void)
 			"Quit",
 		};
 		{
-			cg.SDL_font_type	= FONT16W;
 			unsigned int i;
 			for (i=0; i<(MAX_KEY_NAMES_12); i++)
 			{
 				strcpy(my_font_text, (char *)const_key_str[i]);
-				option_menu_name_surface[i] = font_render_new_surface();
+				option_menu_name_surface[i] = font16_render_new_surface();
 			}
 		}
 	}

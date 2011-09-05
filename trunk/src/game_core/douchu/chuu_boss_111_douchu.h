@@ -3,7 +3,7 @@
 
 /*---------------------------------------------------------
 	東方模倣風 ～ Toho Imitation Style.
-	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	道中の中ボス
 	-------------------------------------------------------
@@ -25,7 +25,7 @@
 	/* 開始するカード番号 */
 
 //
-#define YOKAI1_DATA_s2					target_obj		/* SPRITE *s2;*/
+#define YOKAI1_DATA_s2					target_obj		/* OBJ *s2;*/
 
 //enum /* _yokai_type_ */
 //{
@@ -39,11 +39,11 @@
 
 
 /*---------------------------------------------------------
-	SPRITE *src;	中-ボス敵自体
-	SPRITE *tama;	自弾
+	OBJ *src;	中-ボス敵自体
+	OBJ *tama;	自弾
 ---------------------------------------------------------*/
 
-static void callback_hit_chuu_boss(SPRITE *src, SPRITE *tama)
+static void callback_hit_chuu_boss(OBJ *src, OBJ *tama)
 {
 	/* ボス & 中-ボスに自弾があたった場合の火花エフェクトを登録(現在Gu部分がないので描画してない) */
 	set_REG_DEST_XY(tama);/* 発弾位置 座標xy */
@@ -51,13 +51,13 @@ static void callback_hit_chuu_boss(SPRITE *src, SPRITE *tama)
 //
 	/* 上と分離した方がコード効率があがる。 */
 	{
-		src->base_hp -= tama->base_weapon_strength; 	/* 攻撃して体力減らす(強さ分引く) */
+		src->base_hp -= tama->kougeki_ti; 	/* 攻撃して体力減らす(強さ分引く) */
 		if (0 >= src->base_hp)			/* ０か負値なら、倒した。 */
 		{
 			#if 1/*要るの？*/
 			src->base_hp	= (9999);/* ２回は倒せない */
 			#endif
-			card.card_number			= (SPELL_00);/*(カード実行停止にする)*/
+			card.spell_used_number		= (SPELL_00);/*(カード実行停止にする)*/
 			bullets_to_hosi();/* 弾全部、星アイテムにする */
 		//
 			/* (ザコの)カスタムやられ処理 */
@@ -104,7 +104,7 @@ static void callback_hit_chuu_boss(SPRITE *src, SPRITE *tama)
 //	}
 //	else
 #define LIMIT_TIME_512	(1536)
-static void move_chuu_boss(SPRITE *src)
+static void move_chuu_boss(OBJ *src)
 {
 	if ((OSIMAI_JIKAN_256) > src->jyumyou) 	/* 「上へ退場」(256[count]==約4秒) */
 	{
@@ -116,8 +116,8 @@ static void move_chuu_boss(SPRITE *src)
 		}
 		#endif
 		src->cy256						-= t256(1.5);	/*fps_factor*/
-		if ( 0 > (src->cy256+t256(55.0)))/* 55ドットとして(左上基点、縦のサイズ) */
-	//	if ( 0 > src->cy256)/* 簡略版 */
+		if (0 > (src->cy256+t256(55.0)))/* 55ドットとして(左上基点、縦のサイズ) */
+	//	if (0 > src->cy256)/* 簡略版 */
 		{
 			src->jyumyou						= JYUMYOU_NASI;
 			if (JYUMYOU_NASI <= src->YOKAI1_DATA_s2->jyumyou)/* 背後の魔方陣があれば消去。 */
@@ -132,7 +132,7 @@ static void move_chuu_boss(SPRITE *src)
 	else
 	if ((OSIMAI_JIKAN_256) == src->jyumyou) 	/* 「カード実行停止にする」 */
 	{
-			card.card_number			= (SPELL_00);/*(カード実行停止にする)*/
+			card.spell_used_number			= (SPELL_00);/*(カード実行停止にする)*/
 	}
 	/*([時間切れの位置]時間切れの場合、「カード実行停止にする」)*/
 	/*(最大約8秒(512[count])でスペカ強制中断)*/
@@ -140,7 +140,7 @@ static void move_chuu_boss(SPRITE *src)
 	if ((256+LIMIT_TIME_512) > src->jyumyou)	/* 「カードが終わるまで待機」(512[count]==約8秒) */
 	{
 		/*(カード設定時間が512未満の場合は自然に終了する。その場合、[時間切れの位置]まで時間を進める。)*/
-		if (SPELL_00 == card.card_number)
+		if (SPELL_00 == card.spell_used_number)
 		{
 			src->jyumyou = (OSIMAI_JIKAN_256);
 		}
@@ -156,8 +156,8 @@ static void move_chuu_boss(SPRITE *src)
 		src->cy256					+= t256(2.0);	/*fps_factor*/
 		if ((src->YOKAI1_DATA_start_limit_y256) < src->cy256)
 		{
-			src->jyumyou = ((256+LIMIT_TIME_512)-1);/* 「カードが終わるまで待機」へ設定。 */
-			card.card_number	= card.number_temporaly;	/* カードをセット */		/* "妖怪2"&"ルーミア"専用 */
+			src->jyumyou 			= ((256+LIMIT_TIME_512)-1);/* 「カードが終わるまで待機」へ設定。 */
+			card.spell_used_number	= card.address_temporaly;	/* カードをセット */		/* "妖怪2"&"ルーミア"専用 */
 			card_maikai_init(src);/*(r35-, カードの初期化。カードが変わると毎回行う必要がある)*/
 		}
 	}
@@ -192,7 +192,7 @@ static void move_chuu_boss(SPRITE *src)
 /*---------------------------------------------------------
 	敵を追加する
 ---------------------------------------------------------*/
-//extern void regist_settei_common(GAME_COMMAND *l, SPRITE *src);
+//extern void regist_settei_common(GAME_COMMAND *l, OBJ *src);
 global void game_command_06_regist_chuu_boss(GAME_COMMAND *l)
 {
 	if (0==cg.chuu_boss_mode)
@@ -200,13 +200,13 @@ global void game_command_06_regist_chuu_boss(GAME_COMMAND *l)
 		cg.chuu_boss_mode = (1);
 		//hold_game_mode_on();
 		/* プライオリティー(表示優先順位)があるから、背後に表示させる為に、初めに後ろの魔方陣を確保。 */
-		SPRITE *s2; 		/* 後ろの魔方陣 */
-		s2								= obj_add_01_teki_error();
+		OBJ *s2; 		/* 後ろの魔方陣 */
+		s2								= obj_add_A01_teki_error();
 		if (NULL != s2)/* 登録できた場合のみ */
 		{
 			/* 後ろの魔方陣が確保出来たら本体を確保。 */
-			SPRITE *s1; 	/* 本体 */
-			s1									= obj_add_01_teki_error();
+			OBJ *s1; 	/* 本体 */
+			s1									= obj_add_A01_teki_error();
 			if (NULL != s1)/* 登録できた場合のみ */
 			{
 				/* 0ttd dddd
@@ -220,8 +220,8 @@ global void game_command_06_regist_chuu_boss(GAME_COMMAND *l)
 			//
 				/* 魔方陣生成 */
 				s2->m_Hit256R				= ZAKO_ATARI02_PNG;
-				s2->type					= ZAKO_28_MAHOJIN;
-				s2->flags					|= (SP_FLAG_COLISION_CHECK/*|SP_FLAG_VISIBLE|SP_FLAG_TIME_OVER*/);
+				s2->obj_type_set					= ZAKO_28_MAHOJIN;
+				s2->atari_hantei			= (1/*スコア兼用*/);
 				{
 					const u32 color_table[4] =
 					{	/*	s2->alpha			= 0x00;*/
@@ -239,7 +239,7 @@ global void game_command_06_regist_chuu_boss(GAME_COMMAND *l)
 				regist_settei_common(l, s1);/* 中ボスと共用する必要がある。 */
 				//	s1->type		 /* 設定ファイルから決める */
 				/* easyでも存在感を印象づける為に 200 は必要 */ 	// 50+150*di fficulty;
-			//	s1->flags					|= (SP_FLAG_COLISION_CHECK/*|SP_FLAG_VISIBLE|SP_FLAG_TIME_OVER*/);
+			//	s1->atari_hantei			= (1/*スコア兼用*/);
 			//	s1->m_Hit256R				= ZAKO_ATARI16_PNG;
 			//	s1->base_hp 				= ((l->user_hp));		/* 設定ファイルから体力を決める。 */
 			//	s1->base_score				= ((l->user_score));	/* 設定ファイルから獲得スコアを決める。 */
@@ -259,8 +259,8 @@ global void game_command_06_regist_chuu_boss(GAME_COMMAND *l)
 				s1->YOKAI1_DATA_s2			= s2;
 				#if 1
 				//------------ カード関連
-				card.card_number			= (SPELL_00);/*(カード実行停止にする)*/
-				card.number_temporaly 		= ((l->user_kougeki_type)&0x3f);
+				card.spell_used_number		= (SPELL_00);/*(カード実行停止にする)*/
+				card.address_temporaly 		= ((l->user_kougeki_type)&0x3f);
 				s1->jyumyou = ((256+LIMIT_TIME_512+256)-1);/* 「上から登場」へ設定。 */
 				#endif
 			}
@@ -272,21 +272,3 @@ global void game_command_06_regist_chuu_boss(GAME_COMMAND *l)
 		}
 	}
 }
-//
-				//	card.number_temporaly 	= ((((l->user_255_code)&0x1f)+0x10/*とりあえずr27互換*/)&0x1f);
-				//	card.number_temporaly 	= ((l->user_255_code)&0x1f);
-
-//	s1->base_hp 				= 1856;//(8*200)+(2/*di fficulty*/<<(4+3)); 	/* ルーミア */
-//	s1->base_hp 				= (8*160)+(1/*di fficulty*/<<(4+3-1));	/* 妖怪2 */
-//	s1->base_score				= score(100)+score(100)*(cg.game_difficulty);
-
-/*
- (46-24)/2 == 11
-*/
-
-/*
- 64=1*16+48
- 80=2*16+48
-112=4*16+48
-160=7*16+48
-*/

@@ -3,7 +3,7 @@
 
 /*---------------------------------------------------------
 	東方模倣風 ～ Toho Imitation Style.
-	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	ゲームオーバーの表示
 	-------------------------------------------------------
@@ -24,6 +24,8 @@
 
 #include "kanji_system.h"
 
+#include "kaiwa_sprite.h"
+
 //extern void dec_print_format(unsigned int num, int size, char *my_str);
 
 
@@ -34,14 +36,32 @@
 
 //extern void bg2_destroy(void);
 extern void gu_set_bg_u32_clear_color(u32 set_u32_clear_color);
-
+extern void do_kaiwa_system_terminate(void);
+extern void kaiwa_obj_set_256(void);
 global void gamecore_term(void)
 {
+	#if 1
+	/*(会話モード終了処理)*/
+	do_kaiwa_system_terminate();
+	#else
+	/*(do_kaiwa_system_terminate();と重複)*/
 	ml_font[(0)].haikei 		= (ML_HAIKEI_m1_OFF);/* せりふ背景off */
+	#endif
+	kaiwa_obj_set_256();
+	kaiwa_all_obj_draw_on_off(0);	/* 立ち絵を描画しない。 */
+	//
 //廃止	cg.dr aw_flag_kaiwa_screen	= (0); /* 会話画面の会話用せりふウィンドウ表示フラグ off */
 	cg.bomber_time = (0);
+	#if (1==USE_r36_SCENE_FLAG)
+	/*(??????????????)*/
+	/* off / 道中コマンド追加読み込み処理を停止する。 */
+//	cg.state_flag		&= (~SCENE_NUMBER_MASK); 	/*(シーンを消す)*/
+	cg.state_flag		&= (0xffff00ffu); 	/*(シーンを消す)*/
+	cg.state_flag		|= (0x00008000u); //プレイヤーループを抜ける処理(とりあえず??????)
+	#else
 	/* 現在の version はボスを倒さないで抜けると Gu がまずいので対策 */
-	cg.state_flag &= (~(STATE_FLAG_13_DRAW_BOSS_GAUGE));	/* Guは書かないとマズイ */
+	cg.state_flag &= (~(STATE_FLAG_15_DRAW_BOSS_GAUGE));	/* Guは書かないとマズイ */
+	#endif
 	#if 1
 	cg.draw_boss_hp_value	= 0;/* よくわかんない */			/* Guは書かないとマズイ */
 	#endif
@@ -52,10 +72,10 @@ global void gamecore_term(void)
 	/*
 		この辺で boss とか core とか開放しなくていいんだっけ？
 	*/
-	sprite_all_cleanup();
+	obj_cleanup_all();/* [A00弾領域]と[A01敵領域]と[A02固定領域]と[A03パネル領域]のOBJを全消去。 */
 //	score_cleanup();
 	set_music_volume(128);
-	play_music_num(BGM_26_menu01);
+	play_music_num(BGM_27_menu01);
 }
 
 
@@ -75,6 +95,10 @@ static void render_stage_clear_result(void)
 		#if 1/*模倣風*/
 		if (8 > cg.bombs)	/* クリアー時にボムが９(8)つ未満なら */
 		{	cg.bombs++; }	/* １つ増やす */
+		#endif
+		#if 0/*模倣風*/
+		/*(MAXにする)*/
+		cg.bombs = (8); 	/* ９(8)つに増やす (9個==8) */
 		#endif
 		/* ボムがなくてもクリアーすればボムが４つになる */
 	}
@@ -187,7 +211,7 @@ static void render_stage_clear_result(void)
 	#endif
 //	/* ステージクリア チェック */
 	/* PRACTICE 開放 チェック */
-	if ( (option_config[OPTION_CONFIG_07_OPEN] & (0x07)) < (cg.game_now_stage&0x07) )
+	if ((option_config[OPTION_CONFIG_07_OPEN] & (0x07)) < (cg.game_now_stage&0x07))
 	{
 		/* PRACTICE 開放 (進んだステージを練習可能にする) */
 		option_config[OPTION_CONFIG_07_OPEN] &= (~0x07);
@@ -341,7 +365,12 @@ static void stage_clear_result_screen_local_work(void)
 		play_music_num(BGM_00_stop);
 		set_music_volume(127/*SDL_MAXVOLUME*/);/* たぶん */
 		#endif
-		if (cg.state_flag & STATE_FLAG_16_GAME_TERMINATE)/* 会話システムで終了指示されたら、終了する */
+		#if (1==USE_r36_SCENE_FLAG)
+		/*(??????????????)*/
+		if (cg.state_flag & 0x00008000u)//プレイヤーループを抜ける処理(とりあえず??????)
+		#else
+		if (cg.state_flag & STATE_FLAG_13_GAME_TERMINATE)/* 会話システムで終了指示されたら、終了する */
+		#endif
 		{
 		//	#if 1/* この２つのセットで自動的に終了(GAME OVER)する */
 		//	cg_game_now_max_continue = 1;	/* コンティニューさせない */
@@ -372,20 +401,11 @@ static void stage_clear_result_screen_local_work(void)
 		}
 	}
 }
-	//	#if (1)/*(r34-)*/
-	//	#else/*(-r33)*/
-	//	if (
-	//		/*extra_stage*/(8)==cg.game_now_stage/* エキストラモードの場合、終了する */
-	//		#if (1==US E_EASY_BADEND)
-	//		||/*(もしくは)*/
-	//		(
-	//			((5) == (cg.game_now_stage))/*(5面の場合)*/
-	//			&&/*(かつ)*/
-	//			((0)==(cg.game_difficulty)) /*(easyの場合)*/
-	//		)/* は、終了する */
-	//		#endif
-	//	)
-	//	#endif
+
+
+/*---------------------------------------------------------
+	RESULT表示(ゲーム各面クリアー時)の処理開始
+---------------------------------------------------------*/
 
 global void stage_clear_result_screen_start(void)
 {
@@ -397,6 +417,7 @@ global void stage_clear_result_screen_start(void)
 }
 
 /*---------------------------------------------------------
+	ゲームオーバーの場合
 
 ---------------------------------------------------------*/
 
@@ -434,6 +455,10 @@ static void gameover_local_work(void)
 		}
 	}
 }
+
+/*---------------------------------------------------------
+	ゲームオーバーの処理開始
+---------------------------------------------------------*/
 
 global void gameover_start(void)/* init */
 {

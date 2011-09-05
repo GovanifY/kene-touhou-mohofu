@@ -3,7 +3,7 @@
 
 /*---------------------------------------------------------
 	東方模倣風 ～ Toho Imitation Style.
-	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	演出用テキスト
 ---------------------------------------------------------*/
@@ -13,13 +13,14 @@
 /* ゲーム中イベントメッセージ表示 */
 global void game_command_00_kanji_hyouji(GAME_COMMAND *l)
 {
+	#if (1)/*(r36使ってないので廃止するかも)*/
 	if ((255)!=l->user_255_code)
 	{
 		return; 	/* error!! */
 	}
 	if (0==l->user_x)
 	{
-		kanji_window_all_clear();				/* 漢字画面を全行消す。漢字カーソルをホームポジションへ移動。 */
+		kanji_window_all_clear();	/* 漢字画面を全行消す。漢字カーソルをホームポジションへ移動。 */
 	}
 	cg.msg_time = byou60(5);	/* 約 5 秒 */
 //
@@ -28,11 +29,12 @@ global void game_command_00_kanji_hyouji(GAME_COMMAND *l)
 	strcpy(my_font_text, text);
 	kanji_color(7);
 	kanji_draw();
+	#endif
 }
 
 /*---------------------------------------------------------
 	東方模倣風 ～ Toho Imitation Style.
-	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	隠しボーナスチェック
 ---------------------------------------------------------*/

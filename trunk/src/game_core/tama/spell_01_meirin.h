@@ -1,7 +1,7 @@
 
 /*---------------------------------------------------------
- 東方模倣風 ～ Toho Imitation Style.
-  プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	東方模倣風 ～ Toho Imitation Style.
+	http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	美鈴のカードを定義します。
 ---------------------------------------------------------*/
@@ -33,18 +33,17 @@
 	REG_0b_REG3 	難易度別定数2
 	REG_0c_REG4 	難易度別定数3
 	REG_0d_REG5 	難易度別定数4
-	REG_0e_REG6 	難易度別定数5
 ---------------------------------------------------------*/
-local void spell_init_0a_houka_kenran(SPRITE *src)
+
+local void spell_init_0a_houka_kenran(OBJ *src)
 {
-	REG_0a_REG2 	= const_init_nan_ido_bunkatu_nums_table [b_HOUGA_08_RED_NUMS		+(REG_0f_GAME_DIFFICULTY)];
-	REG_0b_REG3 	= const_init_nan_ido_table				[HOUGA_12_RED_DIV_ANGLE 	+(REG_0f_GAME_DIFFICULTY)];
-	REG_0c_REG4 	= const_init_nan_ido_bunkatu_nums_table [b_HOUGA_00_YEL_NUMS		+(REG_0f_GAME_DIFFICULTY)];
-	REG_0d_REG5 	= const_init_nan_ido_table				[HOUGA_04_YEL_DIV_ANGLE 	+(REG_0f_GAME_DIFFICULTY)];
-	REG_0e_REG6 	= const_init_nan_ido_table				[HOUGA_16_YEL_ROTATE_ANGLE	+(REG_0f_GAME_DIFFICULTY)];
+	REG_0c_REG4 	= const_init_nan_ido_bunkatu_nums_table [tama_const_H00_NUMS_HOUGA_YELLOW	+(REG_0f_GAME_DIFFICULTY)];
+	REG_0a_REG2 	= const_init_nan_ido_bunkatu_nums_table [tama_const_H01_NUMS_HOUGA_RED		+(REG_0f_GAME_DIFFICULTY)];
+	REG_0d_REG5 	= const_init_nan_ido_table				[tama_const_H02_DIVS_HOUGA_YELLOW	+(REG_0f_GAME_DIFFICULTY)];
+	REG_0b_REG3 	= const_init_nan_ido_table				[tama_const_H03_DIVS_HOUGA_RED		+(REG_0f_GAME_DIFFICULTY)];//[tama_const_10_HOUGA_YELLOW_ROTATE_ANGLE]
 }
 #if 1
-local void spell_create_0a_houka_kenran(SPRITE *src)
+local void spell_create_0a_houka_kenran(OBJ *src)
 {
 //	if ((0x10)==((REG_10_BOSS_SPELL_TIMER)&0x1f))/* (16回に1回)(128なら計8回) */
 	if ((0x40)==((REG_10_BOSS_SPELL_TIMER)&0x7f))/* (16回に1回)(128なら計8回) */
@@ -57,7 +56,7 @@ local void spell_create_0a_houka_kenran(SPRITE *src)
 		HATSUDAN_04_tama_spec				= (DANMAKU_LAYER_00)|(TAMA_SPEC_0000_TILT);/* (r33-)標準弾 */
 		HATSUDAN_05_bullet_obj_type 		= (BULLET_KOME_BASE + TAMA_IRO_01_AKA); 							/* [赤色米弾] */
 		HATSUDAN_06_n_way					= REG_0a_REG2;			/*(48)*/				/* [48way] */	/* 発弾数 */
-		HATSUDAN_07_div_angle65536			= REG_0b_REG3;	/*(int)(1024/(48))*/	/* 分割角度(1024[360/360度]を 48 分割) */	/* 1周をn分割した角度 */
+		HATSUDAN_07_div_angle65536			= REG_0b_REG3;/*(分割数、紅色)*/	/*(int)(1024/(48))*/	/* 分割角度(1024[360/360度]を 48 分割) */	/* 1周をn分割した角度 */
 		hatudan_system_regist_katayori_n_way();/* (r33-) */
 		#if (1)
 	//	voice_play(VOICE15_BOSS_KOUGEKI_01, TRACK04_TEKIDAN);
@@ -80,7 +79,7 @@ local void spell_create_0a_houka_kenran(SPRITE *src)
 		HATSUDAN_03_angle65536				= ((65536-(REG_09_REG1))&(65536-1));				/* 発射中心角度 / 特殊機能(自機狙い/他) */
 		hatudan_system_regist_katayori_n_way();/* (r33-) */
 		// 回転量
-		REG_09_REG1 += REG_0e_REG6; 		/*(1024/(6*8))*/		/* 角度(1024[360/360度]を 48分割) */
+		REG_09_REG1 += REG_0b_REG3; /*(回転量、黄色)==(分割数、紅色)*/		/*(1024/(6*8))*/		/* 角度(1024[360/360度]を 48分割) */
 	}
 }
 #endif
@@ -127,25 +126,42 @@ sta tic const s8 step_tbl[(4+4)] =
 #define meirin_danmaku_01_amefuri_callback common_danmaku_01_amefuri_callback
 
 /*---------------------------------------------------------
-	[弾幕グループ(2)セクション]
+	[弾幕グループ(3)セクション、レイヤー(3)弾]
 	-------------------------------------------------------
 	赤青クナイ用青赤
 ---------------------------------------------------------*/
-local void meirin_danmaku_02_aka_ao_kunai_callback(SPRITE *src)
+local void meirin_danmaku_03_aka_ao_kunai_time256_callback(OBJ *src)
+{
+	// [128] ダメ早い
+	/*(発弾から約4[秒]経過した弾は、通常弾へ変身する)*/
+	if ((HATUDAN_ITI_NO_JIKAN-(256)) > src->jyumyou/*(寿命なので自動で減る)*/)/* 発弾エフェクト後から[256]カウント以上経過した弾 */
+	{
+		/* (通常弾へ変身する) */
+		src->hatudan_register_spec_data = (DANMAKU_LAYER_00)|(TAMA_SPEC_0000_TILT);/* (r33-)標準弾 */
+	}
+//	danmaku_00_standard_angle_mover(src);/*(角度弾移動+画面外弾消し)*/
+	hatudan_system_B_move_angle_001(src);/*(角度弾移動)*/
+}
+/*---------------------------------------------------------
+	[弾幕グループ(2)セクション、レイヤー(2)弾]
+	-------------------------------------------------------
+	赤青クナイ用青赤
+---------------------------------------------------------*/
+local void meirin_danmaku_02_aka_ao_kunai_callback(OBJ *src)
 {
 	if ((HATUDAN_ITI_NO_JIKAN-64) == src->jyumyou)/* 発弾エフェクト後から64カウント経過した弾 */
 	{
 		src->hatudan_register_speed65536	= t256(1.0);	/* 初速(打ち出し速度) */
-		src->hatudan_register_tra65536	= t256(6.0);	/* 調整加速弾 */
-		src->tmp_angleCCW1024			= (REG_0a_REG2);	/* [定数2]赤青クナイが曲がる角度 */
+		src->hatudan_register_tra65536		= t256(6.0);	/* 調整加速弾 */
+		src->tmp_angleCCW1024				= (REG_0a_REG2);	/* [定数2]赤青クナイが曲がる角度 */
 		if (src->hatudan_register_spec_data & TAMA_SPEC_AKA_AO_KUNAI_BIT)
 		{
-			src->tmp_angleCCW1024		= (-(src->tmp_angleCCW1024));
+			src->tmp_angleCCW1024			= (-(src->tmp_angleCCW1024));
 		}
-		src->rotationCCW1024			+= (src->tmp_angleCCW1024);
+		src->rotationCCW1024				+= (src->tmp_angleCCW1024);
 		mask1024(src->rotationCCW1024);
-		/* (通常弾へ変身する) */
-		src->hatudan_register_spec_data = (DANMAKU_LAYER_00)|(TAMA_SPEC_8000_NON_TILT);/* (r33-)非傾き弾 */
+		/* (赤青クナイ、レイヤー(3)弾へ変身する) */
+		src->hatudan_register_spec_data = (DANMAKU_LAYER_03)|(TAMA_SPEC_8000_NON_TILT);/* (r33-)非傾き弾 */
 	}
 //	danmaku_00_standard_angle_mover(src);/*(角度弾移動+画面外弾消し)*/
 	hatudan_system_B_move_angle_001(src);/*(角度弾移動)*/
@@ -155,7 +171,7 @@ local void meirin_danmaku_02_aka_ao_kunai_callback(SPRITE *src)
 	if ((HATUDAN_ITI_NO_JIKAN-512) > src->jyumyou/*(寿命なので自動で減る)*/)/* 発弾エフェクト後から[512]カウント以上経過した弾 */
 	{
 		/* (通常弾へ変身する) */
-		src->hatudan_register_spec_data = (DANMAKU_LAYER_00)|(TAMA_SPEC_8000_NON_TILT);/* (r33-)非傾き弾 */
+		src->hatudan_register_spec_data = (DANMAKU_LAYER_00)|(TAMA_SPEC_0000_TILT);/* (r33-)標準弾 */
 	}
 	#endif
 //		const int ao_aka_tbl[(2)]	=
@@ -179,7 +195,7 @@ local void meirin_danmaku_02_aka_ao_kunai_callback(SPRITE *src)
 	-------------------------------------------------------
 ---------------------------------------------------------*/
 
-local void spell_create_12_meirin_magaru_kunai(SPRITE *src)
+local void spell_create_12_meirin_magaru_kunai(OBJ *src)
 {
 	#if 1/*(デバッグ用)*/
 //		REG_03_DEST_Y	 = t256(256);
@@ -213,7 +229,7 @@ a	1010
 			HATSUDAN_01_speed256			= (t256(4.0)-(jj<<6));				/* 弾速 */
 			HATSUDAN_02_speed_offset		= -t256(5); 						/* (-5) (-3)調整減速弾 */	/* この方式になるか検討中 */
 			HATSUDAN_03_angle65536			= (0/65536);						/* 下向き */
-			u8 check_00type 					= ((REG_10_BOSS_SPELL_TIMER>>5)&1); /* 赤青クナイ弾 +(0&1)*/
+			u8 check_00type 				= ((REG_10_BOSS_SPELL_TIMER>>5)&1); /* 赤青クナイ弾 +(0&1)*/
 			HATSUDAN_04_tama_spec			= (DANMAKU_LAYER_02)|((check_00type)<<8)|(TAMA_SPEC_0000_TILT);/* (r33-)標準弾 */
 			HATSUDAN_05_bullet_obj_type 	= (BULLET_KUNAI12_BASE + TAMA_IRO_01_AKA)+(check_00type+check_00type);
 			HATSUDAN_06_n_way				= (24);//step_tbl[(difficulty+4)];/*(32)*/

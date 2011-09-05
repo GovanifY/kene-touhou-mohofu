@@ -2,8 +2,8 @@
 #include "game_main.h"
 
 /*---------------------------------------------------------
- 東方模倣風 ～ Toho Imitation Style.
-  プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	東方模倣風 ～ Toho Imitation Style.
+	http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	同期して行動するレーザー類を生成します。
 	-------------------------------------------------------
@@ -19,20 +19,20 @@ global LASER lz[MAX_99_LASER];
 /*---------------------------------------------------------
 	レーザー
 ---------------------------------------------------------*/
-global void add_laser_off(SPRITE *src)
+global void add_laser_off(OBJ *src)
 {
 	lz[0].laser_type = LASER_TYPE_00_OFF;/* off */
 	lz[1].laser_type = LASER_TYPE_00_OFF;/* off */
 }
-global void add_laser_on(SPRITE *src)
+global void add_laser_on(OBJ *src)
 {
 	lz[0].laser_type = LASER_TYPE_01_4_PACHE;/* on */
 	lz[1].laser_type = LASER_TYPE_01_4_PACHE;/* on */
 }
 
 /*---------------------------------------------------------
- 東方模倣風 ～ Toho Imitation Style.
-  プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	東方模倣風 ～ Toho Imitation Style.
+	http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	前の弾を追いかける行動をとるレーザー類を生成します。
 	-------------------------------------------------------

@@ -3,7 +3,7 @@
 
 /*---------------------------------------------------------
 	東方模倣風 ～ Toho Imitation Style.
-	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	共通選択メニュー
 	-------------------------------------------------------
@@ -97,8 +97,8 @@ enum
 };
 typedef struct
 {
-	u16 x_offset;	// 表示用 x オフセット[dot] */
-	u16 y_offset;	// 表示用 y オフセット[dot] */
+	u16 x_offset;	// 表示用 x オフセット[pixel] */
+	u16 y_offset;	// 表示用 y オフセット[pixel] */
 	const char *str_name;
 } MENU_RESOURCE;
 
@@ -181,8 +181,8 @@ static void stage_select_menu_draw_all(void)
 			if (((signed)i)==aaa.selected_number)	/* 選択された */
 			{
 				text_color = (14);/*(黄色)*/
-				ml_font[i].x += (2);	/* オフセットを 2[dot] にする */
-				ml_font[i].y += (2);	/* オフセットを 2[dot] にする */
+				ml_font[i].x += (2);	/* オフセットを 2[pixel] にする */
+				ml_font[i].y += (2);	/* オフセットを 2[pixel] にする */
 			}
 			ml_font[i].timer	= ML_ON;
 			//
@@ -201,16 +201,6 @@ static void stage_select_menu_draw_all(void)
 /*---------------------------------------------------------
 	終了処理と移動処理。
 ---------------------------------------------------------*/
-	#if 0
-	if (MENU_TYPE_00_SELECT_STAGE==aaa.menu_type)
-	{
-		cg.game_continue_stage = aaa.selected_number;
-		/* プラクティス ゲーム開始 */
-	//	cb.main_call_func = difficulty_select_menu_start;	/* 難易度選択メニューへ */
-		cb.main_call_func = stage_first_init;	/* ゲーム開始 */
-	}
-	else
-	#endif
 
 extern void gamecore_term(void);
 extern void player_continue_value(void);
@@ -226,6 +216,41 @@ static void common_menu_work_MENU_STATE_03_FININSH(void)
 	//
 	if (MENU_TYPE_01_PAUSE==aaa.menu_type)
 	{
+		/* ボスデバッグ用 USE_r36_SCENE_FLAG */
+		#if 1/*(1==DEBUG_MODE)*/
+	//	if (psp_pad.pad_data & PSP_KEY_RIGHT)
+		{
+		//	cg_game_now_max_continue = (90);/*test*/	/* ランキングにさせない */
+		//	cg.game_score	= (8);/*test*/
+		//	cg.graze_point	= (0);/*test*/
+		//	cg.zanki		= (8);/*test*/
+		//	cg.bombs		= (8);/*test*/
+		//	#if (0)
+		//	/* ボスチェック用 */
+		//	pd_weapon_power = MAX_POWER_IS_128;/*test*/
+		//	#endif
+			cg.game_score	= ((cg.state_flag>>8) & 0xff);/*(常に表示)*/
+			cg.graze_point	= (cg.game_score);/*test*/
+		}
+		#endif
+		#if 1/*(1==DEBUG_MODE)*/
+	//	else
+		if (psp_pad.pad_data & PSP_KEY_LEFT)
+		{
+			#if (1==USE_r36_SCENE_FLAG)
+			NEXT_SCENE;
+			#endif
+		//	cg_game_now_max_continue = (90);/*test*/	/* ランキングにさせない */
+			cg.game_score	= (0);/*test*/
+		//	cg.graze_point	= (0);/*test*/
+		//	cg.zanki		= (8);/*test*/
+		//	cg.bombs		= (8);/*test*/
+		//	#if (0)
+		//	/* ボスチェック用 */
+		//	pd_weapon_power = MAX_POWER_IS_128;/*test*/
+		//	#endif
+		}
+		#endif
 		if (/*MENU_ITEM_00_CONTINUE_GAME*/0 == aaa.selected_number)/* Continue Game */
 		{
 			#if 1/*(Gu化完了したら要らなくなる)*/
@@ -258,6 +283,13 @@ static void common_menu_work_MENU_STATE_03_FININSH(void)
 		{
 			/* Continue Game */
 			player_continue_value();
+
+			#if (1==USE_r36_SCENE_FLAG)
+			/*(??????????????)*/
+			//	  (cg.state_flag & 0x00008000u)//プレイヤーループを抜ける処理(とりあえず??????)
+			cg.state_flag &= 0xffff7fffu;/*(とりあえず、現在仕様が良くわかんない)*/
+			#endif
+
 			#if 1/*(Gu化完了したら要らなくなる)*/
 			{
 				psp_clear_screen(); /* [PAUSE] 復帰時にSDL画面を消す。 */
@@ -352,20 +384,7 @@ static void stage_select_menu_work_MENU_STATE_01_WORK_MENU(void)
 				//	aaa.selected_number 	= 0;//MENU_ITEM_00_CONTINUE_YES;
 					cb.main_call_func = common_menu_work_MENU_STATE_02_FADE_OUT;	/* メニュー消去準備 */
 				}
-				/* ボスデバッグ用 */
-				#if 0/*(1==DEBUG_MODE)*/
-				if (psp_pad.pad_data & PSP_KEY_RIGHT)
-				{
-					cg_game_now_max_continue = (90);/*test*/	/* ランキングにさせない */
-//					pd_game_score = (8);/*test*/
-//					pd_zanki = (8);/*test*/
-				//	pd_bombs = (8);/*test*/
-				//	#if (0)
-				//	/* ボスチェック用 */
-				//	pd_weapon_power = MAX_POWER_IS_128;/*test*/
-				//	#endif
-				}
-				#endif
+
 			}
 		}
 		if (psp_pad.pad_data & PSP_KEY_SHOT_OK)
@@ -462,7 +481,7 @@ static void common_menu_initialize(void)
 				「エンディング、スタッフロール、プラクティス」が
 				選べるバグがあるので、修正する。
 			*/
-			if ( (6-1) < cg.game_continue_stage)	{cg.game_continue_stage = (6-1);	/* (6-1) */}
+			if ((6-1) < cg.game_continue_stage) 	{cg.game_continue_stage = (6-1);	/* (6-1) */}
 			#endif
 			aaa.selected_number = cg.game_continue_stage;
 		}

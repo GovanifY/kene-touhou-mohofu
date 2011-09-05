@@ -3,7 +3,7 @@
 
 /*---------------------------------------------------------
 	東方模倣風 ～ Toho Imitation Style.
-	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	爆発作成
 ---------------------------------------------------------*/
@@ -12,7 +12,7 @@
 	爆発エフェクトの表示
 ---------------------------------------------------------*/
 
-static void move_bakuhatsu(SPRITE *src)
+static void move_bakuhatsu(OBJ *src)
 {
 	/* 寿命があるうちは動かす。(寿命経過はシステム側がする) */
 	if (0 < src->jyumyou)
@@ -30,19 +30,19 @@ static void move_bakuhatsu(SPRITE *src)
 global void bakuhatsu_add_type_ccc(int type)
 {
 	{
-		SPRITE *h;
-		h					= obj_add_01_teki_error();
+		OBJ *h;
+		h					= obj_add_A01_teki_error();
 		if (NULL!=h)/* 登録できた場合のみ */
 		{
 			h->m_Hit256R		= TAMA_ATARI_JIPPOU32_PNG;/*????*/
 			h->jyumyou			= (30);/*30 フレーム*/
 
-//			h->flags			|= (/*SP_FLAG_VISIBLE|*/SP_FLAG_TIME_OVER);
-			h->flags			&= (~(SP_FLAG_COLISION_CHECK)); 	/* あたり判定のOFF(無敵) */
+		//	/* あたり判定のOFF(無敵) */
+			h->atari_hantei 		= (ATARI_HANTEI_OFF/*スコア兼用*/);
 
 			#if 1
-			h->cx256 			= REG_02_DEST_X;/* 発弾位置 座標x */
-			h->cy256 			= REG_03_DEST_Y;/* 発弾位置 座標y */
+			h->cx256			= REG_02_DEST_X;/* 発弾位置 座標x */
+			h->cy256			= REG_03_DEST_Y;/* 発弾位置 座標y */
 			#endif
 			h->color32			= MAKE32RGBA(0xff, 0xff, 0xff, 0x66);	/*	s->alpha			= 0x80;*/
 			//
@@ -61,7 +61,7 @@ global void bakuhatsu_add_type_ccc(int type)
 				h->vx256	= (0);
 				h->vy256	= (0);
 			}
-			h->type 			= SP_FRONT_YUKI/*(SP_DUMMY_MUTEKI)*/;
+			h->obj_type_set 			= SP_FRONT_YUKI;
 			h->callback_mover	= move_bakuhatsu;
 		}
 	}
@@ -72,7 +72,7 @@ global void bakuhatsu_add_type_ccc(int type)
 	円状領域に広がる爆発
 ---------------------------------------------------------*/
 
-global void bakuhatsu_add_circle(SPRITE *src, int mode)
+global void bakuhatsu_add_circle(OBJ *src, int mode)
 {
 	int i;
 	int j;
@@ -81,7 +81,7 @@ global void bakuhatsu_add_circle(SPRITE *src, int mode)
 	{
 		j += (ra_nd()&(/*64*/512-1));
 		#if (0)//
-		REG_02_DEST_X = (src->cx256) + ((si n1024((j))*(i)));/*fps_factor*/	/* CCWの場合 */
+		REG_02_DEST_X = (src->cx256) + ((si n1024((j))*(i)));/*fps_factor*/ /* CCWの場合 */
 		REG_03_DEST_Y = (src->cy256) + ((co s1024((j))*(i)));/*fps_factor*/
 		#else
 		{

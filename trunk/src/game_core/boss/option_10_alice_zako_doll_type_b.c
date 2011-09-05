@@ -1,9 +1,17 @@
 
 #include "boss.h"//#include "game_main.h"
 
+#if (1)
+void add_zako_alice_doll_type_b(OBJ *src)
+{
+	/*(r36現在使ってない!!!)*/
+}
+
+#else
+
 /*---------------------------------------------------------
 	東方模倣風 ～ Toho Imitation Style.
-	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	アリス人形カード
 	-------------------------------------------------------
@@ -63,7 +71,7 @@
 	BU LLET_UROKO14_03_MIDORI,	luna
 ---------------------------------------------------------*/
 
-static void move_alice_doll_last_burrets(SPRITE *src)
+static void move_alice_doll_last_burrets(OBJ *src)
 {
 	set_REG_DEST_XY(src);	/* 弾源x256 y256 中心から発弾。 */
 //	HATSUDAN_01_speed256			= (t256(2.0));						/* 弾速 */
@@ -81,10 +89,10 @@ static void move_alice_doll_last_burrets(SPRITE *src)
 	敵移動
 ---------------------------------------------------------*/
 
-static void move_alice_doll_all(SPRITE *src)
+static void move_alice_doll_all(OBJ *src)
 {
 	src->BOSS_DATA_05_move_jyumyou--;/* 時間経過 */
-	if ( 0 > src->BOSS_DATA_05_move_jyumyou )/* 移動終了 */
+	if (0 > src->BOSS_DATA_05_move_jyumyou)/* 移動終了 */
 	{
 		if (ENEMY_LAST_SHOT_LINE256 > src->cy256)	/* このラインより下からは敵が撃たない */
 		{
@@ -129,7 +137,7 @@ static void move_alice_doll_all(SPRITE *src)
 	敵を追加する(1st)
 ---------------------------------------------------------*/
 
-void add_zako_alice_doll_type_b(SPRITE *src)
+void add_zako_alice_doll_type_b(OBJ *src)
 {
 	const int aaa_tbl[(4)] =
 	{
@@ -140,18 +148,26 @@ void add_zako_alice_doll_type_b(SPRITE *src)
 		/* 模倣風はr32現在あたり判定意図的に小さくしているので、いくら1面とはいえ
 			やっぱ難易度低すぎる気もする。(オルレアン人形)以外妖々夢風にした。 */
 	};
+//	if (1 < (REG_0f_GAME_DIFFICULTY/*&3*/))/*(??????巧くいかない。符号？？？)*/
+	if (0 != (REG_0f_GAME_DIFFICULTY/*&3*/))/*(easy 以外は)*/
+	{
+		REG_0f_GAME_DIFFICULTY = (1);/*(強制 normal にする。)*/
+	}/*(r36-: hard, luna をハングアップするので強制 normal にする。)*/
+	//
+	/*(????????r36現在こっちを使ってる。add_zako_alice_doll_type_aは使ってなかった。)*/
+	//
 	const int add_angle1024 = ( (aaa_tbl[((REG_0f_GAME_DIFFICULTY))])); /* 加算角度 */	/* ２回目以降の分列数は常に7回 */
-
+	//
 	int i_angle1024;	/* 積算角度 */
 	for (i_angle1024=0; i_angle1024<(1024); i_angle1024 += add_angle1024)	/* 一周 */
 	{
-		SPRITE *h;
-		h							= obj_add_01_teki_error();
+		OBJ *h;
+		h							= obj_add_A01_teki_error();
 		if (NULL!=h)/* 登録できた場合のみ */
 		{
 			h->m_Hit256R			= ZAKO_ATARI02_PNG;
-			h->type 				= TEKI_16_10;
-			h->flags				|= (SP_FLAG_COLISION_CHECK/*|SP_FLAG_VISIBLE|SP_FLAG_TIME_OVER*/);
+			h->obj_type_set 		= TEKI_16_10;
+		//	h->atari_hantei 		= (1あり);/*(score兼用)*/
 			h->callback_mover		= move_alice_doll_all;
 		//	h->callback_loser		= NULL;
 	//		h->callback_hit_teki	= callback_hit_zako;/*???*/
@@ -167,12 +183,12 @@ void add_zako_alice_doll_type_b(SPRITE *src)
 			/*	h->cx256 =*/ h->BOSS_DATA_00_target_x256 = (src->cx256);
 			/*	h->cy256 =*/ h->BOSS_DATA_01_target_y256 = (src->cy256);
 			//
-		//		h->vx256 = (0);/*右方向*/
-		//		h->vy256 = (0);/*下方向*/
+		//		h->v x256 = (0);/*右方向*/
+		//		h->v y256 = (0);/*下方向*/
 			}
 			h->radius				= (0);
 //			h->recursive			= ( ((3==difficulty)?(1):(0)));/*(Lunatic==オルレアン人形)*/
 		}
 	}
 }
-
+#endif

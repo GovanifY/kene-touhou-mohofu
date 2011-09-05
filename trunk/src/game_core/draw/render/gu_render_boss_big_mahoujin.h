@@ -1,7 +1,7 @@
 
 /*---------------------------------------------------------
 	東方模倣風 ～ Toho Imitation Style.
-	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	このファイルは直接インクルードしません。
 	"draw_screen.c" からのみ間接的にインクルードします。
@@ -37,9 +37,8 @@ static void gu_draw_big_maho_jin(void)
 //
 	unsigned int j;
 	unsigned short uv_x4;
-	SPRITE *obj_boss;
-	obj_boss			= global_obj_boss;
-//	obj_boss			= あたり判定の都合上無理&obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_08_BOSS];
+	OBJ *obj_boss;
+	obj_boss			= &obj99[OBJ_HEAD_01_0x0800_TEKI+TEKI_OBJ_00_BOSS_HONTAI];/*(ボス本体)*/
 	int boss_center_x	= ((obj_boss->cx256)>>8);
 	int boss_center_y	= ((obj_boss->cy256)>>8);
 
@@ -49,8 +48,9 @@ static void gu_draw_big_maho_jin(void)
 //	int hankei_111 = (card.boss_timer>>(2+3))+(64);/* 128==1024/8 */
 //	int hankei_111 = (card.boss_timer>>(7))+(64);/* 128==1024/8 */
 	int hankei_111 = (card.boss_timer>>(8))+(64);/* 128==1024/8 */
+	hankei_111 = psp_max(hankei_111, 64);
 	/* 外側 */
-	int hankei_222 = (hankei_111+(16)/*(8)*/);/* 8[dot]文字高さ */
+	int hankei_222 = (hankei_111+(16)/*(8)*/);/* 8[pixel]文字高さ */
 
 	/* 文字のテクスチャx位置 */
 	aaa_yyy++;
@@ -112,7 +112,7 @@ static void gu_draw_big_maho_jin(void)
 		#if (1==USE_VCOLOR)
 		vertices[j+1].color = (big_maho_color8888); 	/*blendlevel*/
 		#endif
-		uv_x4				+= (32);	/*64*/	/* テクスチャ 32[dots] */
+		uv_x4				+= (32);	/*64*/	/* テクスチャ 32[pixel] */
 	//	rotation_angle512	+= (16);		/* 角度 */
 //		rotation_angle1024	+= (32);		/* 角度 32==(1024/32分割) 1周(1024)を32分割した場合の角度 */
 		rotation_angle1024	+= (16);		/* 角度 16==(1024/64分割) 1周(1024)を64分割した場合の角度 */

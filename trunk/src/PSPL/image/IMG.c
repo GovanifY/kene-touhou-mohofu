@@ -103,7 +103,7 @@ static struct
 /* src/PSPL/audio/mixer/music.c */
 /* src/PSPL/image/IMG.c */
 
-static int PSPL_string_equals(const char *str1, const char *str2)
+static int PSPL_MIXER_string_equals(const char *str1, const char *str2)
 {
 	while ( (*str1) && (*str2) )
 	{
@@ -116,7 +116,7 @@ static int PSPL_string_equals(const char *str1, const char *str2)
 	return ((!*str1) && (!*str2));
 }
 #else
-extern int PSPL_string_equals(const char *str1, const char *str2);
+extern int PSPL_MIXER_string_equals(const char *str1, const char *str2);
 #endif
 
 #if 1
@@ -167,8 +167,10 @@ SDL_Surface *IMG_Load(const char *file)
 			{
 				/* magicless format */
 				if (!type
-				   || !PSPL_string_equals(type, supported[i].type))
-				{	continue;}
+				   || !PSPL_MIXER_string_equals(type, supported[i].type))
+				{
+					continue;
+				}
 			}
 			#ifdef DEBUG_IMGLIB
 			#ifdef PSP_VIRTUAL_CONSOLE_IO

@@ -1,7 +1,7 @@
 
 /*---------------------------------------------------------
 	東方模倣風 ～ Toho Imitation Style.
-	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	このファイルは直接インクルードしません。
 	"game_main.h" からのみ間接的にインクルードします。
@@ -21,7 +21,7 @@
 #include <pspaudio.h>
 #include <pspctrl.h>
 #include <pspdisplay.h>
-#include <pspgu.h>
+//#include <pspgu.h>
 //#include <pspgum.h>/* gumはguより後にインクルード */
 #include <pspiofilemgr.h>
 #include <pspkernel.h>
@@ -37,7 +37,7 @@
 
 // PSPSDK(debug)
 
-#include "./../../debug/psp_debug.h"//#include <pspdebug.h>
+//#include "./../../debug/psp_debug.h"//#include <pspdebug.h>
 //#include "psp_debug.h"//#include <pspdebug.h>
 #ifdef ENABLE_PROFILE
 	#include <pspprof.h>
@@ -227,11 +227,6 @@ R8G8B8A8フォーマットで色を設定する事になりますが、PSPはリトルエンディアンのCPUを
 //#ifndef M_PI
 //	#define M_PI			(3.14159265358979323846)
 //#endif
-
-//#define M_PI_H			(0.52359877559829887307)		/* π ÷ 6 */
-
-//#define degtorad(x)		(((T_GU_M_PI*2)/360.0)*(x)) 	/* 2π ÷ 360 * X */
-//#define radtodeg(x)		( (int)((x)*((360.0)/(T_GU_M_PI*2))+360)%360 )
 
 #ifndef T_GU_M_PI
 	#define T_GU_M_PI		GU_PI

@@ -2,8 +2,8 @@
 #include "game_main.h"
 
 /*---------------------------------------------------------
-  東方模倣風 ～ Toho Imitation Style.
-  プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	東方模倣風 ～ Toho Imitation Style.
+	http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	発弾システム
 	-------------------------------------------------------
@@ -45,26 +45,24 @@
 
 
 #define hatudan_system_kousadan_angle65536 tmp_angleCCW1024
-
-
 /*---------------------------------------------------------
 	発弾エフェクト
 	-------------------------------------------------------
 	傾かない弾 / 傾き弾(通常)
 ---------------------------------------------------------*/
-static void set_mover(SPRITE *src);
-static void move_bullet_hatsudan_effect(SPRITE *src)
+static void set_mover(OBJ *src);
+static void move_bullet_hatsudan_effect(OBJ *src)
 {
 //	hatudan_system_common_hatudan_000(src);
 	{
-		const int aaabbb = (src->hatudan_register_flame_counter);
+		const int aaabbb = (src->hatudan_register_frame_counter);
 		#if (0)
 		src->cx256 = (src->ox256) + ((si n1024((src->rotationCCW1024))*(aaabbb)) );/*fps_factor*/
 		src->cy256 = (src->oy256) + ((co s1024((src->rotationCCW1024))*(aaabbb)) );/*fps_factor*/
 		#else
 		{
-			int sin_value_t256; 	//	sin_value_t256 = 0;
-			int cos_value_t256; 	//	cos_value_t256 = 0;
+			int sin_value_t256; 	// sin_value_t256 = 0;
+			int cos_value_t256; 	// cos_value_t256 = 0;
 			int256_sincos1024( (src->rotationCCW1024), &sin_value_t256, &cos_value_t256);
 			src->cx256 = (src->ox256) + ((sin_value_t256*(aaabbb))>>(((src->hatudan_register_spec_data)>>12)&0x03));/*fps_factor*/
 			src->cy256 = (src->oy256) + ((cos_value_t256*(aaabbb))>>(((src->hatudan_register_spec_data)>>12)&0x03));/*fps_factor*/
@@ -74,10 +72,10 @@ static void move_bullet_hatsudan_effect(SPRITE *src)
 		src->m_zoom_x256	= t256(1.0) + (aaabbb) + (aaabbb);
 		src->m_zoom_y256	= t256(1.0) + (aaabbb) + (aaabbb);
 	}
-	src->hatudan_register_flame_counter -= (4);
-	if (0 > src->hatudan_register_flame_counter)
+	src->hatudan_register_frame_counter -= (4);
+	if (0 > src->hatudan_register_frame_counter)
 	{
-	//	src->hatudan_register_flame_counter = 0;
+	//	src->hatudan_register_frame_counter = 0;
 //		if (0==(src->hatudan_register_spec_data & TAMA_SPEC_4000_NON_MOVE))
 //		{
 //			src->callback_mover 			= hatudan_system_move_angle_001;/*(雑魚等では問題無いが、弾幕には遅すぎる)*/
@@ -91,12 +89,14 @@ static void move_bullet_hatsudan_effect(SPRITE *src)
 		set_mover(src);
 	}
 }
+
+
 /*---------------------------------------------------------
 	移動処理選択。
 ---------------------------------------------------------*/
-static void set_mover(SPRITE *src)
+static void set_mover(OBJ *src)
 {
-	void (*aaa[4/*8*/])(SPRITE *bbb) =
+	void (*aaa[4/*8*/])(OBJ *bbb) =
 	{
 //	/* 移動処理あり */	move_bullet_hatsudan_effect,/* エフェクト大(旧r34互換) */
 //	/* 移動処理あり */	move_bullet_hatsudan_effect,/* エフェクト中 */
@@ -109,16 +109,16 @@ static void set_mover(SPRITE *src)
 	};
 //	src->callback_mover 	= aaa[((src->hatudan_register_spec_data)>>12)&0x07];
 	src->callback_mover 	= aaa[((src->hatudan_register_spec_data)>>12)&0x03];
-	if ( 3 == (((src->hatudan_register_spec_data)>>12)&0x03) )	/* 発弾開始処理 */
+	if (0x03 == (((src->hatudan_register_spec_data)>>12)&0x03)) 	/* 発弾開始処理 */
 	{
 		/* 発弾開始直前にあたり判定を有効にする。 */
 		/* 非傾き弾は、発弾開始直前に設定。 */
-		src->flags |= (SP_FLAG_COLISION_CHECK);/* あたり判定有効 */
+		src->atari_hantei	= (ATARI_HANTEI_TAOSENAI/*スコア兼用*/);/* あたり判定有効 */
 		if (src->hatudan_register_spec_data & TAMA_SPEC_8000_NON_TILT)/* 非傾き弾 */
 		{
 			src->m_zoom_y256 = M_ZOOM_Y256_NO_TILT;/* 特殊機能で傾かないようシステム拡張(r33)。 */
 		}
-	//	src->hatudan_register_flame_counter = 0;/*(この後で使うなら)*/
+	//	src->hatudan_register_frame_counter = 0;/*(この後で使うなら)*/
 		#if (1)/*(発弾エフェクトが無い場合に困る)*/
 		src->cx256 = (src->ox256);/*fps_factor*/
 		src->cy256 = (src->oy256);/*fps_factor*/
@@ -178,23 +178,22 @@ static void set_mover(SPRITE *src)
 
 global void hatudan_system_regist_single(void)
 {
-	SPRITE		*h;
-	h										= obj_add_00_tama_error();/* 発弾登録 */
+	OBJ 	*h;
+	h										= obj_add_A00_tama_error();/* 発弾登録 */
 	if (NULL != h)/* 登録できた場合 */
 	{
-		h->ox256							= REG_02_DEST_X;/* 発弾位置 座標x */
-		h->oy256							= REG_03_DEST_Y;/* 発弾位置 座標y */
-		h->type 							= (HATSUDAN_05_bullet_obj_type);
-		h->flags &= ~(SP_FLAG_COLISION_CHECK);/* あたり判定無効(発弾エフェクト用) */
+		h->ox256								= REG_02_DEST_X;/* 発弾位置 座標x */
+		h->oy256								= REG_03_DEST_Y;/* 発弾位置 座標y */
+		h->obj_type_set 						= (HATSUDAN_05_bullet_obj_type);
+		h->atari_hantei 						= (ATARI_HANTEI_OFF/*スコア兼用*/);/* あたり判定無効(発弾エフェクト用) */
 		reflect_sprite_spec444(h, OBJ_BANK_SIZE_00_TAMA);
 	//
-	//
 		h->hatudan_system_kousadan_angle65536	= (HATSUDAN_03_angle65536); 				/* 交差弾用 */
-		h->rotationCCW1024					= (deg65536to1024(HATSUDAN_03_angle65536)); /* 「1周が65536分割」から「1周が1024分割」へ変換する。 */	/* (i<<4) deg_360_to_512(90) */
-		h->m_Hit256R						= TAMA_ATARI_JIPPOU32_PNG;
+		h->rotationCCW1024						= (deg65536to1024(HATSUDAN_03_angle65536)); /* 「1周が65536分割」から「1周が1024分割」へ変換する。 */	/* (i<<4) deg_360_to_512(90) */
+		h->m_Hit256R							= TAMA_ATARI_JIPPOU32_PNG;
 	//
-		h->hatudan_register_speed65536		= ((HATSUDAN_01_speed256)<<8);		/* t65536形式で。 速度 */	/* 初速(打ち出し速度) */
-		h->hatudan_register_flame_counter		= (0xff);//(0);//(-(0x100));
+		h->hatudan_register_speed65536			= ((HATSUDAN_01_speed256)<<8);		/* t65536形式で。 速度 */	/* 初速(打ち出し速度) */
+		h->hatudan_register_frame_counter		= (0xff);
 		h->hatudan_register_tra65536			= (HATSUDAN_02_speed_offset);		/* t65536形式で。 調整減速弾 */ 	/* この方式になるか検討中 */
 		h->hatudan_register_spec_data			= (HATSUDAN_04_tama_spec);			/* 弾の基本所属能力を設定する。 */
 		set_mover(h);

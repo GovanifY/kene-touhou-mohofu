@@ -1,7 +1,7 @@
 
 /*---------------------------------------------------------
 	東方模倣風 ～ Toho Imitation Style.
-	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	http://mohou.huuryuu.com/
 	-------------------------------------------------------
 ---------------------------------------------------------*/
 
@@ -362,7 +362,9 @@ static void decode_frame(mad_data *mp3_mad)
 			mp3_mad->frame.header.samplerate,
 			//--変換先
 			mp3_mad->mixer.format,
-		//	(2),//	mp3_mad->mixer.channels, //(2)pspステレオ再生固定
+			#ifdef _OLD_SDL_LINK_MODE_/*(旧互換機能)*/
+			(2),//	mp3_mad->mixer.channels, //(2)pspステレオ再生固定
+			#endif
 			mp3_mad->mixer.freq);
 	}
 
