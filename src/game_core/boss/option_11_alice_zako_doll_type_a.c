@@ -3,7 +3,7 @@
 
 /*---------------------------------------------------------
 	東方模倣風 ～ Toho Imitation Style.
-	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	アリス人形カード
 	-------------------------------------------------------
@@ -78,7 +78,7 @@
 	bul let_reg ist_multi_vec tor();
 	#endif
 
-static void move_alice_doll_last_burrets(SPRITE *src)
+static void move_alice_doll_last_burrets(OBJ *src)
 {
 	set_REG_DEST_XY(src);	/* 弾源x256 y256 中心から発弾。 */
 	#if 1
@@ -91,13 +91,19 @@ static void move_alice_doll_last_burrets(SPRITE *src)
 	};
 	HATSUDAN_02_speed_offset		= t256(1);/*(テスト)*/
 	HATSUDAN_04_tama_spec			= (DANMAKU_LAYER_00)|(TAMA_SPEC_0000_TILT);/* (r33-)標準弾 */
-	HATSUDAN_05_bullet_obj_type 	= BULLET_UROKO14_BASE + (tama_color[((REG_0f_GAME_DIFFICULTY))]);			/* [青鱗弾] */
+	#if (1)
+	HATSUDAN_05_bullet_obj_type 	= BULLET_UROKO14_BASE + (tama_color[((REG_0f_GAME_DIFFICULTY)&3)]); 		/* [青鱗弾] */
+	#else
+/*????????????*/
+	HATSUDAN_05_bullet_obj_type 	= BULLET_UROKO14_BASE + (tama_color[((0)&3)]);			/* [青鱗弾] */
+	#endif
+
 //	HATSUDAN_06_n_way				= (1);								/* [7way] [8way] */
 //	HATSUDAN_07_div_angle65536		= (int)(65536/23);					/* 分割角度 (1024/27) (1024/24) */
 	int first_angle_65536;
 	first_angle_65536 = ((src->rotationCCW1024)<<6);
 	unsigned int i;
-	for (i=(0); i<(7); i += (1) )	/* 弾数 */
+	for (i=0; i<(7); i++)	/* 弾数 */
 	{
 		enum
 		{
@@ -137,12 +143,12 @@ static void move_alice_doll_last_burrets(SPRITE *src)
 /*---------------------------------------------------------
 	敵移動
 ---------------------------------------------------------*/
-static void add_zako_alice_doll_2nd_CCW(SPRITE *src);
+static void add_zako_alice_doll_2nd_CCW(OBJ *src);
 
-static void move_alice_doll_all(SPRITE *src)
+static void move_alice_doll_all(OBJ *src)
 {
 	src->BOSS_DATA_05_move_jyumyou--;/* 時間経過 */
-	if ( 0 > src->BOSS_DATA_05_move_jyumyou )/* 移動終了 */
+	if (0 > src->BOSS_DATA_05_move_jyumyou)/* 移動終了 */
 	{
 		if (ENEMY_LAST_SHOT_LINE256 > src->cy256)	/* このラインより下からは敵が撃たない */
 		{
@@ -187,7 +193,7 @@ static void move_alice_doll_all(SPRITE *src)
 /*---------------------------------------------------------
 	敵を追加する(2nd)
 ---------------------------------------------------------*/
-static void add_zako_alice_doll_2nd_CCW(SPRITE *src)
+static void add_zako_alice_doll_2nd_CCW(OBJ *src)
 {
 //	const int add_angle = ( (1024/7) ); /* 加算角度 */	/* ２回目以降の分列数は常に7回 */
 	int first_angle1024;	/* 開始角度 */
@@ -197,13 +203,13 @@ static void add_zako_alice_doll_2nd_CCW(SPRITE *src)
 	/* 半周を7分割 */
 	for (i_angle1024=(0); i_angle1024<(1024/2); i_angle1024 += (1024/(7*2))/*add_angle*/)	/* 弾数 */
 	{
-		SPRITE *h;
-		h						= obj_add_01_teki_error();
+		OBJ *h;
+		h						= obj_add_A01_teki_error();
 		if (NULL!=h)/* 登録できた場合のみ */
 		{
 			h->m_Hit256R			= ZAKO_ATARI02_PNG;
-			h->type 				= TEKI_16_10+((1)<<2)+((src->recursive)<<2);
-			h->flags				|= (SP_FLAG_COLISION_CHECK/*|SP_FLAG_VISIBLE|SP_FLAG_TIME_OVER*/);
+			h->obj_type_set 		= TEKI_16_10+((1)<<2)+((src->recursive)<<2);
+			h->atari_hantei 		= (1/*スコア兼用*/);
 			h->callback_mover		= move_alice_doll_all;
 		//	h->callback_loser		= NULL;
 			h->callback_hit_teki	= callback_hit_zako;
@@ -217,9 +223,6 @@ static void add_zako_alice_doll_2nd_CCW(SPRITE *src)
 				/* 初期位置 */
 			/*	h->cx256 =*/ h->BOSS_DATA_00_target_x256 = (src->cx256);
 			/*	h->cy256 =*/ h->BOSS_DATA_01_target_y256 = (src->cy256);
-			//
-		//		h->vx256 = (0);/*右方向*/
-		//		h->vy256 = (0);/*下方向*/
 			}
 			h->user_data02			= (0);/*(よくわかんない)*/
 			h->radius				= (0);
@@ -233,28 +236,44 @@ static void add_zako_alice_doll_2nd_CCW(SPRITE *src)
 	敵を追加する(1st)
 ---------------------------------------------------------*/
 
-void add_zako_alice_doll(SPRITE *src)
+void add_zako_alice_doll_type_a(OBJ *src)
 {
+	#if (1)
 	const int aaa_tbl[(4)] =
 	{
 //		(int)(1024/3), (int)(1024/5), (int)(1024/9), (int)(1024/2),/*[模倣風]*/ 	/*(オルレアン人形)*/
 //		(int)(1024/3), (int)(1024/5), (int)(1024/9), (int)(1024/3),/*(オルレアン人形)*/ 	/* [現在の方式では無理] */
 		(int)(1024/4), (int)(1024/6), (int)(1024/8), (int)(1024/2),/*[妖々夢風]*/	/*(オルレアン人形)*/	/* [現在の方式では無理] */
+//		(int)(1024/4), (int)(1024/6), (int)(1024/7), (int)(1024/2),/*[妖々夢風]*/	/*(オルレアン人形)*/	/* [現在の方式では無理] */
+	/*(
+	hard ハングアップする。原因が良く判らない。
+		r36, hard zako領域使い尽くして？？ハングアップするので8->7にした
+	)*/
 		/* 模倣風はr32現在あたり判定意図的に小さくしているので、いくら1面とはいえ
 			やっぱ難易度低すぎる気もする。(オルレアン人形)以外妖々夢風にした。 */
 	};
-	const int add_angle1024 = ( (aaa_tbl[((REG_0f_GAME_DIFFICULTY))])); /* 加算角度 */	/* ２回目以降の分列数は常に7回 */
-
+//	if (2==(REG_0f_GAME_DIFFICULTY&3)){REG_0f_GAME_DIFFICULTY=1;}
+//	if (1 < (REG_0f_GAME_DIFFICULTY/*&3*/))/*(??????巧くいかない。符号？？？)*/
+//	if (0 != (REG_0f_GAME_DIFFICULTY/*&3*/))/*(easy 以外は)*/
+//	{
+//		REG_0f_GAME_DIFFICULTY = (1);/*(強制 normal にする。)*/
+//	}/*(r36-: hard, luna をハングアップするので強制 normal にする。)*/
+	//
+	const int add_angle1024 = ( (aaa_tbl[((REG_0f_GAME_DIFFICULTY)&3)])); /* 加算角度 */	/* ２回目以降の分列数は常に7回 */
+	#else
+	/*(????????????)*/
+	const int add_angle1024 = (int)(1024/6);
+	#endif
 	int i_angle1024;	/* 積算角度 */
 	for (i_angle1024=0; i_angle1024<(1024); i_angle1024 += add_angle1024)	/* 一周 */
 	{
-		SPRITE *h;
-		h							= obj_add_01_teki_error();
+		OBJ *h;
+		h							= obj_add_A01_teki_error();
 		if (NULL!=h)/* 登録できた場合のみ */
 		{
 			h->m_Hit256R			= ZAKO_ATARI02_PNG;
-			h->type 				= TEKI_16_10+((0/*2*/)<<2);
-			h->flags				|= (SP_FLAG_COLISION_CHECK/*|SP_FLAG_VISIBLE|SP_FLAG_TIME_OVER*/);
+			h->obj_type_set 		= TEKI_16_10+((0/*2*/)<<2);
+			h->atari_hantei 		= (1/*スコア兼用*/);
 			h->callback_mover		= move_alice_doll_all;
 		//	h->callback_loser		= NULL;
 	//		h->callback_hit_teki	= callback_hit_zako;/*???*/
@@ -268,9 +287,6 @@ void add_zako_alice_doll(SPRITE *src)
 				/* 初期位置 */
 			/*	h->cx256 =*/ h->BOSS_DATA_00_target_x256 = (src->cx256);
 			/*	h->cy256 =*/ h->BOSS_DATA_01_target_y256 = (src->cy256);
-			//
-		//		h->vx256 = (0);/*右方向*/
-		//		h->vy256 = (0);/*下方向*/
 			}
 			h->user_data02			= (0);/*(よくわかんない)*/
 			h->radius				= (0);
@@ -286,7 +302,7 @@ void add_zako_alice_doll(SPRITE *src)
 	敵を追加する(common)
 ---------------------------------------------------------*/
 
-static void add_zako_alice_doll_common(SPRITE *src, int is_the_first)
+static void add_zako_alice_doll_common(OBJ *src, int is_the_first)
 {
 	const int aaa_tbl[(4)] =
 	{
@@ -301,13 +317,13 @@ static void add_zako_alice_doll_common(SPRITE *src, int is_the_first)
 	int i_angle1024;	/* 積算角度 */
 	for (i_angle1024=0; i_angle1024<(1024); i_angle1024 += add_angle1024)	/* 弾数 */
 	{
-		SPRITE *h;
-		h						= obj_add_01_teki_error();
+		OBJ *h;
+		h						= obj_add_A01_teki_error();
 		if (NULL!=h)/* 登録できた場合のみ */
 		{
 			h->m_Hit256R			= ZAKO_ATARI02_PNG;
-			h->type 				= (TEKI_16_10)+((src->recursive)<<2);
-			h->flags				|= (SP_FLAG_COLISION_CHECK/*|SP_FLAG_VISIBLE|SP_FLAG_TIME_OVER*/);
+			h->obj_type_set 				= (TEKI_16_10)+((src->recursive)<<2);
+			h->atari_hantei 		= (1/*スコア兼用*/);
 		//
 			h->callback_mover		= move_alice_doll_all;
 		//	h->callback_loser		= NULL;
@@ -322,9 +338,6 @@ static void add_zako_alice_doll_common(SPRITE *src, int is_the_first)
 				/* 初期位置 */
 			/*	h->cx256 =*/ h->BOSS_DATA_00_target_x256 = (src->cx256);
 			/*	h->cy256 =*/ h->BOSS_DATA_01_target_y256 = (src->cy256);
-			//
-		//		h->vx256 = (0);/*右方向*/
-		//		h->vy256 = (0);/*下方向*/
 			}
 			h->user_data02		= (0);/*(よくわかんない)*/
 			h->radius		= (0);
@@ -337,7 +350,7 @@ static void add_zako_alice_doll_common(SPRITE *src, int is_the_first)
 /*---------------------------------------------------------
 	敵を追加する(2nd)
 ---------------------------------------------------------*/
-static void add_zako_alice_doll_2nd_CCW(SPRITE *src)
+static void add_zako_alice_doll_2nd_CCW(OBJ *src)
 {
 	add_zako_alice_doll_common(src, 0);
 }
@@ -347,7 +360,7 @@ static void add_zako_alice_doll_2nd_CCW(SPRITE *src)
 	敵を追加する(1st)
 ---------------------------------------------------------*/
 
-void add_zako_alice_doll(SPRITE *src)
+void add_zako_alice_doll(OBJ *src)
 {
 	add_zako_alice_doll_common(src, 1);
 }

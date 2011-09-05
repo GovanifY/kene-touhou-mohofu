@@ -1,7 +1,7 @@
 
 /*---------------------------------------------------------
 	東方模倣風 ～ Toho Imitation Style.
-	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	道中のザコ
 	-------------------------------------------------------
@@ -17,7 +17,7 @@
 	敵移動
 ---------------------------------------------------------*/
 
-static void move_meido4(SPRITE *src)
+static void move_meido4(OBJ *src)
 {
 	if (512 > src->jyumyou)/* 退場 */ /* down */
 	{
@@ -50,9 +50,9 @@ static void move_meido4(SPRITE *src)
 	{	/* CCWの場合 */
 		src->tmp_angleCCW1024 += (10);		/*4*/ /*cv1024r(360-2)*/ /*fps_factor*/
 		mask1024(src->tmp_angleCCW1024);
-		if ( src->tmp_angleCCW1024 > cv1024r((180)) )		/* ほぼ真上を向いたら */
+		if (src->tmp_angleCCW1024 > cv1024r(180))		/* ほぼ真上を向いたら */
 		{
-			src->tmp_angleCCW1024 = cv1024r((180)); 	/* 真上に強制補正 */
+			src->tmp_angleCCW1024 = cv1024r(180); 	/* 真上に強制補正 */
 			src->jyumyou = (512+512+512-1);
 			src->speed256 = t256(2.0);		/*8.0*/ 	/* 速度を落とす */
 		}
@@ -77,7 +77,7 @@ static void move_meido4(SPRITE *src)
 	敵を追加する
 ---------------------------------------------------------*/
 
-static void regist_zako_018_meido4(GAME_COMMAND *l, SPRITE *h)
+static void regist_zako_018_meido4(GAME_COMMAND *l, OBJ *h)
 {
 	h->tmp_angleCCW1024 	= cv1024r(0);		/* 真下 */	/* CCWの場合 */
 	h->speed256 			= t256(3.0);	/*6.0*/

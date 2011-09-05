@@ -2,7 +2,7 @@
 # /*
 # ---------------------------------------------------------
 #   東方模倣風 ～ Toho Imitation Style.
-#   プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+#   http://mohou.huuryuu.com/
 # ---------------------------------------------------------
 # notaz 氏 http://notaz.gp2x.de/ の psp picodrive version1.35 source.
 # http://notaz.gp2x.de/releases/PicoDrive/PicoDrive_135src.tar.bz2

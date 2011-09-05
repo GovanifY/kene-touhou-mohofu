@@ -1,7 +1,7 @@
 
 /*---------------------------------------------------------
- 東方模倣風 ～ Toho Imitation Style.
-  プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	東方模倣風 ～ Toho Imitation Style.
+	http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	咲夜のカードを定義します。
 ---------------------------------------------------------*/
@@ -62,7 +62,7 @@
 #define ADJUST3916	(4000)
 //#define ADJUST4444	(4200)
 #define ADJUST4444	(4190)
-local void spell_create_01_sakuya_misogi_normal(SPRITE *src)
+local void spell_create_01_sakuya_misogi_normal(OBJ *src)
 {
 //	SPELL_TIME_0256 SPELL_TIME_0128
 	if (127 == (REG_10_BOSS_SPELL_TIMER))/* 初期値にリセット。 */
@@ -135,8 +135,8 @@ local void spell_create_01_sakuya_misogi_normal(SPRITE *src)
 	else /* REG_0a_REG2 が正の場合 */
 //	/* 赤クナイの方が遅いので、青ナイフより先に撃ち始める事にする。 */
 //	if (DANMAKU_0032_TIME > (REG_0a_REG2))/* 暫く何もしない。 */
-//	if ( (41) > (REG_0a_REG2))/* 暫く何もしない。 */
-	if ( (41-16+(((unsigned)REG_0f_GAME_DIFFICULTY)<<4)) > (u32)(REG_0a_REG2))/* 暫く何もしない。 */
+//	if ((41) > (REG_0a_REG2))/* 暫く何もしない。 */
+	if ((41-16+(((unsigned)REG_0f_GAME_DIFFICULTY)<<4)) > (u32)(REG_0a_REG2))/* 暫く何もしない。 */
 //	if ((128-40) < (REG_0a_REG2))/* 最後は暫く何もしない。 */
 	{
 	//	else/* こっちの弾は本当はずれて出る感じにしたい。 */
@@ -232,7 +232,7 @@ local void spell_create_01_sakuya_misogi_normal(SPRITE *src)
 //	sta tic int ao_knife_timer; 		// 青ナイフタイマー
 ---------------------------------------------------------*/
 
-local void spell_create_2d_sakuya_misogi_lunatic(SPRITE *src)
+local void spell_create_2d_sakuya_misogi_lunatic(OBJ *src)
 {
 //	SPELL_TIME_0256 SPELL_TIME_0128
 	if (127 == (REG_10_BOSS_SPELL_TIMER))/* 初期値にリセット。 */
@@ -381,32 +381,37 @@ local void spell_create_2d_sakuya_misogi_lunatic(SPRITE *src)
 	-------------------------------------------------------
 ---------------------------------------------------------*/
 
-local void spell_init_22_sakuya_miss_direction(SPRITE *src)
+local void spell_init_22_sakuya_miss_direction(OBJ *src)
 {
 	if(1<REG_0f_GAME_DIFFICULTY)
 	// Hard or Lunatic only.
 	{
-		card.danmaku_callback[0] = danmaku_01_standard_angle_sayuu_hansya_mover;/*(通常弾用)*/	/*(画面外なら反射減速)*/
+		card.danmaku_callback[1] = danmaku_01_standard_angle_sayuu_hansya_mover;/*(通常弾用)*/	/*(画面外なら反射減速)*/
 	}
-	// Easy or Normal only.(標準状態)
-//	card.danmaku_callback[0] = danmaku_00_standard_angle_mover;/*(通常弾用)*/	/*(画面外なら弾を消す)*/
-//	card.danmaku_callback[1] = NULL;/*(未使用)*/
+	else
+	{
+		// Easy or Normal only.(標準状態)
+		card.danmaku_callback[1] = danmaku_00_standard_angle_mover;/*(通常弾用)*/
+	}
 //	card.danmaku_callback[2] = NULL;/*(未使用)*/
 //	card.danmaku_callback[3] = NULL;/*(未使用)*/
 }
 
-local void spell_create_22_sakuya_miss_direction(SPRITE *src)
+local void spell_create_22_sakuya_miss_direction(OBJ *src)
 {
 //	if (/*256-64-48*/(64+144)< REG_10_BOSS_SPELL_TIMER)
 	if (/*256-64-48*/(256-40)< REG_10_BOSS_SPELL_TIMER)
 	{
+		/*---------------------------------------------------------
+			自機狙い、全方向24分割、赤クナイ弾
+		---------------------------------------------------------*/
 		/* 赤クナイ弾 */
 		if (0==((REG_10_BOSS_SPELL_TIMER)&0x03))
 		{
 		//	発弾位置をボス中心へセット。
 			//	HATSUDAN_01_speed256				= (t256(2.0)+((REG_10_BOSS_SPELL_TIMER)<<2)); /* 弾速 */
 				HATSUDAN_01_speed256				= (t256(2.0)-((REG_10_BOSS_SPELL_TIMER)));	/* 弾速 */
-				HATSUDAN_04_tama_spec				= (DANMAKU_LAYER_00)|(TAMA_SPEC_1000_EFFECT_MIDDLE)|(TAMA_SPEC_0000_TILT);/* (r33-)標準弾 */
+				HATSUDAN_04_tama_spec				= (DANMAKU_LAYER_01)|(TAMA_SPEC_1000_EFFECT_MIDDLE)|(TAMA_SPEC_0000_TILT);/* (r33-)標準弾 */
 				HATSUDAN_05_bullet_obj_type 		= (BULLET_KUNAI12_BASE + TAMA_IRO_01_AKA);			/* [赤クナイ弾] */
 				HATSUDAN_06_n_way					= (24); 							/* [24way] */
 			//	Lunatic 赤クナイ弾 19way
@@ -448,7 +453,7 @@ local void spell_create_22_sakuya_miss_direction(SPRITE *src)
 			calculate_jikinerai();/* 1:いちいち作成するっぽい。 */
 				int int_aaa 						= ((HATSUDAN_03_angle65536));		/* 弾源角度1024 */
 				HATSUDAN_02_speed_offset		= t256(0);/*(テスト)*/
-				HATSUDAN_04_tama_spec			= (DANMAKU_LAYER_00)|(TAMA_SPEC_3000_EFFECT_NONE)|(TAMA_SPEC_0000_TILT);/* (r33-)標準弾 */
+				HATSUDAN_04_tama_spec			= (DANMAKU_LAYER_01)|(TAMA_SPEC_3000_EFFECT_NONE)|(TAMA_SPEC_0000_TILT);/* (r33-)標準弾 */
 				HATSUDAN_05_bullet_obj_type 	= BULLET_KNIFE20_04_AOI;			/* [青ナイフ弾] */
 			int jj;
 			for (jj=(0); jj<(3); jj++)
@@ -486,16 +491,14 @@ local void spell_create_22_sakuya_miss_direction(SPRITE *src)
 }
 
 
+#if 0/*(旧版、未使用。雑魚スペカとしても再利用は無理がある)*/
 /*---------------------------------------------------------
 	紅5面中-ボス 咲夜「奇術：ミスディレクション(1/2)」にちょっとだけ似たカード
 	-------------------------------------------------------
-	自機狙い、全方向24分割弾
-	-------------------------------------------------------
-	[注：現在bu llet_create_n_way_dan_sa_type()の自機狙いはワザト狙わない奇数弾なので、動かなければ当たりませんが、
-	そのうちここは偶数弾にする予定なので、動かなければ当たるようになる予定です]
+	自機狙い、全方向24分割、赤クナイ弾
 ---------------------------------------------------------*/
 //SPELL_TIME_0048
-local void spell_create_02_24nerai(SPRITE *src)
+local void spell_create_02_24nerai(OBJ *src)
 {
 	if (0==((REG_10_BOSS_SPELL_TIMER)&0x03))
 	{
@@ -516,20 +519,15 @@ local void spell_create_02_24nerai(SPRITE *src)
 		#endif
 	}
 }
-
-
 /*---------------------------------------------------------
 	紅5面中-ボス 咲夜 「奇術：ミスディレクション(2/2)」にちょっとだけ似たカード
 	-------------------------------------------------------
 	自機狙い、11弾(中心と、左右に5弾ずつ狙い)
 	-------------------------------------------------------
-	[注：現在bu llet_create_n_way_dan_sa_type()の自機狙いはワザト狙わない奇数弾なので、動かなければ当たりませんが、
-	そのうちここは偶数弾にする予定なので、動かなければ当たるようになる予定です]
-	-------------------------------------------------------
 	原作やりなおしたら、ここは３回撃つ。
 ---------------------------------------------------------*/
 //SPELL_TIME_0064
-local void spell_create_03_11nife(SPRITE *src)
+local void spell_create_03_11nife(OBJ *src)
 {
 	if (0==((REG_10_BOSS_SPELL_TIMER)&0x07))
 	{
@@ -550,6 +548,7 @@ local void spell_create_03_11nife(SPRITE *src)
 		#endif
 	}
 }
+#endif
 
 
 /*---------------------------------------------------------
@@ -558,16 +557,16 @@ local void spell_create_03_11nife(SPRITE *src)
 	24way =(右12way)+(左12way)
 	-------------------------------------------------------
 ---------------------------------------------------------*/
-local void spell_create_04_pink_hearts(SPRITE *src)
+local void spell_create_04_pink_hearts(OBJ *src)
 {
 	if (0==((REG_10_BOSS_SPELL_TIMER)&0x07))/* 本物は 8 弾(128==0x80==spell_time_out) */
 	{
 			HATSUDAN_02_speed_offset		= t256(1/*0*/);/*(テスト)*/
 			HATSUDAN_04_tama_spec			= (DANMAKU_LAYER_00)|(TAMA_SPEC_3000_EFFECT_NONE)|(TAMA_SPEC_0000_TILT);/* (r33-)標準弾 */
 			HATSUDAN_05_bullet_obj_type 	= BULLET_KNIFE20_06_YUKARI; 		/* [ピンクナイフ弾] */
-			REG_03_DEST_Y						= (src->cy256); 	/* 弾源y256 ボス中心から発弾。 */
+			REG_03_DEST_Y					= (src->cy256); 	/* 弾源y256 ボス中心から発弾。 */
 		//	発弾初期位置の修正
-			REG_02_DEST_X						-= t256(4.0);		/* 弾源x256 ボス左側へ発弾。 */
+			REG_02_DEST_X					-= t256(4.0);		/* 弾源x256 ボス左側へ発弾。 */
 		//
 		int jj;
 		jj = 0;
@@ -576,13 +575,13 @@ local void spell_create_04_pink_hearts(SPRITE *src)
 		{
 			HATSUDAN_01_speed256			= (((160*4)-ii));						/* 弾速 */
 			//
-		//	REG_02_DEST_X						= (src->cx256) + t256(4.0); 			/* 弾源x256 ボス右側から発弾。 */
-			REG_02_DEST_X						+= t256(8.0);			/* 弾源x256 ボス右側から発弾。 */
+		//	REG_02_DEST_X					= (src->cx256) + t256(4.0); 			/* 弾源x256 ボス右側から発弾。 */
+			REG_02_DEST_X					+= t256(8.0);			/* 弾源x256 ボス右側から発弾。 */
 			HATSUDAN_03_angle65536			= (jj/*(0+i+i)&(65536-1)*/);
 			hatudan_system_regist_single();/* (r33-) */
 			//
-		//	REG_02_DEST_X						= (src->cx256) - t256(4.0); 			/* 弾源x256 ボス左側から発弾。 */
-			REG_02_DEST_X						-= t256(8.0);			/* 弾源x256 ボス左側から発弾。 */
+		//	REG_02_DEST_X					= (src->cx256) - t256(4.0); 			/* 弾源x256 ボス左側から発弾。 */
+			REG_02_DEST_X					-= t256(8.0);			/* 弾源x256 ボス左側から発弾。 */
 			HATSUDAN_03_angle65536			= ((0-jj)&(65536-1));
 			hatudan_system_regist_single();/* (r33-) */
 			//
@@ -604,7 +603,7 @@ local void spell_create_04_pink_hearts(SPRITE *src)
 	-------------------------------------------------------
 	32方向	角度(1024[360/360度]を 32 分割)1024 == 32 x 32
 ---------------------------------------------------------*/
-local void spell_create_05_32way_dual(SPRITE *src)
+local void spell_create_05_32way_dual(OBJ *src)
 {
 	if (0==((REG_10_BOSS_SPELL_TIMER)&0x3f))
 	{
@@ -632,7 +631,7 @@ local void spell_create_05_32way_dual(SPRITE *src)
 /*---------------------------------------------------------
 	3「通常攻撃1」遅い弾との組み合わせ
 ---------------------------------------------------------*/
-local void spell_create_2a_sakuya_baramaki1(SPRITE *src)
+local void spell_create_2a_sakuya_baramaki1(OBJ *src)
 {
 //	if (64 == (REG_10_BOSS_SPELL_TIMER))
 //	{
@@ -653,7 +652,7 @@ local void spell_create_2a_sakuya_baramaki1(SPRITE *src)
 /*---------------------------------------------------------
 	5「通常攻撃3」速い弾との組み合わせ
 ---------------------------------------------------------*/
-local void spell_create_2b_sakuya_baramaki2(SPRITE *src)
+local void spell_create_2b_sakuya_baramaki2(OBJ *src)
 {
 	if (64 > (REG_10_BOSS_SPELL_TIMER))
 	{
@@ -686,7 +685,7 @@ local void spell_create_2b_sakuya_baramaki2(SPRITE *src)
 	-------------------------------------------------------
 	32way 固定連弾	x 4回
 ---------------------------------------------------------*/
-local void spell_create_06_luna_clock_32way(SPRITE *src)
+local void spell_create_06_luna_clock_32way(OBJ *src)
 {
 	if (0x40==((REG_10_BOSS_SPELL_TIMER)&0xcf))/* 4回 */
 	{
@@ -721,7 +720,7 @@ local void spell_create_06_luna_clock_32way(SPRITE *src)
 	-------------------------------------------------------
 	本物は画面上と画面左と画面右の端でナイフが一度だけ反射する。
 ---------------------------------------------------------*/
-local void spell_create_07_80way_dual_five(SPRITE *src)
+local void spell_create_07_80way_dual_five(OBJ *src)
 {
 	if (0==((REG_10_BOSS_SPELL_TIMER)&0x3f))
 	{
@@ -755,10 +754,9 @@ local void spell_create_07_80way_dual_five(SPRITE *src)
 	-------------------------------------------------------
 ---------------------------------------------------------*/
 
-local void spell_init_2c_sakuya_blue_red_knife(SPRITE *src)
+local void spell_init_2c_sakuya_blue_red_knife(OBJ *src)
 {
-	card.danmaku_callback[0] = danmaku_01_standard_angle_sayuu_hansya_mover;/*(通常弾用)*/	/*(画面外なら反射減速)*/
-//	card.danmaku_callback[1] = NULL;/*(未使用)*/
+	card.danmaku_callback[1] = danmaku_01_standard_angle_sayuu_hansya_mover;/*(通常弾用)*/	/*(画面外なら反射減速)*/
 //	card.danmaku_callback[2] = NULL;/*(未使用)*/
 //	card.danmaku_callback[3] = NULL;/*(未使用)*/
 }
@@ -766,7 +764,7 @@ local void spell_init_2c_sakuya_blue_red_knife(SPRITE *src)
 	[発弾セクション]
 	-------------------------------------------------------
 ---------------------------------------------------------*/
-local void spell_create_2c_sakuya_blue_red_knife(SPRITE *src)
+local void spell_create_2c_sakuya_blue_red_knife(OBJ *src)
 {
 	if ((0!=((REG_10_BOSS_SPELL_TIMER)&0x0180)))
 	{
@@ -775,7 +773,7 @@ local void spell_create_2c_sakuya_blue_red_knife(SPRITE *src)
 			unsigned int kk;
 			kk = (((REG_10_BOSS_SPELL_TIMER)&0x0100)>>8);
 				HATSUDAN_02_speed_offset		= t256(1/*0*/);/*(テスト)*/
-				HATSUDAN_04_tama_spec			= (DANMAKU_LAYER_00)|(TAMA_SPEC_0000_TILT);/* (r33-)標準弾 */
+				HATSUDAN_04_tama_spec			= (DANMAKU_LAYER_01)|(TAMA_SPEC_0000_TILT);/* (r33-)標準弾 */
 				HATSUDAN_05_bullet_obj_type 	= BULLET_KNIFE20_04_AOI+kk; 			/* [青ナイフ弾] */
 		//
 			int ii; 	/* 1周を65536分割した角度 */
@@ -802,11 +800,11 @@ local void spell_create_2c_sakuya_blue_red_knife(SPRITE *src)
 /*---------------------------------------------------------
 	第11形態: 最終形態(その3)
 ---------------------------------------------------------*/
-local void spell_create_47_sakuya_meek(SPRITE *src)
+local void spell_create_47_sakuya_meek(OBJ *src)
 {
 	if (0==(REG_10_BOSS_SPELL_TIMER))
 	{
-		add_zako_sakuya_doll_01_laser(src);/* レーザー追加 */
+		add_za ko_sakuya_doll_01_laser(src);/* レーザー追加 */
 	}
 //
 	src->color32	= MAKE32RGBA(0xff, 0xff, 0xff, 0xff);		/*	src->alpha = 0xff;*/
@@ -905,18 +903,25 @@ local void spell_create_47_sakuya_meek(SPRITE *src)
 	赤大弾用
 ---------------------------------------------------------*/
 
-local void sakuya_danmaku_01_callback(SPRITE *src)
+local void sakuya_danmaku_01_callback(OBJ *src)
 {
-		SPRITE *zzz_player;
-		zzz_player = &obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_00_PLAYER];
+	#if (0)/*(r35u1バグ。 原因はコンティニューで道中読みこみモードを強制onにしていた為。
+	コンティニュー後の場合、道中処理が起動していた。)*/
+	if (0 >= REG_10_BOSS_SPELL_TIMER)
+	{
+		return;
+	}
+	#endif
+		OBJ *zzz_player;
+		zzz_player = &obj99[OBJ_HEAD_02_0x0900_KOTEI+FIX_OBJ_00_PLAYER];
 	//	/*[(24-12)x8]*/if ((32-8)==(REG_09_REG1))	// 192== (64*3)
 	if ((HATUDAN_ITI_NO_JIKAN-((24-18)*8)) == src->jyumyou)/* 発弾エフェクト後から[??]カウント経過した弾 */
 	{
 		/* 青大弾を、全てストップ */
 		/* 青大弾を、赤大弾へ色変更。 */
 		src->hatudan_register_tra65536				= t256(0);		/* 調整加速弾 */
-		src->hatudan_register_speed65536				= t256(0);		/* 弾速 */
-		src->type									= (BULLET_OODAMA32_01_AKA); 	/* [赤大弾](赤==動脈) */
+		src->hatudan_register_speed65536			= t256(0);		/* 弾速 */
+		src->obj_type_set							= (BULLET_OODAMA32_01_AKA); 	/* [赤大弾](赤==動脈) */
 		reflect_sprite_spec444(src, OBJ_BANK_SIZE_00_TAMA); 	/* 弾グラと弾あたり判定を変更する。 */
 //	}
 //	else
@@ -941,8 +946,8 @@ local void sakuya_danmaku_01_callback(SPRITE *src)
 	if ((HATUDAN_ITI_NO_JIKAN-((26-18)*8)) == src->jyumyou)/* 発弾エフェクト後から[??]カウント経過した弾 */
 	{
 	//	仮の発弾位置を設定。		/* 弾源x256 y256 プレイヤー中心へ向けて発弾。 */
-		REG_00_SRC_X	= zzz_player->cx256;			/* 弾源x256 */
-		REG_01_SRC_Y	= zzz_player->cy256;			/* 弾源y256 */
+		REG_00_SRC_X	= zzz_player->cx256;		/* 弾源x256 */
+		REG_01_SRC_Y	= zzz_player->cy256;		/* 弾源y256 */
 		goto exchange_damnaku_sakuya_tuika;/*ナイフ追加*/
 	}
 	else
@@ -1017,7 +1022,7 @@ my_quit:
 	追加したナイフ弾用
 ---------------------------------------------------------*/
 
-local void sakuya_danmaku_02_callback(SPRITE *src)
+local void sakuya_danmaku_02_callback(OBJ *src)
 {
 	/*(無駄に8回やるがとりあえずの対応)*/
 	if (29==REG_09_REG1)
@@ -1026,7 +1031,7 @@ local void sakuya_danmaku_02_callback(SPRITE *src)
 	//	src->hatudan_register_tra65536	= (jj<<8)+t256(3);	/* (3 ... 6) 調整加速弾 */
 		src->hatudan_register_tra65536	= t256(2);			/* (3 ... 6) 調整加速弾 */
 		//
-		src->type						= BULLET_KNIFE20_07_MIDORI;/* (青→緑ナイフに変身) */
+		src->obj_type_set						= BULLET_KNIFE20_07_MIDORI;/* (青→緑ナイフに変身) */
 		reflect_sprite_spec444(src, OBJ_BANK_SIZE_00_TAMA); 	/* 弾グラと弾あたり判定を変更する。 */
 		//
 		/* (通常弾へ変身する) */
@@ -1047,10 +1052,9 @@ local void sakuya_danmaku_02_callback(SPRITE *src)
 	[初期化セクション]
 	-------------------------------------------------------
 ---------------------------------------------------------*/
-local void spell_init_14_sakuya_jack_oodama32(SPRITE *src)
+local void spell_init_14_sakuya_jack_oodama32(OBJ *src)
 {
-	REG_0a_REG2 	= const_init_nan_ido_table[JACK_14_TAMAKAZU+(REG_0f_GAME_DIFFICULTY)];
-//	card.danmaku_callback[0] = danmaku_00_standard_angle_mover;/*(通常弾用)*/
+	REG_0a_REG2 	= const_init_nan_ido_table [tama_const_H08_NUMS_SAKUYA_JACK 	+(REG_0f_GAME_DIFFICULTY)];
 	card.danmaku_callback[1] = sakuya_danmaku_01_callback;/*(赤大弾用)*/
 	card.danmaku_callback[2] = sakuya_danmaku_02_callback;/*(ナイフ弾用)*/
 //	card.danmaku_callback[3] = NULL;/*(未使用)*/
@@ -1066,7 +1070,7 @@ local void spell_init_14_sakuya_jack_oodama32(SPRITE *src)
 	REG_0c_REG4 	カウンタ。(kk)
 	REG_0d_REG5 	乱数角度、一時保存用。(ra_nd32)
 ---------------------------------------------------------*/
-local void spell_create_14_sakuya_jack_oodama32(SPRITE *src)
+local void spell_create_14_sakuya_jack_oodama32(OBJ *src)
 {
 	count_up_limit_NUM(REG_NUM_08_REG0, 8);//	カウンタ。(8回に1回発弾する)
 	if (1==(REG_08_REG0))	/* 1回目( 0 に初期化されて、カウントアップして 1 になるので。) */
@@ -1116,3 +1120,498 @@ local void spell_create_14_sakuya_jack_oodama32(SPRITE *src)
 		}
 	}
 }
+
+
+
+
+
+
+
+
+
+
+
+
+/*-------------------------------------------------------
+	s->cx256	ナイフのx座標
+	data->cx256 ノードのx座標
+	s->w/2		ナイフの横幅の半分
+	ナイフのx座標 == ノードのx座標 + co_s1024((data->angle1024)) x length - ナイフの横幅の半分
+	#define ryoute_knife_length256 t256(128)
+	⊿angle ≒ 任意/(2π×ryoute_knife_length/√2)
+---------------------------------------------------------*/
+
+//#include "boss.h"//#include "game_main.h"
+
+/*---------------------------------------------------------
+	東方模倣風 ～ Toho Imitation Style.
+	http://code.google.com/p/kene-touhou-mohofu/
+	-------------------------------------------------------
+	咲夜 両手ナイフカード
+	-------------------------------------------------------
+	(r35)ナイフの絶対座標位置を一度で求める考え方から、
+	相対座標(ナイフの移動ベクトル量、現在位置からの差分)を求める考え方に移行し、
+	プログラムをシンプルに修正。
+	-------------------------------------------------------
+	使用レジスタ
+//	REG_08_REG0 	カウンタ。
+	REG_09_REG1 	発弾用カウンタ。(左右で共用)
+//	REG_0a_REG2 	aaa
+//	REG_0b_REG3 	bbb
+
+	-------------------------------------------------------
+	REG_0e_REG6 	[発弾連絡レジスタ]
+		0:	なし。
+		1:	extern void bullet_create_sakuya_ ryoute_knife(OBJ *src); 咲夜 両手ナイフカード
+		2:	extern void bullet_create_sakuya_ kurukuru(OBJ *src);     咲夜 くるくるナイフカード
+	-------------------------------------------------------
+	ボス共通規格使用データー:
+---------------------------------------------------------*/
+
+/*---------------------------------------------------------
+	両手ナイフ親(紫)
+	-------------------------------------------------------
+	length	teki-obj_player間の距離/√2
+	r_or_l	0==右	1==左
+	-------------------------------------------------------
+	ToDo:
+	弾システムに移行する為、廃止予定。
+	カードスクリプトシステムが稼動する為には、発弾を一ヶ所に統合しないと
+	速度的な面でこのままの形態では無理があるので、
+	(ここの発弾処理のせいで他の弾が処理落ちする)
+	ここの発弾処理を hatudan_system_regist_single に置きかえる必要がある。
+---------------------------------------------------------*/
+
+
+// バグ対策。 user_data02 良くワカンナイけど空けとく。()
+	/*-r34旧仕様メモ*/ /* r(-1)==+128, l(+1)==-128 */	/* -1==l, +1==r */
+	/*(==TAMA_SPEC_AKA_AO_KUNAI_BIT; tama_systemの HATSUDAN_04_tama_spec に移行予定)*/
+	#define RYOUTE_KNIFE_DATA_l_or_r		user_data03
+
+
+#define KNIFE_TYPE_RIGHT (0)
+
+/*---------------------------------------------------------
+	[弾幕グループ(1)セクション]
+	-------------------------------------------------------
+---------------------------------------------------------*/
+
+static void sakuya_ryoute_knife_danmaku_01_callback(OBJ *src)
+{
+	/*(ナイフが進行する時に曲がる角度[量])*/
+	{
+		int aaa;
+		aaa = (1);
+	//	if (KNIFE_TYPE_RIGHT!=src->RYOUTE_KNIFE_DATA_l_or_r)
+		if (KNIFE_TYPE_RIGHT==src->RYOUTE_KNIFE_DATA_l_or_r)
+		{
+			aaa = -aaa;
+		}
+		/* 描画用角度(下が0度で左回り(反時計回り)) */
+		src->rotationCCW1024 += (aaa);			/*fps_factor*/	/* R(0)== +2, L(1)== -2 */		/*(r35-)*/
+	}
+//不要	mask1024(src->rotationCCW1024);//(sincosの場合不要)
+	mask1024(src->rotationCCW1024);/*必ず要る*/
+	/*(ナイフの相対移動量。ベクトル。)*/
+	#if (0)//
+	src->cx256		+= ((si n1024((src->rotationCCW1024)))<<1);/*fps_factor*/	/* CCWの場合 */
+	src->cy256		+= ((co s1024((src->rotationCCW1024)))<<1);/*fps_factor*/
+	#else
+	{
+		int sin_value_t256; 	//	sin_value_t256 = 0;
+		int cos_value_t256; 	//	cos_value_t256 = 0;
+		int256_sincos1024( (src->rotationCCW1024), &sin_value_t256, &cos_value_t256);
+		/*(ナイフの進行移動量)*/
+	//	src->cx256 += ((sin_value_t256)<<1);/*fps_factor*/
+	//	src->cy256 += ((cos_value_t256)<<1);/*fps_factor*/
+		src->cx256 += ((sin_value_t256) );/*fps_factor*/
+		src->cy256 += ((cos_value_t256) );/*fps_factor*/
+	}
+	#endif
+	/*(子ナイフの発弾間隔)*/
+	/*(このカウンタは左右で共用なので2倍進む)*/
+	REG_09_REG1++;
+	if (((10)+(10)) < REG_09_REG1)
+	{
+		REG_09_REG1 = (0);
+		/* 親ナイフ(紫)が、1回分の子ナイフ弾(青)を4弾、撃つ。 */
+		/*(子ナイフ弾を4弾、撃つ)*/
+		set_REG_DEST_XY(src);	/* 子ナイフ弾は親ナイフ(紫)弾の位置から発弾。 */
+		//
+		HATSUDAN_02_speed_offset		= t256(0);/*(テスト)*/
+		HATSUDAN_04_tama_spec			= (DANMAKU_LAYER_00)|(TAMA_SPEC_3000_EFFECT_NONE)|(TAMA_SPEC_0000_TILT);/* (r33-)標準弾 */
+		HATSUDAN_05_bullet_obj_type 	= BULLET_KNIFE20_04_AOI;	/* [青ナイフ弾] */
+		{
+			int kk_speed256;
+			kk_speed256 = (t256(1.6));
+			unsigned int jj;
+			for (jj=0; jj<4; jj++)/*(1回で4弾、撃つ)*/
+			{
+				kk_speed256 += (t256(0.2));
+				HATSUDAN_01_speed256		= (kk_speed256);
+				const /*int*/ /*u16*/s32/*(s16で可能)*/ jj_bbb[4] =
+				{
+					(int)((65536*6/12)-(65536*6/12)),	//	kk_speed256 = (t256(1.8));
+					(int)((65536*6/12)-(65536*5/12)),	//	kk_speed256 = (t256(2.0));
+					(int)((65536*6/12)-(65536*4/12)),	//	kk_speed256 = (t256(2.2));
+					(int)((65536*6/12)-(65536*3/12)),	//	kk_speed256 = (t256(2.4));
+				};
+				#if (1)/*r35-*/
+				{	int aaa 	= (((int)(jj_bbb[jj]) ));
+					/*(差分は本来負数で持つべきだが、とりあえず正数で持っている。そこで左右の判断を逆にする)*/
+					if (KNIFE_TYPE_RIGHT!=src->RYOUTE_KNIFE_DATA_l_or_r)	{	aaa = -aaa; 	}
+				//	HATSUDAN_03_angle65536 = (aaa) + (deg1024to65536(src->rotationCCW1024)); /* 「1周が1024分割」から「1周が65536分割」へ変換する。 */
+					HATSUDAN_03_angle65536 = (aaa) + (deg1024to65536(src->rotationCCW1024)); /* 「1周が1024分割」から「1周が65536分割」へ変換する。 */
+				}
+				#endif
+				hatudan_system_regist_single();
+			}
+		}
+	}
+}
+
+
+#if (1)
+//#include "boss.h"//#include "game_main.h"
+
+/*---------------------------------------------------------
+	東方模倣風 ～ Toho Imitation Style.
+	http://code.google.com/p/kene-touhou-mohofu/
+	-------------------------------------------------------
+	咲夜のくるくるナイフ弾(青→緑)
+	咲夜
+	プレイヤーの周りをくるくる回ってから、自分狙いのナイフ。
+	青→緑に色が変わる。
+	-------------------------------------------------------
+	全方向ナイフ(青)
+	狙いナイフ(緑)
+	-------------------------------------------------------
+	プレイヤーの周りに散らばり、時間が経つとプレイヤー狙い弾
+	-------------------------------------------------------
+	弾を全弾書き換え方式に移行するのでここは無くなる予定。
+	-------------------------------------------------------
+	REG_0e_REG6 	[発弾連絡レジスタ]
+		0:	なし。
+		1:	extern void bullet_create_sakuya_ryoute_knife(OBJ *src); 咲夜 両手ナイフカード
+		2:	extern void bullet_create_sakuya_kurukuru(OBJ *src);     咲夜 くるくるナイフカード
+	-------------------------------------------------------
+	-------------------------------------------------------
+	ボス共通規格使用データー:
+---------------------------------------------------------*/
+
+#if 0
+// バグ対策。 user_data02 良くワカンナイけど空けとく。()
+#define sakuya_aaa_HATUDAN_TIME256 	(256)
+local void bullet_move_kurukuru_knife(OBJ *src)
+{
+	if (sakuya_aaa_HATUDAN_TIME256 > src->jyumyou)
+	{
+		;
+	}
+	else
+	if (sakuya_aaa_HATUDAN_TIME256 == src->jyumyou)
+	{
+		/* 変身する。 */
+		{
+			src->obj_type_set			= BULLET_KNIFE20_07_MIDORI;/* (青→緑ナイフに変身) */
+			reflect_sprite_spec444(src, OBJ_BANK_SIZE_00_TAMA);
+			#if 1/* わざと狙わない */
+			u32 ra_nd32 = ra_nd();
+			OBJ *zzz_player;
+			zzz_player = &obj99[OBJ_HEAD_02_0x0900_KOTEI+FIX_OBJ_00_PLAYER];
+		//	set_REG_DEST_XY(src);	/* 弾源x256 y256 中心から発弾。 */
+			#endif
+			REG_00_SRC_X	= (zzz_player->cx256)+((ra_nd32<<8)&0x1fff)-t256(16);
+			REG_01_SRC_Y	= (zzz_player->cy256)+((ra_nd32  )&0x0fff)-t256(8);
+			REG_02_DEST_X	= ((src->cx256));
+			REG_03_DEST_Y	= ((src->cy256));
+			tmp_angleCCW65536_src_nerai();
+			src->tmp_angleCCW1024 = (deg65536to1024(HATSUDAN_03_angle65536));		/* 「1周が65536分割」から「1周が1024分割」へ変換する。 */
+			mask1024(src->tmp_angleCCW1024);/* ねんのため */
+			src->rotationCCW1024 = ((src->tmp_angleCCW1024));	/* 表示角度 */
+		}
+		//------------------
+		HATSUDAN_01_speed256	= (t256(2));
+		HATSUDAN_03_angle65536	= deg1024to65536((src->tmp_angleCCW1024));
+		sincos256();/*(破壊レジスタ多いので注意)*/
+		src->vx256 = REG_03_DEST_Y;//sin_value_t256 // 下CCWの場合(右CWの場合ととxyが逆)
+		src->vy256 = REG_02_DEST_X;//cos_value_t256 // 下CCWの場合(右CWの場合ととxyが逆)
+		//------------------
+	}
+	else
+	{
+		/* くるくるさせる */
+		src->rotationCCW1024 += (64);
+		mask1024(src->rotationCCW1024);/* ねんのため */
+	}
+	src->cx256 += (src->vx256); 	/*fps_factor*/
+	src->cy256 += (src->vy256); 	/*fps_factor*/
+}
+#endif
+local void sakuya_kurukuru_knife_danmaku_02_callback(OBJ *src)
+{
+	/* 0-64 カウントまで */ 	/* [0]カウント==発弾位置 */
+	if ((HATUDAN_ITI_NO_JIKAN-64) < src->jyumyou)/* 発弾エフェクト後から[0-31]カウント経過した弾 */
+	{
+		/* 発弾後、くるくるさせる */
+		src->rotationCCW1024 += (64);
+		mask1024(src->rotationCCW1024);/* ねんのため */
+	}
+	else/* 発弾エフェクト後から[65]カウント経過した弾 */
+	{
+		/* 65 カウントなら、自機狙い弾に変身する。 */
+		src->obj_type_set			= BULLET_KNIFE20_07_MIDORI;/* (青→緑ナイフに変身) */
+		reflect_sprite_spec444(src, OBJ_BANK_SIZE_00_TAMA); 	/* 弾グラと弾あたり判定を変更する。 */
+		#if 1/* わざと狙わない */
+		u32 ra_nd32 = ra_nd();
+		OBJ *zzz_player;
+		zzz_player = &obj99[OBJ_HEAD_02_0x0900_KOTEI+FIX_OBJ_00_PLAYER];
+	//	set_REG_DEST_XY(src);	/* 弾源x256 y256 中心から発弾。 */
+		#endif
+		REG_00_SRC_X	= (zzz_player->cx256)+((ra_nd32<<8)&0x1fff)-t256(16);
+		REG_01_SRC_Y	= (zzz_player->cy256)+((ra_nd32  )&0x0fff)-t256(8);
+		REG_02_DEST_X	= ((src->cx256));
+		REG_03_DEST_Y	= ((src->cy256));
+		tmp_angleCCW65536_src_nerai();
+		src->tmp_angleCCW1024 = (deg65536to1024(HATSUDAN_03_angle65536));		/* 「1周が65536分割」から「1周が1024分割」へ変換する。 */
+	//	mask1024(src->tmp_angleCCW1024);/* ねんのため */
+		src->rotationCCW1024 = ((src->tmp_angleCCW1024));	/* 表示角度 */
+		//------------------
+		src->hatudan_register_speed65536	= (t256(2)<<8);
+		//------------------
+		/* (通常弾へ変身する) */
+		src->hatudan_register_spec_data 	= (DANMAKU_LAYER_00)|(TAMA_SPEC_0000_TILT);/* (r33-)標準弾 */
+	}
+}
+/*---------------------------------------------------------
+	[初期化セクション]
+	-------------------------------------------------------
+---------------------------------------------------------*/
+#if (0)/*(弾幕システムに移行する場合)*/
+local void bullet_init_sakuya_ryoute_knife(OBJ *src)
+{
+	card.danmaku_callback[1] = sakuya_ryoute_knife_danmaku_01_callback;/*(親ナイフ。)*/
+//	card.danmaku_callback[2] = NULL;/*(未使用)*/
+//	card.danmaku_callback[3] = NULL;/*(未使用)*/
+}
+#endif
+local void spell_init_47_sakuya_festival_knife(OBJ *src)
+{
+	//
+	card.danmaku_callback[2] = sakuya_kurukuru_knife_danmaku_02_callback;/*( )*/
+//	card.danmaku_callback[3] = NULL;/*(未使用)*/
+}
+
+
+/*---------------------------------------------------------
+	[発弾セクション]
+	-------------------------------------------------------
+---------------------------------------------------------*/
+local void bullet_create_sakuya_ryoute_knife(OBJ *src)
+{
+	REG_09_REG1 	= (0);/*(左右共用発弾カウンタ)*/
+	//
+	/* 自機狙い角を HATSUDAN_03_angle65536 に作成 */
+//	REG_02_DEST_X	= (src->cx256);/*(咲夜の現在位置座標)*/
+//	REG_03_DEST_Y	= (src->cy256);/*(咲夜の現在位置座標)*/
+	set_REG_DEST_XY(src);	/* ナイフ(紫)弾は咲夜の位置から発弾。 */
+	calculate_jikinerai();
+	/* 「1周が65536分割」から「1周が1024分割」へ変換する。 */
+	HATSUDAN_03_angle1024 = (deg65536to1024(HATSUDAN_03_angle65536));
+	//
+	#if (0)
+	/*(弾幕システムに移行する場合)*/
+//	set_REG_DEST_XY(src);	/* ナイフ(紫)弾は咲夜の位置から発弾。 */	/*(既に自機狙いの時に設定済み)*/
+	HATSUDAN_01_speed256			= (0);				/* 弾速(0) */
+	HATSUDAN_02_speed_offset		= t256(0);/*(てすと)*/
+	HATSUDAN_05_bullet_obj_type 	= (BULLET_KNIFE20_06_YUKARI);	/* ナイフ親(紫) */
+	#endif
+	int r_or_l;
+	for (r_or_l=0; r_or_l<2; r_or_l++)/*r35-*/
+	{
+		#if (1)
+		OBJ *h;
+		h					= obj_add_A00_tama_error();/*全方向ナイフ(青)*/
+		if (NULL != h)
+		#else
+		/*(弾幕システムに移行する場合)*/
+		#endif
+		{
+			#if (1)
+			h->cx256			= (src->cx256); 	/* ナイフ(紫)弾は咲夜の位置から発弾。 */
+			h->cy256			= (src->cy256); 	/* ナイフ(紫)弾は咲夜の位置から発弾。 */
+		//	h->obj_type_set 			= BULLET_KNIFE20_04_AOI;/* ナイフ親(青) */
+			h->obj_type_set 			= BULLET_KNIFE20_06_YUKARI;/* ナイフ親(紫) */
+			reflect_sprite_spec444(h, OBJ_BANK_SIZE_00_TAMA);
+			h->callback_mover			= sakuya_ryoute_knife_danmaku_01_callback;
+			h->m_Hit256R				= TAMA_ATARI_KNIFE18_PNG;
+			#else
+			/*(弾幕システムに移行する場合)*/
+			#endif
+		//
+			#if (1)/*(特別処理)*/
+			/*(ナイフの左右別フラグを決定)*/
+			h->RYOUTE_KNIFE_DATA_l_or_r 		= r_or_l;
+			/*(ナイフの進行向きを決定)*/
+			{
+				int tmp1024;
+				tmp1024 = (128);
+				if (KNIFE_TYPE_RIGHT!=r_or_l)	{		tmp1024 = -tmp1024; 	}
+				tmp1024 += (HATSUDAN_03_angle1024); 	/* 「1周が1024分割」 */
+			//	mask1024(tmp1024);
+				#if (1)
+				h->rotationCCW1024	= (tmp1024);	/*(ナイフの進行向きは表示向きと同じなので、表示向きで保持する)*/
+				#else
+				/*(弾幕システムに移行する場合)*/
+				HATSUDAN_03_angle65536			= (tmp1024);
+				#endif
+			}
+			/*(ナイフの発弾座標を決定)*/
+			#if (0)//
+			h->cx256	= (h->cx256) + ((si n1024((h->rotationCCW1024)))<<7);/*fps_factor*/ /* CCWの場合 */
+			h->cy256	= (h->cy256) + ((co s1024((h->rotationCCW1024)))<<7);/*fps_factor*/
+			#else
+			{
+				int sin_value_t256; 		//	sin_value_t256 = 0;
+				int cos_value_t256; 		//	cos_value_t256 = 0;
+				int256_sincos1024( (h->rotationCCW1024), &sin_value_t256, &cos_value_t256);
+		//		h->cx256		= (h->cx256) + ((sin_value_t256)<<7);/*fps_factor*/
+		//		h->cy256		= (h->cy256) + ((cos_value_t256)<<7);/*fps_factor*/
+				h->cx256		= (h->cx256) + ((sin_value_t256)<<3);/*fps_factor*/
+				h->cy256		= (h->cy256) + ((cos_value_t256)<<3);/*fps_factor*/
+			}
+			#endif
+			/*(ナイフの寿命を決定)*/
+			h->jyumyou						= (128+(REG_0f_GAME_DIFFICULTY<<6));/*(r33)*/	/*意味無い(?)*/
+			#endif
+		}
+		#if (0)
+		/*(弾幕システムに移行する場合)*/
+		HATSUDAN_04_tama_spec			= (DANMAKU_LAYER_01)|(r_or_l<<8)|(TAMA_SPEC_0000_TILT);/* (r33-)標準弾 */
+		hatudan_system_regist_single();
+		#endif
+	}
+}
+
+
+/*
+	-------------------------------------------------------
+	ToDo:
+	弾システムに移行する為、廃止予定。
+	カードスクリプトシステムが稼動する為には、発弾を一ヶ所に統合しないと
+	速度的な面でこのままの形態では無理があるので、
+	(ここの発弾処理のせいで他の弾が処理落ちする)
+	ここの発弾処理を hatudan_system_regist_single に置きかえる必要がある。
+	-------------------------------------------------------
+	REG_0e_REG6 	[発弾連絡レジスタ]
+		0:	なし。
+		1:	extern void bullet_create_sakuya_ryoute_knife(OBJ *src); 咲夜 両手ナイフカード
+		2:	extern void bullet_create_sakuya_kurukuru(OBJ *src);     咲夜 くるくるナイフカード
+	-------------------------------------------------------
+---------------------------------------------------------*/
+
+static void bullet_create_sakuya_kurukuru(OBJ *src)
+{
+	OBJ *zzz_player;
+	zzz_player = &obj99[OBJ_HEAD_02_0x0900_KOTEI+FIX_OBJ_00_PLAYER];
+	/* ある程度遠くに出ないと認識しづらい */
+	/* キャラ(コア)がでかいと避ける前に死ぬ。(ナイフが広がる前にあたる) */
+	#if (1)
+	/*(弾幕システムに移行する場合)*/
+//	set_REG_DEST_XY(src);	/* ナイフ(紫)弾は咲夜の位置から発弾。 */	/*(既に自機狙いの時に設定済み)*/
+//	HATSUDAN_01_speed256			= (0);				/* 弾速(0) */
+	HATSUDAN_02_speed_offset		= t256(0);/*(てすと)*/
+	HATSUDAN_05_bullet_obj_type 	= (BULLET_KNIFE20_04_AOI);	/* (青→緑ナイフに変身) */
+	#endif
+	const int tmp_step[4]	=
+	{
+		(65536/8),
+		(65536/10),
+		(65536/12),
+		(65536/16),
+	};
+	int ii;
+	for (ii=0; ii<65536; ii += tmp_step[(REG_0f_GAME_DIFFICULTY)] ) 	/* プレイヤーの周りに8弾配置する */
+	{
+		#if (0)
+		OBJ *h;
+		h					= ob j_add_A00_t ama_er ror();
+		if (NULL != h)
+		#else
+		/*(弾幕システムに移行する場合)*/
+		#endif
+		{
+		//	REG_0b_REG3 = REG_02_DEST_X;//[ボスx座標一時保存]
+		//	REG_0c_REG4 = REG_03_DEST_Y;//[ボスy座標一時保存]
+			//------------------
+			HATSUDAN_01_speed256	= (t256(128));
+			HATSUDAN_03_angle65536	= (ii);
+			sincos256();/*(破壊レジスタ多いので注意)*/
+			#if (0)
+			h->cx256 = (zzz_player->cx256) + REG_03_DEST_Y;//sin_value_t256 // 下CCWの場合(右CWの場合ととxyが逆)
+			h->cy256 = (zzz_player->cy256) + REG_02_DEST_X;//cos_value_t256 // 下CCWの場合(右CWの場合ととxyが逆)
+			#else
+			/*(弾幕システムに移行する場合)*/
+			REG_03_DEST_Y += (zzz_player->cx256);//sin_value_t256 // 下CCWの場合(右CWの場合ととxyが逆)
+			REG_02_DEST_X += (zzz_player->cy256);//cos_value_t256 // 下CCWの場合(右CWの場合ととxyが逆)
+			#endif
+			//------------------
+		//	// 発射座標リストア。
+		//	REG_02_DEST_X = REG_0b_REG3;//[ボスx座標復活]
+		//	REG_03_DEST_Y = REG_0c_REG4;//[ボスy座標復活]
+			HATSUDAN_01_speed256			= (0);				/* 弾速(0) */
+			#if (0)
+			h->obj_type_set 			= BULLET_KNIFE20_04_AOI;	/* (青→緑ナイフに変身) */
+			reflect_sprite_spec444(h, OBJ_BANK_SIZE_00_TAMA);
+			h->callback_mover			= bullet_move_kurukuru_knife;
+			h->m_Hit256R				= TAMA_ATARI_KNIFE18_PNG;
+			#else
+			/*(弾幕システムに移行する場合)*/
+			#endif
+		//
+			#if (0)
+			h->jyumyou			= (sakuya_aaa_HATUDAN_TIME256+64);
+			h->vx256			= (0);
+			h->vy256			= (0);
+			#else
+			/*(弾幕システムに移行する場合)*/
+			#endif
+		//
+			#if (1)
+			/*(弾幕システムに移行する場合)*/
+			HATSUDAN_04_tama_spec			= (DANMAKU_LAYER_02)|(0)|(TAMA_SPEC_0000_TILT);/* (r33-)標準弾 */
+			hatudan_system_regist_single();
+			#endif
+		}
+	}
+}
+
+#endif
+/*---------------------------------------------------------
+	[咲夜] 幻想「フェスティバルナイフ」(?) むりやり変換 (まだ変換中)
+	-------------------------------------------------------
+	REG_0e_REG6 	[発弾連絡レジスタ]
+		0:	なし。
+		1:	extern void bullet_create_sakuya_ryoute_knife(OBJ *src); 咲夜 両手ナイフカード
+		2:	extern void bullet_create_sakuya_kurukuru(OBJ *src);     咲夜 くるくるナイフカード
+	-------------------------------------------------------
+---------------------------------------------------------*/
+//tern void bullet_create_sakuya_ryoute_knife(OBJ *src); /* 咲夜 両手ナイフカード */
+//tern void bullet_create_sakuya_kurukuru(OBJ *src); 	/* 咲夜 くるくるナイフカード */
+local void spell_create_47_sakuya_festival_knife(OBJ *src)
+{
+	/*[発弾連絡処理]*/
+	if ((0)!=REG_0e_REG6)/*[発弾指示があれば]*/
+	{
+		if ((1)==REG_0e_REG6)/*[咲夜 両手ナイフカード]*/
+		{
+			bullet_create_sakuya_ryoute_knife(src);
+		}
+		if ((2)==REG_0e_REG6)/*[咲夜 くるくるナイフカード]*/
+		{
+			bullet_create_sakuya_kurukuru(src);
+		}
+		REG_0e_REG6=(0);/*[おわったよ]*/
+	}
+};
+

@@ -1,7 +1,7 @@
 
 /*---------------------------------------------------------
- 東方模倣風 ～ Toho Imitation Style.
-  プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	東方模倣風 ～ Toho Imitation Style.
+	http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	ルーミアのカードを定義します。
 ---------------------------------------------------------*/
@@ -30,7 +30,7 @@
 	REG_0b_REG3 	弾番号。0x0fが1弾目、0x0eが2弾目。
 	-------------------------------------------------------
 ---------------------------------------------------------*/
-local void spell_create_08_rumia_night_bird(SPRITE *src)
+local void spell_create_08_rumia_night_bird(OBJ *src)
 {
 	count_up_limit_NUM(REG_NUM_08_REG0, 32);
 //	if (0x10==((REG_10_BOSS_SPELL_TIMER)&0x1f))/* 自機狙い角作成 */
@@ -146,7 +146,7 @@ local void spell_create_08_rumia_night_bird(SPRITE *src)
 	-------------------------------------------------------
 	交差弾。時計回り。
 ---------------------------------------------------------*/
-local void rumia_danmaku_01_callback(SPRITE *src)
+local void rumia_danmaku_01_callback(OBJ *src)
 {
 	/* 0-32 カウントまで */ 	/* [0]カウント==発弾位置 */
 	if ((HATUDAN_ITI_NO_JIKAN-32) < src->jyumyou)/* 発弾エフェクト後から[0-31]カウント経過した弾 */
@@ -210,7 +210,7 @@ local void rumia_danmaku_01_callback(SPRITE *src)
 	-------------------------------------------------------
 	自機を狙わない場合があるが、原因が良く解からない。
 ---------------------------------------------------------*/
-local void rumia_danmaku_02_callback(SPRITE *src)/* 連弾 */
+local void rumia_danmaku_02_callback(OBJ *src)/* 連弾 */
 {
 	/* 32 カウントなら */
 	if ((HATUDAN_ITI_NO_JIKAN-32) == src->jyumyou)/* 発弾エフェクト後から[32]カウント経過した弾 */
@@ -242,9 +242,8 @@ local void rumia_danmaku_02_callback(SPRITE *src)/* 連弾 */
 	-------------------------------------------------------
 ---------------------------------------------------------*/
 
-local void spell_init_29_rumia_demarcation(SPRITE *src)
+local void spell_init_29_rumia_demarcation(OBJ *src)
 {
-//	card.danmaku_callback[0] = danmaku_00_standard_angle_mover;/*(通常弾用)*/
 	card.danmaku_callback[1] = rumia_danmaku_01_callback;/*(米弾。交差弾。反時計回り。) (米弾。交差弾。時計回り。)*/
 	card.danmaku_callback[2] = rumia_danmaku_02_callback;/*(丸弾。連弾。自機狙い。)*/
 //	card.danmaku_callback[3] = NULL;
@@ -260,7 +259,7 @@ local void spell_init_29_rumia_demarcation(SPRITE *src)
 
 ---------------------------------------------------------*/
 // カードスクリプト語では「else」は無い。
-local void spell_create_29_rumia_demarcation(SPRITE *src)
+local void spell_create_29_rumia_demarcation(OBJ *src)
 {
 //	if ((0x1f)==((REG_10_BOSS_SPELL_TIMER)&0x1f))
 	count_up_limit_NUM(REG_NUM_08_REG0, 32);
@@ -298,7 +297,7 @@ local void spell_create_29_rumia_demarcation(SPRITE *src)
 			-------------------------------------------------------
 			記憶だけで作りがちなので、原作でチェック。normalの場合、飛んでくる連弾は４回だった。
 			---------------------------------------------------------*/
-			//local void dimmer_shot_02_rendan(SPRITE *src)
+			//local void dimmer_shot_02_rendan(OBJ *src)
 			unsigned int ii;
 			for (ii=0; ii<8; ii++)
 			{
@@ -346,7 +345,7 @@ local void spell_create_29_rumia_demarcation(SPRITE *src)
 			/*---------------------------------------------------------
 				交差弾。 青弾 / 緑弾 / 赤弾
 			---------------------------------------------------------*/
-		//	local void dimmer_shot_01_kousadan(SPRITE *src, u8 tama_type)
+		//	local void dimmer_shot_01_kousadan(OBJ *src, u8 tama_type)
 			REG_0b_REG3 = (((REG_0a_REG2)&0x06)<<8);/* 弾色別に発弾角を変える。(((REG_0a_REG2)&0x06)<<6) */
 			HATSUDAN_01_speed256				= (t256(1.0));			/* 弾速 (t256(1.5)) */
 			HATSUDAN_02_speed_offset			= t256(0);/*(テスト)*/

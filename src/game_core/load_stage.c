@@ -1,12 +1,15 @@
 
-#include "game_main.h"
+/*(ƒJ[ƒhƒVƒXƒeƒ€‰Šú‰»—p)*/
+#include "./boss/boss.h"//#include "game_main.h"
 
 /*---------------------------------------------------------
 	“Œ•û–Í•í•— ` Toho Imitation Style.
-	ƒvƒƒWƒFƒNƒgƒy[ƒW http://code.google.com/p/kene-touhou-mohofu/
+	http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	ƒXƒe[ƒW“Gƒf[ƒ^[(dat)‚Ì“Ç‚İ‚İ
 ---------------------------------------------------------*/
+
+#include "menu/kaiwa_sprite.h"
 
 global GAME_COMMAND *stage_command_table = NULL;
 
@@ -45,15 +48,26 @@ enum
 	PARAM_03_user_kougeki_type, //	int user_kougeki_type;	/* “G‚ªUŒ‚‚·‚éê‡‚ÌƒJ[ƒh‚Ìí—Ş */
 	PARAM_04_user_x,			//	int user_x; 			/* ”šƒpƒ‰ƒ[ƒ^[‚P(oŒ»‚wÀ•W‚È‚Ç) */
 	PARAM_05_user_y,			//	int user_y; 			/* ”šƒpƒ‰ƒ[ƒ^[‚Q(oŒ»‚xÀ•WA“G“ï“x‚È‚Ç) */
-	PARAM_06_user_hp,			//	int user_hp;			/* ”šƒpƒ‰ƒ[ƒ^[‚Q(oŒ»‚xÀ•WA“G“ï“x‚È‚Ç) */
-	PARAM_07_user_item8,		//	int user_item8; 		/* ”šƒpƒ‰ƒ[ƒ^[‚Q(oŒ»‚xÀ•WA“G“ï“x‚È‚Ç) */
-	PARAM_08_user_score,		//	int user_score; 		/* ”šƒpƒ‰ƒ[ƒ^[‚Q(oŒ»‚xÀ•WA“G“ï“x‚È‚Ç) */
+	PARAM_06_user_hp,			//	int user_hp;			/* ”šƒpƒ‰ƒ[ƒ^[‚Q(“G‘Ì—Í) */
+	PARAM_07_user_item8,		//	int user_item8; 		/* ”šƒpƒ‰ƒ[ƒ^[‚Q(“|‚µ‚½Œã‚Éo‚éƒAƒCƒeƒ€) */
+	PARAM_08_user_score,		//	int user_score; 		/* ”šƒpƒ‰ƒ[ƒ^[‚Q(“|‚µ‚½Œã‚É“¾‚ç‚ê‚é“¾“_) */
 	PARAM_99_MAX/*Å‘å”*/
 };
 
 /*---------------------------------------------------------
 	qŠÖ”
 ---------------------------------------------------------*/
+//	#if (1)/*(-r35)*/
+//	new_entry->user_hp				= c_pn[PARAM_06_user_hp];
+//	#else/*(r35u2-)G‹›d‚·‚¬Hæ‚èŠ¸‚¦‚¸BÀŒ±B */
+//	{	/*(“¹’†‚ªÁ‰»‡‰ß‚¬‚Ä‚Â‚Ü‚ç‚È‚­‚È‚éB• ’†ƒ{ƒX‚ª”ßS‚È–‚É‚È‚éB)*/
+//	int temp_user_hp;
+//		temp_user_hp				= ((c_pn[PARAM_06_user_hp])>>4);/*(1/16‚É‚·‚é)*/
+//		temp_user_hp = psp_max(1, temp_user_hp);/*(Å’á‚Å‚à1‚É‚·‚é)*/
+//		new_entry->user_hp			= (temp_user_hp);
+//	}
+//	#endif
+
 extern void load_bg2_chache(char *filename, int use_alpha);
 /* Do set the entry. */
 static void load_stage_add_entry( char *user_string, const int *c_pn )		// ƒIƒuƒWƒFƒNƒg‚Ì¶¬
@@ -61,13 +75,15 @@ static void load_stage_add_entry( char *user_string, const int *c_pn )		// ƒIƒuƒ
 	GAME_COMMAND *new_entry;
 	new_entry						= my_calloc(sizeof(GAME_COMMAND));
 	#define MUSIC_CONVERT_TIME		(10)
-	/* 10[flame](==0.1666[•b]‚¸‚ç‚·B)“Ç‚İ‚İ‚Æ•ÏŠ·‚ÉŠÔ‚ª‚©‚©‚é–‚ğl—¶‚µ‚ÄAŠÔ‚ğ‚¸‚ç‚·B */
+	/* 10[frame](==0.1666[•b]‚¸‚ç‚·B)“Ç‚İ‚İ‚Æ•ÏŠ·‚ÉŠÔ‚ª‚©‚©‚é–‚ğl—¶‚µ‚ÄAŠÔ‚ğ‚¸‚ç‚·B */
 	new_entry->v_time				= MUSIC_CONVERT_TIME+(c_pn[PARAM_00_time60]);/* Œ³XƒtƒŒ[ƒ€’PˆÊ */
 	new_entry->user_select_gazou	= c_pn[PARAM_02_user_select_gazou];
 	new_entry->user_kougeki_type	= c_pn[PARAM_03_user_kougeki_type];
 	new_entry->user_x				= c_pn[PARAM_04_user_x];
 	new_entry->user_y				= c_pn[PARAM_05_user_y];
-	new_entry->user_hp				= c_pn[PARAM_06_user_hp];
+	#if 1
+	new_entry->user_hp				= ((4)*c_pn[PARAM_06_user_hp]);/*(r36‚Æ‚è‚ ‚¦‚¸)*/
+	#endif
 	new_entry->user_item8			= c_pn[PARAM_07_user_item8];
 	new_entry->user_score			= c_pn[PARAM_08_user_score];
 //
@@ -137,12 +153,12 @@ static void load_stage_add_entry( char *user_string, const int *c_pn )		// ƒIƒuƒ
 		return (0/*FALSE*/);/*NG!,*/
 	}/*(ng!)*/
 	#else
-	if ( ('9') < (*ccc) )
+	if (('9') < (*ccc))
 	{
 		goto my_false;/*NG!,*/
 	}
 	//else
-	if ( ('0') > (*ccc) )
+	if (('0') > (*ccc))
 	{
 		/*('-'‚Ì‰Â”\«‚ª‚ ‚éB)*/
 		if ('-'!=(*ccc))
@@ -251,76 +267,42 @@ tou pper()??
 extern void set_default_bullet_clip(void);
 
 extern int select_player;
-extern void bg2_start_stage(void);
+
 extern void stage_bg_load_texture(void);
 extern void gu_set_bg_u32_clear_color(u32 set_u32_clear_color);
 extern void spell_cpu_douchuu_init(void);
 
 extern void teki_random_item_table_initialize(void);/*int set_seed*/
-global void load_stage(void)
+
+#if (1==USE_AFTER_LOAD_STAGE)
+#else
+global void load_stage_make_filename(void)
 {
-	set_default_bullet_clip();		/* ’e‚Ì”ÍˆÍ‚ğ•W€‚Éİ’è */
-	#if (1)
-	spell_cpu_douchuu_init();		/* ’eÁ‚µƒR[ƒ‹ƒoƒbƒN‚ğ“¹’†‚Æ‹¤—p‚µ‚Ä‚¢‚é“s‡ã‚±‚±‚É•K—vB */
-	card.card_number	= SPELL_00;/*(“¹’†ƒR[ƒ‹ƒoƒbƒN—LŒøƒtƒ‰ƒO‚Æ‹¤—p)*/
-	#endif
-	bg2_start_stage();
-	;/* ƒŠƒvƒŒƒC‘Î‰o—ˆ‚é‚æ‚¤‚ÉA—”Œn—ñ‚Ì‰Šú‰»B */
-	teki_random_item_table_initialize();/*set_seed*/	/* ƒ‰ƒ“ƒ_ƒ€ƒAƒCƒeƒ€“G‚Ìê‡‚Ég‚¤A‹¤’Ê”­¶ƒe[ƒuƒ‹‚ğ‰Šú‰»B */
-	cg.game_now_stage++;
-	// change music soundtrack
-	play_music_num(cg.game_now_stage);	/* n–Ê“¹’† */
-	{
-		/*(•K‚¸Á‚·ƒtƒ‰ƒO)*/
-		{
-			/*(ƒAƒCƒeƒ€©“®ûWƒtƒ‰ƒO‚ğ–ß‚·)*/
-			/* ©“®ûWƒ‚[ƒhƒtƒ‰ƒO‚ğ‘S‚ÄÁ‚·B */
-			cg.state_flag &=
-			(	~(	JIKI_FLAG_0x01_JYOU_BU_SYUU_SYUU				|	/* I‚í‚è */	/* MAX‚Ìã‰ñû */
-					JIKI_FLAG_0x02_BOMBER_SYUU_SYUU 				|	/* I‚í‚è */	/* ƒ{ƒ€”­“®’†‚Ì‚İ‰ñû */
-					JIKI_FLAG_0x04_BOSS_GO_ITEM_JIDOU_SYUU_SYUU 	|	/* I‚í‚è */	/* ƒ{ƒXŒ‚”j‚Ìˆê‰ñû */
-				//
-		/* (r32) */ STATE_FLAG_05_IS_BOSS						/*ƒ{ƒXoff*/
-				)
-			);
-		}
-		/* (r32) */cg.state_flag		|= STATE_FLAG_14_DOUCHU_TUIKA;	/* “¹’†ƒRƒ}ƒ“ƒh’Ç‰Áˆ—‚ğ‚·‚éê‡on */
-		cg.side_panel_draw_flag 		= (1);	/* ƒpƒlƒ‹•\¦on */
-		cg.player_option_mode			= (0);/* ‚Ç‚±‚©‚Å‰Šú‰»‚ª•K‚¸•K—v */
-	//	player_option_position_initilize(); 	/*(ƒIƒvƒVƒ‡ƒ“‚ÌˆÊ’u‚ğ‰Šú‰»‚·‚é)*/
-	}
-	{
-		const u32 bg_color_list[8] =
-		{	/*AABBGGRR*/
-			0xffaa9999,/*extra_stage(”’‡)*/		//	0xff000000 (•)
-			0xffaa9999,/*1–Ê(”’‡A–‚–@‚ÌX)*/		//0xffcdb4b9	0xff106010, (—ÎA–‚–@‚ÌX)
-			0xff401010,/*3–Ê(ÂA–À‚¢‚Ì’|—Ñ)*/		//	0xff401010	//	0xff104010,/*3–Ê(—Î)*/
-			0xff402020,/*4–Ê(ÂA‰i‰“’à)*/			//	0xff402020
-			0xff804010,/*2–Ê(…A—d‰ö‚ÌRA‘ê)*/	//	0xff804010	//	0xff802010,/*2–Ê(Â)*/		0xff102080,
-			0xff601030,/*5–Ê(ÂA}‘ŠÙ)*/			//	0xff601030
-			0xff1311ee,/*6–Ê(ÔAg–‚ŠÙ)*/			//0xff333af4	0xff301060	//	0xff601030,/*6–Ê(Â)*/
-			0xff000000,/*ending(•)*/				//
-		//	0xff601010,/**/
-		};
-		gu_set_bg_u32_clear_color((bg_color_list[cg.game_now_stage&0x07]));
-	}
-	stage_bg_load_texture();
-//
 //	char my_file_common_name[128];
 //	sp rintf(my_file_common_name, DIRECTRY_NAME_DATA_STR "/dat/" "stage%02d.dat", cg.game_now_stage);
 //	sp rintf(my_file_common_name, DIRECTRY_NAME_DATA_STR "/dat/" "stage%01d.txt", cg.game_now_stage);
 //	sp rintf(my_file_common_name, DIRECTRY_NAME_DATA_STR "/dat/" "stage%c.txt", ('0'+ cg.game_now_stage) );
 //	sp rintf(my_file_common_name, DIRECTRY_NAME_DATA_STR "/dat/" "stage%c.txt", ('0'+ cg.game_now_stage) );
-	strcpy(my_file_common_name, DIRECTRY_NAME_DATA_STR "/douchuu/" "stageZ.txt");
+	strcpy(my_file_common_name, DIRECTRY_NAME_DATA_STR "/kaiwa/s/" "stageZ.txt");
 	/*(stage'Z'‚Ì•¶š‚ÌˆÊ’u‚ª+14•¶š–Ú)*/
 	#define DIRECTRY_DOUCHU_OFFSET_LENGTH		(14)
 	my_file_common_name[DIRECTRY_DOUCHU_OFFSET_LENGTH+DIRECTRY_NAME_DATA_LENGTH] = get_stage_chr(cg.game_now_stage); /*load_stage_number*/
+	//
+}
+#endif
 
+global void load_stage_data(void)
+{
 //	/*FILE*/char *fp;
 	if (NULL==(/*fp =*/my_file_fopen()))	/* ŠJ‚¯‚È‚©‚Á‚½‚Æ‚« */	/*my_file_common_name*/ /*,"r"*/
 	{	/* “Ç‚İ‚İ¸”s */
-	//	error(ERR_FATAL, (char*)"can't read stage data %s\nerrno: %d (%s)",my_file_common_name,errno,strerror(errno));
-		error(ERR_FATAL, (char*)"can't read stage %d data %s\n", /*load_stage_number*/cg.game_now_stage, my_file_common_name );
+		psp_fatal_error( (char*)
+		//	"0123456789012345678901234567890123456789"	// ”¼Šp40š"Å‘å•\¦•¶š”"
+			"load stage: %d –Ê‚Ì“¹’†“Gİ’è" "\\n"
+			"ƒtƒ@ƒCƒ‹‚ª‚ ‚è‚Ü‚¹‚ñB" "\\n"
+			"%s",
+			/*load_stage_number*/cg.game_now_stage,
+			my_file_common_name );
 	}
 //
 	load_stage_free_entry();	/* ‘O‰ñ‚Ü‚ÅŠm•Û‚µ‚½ƒƒ‚ƒŠ‚ª‚ ‚ê‚ÎAæ‚ÉŠJ•ú‚·‚éB */
@@ -360,7 +342,13 @@ global void load_stage(void)
 		MY_FILE_LOOP_CONTINUE;
 	#if (1==USE_PARTH_DEBUG)
 	err_warn:
-		error(/*ERR_WARN*/ERR_FATAL, (char*)"syntax error in stage data '%s', line no: %d", filename, debug_number_of_read_line);
+		psp_fatal_error( (char*)
+		//	"0123456789012345678901234567890123456789"	// ”¼Šp40š"Å‘å•\¦•¶š”"
+			"load stage: “¹’†“Gİ’èƒtƒ@ƒCƒ‹‚ÌA" "\\n"
+			"%ds–Ú‚ÍˆÓ–¡‚ª”»‚è‚Ü‚¹‚ñB" "\\n"
+			"%s",
+			debug_number_of_read_line,
+			my_file_common_name);
 		MY_FILE_LOOP_CONTINUE;
 	#endif
 		MY_FILE_LOOP_END;
@@ -368,7 +356,75 @@ global void load_stage(void)
 	my_file_fclose(/*fp*/);
 	if (0==entrys)		/* —LŒøs”‚ª‚È‚¯‚ê‚ÎƒGƒ‰[ */
 	{
-		error(/*ERR_WARN*/ERR_FATAL, (char*)"no entrys for STAGE%d.TXT", cg.game_now_stage);
+		psp_fatal_error( (char*)
+		//	"0123456789012345678901234567890123456789"	// ”¼Šp40š"Å‘å•\¦•¶š”"
+			"load stage: STAGE%d.TXT ‚Í“¹’†“Gİ’è" "\\n"
+			"ƒtƒ@ƒCƒ‹‚Å‚Í‚ ‚è‚Ü‚¹‚ñB", cg.game_now_stage);
 	}
 	//fps_init();/* ??? auto fps‰Šú‰» */
+}
+
+/*---------------------------------------------------------
+	ƒXƒe[ƒW“Ç‚İ‚İ‘O‚Ì‰Šú‰»
+	-------------------------------------------------------
+	ƒXƒe[ƒW“Ç‚İ‚İ‚æ‚è‘O‚É‰Šú‰»‚·‚é•”•ªB
+---------------------------------------------------------*/
+
+global void load_stage_init(void)
+{
+	set_default_bullet_clip();		/* ’e‚Ì”ÍˆÍ‚ğ•W€‚Éİ’è */
+	#if (1)
+	spell_cpu_douchuu_init();		/* ’eÁ‚µƒR[ƒ‹ƒoƒbƒN‚ğ“¹’†‚Æ‹¤—p‚µ‚Ä‚¢‚é“s‡ã‚±‚±‚É•K—vB */
+	card.spell_used_number		= SPELL_00;/*(“¹’†ƒR[ƒ‹ƒoƒbƒN—LŒøƒtƒ‰ƒO‚Æ‹¤—p)*/
+	#endif
+	;/* ƒŠƒvƒŒƒC‘Î‰o—ˆ‚é‚æ‚¤‚ÉA—”Œn—ñ‚Ì‰Šú‰»B */
+	teki_random_item_table_initialize();/*set_seed*/	/* ƒ‰ƒ“ƒ_ƒ€ƒAƒCƒeƒ€“G‚Ìê‡‚Ég‚¤A‹¤’Ê”­¶ƒe[ƒuƒ‹‚ğ‰Šú‰»B */
+	cg.game_now_stage++;
+	// change music soundtrack
+//	play_music_num(cg.game_now_stage);	/* n–Ê“¹’† */
+	{
+		/*(•K‚¸Á‚·ƒtƒ‰ƒO)*/
+		{
+			/*(ƒAƒCƒeƒ€©“®ûWƒtƒ‰ƒO‚ğ–ß‚·)*/
+			/* ©“®ûWƒ‚[ƒhƒtƒ‰ƒO‚ğ‘S‚ÄÁ‚·B */
+			cg.state_flag &=
+			(	~(	  JIKI_FLAG_0x0010_JYOU_BU_SYUU_SYUU					/* I‚í‚è */	/* MAX‚Ìã‰ñû */
+					| JIKI_FLAG_0x0020_BOMBER_SYUU_SYUU 					/* I‚í‚è */	/* ƒ{ƒ€”­“®’†‚Ì‚İ‰ñû */
+					| JIKI_FLAG_0x0040_BOSS_GO_ITEM_JIDOU_SYUU_SYUU 		/* I‚í‚è */	/* ƒ{ƒXŒ‚”j‚Ìˆê‰ñû */
+				//
+				#if (1==USE_r36_SCENE_FLAG)
+				/*(‚È‚µ)*/
+				#else
+				/* (r32) */| STATE_FLAG_0x0800_IS_BOSS						/*ƒ{ƒXoff*/
+				#endif
+				)
+			);
+		}
+				#if (1==USE_r36_SCENE_FLAG)
+				/*(‚È‚µ)*/
+				#else
+		/* (r32) */cg.state_flag		|= STATE_FLAG_14_DOUCHU_TUIKA;	/* “¹’†ƒRƒ}ƒ“ƒh’Ç‰Áˆ—‚ğ‚·‚éê‡on */
+				#endif
+		cg.side_panel_draw_flag 		= (1);	/* ƒpƒlƒ‹•\¦on */
+		cg.player_option_mode			= (0);/* ‚Ç‚±‚©‚Å‰Šú‰»‚ª•K‚¸•K—v */
+
+		kaiwa_all_obj_draw_on_off(0);	/* —§‚¿ŠG‚ğ•`‰æ‚µ‚È‚¢B */
+	//	player_option_position_initilize(); 	/*(ƒIƒvƒVƒ‡ƒ“‚ÌˆÊ’u‚ğ‰Šú‰»‚·‚é)*/
+	}
+	{
+		const u32 bg_color_list[8] =
+		{	/*AABBGGRR*/
+			0xffaa9999,/*extra_stage(”’‡)*/		//	0xff000000 (•)
+			0xffaa9999,/*1–Ê(”’‡A–‚–@‚ÌX)*/		//	0xffcdb4b9	0xff106010, (—ÎA–‚–@‚ÌX)
+			0xff401010,/*3–Ê(ÂA–À‚¢‚Ì’|—Ñ)*/		//	0xff401010	//	0xff104010,/*3–Ê(—Î)*/
+			0xff402020,/*4–Ê(ÂA‰i‰“’à)*/			//	0xff402020
+			0xff804010,/*2–Ê(…A—d‰ö‚ÌRA‘ê)*/	//	0xff804010	//	0xff802010,/*2–Ê(Â)*/		0xff102080,
+			0xff601030,/*5–Ê(ÂA}‘ŠÙ)*/			//	0xff601030
+			0xff1311ee,/*6–Ê(ÔAg–‚ŠÙ)*/			//	0xff333af4	0xff301060	//	0xff601030,/*6–Ê(Â)*/
+			0xff000000,/*ending(•)*/				//
+		//	0xff601010,/**/
+		};
+		gu_set_bg_u32_clear_color((bg_color_list[cg.game_now_stage&0x07]));
+	}
+	stage_bg_load_texture();
 }

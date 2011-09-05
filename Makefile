@@ -17,12 +17,12 @@
 
 TARGET = mohoufu
 
-#RELESE_DATE = 2011/12/04(r37)冬
-#RELESE_DATE = 2011/09/04(r36)秋
-#RELESE_DATE = 2011/06/05(r35)夏
-RELESE_DATE = 2011/06/05
+#RELESE_DATE = 2011/12/04(r39)冬
+#RELESE_DATE = 2011/09/04(r38)秋
+#差分氏の活躍
+RELESE_DATE = 2011/09/04
 
-VERSION_MAJOR =35
+VERSION_MAJOR =38
 VERSION_MINOR =1
 
 # psp の XMB 設定
@@ -39,8 +39,9 @@ USE_EBOOT_TITLE = 1
 
 # 0 == cygwin を使う。(通常開発)。
 # 1 == pspsdk-setup-0.11.1.exe を使う。( Minimalist PSP homebrew SDK for Windows. version 0.11.1 )。
-# 1 == pspsdk-setup-0.11.2r2.exe を使う。
- USE_MINIMALIST_PSP_SDK = 1
+# 1 == pspsdk-setup-0.11.2r2.exe(2011-05-18) を使う。
+#// まだ未検証 1 == pspsdk-setup-0.11.2r3.exe(2011-06-01) を使う。
+USE_MINIMALIST_PSP_SDK = 1
 #USE_MINIMALIST_PSP_SDK = 0
 
 
@@ -61,15 +62,19 @@ USE_EBOOT_TITLE = 1
 # PSP setting.
 #------------------------------------------------------------------------------
 
-# psp-2000対応(らしい)。
+# psp-2000対応。
 PSP_LARGE_MEMORY = 1
 
 # 3.71以降(つまりpsp-2000拡張メモリ)対応ってこと(らしい)。
 PSP_FW_VERSION = 371
 
-# 署名版は fw1.00 では起動できません。(BUILD_PRX = 1が無理)
-#PSP_SYOMEI_OFW = 0
- PSP_SYOMEI_OFW = 1
+# 注意: 署名版は fw1.00 では起動できません。(BUILD_PRX = 1が無理)
+PSP_SYOMEI_OFW = 0
+#PSP_SYOMEI_OFW = 1
+
+# 注意: (r38)Minimalistの場合、署名版は MusicRoom に入るとハングアップします。原因はメモリ不足なのですが、
+# 時間内に原因を追求しきれませんでした。
+# (r38)cygwinの場合、署名版は メモリ不足にならないので、問題ありません。 MusicRoom に入ってもハングアップしません。
 
 #------------------------------------------------------------------------------
 # OFW setting.
@@ -243,13 +248,16 @@ LINK_MOD = 1
 # Configurate Rule.
 #------------------------------------------------------------------------------
 
+SRC = src
+OBJ = obj
+
 VERSION_ALL = r$(VERSION_MAJOR)u$(VERSION_MINOR)
 
 #CORE_CFLAGS += -DKENE_NAME_STR="KENE"
 CORE_CFLAGS += -DKENE_RELEASE_VERSION=$(VERSION_MAJOR)
 CORE_CFLAGS += -DKENE_UPDATE_VERSION=$(VERSION_MINOR)
 
-include ./src/UTF8_title.mak
+include ./$(SRC)/UTF8_title.mak
 
 #PSP_EBOOT_TITLE = kene_r34_debug
 #PSP_EBOOT_TITLE = kene$(RELESE_DATE)(r35)
@@ -269,17 +277,14 @@ else
 	# ICON1.PNG はとりあえず作るの、めんどくさい。
 	# 1 == アップデート版(タイトルの文字あり)
 	PSP_EBOOT_ICON	 = ICON0.PNG
-	PSP_EBOOT_ICON1  = ICON0.PMF
+#test	PSP_EBOOT_ICON1  = ICON0.PMF
 	PSP_EBOOT_UNKPNG = 
 	PSP_EBOOT_PIC1	 = 
-	PSP_EBOOT_SND0	 = SND0.AT3
+#test	PSP_EBOOT_SND0	 = SND0.AT3
 endif
 
 # 通常開発
 EXTRA_TARGETS		 = mk_dir EBOOT.PBP
-
-SRC = src
-OBJ = obj
 
 
 ifneq ($(USE_MINIMALIST_PSP_SDK),1)
@@ -336,12 +341,12 @@ endif
 
 # sdl-config ( $(shell $(SDL_CONFIG) --libs) ) は使用できない。理由は以下の２点
 
-# １．sdl-config に、-lSDLmain がある。これを使うと、新型psp(psp-2000)では起動できない。
+# １。sdl-config に、-lSDLmain がある。これを使うと、新型psp(psp-2000)では起動できない。
 # その為 libSDLmain.a の main(); 以外に main(); があり(当然psp-2000で起動させるために)
 # こちらを使う(C言語はmain();関数が１つのみ、リンカは後着優先)が、
 # 周辺関数の名前が同じならバッティングする危険がある。
 
-# ２．ライブラリ間の依存関係が解消できない。
+# ２。ライブラリ間の依存関係が解消できない。
 # sdl-config は SDL 以外のライブラリと依存関係が発生する場合を考慮しない為。
 
 #------------------------------------------------------------------------------
@@ -824,7 +829,7 @@ CFLAGS += -falign-functions=32
 # ループの頭は必ずアライメント。
 CFLAGS += -falign-loops
 # ラベル指定も必ずアライメント。
-CFLAGS += -falign-labels 
+CFLAGS += -falign-labels
 # ジャンプ先も必ずアライメント。
 CFLAGS += -falign-jumps
 
@@ -897,7 +902,7 @@ CFLAGS += -std=gnu99
 # off(符号比較で警告しない):符号比較の扱い
 #CFLAGS += -Wno-sign-compare
 # on(符号比較で警告する):符号比較の扱い。
-CFLAGS += -Wsign-compare 
+CFLAGS += -Wsign-compare
 
 
 
@@ -911,10 +916,6 @@ CFLAGS += -Wbad-function-cast
 
 #CFLAGS += -Wmissing-prototypes # プロトタイプ宣言が無い場合に警告(→エラー)。
 
-#	CFLAGS += -ftracer
-#	CFLAGS += -fstrength-reduce
-#	CFLAGS += -ffast-math
-
 CFLAGS += -ffast-math
 	# このオプションを指定すると、実行速度を最適化するという観点から、
 	# ある面で ANSI や IEEE の規則や仕様を破ることを GCC に許す。
@@ -922,14 +923,43 @@ CFLAGS += -ffast-math
 	# 浮動小数点値がNaN になることはないという仮定を行なう。 
 
 
-#	CFLAGS += -funroll-all-loops
+
+
 #	CFLAGS += -pipe
-#	CFLAGS += -falign-functions
-#	CFLAGS += -falign-jumps
-#	CFLAGS += -falign-loops
-#	CFLAGS += -falign-labels
 #	CFLAGS += -freorder-blocks
 #	CFLAGS += -fprefetch-loop-arrays
+
+#------------------------------------------------------------------------------
+# ループ展開に関する最適化オプション
+#------------------------------------------------------------------------------
+# これらのオプションを付けると pspでは遅くなる。
+#------------------------------------------------------------------------------
+
+# ========
+# -fstrength-reduce
+# ループの強度削減と繰り返し変数の削除の最適化を実行します。
+# ループの外に出せる計算は外に出して、ステップ数を減らします。
+# ========
+# -frerun-cse-after-loop 
+# ループ最適化の実行後に共通部分式の削除をもう一度実行します。
+# -fstrength-reduce で行ったことを徹底して行います。
+# ========
+# -frerun-loop-opt 
+# ループ最適化を徹底して行います。-fstrength-reduceで行ったことです。
+# ループ内で変化しない式やアドレス計算がチェックされます。
+# そして、そうした計算はループの外に移され、その評価値がレジスタに格納されます。
+# ========
+# -funroll-loops
+# ループ展開最適化を実行します。
+# これは、コンパイル時か実行時に繰り返し回数が決められるループにしか行われません。
+# -funroll-loopsは、前述の -fstrength-reduce と -frerun-cse-after-loop を含みます。
+# ========
+# -funroll-all-loops
+# ループ展開最適化を実行します。これは、すべてのループに対して行われ、
+# 普通はプログラムの実行を遅くしてしまいます。
+# (pspではループ展開はすればするほど遅くなる。)	CFLAGS += -funroll-all-loops
+# ========
+
 
 #------------------------------------------------------------------------------
 # cygwinも Minimalist は無くてもコンパイル出来る(?)。
@@ -959,7 +989,17 @@ endif
 # また、多くの関数で利用可能なレジスタが一つ増える。
 # また、機種によってはデバッグが不可能になる。 (pspでは -pg が使えなくなる)。
 
+# (現在r36異常動作の為off。pspでは遅くなる?) CFLAGS += -ftracer
+# (現在r36異常動作の為off。pspでは遅くなる?) CFLAGS += -fstrength-reduce
+
+# どちらのオプションが悪いのか実験していないが、r36では、
+# これらを付けると、キャラ選択画面がちらついたり、色々おかしい。
+# これらのオプションはループ展開等するらしく、
+# サイズが増えるとキャッシュに収まりきらなくなり psp では速度低下する。
+
 ifneq ($(USE_PROFILE),1)
+#	CORE_CFLAGS += -ftracer
+#	CORE_CFLAGS += -fstrength-reduce
 	CORE_CFLAGS += -fomit-frame-pointer
 else
 	CORE_CFLAGS += -DENABLE_PROFILE
@@ -967,6 +1007,8 @@ else
 endif
 
 ifneq ($(USE_LIB_PROFILE),1)
+#	LIB_CFLAGS += -ftracer
+#	LIB_CFLAGS += -fstrength-reduce
 	LIB_CFLAGS += -fomit-frame-pointer
 else
 	LIB_CFLAGS += -DENABLE_PROFILE
@@ -980,7 +1022,6 @@ endif
 #CXXFLAGS += -fno-rtti
 #CXXFLAGS += -fsingle-precision-constant
 #CXXFLAGS += -mno-check-zero-division
-#CXXFLAGS += -ffast-math
 ###
 #CXXFLAGS += $(CFLAGS)
 #CXXFLAGS += -fno-exceptions
@@ -1133,18 +1174,18 @@ $(OBJ)/%.a:
 
 ifneq ($(USE_MINIMALIST_PSP_SDK),1)
 # 通常開発(cygwin)
-# (unix:ディレクトリー  ,msdos: ディレクトリー  ,windows: フォルダ)[OSで名称が違うが同じ物]
-# make directory (unix:mkdir  ,msdos: md) メイク-ディアー、メイク-ディレクトリー(ディレクトリを作成する)
+# (unix:ディレクトリー ,msdos: ディレクトリー ,windows: フォルダ)[OSで名称が違うが同じ物]
+# make directory (unix:mkdir ,msdos:md) メイク-ディアー、メイク-ディレクトリー(ディレクトリを作成する)
 #435ではbuild.mak内にある。MKDIR = mkdir.exe
 RM = -rm.exe
-# copy    (unix:cp  ,msdos: copy) コピー(ファイルを複製する)[2つに増える]
+# copy    (unix:cp ,msdos: copy) コピー(ファイルを複製する)[2つに増える]
 #435ではbuild.mak内にある。CP = cp
 CP = cp
-# re-move (unix:rm  ,msdos: del)  リムーブ(ファイルを消す)
+# re-move (unix:rm ,msdos:del)  リムーブ(ファイルを消す)
 #435ではbuild.mak内にある。RM = rm
-# move    (unix:mv  ,msdos:move)  ムーブ(ファイルを移動する)[移動元は削除される]
+# move    (unix:mv ,msdos:move)  ムーブ(ファイルを移動する)[移動元は削除される]
 MV = mv
-# archiver ア－カイバ(C言語などのコンパイルしたobjファイルをライブラリに纏めたり分解したりするツール。ファイル圧縮は一切しない)
+# archiver ア－カイバ(C言語などのコンパイルした.objファイルをライブラリ.aファイルに纏めたり分解したりするツール。ファイル圧縮は一切しない)
 #435ではbuild.mak内にある。(psp-ar)AR = ar
 else
 # pspsdk-setup-0.11.1
@@ -1231,6 +1272,15 @@ a:
 #	@$(RM) -f $(OBJ)/game_core/menu/*.o
 #	@$(RM) -f $(OBJ)/game_core/tama/*.o
 
+# syomei banをminimalistでやる場合のパッチ。
+patch:
+	@echo syomei ban minimalist patch.
+	@$(RM) -f $(OBJ)/game_core/boot_main.o
+	@$(RM) -f $(TARGET).prx
+	@$(RM) -f $(TARGET).elf
+	@$(RM) -f PARAM.SFO
+	@$(RM) -f EBOOT.PBP
+
 
 # font 作りなおしたい場合に。
 # Make font ↓ (但しcygwin)
@@ -1247,52 +1297,4 @@ rr:
 	@$(RM) -f *.elf
 	@$(RM) -f $(TARGET)_map.txt
 	@$(DELTREE_OBJ_ALL)
-
-
-# 小さい方を選択してみるテスト。
-cp:
-	@echo Test copy files.
-	@$(CP) 02obj/game_core/my_math.o obj/game_core/my_math.o
-	@$(CP) 02obj/game_core/tama/bullet_vector.o obj/game_core/tama/bullet_vector.o
-	@$(CP) 02obj/game_core/boss/spell_card.o obj/game_core/boss/spell_card.o
-	@$(CP) 02obj/game_core/boss/boss_06_sakuya.o obj/game_core/boss/boss_06_sakuya.o
-	@$(CP) 02obj/game_core/boss/option_64_sakuya_kurukuru.o obj/game_core/boss/option_64_sakuya_kurukuru.o
-	@$(CP) 02obj/game_core/boss/option_66_sakuya_star.o obj/game_core/boss/option_66_sakuya_star.o
-	@$(CP) 02obj/game_core/boss/option_50_pache_laser.o obj/game_core/boss/option_50_pache_laser.o
-	@$(CP) 02obj/game_core/douchu/zako.o obj/game_core/douchu/zako.o
-	@$(CP) 02obj/game_core/douchu/game_clear.o obj/game_core/douchu/game_clear.o
-	@$(CP) 02obj/game_core/jiki/jiki_shot.o obj/game_core/jiki/jiki_shot.o
-	@$(CP) 02obj/game_core/font.o obj/game_core/font.o
-	@$(CP) 02obj/game_core/load_stage.o obj/game_core/load_stage.o
-	@$(CP) 02obj/game_core/menu/select_stage.o obj/game_core/menu/select_stage.o
-	@$(CP) 02obj/game_core/menu/game_over.o obj/game_core/menu/game_over.o
-	@$(CP) 02obj/game_core/draw/graphics00.o obj/game_core/draw/graphics00.o
-	@$(CP) 02obj/PSPL/audio/mikmod/mdriver.o obj/PSPL/audio/mikmod/mdriver.o
-	@$(CP) 02obj/PSPL/audio/mikmod/virtch_common.o obj/PSPL/audio/mikmod/virtch_common.o
-	@$(CP) 02obj/PSPL/audio/mikmod/mlutil.o obj/PSPL/audio/mikmod/mlutil.o
-	@$(CP) 02obj/PSPL/audio/mikmod/munitrk.o obj/PSPL/audio/mikmod/munitrk.o
-	@$(CP) 02obj/PSPL/audio/mikmod/mplayer.o obj/PSPL/audio/mikmod/mplayer.o
-	@$(CP) 02obj/PSPL/audio/mixer/load_ogg.o obj/PSPL/audio/mixer/load_ogg.o
-	@$(CP) 02obj/PSPL/audio/mixer/music_mad.o obj/PSPL/audio/mixer/music_mad.o
-	@$(CP) 02obj/PSPL/audio/mixer/wavestream.o obj/PSPL/audio/mixer/wavestream.o
-	@$(CP) 02obj/PSPL/audio/mixer/music.o obj/PSPL/audio/mixer/music.o
-	@$(CP) 02obj/jpeg/jidctfst.o obj/jpeg/jidctfst.o
-	@$(CP) 02obj/jpeg/jdhuff.o obj/jpeg/jdhuff.o
-	@$(CP) 02obj/jpeg/jdmainct.o obj/jpeg/jdmainct.o
-	@$(CP) 02obj/jpeg/jdpostct.o obj/jpeg/jdpostct.o
-	@$(CP) 02obj/jpeg/jdinput.o obj/jpeg/jdinput.o
-	@$(CP) 02obj/jpeg/jcomapi.o obj/jpeg/jcomapi.o
-	@$(CP) 02obj/libpng/pngerror.o obj/libpng/pngerror.o
-	@$(CP) 02obj/libpng/pngget.o obj/libpng/pngget.o
-	@$(CP) 02obj/libpng/pngset.o obj/libpng/pngset.o
-	@$(CP) 02obj/libpng/png.o obj/libpng/png.o
-	@$(CP) 02obj/libpng/pngread.o obj/libpng/pngread.o
-	@$(CP) 02obj/PSPL/image/IMG_jpg.o obj/PSPL/image/IMG_jpg.o
-	@$(CP) 02obj/PSPL/image/IMG.o obj/PSPL/image/IMG.o
-	@$(CP) 02obj/PSPL/audio/PSPL_pspaudio.o obj/PSPL/audio/PSPL_pspaudio.o
-	@$(CP) 02obj/PSPL/audio/PSPL_mixer.o obj/PSPL/audio/PSPL_mixer.o
-	@$(CP) 02obj/PSPL/thread/PSPL_syssem.o obj/PSPL/thread/PSPL_syssem.o
-	@$(CP) 02obj/PSPL/video/PSPL_blit.o obj/PSPL/video/PSPL_blit.o
-	@$(CP) 02obj/PSPL/video/PSPL_surface.o obj/PSPL/video/PSPL_surface.o
-	@$(CP) 02obj/PSPL/video/PSPL_video.o obj/PSPL/video/PSPL_video.o
 

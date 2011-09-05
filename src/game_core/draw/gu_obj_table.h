@@ -1,7 +1,7 @@
 
 /*---------------------------------------------------------
 	東方模倣風 ～ Toho Imitation Style.
-	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	このファイルは /src/core/draw/gu_draw_screen.c からインクルードされます。
 ---------------------------------------------------------*/
@@ -201,8 +201,8 @@ static VIRTUAL_OBJ_STATE obj_status_table[(OBJ_BANK_MAX*OBJ_BANK_SIZE)/*(6*8*8)*
 	{  0,  0,  8,  8},//	J,
 // [5]
 	{  0, 17, 14, 14},//	SPELL_SQUERE_,	/* [□] */
-	{  0, 32,  1,  1},//	SP_DUMMY_MUTEKI, FRONT 面なのであたり判定なし。それから表示されない。S P_GROUP_ETC_DUMMY_REMILIA,
-	{219,  0,  4,  4},//	SP_FRONT_YUKI, FRONT 面なのであたり判定なし。(とりあえず仮で)雪みたいな表示。S P_GROUP_ETC_DUMMY_SLOW_BOMB,
+	{  0, 32,  1,  1},//	SP_DUMMY_MUTEKI, FRONT 面なのであたり判定なし。それから表示されない。
+	{219,  0,  4,  4},//	SP_FRONT_YUKI, FRONT 面なのであたり判定なし。(とりあえず仮で)雪みたいな表示。
 	{129, 18, 32, 10},//	J,"MAX"32x10ローマ文字,
 	{192,128, 32, 10},//	J,"Easy"32x10ローマ文字,
 	{192,139, 40, 10},//	J,"Normal"40x10ローマ文字,
@@ -331,7 +331,7 @@ static VIRTUAL_OBJ_STATE obj_status_table[(OBJ_BANK_MAX*OBJ_BANK_SIZE)/*(6*8*8)*
 	{  0, 96, 11, 11},//	JIKI_OPTION_00_07,
 
 //						//	左へ移動のアニメーション	[中心→左側4→左側3→左側2→左側1→左側1→左側1→...]
-// [1]					//	JIKI_PLAYER_00_LEFT 	/* 左側1 */ 	/* 最も左 */			= SP_GROUP_JIKI_GET_ITEM/*0x08
+// [1]					//	JIKI_PLAYER_00_LEFT 	/* 左側1 */ 	/* 最も左 */			= OBJ_Z01_JIKI_GET_ITEM/*0x08
 	{  0,  0, 31, 31},//	JIKI_PLAYER_01_LEFT,	/* 左側2 */
 	{ 32,  0, 31, 31},//	JIKI_PLAYER_02_LEFT,	/* 左側3 */
 	{ 64,  0, 31, 31},//	JIKI_PLAYER_03_LEFT,	/* 左側4 */ 	/* 中より左 */
@@ -416,7 +416,7 @@ static VIRTUAL_OBJ_STATE obj_status_table[(OBJ_BANK_MAX*OBJ_BANK_SIZE)/*(6*8*8)*
 	{  0, 96, 11, 11},//	JIKI_OPTION_00_07,
 
 //						//	左へ移動のアニメーション	[中心→左側4→左側3→左側2→左側1→左側1→左側1→...]
-// [1]					//	JIKI_PLAYER_00_LEFT 	/* 左側1 */ 	/* 最も左 */			= SP_GROUP_JIKI_GET_ITEM/*0x08
+// [1]					//	JIKI_PLAYER_00_LEFT 	/* 左側1 */ 	/* 最も左 */			= OBJ_Z01_JIKI_GET_ITEM/*0x08
 	{  0,  0, 31, 31},//	JIKI_PLAYER_01_LEFT,	/* 左側2 */
 	{ 32,  0, 31, 31},//	JIKI_PLAYER_02_LEFT,	/* 左側3 */
 	{ 64,  0, 31, 31},//	JIKI_PLAYER_03_LEFT,	/* 左側4 */ 	/* 中より左 */
@@ -501,7 +501,7 @@ static VIRTUAL_OBJ_STATE obj_status_table[(OBJ_BANK_MAX*OBJ_BANK_SIZE)/*(6*8*8)*
 	{  0, 96, 11, 11},//	JIKI_OPTION_00_06,
 	{  0, 96, 11, 11},//	JIKI_OPTION_00_07,
 //					//	左へ移動のアニメーション	[中心→左側4→左側3→左側2→左側1→左側1→左側1→...]
-// [1]				//	JIKI_PLAYER_00_LEFT 	/* 左側1 */ 	/* 最も左 */			= SP_GROUP_JIKI_GET_ITEM/*0x08
+// [1]				//	JIKI_PLAYER_00_LEFT 	/* 左側1 */ 	/* 最も左 */			= OBJ_Z01_JIKI_GET_ITEM/*0x08
 	{  0,  0, 31, 31},//	JIKI_PLAYER_01_LEFT,	/* 左側2 */
 	{ 32,  0, 31, 31},//	JIKI_PLAYER_02_LEFT,	/* 左側3 */
 	{ 64,  0, 31, 31},//	JIKI_PLAYER_03_LEFT,	/* 左側4 */ 	/* 中より左 */
@@ -587,7 +587,7 @@ static VIRTUAL_OBJ_STATE obj_status_table[(OBJ_BANK_MAX*OBJ_BANK_SIZE)/*(6*8*8)*
 	{  0, 96, 11, 11},//	JIKI_OPTION_00_07,
 
 //					//	左へ移動のアニメーション	[中心→左側4→左側3→左側2→左側1→左側1→左側1→...]
-// [1]				//	JIKI_PLAYER_00_LEFT 	/* 左側1 */ 	/* 最も左 */			= SP_GROUP_JIKI_GET_ITEM/*0x08
+// [1]				//	JIKI_PLAYER_00_LEFT 	/* 左側1 */ 	/* 最も左 */			= OBJ_Z01_JIKI_GET_ITEM/*0x08
 	{  0,  0, 31, 31},//	JIKI_PLAYER_01_LEFT,	/* 左側2 */
 	{ 32,  0, 31, 31},//	JIKI_PLAYER_02_LEFT,	/* 左側3 */
 	{ 64,  0, 31, 31},//	JIKI_PLAYER_03_LEFT,	/* 左側4 */ 	/* 中より左 */
@@ -674,7 +674,7 @@ static VIRTUAL_OBJ_STATE obj_status_table[(OBJ_BANK_MAX*OBJ_BANK_SIZE)/*(6*8*8)*
 	{  0, 96, 18, 18},//	JIKI_OPTION_00_07,
 
 //					//	左へ移動のアニメーション	[中心→左側4→左側3→左側2→左側1→左側1→左側1→...]
-// [1]				//	JIKI_PLAYER_00_LEFT 	/* 左側1 */ 	/* 最も左 */			= SP_GROUP_JIKI_GET_ITEM/*0x08
+// [1]				//	JIKI_PLAYER_00_LEFT 	/* 左側1 */ 	/* 最も左 */			= OBJ_Z01_JIKI_GET_ITEM/*0x08
 	{  0,  0, 31, 31},//	JIKI_PLAYER_01_LEFT,	/* 左側2 */
 	{ 32,  0, 32, 31},//	JIKI_PLAYER_02_LEFT,	/* 左側3 */
 	{ 64,  0, 31, 31},//	JIKI_PLAYER_03_LEFT,	/* 左側4 */ 	/* 中より左 */
@@ -761,7 +761,7 @@ static VIRTUAL_OBJ_STATE obj_status_table[(OBJ_BANK_MAX*OBJ_BANK_SIZE)/*(6*8*8)*
 	{112, 96, 15, 15},//	JIKI_OPTION_00_07,
 
 //					//	左へ移動のアニメーション	[中心→左側4→左側3→左側2→左側1→左側1→左側1→...]
-// [1]				//	JIKI_PLAYER_00_LEFT 	/* 左側1 */ 	/* 最も左 */			= SP_GROUP_JIKI_GET_ITEM/*0x08
+// [1]				//	JIKI_PLAYER_00_LEFT 	/* 左側1 */ 	/* 最も左 */			= OBJ_Z01_JIKI_GET_ITEM/*0x08
 	{  0,  0, 31, 31},//	JIKI_PLAYER_01_LEFT,	/* 左側2 */
 	{ 32,  0, 31, 31},//	JIKI_PLAYER_02_LEFT,	/* 左側3 */
 	{ 64,  0, 31, 31},//	JIKI_PLAYER_03_LEFT,	/* 左側4 */ 	/* 中より左 */
@@ -803,13 +803,13 @@ static VIRTUAL_OBJ_STATE obj_status_table[(OBJ_BANK_MAX*OBJ_BANK_SIZE)/*(6*8*8)*
 
 // [3]
 	{161,  0, 94,149},//	JIKI_BOMBER_00, 	/* ボンバー発動時の立ち絵 */
-	{  0,112, 15, 15},//	JIKI_BOMBER_01, 	/* 誘導ボム(低速ボム)	 */
-	{  0,  0, 31, 31},//	JIKI_BOMBER_02, 	/* --- 未使用 --- / 結界白 / 長炎1 */
-	{  0,  0, 31, 31},//	JIKI_BOMBER_03, 	/* --- 未使用 --- / 結界黄 / 長炎2 */
-	{  0,112, 46, 37},//	JIKI_BOMBER_04, 	/* 黄札1 / 星1 / 十字炎1 / 蝶1 / チ */
-	{ 47,112, 46, 37},//	JIKI_BOMBER_05, 	/* 黄札2 / 星2 / 十字炎2 / 蝶2 / ル */
-	{  0,112, 46, 37},//	JIKI_BOMBER_06, 	/* 黄札3 / 星3 / 十字炎3 / 蝶3 / ノ */
-	{ 47,112, 46, 37},//	JIKI_BOMBER_07, 	/* 黄札4 / 星4 / 十字炎4 / 蝶4 / ⑨ */
+	{100,112,  8,  8},//	JIKI_BOMBER_01, 	/* 赤88弾 / 誘導ボム(低速ボム)	 */
+	{ 66,112, 16, 16},//	JIKI_BOMBER_02, 	/* 蝶弾16赤 / 結界白 / 長炎1 */
+	{ 83,112, 16, 16},//	JIKI_BOMBER_03, 	/* 蝶弾16青 / 結界黄 / 長炎2 */
+	{  0,112, 32, 32},//	{  0,112, 46, 37},//	JIKI_BOMBER_04, 	/* 黄札1 / 星1 / 十字炎1 / 蝶1 / チ */
+	{ 33,112, 32, 32},//	{ 47,112, 46, 37},//	JIKI_BOMBER_05, 	/* 黄札2 / 星2 / 十字炎2 / 蝶2 / ル */
+	{  0,112, 32, 32},//	{  0,112, 46, 37},//	JIKI_BOMBER_06, 	/* 黄札3 / 星3 / 十字炎3 / 蝶3 / ノ */
+	{ 33,112, 32, 32},//	{ 47,112, 46, 37},//	JIKI_BOMBER_07, 	/* 黄札4 / 星4 / 十字炎4 / 蝶4 / ⑨ */
 
 // [8]
 	{ 96, 96, 15, 15},//	JIKI_OPTION_03_00,/* 同じ */
@@ -829,12 +829,12 @@ static VIRTUAL_OBJ_STATE obj_status_table[(OBJ_BANK_MAX*OBJ_BANK_SIZE)/*(6*8*8)*
 	{  1, 64, 32, 32},//	JIKI_SHOT_04,		/* こうもり弾2 / 黄札2 */
 	{  1, 64, 32, 32},//	JIKI_SHOT_05,		/* こうもり弾3 / 黄札3 */
 	{  1, 64, 32, 32},//	JIKI_SHOT_06,		/* こうもり弾4 / 黄札4 */
-	{128, 50, 19, 36},//	JIKI_SHOT_07,		/* こうもり弾5 / 針弾 / 森弾 / ウェイブ弾 / ピンク蝶弾 */
+	{128, 50, 18, 36},//	JIKI_SHOT_07,		/* こうもり弾5 / 針弾 / 森弾 / ウェイブ弾 / ピンク蝶弾 */
 
 
 //
 /* [OBJ_BANK_06_CIRNO_A] */
-// [06チルノA]
+// [06チルノA (氷符)]
 // [5]
 	{  0, 96, 15, 15},//	JIKI_OPTION_00_00,
 	{ 16, 96, 15, 15},//	JIKI_OPTION_00_01,
@@ -846,7 +846,7 @@ static VIRTUAL_OBJ_STATE obj_status_table[(OBJ_BANK_MAX*OBJ_BANK_SIZE)/*(6*8*8)*
 	{112, 96, 15, 15},//	JIKI_OPTION_00_07,
 
 //					//	左へ移動のアニメーション	[中心→左側4→左側3→左側2→左側1→左側1→左側1→...]
-// [1]				//	JIKI_PLAYER_00_LEFT 	/* 左側1 */ 	/* 最も左 */			= SP_GROUP_JIKI_GET_ITEM/*0x08
+// [1]				//	JIKI_PLAYER_00_LEFT 	/* 左側1 */ 	/* 最も左 */			= OBJ_Z01_JIKI_GET_ITEM/*0x08
 	{  0,  0, 31, 31},//	JIKI_PLAYER_01_LEFT,	/* 左側2 */
 	{ 32,  0, 31, 31},//	JIKI_PLAYER_02_LEFT,	/* 左側3 */
 	{ 64,  0, 31, 31},//	JIKI_PLAYER_03_LEFT,	/* 左側4 */ 	/* 中より左 */
@@ -919,7 +919,7 @@ static VIRTUAL_OBJ_STATE obj_status_table[(OBJ_BANK_MAX*OBJ_BANK_SIZE)/*(6*8*8)*
 
 //
 /* [OBJ_BANK_07_CIRNO_Q] */
-// [07チルノ⑨]
+// [07チルノ⑨ (⑨符)]
 
 // [5]
 	{  0, 96, 15, 15},//	JIKI_OPTION_00_00,
@@ -932,7 +932,7 @@ static VIRTUAL_OBJ_STATE obj_status_table[(OBJ_BANK_MAX*OBJ_BANK_SIZE)/*(6*8*8)*
 	{112, 96, 15, 15},//	JIKI_OPTION_00_07,
 
 //					//	左へ移動のアニメーション	[中心→左側4→左側3→左側2→左側1→左側1→左側1→...]
-// [1]				//	JIKI_PLAYER_00_LEFT 	/* 左側1 */ 	/* 最も左 */			= SP_GROUP_JIKI_GET_ITEM/*0x08
+// [1]				//	JIKI_PLAYER_00_LEFT 	/* 左側1 */ 	/* 最も左 */			= OBJ_Z01_JIKI_GET_ITEM/*0x08
 	{  0,  0, 31, 31},//	JIKI_PLAYER_01_LEFT,	/* 左側2 */
 	{ 32,  0, 31, 31},//	JIKI_PLAYER_02_LEFT,	/* 左側3 */
 	{ 64,  0, 31, 31},//	JIKI_PLAYER_03_LEFT,	/* 左側4 */ 	/* 中より左 */

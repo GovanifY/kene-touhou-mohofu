@@ -1,10 +1,9 @@
 
 #include "boss.h"
 
-
 /*---------------------------------------------------------
 	東方模倣風 ～ Toho Imitation Style.
-	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	カード管理システム
 	-------------------------------------------------------
@@ -23,78 +22,50 @@
 	★ 雑魚(中雑魚)がカードを撃てる機能は、廃止して、
 	雑魚(中雑魚)がカードを撃ちたい場合は、「カードが撃てるザコ」という物を新設してそれを使い
 	システムではサポートしない方が良いと思う。のでそういう方向で改造予定。
-	-------------------------------------------------------
-	GAME_X_OFFSET 対応。
 ---------------------------------------------------------*/
 
 #include "kanji_system.h"
+
+#include "../menu/kaiwa_sprite.h"
 
 /*---------------------------------------------------------
 	ボス追加
 ---------------------------------------------------------*/
 
 // チルノ EX1面
-extern void cirno_02_keitai(SPRITE *src);
 // 咲夜 6面
-extern void sakuya_11_keitai(SPRITE *src);
-extern void sakuya_10_keitai(SPRITE *src);
-extern void sakuya_09_keitai(SPRITE *src);
-extern void sakuya_08_keitai(SPRITE *src);
-extern void sakuya_07_keitai(SPRITE *src);
-extern void sakuya_06_keitai(SPRITE *src);
-extern void sakuya_04_keitai(SPRITE *src);
-//tern void sakuya_03_keitai(SPRITE *src);/* 同じ */
-extern void sakuya_02_keitai(SPRITE *src);
-//tern void sakuya_01_keitai(SPRITE *src);/* 同じ */
+extern void boss_move_17_sakuya_bimyou_idou(OBJ *src);/*(微妙に移動する)*/
+extern void boss_move_16_sakuya_nazo_keitai(OBJ *src);/*(差分氏の謎形態)*/
+extern void boss_move_15_sakuya_festival_knife(OBJ *src);/*(幻葬「フェスティバルナイフ」)*/
+extern void boss_move_14_sakuya_miss_direction(OBJ *src);/*(奇術「ミスディレクション」)*/
 
 // パチェ 5面
-
 //レーザー
-extern void add_laser_off(SPRITE *src);
-extern void add_laser_on(SPRITE *src);
-
+extern void add_laser_off(OBJ *src);
+extern void add_laser_on(OBJ *src);
 // 文 4面
-extern void aya_05_keitai(SPRITE *src);
-//tern void aya_04_keitai(SPRITE *src);/* 同じ */
-//tern void aya_03_keitai(SPRITE *src);/* 同じ */
-//tern void aya_02_keitai(SPRITE *src);/* 同じ */
-//tern void aya_01_keitai(SPRITE *src);/* 同じ */
-
+extern void boss_move_13_aya_taifu(OBJ *src);
 // 輝夜 3面
-extern void add_zako_kaguya_houmotsu(SPRITE *src);
-extern void add_zako_kaguya_dolls02(SPRITE *src);
-extern void add_zako_kaguya_dolls01(SPRITE *src);
-//tern void kaguya_06_keitai(SPRITE *src);
-//tern void kaguya_05_keitai(SPRITE *src);
-extern void kaguya_04_keitai(SPRITE *src);
-//tern void kaguya_03_keitai(SPRITE *src);
-//tern void kaguya_02_keitai(SPRITE *src);
-extern void kaguya_01_keitai(SPRITE *src);
-extern void boss_init_kaguya(SPRITE *src);
-
+extern void boss_move_12_kaguya_funya_idou(OBJ *src);
+extern void boss_move_11_kaguya_yureru(OBJ *src);
+extern void boss_init_kaguya(OBJ *src);
 // 魅魔 2面
-
-extern void mima_01_keitai(SPRITE *src);
-
+extern void boss_move_10_mima_keitai(OBJ *src);
 // アリス 1面
 
 
 // 共通形態
-extern void boss_move_05_xy_douki_differential64(SPRITE *src);
-extern void boss_move_04_xy_douki_differential32(SPRITE *src);
-extern void boss_move_03_x_douki(SPRITE *src);
-extern void boss_move_02_xy_hidouki(SPRITE *src);
-extern void boss_move_01_not_move(SPRITE *src);
-
-/*(会話中の形態)*/
-extern void kaiwa_00_keitai(SPRITE *src);
-//extern void common_99_keitai(SPRITE *src);/* 撃破後に画面外にボスが逃げる */
+extern void boss_move_05_xy_douki_differential64(OBJ *src);
+extern void boss_move_04_xy_douki_differential32(OBJ *src);
+extern void boss_move_03_x_douki(OBJ *src);
+extern void boss_move_02_xy_hidouki(OBJ *src);
+extern void boss_move_01_taihi_ue_naka(OBJ *src);
 
 
 /* 共通部 */
-global void init_00_boss_clip000(SPRITE *h);/* 標準タイプ */
-global void init_00_boss_clip111(SPRITE *h);/* 上に広いタイプ */
-
+static void init_00_boss_clip000(OBJ *h);/* 標準タイプ */
+static void init_00_boss_clip111(OBJ *h);/* 上に広いタイプ */
+static void init_00_boss_clip222(OBJ *h);/* 上だけ広いタイプ */
 
 
 
@@ -119,537 +90,13 @@ global void init_00_boss_clip111(SPRITE *h);/* 上に広いタイプ */
 // int card.number; 		/* 共用 */	// カード番号
 
 global CARD_SYSTEM_GLOBAL_CLASS card;
-/*global*/ static int card_syoji_maisuu;		/* 共用 */	// カード番号最大限界値
-
-
-
-typedef struct
-{
-	int spell_life; 							/* カードに登録された一定体力 */
-	int spell_limit_time;						/* カードの制限時間。(カードに登録された一定時間) */
-//
-	const char *spell_str_name; 				/* カード名称 */
-	int card_number;							/* カードの種類 */
-//
-	void (*spell_init_callback)(SPRITE *sss);			/* 初期化移動処理 */
-	void (*boss_move_keitai_callback)(SPRITE *sss); 	/* ボス移動形態選択処理 */
-} CARD_ADDRESS_RESOURCE;
-//	void (*spell_yuudou_callback)(SPRITE *sss); 		/* カード誘導移動処理 */
-//廃止	void (*spell_tamakesi04_callback)(void);		/* カード弾画面外処理(弾消し / 弾反射 / ...) */
-
-	/* 名前はテキトーです */
-
-/* カード時間(==単位[フレーム])は、64倍(==単位[約1秒])が規格 */
-#define s_time(aaa) (((int)(aaa))<<6)
-
-/* ボス体力単位は、1024倍を単位にしてみる */
-#define s_hp(aaa) (((int)(aaa))<<10)
-
-#if 0
-	// 32でゲージ1本(r32)
-	32768==1024*32==s_hp(32)
-//
-311296==32768*9.5
-294912==32768*9.0
-262144==32768*8.0
-237568==32768*7.25
-229376==32768*7.0
-196608==32768*6.0
-163840==32768*5.0
-147456==32768*4.5
-131072==32768*4.0
-114688==32768*3.5
-98304==32768*3.0
-81920==32768*2.5
-65536==32768*2.0
-49152==32768*1.5
-#endif
-/*---------------------------------------------------------
-	氷符「アイシクルフォール」動かないでカードを撃つ。
----------------------------------------------------------*/
-
-static CARD_ADDRESS_RESOURCE my_card_resource[CARD_ADDRESS_MAX] =
-{									// 最大半角で30文字。
-// チルノ エキストラステージ		"eeddccbbaa99887766554433221100",'\n\0' ワーク文字列バッファ長をこれだけしか用意しない予定なので、あふれたら字が出ない。 */
-	{s_hp(32*3.5),	s_time(900),	NULL,/* "形態変更" "\n"*/				SPELL_00,							init_00_boss_clip000,		kaiwa_00_keitai,						},	/* 73728==8192*9.0 */
-	{s_hp(32*3.5),	s_time(900),	NULL,/* "形態変更" "\n"*/				SPELL_00,							init_00_boss_clip000,		kaiwa_00_keitai,						},	/* 73728==8192*9.0 */
-	{s_hp(32*3.5),	s_time(900),	NULL,/* "形態変更" "\n"*/				SPELL_00,							init_00_boss_clip000,		kaiwa_00_keitai,						},	/* 73728==8192*9.0 */
-	{s_hp(32*3.5),	s_time(900),	NULL,/* "形態変更" "\n"*/				SPELL_00,							init_00_boss_clip000,		kaiwa_00_keitai,						},	/* 73728==8192*9.0 */
-//	3.5
-	{	s_hp(16),	s_time(20), 	NULL,/* "通常攻撃1" "\n"*/				SPELL_10_cirno, 					NULL,						boss_move_02_xy_hidouki,				},	/* "第一形態: " */	/* 初回の攻撃分(手動設定)  500 160	*/
-	{	s_hp(16),	s_time(20), 	NULL,/* "通常攻撃1" "\n"*/				SPELL_10_cirno, 					NULL,						boss_move_02_xy_hidouki,				},	/* "第一形態: " */	/* 初回の攻撃分(手動設定)  500 160	*/
-	{	s_hp(16),	s_time(20), 	NULL,/* "通常攻撃1" "\n"*/				SPELL_10_cirno, 					NULL,						boss_move_02_xy_hidouki,				},	/* "第一形態: " */	/* 初回の攻撃分(手動設定)  500 160	*/
-	{	s_hp(16),	s_time(20), 	NULL,/* "通常攻撃1" "\n"*/				SPELL_10_cirno, 					NULL,						boss_move_02_xy_hidouki,				},	/* "第一形態: " */	/* 初回の攻撃分(手動設定)  500 160	*/
-//	3.0
-	{	s_hp(24),	s_time(20), 	"　　氷符「アイシクルフォール」" "\n",	SPELL_1b_cirno_icecle_fall, 		NULL,						boss_move_01_not_move,					},	/* "第二形態: " */
-	{	s_hp(24),	s_time(20), 	"　　氷符「アイシクルフォール」" "\n",	SPELL_1b_cirno_icecle_fall, 		NULL,						boss_move_01_not_move,					},	/* "第二形態: " */
-	{	s_hp(24),	s_time(20), 	"　　氷符「アイシクルフォール」" "\n",	SPELL_1b_cirno_icecle_fall, 		NULL,						boss_move_01_not_move,					},	/* "第二形態: " */
-	{	s_hp(24),	s_time(20), 	"　　氷符「アイシクルフォール」" "\n",	SPELL_1b_cirno_icecle_fall, 		NULL,						boss_move_01_not_move,					},	/* "第二形態: " */
-//	2.25
-	{	 s_hp(8),	s_time(20), 	NULL,/* "通常攻撃2" "\n"*/				SPELL_0c_sakuya_jack32, 			NULL,						boss_move_02_xy_hidouki,				},	/* "第三形態: " */
-	{	 s_hp(8),	s_time(20), 	NULL,/* "通常攻撃2" "\n"*/				SPELL_0c_sakuya_jack32, 			NULL,						boss_move_02_xy_hidouki,				},	/* "第三形態: " */
-	{	 s_hp(8),	s_time(20), 	NULL,/* "通常攻撃2" "\n"*/				SPELL_0c_sakuya_jack32, 			NULL,						boss_move_02_xy_hidouki,				},	/* "第三形態: " */
-	{	 s_hp(8),	s_time(20), 	NULL,/* "通常攻撃2" "\n"*/				SPELL_0c_sakuya_jack32, 			NULL,						boss_move_02_xy_hidouki,				},	/* "第三形態: " */
-//	2.0
-	{	s_hp(16),	s_time(20), 	"　凍符「パーフェクトフリーズ」" "\n",	SPELL_11_perfect_freeze,			NULL,						boss_move_02_xy_hidouki,				},	/* "第四形態: " */
-	{	s_hp(16),	s_time(20), 	"　凍符「パーフェクトフリーズ」" "\n",	SPELL_11_perfect_freeze,			NULL,						boss_move_02_xy_hidouki,				},	/* "第四形態: " */
-	{	s_hp(16),	s_time(20), 	"　凍符「パーフェクトフリーズ」" "\n",	SPELL_11_perfect_freeze,			NULL,						boss_move_02_xy_hidouki,				},	/* "第四形態: " */
-	{	s_hp(16),	s_time(20), 	"　凍符「パーフェクトフリーズ」" "\n",	SPELL_11_perfect_freeze,			NULL,						boss_move_02_xy_hidouki,				},	/* "第四形態: " */
-//	1.5
-	{	s_hp(32),	s_time(20), 	"雪符「ダイアモンドブリザード」" "\n",	SPELL_12_diamond_blizzard,			NULL,						boss_move_02_xy_hidouki,				},	/* "第五形態: " */
-	{	s_hp(32),	s_time(20), 	"雪符「ダイアモンドブリザード」" "\n",	SPELL_12_diamond_blizzard,			NULL,						boss_move_02_xy_hidouki,				},	/* "第五形態: " */
-	{	s_hp(32),	s_time(20), 	"雪符「ダイアモンドブリザード」" "\n",	SPELL_12_diamond_blizzard,			NULL,						boss_move_02_xy_hidouki,				},	/* "第五形態: " */
-	{	s_hp(32),	s_time(20), 	"雪符「ダイアモンドブリザード」" "\n",	SPELL_12_diamond_blizzard,			NULL,						boss_move_02_xy_hidouki,				},	/* "第五形態: " */
-//	0.0
-	// 咲夜easyは短い上に段階が少ない。
-// 咲夜 6面 						"eeddccbbaa99887766554433221100",'\n\0' ワーク文字列バッファ長をこれだけしか用意しない予定なので、あふれたら字が出ない。 */
-	{s_hp(32*2.0),	s_time(900),	NULL,/* "形態変更" "\n"*/				SPELL_00,							init_00_boss_clip000,		kaiwa_00_keitai,						},	/* 73728==8192*9.0 */
-	{s_hp(32*3.5),	s_time(900),	NULL,/* "形態変更" "\n"*/				SPELL_00,							init_00_boss_clip000,		kaiwa_00_keitai,						},	/* 73728==8192*9.0 */
-	{s_hp(32*3.5),	s_time(900),	NULL,/* "形態変更" "\n"*/				SPELL_00,							init_00_boss_clip000,		kaiwa_00_keitai,						},	/* 73728==8192*9.0 */
-	{s_hp(32*3.5),	s_time(900),	NULL,/* "形態変更" "\n"*/				SPELL_00,							init_00_boss_clip000,		kaiwa_00_keitai,						},	/* 73728==8192*9.0 */
-//	9.5
-	{	s_hp(6),	s_time(20), 	NULL,/* "通常攻撃" "\n"*/				SPELL_01_sakuya_misogi_normal,		NULL,						boss_move_04_xy_douki_differential32,	},	/* "第一形態: 通常攻撃(左右に動いて禊弾撃ち)"		*/	/* 初回の攻撃分(手動設定)  500 160	*/
-	{	s_hp(10),	s_time(20), 	NULL,/* "通常攻撃" "\n"*/				SPELL_01_sakuya_misogi_normal,		NULL,						boss_move_04_xy_douki_differential32,	},	/* "第一形態: 通常攻撃(左右に動いて禊弾撃ち)"		*/	/* 初回の攻撃分(手動設定)  500 160	*/
-	{	s_hp(10),	s_time(20), 	NULL,/* "通常攻撃" "\n"*/				SPELL_01_sakuya_misogi_normal,		NULL,						boss_move_04_xy_douki_differential32,	},	/* "第一形態: 通常攻撃(左右に動いて禊弾撃ち)"		*/	/* 初回の攻撃分(手動設定)  500 160	*/
-	{	s_hp(10),	s_time(20), 	NULL,/* "通常攻撃" "\n"*/				SPELL_2d_sakuya_misogi_lunatic, 	NULL,						boss_move_04_xy_douki_differential32,	},	/* "第一形態: 通常攻撃(左右に動いて禊弾撃ち)"		*/	/* 初回の攻撃分(手動設定)  500 160	*/
-//	9.0
-	{	s_hp(3),	s_time(10), 	"　　奇術「ミスディレクション」" "\n",	SPELL_0d_sakuya_miss_direction, 	NULL,						sakuya_02_keitai,						},	/* "第二形態: 奇術「ミスディレクション」(全方位、豆まき)"	*/
-	{	s_hp(4),	s_time(10), 	"　　奇術「ミスディレクション」" "\n",	SPELL_0d_sakuya_miss_direction, 	NULL,						sakuya_02_keitai,						},	/* "第二形態: 奇術「ミスディレクション」(全方位、豆まき)"	*/
-	{	s_hp(5),	s_time(10), 	"奇術「幻惑ミスディレクション」" "\n",	SPELL_0d_sakuya_miss_direction, 	NULL,						sakuya_02_keitai,						},	/* "第二形態: 奇術「ミスディレクション」(全方位、豆まき)"	*/
-	{	s_hp(5),	s_time(10), 	"奇術「幻惑ミスディレクション」" "\n",	SPELL_0d_sakuya_miss_direction, 	NULL,						sakuya_02_keitai,						},	/* "第二形態: 奇術「ミスディレクション」(全方位、豆まき)"	*/
-//	8.25	// bloody==血だらけの。 staind ステインド==ステンド==(色を)焼き付け(て残す)る。
-	{	 s_hp(3),	s_time(20), 	NULL,/* "通常攻撃3" "\n"*/				SPELL_2c_sakuya_blue_red,			NULL,						boss_move_04_xy_douki_differential32,	},	/* "第三形態: " " 　　　　時象「ペッパーナイフ」"		*/
-	{	 s_hp(4),	s_time(20), 	NULL,/* "通常攻撃3" "\n"*/				SPELL_2c_sakuya_blue_red,			NULL,						boss_move_04_xy_douki_differential32,	},	/* "第三形態: " " 　　　　時雨「ステンドナイフ」"		*/
-	{	 s_hp(4),	s_time(20), 	NULL,/* "通常攻撃3" "\n"*/				SPELL_2c_sakuya_blue_red,			NULL,						boss_move_04_xy_douki_differential32,	},	/* "第三形態: " " 　　五月雨「ブラッディナイフ」"		*/
-	{	 s_hp(4),	s_time(20), 	NULL,/* "通常攻撃3" "\n"*/				SPELL_2c_sakuya_blue_red,			NULL,						boss_move_04_xy_douki_differential32,	},	/* "第三形態: " " 　　時砂「パーフェクトナイフ」"		*/
-//	8.0
-	{	s_hp(6),	s_time(20), 	NULL,/* "通常攻撃"白緑弾 */ 			SPELL_2a_sakuya_baramaki1,			NULL,						sakuya_04_keitai,						},	/* "第四形態: 魔方陣生成"	*/
-	{	s_hp(9),	s_time(20), 	NULL,/* "通常攻撃"白緑弾 */ 			SPELL_2a_sakuya_baramaki1,			NULL,						sakuya_04_keitai,						},	/* "第四形態: 魔方陣生成"	*/
-	{	s_hp(9),	s_time(20), 	NULL,/* "通常攻撃"白緑弾 */ 			SPELL_2a_sakuya_baramaki1,			NULL,						sakuya_04_keitai,						},	/* "第四形態: 魔方陣生成"	*/
-	{	s_hp(9),	s_time(20), 	NULL,/* "通常攻撃"白緑弾 */ 			SPELL_2a_sakuya_baramaki1,			NULL,						sakuya_04_keitai,						},	/* "第四形態: 魔方陣生成"	*/
-//	7.5 	// meek==素直。
-	{	s_hp(6),	s_time(20), 	"鈍詛「ブラドツェペシュの鈍い」" "\n",	SPELL_28_remilia_tamaoki1,			NULL,						boss_move_02_xy_hidouki,				},	/* sakuya_06_keitai"第五形態: (黄色マスカット弾A)"	"　　幻定「デンジャラスミーク」"	*/
-	{	s_hp(9),	s_time(20), 	"呪詛「ブラドツェペシュの呪い」" "\n",	SPELL_28_remilia_tamaoki1,			NULL,						boss_move_02_xy_hidouki,				},	/* sakuya_06_keitai"第五形態: (黄色マスカット弾A)"	"　幻種「デンジャラスワールド」"	*/
-	{	s_hp(9),	s_time(20), 	"祝詛「ブラドツェペシュの祝い」" "\n",	SPELL_28_remilia_tamaoki1,			NULL,						boss_move_02_xy_hidouki,				},	/* sakuya_06_keitai"第五形態: (黄色マスカット弾A)"	"　　幻象「デンジャラスタイム」"	*/
-	{	s_hp(9),	s_time(20), 	"恐詛「ブラドツェペシュの恐い」" "\n",	SPELL_28_remilia_tamaoki1,			NULL,						boss_move_02_xy_hidouki,				},	/* sakuya_06_keitai"第五形態: (黄色マスカット弾A)"	"　幻舞「デンジャラスストーム」"	*/
-	//
-	{	s_hp(6),	s_time(20), 	"鈍詛「ブラドツェペシュの鈍い」" "\n",	SPELL_28_remilia_tamaoki1,			NULL,						boss_move_02_xy_hidouki,				},	/* sakuya_06_keitai"第六形態: (黄色マスカット弾B)"					*/
-	{	s_hp(9),	s_time(20), 	"呪詛「ブラドツェペシュの呪い」" "\n",	SPELL_28_remilia_tamaoki1,			NULL,						boss_move_02_xy_hidouki,				},	/* sakuya_06_keitai"第六形態: (黄色マスカット弾B)"					*/
-	{	s_hp(9),	s_time(20), 	"祝詛「ブラドツェペシュの祝い」" "\n",	SPELL_28_remilia_tamaoki1,			NULL,						boss_move_02_xy_hidouki,				},	/* sakuya_06_keitai"第六形態: (黄色マスカット弾B)"					*/
-	{	s_hp(9),	s_time(20), 	"恐詛「ブラドツェペシュの恐い」" "\n",	SPELL_28_remilia_tamaoki1,			NULL,						boss_move_02_xy_hidouki,				},	/* sakuya_06_keitai"第六形態: (黄色マスカット弾B)"					*/
-//	6.5 	// ジャック・ザ・リッパー==Jack the Ripper==切り裂きジャック(殺人鬼)19世紀(1888年)に実在(?)/抽象名詞化。ワールドヒーローズ。 リック==スプラッターハウス
-	{	s_hp(12),	s_time(20), 	"　奇抜「ジャック・ガーリック」" "\n",	SPELL_0c_sakuya_jack32, 			NULL,						boss_move_02_xy_hidouki,				},	/* "第七形態: (分散魔方陣)追加計画中"				*/
-	{	s_hp(16),	s_time(20), 	"奇術「ジャック・ザ・ラッパー」" "\n",	SPELL_0c_sakuya_jack32, 			NULL,						boss_move_02_xy_hidouki,				},	/* "第七形態: (分散魔方陣)追加計画中"				*/
-	{	s_hp(16),	s_time(20), 	"奇術「ジャック・ザ・ビーンズ」" "\n",	SPELL_0c_sakuya_jack32, 			NULL,						boss_move_02_xy_hidouki,				},	/* "第七形態: (分散魔方陣)追加計画中"				*/
-	{	s_hp(16),	s_time(20), 	"夢違「ジャック・デ・マメマキ」" "\n",	SPELL_0c_sakuya_jack32, 			NULL,						boss_move_02_xy_hidouki,				},	/* "第七形態: (分散魔方陣)追加計画中"				*/
-//
-	{	s_hp(8),	s_time(20), 	NULL,									SPELL_2b_sakuya_baramaki2,			NULL,						sakuya_08_keitai,						},	/* "第四形態: 魔方陣生成"	*/
-	{	s_hp(12),	s_time(20), 	NULL,									SPELL_2b_sakuya_baramaki2,			NULL,						sakuya_08_keitai,						},	/* "第四形態: 魔方陣生成"	*/
-	{	s_hp(12),	s_time(20), 	NULL,									SPELL_2b_sakuya_baramaki2,			NULL,						sakuya_08_keitai,						},	/* "第四形態: 魔方陣生成"	*/
-	{	s_hp(12),	s_time(20), 	NULL,									SPELL_2b_sakuya_baramaki2,			NULL,						sakuya_08_keitai,						},	/* "第四形態: 魔方陣生成"	*/
-//	4.5
-	{	s_hp(8),	s_time(20), 	"　幻想「フェスティバルナイフ」" "\n",	SPELL_r34_GOKAN_KINOU,				init_48_r34_gokan_kinou,	sakuya_09_keitai,						},	/* "第九形態: 最終形態(その1)"					*/
-	{	s_hp(12),	s_time(20), 	"　幻葬「フェスティバルナイフ」" "\n",	SPELL_r34_GOKAN_KINOU,				init_48_r34_gokan_kinou,	sakuya_09_keitai,						},	/* "第九形態: 最終形態(その1)"					*/
-	{	s_hp(12),	s_time(20), 	"　幻奏「フェスティバルナイフ」" "\n",	SPELL_r34_GOKAN_KINOU,				init_48_r34_gokan_kinou,	sakuya_09_keitai,						},	/* "第九形態: 最終形態(その1)"					*/
-	{	s_hp(12),	s_time(20), 	"　幻惑「フェスティバルナイフ」" "\n",	SPELL_r34_GOKAN_KINOU,				init_48_r34_gokan_kinou,	sakuya_09_keitai,						},	/* "第九形態: 最終形態(その1)"					*/
-//	2.5
-	{	s_hp(8),	s_time(20), 	NULL,									SPELL_0e_remilia_00,				NULL,						sakuya_10_keitai,						},	/* "第10形態: 最終形態(その2)"	*/
-	{	s_hp(12),	s_time(20), 	NULL,									SPELL_0e_remilia_00,				NULL,						sakuya_10_keitai,						},	/* "第10形態: 最終形態(その2)"	*/
-	{	s_hp(12),	s_time(20), 	NULL,									SPELL_0e_remilia_00,				NULL,						sakuya_10_keitai,						},	/* "第10形態: 最終形態(その2)"	*/
-	{	s_hp(12),	s_time(20), 	NULL,									SPELL_0e_remilia_00,				NULL,						sakuya_10_keitai,						},	/* "第10形態: 最終形態(その2)"	*/
-//	0.5
-	{	 s_hp(8),	s_time(20), 	"　　メイド秘密「残虐行為手当」" "\n",	SPELL_0e_remilia_00,				NULL,						sakuya_11_keitai,						},	/* "第11形態: 最終形態(その3)"					*/	// (easy)実はここにはこない
-	{	 s_hp(8),	s_time(20), 	"　　メイド秘技「鯱！鯱！鯱！」" "\n",	SPELL_0e_remilia_00,				NULL,						sakuya_11_keitai,						},	/* "第11形態: 最終形態(その3)"					*/
-	{	 s_hp(8),	s_time(20), 	"　メイド秘宝「あつくて死ぬぜ」" "\n",	SPELL_0e_remilia_00,				NULL,						sakuya_11_keitai,						},	/* "第11形態: 最終形態(その3)"					*/
-	{	 s_hp(8),	s_time(20), 	"　　メイド日々「もうすぐボス」" "\n",	SPELL_0e_remilia_00,				NULL,						sakuya_11_keitai,						},	/* "第11形態: 最終形態(その3)"					*/
-//	0.25
-//	{	s_hp(16),	s_time(20), 	"　　　　奇術「咲夜テストE008」" "\n",	SPELL_00,							NULL,						common_00_keitai,						},	/* "第八形態: (時止めナイフ)追加計画中" 		*/
-//	{	s_hp(24),	s_time(20), 	"　　　　奇術「咲夜テストN008」" "\n",	SPELL_00,							NULL,						common_00_keitai,						},	/* "第八形態: (時止めナイフ)追加計画中" 		*/
-//	{	s_hp(24),	s_time(20), 	"　　　　奇術「咲夜テストH008」" "\n",	SPELL_00,							NULL,						common_00_keitai,						},	/* "第八形態: (時止めナイフ)追加計画中" 		*/
-//	{	s_hp(24),	s_time(20), 	"　　　　奇術「咲夜テストL008」" "\n",	SPELL_00,							NULL,						common_00_keitai,						},	/* "第八形態: (時止めナイフ)追加計画中" 		*/
-
-	// パチェeasyは短い上に1段階少ない。
-// A(霊符)
-// パチェA 5面						"eeddccbbaa99887766554433221100",'\n\0' ワーク文字列バッファ長をこれだけしか用意しない予定なので、あふれたら字が出ない。 */
-	{s_hp(32*2.00), s_time(800),	NULL,/* "形態変更" "\n"*/				SPELL_00,							init_00_boss_clip000,		kaiwa_00_keitai,						},/* 40960==8192*5.0 */
-	{s_hp(32*3.75), s_time(800),	NULL,/* "形態変更" "\n"*/				SPELL_00,							init_00_boss_clip000,		kaiwa_00_keitai,						},/* 40960==8192*5.0 */
-	{s_hp(32*3.75), s_time(800),	NULL,/* "形態変更" "\n"*/				SPELL_00,							init_00_boss_clip000,		kaiwa_00_keitai,						},/* 40960==8192*5.0 */
-	{s_hp(32*3.75), s_time(800),	NULL,/* "形態変更" "\n"*/				SPELL_00,							init_00_boss_clip000,		kaiwa_00_keitai,						},/* 40960==8192*5.0 */
-//	5.0
-	{	s_hp(10),	s_time(30), 	NULL,/* "通常攻撃1" "\n"*/				SPELL_42_PACHE_LASER1,				add_laser_on,				boss_move_02_xy_hidouki,				},
-	{	s_hp(16),	s_time(30), 	NULL,/* "通常攻撃1" "\n"*/				SPELL_42_PACHE_LASER1,				add_laser_on,				boss_move_02_xy_hidouki,				},
-	{	s_hp(16),	s_time(30), 	NULL,/* "通常攻撃1" "\n"*/				SPELL_42_PACHE_LASER1,				add_laser_on,				boss_move_02_xy_hidouki,				},
-	{	s_hp(16),	s_time(30), 	NULL,/* "通常攻撃1" "\n"*/				SPELL_42_PACHE_LASER1,				add_laser_on,				boss_move_02_xy_hidouki,				},
-//	4.0
-	{	s_hp(10),	s_time(30), 	"　　　　火符「アグニシャイン」" "\n",	SPELL_2e_pache_agni_shine_1,		add_laser_off,				boss_move_03_x_douki,					},
-	{	s_hp(16),	s_time(30), 	"　　　　火符「アグニシャイン」" "\n",	SPELL_2e_pache_agni_shine_1,		add_laser_off,				boss_move_02_xy_hidouki,				},
-	{	s_hp(16),	s_time(30), 	"　　火符「アグニシャイン上級」" "\n",	SPELL_33_pache_agni_shine_2,		add_laser_off,				boss_move_02_xy_hidouki,				},
-	{	s_hp(16),	s_time(30), 	"　　火符「アグニシャイン上級」" "\n",	SPELL_33_pache_agni_shine_2,		add_laser_off,				boss_move_02_xy_hidouki,				},
-//	3.0
-	{	s_hp(10),	s_time(30), 	NULL,/* "通常攻撃2" "\n"*/				SPELL_43_PACHE_LASER2,				add_laser_on,				boss_move_02_xy_hidouki,				},
-	{	s_hp(16),	s_time(30), 	NULL,/* "通常攻撃2" "\n"*/				SPELL_43_PACHE_LASER2,				add_laser_on,				boss_move_02_xy_hidouki,				},
-	{	s_hp(16),	s_time(30), 	NULL,/* "通常攻撃2" "\n"*/				SPELL_43_PACHE_LASER2,				add_laser_on,				boss_move_02_xy_hidouki,				},
-	{	s_hp(16),	s_time(30), 	NULL,/* "通常攻撃2" "\n"*/				SPELL_43_PACHE_LASER2,				add_laser_on,				boss_move_02_xy_hidouki,				},
-//	2.0
-	{	s_hp(10),	s_time(30), 	"　　土符「レイジィトリリトン」" "\n",	SPELL_31_pache_rage_tririton_1, 	add_laser_off,				boss_move_01_not_move,					},/*(テスト)*/
-	{	s_hp(16),	s_time(30), 	"土符「レイジィトリリトン上級」" "\n",	SPELL_35_pache_rage_tririton_2, 	add_laser_off,				boss_move_01_not_move,					},/*(テスト)*/
-	{	s_hp(16),	s_time(30), 	"　　土符「トリリトンシェイク」" "\n",	SPELL_39_pache_tririton_shake,		add_laser_off,				boss_move_01_not_move,					},/*(テスト)*/
-	{	s_hp(16),	s_time(30), 	"　　土符「トリリトンシェイク」" "\n",	SPELL_39_pache_tririton_shake,		add_laser_off,				boss_move_01_not_move,					},/*(テスト)*/
-//	1.0
-	{	s_hp(10),	s_time(30), 	"火＆土符「ラーヴァクロムレク」" "\n",	SPELL_3b_pache_lava_cromlech,		NULL,						boss_move_02_xy_hidouki,				},
-	{	s_hp(16),	s_time(30), 	"火＆土符「ラーヴァクロムレク」" "\n",	SPELL_3b_pache_lava_cromlech,		NULL,						boss_move_02_xy_hidouki,				},
-	{	s_hp(16),	s_time(30), 	"火＆土符「ラーヴァクロムレク」" "\n",	SPELL_3b_pache_lava_cromlech,		NULL,						boss_move_02_xy_hidouki,				},
-	{	s_hp(16),	s_time(30), 	"火＆土符「ラーヴァクロムレク」" "\n",	SPELL_3b_pache_lava_cromlech,		NULL,						boss_move_02_xy_hidouki,				},
-//	0.0
-	{	s_hp(10),	s_time(30), 	"金＆水符「マーキュリポイズン」" "\n",	SPELL_3e_pache_mercury_poison,		NULL,						boss_move_01_not_move,					},
-	{	s_hp(16),	s_time(30), 	"金＆水符「マーキュリポイズン」" "\n",	SPELL_3e_pache_mercury_poison,		NULL,						boss_move_01_not_move,					},
-	{	s_hp(16),	s_time(30), 	"金＆水符「マーキュリポイズン」" "\n",	SPELL_3e_pache_mercury_poison,		NULL,						boss_move_01_not_move,					},
-	{	s_hp(16),	s_time(30), 	"金＆水符「マーキュリポイズン」" "\n",	SPELL_3e_pache_mercury_poison,		NULL,						boss_move_01_not_move,					},
-//	0.0
-	{	s_hp(10),	s_time(30), 	"木＆火符「フォレストブレイズ」" "\n",	SPELL_3c_pache_forest_blaze,		NULL,						boss_move_01_not_move,					},	// (easy)実はここにはこない
-	{	s_hp(16),	s_time(30), 	"木＆火符「フォレストブレイズ」" "\n",	SPELL_3c_pache_forest_blaze,		NULL,						boss_move_01_not_move,					},
-	{	s_hp(16),	s_time(30), 	"木＆火符「フォレストブレイズ」" "\n",	SPELL_3c_pache_forest_blaze,		NULL,						boss_move_01_not_move,					},
-	{	s_hp(16),	s_time(30), 	"木＆火符「フォレストブレイズ」" "\n",	SPELL_3c_pache_forest_blaze,		NULL,						boss_move_01_not_move,					},
-
-// B(夢符)
-// パチェB 5面						"eeddccbbaa99887766554433221100",'\n\0' ワーク文字列バッファ長をこれだけしか用意しない予定なので、あふれたら字が出ない。 */
-	{s_hp(32*2.00), s_time(800),	NULL,/* "形態変更" "\n"*/				SPELL_00,							init_00_boss_clip000,		kaiwa_00_keitai,						},/* 40960==8192*5.0 */
-	{s_hp(32*3.75), s_time(800),	NULL,/* "形態変更" "\n"*/				SPELL_00,							init_00_boss_clip000,		kaiwa_00_keitai,						},/* 40960==8192*5.0 */
-	{s_hp(32*3.75), s_time(800),	NULL,/* "形態変更" "\n"*/				SPELL_00,							init_00_boss_clip000,		kaiwa_00_keitai,						},/* 40960==8192*5.0 */
-	{s_hp(32*3.75), s_time(800),	NULL,/* "形態変更" "\n"*/				SPELL_00,							init_00_boss_clip000,		kaiwa_00_keitai,						},/* 40960==8192*5.0 */
-//	5.0
-	{	s_hp(10),	s_time(30), 	NULL,/* "通常攻撃1" "\n"*/				SPELL_42_PACHE_LASER1,				add_laser_on,				boss_move_02_xy_hidouki,				},
-	{	s_hp(16),	s_time(30), 	NULL,/* "通常攻撃1" "\n"*/				SPELL_42_PACHE_LASER1,				add_laser_on,				boss_move_02_xy_hidouki,				},
-	{	s_hp(16),	s_time(30), 	NULL,/* "通常攻撃1" "\n"*/				SPELL_42_PACHE_LASER1,				add_laser_on,				boss_move_02_xy_hidouki,				},
-	{	s_hp(16),	s_time(30), 	NULL,/* "通常攻撃1" "\n"*/				SPELL_42_PACHE_LASER1,				add_laser_on,				boss_move_02_xy_hidouki,				},
-//	4.0
-	{	s_hp(10),	s_time(30), 	"　水符「プリンセスウンディネ」" "\n",	SPELL_2f_pache_princess_undine, 	add_laser_off,				boss_move_04_xy_douki_differential32,	},
-	{	s_hp(16),	s_time(30), 	"　水符「プリンセスウンディネ」" "\n",	SPELL_2f_pache_princess_undine, 	add_laser_off,				boss_move_04_xy_douki_differential32,	},
-	{	s_hp(16),	s_time(30), 	"　　　水符「ベリーインレイク」" "\n",	SPELL_37_pache_bury_in_lake,		add_laser_off,				boss_move_04_xy_douki_differential32,	},
-	{	s_hp(16),	s_time(30), 	"　　　水符「ベリーインレイク」" "\n",	SPELL_37_pache_bury_in_lake,		add_laser_off,				boss_move_02_xy_hidouki,				},
-//	3.0
-	{	s_hp(10),	s_time(30), 	NULL,/* "通常攻撃2" "\n"*/				SPELL_43_PACHE_LASER2,				add_laser_on,				boss_move_02_xy_hidouki,				},
-	{	s_hp(16),	s_time(30), 	NULL,/* "通常攻撃2" "\n"*/				SPELL_43_PACHE_LASER2,				add_laser_on,				boss_move_02_xy_hidouki,				},
-	{	s_hp(16),	s_time(30), 	NULL,/* "通常攻撃2" "\n"*/				SPELL_43_PACHE_LASER2,				add_laser_on,				boss_move_02_xy_hidouki,				},
-	{	s_hp(16),	s_time(30), 	NULL,/* "通常攻撃2" "\n"*/				SPELL_43_PACHE_LASER2,				add_laser_on,				boss_move_02_xy_hidouki,				},
-//	2.0
-	{	s_hp(10),	s_time(30), 	"　　木符「シルフィホルン上級」" "\n",	SPELL_34_pache_sylphy_horn_2,		add_laser_off,				boss_move_01_not_move,					},
-	{	s_hp(16),	s_time(30), 	"　　木符「シルフィホルン上級」" "\n",	SPELL_34_pache_sylphy_horn_2,		add_laser_off,				boss_move_01_not_move,					},
-	{	s_hp(16),	s_time(30), 	"　　　木符「グリーンストーム」" "\n",	SPELL_38_pache_green_storm, 		add_laser_off,				boss_move_01_not_move,					},
-	{	s_hp(16),	s_time(30), 	"　　　木符「グリーンストーム」" "\n",	SPELL_38_pache_green_storm, 		add_laser_off,				boss_move_01_not_move,					},
-//	1.0
-	{	s_hp(10),	s_time(30), 	"　水＆木符「ウォーターエルフ」" "\n",	SPELL_3d_pache_water_elf,			NULL,						boss_move_02_xy_hidouki,				},
-	{	s_hp(16),	s_time(30), 	"　水＆木符「ウォーターエルフ」" "\n",	SPELL_3d_pache_water_elf,			NULL,						boss_move_02_xy_hidouki,				},
-	{	s_hp(16),	s_time(30), 	"　水＆木符「ウォーターエルフ」" "\n",	SPELL_3d_pache_water_elf,			NULL,						boss_move_02_xy_hidouki,				},
-	{	s_hp(16),	s_time(30), 	"　水＆木符「ウォーターエルフ」" "\n",	SPELL_3d_pache_water_elf,			NULL,						boss_move_02_xy_hidouki,				},
-//	0.0
-	{	s_hp(10),	s_time(30), 	"金＆水符「マーキュリポイズン」" "\n",	SPELL_3e_pache_mercury_poison,		NULL,						boss_move_01_not_move,					},
-	{	s_hp(16),	s_time(30), 	"金＆水符「マーキュリポイズン」" "\n",	SPELL_3e_pache_mercury_poison,		NULL,						boss_move_01_not_move,					},
-	{	s_hp(16),	s_time(30), 	"金＆水符「マーキュリポイズン」" "\n",	SPELL_3e_pache_mercury_poison,		NULL,						boss_move_01_not_move,					},
-	{	s_hp(16),	s_time(30), 	"金＆水符「マーキュリポイズン」" "\n",	SPELL_3e_pache_mercury_poison,		NULL,						boss_move_01_not_move,					},
-//	0.0
-	{	s_hp(10),	s_time(30), 	"土＆金符「エメラルドメガリス」" "\n",	SPELL_3f_pache_emerald_megalith,	NULL,						boss_move_02_xy_hidouki,				},	// (easy)実はここにはこない
-	{	s_hp(16),	s_time(30), 	"土＆金符「エメラルドメガリス」" "\n",	SPELL_3f_pache_emerald_megalith,	NULL,						boss_move_02_xy_hidouki,				},
-	{	s_hp(16),	s_time(30), 	"土＆金符「エメラルドメガリス」" "\n",	SPELL_3f_pache_emerald_megalith,	NULL,						boss_move_02_xy_hidouki,				},
-	{	s_hp(16),	s_time(30), 	"土＆金符「エメラルドメガリス」" "\n",	SPELL_3f_pache_emerald_megalith,	NULL,						boss_move_02_xy_hidouki,				},
-
-// C(魔符)
-// パチェC 5面						"eeddccbbaa99887766554433221100",'\n\0' ワーク文字列バッファ長をこれだけしか用意しない予定なので、あふれたら字が出ない。 */
-	{s_hp(32*2.00), s_time(800),	NULL,/* "形態変更" "\n"*/				SPELL_00,							init_00_boss_clip000,		kaiwa_00_keitai,						},/* 40960==8192*5.0 */
-	{s_hp(32*3.75), s_time(800),	NULL,/* "形態変更" "\n"*/				SPELL_00,							init_00_boss_clip000,		kaiwa_00_keitai,						},/* 40960==8192*5.0 */
-	{s_hp(32*3.75), s_time(800),	NULL,/* "形態変更" "\n"*/				SPELL_00,							init_00_boss_clip000,		kaiwa_00_keitai,						},/* 40960==8192*5.0 */
-	{s_hp(32*3.75), s_time(800),	NULL,/* "形態変更" "\n"*/				SPELL_00,							init_00_boss_clip000,		kaiwa_00_keitai,						},/* 40960==8192*5.0 */
-//	5.0
-	{	s_hp(10),	s_time(30), 	NULL,/* "通常攻撃1" "\n"*/				SPELL_42_PACHE_LASER1,				add_laser_on,				boss_move_02_xy_hidouki,				},
-	{	s_hp(16),	s_time(30), 	NULL,/* "通常攻撃1" "\n"*/				SPELL_42_PACHE_LASER1,				add_laser_on,				boss_move_02_xy_hidouki,				},
-	{	s_hp(16),	s_time(30), 	NULL,/* "通常攻撃1" "\n"*/				SPELL_42_PACHE_LASER1,				add_laser_on,				boss_move_02_xy_hidouki,				},
-	{	s_hp(16),	s_time(30), 	NULL,/* "通常攻撃1" "\n"*/				SPELL_42_PACHE_LASER1,				add_laser_on,				boss_move_02_xy_hidouki,				},
-//	4.0
-	{	s_hp(10),	s_time(30), 	"　　　　木符「シルフィホルン」" "\n",	SPELL_30_pache_sylphy_horn_1,		add_laser_off,				boss_move_01_not_move,					},
-	{	s_hp(16),	s_time(30), 	"　　　　木符「シルフィホルン」" "\n",	SPELL_30_pache_sylphy_horn_1,		add_laser_off,				boss_move_01_not_move,					},
-	{	s_hp(16),	s_time(30), 	"　　木符「シルフィホルン上級」" "\n",	SPELL_34_pache_sylphy_horn_2,		add_laser_off,				boss_move_01_not_move,					},
-	{	s_hp(16),	s_time(30), 	"　　木符「シルフィホルン上級」" "\n",	SPELL_34_pache_sylphy_horn_2,		add_laser_off,				boss_move_01_not_move,					},
-//	3.0
-	{	s_hp(10),	s_time(30), 	NULL,/* "通常攻撃2" "\n"*/				SPELL_43_PACHE_LASER2,				add_laser_on,				boss_move_02_xy_hidouki,				},
-	{	s_hp(16),	s_time(30), 	NULL,/* "通常攻撃2" "\n"*/				SPELL_43_PACHE_LASER2,				add_laser_on,				boss_move_02_xy_hidouki,				},
-	{	s_hp(16),	s_time(30), 	NULL,/* "通常攻撃2" "\n"*/				SPELL_43_PACHE_LASER2,				add_laser_on,				boss_move_02_xy_hidouki,				},
-	{	s_hp(16),	s_time(30), 	NULL,/* "通常攻撃2" "\n"*/				SPELL_43_PACHE_LASER2,				add_laser_on,				boss_move_02_xy_hidouki,				},
-//	2.0
-	{	s_hp(10),	s_time(30), 	"　　　　火符「アグニシャイン」" "\n",	SPELL_2e_pache_agni_shine_1,		add_laser_off,				boss_move_03_x_douki,					},
-	{	s_hp(16),	s_time(30), 	"　　火符「アグニシャイン上級」" "\n",	SPELL_33_pache_agni_shine_2,		add_laser_off,				boss_move_02_xy_hidouki,				},
-	{	s_hp(16),	s_time(30), 	"　火符「アグニレイディアンス」" "\n",	SPELL_36_pache_agni_radiance,		add_laser_off,				boss_move_02_xy_hidouki,				},
-	{	s_hp(16),	s_time(30), 	"　火符「アグニレイディアンス」" "\n",	SPELL_36_pache_agni_radiance,		add_laser_off,				boss_move_02_xy_hidouki,				},
-//	1.0
-	{	s_hp(10),	s_time(30), 	"木＆火符「フォレストブレイズ」" "\n",	SPELL_3c_pache_forest_blaze,		NULL,						boss_move_01_not_move,					},
-	{	s_hp(16),	s_time(30), 	"木＆火符「フォレストブレイズ」" "\n",	SPELL_3c_pache_forest_blaze,		NULL,						boss_move_01_not_move,					},
-	{	s_hp(16),	s_time(30), 	"木＆火符「フォレストブレイズ」" "\n",	SPELL_3c_pache_forest_blaze,		NULL,						boss_move_01_not_move,					},
-	{	s_hp(16),	s_time(30), 	"木＆火符「フォレストブレイズ」" "\n",	SPELL_3c_pache_forest_blaze,		NULL,						boss_move_01_not_move,					},
-//	0.0
-	{	s_hp(10),	s_time(30), 	"土＆金符「エメラルドメガリス」" "\n",	SPELL_3f_pache_emerald_megalith,	NULL,						boss_move_02_xy_hidouki,				},
-	{	s_hp(16),	s_time(30), 	"土＆金符「エメラルドメガリス」" "\n",	SPELL_3f_pache_emerald_megalith,	NULL,						boss_move_02_xy_hidouki,				},
-	{	s_hp(16),	s_time(30), 	"土＆金符「エメラルドメガリス」" "\n",	SPELL_3f_pache_emerald_megalith,	NULL,						boss_move_02_xy_hidouki,				},
-	{	s_hp(16),	s_time(30), 	"土＆金符「エメラルドメガリス」" "\n",	SPELL_3f_pache_emerald_megalith,	NULL,						boss_move_02_xy_hidouki,				},
-//	0.0
-	{	s_hp(10),	s_time(30), 	"火＆土符「ラーヴァクロムレク」" "\n",	SPELL_3b_pache_lava_cromlech,		NULL,						boss_move_02_xy_hidouki,				},	// (easy)実はここにはこない
-	{	s_hp(16),	s_time(30), 	"火＆土符「ラーヴァクロムレク」" "\n",	SPELL_3b_pache_lava_cromlech,		NULL,						boss_move_02_xy_hidouki,				},
-	{	s_hp(16),	s_time(30), 	"火＆土符「ラーヴァクロムレク」" "\n",	SPELL_3b_pache_lava_cromlech,		NULL,						boss_move_02_xy_hidouki,				},
-	{	s_hp(16),	s_time(30), 	"火＆土符「ラーヴァクロムレク」" "\n",	SPELL_3b_pache_lava_cromlech,		NULL,						boss_move_02_xy_hidouki,				},
-
-// D(恋符)
-// パチェD 5面						"eeddccbbaa99887766554433221100",'\n\0' ワーク文字列バッファ長をこれだけしか用意しない予定なので、あふれたら字が出ない。 */
-	{s_hp(32*2.00), s_time(800),	NULL,/* "形態変更" "\n"*/				SPELL_00,							init_00_boss_clip000,		kaiwa_00_keitai,						},/* 40960==8192*5.0 */
-	{s_hp(32*3.75), s_time(800),	NULL,/* "形態変更" "\n"*/				SPELL_00,							init_00_boss_clip000,		kaiwa_00_keitai,						},/* 40960==8192*5.0 */
-	{s_hp(32*3.75), s_time(800),	NULL,/* "形態変更" "\n"*/				SPELL_00,							init_00_boss_clip000,		kaiwa_00_keitai,						},/* 40960==8192*5.0 */
-	{s_hp(32*3.75), s_time(800),	NULL,/* "形態変更" "\n"*/				SPELL_00,							init_00_boss_clip000,		kaiwa_00_keitai,						},/* 40960==8192*5.0 */
-//	5.0
-	{	s_hp(10),	s_time(30), 	NULL,/* "通常攻撃1" "\n"*/				SPELL_42_PACHE_LASER1,				add_laser_on,				boss_move_02_xy_hidouki,				},
-	{	s_hp(16),	s_time(30), 	NULL,/* "通常攻撃1" "\n"*/				SPELL_42_PACHE_LASER1,				add_laser_on,				boss_move_02_xy_hidouki,				},
-	{	s_hp(16),	s_time(30), 	NULL,/* "通常攻撃1" "\n"*/				SPELL_42_PACHE_LASER1,				add_laser_on,				boss_move_02_xy_hidouki,				},
-	{	s_hp(16),	s_time(30), 	NULL,/* "通常攻撃1" "\n"*/				SPELL_42_PACHE_LASER1,				add_laser_on,				boss_move_02_xy_hidouki,				},
-//	4.0
-	{	s_hp(10),	s_time(30), 	"　　土符「レイジィトリリトン」" "\n",	SPELL_31_pache_rage_tririton_1, 	add_laser_off,				boss_move_01_not_move,					},
-	{	s_hp(16),	s_time(30), 	"　　土符「レイジィトリリトン」" "\n",	SPELL_31_pache_rage_tririton_1, 	add_laser_off,				boss_move_01_not_move,					},
-	{	s_hp(16),	s_time(30), 	"土符「レイジィトリリトン上級」" "\n",	SPELL_35_pache_rage_tririton_2, 	add_laser_off,				boss_move_01_not_move,					},
-	{	s_hp(16),	s_time(30), 	"土符「レイジィトリリトン上級」" "\n",	SPELL_35_pache_rage_tririton_2, 	add_laser_off,				boss_move_01_not_move,					},
-//	3.0
-	{	s_hp(10),	s_time(30), 	NULL,/* "通常攻撃2" "\n"*/				SPELL_43_PACHE_LASER2,				add_laser_on,				boss_move_02_xy_hidouki,				},
-	{	s_hp(16),	s_time(30), 	NULL,/* "通常攻撃2" "\n"*/				SPELL_43_PACHE_LASER2,				add_laser_on,				boss_move_02_xy_hidouki,				},
-	{	s_hp(16),	s_time(30), 	NULL,/* "通常攻撃2" "\n"*/				SPELL_43_PACHE_LASER2,				add_laser_on,				boss_move_02_xy_hidouki,				},
-	{	s_hp(16),	s_time(30), 	NULL,/* "通常攻撃2" "\n"*/				SPELL_43_PACHE_LASER2,				add_laser_on,				boss_move_02_xy_hidouki,				},
-//	2.0
-	{	s_hp(10),	s_time(30), 	"　　金符「メタルファティーグ」" "\n",	SPELL_32_pache_metal_fatigue,		add_laser_off,				boss_move_01_not_move,					},
-	{	s_hp(16),	s_time(30), 	"　　金符「メタルファティーグ」" "\n",	SPELL_32_pache_metal_fatigue,		add_laser_off,				boss_move_01_not_move,					},
-	{	s_hp(16),	s_time(30), 	"　　　金符「シルバードラゴン」" "\n",	SPELL_3a_pache_silver_dragon,		add_laser_off,				boss_move_01_not_move,					},
-	{	s_hp(16),	s_time(30), 	"　　　金符「シルバードラゴン」" "\n",	SPELL_3a_pache_silver_dragon,		add_laser_off,				boss_move_01_not_move,					},
-//	1.0
-	{	s_hp(10),	s_time(30), 	"土＆金符「エメラルドメガリス」" "\n",	SPELL_3f_pache_emerald_megalith,	NULL,						boss_move_02_xy_hidouki,				},
-	{	s_hp(16),	s_time(30), 	"土＆金符「エメラルドメガリス」" "\n",	SPELL_3f_pache_emerald_megalith,	NULL,						boss_move_02_xy_hidouki,				},
-	{	s_hp(16),	s_time(30), 	"土＆金符「エメラルドメガリス」" "\n",	SPELL_3f_pache_emerald_megalith,	NULL,						boss_move_02_xy_hidouki,				},
-	{	s_hp(16),	s_time(30), 	"土＆金符「エメラルドメガリス」" "\n",	SPELL_3f_pache_emerald_megalith,	NULL,						boss_move_02_xy_hidouki,				},
-//	0.0
-	{	s_hp(10),	s_time(30), 	"　水＆木符「ウォーターエルフ」" "\n",	SPELL_3d_pache_water_elf,			NULL,						boss_move_02_xy_hidouki,				},
-	{	s_hp(16),	s_time(30), 	"　水＆木符「ウォーターエルフ」" "\n",	SPELL_3d_pache_water_elf,			NULL,						boss_move_02_xy_hidouki,				},
-	{	s_hp(16),	s_time(30), 	"　水＆木符「ウォーターエルフ」" "\n",	SPELL_3d_pache_water_elf,			NULL,						boss_move_02_xy_hidouki,				},
-	{	s_hp(16),	s_time(30), 	"　水＆木符「ウォーターエルフ」" "\n",	SPELL_3d_pache_water_elf,			NULL,						boss_move_02_xy_hidouki,				},
-//	0.0
-	{	s_hp(10),	s_time(30), 	"金＆水符「マーキュリポイズン」" "\n",	SPELL_3e_pache_mercury_poison,		NULL,						boss_move_01_not_move,					},	// (easy)実はここにはこない
-	{	s_hp(16),	s_time(30), 	"金＆水符「マーキュリポイズン」" "\n",	SPELL_3e_pache_mercury_poison,		NULL,						boss_move_01_not_move,					},
-	{	s_hp(16),	s_time(30), 	"金＆水符「マーキュリポイズン」" "\n",	SPELL_3e_pache_mercury_poison,		NULL,						boss_move_01_not_move,					},
-	{	s_hp(16),	s_time(30), 	"金＆水符「マーキュリポイズン」" "\n",	SPELL_3e_pache_mercury_poison,		NULL,						boss_move_01_not_move,					},
-
-//	{	s_hp(10),	s_time(99), 	" 　月符「サイレント未作成E06」" "\n",	SPELL_00,							NULL,						boss_move_01_not_move,					},
-//	{	s_hp(16),	s_time(99), 	" 　月符「サイレント未作成N06」" "\n",	SPELL_00,							NULL,						boss_move_01_not_move,					},
-//	{	s_hp(16),	s_time(99), 	" 　月符「サイレント未作成H06」" "\n",	SPELL_00,							NULL,						boss_move_01_not_move,					},
-//	{	s_hp(16),	s_time(99), 	" 　月符「サイレント未作成L06」" "\n",	SPELL_00,							NULL,						boss_move_01_not_move,					},
-
-//	{	s_hp(10),	s_time(99), 	" 　氷符「パチュリー未作成E07」" "\n",	SPELL_00,							NULL,						boss_move_01_not_move,					},
-//	{	s_hp(16),	s_time(99), 	" 　氷符「パチュリー未作成N07」" "\n",	SPELL_00,							NULL,						boss_move_01_not_move,					},
-//	{	s_hp(16),	s_time(99), 	" 　氷符「パチュリー未作成H07」" "\n",	SPELL_00,							NULL,						boss_move_01_not_move,					},
-//	{	s_hp(16),	s_time(99), 	" 　氷符「パチュリー未作成L07」" "\n",	SPELL_00,							NULL,						boss_move_01_not_move,					},
-
-//	SPELL_15_aya_misogi
-//	SPELL_25_houka_kenran			/*aya_02_keitai*/
-//	SPELL_23_meirin_magaru_kunai	/*aya_01_keitai*/
-
-// 文 4面							"eeddccbbaa99887766554433221100",'\n\0' ワーク文字列バッファ長をこれだけしか用意しない予定なので、あふれたら字が出ない。 */
-	//																											/*ボス登場前の初期化[会話の前]*/
-	{s_hp(32*3),	s_time(600),	NULL,/* "形態変更" "\n"*/				SPELL_00,							NULL,						kaiwa_00_keitai,						},/* 32768=32768.0 */
-	{s_hp(32*3),	s_time(600),	NULL,/* "形態変更" "\n"*/				SPELL_00,							NULL,						kaiwa_00_keitai,						},/* 32768=32768.0 */
-	{s_hp(32*3),	s_time(600),	NULL,/* "形態変更" "\n"*/				SPELL_00,							NULL,						kaiwa_00_keitai,						},/* 32768=32768.0 */
-	{s_hp(32*3),	s_time(600),	NULL,/* "形態変更" "\n"*/				SPELL_00,							NULL,						kaiwa_00_keitai,						},/* 32768=32768.0 */
-	//	4.0 																									/*ボス戦闘前の初期化[会話の後]*/
-	{	s_hp(12),	s_time(20), 	NULL,/* "通常攻撃1" "\n"*/				SPELL_20_aya_misogi1,				init_00_boss_clip000,		boss_move_03_x_douki,					},/*(4)*/
-	{	s_hp(16),	s_time(20), 	NULL,/* "通常攻撃1" "\n"*/				SPELL_20_aya_misogi1,				init_00_boss_clip000,		boss_move_03_x_douki,					},/*(4)*/
-	{	s_hp(16),	s_time(20), 	NULL,/* "通常攻撃1" "\n"*/				SPELL_20_aya_misogi1,				init_00_boss_clip000,		boss_move_03_x_douki,					},/*(4)*/
-	{	s_hp(16),	s_time(20), 	NULL,/* "通常攻撃1" "\n"*/				SPELL_20_aya_misogi1,				init_00_boss_clip000,		boss_move_03_x_douki,					},/*(4)*/
-	//	3.5
-	{	s_hp(8),	s_time(30), 	"　　　　　　　岐符「天の八衢」" "\n",	SPELL_22_ame_no_yatimata,			init_00_boss_clip111,		boss_move_01_not_move,					},/*(4)*/
-	{	s_hp(8),	s_time(30), 	"　　　　　　　岐符「天の八衢」" "\n",	SPELL_22_ame_no_yatimata,			init_00_boss_clip111,		boss_move_01_not_move,					},/*(4)*/
-	{	s_hp(8),	s_time(30), 	"　　　　　　　岐符「天の八衢」" "\n",	SPELL_22_ame_no_yatimata,			init_00_boss_clip111,		boss_move_01_not_move,					},/*(4)*/
-	{	s_hp(8),	s_time(30), 	"　　　　　　　岐符「天の八衢」" "\n",	SPELL_22_ame_no_yatimata,			init_00_boss_clip111,		boss_move_01_not_move,					},/*(4)*/
-	//	3.0
-	{	s_hp(10),	s_time(20), 	NULL,/* "通常攻撃2" "\n"*/				SPELL_21_aya_misogi2,				init_00_boss_clip000,		boss_move_03_x_douki,					},/*(5)"岐符「未作成カード001」"*/
-	{	s_hp(12),	s_time(20), 	NULL,/* "通常攻撃2" "\n"*/				SPELL_21_aya_misogi2,				init_00_boss_clip000,		boss_move_03_x_douki,					},/*(5)"岐符「未作成カード001」"*/
-	{	s_hp(12),	s_time(20), 	NULL,/* "通常攻撃2" "\n"*/				SPELL_21_aya_misogi2,				init_00_boss_clip000,		boss_move_03_x_douki,					},/*(5)"岐符「未作成カード001」"*/
-	{	s_hp(12),	s_time(20), 	NULL,/* "通常攻撃2" "\n"*/				SPELL_21_aya_misogi2,				init_00_boss_clip000,		boss_move_03_x_douki,					},/*(5)"岐符「未作成カード001」"*/
-	//	2.5
-	{	 s_hp(4),	s_time(40), 	"　　　　　　摘符「穎割大好評」" "\n",	SPELL_24_aya_doll,					NULL,						boss_move_03_x_douki,					},/*(4)"岐符「未作成カード002」"*/
-	{	 s_hp(4),	s_time(40), 	"　　　　　風説「穎割大根被害」" "\n",	SPELL_24_aya_doll,					NULL,						boss_move_03_x_douki,					},/*(4)"岐符「未作成カード002」"*/
-	{	 s_hp(4),	s_time(40), 	"　　　　　　過剰「山葵大被害」" "\n",	SPELL_24_aya_doll,					NULL,						boss_move_03_x_douki,					},/*(4)"岐符「未作成カード002」"*/
-	{	 s_hp(4),	s_time(40), 	"　　　　　大量「麦酒十\升呑過」" "\n", SPELL_24_aya_doll,					NULL,						boss_move_03_x_douki,					},/*(4)"岐符「未作成カード002」"*/
-	//	2.0
-	{	s_hp(16),	s_time(100),	"　　　　　　　実況「風速３Ｍ」" "\n",	SPELL_r34_GOKAN_KINOU,				init_48_r34_gokan_kinou,	aya_05_keitai,							},/*(5)"岐符「未作成カード003」"*/
-	{	s_hp(16),	s_time(100),	"　　　　　　実況「風速３３Ｍ」" "\n",	SPELL_r34_GOKAN_KINOU,				init_48_r34_gokan_kinou,	aya_05_keitai,							},/*(5)"岐符「未作成カード003」"*/
-	{	s_hp(16),	s_time(100),	"　　　　　　実況「風速９８Ｍ」" "\n",	SPELL_r34_GOKAN_KINOU,				init_48_r34_gokan_kinou,	aya_05_keitai,							},/*(5)"岐符「未作成カード003」"*/
-	{	s_hp(16),	s_time(100),	"　　　　　　実況「風速測定中」" "\n",	SPELL_r34_GOKAN_KINOU,				init_48_r34_gokan_kinou,	aya_05_keitai,							},/*(5)"岐符「未作成カード003」"*/
-	//	1.5
-	{	s_hp(8),	s_time(99), 	"　　　　　　路符「小耳の調べ」" "\n",	SPELL_1d_amefuri_test,				init_00_boss_clip111,		boss_move_01_not_move,					},/*(4)"岐符「未作成カード004」"*/
-	{	s_hp(8),	s_time(99), 	"　　　　　　路符「小手の調べ」" "\n",	SPELL_1d_amefuri_test,				init_00_boss_clip111,		boss_move_01_not_move,					},/*(4)"岐符「未作成カード004」"*/
-	{	s_hp(8),	s_time(99), 	"　　　　　　路符「胡弓の調べ」" "\n",	SPELL_1d_amefuri_test,				init_00_boss_clip111,		boss_move_01_not_move,					},/*(4)"岐符「未作成カード004」"*/
-	{	s_hp(8),	s_time(99), 	"　　　　追跡「コロンボの調べ」" "\n",	SPELL_1d_amefuri_test,				init_00_boss_clip111,		boss_move_01_not_move,					},/*(4)"岐符「未作成カード004」"*/
-	//	1.0
-	{	s_hp(8),	s_time(99), 	"　　華符「うろおぼえ芳華絢爛」" "\n",	SPELL_25_houka_kenran,				init_00_boss_clip000,		boss_move_01_not_move,					},/*(5)*/
-	{	s_hp(8),	s_time(99), 	"　　　　　　　塞符「山神渡御」" "\n",	SPELL_26_aya_saifu, 				init_00_boss_clip000,		boss_move_01_not_move,					},/*(5)*/
-	{	s_hp(8),	s_time(99), 	"　　　　塞符「天上天下の照國」" "\n",	SPELL_26_aya_saifu, 				init_00_boss_clip000,		boss_move_01_not_move,					},/*(5)*/
-	{	s_hp(8),	s_time(99), 	"　　　　塞符「唯我独尊の照國」" "\n",	SPELL_26_aya_saifu, 				init_00_boss_clip000,		boss_move_01_not_move,					},/*(5)*/
-	//	0.5
-//	{	s_hp(16),	s_time(99), 	"　　　岐符「未作成カードE006」" "\n",	SPELL_00,							NULL,						aya_05_keitai,							},/*(5)*/
-//	{	s_hp(16),	s_time(99), 	"　　　岐符「未作成カードN006」" "\n",	SPELL_00,							NULL,						aya_05_keitai,							},/*(5)*/
-//	{	s_hp(16),	s_time(99), 	"　　　岐符「未作成カードH006」" "\n",	SPELL_00,							NULL,						aya_05_keitai,							},/*(5)*/
-//	{	s_hp(16),	s_time(99), 	"　　　岐符「未作成カードL006」" "\n",	SPELL_00,							NULL,						aya_05_keitai,							},/*(5)*/
-	//	0.0
-//	{	s_hp(64),	s_time(99), 	"　　　岐符「未作成カードE007」" "\n",	SPELL_00,							NULL,						aya_05_keitai,							},/*(5)*/
-//	{	s_hp(64),	s_time(99), 	"　　　岐符「未作成カードN007」" "\n",	SPELL_00,							NULL,						aya_05_keitai,							},/*(5)*/
-//	{	s_hp(64),	s_time(99), 	"　　　岐符「未作成カードH007」" "\n",	SPELL_00,							NULL,						aya_05_keitai,							},/*(5)*/
-//	{	s_hp(64),	s_time(99), 	"　　　岐符「未作成カードL007」" "\n",	SPELL_00,							NULL,						aya_05_keitai,							},/*(5)*/
-
-//	SPELL_1e_kaguya01		ボス行動、第 1形態
-//	SPELL_1f_kaguya04		ボス行動、第 4形態
-	// 3面ボス、easyはそこそこ簡単に。他はそれなりに。
-// 輝夜 3面 						"eeddccbbaa99887766554433221100",'\n\0' ワーク文字列バッファ長をこれだけしか用意しない予定なので、あふれたら字が出ない。 */
-	{s_hp(32*2.0),	s_time(500),	NULL,/* "形態変更" "\n"*/				SPELL_00,							init_00_boss_clip000,		kaiwa_00_keitai,						},/* 28672==8192*3.5 */
-	{s_hp(32*3.0),	s_time(500),	NULL,/* "形態変更" "\n"*/				SPELL_00,							init_00_boss_clip000,		kaiwa_00_keitai,						},/* 28672==8192*3.5 */
-	{s_hp(32*3.0),	s_time(500),	NULL,/* "形態変更" "\n"*/				SPELL_00,							init_00_boss_clip000,		kaiwa_00_keitai,						},/* 28672==8192*3.5 */
-	{s_hp(32*3.0),	s_time(500),	NULL,/* "形態変更" "\n"*/				SPELL_00,							init_00_boss_clip000,		kaiwa_00_keitai,						},/* 28672==8192*3.5 */
-	// 3.5
-	{	s_hp(8),	s_time(20), 	NULL,/* "通常攻撃" "\n"*/				SPELL_1e_kaguya01,					boss_init_kaguya,			kaguya_01_keitai,						}, // 密着(5)還り弾、赤、青。自機狙い連弾(8)赤18セット(秒)ぐらい(始めの5秒は出さない)。(輝夜一定間隔で移動、終了後中央へ移動)
-	{	s_hp(12),	s_time(20), 	NULL,/* "通常攻撃" "\n"*/				SPELL_1e_kaguya01,					boss_init_kaguya,			kaguya_01_keitai,						}, // 密着(5)還り弾、赤、青。自機狙い連弾(8)赤18セット(秒)ぐらい(始めの5秒は出さない)。(輝夜一定間隔で移動、終了後中央へ移動)
-	{	s_hp(12),	s_time(20), 	NULL,/* "通常攻撃" "\n"*/				SPELL_1e_kaguya01,					boss_init_kaguya,			kaguya_01_keitai,						}, // 密着(5)還り弾、赤、青。自機狙い連弾(8)赤18セット(秒)ぐらい(始めの5秒は出さない)。(輝夜一定間隔で移動、終了後中央へ移動)
-	{	s_hp(12),	s_time(20), 	NULL,/* "通常攻撃" "\n"*/				SPELL_1e_kaguya01,					boss_init_kaguya,			kaguya_01_keitai,						}, // 密着(5)還り弾、赤、青。自機狙い連弾(8)赤18セット(秒)ぐらい(始めの5秒は出さない)。(輝夜一定間隔で移動、終了後中央へ移動)
-	// 3.0
-	{	s_hp(8),	s_time(40), 	" 　　　　　　難題「未作成E01」" "\n",	SPELL_1e_kaguya01,					add_zako_kaguya_houmotsu,	kaguya_01_keitai,						},// 1.龍の頸の玉	(輝夜中央固定、青赤紫緑黄の丸弾、短レーザー)4セットx
-	{	s_hp(12),	s_time(40), 	" 　　　　　　難題「未作成N01」" "\n",	SPELL_1e_kaguya01,					add_zako_kaguya_houmotsu,	kaguya_01_keitai,						},// 1.龍の頸の玉	(輝夜中央固定、青赤紫緑黄の丸弾、短レーザー)4セットx
-	{	s_hp(12),	s_time(40), 	" 　　　　　　難題「未作成H01」" "\n",	SPELL_1e_kaguya01,					add_zako_kaguya_houmotsu,	kaguya_01_keitai,						},// 1.龍の頸の玉	(輝夜中央固定、青赤紫緑黄の丸弾、短レーザー)4セットx
-	{	s_hp(12),	s_time(40), 	" 　　　　　　難題「未作成L01」" "\n",	SPELL_1e_kaguya01,					add_zako_kaguya_houmotsu,	kaguya_01_keitai,						},// 1.龍の頸の玉	(輝夜中央固定、青赤紫緑黄の丸弾、短レーザー)4セットx
-	// 2.5
-	{	s_hp(8),	s_time(40), 	" 　　　　　　難題「未作成E02」" "\n",	SPELL_1e_kaguya01,					add_zako_kaguya_houmotsu,	kaguya_01_keitai,						},// 2.仏の御石の鉢
-	{	s_hp(12),	s_time(40), 	" 　　　　　　難題「未作成N02」" "\n",	SPELL_1e_kaguya01,					add_zako_kaguya_houmotsu,	kaguya_01_keitai,						},// 2.仏の御石の鉢
-	{	s_hp(12),	s_time(40), 	" 　　　　　　難題「未作成H02」" "\n",	SPELL_1e_kaguya01,					add_zako_kaguya_houmotsu,	kaguya_01_keitai,						},// 2.仏の御石の鉢
-	{	s_hp(12),	s_time(40), 	" 　　　　　　難題「未作成L02」" "\n",	SPELL_1e_kaguya01,					add_zako_kaguya_houmotsu,	kaguya_01_keitai,						},// 2.仏の御石の鉢
-	// 2.0
-	{	s_hp(8),	s_time(40), 	" 　　　　　　難題「未作成E03」" "\n",	SPELL_1f_kaguya04,					add_zako_kaguya_dolls02,	kaguya_04_keitai,						},// 3.火鼠の皮衣
-	{	s_hp(12),	s_time(40), 	" 　　　　　　難題「未作成N03」" "\n",	SPELL_1f_kaguya04,					add_zako_kaguya_dolls02,	kaguya_04_keitai,						},// 3.火鼠の皮衣
-	{	s_hp(12),	s_time(40), 	" 　　　　　　難題「未作成H03」" "\n",	SPELL_1f_kaguya04,					add_zako_kaguya_dolls02,	kaguya_04_keitai,						},// 3.火鼠の皮衣
-	{	s_hp(12),	s_time(40), 	" 　　　　　　難題「未作成L03」" "\n",	SPELL_1f_kaguya04,					add_zako_kaguya_dolls02,	kaguya_04_keitai,						},// 3.火鼠の皮衣
-	// 1.5
-	{	s_hp(8),	s_time(40), 	" 　　　　　　難題「未作成E04」" "\n",	SPELL_1f_kaguya04,					add_zako_kaguya_dolls02,	kaguya_04_keitai,						},// 4.燕の子安貝
-	{	s_hp(12),	s_time(40), 	" 　　　　　　難題「未作成N04」" "\n",	SPELL_1f_kaguya04,					add_zako_kaguya_dolls02,	kaguya_04_keitai,						},// 4.燕の子安貝
-	{	s_hp(12),	s_time(40), 	" 　　　　　　難題「未作成H04」" "\n",	SPELL_1f_kaguya04,					add_zako_kaguya_dolls02,	kaguya_04_keitai,						},// 4.燕の子安貝
-	{	s_hp(12),	s_time(40), 	" 　　　　　　難題「未作成L04」" "\n",	SPELL_1f_kaguya04,					add_zako_kaguya_dolls02,	kaguya_04_keitai,						},// 4.燕の子安貝
-	// 1.0
-	{	s_hp(8),	s_time(40), 	" 　　　　　　難題「未作成E05」" "\n",	SPELL_1c_kakuya_tamanoe,			add_zako_kaguya_dolls01,	boss_move_01_not_move,					},// 5.蓬莱の玉の枝
-	{	s_hp(12),	s_time(40), 	" 　　　　　　難題「未作成N05」" "\n",	SPELL_1c_kakuya_tamanoe,			add_zako_kaguya_dolls01,	boss_move_01_not_move,					},// 5.蓬莱の玉の枝
-	{	s_hp(12),	s_time(40), 	" 　　　　　　難題「未作成H05」" "\n",	SPELL_1c_kakuya_tamanoe,			add_zako_kaguya_dolls01,	boss_move_01_not_move,					},// 5.蓬莱の玉の枝
-	{	s_hp(12),	s_time(40), 	" 　　　　　　難題「未作成L05」" "\n",	SPELL_1c_kakuya_tamanoe,			add_zako_kaguya_dolls01,	boss_move_01_not_move,					},// 5.蓬莱の玉の枝
-	// 0.5
-	{	s_hp(8),	s_time(40), 	" 　　　難題「蓬莱の玉の枝E06」" "\n",	SPELL_1c_kakuya_tamanoe,			add_zako_kaguya_dolls01,	boss_move_01_not_move,					},//
-	{	s_hp(12),	s_time(40), 	" 　　　難題「蓬莱の玉の枝N06」" "\n",	SPELL_1c_kakuya_tamanoe,			add_zako_kaguya_dolls01,	boss_move_01_not_move,					},//
-	{	s_hp(12),	s_time(40), 	" 　　　難題「蓬莱の玉の枝H06」" "\n",	SPELL_1c_kakuya_tamanoe,			add_zako_kaguya_dolls01,	boss_move_01_not_move,					},//
-	{	s_hp(12),	s_time(40), 	" 　　　難題「蓬莱の玉の枝L06」" "\n",	SPELL_1c_kakuya_tamanoe,			add_zako_kaguya_dolls01,	boss_move_01_not_move,					},//
-	// 2面ボスなので、適当に易しく。
-// 魅魔 2面 						"eeddccbbaa99887766554433221100",'\n\0' ワーク文字列バッファ長をこれだけしか用意しない予定なので、あふれたら字が出ない。 */
-	{s_hp(32*1.4),	s_time(400),	NULL,/* "形態変更" "\n"*/				SPELL_00,							init_00_boss_clip000,		kaiwa_00_keitai,						},/* 20480==8192*2.5 */
-	{s_hp(32*2),	s_time(400),	NULL,/* "形態変更" "\n"*/				SPELL_00,							init_00_boss_clip000,		kaiwa_00_keitai,						},/* 20480==8192*2.5 */
-	{s_hp(32*2),	s_time(400),	NULL,/* "形態変更" "\n"*/				SPELL_00,							init_00_boss_clip000,		kaiwa_00_keitai,						},/* 20480==8192*2.5 */
-	{s_hp(32*2),	s_time(400),	NULL,/* "形態変更" "\n"*/				SPELL_00,							init_00_boss_clip000,		kaiwa_00_keitai,						},/* 20480==8192*2.5 */
-	// 2.000 (12==32*0.375) // easy(3) やたら短いのは道中で死んでパワーダウンを想定している。パワーダウンなので弾力がないが、体力が極端に少ないので次の段階に速く移行させ弾消しにつなげる。
-	{	 s_hp(3),	s_time(20), 	NULL,/* "通常攻撃" "\n"*/				SPELL_1a_mima_toge, 				NULL,						mima_01_keitai, 						},
-	{	 s_hp(6),	s_time(20), 	NULL,/* "通常攻撃" "\n"*/				SPELL_1a_mima_toge, 				NULL,						mima_01_keitai, 						},
-	{	 s_hp(6),	s_time(20), 	NULL,/* "通常攻撃" "\n"*/				SPELL_1a_mima_toge, 				NULL,						mima_01_keitai, 						},
-	{	 s_hp(6),	s_time(20), 	NULL,/* "通常攻撃" "\n"*/				SPELL_1a_mima_toge, 				NULL,						mima_01_keitai, 						},
-	// 2.--
-	{	 s_hp(5),	s_time(20), 	" 　　　未定「未作成カードE01」" "\n",	SPELL_27_hosigata_test, 			NULL,						mima_01_keitai, 						},	/* 通常タイプ */
-	{	 s_hp(6),	s_time(20), 	" 　　　未定「未作成カードN01」" "\n",	SPELL_27_hosigata_test, 			NULL,						mima_01_keitai, 						},	/* 通常タイプ */
-	{	 s_hp(6),	s_time(20), 	" 　　　未定「未作成カードH01」" "\n",	SPELL_27_hosigata_test, 			NULL,						mima_01_keitai, 						},	/* 通常タイプ */
-	{	 s_hp(6),	s_time(20), 	" 　　　未定「未作成カードL01」" "\n",	SPELL_27_hosigata_test, 			NULL,						mima_01_keitai, 						},	/* 通常タイプ */
-	// 1.625
-	{	s_hp(10),	s_time(40), 	"　　闇符「ディマーケイション」" "\n",	SPELL_29_rumia_demarcation, 		NULL/*init_00_boss_clip111*/,	boss_move_01_not_move,				},	/* 上広タイプ */	// "　　 闇符「ディマーケイション」"
-	{	s_hp(18),	s_time(40), 	"　　闇符「ディマーケイション」" "\n",	SPELL_29_rumia_demarcation, 		NULL/*init_00_boss_clip111*/,	boss_move_01_not_move,				},	/* 上広タイプ */
-	{	s_hp(18),	s_time(40), 	"　　闇符「ディマーケイション」" "\n",	SPELL_29_rumia_demarcation, 		NULL/*init_00_boss_clip111*/,	boss_move_01_not_move,				},	/* 上広タイプ */
-	{	s_hp(18),	s_time(40), 	"　　闇符「ディマーケイション」" "\n",	SPELL_29_rumia_demarcation, 		NULL/*init_00_boss_clip111*/,	boss_move_01_not_move,				},	/* 上広タイプ */
-	// 1.00
-	{	s_hp(12),	s_time(40), 	NULL,/* "通常攻撃" "\n"*/				SPELL_23_meirin_magaru_kunai,		init_00_boss_clip111,		boss_move_01_not_move,					},	/* 上広タイプ */
-	{	s_hp(10),	s_time(40), 	NULL,/* "通常攻撃" "\n"*/				SPELL_23_meirin_magaru_kunai,		init_00_boss_clip111,		boss_move_01_not_move,					},	/* 上広タイプ */
-	{	s_hp(10),	s_time(40), 	NULL,/* "通常攻撃" "\n"*/				SPELL_23_meirin_magaru_kunai,		init_00_boss_clip111,		boss_move_01_not_move,					},	/* 上広タイプ */
-	{	s_hp(10),	s_time(40), 	NULL,/* "通常攻撃" "\n"*/				SPELL_23_meirin_magaru_kunai,		init_00_boss_clip111,		boss_move_01_not_move,					},	/* 上広タイプ */
-	// 1.--
-	{	 s_hp(6),	s_time(40), 	"　　　　　　　華符「芳華絢爛」" "\n",	SPELL_25_houka_kenran,				init_00_boss_clip000,		boss_move_01_not_move,					},	/* 通常タイプ */
-	{	 s_hp(8),	s_time(40), 	"　　　　　　　華符「芳華絢爛」" "\n",	SPELL_25_houka_kenran,				init_00_boss_clip000,		boss_move_01_not_move,					},	/* 通常タイプ */
-	{	 s_hp(8),	s_time(40), 	"　　　　　　　薫符「芳薫絢爛」" "\n",	SPELL_25_houka_kenran,				init_00_boss_clip000,		boss_move_01_not_move,					},	/* 通常タイプ */
-	{	 s_hp(8),	s_time(40), 	"　　　　　　　蘭符「芳華兼蘭」" "\n",	SPELL_25_houka_kenran,				init_00_boss_clip000,		boss_move_01_not_move,					},	/* 通常タイプ */
-	// 1.--
-	{	 s_hp(6),	s_time(60), 	" 　　　未定「未作成カードE05」" "\n",	SPELL_18_hana_test, 				NULL,						boss_move_02_xy_hidouki,				},
-	{	 s_hp(8),	s_time(60), 	" 　　　未定「未作成カードN05」" "\n",	SPELL_18_hana_test, 				NULL,						boss_move_02_xy_hidouki,				},
-	{	 s_hp(8),	s_time(60), 	" 　　　未定「未作成カードH05」" "\n",	SPELL_18_hana_test, 				NULL,						boss_move_02_xy_hidouki,				},
-	{	 s_hp(8),	s_time(60), 	" 　　　未定「未作成カードL05」" "\n",	SPELL_18_hana_test, 				NULL,						boss_move_02_xy_hidouki,				},
-	// 1.0
-	{	s_hp(32),	s_time(60), 	" 　　　未定「てすとカードE06」" "\n",	SPELL_16_alice_doll,				NULL,						boss_move_02_xy_hidouki,				},// 都合上来ない。
-	{	s_hp(32),	s_time(60), 	" 　　　未定「てすとカードN06」" "\n",	SPELL_16_alice_doll,				NULL,						boss_move_02_xy_hidouki,				},// 都合上来ない。
-	{	s_hp(32),	s_time(60), 	" 　　　未定「てすとカードH06」" "\n",	SPELL_16_alice_doll,				NULL,						boss_move_02_xy_hidouki,				},// 都合上来ない。
-	{	s_hp(32),	s_time(60), 	" 　　　未定「てすとカードL06」" "\n",	SPELL_16_alice_doll,				NULL,						boss_move_02_xy_hidouki,				},// 都合上来ない。
-	// 1面ボスなので、(少なくとも easy、normal あたりは)難しく出来ない。
-// アリス 1面						"eeddccbbaa99887766554433221100",'\n\0' ワーク文字列バッファ長をこれだけしか用意しない予定なので、あふれたら字が出ない。 */
-	{s_hp(32*1.125), s_time(300),	NULL,/* "形態変更" "\n"*/				SPELL_00,							init_00_boss_clip000,		kaiwa_00_keitai,						},/* 16384==8192*2 */	/* "通常攻撃"の時間(?) */ /* "通常攻撃"のライフ */
-	{s_hp(32*1.25),  s_time(300),	NULL,/* "形態変更" "\n"*/				SPELL_00,							init_00_boss_clip000,		kaiwa_00_keitai,						},/* 16384==8192*2 */	/* "通常攻撃"の時間(?) */ /* "通常攻撃"のライフ */
-	{s_hp(32*1.50),  s_time(300),	NULL,/* "形態変更" "\n"*/				SPELL_00,							init_00_boss_clip000,		kaiwa_00_keitai,						},/* 16384==8192*2 */	/* "通常攻撃"の時間(?) */ /* "通常攻撃"のライフ */
-	{s_hp(32*1.50),  s_time(300),	NULL,/* "形態変更" "\n"*/				SPELL_00,							init_00_boss_clip000,		kaiwa_00_keitai,						},/* 16384==8192*2 */	/* "通常攻撃"の時間(?) */ /* "通常攻撃"のライフ */
-	// 1.25 easy(10) 道中で[F]出るので、パワーは問題ない。まず始めに弾幕は簡単という事に慣れてもらう為、長め。(easyはプレイヤーに死んでもらっては困るので、ボスと戦った気にさせるのが難しい)
-	{	 s_hp(10),	 s_time(40),	NULL,/* "通常攻撃" "\n"*/				SPELL_14_alice_youmu300,			NULL,						boss_move_01_not_move,					},// 明らかに簡単な弾幕
-	{	  s_hp(6),	 s_time(40),	NULL,/* "通常攻撃" "\n"*/				SPELL_14_alice_youmu300,			NULL,						boss_move_01_not_move,					},
-	{	  s_hp(5),	 s_time(40),	NULL,/* "通常攻撃" "\n"*/				SPELL_13_alice_suwako,				NULL,						boss_move_01_not_move,					},
-	{	  s_hp(4),	 s_time(40),	NULL,/* "通常攻撃" "\n"*/				SPELL_13_alice_suwako,				NULL,						boss_move_01_not_move,					},
-	// 1.--
-	{	 s_hp(12),	 s_time(40),	"　　　　　懐古「紅の魔法Lv.2」" "\n",	SPELL_15_alice_aka_2nd, 			NULL,						boss_move_01_not_move,					},/* "蒼符「溺愛の仏蘭西人形」"のライフ */
-	{	 s_hp(14),	 s_time(40),	" 　　　　懐古「紅の魔法Lv.16」" "\n",	SPELL_15_alice_aka_2nd, 			NULL,						boss_move_01_not_move,					},/* "蒼符「溺愛の仏蘭西人形」"のライフ */
-	{	 s_hp(12),	 s_time(40),	"　　　　懐古「紅の魔法Lv.256」" "\n",	SPELL_15_alice_aka_2nd, 			NULL,						boss_move_04_xy_douki_differential32,	},/* "蒼符「溺愛の仏蘭西人形」"のライフ */
-	{	 s_hp(10),	 s_time(40),	"　　　懐古「紅の魔法Lv.65536」" "\n",	SPELL_15_alice_aka_2nd, 			NULL,						boss_move_04_xy_douki_differential32,	},/* "蒼符「溺愛の仏蘭西人形」"のライフ */
-	// 1.-- easy(4) 「パーフェクトフリーズ」は一定の事故率がある為、初心者向きでは無い。拠って不必要に短くする。
-	{	  s_hp(4),	 s_time(20),	" 　　 試作「カード語のてすと」" "\n",	SPELL_44_ruiz3_test,				NULL,						boss_move_02_xy_hidouki,				},/* "蒼符「溺愛の仏蘭西人形」"のライフ */
-	{	  s_hp(6),	 s_time(20),	"　凍符「パーフェクトフリーズ」" "\n",	SPELL_11_perfect_freeze,			NULL,						boss_move_02_xy_hidouki,				},/* "蒼符「溺愛の仏蘭西人形」"のライフ */
-	{	  s_hp(8),	 s_time(20),	"　凍符「パーティクルフリーク」" "\n",	SPELL_11_perfect_freeze,			NULL,						boss_move_02_xy_hidouki,				},/* "蒼符「溺愛の仏蘭西人形」"のライフ */
-	{	 s_hp(12),	 s_time(20),	"　凍符「ブリザードフローズン」" "\n",	SPELL_11_perfect_freeze,			NULL,						boss_move_02_xy_hidouki,				},/* "蒼符「溺愛の仏蘭西人形」"のライフ */
-	// 1.00
-	{	 s_hp(7),	 s_time(60),	"　蒼符「薄愛のマトリョーシカ」" "\n",	SPELL_16_alice_doll,				NULL,						boss_move_02_xy_hidouki,				},/* " 　蒼符「薄愛のマトリョーシカ」"白符「博愛の円谷人形」 */ 	//(r33p)boss_move_04_xy_douki_differential
-	{	 s_hp(8),	 s_time(60),	"　蒼符「溺愛のマトリョーシカ」" "\n",	SPELL_16_alice_doll,				NULL,						boss_move_02_xy_hidouki,				},/* " 　蒼符「溺愛のマトリョーシカ」"白符「博愛の円谷人形」 */ 	//(r33p)boss_move_04_xy_douki_differential
-	{	 s_hp(8),	 s_time(60),	"　蒼符「自戒のマトリョーシカ」" "\n",	SPELL_16_alice_doll,				NULL,						boss_move_02_xy_hidouki,				},/* " 　蒼符「自戒のマトリョーシカ」"白符「博愛の円谷人形」 */ 	//(r33p)boss_move_04_xy_douki_differential
-	{	 s_hp(8),	 s_time(60),	"　蒼符「自害のマトリョーシカ」" "\n",	SPELL_16_alice_doll,				NULL,						boss_move_02_xy_hidouki,				},/* " 　蒼符「自害のマトリョーシカ」"白符「博愛の円谷人形」 */ 	//(r33p)boss_move_04_xy_douki_differential
-	// 0.--
-	{	 s_hp(8),	 s_time(60),	NULL,/* "通常攻撃z" "\n"*/				SPELL_16_alice_doll,				NULL,						boss_move_02_xy_hidouki,				},/* " 　　　　操符「淡い眼の案山子」"白符「博愛の円谷人形」 */
-	{	 s_hp(8),	 s_time(60),	NULL,/* "通常攻撃z" "\n"*/				SPELL_16_alice_doll,				NULL,						boss_move_02_xy_hidouki,				},/* " 　　　　　操符「幻の機巧人形」"白符「博愛の円谷人形」 */
-	{	 s_hp(8),	 s_time(60),	NULL,/* "通常攻撃z" "\n"*/				SPELL_16_alice_doll,				NULL,						boss_move_02_xy_hidouki,				},/* " 　　　　　　操符「古の流し雛」"白符「博愛の円谷人形」 */
-	{	 s_hp(8),	 s_time(60),	NULL,/* "通常攻撃z" "\n"*/				SPELL_16_alice_doll,				NULL,						boss_move_02_xy_hidouki,				},/* " 　操符「呪のクラッシュダミー」"白符「博愛の円谷人形」 */
-//									"eeddccbbaa99887766554433221100",'\n\0' ワーク文字列バッファ長をこれだけしか用意しない予定なので、あふれたら字が出ない。 */
-	#if (1)/*(r35無いとハングアップする？)*/
-	{	 s_hp(8),	 s_time(60),	NULL,/* "通常攻撃z" "\n"*/				SPELL_16_alice_doll,				NULL,						boss_move_02_xy_hidouki,				},/* " 　　　　操符「淡い眼の案山子」"白符「博愛の円谷人形」 */
-	{	 s_hp(8),	 s_time(60),	NULL,/* "通常攻撃z" "\n"*/				SPELL_16_alice_doll,				NULL,						boss_move_02_xy_hidouki,				},/* " 　　　　　操符「幻の機巧人形」"白符「博愛の円谷人形」 */
-	{	 s_hp(8),	 s_time(60),	NULL,/* "通常攻撃z" "\n"*/				SPELL_16_alice_doll,				NULL,						boss_move_02_xy_hidouki,				},/* " 　　　　　　操符「古の流し雛」"白符「博愛の円谷人形」 */
-	{	 s_hp(8),	 s_time(60),	NULL,/* "通常攻撃z" "\n"*/				SPELL_16_alice_doll,				NULL,						boss_move_02_xy_hidouki,				},/* " 　操符「呪のクラッシュダミー」"白符「博愛の円谷人形」 */
-	#endif
-};
-//	" 　　　蒼符「博愛の仏蘭西人形」" "\n"
-//	" 　蒼符「博愛のオルレアソ\人形」" "\n" " 　蒼符「博愛のオルレアン人形」"...現在の方式では無理です。
-//	{	 (1024*16),  s_time(40),	"　操符「未作成の阿蘭陀人形L1」" "\n",	SPELL_00,							NULL,						alice_04_keitai,						},/* 白符「博愛の円谷人形」 */
-//	{	(20000*4),	 s_time(20),	"操符「未作成の伊太利亜人形L2」" "\n",	SPELL_00,							NULL,						boss_move_02_xy_hidouki,				},/* 炎符「浅草の人形焼き」 */
-//	{	 (5000*4),	 s_time(20),	"　操符「未作成の英吉利人形L3」" "\n",	SPELL_00,							NULL,						alice_02_keitai,						},
-//	{	 (5000*4),	 s_time(20),	"　操符「未作成の露西亜人形L4」" "\n",	SPELL_00,							NULL,						alice_02_keitai,						},
-//	{	 (5000*4),	 s_time(80),	"　　操符「未作成の瑞西人形L5」" "\n",	SPELL_00,							NULL,						alice_02_keitai,						},
-//	{	 (5000*4),	 s_time(80),	"　操符「未作成の白耳義人形L6」" "\n",	SPELL_00,							NULL,						alice_02_keitai,						},
-//	{	 (5000*4),	 s_time(80),	"　　操符「未作成の波蘭人形L7」" "\n",	SPELL_00,							NULL,						alice_02_keitai,						},
-	/*
-	マトリョーシカは、露西亜人形でいいのかな？人形というよりより民芸品の趣がある。
-	最近は萌えマトリョーシカの需要が日本からあるらしい。
-	//
-	日本の気象庁は風速17m以上の風を「台風」と定義。
-	国際気象機関(WMO)では風速33m以上のものを「typhoon」と定義。それ以下は「storm」。
-	*/
-
 
 /*---------------------------------------------------------
 	スプライト リストに登録されたスプライトを全部 。
 ---------------------------------------------------------*/
 #define TEST_ZAKO_HIDE (0)
 #if (1==TEST_ZAKO_HIDE)/* ボスも影響受ける */
-static void sprite_sethide_all(SPRITE *s, unsigned int length)
+static void sprite_sethide_all(OBJ *s, unsigned int length)
 {
 	unsigned int ii;
 	for (ii=0; ii<length; ii++)/* 全部調べる。 */
@@ -663,12 +110,350 @@ static void sprite_sethide_all(SPRITE *s, unsigned int length)
 }
 static void zako_all_timeup(void)/*int ty pe*/
 {
-	SPRITE *s;
-	s = &obj99[OBJ_HEAD_01_TEKI+0];
-	sprite_sethide_all(s, OBJ_POOL_01_TEKI_MAX);
+	OBJ *s;
+	s = &obj99[OBJ_HEAD_01_0x0800_TEKI+0];
+	sprite_sethide_all(s, OBJ_POOL_01_TEKI_0256_MAX);
 }
 #endif
 
+
+/*---------------------------------------------------------
+	[r36新]ボス誘導移動のみ。
+---------------------------------------------------------*/
+
+static int bos_ddd_obj_alt_x256;
+static int bos_ddd_obj_alt_y256;
+static int bos_ddd_obj_target_x256;
+static int bos_ddd_obj_target_y256;
+//static int bos_ddd_obj_ido_speed256;
+
+
+/*---------------------------------------------------------
+	ボス誘導移動のみ。
+---------------------------------------------------------*/
+/* 誘導移動/誘導計算 */
+static void boss_r36_yuudou(OBJ *src)
+{
+	{	/*(とりあえず)*/
+		src->BOSS_DATA_04_toutatu_wariai256 -= (6);/*(ボス退避、速度。1/t256()形式。(逆数で指定する) )*/
+	//	src->BOSS_DATA_04_toutatu_wariai256 -= (bos_ddd_obj_ido_speed256);/*(ボス退避、速度)*/
+		src->BOSS_DATA_04_toutatu_wariai256 = psp_max(src->BOSS_DATA_04_toutatu_wariai256, 0);
+		//
+		if (0 < src->BOSS_DATA_04_toutatu_wariai256)/*(移動が必要な場合のみ移動処理を行う)*/
+		{
+			int move_rate256;
+			move_rate256 = src->BOSS_DATA_04_toutatu_wariai256;
+			move_rate256 = psp_min(move_rate256, 256);
+			move_rate256 = psp_max(move_rate256, 0);
+			#if (1)/* 非等分値の計算 */
+			{
+				u32 i_rate65536;
+				i_rate65536 = (move_rate256 << 8);
+			//	i_rate65536 = (int)(vfpu_ease_in_out(t)*256.0);
+				i_rate65536 = (int)(vfpu_ease_in_out65536(i_rate65536));	/* t65536の等分カウンタ値を使い、非等分になるよう値を修正する。
+				非等分の方式は「ease_in_out」これは、始めと最後がゆっくりで間が速いという配分方式。 */
+				move_rate256 = (i_rate65536 >> 8);
+			}
+			#endif
+			//------------------
+			#if (1)/*(到達割合を考慮して、合成する。)*/
+		//	REG_00_SRC_X	= ((bos_ddd_obj_alt_x256)); 	/*(合成位置[A]t256()形式)*/
+		//	REG_01_SRC_Y	= ((bos_ddd_obj_alt_y256)); 	/*(合成位置[A]t256()形式)*/
+		//	REG_02_DEST_X	= ((bos_ddd_obj_target_x256));	/*(合成位置[B]t256()形式)*/
+		//	REG_03_DEST_Y	= ((bos_ddd_obj_target_y256));	/*(合成位置[B]t256()形式)*/
+			REG_00_SRC_X	= ((bos_ddd_obj_target_x256));	/*(合成位置[A]t256()形式)*/
+			REG_01_SRC_Y	= ((bos_ddd_obj_target_y256));	/*(合成位置[A]t256()形式)*/
+			REG_02_DEST_X	= ((bos_ddd_obj_alt_x256)); 	/*(合成位置[B]t256()形式)*/
+			REG_03_DEST_Y	= ((bos_ddd_obj_alt_y256)); 	/*(合成位置[B]t256()形式)*/
+			REG_11_GOUSEI_WARIAI256 	= move_rate256;/*(合成割合t256()形式)*/
+			multiprex_rate_vector();/*(破壊レジスタ多いので注意)*/
+			#endif
+			// この時点で、
+			// REG_02_DEST_X: 合成値
+			// REG_03_DEST_Y: 合成値
+			//-----------------------
+			src->cx256 = (REG_02_DEST_X);
+			src->cy256 = (REG_03_DEST_Y);
+		}
+	}
+}
+/*---------------------------------------------------------
+	ボス誘導移動のみ。
+---------------------------------------------------------*/
+global void boss_set_new_position(OBJ *src)
+{
+	src->BOSS_DATA_04_toutatu_wariai256 	= t256(1.0);/*(初期値)*/
+	/*(現在位置を設定)*/
+	bos_ddd_obj_alt_x256		= (src->cx256);
+	bos_ddd_obj_alt_y256		= (src->cy256);
+	/*(退避位置を設定)*/
+	bos_ddd_obj_target_x256 	= REG_02_DEST_X;/*(t256()形式)*/
+	bos_ddd_obj_target_y256 	= REG_03_DEST_Y;/*(t256()形式)*/
+	/*(移動速度を設定)*/
+//	bos_ddd_obj_ido_speed256	= HATSUDAN_01_speed256;/*(==REG_11)*/
+}
+
+/*---------------------------------------------------------
+	共通ボス退避(撃破後に画面外にボスが逃げる)
+	[カードシステム内に移動予定]
+---------------------------------------------------------*/
+
+static void common_99_keitai(OBJ *src)
+{
+	boss_r36_yuudou(src);
+	/* 移動完了座標に等しいかはみ出したら、完了とする。 */
+	if (src->BOSS_DATA_04_toutatu_wariai256 <= t256(0))
+	{
+		#if (1)
+	//重複	src->callback_mover 	= NULL; 		/* おしまい */
+		sprite_kotei_obj_r36_taihi(src);/*(ボスobj使用中であるが退避位置へ退避)*/
+		bullets_to_hosi();/* 弾全部、星アイテムにする */
+		#endif
+		boss_effect_kotei_obj_r36_taihi();
+		//return /*(1)*/;/*移動完了*/
+	}
+}
+/* 撃破後に画面外にボスが逃げる */
+static void common_88_keitai(OBJ *src)
+{
+	/*(レーザーモードは、強制的にoffにする。)*/
+	add_laser_off(NULL);
+	#if (1)
+	/*(退避位置を設定)*/
+	REG_02_DEST_X = (int)(GAME_X_OFFSET*256+(GAME_320_WIDTH*256/2));
+	REG_03_DEST_Y = -t256((50.0/2));/* +t256(50.0) ボスグラの最大サイズ(50[pixel]) */
+	boss_set_new_position(src);
+	#endif
+	src->BOSS_DATA_05_boss_base_state777			= (0);	/*ST_00*/	/*初期値を0にする。*/
+	src->callback_mover 	= common_99_keitai; 		/* 最終形態にする。 */
+}
+
+/*---------------------------------------------------------
+	ボス死亡判定
+	-------------------------------------------------------
+	★ 攻撃の場合の死亡判定 		DESTROY_CHECK_00_WIN_BOSS
+	★ 時間切れの場合の死亡判定 	DESTROY_CHECK_01_IS_TIME_OUT
+	-------------------------------------------------------
+	ボス敵やられ
+	ボス倒した場合の処理
+	(プレイヤー側含む)
+---------------------------------------------------------*/
+/*	★ 攻撃の場合の死亡判定 	★ 時間切れの場合の死亡判定 */
+
+extern void player_loop_quit(void);
+extern void jiki_eien_muteki_on(void);/*(自機クラスjiki::eien_muteki_on(void);) (game_core/jiki/jiki.c)*/
+extern void set_bg_alpha(int set_bg_alpha);
+
+/* 共通ボス退避(撃破後に画面外にボスが逃げる) */
+/*(撃破形態)*/
+/*(???)*/static void NULL_keitai(OBJ *src)/*(src==ボス敵本体)*/
+{
+	/*(card.boss_move_card_callbackがNULLに対応してない場合に、必要なダミー形態)*/
+}
+//	/*static*/ void boss_destroy_check_type(OBJ *src/*敵自体*/, int check_type)
+
+
+//	if (0 >= src->base_hp)			/* ０か負値なら、倒した。 */
+	// /* ボスを倒した直後、「ボス後イベント」前の処理 */
+//	#if (0)
+//	enum
+//	{
+//		DESTROY_CHECK_00_WIN_BOSS = 0,
+//		DESTROY_CHECK_01_IS_TIME_OUT,
+//	};
+//	int check_type;
+//	check_type = DESTROY_CHECK_00_WIN_BOSS;/*(とりあえず)*/
+//	if (DESTROY_CHECK_00_WIN_BOSS == check_type)
+//	#endif
+
+static void gekiha_keitai(OBJ *src)/*(src==ボス敵本体)*/
+{
+	#if 0
+//	bakuhatsu_add_circle(src, 1);/*(爆発エフェクト)*/
+	#endif
+	src->base_hp = 0;
+	/* コールバック登録 */
+	src->callback_hit_teki			= NULL; 	/* ダミーコールバック登録 */
+	src->callback_mover 			= common_88_keitai;/* 共通ボス退避(撃破後に画面外にボスが逃げる) */
+//重複(既に設定済み)	card.boss_move_card_callback	= NULL_keitai;/*(テスト)*/
+	{
+		#if (1==USE_BOSS_JIKANGIRE)/*(使用予定あり。未検証)*/
+		if (0 != (cg.state_flag&JIKI_FLAG_16_0x8000_BOSS_JIKAN_GIRE))/*0 >= card.boss_timer*/
+		{
+			;/* 時間切れの場合はボーナスアイテムと得点なし。 */
+		}
+		else
+		#endif
+		{	/* 攻撃で倒した場合のみ */
+			item_create_for_boss(src, ITEM_CREATE_MODE_01); 	/* ボーナスアイテムを出す */
+			player_dummy_add_score(src->base_score);			/* ボスの得点加算 */
+		}
+	}
+	//
+	#if (0)/*(デバッグ)*/
+	{	psp_fatal_error( (char*)
+		//	"0123456789012345678901234567890123456789"	// 半角40字"最大表示文字数"
+			"load stage: STAGE%d" "\\n"
+			"ボス、撃破テストOK。", cg.game_now_stage);
+	}
+	#endif
+//
+	jiki_eien_muteki_on();/*(自機を一時的に、無敵状態にする)*/
+	set_bg_alpha(255);/* 画面を明るくする */
+//	s1->color32 		= MAKE32RGBA(0xff, 0xff, 0xff, 0x50);	//	s1->alpha		= 0x50; 	/* 半透明 */
+//	obj_maru->color32	= MAKE32RGBA(0xff, 0xff, 0xff, 0x50);	//	obj_maru->alpha = 0x50; 	/* 半透明 */
+	// ボスを倒したときの処理
+	bullets_to_hosi();/* 弾全部、星アイテムにする */
+	voice_play(VOICE03_BOSS_HAKAI, TRACK03_SHORT_MUSIC/*TRACK02_ALEART_IVENT*/);
+//	voice_play(VOICE03_BOSS_HAKAI, TRACK01_EXPLODE);/*予備(うるさい)*/
+
+	cg.draw_boss_hp_value	= (0); /* 必要 */ /*(boss_hp_frame_check()を無効にする。Gu側でチェックさせない)*/
+	cg.bomber_time			= (0); /* 都合上 */
+	{
+		#if (1==USE_r36_SCENE_FLAG)
+		/*(無し==NEXT_SCENE;と統合)*/
+		#else
+		cg.state_flag &= (~(STATE_FLAG_15_DRAW_BOSS_GAUGE));/*off*/
+		#endif
+//		cg.state_flag		&= (~(JIKI_FLAG_0x0040_BOSS_GO_ITEM_JIDOU_SYUU_SYUU));		/* 終わり */
+		cg.state_flag		|= ( (JIKI_FLAG_0x0040_BOSS_GO_ITEM_JIDOU_SYUU_SYUU));		/* 自動収集開始 */
+		/* 自動収集モードはステージロード時に強制解除される。 */
+		if (
+			(0==cg.game_practice_mode)/* 練習モードではボス後イベントは見れないよ。 */
+			||/*(または)*/
+			(	/* 隠しエンディング */
+				((1)==cg.game_practice_mode)/* 練習モードではボス後イベントは見れないよ。 */
+				&&/*(かつ)*/
+				((0)==(cg.game_difficulty))/*(easyの場合)*/
+				&&/*(かつ)*/
+				((6) == (cg.game_now_stage))/*(6面の場合、隠しエンド)*/
+			)
+		)
+		{
+			#if (1==USE_r36_SCENE_FLAG)
+			NEXT_SCENE;/*(次の場面へ設定)*/
+			#else
+		//	pd_bo ssmode	= B07_AFTER_LOAD;
+			cg.state_flag |= STATE_FLAG_0x0100_IS_LOAD_KAIWA_TXT;
+			#endif
+		}
+		else/* 練習モードの場合、終了する */
+		{
+			#if 1/* この２つのセットで自動的に終了(GAME OVER)する */
+			cg.game_now_max_continue = 1;	/* コンティニューさせない */
+			player_loop_quit();
+			#endif
+		}
+	}
+
+}
+
+
+/*---------------------------------------------------------
+	[カードシステム内に移動予定]
+---------------------------------------------------------*/
+
+
+/*---------------------------------------------------------
+	ボスを攻撃した場合の共通ルーチン
+	-------------------------------------------------------
+	OBJ *src;	ボス敵自体
+	OBJ *tama;	自弾
+---------------------------------------------------------*/
+
+/*static*/static/*global*/	void s_callback_hit_boss(OBJ *src, OBJ *tama)
+{
+	/* ボス & 中-ボスに自弾があたった場合の火花エフェクトを登録(現在Gu部分がないので描画してない) */
+	set_REG_DEST_XY(tama);/* 発弾位置 座標xy */
+	bakuhatsu_add_type_ccc(BAKUHATSU_MOVE12/*BAKUHATSU_MINI00*/);/* 先に実行した方が速い */
+//
+	/* 上と分離した方がコード効率があがる。 */
+	{
+		card.boss_hp_dec_by_frame += /*w->*/tama->kougeki_ti; /* 攻撃して体力減らす(強さ分引く) */
+	}
+}
+
+
+/*---------------------------------------------------------
+	ボスの共通、１回目初期化ルーチン
+	初回、攻撃不可[会話中の形態]、初期設定
+
+---------------------------------------------------------*/
+
+/*---------------------------------------------------------
+	ボスの共通、２回目初期化ルーチン
+	[会話中の形態]、会話終了まで待機する。
+	待機が終わったら、攻撃可能にする。
+---------------------------------------------------------*/
+/*([会話中の形態]、初期設定)*/
+/* 出現時x座標 */
+//#define BOSS_XP256		(t256(GAME_WIDTH/2))	/* 中心座標なので */
+#define BOSS_XP256			(t256(GAME_X_OFFSET)+t256(GAME_320_WIDTH/2))	/* 中心座標なので */
+
+static void card_address_incliment(void);
+static void card_set_boss_move_callback(void);
+static void kaiwa_00_keitai(OBJ *src)/*([会話中の形態]、会話終了まで待機する)*/
+{
+	#if (1==USE_r36_SCENE_FLAG)
+	if (SCENE_NUMBER_0x0800_BOSS_TATAKAU==(cg.state_flag & 0x0f00)) /* ボス戦闘前の会話終了済み? */
+	#else
+	if (cg.state_flag & STATE_FLAG_0x0800_IS_BOSS)	/* ボス戦闘前の会話終了済み? */
+	#endif
+	{
+		/* プレイヤー弾受け付け、コールバックを登録 */
+		src->callback_hit_teki = s_callback_hit_boss;	/* コールバック登録 */
+		/* card common init */
+		card.mode_timer 	= (CARD_BOSS_TIMER_0255_IDO_JYUNNBI);/*on*/
+	//	card.mode		= (0);/*off*/
+	//	/*時間制限カウント有効化*/
+	//	data->boss_base.state001++/* = ST_02*/;
+		card_address_incliment();
+		card_set_boss_move_callback();
+	}
+}
+
+
+////////  形態系はここより上に記述く。
+
+/*---------------------------------------------------------
+	カード設定。
+---------------------------------------------------------*/
+#include "card_resource.h"
+
+/*---------------------------------------------------------
+	カードを次に進める。
+---------------------------------------------------------*/
+static void card_address_incliment(void)
+{
+	/*(撃破形態の場合、カードを次に進めない。)*/
+//	if (SPELL_49_r36_gekiha != my_card_resource[(card.address_set)].spell_set_number)
+	{
+		card.address_set += (4);/*(カードを次に進める。)*/
+	}
+}
+/*---------------------------------------------------------
+	card内ボス移動処理を設定する。
+---------------------------------------------------------*/
+static void card_set_boss_move_callback(void)
+{
+	card.boss_move_card_callback = my_card_resource[(card.address_set)].boss_move_keitai_set_callback;/*(card内ボス移動処理を設定する)*/
+}
+static void set_new_limit(void)
+{
+	card.limit_health -= (my_card_resource[(card.address_set + (4))].spell_life);	/*1000 500*/
+	card.limit_health = psp_max(card.limit_health, 0);		/*(0未満==負数にしない)*/
+	//
+	#if 0
+	/*(制限時間を足す)*/
+	card.boss_timer += (((my_card_resource[(card.address_set + (4))].spell_limit_time)));	/* 75*64==75[count] 	約99[秒(64/60)](単位は秒ではない) */
+	#else
+	/*
+		(r35 固定制限時間を設定[仮仕様])
+		タイマー値の保持が現状一ヶ所しか無いので、とりあえずこういう形にしといた。(制限時間の設定部分が無い為)
+	*/
+	card.boss_timer = (((my_card_resource[(card.address_set + (4))].spell_limit_time)));	/* 75*64==75[count] 	約99[秒(64/60)](単位は秒ではない) */
+	#endif
+}
 /*---------------------------------------------------------
 	カードシステムのボス形態に登録されたカード番号を取得し、
 //	同時にカードの時間切れを設定する。
@@ -676,20 +461,19 @@ static void zako_all_timeup(void)/*int ty pe*/
 
 ---------------------------------------------------------*/
 
-global void card_maikai_init_and_get_spell_number(SPRITE *src)
+global void card_maikai_init_and_get_spell_number(OBJ *src)
 {
-	card.card_number	= my_card_resource[(card.number)].card_number;	/* カードをセット */
+	card.spell_used_number	= my_card_resource[(card.address_set)].spell_set_number;	/* カードをセット */
 	//
 	card_maikai_init(src);		/* カードの制限時間を設定(予めカードごとに設定されている標準時間に設定) */
 }
-
 
 /*---------------------------------------------------------
 	ボス形態変更時の共通ルーチン
 	カード撃破後アイテム出す。
 ---------------------------------------------------------*/
 
-global void common_boss_put_items(SPRITE *src)
+global void common_boss_put_items(OBJ *src)
 {
 //++	pd_bo ssmode=B04_CHANGE;
 	bullets_to_hosi();/* 弾全部、星アイテムにする */
@@ -709,7 +493,7 @@ global void common_boss_put_items(SPRITE *src)
 		kanji_window_clear_line(ML_LINE_04);	/* 漢字ウィンドウの4行目(==3)の内容を消す。 */
 		set_kanji_xy((0)*(KANJI_FONT_08_HARF_WIDTH), (ML_LINE_04)*(KANJI_FONT_18_HEIGHT_P2));	/* カーソルを4行目(==3)へ移動 */
 	//
-		if (NULL != my_card_resource[(card.number)].spell_str_name)
+		if (NULL != my_card_resource[(card.address_set)].spell_str_name)
 		{
 			/* カード背景がある場合 */
 			cb.callback_gu_draw_haikei = cb.callback_gu_draw_haikei_supeka;
@@ -725,7 +509,7 @@ global void common_boss_put_items(SPRITE *src)
 			}
 			ml_font[(0)].haikei 		= (ML_HAIKEI_01_BOSS_SPELL_CARD);/* [青/ボスカード用背景]ボスカード用せりふ背景on */
 			cg.msg_time = byou60(5);	/* 約 5 秒 */
-			strcpy(my_font_text, my_card_resource[(card.number)].spell_str_name);
+			strcpy(my_font_text, my_card_resource[(card.address_set)].spell_str_name);
 			kanji_color(/*int color_type*/(7)|STR_CODE_NO_ENTER);	/* 改行しない */
 			kanji_draw();
 		}
@@ -754,387 +538,252 @@ global void common_boss_put_items(SPRITE *src)
 	表示だけlogなんじゃね？って気がしてきた。
 	そういう風にしようかな。ゲームバランスとか色々変わるから。
 ---------------------------------------------------------*/
-		#if 0
-			 if (0x80 < test_draw_boss_hp_value)	{	limit_max_hp_dec_boss_by_flame = (48);	}	//128 ... 255
-		else if (0x40 < test_draw_boss_hp_value)	{	limit_max_hp_dec_boss_by_flame = (32);	}	// 64 ... 127
-		else if (0x20 < test_draw_boss_hp_value)	{	limit_max_hp_dec_boss_by_flame = (16);	}	// 32 ...  63
-		else if (0x10 < test_draw_boss_hp_value)	{	limit_max_hp_dec_boss_by_flame = ( 4);	}	// 16 ...  31
-		else										{	limit_max_hp_dec_boss_by_flame = ( 1);	}	//	0 ...  15
-		#endif
-		#if 0
-			 if (200 < test_draw_boss_hp_value) 	{	limit_max_hp_dec_boss_by_flame = (40);	}	//201 ... 255
-		else if (150 < test_draw_boss_hp_value) 	{	limit_max_hp_dec_boss_by_flame = (30);	}	//151 ... 200
-		else if (100 < test_draw_boss_hp_value) 	{	limit_max_hp_dec_boss_by_flame = (20);	}	//101 ... 150
-		else if ( 50 < test_draw_boss_hp_value) 	{	limit_max_hp_dec_boss_by_flame = (10);	}	// 51 ... 100
-		else										{	limit_max_hp_dec_boss_by_flame = ( 5);	}	//	0 ...  50
-		#endif
-		#if 0
-			 if (200 < test_draw_boss_hp_value) 	{	limit_max_hp_dec_boss_by_flame = (48);	}	//201 ... 255  ;  48 = 6  x8
-		else if (150 < test_draw_boss_hp_value) 	{	limit_max_hp_dec_boss_by_flame = (40);	}	//151 ... 200  ;  40 = 5  x8
-		else if (100 < test_draw_boss_hp_value) 	{	limit_max_hp_dec_boss_by_flame = (32);	}	//101 ... 150  ;  32 = 4  x8
-		else if ( 50 < test_draw_boss_hp_value) 	{	limit_max_hp_dec_boss_by_flame = (24);	}	// 51 ... 100  ;  24 = 3  x8
-		else										{	limit_max_hp_dec_boss_by_flame = (12);	}	//	0 ...  50  ;  12 = 1.5x8
-		#endif
-		#if 0
-			 if (191 < test_draw_boss_hp_value) 	{	limit_max_hp_dec_boss_by_flame = (48);	}	//192 ... 255  ;  48 = 6  x8
-		else if (127 < test_draw_boss_hp_value) 	{	limit_max_hp_dec_boss_by_flame = (40);	}	//128 ... 191  ;  40 = 5  x8
-		else if ( 63 < test_draw_boss_hp_value) 	{	limit_max_hp_dec_boss_by_flame = (32);	}	// 64 ... 127  ;  32 = 4  x8
-		else										{	limit_max_hp_dec_boss_by_flame = (24);	}	//	0 ...  63  ;  24 = 3  x8
-		#endif
-		#if 0
-			 if (191 < test_draw_boss_hp_value) 	{	limit_max_hp_dec_boss_by_flame = (60);	}	//192 ... 255  ;  60 = 4  x16 -4
-		else if (127 < test_draw_boss_hp_value) 	{	limit_max_hp_dec_boss_by_flame = (44);	}	//128 ... 191  ;  44 = 3  x16 -4
-		else if ( 63 < test_draw_boss_hp_value) 	{	limit_max_hp_dec_boss_by_flame = (28);	}	// 64 ... 127  ;  28 = 2  x16 -4
-		else										{	limit_max_hp_dec_boss_by_flame = (12);	}	//	0 ...  63  ;  12 = 1  x16 -4
-		#endif
-		#if 0
-	//	limit_max_hp_dec_boss_by_flame = (((test_draw_boss_hp_value>>(6))+3)<<3);
-	//	limit_max_hp_dec_boss_by_flame = (test_draw_boss_hp_value>>3)+(3<<3);
-	//	limit_max_hp_dec_boss_by_flame = (((test_draw_boss_hp_value>>(6))+1)<<4);
-	//	limit_max_hp_dec_boss_by_flame = (((test_draw_boss_hp_value>>(6)))<<4)+(1<<4);
-	//	limit_max_hp_dec_boss_by_flame = (test_draw_boss_hp_value>>2)+(1<<4)-4;
-		limit_max_hp_dec_boss_by_flame = (test_draw_boss_hp_value>>2)+(16-4);
-		#endif
 
-//0 ... 255 == draw_boss_hp_value 0001 1111 1110 0000;	>>=(2+3);  0000 0000 1111 1111; 0xff;
-/*
-	4096/60 == 68.2666666666666666666666666666667
-	4096/256 == 16
-*/
-//#define LIMIT_MAX_HP_DEC_BOSS_BY_FLAME (16)
-//#define LIMIT_MAX_HP_DEC_BOSS_BY_FLAME (48)
-//	int LIMIT_MAX_HP_DEC_BOSS_BY_FLAME[8] = { (1), (2), (4), (8),  (16), (24), (32), (48), };
-
-
-global void boss_hp_frame_check(void)
+static void boss_hp_frame_check(OBJ *src)/*(ボス本体)*/
 {
-	SPRITE *obj_boss;
-	obj_boss			= global_obj_boss;
-//	obj_boss			= あたり判定の都合上無理&obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_08_BOSS];
 	{
-		int limit_max_hp_dec_boss_by_flame;
-		u8 test_draw_boss_hp_value;
-	//	test_draw_boss_hp_value = (obj_boss->base_hp>>5) & 0xff;	/* 8192/32 == 256 (r32) */
-		test_draw_boss_hp_value = (obj_boss->base_hp>>7) & 0xff;	/* 32768/32 == 256 (r33) */
+		s32 limit_max_hp_dec_boss_by_frame;
+	//	u8 test_draw_boss_hp_value;
+		u16 test_draw_boss_hp_value;
+	//	test_draw_boss_hp_value = (src->base_hp>>5) & 0xff; /* 8192/32 == 256 (r32) */
+	//	test_draw_boss_hp_value = (src->base_hp>>7) & 0xff; /* 32768/32 == 256 (r33) */
+		test_draw_boss_hp_value = (src->base_hp>>9) & 0x03ff;	/* ?/32 == 256*4 (r35u2-) */
 		#if 1
-	//	limit_max_hp_dec_boss_by_flame = (test_draw_boss_hp_value>>2) | (0x0f);
-	//	limit_max_hp_dec_boss_by_flame = (test_draw_boss_hp_value>>2) | (0x08);
-		limit_max_hp_dec_boss_by_flame = (test_draw_boss_hp_value) | (0x10);
+	//	limit_max_hp_dec_boss_by_frame = (test_draw_boss_hp_value>>2) | (0x0f);
+	//	limit_max_hp_dec_boss_by_frame = (test_draw_boss_hp_value>>2) | (0x08);
+	//	limit_max_hp_dec_boss_by_frame = (test_draw_boss_hp_value) | (0x10);/*(-r35u1)*/
+		limit_max_hp_dec_boss_by_frame = (test_draw_boss_hp_value) | (0x40);/*(r35u2-)*/
 		#endif
 		//
-		if (limit_max_hp_dec_boss_by_flame < card.boss_hp_dec_by_frame)
-		{
-			card.boss_hp_dec_by_frame = limit_max_hp_dec_boss_by_flame;
-		}
+	//	if (limit_max_hp_dec_boss_by_frame < card.boss_hp_dec_by_frame)
+	//	{
+	//		card.boss_hp_dec_by_frame = limit_max_hp_dec_boss_by_frame;
+	//	}
+		card.boss_hp_dec_by_frame = psp_min(card.boss_hp_dec_by_frame, limit_max_hp_dec_boss_by_frame);
 	}
 //
-	obj_boss->base_hp -= card.boss_hp_dec_by_frame;
+	src->base_hp -= card.boss_hp_dec_by_frame;
 	card.boss_hp_dec_by_frame = 0;/* 使ったので消す(フレーム単位) */
-	if (card.limit_health >= obj_boss->base_hp) 	/* 規定値以下になればカードモード解除 */
+	if (card.limit_health >= src->base_hp)	/* 規定値以下になればカードモード解除 */
 	{
-		card.mode			= (CARD_BOSS_MODE_00_OFF);
-		boss_destroy_check_type(obj_boss, DESTROY_CHECK_00_WIN_BOSS);
+		src->base_hp = card.limit_health;	/* 規定値未満にしない。 */
+		card.mode_timer 		= (CARD_BOSS_TIMER_0256_SET);
+	//	boss_destroy_check_type(src, DESTROY_CHECK_00_WIN_BOSS);
 		cb.callback_gu_draw_haikei = cb.callback_gu_draw_haikei_modosu;
 	}
 }
-
-
 /*---------------------------------------------------------
-	カードを次に進める。
+
 ---------------------------------------------------------*/
-static void card_incliment(void)
-{
-			card.number += (4)/*1*/;
-}
-
-/* 出現時x座標 */
-//#define BOSS_XP256		(t256(GAME_WIDTH/2))	/* 中心座標なので */
-#define BOSS_XP256			(t256(GAME_X_OFFSET)+t256(GAME_320_WIDTH/2))	/* 中心座標なので */
-
 /*---------------------------------------------------------
-	[カードシステム内に移動予定]	カード登録
+	カード登録
 ---------------------------------------------------------*/
 
-/*global*/global/*static*/ void card_boss_move_generate_check_regist(SPRITE *src)
+/*
+	 [-1]発弾時
+  >
+ 0
+	 [0...253]立ち絵移動
+  >
+ 254 == 256-2
+	 [254]設定
+ 255 == 256-1
+	 [255...]
+
+*/
+
+
+/*global*/global/*static*/ void card_boss_move_generate_check_regist(OBJ *src)
 {
-	if ( /*off*/(0)==card.mode)/*(判断)*/
-	{
-		card.mode		= (CARD_BOSS_MODE_01_IDO_JYUNNBI);/*on*/	/* とりあえず */
-		/* [(とりあえず)カード攻撃のみに仕様変更]したので、最後撃てるカードがなくなった場合に攻撃させる為。 */
-		{
-			int aaa;	/* 現在体力 から 撃ちたいカード分 引いた体力値 */
-			aaa = card.limit_health - (my_card_resource[(card.number+(4)/*1*/)].spell_life);	/*1000 500*/
-		//	card.limit_health -= 1000/*500*/;
-			/* ボスがカードを撃てる一定体力がある場合 */
-			if (0 < aaa)	/* カード撃てる。 */
-			{
-				card.limit_health = aaa;
-			//	if (card_syoji_maisuu < card.number)
-				if (0 == card_syoji_maisuu )
-				{
-					/* 形態変更しない、アイテム吐かない */
-				//	card.number -= (4);
-				//	src->callback_loser 			= lo se_boss;
-				}
-				else/* 形態変更したら */
-				{
-					card_incliment();
-					card_syoji_maisuu--;
-					#if 0//(1==TEST_ZAKO_HIDE)/* ボスも影響受ける */
-					zako_all_timeup();/* ザコタイムアウト(フェイドアウト消去処理へ移行) */
-					#endif
-					/* アイテム吐く */
-					if (NULL != src->callback_loser)
-					{
-						(src->callback_loser)(src); 	/* sakuya_put_items(src); */
-					}
-				}
-			}
-			else	/* カード撃てない。 */
-			{
-				card.limit_health = (0);
-			//	card.mode		= (0);/*off*/
-			}
-		}
-		/*---------------------------------------------------------
-			カードチェック
-		---------------------------------------------------------*/
-		if ( /*off*/(0)==card.boss_timer)
-		{
-			card.limit_health = (0);
-		}
-	}
-	else
-	if (CARD_BOSS_MODE_01_IDO_JYUNNBI == card.mode)
-	{
-		card.mode			= (CARD_BOSS_MODE_02_TAIHI);/*on*/
-
-
-		REG_10_BOSS_SPELL_TIMER = (0);	/* カード生成を強制的に止める。 */
-		bullets_to_hosi();		/* 総ての敵弾を、hosiアイテムに変える */
-		/* 真中付近に退避 */
-	//	src->BOSS_DATA_04_toutatu_wariai256 			= t256(  0);/* 初期化済みの必要あり */
-		src->BOSS_DATA_04_toutatu_wariai256 			= t256(1.0);/* 初期化済みの必要あり */
-	//	src->BOSS_DATA_00_target_x256			= t256(153);
-		src->BOSS_DATA_00_target_x256			= BOSS_XP256; //t256(0);
-	//	src->BOSS_DATA_01_target_y256			= src->cy256;
-		src->BOSS_DATA_01_target_y256			= t256(16.0); //t256(0);
-
-		#if 1/* (新[カード始まる前に初期化]) 第0形態から、必ず呼ぶ筈。 */
-		/* カード初期化 */
-		if (NULL != my_card_resource[(card.number)].spell_init_callback)
-		{
-			(my_card_resource[(card.number)].spell_init_callback)(src);
-		}
-		#endif
-	}
-	else
-	if (CARD_BOSS_MODE_02_TAIHI==card.mode) /* 発弾位置まで移動中。 */
-	{
-	//	src->BOSS_DATA_04_toutatu_wariai256 -= (1); 	/* [約	4 秒]== 4.2666==(256/60[flame]) */
-	//	src->BOSS_DATA_04_toutatu_wariai256 -= (1*4);		/* [約	1 秒]== 1.0666==(256/(4*60)[flame]) */
-//		src->BOSS_DATA_04_toutatu_wariai256 -= (1*(4-1));	/* [約	1 秒]== 1.0666==(256/(4*60)[flame]) */
-		#if 1/*(r32)*/
-	//	boss_yuudou_idou_nomi(src);/*(r32)*/
-		boss_yuudou_hiritu_keisan(src);
-	//	src->BOSS_DATA_04_toutatu_wariai256 -= (1); /* [約	4 秒]== 4.2666==(256/60[flame]) */
-		src->BOSS_DATA_04_toutatu_wariai256 -= (1*4);	/* [約	1 秒]== 1.0666==(256/(4*60)[flame]) */
-		if (0 > src->BOSS_DATA_04_toutatu_wariai256 )	/* ほぼ画面中心付近まで、移動した。 */
-		{
-			src->BOSS_DATA_04_toutatu_wariai256 = (0);
-			card.mode		= (CARD_BOSS_MODE_03_HATUDAN);/*on*/
-		}
-		#endif/*(r32)*/
-		#if 0/*(r32p)*/
-		boss_yuudou_idou_nomi(src);/*(r32p)*/
-		boss_yuudou_hiritu_keisan(src);
-	//	src->BOSS_DATA_04_toutatu_wariai256 -= (1); /* [約	4 秒]== 4.2666==(256/60[flame]) */
-	//	src->BOSS_DATA_04_toutatu_wariai256 -= (1*4);	/* [約	1 秒]== 1.0666==(256/(4*60)[flame]) */
-	//	if (0 > src->BOSS_DATA_04_toutatu_wariai256 )	/* ほぼ画面中心付近まで、移動した。 */
-		if ((0==src->BOSS_DATA_04_toutatu_wariai256))
-		{
-	//		src->BOSS_DATA_04_toutatu_wariai256 = (0);
-			card.mode		= (CARD_BOSS_MODE_03_HATUDAN);/*on*/
-		}
-		#endif/*(r32p)*/
-	}
-	else/* [(とりあえず)カード攻撃のみに仕様変更]*/
+	card.mode_timer--;
 	/*
+		[カード攻撃のみに仕様変更]
 		(準備時の移動などもカード扱い)
 		(カード無くなった後も扱い)
 	*/
 	/* ボス行動 */
-	if (CARD_BOSS_MODE_03_HATUDAN==card.mode)/*(カード中)*/
+	if (CARD_BOSS_TIMER_0000_HATUDAN > card.mode_timer)/*発弾時*/ /*(カード中)*/
 	{
-		(my_card_resource[(card.number)].boss_move_keitai_callback)(src);/*(ボス移動形態毎に、ボス移動処理を実行する)*/
-	}
-}
-
-
-/*---------------------------------------------------------
-	[カードシステム内に移動予定]
----------------------------------------------------------*/
-
-
-/*---------------------------------------------------------
-	ボスを攻撃した場合の共通ルーチン
-	-------------------------------------------------------
-	SPRITE *src;	ボス敵自体
-	SPRITE *tama;	自弾
----------------------------------------------------------*/
-
-/*static*/static/*global*/	void s_callback_hit_boss(SPRITE *src, SPRITE *tama)
-{
-	/* ボス & 中-ボスに自弾があたった場合の火花エフェクトを登録(現在Gu部分がないので描画してない) */
-	set_REG_DEST_XY(tama);/* 発弾位置 座標xy */
-	bakuhatsu_add_type_ccc(BAKUHATSU_MOVE12/*BAKUHATSU_MINI00*/);/* 先に実行した方が速い */
-//
-	/* 上と分離した方がコード効率があがる。 */
-	{
-		card.boss_hp_dec_by_frame += /*w->*/tama->base_weapon_strength; /* 攻撃して体力減らす(強さ分引く) */
-	}
-}
-
-//static int kaiwa_syuuryou;	/* ボス戦闘前の会話終了を待つ */
-global /*static*/ void kaiwa_00_keitai(SPRITE *src)
-{
-//	if (0!=kaiwa_syuuryou)	/* ボス戦闘前の会話終了を待つ */
-	if ( ((cg.state_flag) & STATE_FLAG_05_IS_BOSS) )	/* ボス戦闘前の会話終了? */
-	{
-		src->BOSS_DATA_04_toutatu_wariai256 = t256(1.0);
-	//	common_boss_init_2nd(src);	/* プレイヤー弾受け付け、コールバックを登録 */
-		/*---------------------------------------------------------
-			ボスの共通、２回目初期化ルーチン(攻撃可能)
-		---------------------------------------------------------*/
-	//	/*extern*/static void common_boss_init_2nd(SPRITE *src)
+		/* (とりあえず)カードモード時のみボス時間経過 */
 		{
-			/* プレイヤー弾受け付け、コールバックを登録 */
-			src->callback_hit_teki = s_callback_hit_boss;	/* コールバック登録 */
-			/* card common init */
-			card.mode		= (CARD_BOSS_MODE_01_IDO_JYUNNBI);/*on*/
-		//	card.mode		= (0);/*off*/
+			card.boss_timer--;/*fps_factor*/
+			if (0 >= (card.boss_timer)) /*1*/
+			{
+				card.boss_timer 	= (0);/*(一時的に0にする)*/ 	/*(もし次のスペカがあれば、スペカシステム側で次へ移行する。その際に card.boss_timer に時間が加算される。)*/
+				card.mode_timer 	= CARD_BOSS_TIMER_0000_HATUDAN/*off*/;/**/
+				src->base_hp		= card.limit_health;		/* (とりあえず) */
+			//	boss_destroy_check_type(h/*敵自体*/, DESTROY_CHECK_01_IS_TIME_OUT);/*	★ 攻撃の場合の死亡判定 	★ 時間切れの場合の死亡判定 */
+				#if (1==USE_BOSS_JIKANGIRE)/*(使用予定あり。未検証)*/
+				cg.state_flag |= JIKI_FLAG_16_0x8000_BOSS_JIKAN_GIRE;/*(時間切れフラグon)*/
+				#endif
+			}
 		}
-	//	/*時間制限カウント有効化*/
-	//	data->boss_base.state001++/* = ST_02*/;
-		card_incliment();
-	}
-}
-//global void called_from_kaiwa_system_boss_start(void)
-//{
-//	cg.state_flag |= STATE_FLAG_05_IS_BOSS; 	/* ボス戦闘前の会話終了を設定 */
-//	kaiwa_syuuryou = (1);
-//}
-/*---------------------------------------------------------
-	共通ボス退避(撃破後に画面外にボスが逃げる)
-	[カードシステム内に移動予定]
----------------------------------------------------------*/
-
-global /*static*/ void common_99_keitai(SPRITE *src)
-{
-	if (0 > (src->cy256+t256(50.0)))/* +t256(50.0) ボスグラの最大サイズ(50[dot]) */
-	{
-		bullets_to_hosi();/* 弾全部、星アイテムにする */
-		src->callback_mover 	= NULL; 		/* おしまい */
-	//	#if (0==US E_BOSS_COMMON_MALLOC)
-	//	src->type					= SP_DELETE;	/* おしまい */
-	//	#else
-		sprite_initialize_position(src);
+	//	#if (0)/*(r36, NULLは登録できない。何もしない場合は NULL_keitai を登録する。)*/
+	//	if (NULL != card.boss_move_card_callback)
 	//	#endif
-
-	//	pd_save_timer		= (6);/* 6[フレーム] ボス倒してから次(シナリオ)に進むまでの待ち時間 */
+		{
+			(card.boss_move_card_callback)(src);/*(ボス移動形態毎に、ボス移動処理を実行する)*/
+		}
+		boss_r36_yuudou(src);
+		if (TUKAIMA_00_OFF != card.tukaima_used_number) 	/* 使い魔生成は必要？ */
+		{
+			tukaima_system_add_dolls(src);/*(複数の使い魔達の生成をする。使い魔は一人でなくて複数の方が多い。)*/
+			card.tukaima_used_number = TUKAIMA_00_OFF;/*(生成完了したので off にする。)*/
+		}
+		/*ボスを攻撃した場合のフレームチェック*/
+		if (0!=cg.draw_boss_hp_value)/*(boss_mode)*/
+		{	boss_hp_frame_check(src);}/*ボスを攻撃した場合のフレームチェック/カードモードチェック*/
 	}
 	else
+//	if (CARD_BO SS_MODE_02_TAIHI==card.mode) /* 発弾位置まで移動中。 */
+	if ((CARD_BOSS_TIMER_0256_SET-2) > card.mode_timer) /* 発弾位置まで移動中。 */
 	{
-		src->cy256 -= t256(0.75);					/* 上に退避 */			/* t256(0.75) 退避速度 0.75[dot/flame] */	/*fps_factor*/
-		if ( (int)(GAME_X_OFFSET*256+(GAME_320_WIDTH*256/2)) > src->cx256)	/* 画面半分の位置 */
+		#if 1/*(r32p)*/
+	//	bo ss_y uudou_idou_nomi(src);/*(r32p)*/ //	src->BOSS_DATA_04_toutatu_wariai256 -= (1); /* [約	4 秒]== 4.2666==(256/60[frame]) */
+	//	bo ss_y uudou_hiritu_keisan(src);
+		boss_r36_yuudou(src);
+		#if 0
+	//	if (0 > src->BOSS_DATA_04_toutatu_wariai256 )	/* ほぼ画面中心付近まで、移動した。 */
+		if ((0==src->BOSS_DATA_04_toutatu_wariai256))
 		{
-			src->cx256 += t256(1.0);	/* 右上に退避 */
+	//		src->BOSS_DATA_04_toutatu_wariai256 = (0);
+			card.mode_timer 	= (CARD_BOSS_TIMER_0000_HATUDAN);/*on*/
 		}
-		else
+		#endif
+		#endif/*(r32p)*/
+		// ボス(立ち絵移動)
+		#if 0/*(等速移動)*/
+		kaiwa_sprite[1].cy256		= t256(272+128) - ((card.mode_timer)<<9);
+		#else/*(加減速移動)*/
 		{
-			src->cx256 -= t256(1.0);	/* 左上に退避 */
+			u32 aaa = (card.mode_timer);
+			aaa += 128;/*(上下入れ替え)*/
+			aaa &= 0xff;/*(0...255)*/
+		//	aaa = ((aaa)|(aaa<<8));/*(0...65535)*/
+			aaa <<= 8;/*(0...65535)*/
+			aaa = vfpu_ease_in_out65536(aaa);
+			aaa += 32768;/*(上下入れ替え)*/
+			aaa &= 0xffff;/*(0...65535)*/
+			aaa += aaa;/*(2倍)*/
+			kaiwa_sprite[1].cy256		= t256(272+128) - (aaa);
+		}
+		#endif
+	}
+	else
+	if ((CARD_BOSS_TIMER_0256_SET-1) > card.mode_timer) /* 発弾位置まで移動中。 */
+	{
+		REG_10_BOSS_SPELL_TIMER = (0);	/* カード生成を強制的に止める。 */
+		bullets_to_hosi();		/* 総ての敵弾を、hosiアイテムに変える */
+		/* 真中付近に退避 */
+	//	src->BOSS_DATA_04_to utatu_wariai256	= t256(  0);/* 初期化済みの必要あり */
+	//	src->BOSS_DATA_04_to utatu_wariai256	= t256(1.0);/* 初期化済みの必要あり */
+	//	src->BOSS_DATA_00_ta rget_x256			= BOSS_XP256; //t256(0); t256(153);
+	//	src->BOSS_DATA_01_ta rget_y256			= t256(16.0); //t256(0); src->cy256;
+		REG_02_DEST_X	= (BOSS_XP256);/*(t256()形式)*/
+		REG_03_DEST_Y	= (t256(16.0));/*(t256()形式)*/
+		boss_set_new_position(src);/*(誘導移動座標を設定)*/
+		//
+		#if 1/* (新[カード始まる前に初期化]) 第0形態から、必ず呼ぶ筈。 */
+		/* カード初期化 */
+	//	#if (0)/*(r36, NULLは登録できない。何もしない場合は NULL_keitai を登録する。)*/
+	//	if (NULL != my_card_resource[(card.address_set)].spell_init_callback)
+	//	#endif
+		{
+			(my_card_resource[(card.address_set)].spell_init_callback)(src);
+		}
+		#endif
+		// ボス
+		kaiwa_sprite[1].cx256		= t256(256);
+	}
+	else
+//	if ((CARD_BOSS_TIMER_0256_SET) > card.mode_timer)/*(判断)*/  /*off*/
+	{
+		/* [(とりあえず)カード攻撃のみに仕様変更]したので、最後撃てるカードがなくなった場合に攻撃させる為。 */
+		/*(規定値の算出)*/
+		/*(リミット分引く)*/
+		set_new_limit();
+		{
+			card_address_incliment();
+			card_set_boss_move_callback();
+			#if 0//(1==TEST_ZAKO_HIDE)/* ボスも影響受ける */
+			zako_all_timeup();/* ザコタイムアウト(フェイドアウト消去処理へ移行) */
+			#endif
+			/* アイテム吐く */
+			if (NULL != src->callback_loser)
+			{
+				(src->callback_loser)(src); 	/* sakuya_put_items(src); */
+			}
 		}
 	}
 }
-
-
-
-/*---------------------------------------------------------
-	カードが終わるまで待つ。(廃止)
-	-------------------------------------------------------
-
----------------------------------------------------------*/
-#if 0
-	/*static*/global void card_state_check_holding(SPRITE *src)
-	{
-		if (SPELL_00 == card.card_number)
-		{
-			src->BOSS_DATA_05_boss_base_state777++;
-		}
-	}
-#endif
-
-
-/*---------------------------------------------------------
-	ボスの共通、１回目初期化ルーチン(初回、攻撃不可)
----------------------------------------------------------*/
 
 
 /*---------------------------------------------------------
 	弾の範囲を「標準」に設定
+	-------------------------------------------------------
+	set_default_bullet_clip
 ---------------------------------------------------------*/
-global void set_default_bullet_clip(void)/* call from load_stage.c */
+static void init_00_boss_clip000(OBJ *h)/* call from load_stage.c */
 {
-	rect_clip.bullet_clip_min.x256 = t256(GAME_X_OFFSET);
-	rect_clip.bullet_clip_max.x256 = t256(GAME_X_OFFSET)+t256(GAME_320_WIDTH);
-	rect_clip.bullet_clip_min.y256 = t256(-32);
-	rect_clip.bullet_clip_max.y256 = t256(GAME_HEIGHT);
+	rect_clip.bullet_clip_min.x256 = t256(GAME_X_OFFSET);						/*(横は標準範囲)*/
+	rect_clip.bullet_clip_max.x256 = t256(GAME_X_OFFSET)+t256(GAME_320_WIDTH);	/*(横は標準範囲)*/
+	rect_clip.bullet_clip_min.y256 = t256(-32); 			/*(上は標準範囲)*/
+	rect_clip.bullet_clip_max.y256 = t256(GAME_HEIGHT); 	/*(下は標準範囲)*/
 }
-
 
 /*---------------------------------------------------------
 	弾の範囲を「上と横の広範囲」に設定
+	-------------------------------------------------------
+	set_aya_bullet_clip
 ---------------------------------------------------------*/
-global void set_aya_bullet_clip(void)/* call from load_stage.c */
+static void init_00_boss_clip111(OBJ *h)/* call from load_stage.c */
 {
-	rect_clip.bullet_clip_min.x256 = t256(GAME_X_OFFSET)						+ t256(-100);
-	rect_clip.bullet_clip_max.x256 = t256(GAME_X_OFFSET)+t256(GAME_320_WIDTH) + t256( 100);
-	rect_clip.bullet_clip_min.y256 = t256(-256);/* あや */
-	rect_clip.bullet_clip_max.y256 = t256(GAME_HEIGHT);//+t256(100)
+	rect_clip.bullet_clip_min.x256 = t256(GAME_X_OFFSET)					  + t256(-100);/*(横は広範囲)*/
+	rect_clip.bullet_clip_max.x256 = t256(GAME_X_OFFSET)+t256(GAME_320_WIDTH) + t256( 100);/*(横は広範囲)*/
+	rect_clip.bullet_clip_min.y256 = t256(-256);			/*(上は広範囲)*/		/* あや */
+	rect_clip.bullet_clip_max.y256 = t256(GAME_HEIGHT); 	/*(下は標準範囲)*/
 }
 
-global void init_00_boss_clip000(SPRITE *h)/* 標準タイプ */
+/*---------------------------------------------------------
+	弾の範囲を「上だけ広いタイプ」に設定
+	-------------------------------------------------------
+	set_cirno_bullet_clip
+---------------------------------------------------------*/
+
+static void init_00_boss_clip222(OBJ *h)/* call from load_stage.c */
 {
-	set_default_bullet_clip();	/* 弾の範囲を標準に設定 */
+	rect_clip.bullet_clip_min.x256 = t256(GAME_X_OFFSET);						/*(横は標準範囲)*/
+	rect_clip.bullet_clip_max.x256 = t256(GAME_X_OFFSET)+t256(GAME_320_WIDTH);	/*(横は標準範囲)*/
+	rect_clip.bullet_clip_min.y256 = t256(-256);			/*(上は広範囲)*/		/*(てすとチルノ)*/
+	rect_clip.bullet_clip_max.y256 = t256(GAME_HEIGHT); 	/*(下は標準範囲)*/
 }
-global void init_00_boss_clip111(SPRITE *h)/* 上に広いタイプ */
+
+/*---------------------------------------------------------
+	道中用の、弾の範囲を「標準」に設定。(from load_stage.c)
+---------------------------------------------------------*/
+global void set_default_bullet_clip(void)	/* 標準タイプ */
 {
-	set_aya_bullet_clip();	/* 弾の範囲を標準に設定 */
+	init_00_boss_clip000(NULL); 			/* 弾の範囲を標準に設定 */
 }
 
 
 /*---------------------------------------------------------
-	敵を追加する
+	ボス敵の初期化。
 ---------------------------------------------------------*/
-//	#if (0==U SE_BOSS_COMMON_MALLOC)
-//	h									= obj_add_01_teki_error();
-//	obj_boss							= h;/*輝夜本人*/
-//	#else
-//	SPRITE *obj_boss;
-//	obj_boss = あたり判定の都合上無理&obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_08_BOSS];
-//	SPRITE *h;
-//	h = あたり判定の都合上無理&obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_08_BOSS];
-//	#endif
+		#if 0/* 初期化済みの必要あり */
+		h->vx256						= t256( 0);
+		h->vy256						= t256( 0);
+		#endif
+	//
 
-
-/*static*/extern  void boss_effect_reset(void);
-extern void stage_boss_load_texture(void);
-
-
-
+	extern void stage_boss_load_texture(void);
 // src/core/douchu/boss.h の初期化も参照する事。
+extern void root_boss_mover(OBJ *src);
 global void called_from_kaiwa_system_boss_load(int boss_number)
 {
+	/*(ボス番号は 0-7 のいずれかに勝手に固定(r36現在)。)*/
+	boss_number &= (8-1);
+	/*(ボス本体の行動範囲を制限する。)*/
 	{
 		/* boss_rect_init */
 		rect_clip.boss_clip_min.x256	= t256(GAME_X_OFFSET)+t256( 			0)+t256(24);
@@ -1142,35 +791,20 @@ global void called_from_kaiwa_system_boss_load(int boss_number)
 		rect_clip.boss_clip_min.y256	= t256(0);
 		rect_clip.boss_clip_max.y256	= t256(96);
 	}
-//
-	int sss;
-	sss = boss_number;
-	sss &= (8-1);
-//
 	//----[BOSS]
-	SPRITE *h;
-	h					= global_obj_boss;/*輝夜本人*/
-//	h					= あたり判定の都合上無理&obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_08_BOSS];
-//	if (NULL!=h)/* 登録できた場合のみ */	/* 強制登録 */		/* 仕様バグ(?) */
+	OBJ *h;
+	h					= &obj99[OBJ_HEAD_01_0x0800_TEKI+TEKI_OBJ_00_BOSS_HONTAI];/*(ボス本体)*/
 	{
-	/*(再定義の必要あり)*/	h->type 						= BOSS_00_11;
-		h->callback_mover				= common_boss_move;
+		h->obj_type_set 				= BOSS_00_11;	/*(再定義の必要あり)*/
+		h->callback_mover				= root_boss_mover;
 		h->callback_hit_teki			= NULL; 	/* ダミーコールバック登録 */
 	//
-		#if 0/* 初期化済みの必要あり */
-		h->vx256						= t256( 0);
-		h->vy256						= t256( 0);
-		#endif
-	//
 		h->BOSS_DATA_03_kougeki_anime_count 		= (0);	/* 攻撃アニメーション用カウンタ / 0以下なら移動アニメーション */
-		h->BOSS_DATA_05_boss_base_state777			= (0);	/*ST_00*/	/*初期値を0にする。*/
-	//	h->BOSS_DATA_05_boss_base_state777			= (-1); /*ST_00*/
-	//
-	//------------ カード関連
+		h->BOSS_DATA_05_boss_base_state777			= (0);	/*ST_00*/	/*(初期値を0にする。) (-1) */
+		//------------ カード関連
 		{
-			static const u16/*u8*/ aaa[8+8] =/* カードアドレスが256種類を超えたので、u16 */
-			{
-			/* ボス開始カード番号(easy) */
+			static const u16 boss_start_card_address[(8)] =/* カードアドレスが256種類を超えたので最低でも u16 は必要。 */
+			{	/* ボス開始カード番号(easy) */
 				CARD_ADDRESS_00E_chrno_000, 	/* チルノ(?) */ 	/* エキストラ用(boss0) */
 				CARD_ADDRESS_00E_alice_000, 	/* アリス */
 				CARD_ADDRESS_00E_mima_000,		/* 魅魔 */
@@ -1180,38 +814,65 @@ global void called_from_kaiwa_system_boss_load(int boss_number)
 				CARD_ADDRESS_00E_pacheA_000,	/* パチェ */
 				CARD_ADDRESS_00E_sakuya_000,	/* 咲夜 */
 				CARD_ADDRESS_00E_pacheA_000,	/* フラン(?) */ 	/* ファンタズム用(boss7) */
-			/* ボスカード所持数 */
-				(6),//(0-0),													/* チルノ(?) */ 	/* エキストラ用(boss0) */
-				(5),//(CARD_ADDRESS_16E_alice_ggg-CARD_ADDRESS_00E_alice_000),		/* アリス */		/*CARD_ADDRESS_19_alice_jjj;*/
-				(5),//(CARD_ADDRESS_17E_mima_hhh-CARD_ADDRESS_00E_mima_000),		/* 魅魔 */
-				(6),//(CARD_ADDRESS_17E_kaguya_hhh-CARD_ADDRESS_00E_kaguya_000),	/* 輝夜 */
-			//
-				(6),//(CARD_ADDRESS_19E_aya_jjj-CARD_ADDRESS_00E_aya_000),			/* 文 */
-				(8),//(CARD_ADDRESS_17E_pache_hhh-CARD_ADDRESS_00E_pache_000),		/* パチェ */
-				(9),//(CARD_ADDRESS_11E_sakuya_kkk-CARD_ADDRESS_00E_sakuya_000),	/* 咲夜 */
-				(5),//(0-0),													/* フラン(?) */ 	/* ファンタズム用(boss7) */
 			};
-			card.number 			= aaa[sss  ] + ((cg.game_difficulty)&0x03)
-				+ ((5!=sss)?(0):(((cg_game_select_player)&(4-1))<<(2+3)));/* 難易度(2bit==4段階)、カード(3bit==8段階) */
-			card_syoji_maisuu		= aaa[sss+8];
+			card.address_set =
+				#if (1)/*(ボスが違えばスペカも違う)*/
+				boss_start_card_address[boss_number]	/*(基準位置)*/
+				#endif
+				#if (1)/*(難易度別に違うスペカを撃つ)*/
+				+ ((cg.game_difficulty)&0x03);	/*(難易度別オフセット)*/
+				#endif
+			if (5==boss_number)/*(5==パチェの場合、プレイヤー毎に違うスペカを撃つ)*/	/*(パチェの場合オフセット)*/
+			{
+				u8 aaa;
+				aaa = ((((cg_game_select_player)&(4-1)))<<2);/* 4種(0 ... 3)に制限してから、4倍する。(rank == E,N,H,L) */
+				card.address_set += ((aaa<<3)+(aaa));/*(aaa *= 9; 9倍する。r36_gekiha 含めスペカ領域 9 種類。)*/
+			}
+			h->base_hp				= (my_card_resource[(card.address_set)].spell_life);	/* 全体の体力 */	/*(再定義の必要あり)*/
+			/*(初回の規定値)*/
+			card.limit_health			= (h->base_hp);
+			card.mode_timer 			= (CARD_BOSS_TIMER_0000_HATUDAN);/*on*/ 	/* 会話形態 */	/* 特殊？ (CARD_BOSS_TIMER_0255_IDO_JYUNNBI) */
+			card.spell_used_number		= SPELL_00; 	/* カード生成終了フラグ */
+			card.address_temporaly		= (0);			/*(SPELL_08_rumia-1)*/ /*0*/
+			#if (0)//(1)
+			card_set_boss_move_callback();
+			#else/*(たぶん、同じ)*/
+			card.boss_move_card_callback = kaiwa_00_keitai;/*(必ず、会話0形態から始まる。)*/
+			#endif
 		}
-		{
-	/*(再定義の必要あり)*/	h->base_hp				= (my_card_resource[(card.number)].spell_life); 		/* 全体の体力 */
-			card.limit_health = (h->base_hp) - (my_card_resource[(card.number + (4)/*1*/)].spell_life); 	/* 通常攻撃(初回攻撃)の攻撃分 */
-			//
-			card.boss_timer = (((my_card_resource[(card.number)].spell_limit_time)));	/* 75*64==75[count] 	約99[秒(64/60)](単位は秒ではない) */
-			card.mode		= (CARD_BOSS_MODE_01_IDO_JYUNNBI);/*on*/	/* 特殊？ */
-			/*???*/
-		//	kaiwa_syuuryou = (0);
-		}
-		#if 1
-	//------------ カード関連
-		card.card_number			= SPELL_00; 	/* カード生成終了フラグ */
-		card.number_temporaly	= (0);			/*(SPELL_08_rumia-1)*/ /*0*/
-		#endif
-	//
 	}
-	boss_effect_reset();
+	/*(リミット分引く)*/		/*(初回攻撃)の攻撃分引く */
+	set_new_limit();			/* 通常攻撃(初回攻撃)の攻撃分 */
 	// ボステクスチャ読み込み
 	stage_boss_load_texture();
+
+	#if (0)/*(デバッグ)*/
+	kanji_window_clear_line(0); 			/* 漢字ウィンドウの1行目(==0)の内容を消す。 */
+	kanji_cursor_move_home_position();		/* カーソルを1行目(==0)へ移動 */
+	{
+	//	ml_font[(0)].haikei 		= (ML_HAIKEI_02_JIKI_SPELL_CARD);/* [赤/自機カード用背景]せりふ背景on */
+		cg.msg_time 				= (65536);	/* 約 18 分 */
+		strcpy(my_font_text, "ボス、ロードしたよ。" "\n");
+		kanji_color((7)|STR_CODE_NO_ENTER);
+		kanji_draw();
+	}
+	#endif
+	//
+	#if (0)/*(デバッグ)*/
+	{	psp_fatal_error( (char*)
+		//	"0123456789012345678901234567890123456789"	// 半角40字"最大表示文字数"
+			"load stage: STAGE%d" "\\n"
+			"ボス、ロードテストOK。", cg.game_now_stage);
+	}
+	#endif
+	/*---------------------------------------------------------
+		「datで設定したボス出現位置」から、
+		「ボス出現固定位置」まで移動する。
+		ように初期設定を行う。
+	---------------------------------------------------------*/
+	// 出現座標の初期設定。
+	REG_02_DEST_X	= (BOSS_XP256);/*(t256()形式、ボス出現固定位置)*/
+	REG_03_DEST_Y	= (t256(16.0));/*(t256()形式、ボス出現固定位置)*/
+	boss_set_new_position(h);/*(誘導移動座標を設定)*/
+	//
 }

@@ -1,7 +1,7 @@
 
 /*---------------------------------------------------------
- 東方模倣風 ～ Toho Imitation Style.
-  プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	東方模倣風 ～ Toho Imitation Style.
+	http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	チルノのカードを定義します。
 ---------------------------------------------------------*/
@@ -13,12 +13,20 @@
 	(1-2-3-4-5-6-7-8弾)だったので修正。
 うーん
 	原作やり直してよく見たら、
-	(1-2-3-4-5-6-7弾)か 			(easyとか)
-	(3-4-5-6-7-8弾)。				(hard)
-	(3-4-5-6-7-8弾)。				(lunatic)
+//	(1-2-3-4-5-6-7弾)か 			(easyとか)間違い？？？
+
 
 	チルノはどうも「内部ランク」で違う感じの弾を撃ってくる。ので良く判らない。
 
+
+	-------------------------------------------------------
+	原作やり直してよく見たら、
+	(2-3-4-5-6-7弾) 				(easy)
+									(normal)
+	(3-4-5-6-7-8弾)。				(hard)
+	(3-4-5-6-7-8弾)。				(lunatic)
+	-------------------------------------------------------
+	始めの方の弾が速く、後の弾はゆっくり。
 
 1100 0111 0xc7
 0100 0000
@@ -44,7 +52,7 @@
 /*---------------------------------------------------------
 	[初期化セクション]
 ---------------------------------------------------------*/
-local void spell_init_10_cirno_misogi(SPRITE *src)
+local void spell_init_10_cirno_misogi(OBJ *src)
 {
 //	if ((64-1)==((src->boss_sp ell_timer)))
 //	if ((SPELL_TIME_0060-1)==((src->boss_sp ell_timer)))
@@ -55,8 +63,8 @@ local void spell_init_10_cirno_misogi(SPRITE *src)
 	//	/*別変数でも良い?*/src->tmp_angleCCW65536
 		REG_0a_REG2 = ((REG_0f_GAME_DIFFICULTY)>>1);
 		REG_0c_REG4 = HATSUDAN_03_angle65536;	/* [角度をおぼえとく] */
-		REG_0d_REG5 = const_init_nan_ido_bunkatu_nums_table[b_chrno_00_BLUE_NUMS+(REG_0f_GAME_DIFFICULTY)];
-		REG_0e_REG6 = const_init_nan_ido_table[chrno_04_BLUE_DIV_ANGLE+(REG_0f_GAME_DIFFICULTY)];
+		REG_0d_REG5 = const_init_nan_ido_bunkatu_nums_table [tama_const_H04_NUMS_CIRNO_BLUE 	+(REG_0f_GAME_DIFFICULTY)];
+		REG_0e_REG6 = const_init_nan_ido_table				[tama_const_H05_DIVS_CIRNO_BLUE 	+(REG_0f_GAME_DIFFICULTY)];
 	}
 }
 /*---------------------------------------------------------
@@ -64,41 +72,39 @@ local void spell_init_10_cirno_misogi(SPRITE *src)
 	-------------------------------------------------------
 	使用レジスタ
 	REG_08_REG0 	カウンタ1。
-	REG_09_REG1 	カウンタ2。
-	REG_0a_REG2 	難易度別定数3
-	REG_0b_REG3 	n_way
+	REG_09_REG1 	周期カウンタ2。
+	REG_0a_REG2 	難易度別定数3(E=0,N=0, H=1,L=1)
+//	REG_0b_REG3 	---
 	REG_0c_REG4 	覚えとく角度。aaa_angle65536
 	REG_0d_REG5 	難易度別定数1
 	REG_0e_REG6 	難易度別定数2
 ---------------------------------------------------------*/
-local void spell_create_10_cirno_misogi(SPRITE *src)
+local void spell_create_10_cirno_misogi(OBJ *src)
 {
 	count_up_limit_NUM(REG_NUM_08_REG0, 8);
 //	if (0x40==((src->boss_sp ell_timer)&0xc7))/* 8回(修正1-2-3-4-5-6-7弾:0wayは撃たないので撃つのは7回) */
 //	if (0x00==((src->boss_sp ell_timer)&0x07))/* 8回(修正1-2-3-4-5-6-7弾:0wayは撃たないので撃つのは7回) */
 	if (1==(REG_08_REG0))/* 8回毎に1回 */
 	{
-		count_up_limit_NUM(REG_NUM_09_REG1, 8);/*(カウンタ2)*/
-	//	REG_0b_REG3 = 0;
-	//	REG_0b_REG3 = ((/*16*/7-((src->boss_sp ell_timer)>>3))&7)+(1)+((REG_0f_GAME_DIFFICULTY)>>1);
-		REG_0b_REG3 = (REG_09_REG1) + (REG_0a_REG2);
-		if (0 != REG_0b_REG3)
-		{
-			HATSUDAN_01_speed256			= (t256(2.0));				/* 弾速(2.5) */
+		count_up_limit_NUM(REG_NUM_09_REG1, 12);/*(0 ... 11 : カウンタ2)*/
+		if (6 > REG_09_REG1)/*(0,1,2,3,4,5 の場合)*/
+		{	/* 2.50, 2.375, 2.250, 2.125, 2.00, 1.875 :  (8-3)==0.125,  8==1.00, 7==0.50, 6==0.25, 5==0.125 */
+			HATSUDAN_01_speed256			= (t256(2.5))-((REG_NUM_09_REG1)<<5);				/* 弾速(2.5) */
+		//	HATSUDAN_02_speed_offset		= t256(6);/*(テスト)*/
 			HATSUDAN_02_speed_offset		= t256(6);/*(テスト)*/
-		//	HATSUDAN_03_angle65536			= (src->tmp_angleCCW65536)-(REG_0b_REG3*65536/128);
-		//	HATSUDAN_03_angle65536			= (src->tmp_angleCCW65536); 	/* [破壊] */
 			HATSUDAN_03_angle65536			= REG_0c_REG4;//(/*別変数でも良い*/src->tmp_angleCCW65536); /* [破壊] */
 			HATSUDAN_04_tama_spec			= (DANMAKU_LAYER_00)|(TAMA_SPEC_0000_TILT);/* (r33-)標準弾 */
 			HATSUDAN_05_bullet_obj_type 	= (BULLET_KOME_BASE + TAMA_IRO_03_AOI); 	/* [青米弾] になってるのは現在 氷弾 のグラが無いから */
-			HATSUDAN_06_n_way				= REG_0b_REG3;/* [nway] */	/* [破壊] */
-			HATSUDAN_07_div_angle65536		= (int)(65536/(64));		/* [破壊] */		/* 分割角度(1024[360/360度]を 64 分割) */	/* 1周をn分割した角度 */
+			HATSUDAN_06_n_way				= (2) + (REG_09_REG1) + (REG_0a_REG2);/* [nway] */	/* [破壊] */
+		//	HATSUDAN_07_div_angle65536		= (int)(65536/(64));		/* [破壊] */		/* 分割角度(1024[360/360度]を 64 分割) */	/* 1周をn分割した角度 */
+		//	HATSUDAN_07_div_angle65536		= (int)(65536/(80));		/* [破壊] */		/* 分割角度(1024[360/360度]を 80 分割) */	/* 1周をn分割した角度 */
+			HATSUDAN_07_div_angle65536		= (int)(65536/(96));		/* [破壊] */		/* 分割角度(1024[360/360度]を 80 分割) */	/* 1周をn分割した角度 */
 			hatudan_system_regist_n_way();/* (r33-) */
 		}
 		#if 1
 		/* --10 -000 == 0011 0111 */
 	//	if (0x20==((src->boss_sp ell_timer)&0x37))/* 2回 */
-		if (2 > REG_09_REG1)/* 2回 */	/* (0) or (1) の場合。 */
+		if (9 < REG_09_REG1)/* 2回 */	/* (10) or (11) の場合。 */
 		{
 			if (0 != REG_0d_REG5)
 			{
@@ -127,7 +133,49 @@ local void spell_create_10_cirno_misogi(SPRITE *src)
 
 
 /*---------------------------------------------------------
+	紅2面ボス チルノ	通常攻撃1(2/3)	自機狙い全方位弾
+	-------------------------------------------------------
+	[easy]10方向枠付き青弾。
+	-------------------------------------------------------
+	ただの全方位ばらまき。
+	-------------------------------------------------------
+	紅2面ボス チルノ	通常攻撃1(3/3)	自機狙い収束弾
+	-------------------------------------------------------
+	[easy]自機狙い収束18方向白米弾は、原作のスクショから
+	弾の中心で138x138[pix]ぐらいまで広がるっぽい。
+	70[pix]として、pspでは52[pix]ぐらい？(52.5==70*0.75)
+	-------------------------------------------------------
+	始めはただの全方位ばらまき。speedt256(2.0)ぐらい？
+	70[pix]進んだら、全弾自機狙いに変化。
+	すごいゆっくりspeedt256(0.5)ぐらい？
+---------------------------------------------------------*/
+#if 0
+#endif
+
+
+/*---------------------------------------------------------
 	紅2面ボス チルノ	氷符「アイシクルフォール」
+	-------------------------------------------------------
+	上から順番に計11回撃つ。(初ループ目は2回目の位置から始めるので計10回、2ループ目からは計11回撃つ)
+	3回目ぐらいが水平(より若干下)。
+	10回目ぐらいが45度斜めぐらい(より若干下)。
+	-------------------------------------------------------
+	このカードではチルノは動かないので、画像解析してみる。
+	http://code.google.com/p/kene-touhou-mohofu/htm/lab/20110704.html
+	-------------------------------------------------------
+	画像解析してみると、角度ムラがかなりある。
+	わざとやってるのかもしれない。良く判らない。
+	-------------------------------------------------------
+	45/360度を8分割した角度らしい。(が近い)
+	と言う事は1周を64分割した角度？？？
+	-------------------------------------------------------
+	1回0.5[秒]くらいかな？
+	-------------------------------------------------------
+	0.5[秒]が 32[カウント]として 10[回]だから、
+	繰り返し1周期 == 320[カウント]？
+	-------------------------------------------------------
+	使用レジスタ
+//	REG_08_REG0 	カウンタ。(音専用)
 	-------------------------------------------------------
 
 ---------------------------------------------------------*/
@@ -136,17 +184,41 @@ local void spell_create_10_cirno_misogi(SPRITE *src)
 	[弾幕グループ(1)セクション]
 	-------------------------------------------------------
 ---------------------------------------------------------*/
-
+local void cirno_icecle_fall_danmaku_11_callback(OBJ *src)/* 氷符「アイシクルフォール」 */
+{
+//	if (((32*18)-HATUDAN_FRAME64)==((REG_0a_REG2) ))/* 約0.33[秒](==20[frame])停止 */
+	if ((HATUDAN_ITI_NO_JIKAN-64) == src->jyumyou)/* 発弾エフェクト後から[64]カウントの弾 */
+	{
+		if (0==(src->hatudan_register_spec_data & TAMA_SPEC_KAITEN_HOUKOU_BIT))/*TAMA_SPEC_AKA_AO_KUNAI_BIT*/
+		{	/*CW(時計回り)*/
+		//	src->rotationCCW1024 -= (6);/* 90/360 度 曲げてみるテスト(32カウントかけて曲げる。256==8*32) */
+		//	src->rotationCCW1024 -= (3);/* 90/360 度 曲げてみるテスト(32カウントかけて曲げる。256==8*32) */
+			src->rotationCCW1024 -= (1024/4);/* 90/360 度 曲げてみるテスト(32カウントかけて曲げる。256==8*32) */
+		}
+		else
+		{	/*CCW(反時計回り)*/
+		//	src->rotationCCW1024 += (6);/* 90/360 度 曲げてみるテスト(32カウントかけて曲げる。256==8*32) */
+		//	src->rotationCCW1024 += (3);/* 90/360 度 曲げてみるテスト(32カウントかけて曲げる。256==8*32) */
+			src->rotationCCW1024 += (1024/4);/* 90/360 度 曲げてみるテスト(32カウントかけて曲げる。256==8*32) */
+		}
+			src->hatudan_register_tra65536					= t256(1);		/* (1) 調整加速弾 */
+			src->hatudan_register_speed65536				= t256(128);		/* 弾速 */
+			/* (通常弾へ変身する) */
+			src->hatudan_register_spec_data 		= (DANMAKU_LAYER_00)|(TAMA_SPEC_8000_NON_TILT);/* (r33-)非傾き弾 */
+	}
+//	danmaku_00_standard_angle_mover(src);/*(角度弾移動+画面外弾消し)*/
+	hatudan_system_B_move_angle_001(src);/*(角度弾移動)*/
+}
 
 /*---------------------------------------------------------
 	[初期化セクション]
 	-------------------------------------------------------
 ---------------------------------------------------------*/
 
-local void spell_init_1b_cirno_icecle_fall(SPRITE *src)
+local void spell_init_1b_cirno_icecle_fall(OBJ *src)
 {
-//	card.danmaku_callback[0] = danmaku_00_standard_angle_mover;/*(通常弾用)*/
-	card.danmaku_callback[1] = danmaku_01_standard_angle_sayuu_hansya_mover;/*(通常弾用)*/	/*(画面外なら反射減速)*/
+//	card.danmaku_callback[1] = danmaku_01_standard_angle_sayuu_hansya_mover;/*(通常弾用)*/	/*(画面外なら反射減速)*/
+	card.danmaku_callback[1] = cirno_icecle_fall_danmaku_11_callback;/*(氷符「アイシクルフォール」用。)*/
 //	card.danmaku_callback[2] = NULL;/*(未使用)*/
 //	card.danmaku_callback[3] = NULL;/*(未使用)*/
 }
@@ -154,7 +226,7 @@ local void spell_init_1b_cirno_icecle_fall(SPRITE *src)
 	[発弾セクション]
 	-------------------------------------------------------
 ---------------------------------------------------------*/
-local void spell_create_1b_cirno_icecle_fall(SPRITE *src)
+local void spell_create_1b_cirno_icecle_fall(OBJ *src)
 {
 //	if ((64-1)==((src->boss_sp ell_timer)))
 //	if ((SPELL_TIME_0060-1)==((src->boss_sp ell_timer)))
@@ -166,30 +238,34 @@ local void spell_create_1b_cirno_icecle_fall(SPRITE *src)
 //	}
 //	else
 //	if (0x40==((REG_10_BOSS_SPELL_TIMER)&0xc7))/* 8回(修正1-2-3-4-5-6-7弾:0wayは撃たないので撃つのは7回) */
-	if (0x00==((REG_10_BOSS_SPELL_TIMER)&0x07))/* 8回(修正1-2-3-4-5-6-7弾:0wayは撃たないので撃つのは7回) */
+//	if (0x00==((REG_10_BOSS_SPELL_TIMER)&0x07))/* 8回(修正1-2-3-4-5-6-7弾:0wayは撃たないので撃つのは7回) */
+	if (0x00==((REG_10_BOSS_SPELL_TIMER)&0x1f))/* 約0.5[秒]として、32回に1回。 */
 	{
-			HATSUDAN_02_speed_offset		= t256(6);/*(テスト)*/
-			HATSUDAN_04_tama_spec			= (DANMAKU_LAYER_01)|(TAMA_SPEC_0000_TILT);/* (r33-)標準弾 */
-			HATSUDAN_05_bullet_obj_type 	= (BULLET_KOME_BASE + TAMA_IRO_03_AOI); 	/* [青米弾] になってるのは現在 氷弾 のグラが無いから */
+		//	HATSUDAN_02_speed_offset			= (jj<<(2+8));/* x4倍 てすと*/
+			HATSUDAN_02_speed_offset			= (0);/* x4倍 てすと*/
+		//	HATSUDAN_02_speed_offset			= t256(6);/*(テスト)*/
+		//	HATSUDAN_01_speed256				= (t256(0.5));			/* 弾速(pspの画面は狭い) */
+		//	HATSUDAN_04_tama_spec				= (DANMAKU_LAYER_01)|(TAMA_SPEC_0000_TILT);/* (r33-)標準弾 */
+			HATSUDAN_05_bullet_obj_type 		= (BULLET_KOME_BASE + TAMA_IRO_03_AOI); 	/* [青米弾] になってるのは現在 氷弾 のグラが無いから */
 		int jj;
-		for (jj=0; jj<5; jj++)/* 全部調べる。 */
+		for (jj=0; jj<5; jj++)/* 一度に5弾撃つ。 */
 		{
-		//	HATSUDAN_01_speed256			= (t256(2.0)-(jj<<5));				/* 弾速(2.5) */
-			HATSUDAN_01_speed256			= (t256(1.5)-(jj<<8));				/* 弾速(2.5) */
-		//	HATSUDAN_03_angle65536			= (0);	/* 下向き */	/* [破壊] */
-		//	HATSUDAN_06_n_way				= (1);/* [nway] */		/* [破壊] */
-		//	HATSUDAN_07_div_angle65536		= (int)(65536/(5))+((REG_10_BOSS_SPELL_TIMER)<<7);	/* [破壊] */		/* 分割角度(1024[360/360度]を 64 分割) */	/* 1周をn分割した角度 */
-			REG_00_SRC_X	= ((0));
-			REG_01_SRC_Y	= ((src->cy256)+((REG_10_BOSS_SPELL_TIMER)<<9));
-		//	REG_02_DEST_X	= ((src->cx256));/*(チルノの位置)*/
-		//	REG_03_DEST_Y	= ((src->cy256));/*(チルノの位置)*/
-			tmp_angleCCW65536_src_nerai();//_bbb(zzz_player, dest);
+		//	HATSUDAN_01_speed256				= (t256(2.0)-(jj<<5));				/* 弾速(2.5) */
+		//	HATSUDAN_01_speed256				= (t256(1.5)-(jj<<8));				/* 弾速(2.5) */
+		//	HATSUDAN_01_speed256				= (t256(1.25)-(jj<<5)); 			/* 弾速(1.250 1.125 1.000, 0.875 0.750, 0.625 ) */
+			HATSUDAN_01_speed256				= (t256(1.25)-(jj<<6)); 			/* 弾速(1.250 1.125 1.000, 0.875 0.750, 0.625 ) */
+		//	HATSUDAN_03_angle65536				= (0);	/* 下向き */	/* [破壊] */
+		//	HATSUDAN_06_n_way					= (1);/* [nway] */		/* [破壊] */
+		//	HATSUDAN_07_div_angle65536			= (int)(65536/(5))+((REG_10_BOSS_SPELL_TIMER)<<7);	/* [破壊] */		/* 分割角度(1024[360/360度]を 64 分割) */	/* 1周をn分割した角度 */
 			int aaa_angle;
-			aaa_angle = HATSUDAN_03_angle65536;
+			aaa_angle = (65536/2) + (int)(65536/5) + ((REG_10_BOSS_SPELL_TIMER)<<(10-5));/*n x 1024, 1024==65536/64[分割]。 */
+			HATSUDAN_03_angle65536 = aaa_angle;
 			/* HATSUDAN_03_angle65536 [破壊??] */
+			HATSUDAN_04_tama_spec				= (DANMAKU_LAYER_01)|(TAMA_SPEC_KAITEN_HOUKOU_BIT)|(TAMA_SPEC_3000_EFFECT_NONE)|(TAMA_SPEC_0000_TILT);/* (r33-)標準弾 */
 			hatudan_system_regist_single();/* (r33-) */
 		//
 			HATSUDAN_03_angle65536 = (65536-aaa_angle);/*(反対側を狙う)*/
+			HATSUDAN_04_tama_spec				= (DANMAKU_LAYER_01)|(0)|(TAMA_SPEC_3000_EFFECT_NONE)|(TAMA_SPEC_0000_TILT);/* (r33-)標準弾 */
 			/* HATSUDAN_03_angle65536 [破壊??] */
 			hatudan_system_regist_single();/* (r33-) */
 		}
@@ -218,20 +294,6 @@ local void spell_create_1b_cirno_icecle_fall(SPRITE *src)
 }
 
 
-/*---------------------------------------------------------
-	紅2面ボス チルノ	通常攻撃1(2/3)	自機狙い全方位弾
-	-------------------------------------------------------
----------------------------------------------------------*/
-#if 0
-#endif
-
-
-/*---------------------------------------------------------
-	紅2面ボス チルノ	通常攻撃1(3/3)	自機狙い収束弾
-	-------------------------------------------------------
----------------------------------------------------------*/
-#if 0
-#endif
 
 
 /*---------------------------------------------------------
@@ -314,7 +376,7 @@ local void spell_create_1b_cirno_icecle_fall(SPRITE *src)
 	[弾幕グループ(1)セクション]
 	-------------------------------------------------------
 ---------------------------------------------------------*/
-local void cirno_danmaku_01_callback(SPRITE *src)/* パーフェクトフリーズ */
+local void cirno_danmaku_01_callback(OBJ *src)/* パーフェクトフリーズ */
 {
 	if ((7*64)==(REG_0a_REG2)/*(とりあえず)*/)	/*減速開始*/
 	{
@@ -327,7 +389,8 @@ local void cirno_danmaku_01_callback(SPRITE *src)/* パーフェクトフリーズ */
 	}
 	else
 //	if ((6*64)==(REG_0a_REG2)/*(とりあえず)*/)	/*全てストップ*/
-	if ((5*64)==(REG_0a_REG2)/*(とりあえず)*/)	/*全てストップ*/
+//	if ((5*64)==(REG_0a_REG2)/*(とりあえず)*/)	/*全てストップ*/
+	if ((4*64)==(REG_0a_REG2)/*(とりあえず)*/)	/*全てストップ*/
 	{
 		/*---------------------------------------------------------
 			(全弾停止) (枠つき12丸弾を全弾停止。)
@@ -345,7 +408,7 @@ local void cirno_danmaku_01_callback(SPRITE *src)/* パーフェクトフリーズ */
 			#endif
 		src->hatudan_register_tra65536	= t256(0.0);		/* 調整加速弾 */
 		src->hatudan_register_speed65536	= t256(0.0);		/* 弾速 */
-		src->type						= (BULLET_WAKU12_BASE + TAMA_IRO_00_SIRO);
+		src->obj_type_set						= (BULLET_WAKU12_BASE + TAMA_IRO_00_SIRO);
 		reflect_sprite_spec444(src, OBJ_BANK_SIZE_00_TAMA); 	/* 弾グラと弾あたり判定を変更する。 */
 	}
 	else
@@ -386,7 +449,7 @@ local void cirno_danmaku_01_callback(SPRITE *src)/* パーフェクトフリーズ */
 			src->hatudan_register_tra65536	= (REG_0b_REG3)+t256(1.0);/*(r35)*/ 	/* (1 ... 2) 調整加速弾 */
 			#endif
 		}
-		/* (通常弾へ変身する) */
+		/* (通常弾へ変身する) */	/*(後追い弾は通常弾)*/
 		src->hatudan_register_spec_data 	= (DANMAKU_LAYER_00)|(TAMA_SPEC_8000_NON_TILT);/* (r33-)非傾き弾 */
 	}
 //	danmaku_00_standard_angle_mover(src);/*(角度弾移動+画面外弾消し)*/
@@ -397,9 +460,8 @@ local void cirno_danmaku_01_callback(SPRITE *src)/* パーフェクトフリーズ */
 	[初期化セクション]
 	-------------------------------------------------------
 ---------------------------------------------------------*/
-local void spell_init_13_perfect_freeze(SPRITE *src)
+local void spell_init_13_perfect_freeze(OBJ *src)
 {
-//	card.danmaku_callback[0] = danmaku_00_standard_angle_mover;/*(通常弾用)*/	/*(後追い弾は通常弾)*/
 	card.danmaku_callback[1] = cirno_danmaku_01_callback;/*(パーフェクトフリーズ用。)*/
 //	card.danmaku_callback[2] = NULL;/*(未使用)*/
 //	card.danmaku_callback[3] = NULL;/*(未使用)*/
@@ -413,7 +475,7 @@ local void spell_init_13_perfect_freeze(SPRITE *src)
 	REG_0a_REG2 	ボスタイマー値、コールバック側に連絡用。(とりあえず)
 	REG_0b_REG3 	再加速の速度用に一時使用。
 ---------------------------------------------------------*/
-local void spell_create_13_perfect_freeze(SPRITE *src)
+local void spell_create_13_perfect_freeze(OBJ *src)
 {
 	REG_0a_REG2 = (REG_10_BOSS_SPELL_TIMER);/*(とりあえず)*/
 	//
@@ -545,7 +607,7 @@ local void spell_create_13_perfect_freeze(SPRITE *src)
 	REG_0b_REG3 	cosine の値用。
 ---------------------------------------------------------*/
 
-local void spell_create_16_diamond_blizzard(SPRITE *src)
+local void spell_create_16_diamond_blizzard(OBJ *src)
 {
 //	if (0==((REG_10_BOSS_SPELL_TIMER)&0x1f))/*(32回に1回)*/
 	/*(毎フレーム発弾)*/

@@ -1,7 +1,7 @@
 
 /*---------------------------------------------------------
- 東方模倣風 ～ Toho Imitation Style.
-  プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	東方模倣風 ～ Toho Imitation Style.
+	http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	大妖精のカードを定義します。
 ---------------------------------------------------------*/
@@ -18,7 +18,7 @@
 	[初期化セクション]
 	-------------------------------------------------------
 ---------------------------------------------------------*/
-local void spell_init_1a_dai_yousei_midori(SPRITE *src)
+local void spell_init_1a_dai_yousei_midori(OBJ *src)
 {
 //	if (64==(src->boss_spe ll_timer))
 	{
@@ -35,7 +35,7 @@ local void spell_init_1a_dai_yousei_midori(SPRITE *src)
 	REG_0a_REG2 	bbb
 	REG_0b_REG3 	i (難易度別に残り回数を設定。)
 ---------------------------------------------------------*/
-local void spell_create_1a_dai_yousei_midori(SPRITE *src)
+local void spell_create_1a_dai_yousei_midori(OBJ *src)
 {
 //	if ((64-(48))<((src->boss_spe ll_timer)))
 	count_up_limit_NUM(REG_NUM_08_REG0, 64);
@@ -81,7 +81,7 @@ local void spell_create_1a_dai_yousei_midori(SPRITE *src)
 	[初期化セクション]
 	-------------------------------------------------------
 ---------------------------------------------------------*/
-local void spell_init_1b_dai_yousei_aka(SPRITE *src)
+local void spell_init_1b_dai_yousei_aka(OBJ *src)
 {
 //	if (64==(src->boss_spe ll_timer))
 	{
@@ -98,7 +98,7 @@ local void spell_init_1b_dai_yousei_aka(SPRITE *src)
 	REG_0a_REG2 	bbb
 	REG_0b_REG3 	i (難易度別に残り回数を設定。)
 ---------------------------------------------------------*/
-local void spell_create_1b_dai_yousei_aka(SPRITE *src)
+local void spell_create_1b_dai_yousei_aka(OBJ *src)
 {
 //	if ((64-(48))<((src->boss_spe ll_timer)))
 	count_up_limit_NUM(REG_NUM_08_REG0, 64);
@@ -144,7 +144,7 @@ local void spell_create_1b_dai_yousei_aka(SPRITE *src)
 	REG_0a_REG2 	乱数。
 	REG_0b_REG3 	乱数加算角(テキトー)
 ---------------------------------------------------------*/
-local void spell_create_1f_koakuma(SPRITE *src)
+local void spell_create_1f_koakuma(OBJ *src)
 {
 //	if (64==(REG_10_BOSS_SPELL_TIMER)) /* 始めに初期化 */
 	count_up_limit_NUM(REG_NUM_08_REG0, 192);// 	/*	繰り返しカウンタ。 */

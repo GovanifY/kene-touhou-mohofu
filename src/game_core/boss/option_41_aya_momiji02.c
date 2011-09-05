@@ -3,7 +3,7 @@
 
 /*---------------------------------------------------------
 	“Œ•û–Í•í•— ` Toho Imitation Style.
-	ƒvƒƒWƒFƒNƒgƒy[ƒW http://code.google.com/p/kene-touhou-mohofu/
+	http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	ƒJ[ƒh
 	-------------------------------------------------------
@@ -25,7 +25,7 @@
 	•ª—ô(last)
 ---------------------------------------------------------*/
 
-static void move_aya_doll_last_burrets(SPRITE *src)
+static void move_aya_doll_last_burrets(OBJ *src)
 {
 //	/*[r35—v”¼•ª‘¬]*/HATSUDAN_01_speed256	= (t256(0.75)+(ra_nd()&0xff));					/* ’e‘¬ */
 	/*[r35”¼•ª‘¬]*/HATSUDAN_01_speed256 	= (t256(0.375)+(ra_nd()&0xff)); 				/* ’e‘¬ */
@@ -33,7 +33,7 @@ static void move_aya_doll_last_burrets(SPRITE *src)
 	HATSUDAN_04_tama_spec					= (DANMAKU_LAYER_00)|(TAMA_SPEC_3000_EFFECT_NONE)|(TAMA_SPEC_0000_TILT);/* (r33-)•W€’e */
 	HATSUDAN_03_angle65536					= ((ra_nd()&(65536-1)));						/* src->tmp_angleCCW1024 */
 	HATSUDAN_05_bullet_obj_type 			= (BULLET_KOME_BASE + TAMA_IRO_01_AKA) + (((REG_0f_GAME_DIFFICULTY)&0x02)<<1);	/* [Ô(0x01)/—Î(0x05)•Ä’e] */
-	HATSUDAN_06_n_way						= (1+(REG_0f_GAME_DIFFICULTY)); 							/* [7way] [8way] */
+	HATSUDAN_06_n_way						= (1+(REG_0f_GAME_DIFFICULTY)); 				/* [7way] [8way] */
 	HATSUDAN_07_div_angle65536				= (int)(65536/23);								/* Šp“x (65536/27) (65536/24) */
 	set_REG_DEST_XY(src);	/* ’eŒ¹x256 y256 ’†S‚©‚ç”­’eB */
 	hatudan_system_regist_n_way();/* (r33-) */
@@ -44,7 +44,7 @@ static void move_aya_doll_last_burrets(SPRITE *src)
 
 ---------------------------------------------------------*/
 
-static void move_bullet_momiji(SPRITE *src)
+static void move_bullet_momiji(OBJ *src)
 {
 	src->BOSS_DATA_05_move_jyumyou--;
 	if ((0 > src->BOSS_DATA_05_move_jyumyou))
@@ -99,7 +99,7 @@ static void move_bullet_momiji(SPRITE *src)
 ---------------------------------------------------------*/
 #define MOMIJI_KODOMO_next_angle1024	tmp_angleCCW1024	/* Žq‹Ÿ’eA¶¬Šp“x */
 
-/*static*/ void add_zako_aya_5_momiji(SPRITE *src)
+/*static*/ void add_zako_aya_5_momiji(OBJ *src)
 {
 	int angle1024;
 	angle1024 = (src->MOMIJI_KODOMO_next_angle1024)-((int)(1024*1/20));
@@ -107,13 +107,13 @@ static void move_bullet_momiji(SPRITE *src)
 	int jj;
 	for (jj=(0); jj<(5); jj++)
 	{
-		SPRITE *h;
-		h							= obj_add_01_teki_error();
+		OBJ *h;
+		h							= obj_add_A01_teki_error();
 		if (NULL!=h)/* “o˜^‚Å‚«‚½ê‡‚Ì‚Ý */
 		{
 			h->m_Hit256R			= ZAKO_ATARI16_PNG;
-			h->type 				= (TEKI_32_20)+((angle1024>>7)&0x07);/* 0 ... 8 */
-			h->flags				|= (SP_FLAG_COLISION_CHECK/*|SP_FLAG_VISIBLE|SP_FLAG_TIME_OVER*/);
+			h->obj_type_set 				= (TEKI_32_20)+((angle1024>>7)&0x07);/* 0 ... 8 */
+			h->atari_hantei 		= (1/*ƒXƒRƒAŒ“—p*/);
 			h->callback_mover		= move_bullet_momiji;
 			h->BOSS_DATA_05_move_jyumyou			= (50); 	/* 200Žõ–½ */
 			{

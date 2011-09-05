@@ -3,7 +3,7 @@
 
 /*---------------------------------------------------------
 	東方模倣風 ～ Toho Imitation Style.
-	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	共通選択メニュー
 	-------------------------------------------------------
@@ -71,8 +71,8 @@ static void stage_select_menu_draw_all(void)
 			if (((signed)i)==aaa_selected_number)	/* 選択された */
 			{
 				text_color = (12);/*(緑色)*/
-				ml_font[i].x += (2);	/* オフセットを 2[dot] にする */
-				ml_font[i].y += (2);	/* オフセットを 2[dot] にする */
+				ml_font[i].x += (2);	/* オフセットを 2[pixel] にする */
+				ml_font[i].y += (2);	/* オフセットを 2[pixel] にする */
 			}
 			ml_font[i].timer	= ML_ON;
 			//
@@ -103,14 +103,13 @@ static void common_menu_work_MENU_STATE_03_FININSH(void)
 	//
 	if ((0)>aaa_selected_number)/*(CANCELの場合)*/
 	{
-		cb.main_call_func = difficulty_select_menu_start;	/* 選択メニューへ戻る */
+		cb.main_call_func = rank_select_menu_start; 	/* 選択メニューへ戻る */
 	}
 	else/*(OKの場合)*/
 	{
 		cg.game_continue_stage = aaa_selected_number;
 		/* プラクティス ゲーム開始 */
-	//	cb.main_call_func = difficulty_select_menu_start;	/* 難易度選択メニューへ */
-		cb.main_call_func = stage_first_init;	/* ゲーム開始 */
+		cb.main_call_func = stage_first_init;			/* ゲーム開始 */
 	}
 }
 
@@ -222,7 +221,7 @@ static void common_menu_work_MENU_STATE_00_FADE_IN_MENU(void)
 			「エンディング、スタッフロール、プラクティス」が
 			選べるバグがあるので、修正する。
 		*/
-		if ( (6-1) < cg.game_continue_stage)	{cg.game_continue_stage = (6-1);	/* (6-1) */}
+		if ((6-1) < cg.game_continue_stage) 	{cg.game_continue_stage = (6-1);	/* (6-1) */}
 		#endif
 		aaa_selected_number = cg.game_continue_stage;
 	}

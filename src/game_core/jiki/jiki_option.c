@@ -3,7 +3,7 @@
 
 /*---------------------------------------------------------
 	東方模倣風 ～ Toho Imitation Style.
-	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 ---------------------------------------------------------*/
 
@@ -95,8 +95,8 @@ static const s8 ggg[FORMATION_99_MAX][4] =
 	//	[3]右外 	[0]左外 [2]右内 	[1]左内
 	{	( 24),		 (-24),  (	6), 	   (-6),	},	/* 4 レミリア */
 	{	( 24),		 (-24),  ( 24), 	  (-24),	},	/* 5 幽々子 */
-	{	( 24),		 (-24),  (	6), 	   (-6),	},	/* 6 チルノ */
-	{	( 24),		 (-24),  (	6), 	   (-6),	},	/* 7 チルノ */
+	{	( 24),		 (-24),  (	6), 	   (-6),	},	/* 6 チルノ A */
+	{	( 24),		 (-24),  (	6), 	   (-6),	},	/* 7 チルノ Q */
 													/* 通常時 (Y座標位置オフセット) */
 	{	( -4),		 (-4),	 (-22), 	 (-22), 	},	/* 0 霊夢 A */
 	{	(  5),		  (5),	 (-20), 	 (-20), 	},	/* 1 霊夢 B */
@@ -114,8 +114,8 @@ static const s8 ggg[FORMATION_99_MAX][4] =
 	//	[3]右外 	[0]左外 [2]右内 	[1]左内
 	{	( 24),		 (-24),   (6),		  (-6), 	},	/* 4 レミリア */
 	{	( 18),		 (-18),  (30),		 (-30), 	},	/* 5 幽々子 */
-	{	( 24),		 (-24),   (6),		  (-6), 	},	/* 6 チルノ */
-	{	( 24),		 (-24),   (6),		  (-6), 	},	/* 7 チルノ */
+	{	( 24),		 (-24),   (6),		  (-6), 	},	/* 6 チルノ A */
+	{	( 24),		 (-24),   (6),		  (-6), 	},	/* 7 チルノ Q */
 													/* 低速時 (Y座標位置オフセット) */
 	{	( 29),		 (29),	 (15),		 (15),		},	/* 0 霊夢 A */
 	{	(-12),		(-12),	(-18),		(-18),		},	/* 1 霊夢 B */
@@ -131,18 +131,18 @@ static const s8 ggg[FORMATION_99_MAX][4] =
 	{	(20),  ( 30),	(40),  ( 50) }, 								/* 1 FORMATION_30_RADIUS_R: 回転半径 */
 	{	( 1),  (  2),	(-3),  ( -6) }, 								/* 0 FORMATION_31_ADD_R:	回転方向、角度加算値 */
 };
-//	{	( 1*104+20),  ( 2*104+20),	( 0*104+20),  ( 3*104+20) },		/* 2 FORMATION_TYPE_02_LOCATE_X: 画面後方から支援するよ(width352dot) */
+//	{	( 1*104+20),  ( 2*104+20),	( 0*104+20),  ( 3*104+20) },		/* 2 FORMATION_TYPE_02_LOCATE_X: 画面後方から支援するよ(width352[pixel]) */
 //	{  (240),  (240),  (220),  (220) }, 								/* 3 FORMATION_TYPE_02_LOCATE_Y: 画面後方から支援するよ */
 
 //	{	t256(15),  t256(-15),	t256(25),  t256(-25) }, 				/* FORMATION_TYPE_00:			旧FORMATION_TYPE_00_LOCATE_X */
 //	{	t256(15),  t256( 15),	t256(20),  t256( 20) }, 				/* FORMATION_TYPE_00:			旧FORMATION_TYPE_00_LOCATE_Y */
-//	{	( 1*115+10),  ( 2*115+10),	( 0*115+10),  ( 3*115+10) },		/* FORMATION_TYPE_02:			画面後方から支援するよ(wideth380dot) */
+//	{	( 1*115+10),  ( 2*115+10),	( 0*115+10),  ( 3*115+10) },		/* FORMATION_TYPE_02:			画面後方から支援するよ(wideth380[pixel]) */
 
 
 /*---------------------------------------------------------
 
 ---------------------------------------------------------*/
-static void move_delta_xy(SPRITE *src, int delta_x256, int delta_y256)
+static void move_delta_xy(OBJ *src, int delta_x256, int delta_y256)
 {	/* 目標地点に移動する */
 //	int ccc_angle1024 = at an_1024(((delta_y256)>>8), ((delta_x256)>>8));
 //	int ccc_speed256 = (/*10*/((REMILIA==(cg_game_select_player))?t256(8.0):t256(1.0)));
@@ -158,18 +158,24 @@ static void move_delta_xy(SPRITE *src, int delta_x256, int delta_y256)
 	const int ccc_speed256 = bbb_speed_tbl[(cg_game_select_player)];
 	#if (0)//
 	src->cx256 += ((si n1024((ccc_angle1024))*(ccc_speed256))>>8);/*fps_factor*/	/* CCWの場合 */
-	src->cx256 += ((si n1024((ccc_angle1024))*(ccc_speed256))>>8);/*fps_factor*/	/* CCWの場合 */
 	src->cy256 += ((co s1024((ccc_angle1024))*(ccc_speed256))>>8);/*fps_factor*/
-	src->cy256 += ((co s1024((ccc_angle1024))*(ccc_speed256))>>8);/*fps_factor*/
-	#else
+	//#el se
 	{
 		int sin_value_t256; 	//	sin_value_t256 = 0;
 		int cos_value_t256; 	//	cos_value_t256 = 0;
-		int256_sincos1024( (deg65536to1024(cc_angle65536)), &sin_value_t256, &cos_value_t256);	/* 「1周が65536分割」から「1周が1024分割」へ変換する。 */
+		int256_si nco s1024( (deg65536to1024(cc_angle65536)), &sin_value_t256, &cos_value_t256);	/* 「1周が65536分割」から「1周が1024分割」へ変換する。 */
 		src->cx256 += ((sin_value_t256*(ccc_speed256))>>8);/*fps_factor*/
 		src->cy256 += ((cos_value_t256*(ccc_speed256))>>8);/*fps_factor*/
 	}
 	#endif
+	//------------------
+	HATSUDAN_01_speed256	= (ccc_speed256);
+	HATSUDAN_03_angle65536	= (cc_angle65536);
+	sincos256();/*(破壊レジスタ多いので注意)*/
+	src->cx256 += REG_03_DEST_Y;//sin_value_t256 // 下CCWの場合(右CWの場合ととxyが逆)
+	src->cy256 += REG_02_DEST_X;//cos_value_t256 // 下CCWの場合(右CWの場合ととxyが逆)
+	//------------------
+
 }
 /*---------------------------------------------------------
 
@@ -185,14 +191,14 @@ static void move_delta_xy(SPRITE *src, int delta_x256, int delta_y256)
 #define control_formation00 control_formation00_and_02
 #define control_formation02 control_formation00_and_02
 
-static void control_formation00_and_02(SPRITE *src) /* FORMATION_TYPE_00 */ /* FORMATION_TYPE_02 */
+static void control_formation00_and_02(OBJ *src) /* FORMATION_TYPE_00 */ /* FORMATION_TYPE_02 */
 {
 	int player_offs_x256;
 	int player_offs_y256;
 	if (FORMATION_TYPE_00==cg.player_option_mode)
 	{
-		SPRITE *zzz_player;
-		zzz_player = &obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_00_PLAYER];
+		OBJ *zzz_player;
+		zzz_player = &obj99[OBJ_HEAD_02_0x0900_KOTEI+FIX_OBJ_00_PLAYER];
 		#if 1/*Gu(中心座標)*/
 		player_offs_x256 = zzz_player->cx256;
 		player_offs_y256 = zzz_player->cy256;
@@ -201,7 +207,7 @@ static void control_formation00_and_02(SPRITE *src) /* FORMATION_TYPE_00 */ /* F
 		{
 		//	/* FORMATION_TYPE_00: レミリアの直前に四つ / チルノの直後に四人 */
 			const int if_teisoku = ((psp_pad.pad_data & PSP_KEY_SLOW))?( (8+8)):(0);
-			src->PL_OPTION_DATA_offset_x256 = ((ggg[if_teisoku+(cg_game_select_player)	][(src->PL_OPTION_DATA_opt_anime_add_id)])<<8);
+			src->PL_OPTION_DATA_offset_x256 = ((ggg[if_teisoku+(cg_game_select_player)	  ][(src->PL_OPTION_DATA_opt_anime_add_id)])<<8);
 			src->PL_OPTION_DATA_offset_y256 = ((ggg[if_teisoku+(cg_game_select_player)+(8)][(src->PL_OPTION_DATA_opt_anime_add_id)])<<8);/*240*/ /* プレイヤー番号に合わせている事に注意 */
 		}
 	}
@@ -219,7 +225,7 @@ static void control_formation00_and_02(SPRITE *src) /* FORMATION_TYPE_00 */ /* F
 					(GAME_X_OFFSET+ (2*104) + 20),
 					(GAME_X_OFFSET+ (0*104) + 20),
 					(GAME_X_OFFSET+ (3*104) - 20)
-				},		/* 2 FORMATION_TYPE_02_LOCATE_X: 画面後方から支援するよ(width352dot) */
+				},		/* 2 FORMATION_TYPE_02_LOCATE_X: 画面後方から支援するよ(width352[pixel]) */
 				{
 					(240),
 					(240),
@@ -232,7 +238,7 @@ static void control_formation00_and_02(SPRITE *src) /* FORMATION_TYPE_00 */ /* F
 					(GAME_X_OFFSET+ (2*70) +  70   -32),
 					(GAME_X_OFFSET+ (0*70) + 100   -32),
 					(GAME_X_OFFSET+ (3*70) +  70   -32)
-				},								/* 2 FORMATION_TYPE_02_LOCATE_X: 画面後方から支援するよ(width352dot) */
+				},								/* 2 FORMATION_TYPE_02_LOCATE_X: 画面後方から支援するよ(width352[pixel]) */
 				{
 					(240),
 					(240),
@@ -290,13 +296,13 @@ static void control_formation00_and_02(SPRITE *src) /* FORMATION_TYPE_00 */ /* F
 /*---------------------------------------------------------
 
 ---------------------------------------------------------*/
-static void control_formation01(SPRITE *src) /* FORMATION_TYPE_01 */
+static void control_formation01(OBJ *src) /* FORMATION_TYPE_01 */
 {
 	int player_offs_x256;
 	int player_offs_y256;
 	{
-		SPRITE *zzz_player;
-		zzz_player = &obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_00_PLAYER];
+		OBJ *zzz_player;
+		zzz_player = &obj99[OBJ_HEAD_02_0x0900_KOTEI+FIX_OBJ_00_PLAYER];
 		#if 1/*Gu(中心座標)*/
 		player_offs_x256 = zzz_player->cx256;
 		player_offs_y256 = zzz_player->cy256;
@@ -310,24 +316,19 @@ static void control_formation01(SPRITE *src) /* FORMATION_TYPE_01 */
 	}
 	/* 目標地点へ移動中 */
 	{
-		int delta_y256; 			/* delta_y : y座標における目標地点と現在地の差 */
-		int delta_x256; 			/* delta_x : x座標における目標地点と現在地の差 */
+		int delta_y256; 			/* delta_y : y座標における目標地点と現在地点との差 */
+		int delta_x256; 			/* delta_x : x座標における目標地点と現在地点との差 */
 		//	delta_y256 = 0;
 		//	delta_x256 = 0;
 	//	/* FORMATION_TYPE_01: レミリアの周りを回るよ */
 		/*REMILIA_angle512*/
-		#if (0)//
-		delta_x256 = (player_offs_x256-src->cx256) + ((si n1024((src->PL_OPTION_DATA_angleCCW1024))*(remi_offset_r)));/*fps_factor*/	/* CCWの場合 */
-		delta_y256 = (player_offs_y256-src->cy256) + ((co s1024((src->PL_OPTION_DATA_angleCCW1024))*(remi_offset_r)));/*fps_factor*/
-		#else
-		{
-			int sin_value_t256; 	//	sin_value_t256 = 0;
-			int cos_value_t256; 	//	cos_value_t256 = 0;
-			int256_sincos1024( (src->PL_OPTION_DATA_angleCCW1024), &sin_value_t256, &cos_value_t256);
-			delta_x256 = (player_offs_x256-src->cx256) + ((sin_value_t256*(remi_offset_r)));/*fps_factor*/
-			delta_y256 = (player_offs_y256-src->cy256) + ((cos_value_t256*(remi_offset_r)));/*fps_factor*/
-		}
-		#endif
+		//------------------
+		HATSUDAN_01_speed256	= ((remi_offset_r)<<8);
+		HATSUDAN_03_angle65536	= deg1024to65536((src->PL_OPTION_DATA_angleCCW1024));
+		sincos256();/*(破壊レジスタ多いので注意)*/
+		delta_x256 = (player_offs_x256-src->cx256) + REG_03_DEST_Y;//sin_value_t256 // 下CCWの場合(右CWの場合ととxyが逆)
+		delta_y256 = (player_offs_y256-src->cy256) + REG_02_DEST_X;//cos_value_t256 // 下CCWの場合(右CWの場合ととxyが逆)
+		//------------------
 		move_delta_xy(src, delta_x256, delta_y256); /* 目標地点に移動する */
 	#if 1
 		/* レミリア用 */
@@ -342,23 +343,19 @@ static void control_formation01(SPRITE *src) /* FORMATION_TYPE_01 */
 		/*REMILIA_angle512*/src->PL_OPTION_DATA_angleCCW1024 += remi_offset_add_r;	/*5==ra d2deg512(0.05)*/	/*fps_factor*/
 		mask1024(/*REMILIA_angle512*/src->PL_OPTION_DATA_angleCCW1024);
 		/*REMILIA_angle512*/
-		#if (0)//
-		src->cx256 = (player_offs_x256) + ((si n1024((src->PL_OPTION_DATA_angleCCW1024))*(remi_offset_r)));/*fps_factor*/	/* CCWの場合 */
-		src->cy256 = (player_offs_y256) + ((co s1024((src->PL_OPTION_DATA_angleCCW1024))*(remi_offset_r)));/*fps_factor*/
-		#else
-		{
-			int sin_value_t256; 	//	sin_value_t256 = 0;
-			int cos_value_t256; 	//	cos_value_t256 = 0;
-			int256_sincos1024( (src->PL_OPTION_DATA_angleCCW1024), &sin_value_t256, &cos_value_t256);
-			src->cx256 = (player_offs_x256) + ((sin_value_t256*(remi_offset_r)));/*fps_factor*/
-			src->cy256 = (player_offs_y256) + ((cos_value_t256*(remi_offset_r)));/*fps_factor*/
-		}
-		#endif
+		//------------------
+		HATSUDAN_01_speed256	= ((remi_offset_r)<<8);
+		HATSUDAN_03_angle65536	= deg1024to65536((src->PL_OPTION_DATA_angleCCW1024));
+		sincos256();/*(破壊レジスタ多いので注意)*/
+		src->cx256 = (player_offs_x256) + REG_03_DEST_Y;//sin_value_t256 // 下CCWの場合(右CWの場合ととxyが逆)
+		src->cy256 = (player_offs_y256) + REG_02_DEST_X;//cos_value_t256 // 下CCWの場合(右CWの場合ととxyが逆)
+		//------------------
 			}
 		}
 	#endif
 	}
 }
+
 			#if 0
 			/* レミリア用 */
 			if (REMILIA==(cg_game_select_player))
@@ -373,13 +370,13 @@ static void control_formation01(SPRITE *src) /* FORMATION_TYPE_01 */
 
 ---------------------------------------------------------*/
 
-static void control_formation03(SPRITE *src) /* FORMATION_TYPE_03 */
+static void control_formation03(OBJ *src) /* FORMATION_TYPE_03 */
 {
 	int player_offs_x256;
 	int player_offs_y256;
 	{
-		SPRITE *zzz_player;
-		zzz_player = &obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_00_PLAYER];
+		OBJ *zzz_player;
+		zzz_player = &obj99[OBJ_HEAD_02_0x0900_KOTEI+FIX_OBJ_00_PLAYER];
 		player_offs_x256 = zzz_player->cx256;
 		player_offs_y256 = zzz_player->cy256;
 	}
@@ -415,7 +412,7 @@ static void control_formation03(SPRITE *src) /* FORMATION_TYPE_03 */
 
 ---------------------------------------------------------*/
 
-/*static*/ void player_control_option(SPRITE *src)
+/*static*/ void player_control_option(OBJ *src)
 {
 	unsigned int slow_remilia_flag;
 	slow_remilia_flag = 0;
@@ -431,8 +428,8 @@ static void control_formation03(SPRITE *src) /* FORMATION_TYPE_03 */
 				if (
 					(src->PL_OPTION_DATA_slow_count < ((src->PL_OPTION_DATA_opt_anime_add_id+1)<<(6+2))/* *30 64*/))
 				{
-					SPRITE *zzz_player;
-					zzz_player = &obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_00_PLAYER];
+					OBJ *zzz_player;
+					zzz_player = &obj99[OBJ_HEAD_02_0x0900_KOTEI+FIX_OBJ_00_PLAYER];
 					/* FORMATION_TYPE_03: 減速時用(好きな位置に置けるよ) */
 					src->cx256 = zzz_player->cx256;
 					src->cy256 = zzz_player->cy256;
@@ -467,15 +464,15 @@ static void control_formation03(SPRITE *src) /* FORMATION_TYPE_03 */
 			/* (オプションキーキーを離した瞬間なら) */
 			if ((0==(psp_pad.pad_data & PSP_KEY_OPTION)))	/* オプションキーが離されている */
 			{
-				if ( (psp_pad.pad_data^psp_pad.pad_data_alter) & PSP_KEY_OPTION)	/* オプションキーの状態が変わった(トグル、押したまたは離した場合) */
+				if ((psp_pad.pad_data^psp_pad.pad_data_alter) & PSP_KEY_OPTION)	/* オプションキーの状態が変わった(トグル、押したまたは離した場合) */
 				{
 					cg.player_option_mode++;
-					cg.player_option_mode &= (4-1);//if ( cg.player_option_mode==(FORMATION_TYPE_99_MAX) )	{	 cg.player_option_mode=FORMATION_TYPE_00;}
+					cg.player_option_mode &= (4-1);//if (FORMATION_TYPE_99_MAX == cg.player_option_mode)	{	 cg.player_option_mode = FORMATION_TYPE_00;}
 				}
 			}
 		}
 		{
-			static /*const*/ void (*formation_call_table[(4)])(SPRITE *src) =
+			static /*const*/ void (*formation_call_table[(4)])(OBJ *src) =
 			{
 				control_formation00,
 				control_formation01,
@@ -486,6 +483,87 @@ static void control_formation03(SPRITE *src) /* FORMATION_TYPE_03 */
 		}
 	}
 }
+
+/*---------------------------------------------------------
+	プレイヤー、オプションの移動(霊夢、魔理沙、仮幽々子)
+---------------------------------------------------------*/
+
+/*---------------------------------------------------------
+	プレイヤー、オプションの定義
+---------------------------------------------------------*/
+/* static */extern void player_move_option(OBJ *src);
+
+global/*static*/ void jiki_option_create(void)
+{
+	unsigned int jj;
+	for (jj=0; jj<(OPTION_04_MAX); jj++)
+	{
+		OBJ *h;
+		h						= obj_add_Ann_direct(OBJ_HEAD_02_0x0900_KOTEI+FIX_OBJ_04_JIKI_OPTION0/* +OPTION_C1 */+jj);	/* 必ず登録できる。 */
+		h->jyumyou				= JYUMYOU_MUGEN;/* 時間で自動消去しない */
+		{
+		//	h->obj_type_set 				= (JIKI_OPTION_00_00)+kk; kk += (16);/* オプションインターリーブ */ /* 8 */
+			h->obj_type_set 				= (JIKI_OPTION_00_00)+(jj<<4); /* オプションインターリーブ */ /* 8 */
+			{
+				static const /* int */s16 aaa_tbl[4] =
+				{
+					(1024/8)*(3),	//cv1024r(45)*(8-5),	/* cv1024r(45)*1 */ /* 1*1024/8 */
+					(1024/8)*(1),	//cv1024r(45)*(8-7),	/* cv1024r(45)*5 */ /* 5*1024/8 */
+					(1024/8)*(7),	//cv1024r(45)*(8-1),	/* cv1024r(45)*3 */ /* 3*1024/8 */
+					(1024/8)*(5)	//cv1024r(45)*(8-3) 	/* cv1024r(45)*7 */ /* 7*1024/8 */
+				};
+				h->PL_OPTION_DATA_angleCCW1024 = aaa_tbl[jj];/* REMILIA_angle1024 */
+			}
+				h->PL_OPTION_DATA_opt_anime_add_id		= (OPTION_C1+jj);
+
+		//
+			#if /*(ステージ開始時に再設定されるので要らない)*/0/* Gu(中心座標) */
+			h->cx256					= (s1->cx256);	/* プレイヤーオプション位置の初期化 */
+			h->cy256					= (s1->cy256);	/* プレイヤーオプション位置の初期化 */
+			#endif
+			h->m_Hit256R				= TAMA_ATARI_BULLET_DUMMY;
+		//	h->PL_OPTION_DATA_yuukou_flag 			= (PL_OPTION_FLAG_01_OPTION_ON);
+			h->PL_OPTION_DATA_yuukou_flag 			= (PL_OPTION_FLAG_00_OPTION_OFF); 	/* 可視フラグのOFF(不可視) */
+			h->atari_hantei 			= ATARI_HANTEI_OFF; 				/* あたり判定のOFF(無敵) */
+
+//	/* ??? */ h->kougeki_ti 			= (0/* 1 8*5 */);/*(オプションが雑魚に体当たりした場合の強さ。1なら倒せる。あたり判定はあるが0なら倒せない。)*/
+			{
+			//
+				h->callback_mover		= player_move_option;
+			//
+			//	h->PL_OPTION_DATA_next					= obj99[OBJ_HEAD_02_0x0900_KOTEI+FIX_OBJ_00_PLAYER];
+			//	h->P L_OPTION_DATA_state2				= 0;
+				h->PL_OPTION_DATA_offset_x256			= t256(0);
+				h->PL_OPTION_DATA_offset_y256			= t256(0);
+			//	h->PL_OPTION_DATA_ccc_angle512			= cv1024r((0));
+				h->PL_OPTION_DATA_slow_count			= 0;
+			}
+			h->PL_OPTION_DATA_opt_shot_interval 	= 0;
+		//	h->PL_OPTION_DATA_state 				= 0;
+		//	h->PL_OPTION_DATA_state1				= 0;///
+			h->PL_OPTION_DATA_anime_wait			= 0;
+			/* レミリアのオプションは半透明っぽい */
+			if (REMILIA==(cg_game_select_player))
+			{
+			//	h->color32			= MAKE32RGBA(0xff, 0xff, 0xff, 0x96);	/*	h->alpha			= 0x96; */	/* 明る過ぎる */
+				h->color32			= MAKE32RGBA(0xff, 0xff, 0xff, 0x80);	/*	h->alpha			= 0x80; */	/* 半透明 */
+			//	h->color32			= MAKE32RGBA(0xff, 0xff, 0xff, 0x50);	/*	h->alpha			= 0x50; */	/* 暗ら過ぎる */
+			}
+		}
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
 	#if (0)/*デバッグ用*/
 	/*	★「ボスと相打ちするとハングアップ」バグ(～r26)対策 */
 	/*(ボス倒す時に喰らいボム状態?だとstartすら効かなくなるバグがある。がオプションキーは効く)*/
@@ -493,7 +571,7 @@ static void control_formation03(SPRITE *src) /* FORMATION_TYPE_03 */
 	/*
 	my_score0000460960 == 0xb410
 	0x1
-		STATE_FLAG_05_IS_BOSS						(0x0010)
+		STATE_FLAG_0x0800_IS_BOSS						(0x0010)
 	0x4
 	0xb
 		ST ATE_FLAG_13_DRAW_BOSS_GAUGE				(0x1000)

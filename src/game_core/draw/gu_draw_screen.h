@@ -1,7 +1,7 @@
 
 /*---------------------------------------------------------
 	東方模倣風 ～ Toho Imitation Style.
-	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 ---------------------------------------------------------*/
 
@@ -29,7 +29,7 @@ extern void TGameTexture_Load_Surface( int num );
 #define USE_SDL_image 0
 #if (1==USE_SDL_image)
 	//#include "_SDL_image.h"//#include "_SDL_image.h"
-	#define MY_DIB_SURFACE	SDL_Surface
+	#define MY_DIB_SURFACE	S_DL_Surface
 	#define MY_DIB_DATA 	pixels
 	#define MY_DIB_WK512	unused1
 #else
@@ -172,8 +172,9 @@ enum
 	TEX_06_BULLET,				/* [128x128]敵弾 */
 	TEX_07_FRONT,				/* [256x256]自機当たり表示/爆発/[コンティニュー文字(bank00)/メニュー文字(bank01)/メニュー文字(bank02)] */
 //	TEX_08_SCORE_PANEL, 		/* [TEX_07_FRONTと融合する可能性が高い(256x512テクスチャ？)] スコアパネル/スコアフォント文字 */
-//	TEX_09_TACHIE,				/* 立ち絵 */
-//	TEX_10_MESSAGE, 			/* [TEX_07_FRONTと融合する可能性が高い(512x512テクスチャ？)]メッセージ固定文字 */
+	TEX_09_TACHIE_L,			/* 立ち絵L */
+	TEX_10_TACHIE_R,			/* 立ち絵R */
+//	TEX_11_MESSAGE, 			/* [TEX_07_FRONTと融合する可能性が高い(512x512テクスチャ？)]メッセージ固定文字 */
 	TEXTURE_MAX 				/* --- 管理する最大テクスチャー数 */
 };
 

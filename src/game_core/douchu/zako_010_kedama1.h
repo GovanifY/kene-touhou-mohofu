@@ -1,7 +1,7 @@
 
 /*---------------------------------------------------------
 	東方模倣風 ～ Toho Imitation Style.
-	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	道中のザコ
 	-------------------------------------------------------
@@ -14,27 +14,22 @@
 	敵移動
 ---------------------------------------------------------*/
 
-static void my_nerai(SPRITE *src)
+static void my_nerai(OBJ *src)
 {
 	REG_00_SRC_X	= (src->target_x256);						/* 弾源x256 */
 	REG_01_SRC_Y	= (src->target_y256-t256(64)/*+(20)*/); 	/* 弾源y256 */
 	set_REG_DEST_XY(src);
 	tmp_angleCCW65536_src_nerai();
-	#if (0)//
-	src->vx256			= ((si n1024((deg65536to1024(HATSUDAN_03_angle65536)))));/*fps_factor*/	/* CCWの場合 */
-	src->vy256			= ((co s1024((deg65536to1024(HATSUDAN_03_angle65536)))));/*fps_factor*/
-	#else
-	{
-		int sin_value_t256; 	//	sin_value_t256 = 0;
-		int cos_value_t256; 	//	cos_value_t256 = 0;
-		int256_sincos1024( (deg65536to1024(HATSUDAN_03_angle65536)), &sin_value_t256, &cos_value_t256);	/* 「1周が65536分割」から「1周が1024分割」へ変換する。 */
-		src->vx256 = ((sin_value_t256));/*fps_factor*/
-		src->vy256 = ((cos_value_t256));/*fps_factor*/
-	}
-	#endif
+	//------------------
+	HATSUDAN_01_speed256	= (t256(1.0));
+//	HATSUDAN_03_angle65536	= (HATSUDAN_03_angle65536);
+	sincos256();/*(破壊レジスタ多いので注意)*/
+	src->vx256 = REG_03_DEST_Y;//sin_value_t256 // 下CCWの場合(右CWの場合ととxyが逆)
+	src->vy256 = REG_02_DEST_X;//cos_value_t256 // 下CCWの場合(右CWの場合ととxyが逆)
+	//------------------
 }
 
-static void move_kedama1(SPRITE *src)
+static void move_kedama1(OBJ *src)
 {
 	if (512 > src->jyumyou)/* 退場 */
 	{
@@ -57,8 +52,8 @@ static void move_kedama1(SPRITE *src)
 	{
 		my_nerai(src);
 		{
-			SPRITE *zzz_player;
-			zzz_player = &obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_00_PLAYER];
+			OBJ *zzz_player;
+			zzz_player = &obj99[OBJ_HEAD_02_0x0900_KOTEI+FIX_OBJ_00_PLAYER];
 			if (//(src->cx256 >= zzz_player->cx256) ||
 				(src->cy256 > t256(GAME_HEIGHT/2) ) /*(480-80)*/ /*(272-32)*/
 			 )
@@ -84,15 +79,15 @@ static void move_kedama1(SPRITE *src)
 	敵を追加する
 ---------------------------------------------------------*/
 
-static void regist_zako_010_kedama1(GAME_COMMAND *l, SPRITE *h)
+static void regist_zako_010_kedama1(GAME_COMMAND *l, OBJ *h)
 {
 	h->color32				= MAKE32RGBA(0xff, 0xff, 0xff, 0xaa);		/*白っぽく */
 //
 	h->jyumyou			= (512+64+64);
 	{
 		/* 第一目標はプレイヤーのいた位置 */
-		SPRITE *zzz_player;
-		zzz_player = &obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_00_PLAYER];
+		OBJ *zzz_player;
+		zzz_player = &obj99[OBJ_HEAD_02_0x0900_KOTEI+FIX_OBJ_00_PLAYER];
 		h->target_x256				= (zzz_player->cx256);
 		h->target_y256				= (zzz_player->cy256);
 	}

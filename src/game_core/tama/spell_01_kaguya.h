@@ -1,7 +1,7 @@
 
 /*---------------------------------------------------------
- 東方模倣風 ～ Toho Imitation Style.
-  プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	東方模倣風 ～ Toho Imitation Style.
+	http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	輝夜のカードを定義します。
 ---------------------------------------------------------*/
@@ -16,7 +16,7 @@
 	4面専用
 ---------------------------------------------------------*/
 
-local void kaguya_uroko_dan_seisei(SPRITE *src)
+local void kaguya_uroko_dan_seisei(OBJ *src)
 {
 	/* 4面の場合---- */
 	const u16 my_ra_nd = ra_nd();
@@ -66,7 +66,7 @@ local void kaguya_uroko_dan_seisei(SPRITE *src)
 	左右ショット
 ---------------------------------------------------------*/
 
-local void kaguya_hari_shot(SPRITE *src)
+local void kaguya_hari_shot(OBJ *src)
 {
 	static int hari=0;
 	hari--;
@@ -96,8 +96,8 @@ local void kaguya_hari_shot(SPRITE *src)
 		HATSUDAN_05_bullet_obj_type 	= hari_no_iro;		/* [ 弾] */
 	//
 	int jj;
-	int spd;
-	spd = (0x180)+(ra_nd() & 0x00ff);
+	int spd;/*(弾速)*/
+	spd = t256(1.5) + /*(t256(0.0 ... 0.99)の乱数)*/(ra_nd() & 0x00ff);
 	for (
 			jj = (0);
 			jj < ((4/*difficulty*/+1)<<16);
@@ -118,7 +118,7 @@ local void kaguya_hari_shot(SPRITE *src)
 	左右ショット
 ---------------------------------------------------------*/
 
-local void kaguya_hari_dan_seisei(SPRITE *src)
+local void kaguya_hari_dan_seisei(OBJ *src)
 {
 //	if (CARD_ADDRESS_00_kaguya_000 < sp ell_card_number)
 	{
@@ -151,7 +151,7 @@ local void kaguya_hari_dan_seisei(SPRITE *src)
 
 static int fire_wait3;
 static int bomb_aaa;
-local void kaguya_pong_boll(SPRITE *src)
+local void kaguya_pong_boll(OBJ *src)
 {
 	/* 4面の場合跳ねる珠 */
 	{
@@ -185,20 +185,20 @@ local void kaguya_pong_boll(SPRITE *src)
 				int ii;
 			//	for (ii=0; ii<(1024); ii+=(512-bomb_aaa))	/* 精々最大16方向ぐらい出ないとくぐって避けれない。 */
 				{
-					HATSUDAN_03_angle65536				= ((ii)<<6);				/* 角度 */
+					HATSUDAN_03_angle65536				= ((ii)<<6);	/* 角度 */
 					bullet_regist_leg acy_vector_direct();
 				}
 					#else	/*新しい*/
 					HATSUDAN_01_speed256					= t256(0.05)+((REG_0f_GAME_DIFFICULTY)<<6); 	/* 速度 t256(5.0) */
-					HATSUDAN_02_speed_offset					= (t256(0.07)); 								/*17.92==t256(0.07)*/
-					HATSUDAN_04_tama_spec					= (DANMAKU_LAYER_01)|(TAMA_SPEC_4000_NON_MOVE)|(TAMA_SPEC_8000_NON_TILT);/* (r33-)非傾き弾 */
+					HATSUDAN_02_speed_offset				= (t256(0.07)); 								/*17.92==t256(0.07)*/
+					HATSUDAN_04_tama_spec					= (DANMAKU_LAYER_01)|(TAMA_SPEC_8000_NON_TILT);/* (r33-)非傾き弾 */
 					HATSUDAN_05_bullet_obj_type 			= BULLET_MINI8_BASE + ( TAMA_IRO_04_MIZU_IRO +(REG_0f_GAME_DIFFICULTY));
 				bomb_aaa += (9*64);
 				if ((419*64) < bomb_aaa)	{	bomb_aaa = (419*64);	}	/* 512-419 == 93 == 1024/11...方向 / 最大11方向の場合。 */
 				int ii;
-				for (ii=0; ii<(65536); ii+=((65536/2)-bomb_aaa))	/* 精々最大16方向ぐらい出ないとくぐって避けれない。 */
+				for (ii=0; ii<(65536); ii+=((65536/2)-bomb_aaa))	/* 16方向より増やすと、くぐって避けるのが難しくなりすぎるので最大でも16方向。 */
 				{
-					HATSUDAN_03_angle65536				= (ii); 				/* 角度 */
+					HATSUDAN_03_angle65536				= (ii); 		/* 角度 */
 					hatudan_system_regist_single();
 				}
 					#endif
@@ -210,18 +210,17 @@ local void kaguya_pong_boll(SPRITE *src)
 /*---------------------------------------------------------
 	敵を追加する
 ---------------------------------------------------------*/
-extern void add_zako_kaguya_houmotsu(SPRITE *src);
-global void boss_init_kaguya(SPRITE *h)
+global void boss_init_kaguya(OBJ *h)
 {
+	init_set_dolls_kaguya_T01(h);/*(使い魔システム)*/
 	fire_wait3			= 0;
 	bomb_aaa			= 0;
-	add_zako_kaguya_houmotsu(h);
 }
 
 /*---------------------------------------------------------
 	敵を追加する
 ---------------------------------------------------------*/
-local void spell_create_18_kaguya01(SPRITE *src)
+local void spell_create_18_kaguya01(OBJ *src)
 {
 //	if (50==((REG_10_BOSS_SPELL_TIMER) ))
 	if ((64-10)==((REG_10_BOSS_SPELL_TIMER) ))
@@ -230,7 +229,7 @@ local void spell_create_18_kaguya01(SPRITE *src)
 	}
 	kaguya_hari_dan_seisei(src);
 }
-local void spell_create_19_kaguya04(SPRITE *src)
+local void spell_create_19_kaguya04(OBJ *src)
 {
 //	if (50==((REG_10_BOSS_SPELL_TIMER) ))
 	if ((64-10)==((REG_10_BOSS_SPELL_TIMER) ))
@@ -258,7 +257,7 @@ local void spell_create_19_kaguya04(SPRITE *src)
 // 4096 == 65536/16
 // 3855.05882352941176470588235294118 == 65536/17
 //	240.941176470588235294117647058824 == ((65536/16)-(16636/17)) 差分
-local void spell_create_23_kaguya_tamanoe(SPRITE *src)
+local void spell_create_23_kaguya_tamanoe(OBJ *src)
 {
 //	if ((0x02)==((REG_10_BOSS_SPELL_TIMER)&0x03))/* (2回に1回)(8回毎に発弾) */
 	if ((0x04)==((REG_10_BOSS_SPELL_TIMER)&0x07))/* (2回に1回)(8回毎に発弾) */

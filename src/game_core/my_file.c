@@ -3,14 +3,14 @@
 
 /*---------------------------------------------------------
 	東方模倣風 ～ Toho Imitation Style.
-	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	ファイル関連処理
 	-------------------------------------------------------
 	ファイル関連のサポートルーチンは、ここに記述してください。
 
-	敵出現データー(douchuu/xxxx.txt)ファイル読み込み
-	シナリオ会話(text/xxxx.txt)ファイル読み込み
+	敵出現データー(kaiwa/s/xxxx.txt)ファイル読み込み
+	シナリオ会話(kaiwa/0/xxxx.txt)ファイル読み込み
 	ハイスコアファイル読み込み／保存
 	設定読み込み／保存
 	画面保存
@@ -358,7 +358,7 @@ global void ini_load(void)
 	ng1 = 0;/*fopen()成功*/
 //
 //	FILE *fp;
-	if ( NULL == /* fp =*/ my_file_fopen()) 	/* 開けなかったとき */		/*my_file_common_name, "r"*/
+	if (NULL == /* fp =*/ my_file_fopen()) 	/* 開けなかったとき */		/*my_file_common_name, "r"*/
 	{	/* 読み込み失敗 */
 		ng1 = 1;/*fopen()失敗*/ goto error00;
 	}
@@ -459,9 +459,9 @@ error00:
 						score(	5000000),	//	score(10000000),		//score(20000),
 						score(	1000000),	//	score( 5000000),		//score(1000),
 					};
-				//	strcpy(high_score_table[j][i].name,"12345678");
-				//	strcpy(high_score_table[j][i].name,"ZUN     ");
-					strcpy(high_score_table[j][i].name,"Nanashi ");
+				//	strcpy(high_score_table[j][i].name, "12345678");
+				//	strcpy(high_score_table[j][i].name, "ZUN     ");
+					strcpy(high_score_table[j][i].name, "Nanashi ");
 					tmpscore = init_score_tbl[i];
 				}
 				high_score_table[j][i].score = tmpscore;
@@ -521,7 +521,7 @@ static void write_line_buffer_to_file(SceUID fd)/*FILE *fp*/ /*, char *str_buf*/
 	/* 文字列終端を調べる。 */
 	{
 	string_retry:/*(もう一度)*/
-		if ( 0 == (*str_pointer) )	/* 文字列終端か。 */
+		if (0 == (*str_pointer))	/* 文字列終端か。 */
 		{	goto string_terminate;	}
 		#if (0)/*(エラーチェック)*/
 	//	if (253 < len)/* 長すぎる場合は強制打ち切り。(254==0x0d, 255==0x0a, [256]なので[255]まで使える。) */
@@ -547,19 +547,39 @@ global void ini_save(void)
 	strcpy(my_file_common_name, "./" FILE_NAME_SETTING_TXT);
 //	fp = fopen(buf, "w");
 	SceUID fd = sceIoOpen((char *)my_file_common_name, PSP_O_WRONLY | PSP_O_CREAT | PSP_O_TRUNC, 0777);
-//	if (fd < 0)
+//	if (0 > fd)
 //	{
 //		/*"セーブデータがない。"*/
 //	}
-//	if ( NULL == fp)	{	return; 	}
+//	if (NULL == fp) 	{	return; 	}
 //
-
 	/* 巧くいくけど off. */
 	#define USE_MEMO (0)
 	#if (1==USE_MEMO)
 
-	#define KAIGYOU_CR_LF "\r\n"
+	// 'CR'=='\r' というのは carrige Return (改行)の省略形。 '\r' の意味は(改行)コード。
+	// 'LF'=='\n' というのは New line (新行)の省略形。 '\n' の意味は(新規に次の行にする)コード。
+	// 'LF' は、 Line Feed (行変え)の省略形。行を変えるのだから、意味は新行と全く同じ。
+	// これは元々端末用語ではなく、プリンタ(印字)用語。これが端末(Terminal)用語に継承された。
 	//---------------------------
+	// MS-DOS/Windows では、テキストファイルの行末に[CR+LF]形式を採用している。
+	// "メモ帳"やms-dosの"edit"で新規ファイルを作成し、適当に改行を入れて保存するとこの形式。
+	//---------------------------
+	// Unix(Linux/FreeBSD等)では、テキストファイルの行末に[LF]形式を採用している。
+	// "vi"等"editer"で新規ファイルを作成し、適当に改行を入れて保存するとこの形式。
+	//---------------------------
+	// インターネットのサーバーでは、標準的にテキストファイルの行末に[LF]形式を採用している。
+	//---------------------------
+	// [Windows系 PC]->[サーバー]のupload時に、テキストファイルを[CR+LF]->[LF]変換し、
+	// [Windows系 PC]<-[サーバー]のdownload時に、テキストファイルを[LF]->[CR+LF]変換している。
+	// サーバーの相手が[Unix系 PC]の場合は、何も変換しない。
+	//---------------------------
+	// 但し、テキストファイルでないものをテキストファイルと認識した場合、変換機能があるとファイルが破壊される為、
+	// テキストファイルを強制的に"バイナリファイル"として扱い、変換しないサーバーもある。
+	// 逆に明らかに".png"画像なのに、(Windows系 PCでdownload時に)勝手に[LF]->[CR+LF]形式に変換し、
+	// 読めなくなっちゃうサーバーもある。(もちろん管理者の設定が悪い)。何処とは言わないが。
+	//---------------------------
+	#define KAIGYOU_CR_LF "\r\n"
 	strcpy(my_file_line_buffer256,
 		";-------------------------------------" KAIGYOU_CR_LF
 		"; 東方模倣風(r35) configuration file."  KAIGYOU_CR_LF

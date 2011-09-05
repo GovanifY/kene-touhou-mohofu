@@ -3,7 +3,7 @@
 
 /*---------------------------------------------------------
 	東方模倣風 ～ Toho Imitation Style.
-	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	将来的にSDL使わなくなる予定なので、
 	グラフィック読み込みライブラリ
@@ -133,7 +133,7 @@ global my_image* png_load_my_image(const char *filename)
 	//
 	char *malloc_buf;
 	malloc_buf = my_file_fopen(/*my_file_common_name, "r"*/);	// png読み込み後ファイルキャッシュへ配置
-	if ( NULL == /* fp =*/malloc_buf )
+	if (NULL == /* fp =*/malloc_buf)
 	{
 		my_err("png ファイルがロードできるメモリが無い。");
 //		fclose(fp);

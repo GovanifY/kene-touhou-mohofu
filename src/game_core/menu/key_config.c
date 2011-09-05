@@ -3,7 +3,7 @@
 
 /*---------------------------------------------------------
 	東方模倣風 ～ Toho Imitation Style.
-	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	キーコンフィグ
 ---------------------------------------------------------*/
@@ -157,7 +157,7 @@ static void key_config_state_04_fade_out(void)
 
 static void key_config_state_03_fade_init(void)
 {
-	play_music_num(BGM_26_menu01);
+	play_music_num(BGM_27_menu01);
 	load_SDL_bg(BG_TYPE_00_title_bg);
 	bg_alpha_aaa		= (0);
 	cb.main_call_func = key_config_state_04_fade_out;
@@ -410,10 +410,14 @@ static void key_config_state_01_fade_in(void)
 /*---------------------------------------------------------
 
 ---------------------------------------------------------*/
-
+//enum /*FONTS*/
+//{
+//	F_16K,			/* 16x16 x キーコンフィグ用 */
+//	F_16W,			/* 16x16 x WHITE 白 */
+//};
 global void key_config_start(void)
 {
-	play_music_num(BGM_25_menu02);
+	play_music_num(BGM_26_menu02);
 	load_SDL_bg(BG_TYPE_02_key_config);
 	#if 0
 	//	システム(PSPのハードウェア)順
@@ -439,62 +443,73 @@ global void key_config_start(void)
 	}
 	#endif
 	{
-typedef struct
-{
-	u32 font_type;
-	const char *key_str;
-} FONT_AAA;
-		static const FONT_AAA aaa[(MAX_KEY_NAMES_33)] =
+
+//typedef struct
+//{
+//	u32 font_type;
+//	const char *key_str;
+//} FONT_AAA;
+		static const /*FONT_AAA*/char *aaa[(MAX_KEY_NAMES_33)] =
 		{
 			// [[ 選択する並び順序 ]]
 			// 機能順序
-			{FONT16W, "-"}, 		// "--" "None"
-			{FONT16K, "b"}, 		// "Se" "Select"
-			{FONT16K, "c"}, 		// "St" "Start"
-		//	{FONT16K, "Up"},		// 無し(アナログ対応の為、ややこしい)
-		//	{FONT16K, "Right"}, 	// 無し(アナログ対応の為、ややこしい)
-		//	{FONT16K, "Down"},		// 無し(アナログ対応の為、ややこしい)
-		//	{FONT16K, "Left"},		// 無し(アナログ対応の為、ややこしい)
-			{FONT16K, "h"}, 		//"L "	 "SS"	 "Snap Shot"},			//0 KEY_NUM06_L_TRIG = 0,	/* L */
-			{FONT16K, "i"}, 		//"R "	 "ZZ"	 "System"}, 			//1 KEY_NUM07_R_TRIG,		/* R */
-			{FONT16K, "l"}, 		//"A "	 "SL"	 "Slow"},				//2 KEY_NUM08_TRIANGLE, 	/* △ */	"Sankaku"},
-			{FONT16K, "m"}, 		//"O "	 "FM"	 "Option"}, 			//3 KEY_NUM09_CIRCLE,		/* ○ */	"Maru"},
-			{FONT16K, "n"}, 		//"X "	 "OK"	 "Shot / OK"},			//4 KEY_NUM10_CROSS,		/* × */	"Batu"},
-			{FONT16K, "o"}, 		//"H "	 "NG"	 "Bomb / Cancel"},		//5 KEY_NUM11_SQUARE,		/* □ */	"Sikaku"},
+			"-", 		// "--" "None"
+			"\xe2",//"b", 		// "Se" "Select"
+			"\xe3",//"c", 		// "St" "Start"
+		//	"Up",		// 無し(アナログ対応の為、ややこしい)
+		//	"Right", 	// 無し(アナログ対応の為、ややこしい)
+		//	"Down",		// 無し(アナログ対応の為、ややこしい)
+		//	"Left",		// 無し(アナログ対応の為、ややこしい)
+			"\xe8",//"h", 		//"L "	 "SS"	 "Snap Shot",			//0 KEY_NUM06_L_TRIG = 0,	/* L */
+			"\xe9",//"i", 		//"R "	 "ZZ"	 "System", 			//1 KEY_NUM07_R_TRIG,		/* R */
+			"\xec",//"l", 		//"A "	 "SL"	 "Slow",				//2 KEY_NUM08_TRIANGLE, 	/* △ */	"Sankaku",
+			"\xed",//"m", 		//"O "	 "FM"	 "Option", 			//3 KEY_NUM09_CIRCLE,		/* ○ */	"Maru",
+			"\xee",//"n", 		//"X "	 "OK"	 "Shot / OK",			//4 KEY_NUM10_CROSS,		/* × */	"Batu",
+			"\xef",//"o", 		//"H "	 "NG"	 "Bomb / Cancel",		//5 KEY_NUM11_SQUARE,		/* □ */	"Sikaku",
 			#if 1
 			// システム(PSPのハードウェア)順
-			{FONT16W, "Select"},	// "Select"
-			{FONT16W, "Pause"}, 	// "Start"
-		//	{FONT16W, "Up"},
-		//	{FONT16W, "Right"},
-		//	{FONT16W, "Down"},
-		//	{FONT16W, "Left"},
-			{FONT16W, "Snap Shot"}, 	//	"L" 			"Snap Shot" 	"System"
-			{FONT16W, "System"},		//	"R" 			"System"		"Slow"
-			{FONT16W, "Slow"},			//	"Sankaku"		"Slow"			"Snap Shot"
-			{FONT16W, "Option"},		//	"Maru"			"Option"
-			{FONT16W, "Shot / OK"}, 	//	"Batu"			"Shot / OK"
-			{FONT16W, "Bomb / NG"}, 	//	"Sikaku"		"Bomb / Cancel"
-		//	{FONT16W, "Teisoku Bomb"},
+			"Select",	// "Select"
+			"Pause", 	// "Start"
+		//	"Up",
+		//	"Right",
+		//	"Down",
+		//	"Left",
+			"Snap Shot", 	//	"L" 			"Snap Shot" 	"System"
+			"System",		//	"R" 			"System"		"Slow"
+			"Slow",			//	"Sankaku"		"Slow"			"Snap Shot"
+			"Option",		//	"Maru"			"Option"
+			"Shot / OK", 	//	"Batu"			"Shot / OK"
+			"Bomb / NG", 	//	"Sikaku"		"Bomb / Cancel"
+		//	"Teisoku Bomb",
 			#endif
 			// 初期設定 / 終了
-			{FONT16W, "Reset"},
-			{FONT16W, "Quit"},
+			"Reset",
+			"Quit",
 			// 初期設定タイプの選択
-			{FONT16W, "Type 01"},
-			{FONT16W, "Type 02"},
-			{FONT16W, "Type 03"},
-			{FONT16W, "Type 04"},
-			{0, NULL,},
+			"Type 01",
+			"Type 02",
+			"Type 03",
+			"Type 04",
+			NULL,
 		};
 		{
 			unsigned int i;
 			i = 0;
-			while (NULL != aaa[i].key_str)
+			while (NULL != aaa[i]/*.key_str*/)
 			{
-				strcpy(my_font_text, (char *)aaa[i].key_str);
-				cg.SDL_font_type	= aaa[i].font_type;
-				key_name_surface[i] = font_render_new_surface();
+				#if 0
+				if (F_16K==aaa[i].font_type)
+				{
+					my_font_text[0] = ((aaa[i].key_str[0]) ^ 0x80);
+				//	my_font_text[0] = (('b') ^ 0x80);
+					my_font_text[1] = 0;
+				}
+				else
+				#endif
+				{
+					strcpy(my_font_text, (char *)aaa[i]/*.key_str*/);
+				}
+				key_name_surface[i] = font16_render_new_surface();
 				i++;
 			}
 		}

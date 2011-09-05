@@ -1,7 +1,7 @@
 
 /*---------------------------------------------------------
 	東方模倣風 ～ Toho Imitation Style.
-	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	http://mohou.huuryuu.com/
 	-------------------------------------------------------
 ---------------------------------------------------------*/
 
@@ -919,6 +919,7 @@ int open_music(PSPL_AUDIO_SPEC *mixer)
 	return (0);
 }
 
+#if (000)
 #if (1)
 /* Portable case-insensitive string compare function */
 /* src/PSPL/audio/mixer/music.c */
@@ -948,7 +949,7 @@ int open_music(PSPL_AUDIO_SPEC *mixer)
 			u8 s1;
 			u8 s2;
 		my_loop:
-			/* 0110 6, 0100 4, 1101 1111 0xdf   */
+			/* 0110 6, 0100 4, 1101 1111 0xdf	*/
 			s1 = (*str1) & (0xdf);/*(正確でないテキトー版大文字化)*/
 			s2 = (*str2) & (0xdf);/*(正確でないテキトー版大文字化)*/
 			if (0==s1)
@@ -974,6 +975,45 @@ int open_music(PSPL_AUDIO_SPEC *mixer)
 
 #else
 extern int PSPL_string_equals(const char *str1, const char *str2);
+#endif
+#endif /*(000)*/
+
+#if 1
+/* Portable case-insensitive string compare function */
+//#include <ctype.h>/*isaln um toupper*/
+int PSPL_MIXER_string_equals(const char *str1, const char *str2)
+{
+//	while ( *str1 && *str2 )
+	{
+	loop_start:
+		if (0==(*str1)) 	goto loop_break;
+		if (0==(*str2)) 	goto loop_break;
+		//
+	//	if ( toupper((u8)*str1) !=
+	//		 toupper((u8)*str2) )
+		if (  ((*str1) & (0xdf)) != 	/*(正確でないテキトー版大文字化)*/
+			  ((*str2) & (0xdf)) )		/*(正確でないテキトー版大文字化)*/
+		{
+			goto loop_break;
+		}
+		str1++;
+		str2++;
+		goto loop_start;
+	loop_break:
+		;
+	}
+	#if 0
+//	return ( (!(*str1)) && (!(*str2)) );
+	return ( (0==(*str1)) && (0==(*str2)) );
+	#else
+	if (0!=(*str1)) 	goto my_false;
+	if (0!=(*str2)) 	goto my_false;
+//	my_quit:
+		return (1/*TRUE*/);/*ok!==*/
+	my_false:
+		return (0/*FALSE*/);/*NG!,*/
+	#endif
+}
 #endif
 
 /* Load a music file */
@@ -1035,7 +1075,7 @@ Mix_Music *Mix_LoadMUS(const char *file)
 	/* WAVE files have the magic four bytes "RIFF"
 	   AIFF files have the magic 12 bytes "FORM" XXXX "AIFF"
 	 */
-	if ( (ext && PSPL_string_equals(ext, "WAV")) ||
+	if ( (ext && PSPL_MIXER_string_equals(ext, "wav")) ||
 		 (	(tiny_strcmp((char *)magic, "RIFF") == 0) &&
 			(tiny_strcmp((char *)(moremagic+4), "WAVE") == 0)) ||
 			(tiny_strcmp((char *)magic, "FORM") == 0) )
@@ -1052,8 +1092,10 @@ Mix_Music *Mix_LoadMUS(const char *file)
 	#endif
 	#if defined(MID_MUSIC)
 	/* MIDI files have the magic four bytes "MThd" */
-	if ( (ext && PSPL_string_equals(ext, "MID")) ||
-		 (ext && PSPL_string_equals(ext, "MIDI")) ||
+	if ( (ext && PSPL_MIXER_string_equals(ext, "mid")) ||
+			#if 0
+		 (ext && PSPL_MIXER_string_equals(ext, "midi")) ||
+			#endif
 		   tiny_strcmp((char *)magic, "MThd") == 0	||
 		 ( tiny_strcmp((char *)magic, "RIFF") == 0	&&
 		   tiny_strcmp((char *)(moremagic+4), "RMID") == 0 ) )
@@ -1092,7 +1134,7 @@ Mix_Music *Mix_LoadMUS(const char *file)
 	#endif
 	#if defined(OGG_MUSIC)
 	/* Ogg Vorbis files have the magic four bytes "OggS" */
-	if ( (ext && PSPL_string_equals(ext, "OGG")) ||
+	if (	(ext && PSPL_MIXER_string_equals(ext, "ogg")) ||/*"模倣風はこれしかない"*/
 		 tiny_strcmp((char *)magic, "OggS") == 0 )
 	{
 		music->type = MUS_OGG;
@@ -1105,9 +1147,11 @@ Mix_Music *Mix_LoadMUS(const char *file)
 	else
 	#endif
 	#if defined(MP3_MUSIC)
-	if ( (ext && PSPL_string_equals(ext, "MPG")) ||
-		 (ext && PSPL_string_equals(ext, "MP3")) ||
-		 (ext && PSPL_string_equals(ext, "MPEG")) ||
+	if (	(ext && PSPL_MIXER_string_equals(ext, "mp3")) ||/*"模倣風はこれしかない"*/
+			#if 0
+			(ext && PSPL_MIXER_string_equals(ext, "mpg")) ||
+			(ext && PSPL_MIXER_string_equals(ext, "mpeg")) ||
+			#endif
 		 ((magic[0] == 0xff) && ((magic[1] & 0xF0) == 0xF0))
 	)
 	{
@@ -1127,10 +1171,12 @@ Mix_Music *Mix_LoadMUS(const char *file)
 	else
 	#endif
 	#if defined(MP3_MAD_MUSIC)
-	if ( (ext && PSPL_string_equals(ext, "MPG")) ||
-		 (ext && PSPL_string_equals(ext, "MP3")) ||
-		 (ext && PSPL_string_equals(ext, "MPEG")) ||
-		 (ext && PSPL_string_equals(ext, "MAD")) ||
+	if (	(ext && PSPL_MIXER_string_equals(ext, "mp3")) ||/*"模倣風はこれしかない"*/
+			#if 0
+			(ext && PSPL_MIXER_string_equals(ext, "mpg")) ||
+			(ext && PSPL_MIXER_string_equals(ext, "MPEG")) ||
+			(ext && PSPL_MIXER_string_equals(ext, "mad")) ||
+			#endif
 		 ((magic[0] == 0xff) && ((magic[1] & 0xF0) == 0xF0))
 	//	 || (st rncmp((char *)magic, "ID3", 3) == 0)
 	)
@@ -1525,7 +1571,7 @@ void close_music(void)
 #if 0/*(???)*/
 Mix_Music *Mix_LoadMUS_RW(SDL_RWops *rw)
 {
-	u8 magic[5]; 	/* Apparently there is no way to check if the file is really a MOD, */
+	u8 magic[5];	/* Apparently there is no way to check if the file is really a MOD, */
 	/* or there are too many formats supported by MusicMod or MusicMod does */
 	/* this check by itself. If someone implements other formats (e.g. MP3) */
 	/* the check can be uncommented */

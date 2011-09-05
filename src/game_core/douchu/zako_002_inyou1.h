@@ -1,7 +1,7 @@
 
 /*---------------------------------------------------------
 	東方模倣風 ～ Toho Imitation Style.
-	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	道中のザコ
 	-------------------------------------------------------
@@ -19,7 +19,7 @@
 	敵移動
 ---------------------------------------------------------*/
 
-static void move_inyou1(SPRITE *src)
+static void move_inyou1(OBJ *src)
 {
 	src->cx256 += src->vx256;
 	/* 画面両端では、跳ね返る */
@@ -40,7 +40,7 @@ static void move_inyou1(SPRITE *src)
 	}
 	/* */
 	src->cy256 += src->vy256;
-	if ( (src->limit_y256) < (src->cy256) )
+	if ((src->limit_y256) < (src->cy256))
 	{
 	//	src->cy256			= src->limit_y256;
 		src->limit_y256 	= t256(300);
@@ -60,7 +60,7 @@ static void move_inyou1(SPRITE *src)
 	敵を追加する
 ---------------------------------------------------------*/
 
-static void regist_zako_002_inyou1(GAME_COMMAND *l, SPRITE *h)
+static void regist_zako_002_inyou1(GAME_COMMAND *l, OBJ *h)
 {
 	h->callback_loser		= item_create_002_inyou_zako;
 	h->limit_y256			= (t256(128)-((/*yyy*/(l->user_kougeki_type)&0x0f)<<(5+8)));		/* 閾値 */

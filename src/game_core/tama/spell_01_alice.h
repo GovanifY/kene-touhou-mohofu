@@ -1,7 +1,7 @@
 
 /*---------------------------------------------------------
- 東方模倣風 ～ Toho Imitation Style.
-  プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	東方模倣風 ～ Toho Imitation Style.
+	http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	アリスのカードを定義します。
 ---------------------------------------------------------*/
@@ -15,38 +15,50 @@
 	使用レジスタ
 	REG_08_REG0 	カウンタ。(4回に1回発弾する)
 	REG_0a_REG2 	自機狙い角を一時保持する。(現在の実装では HATSUDAN_03_angle65536 が破壊される仕様なので要るが、後で要らなくなるかも？)
+	REG_0b_REG3 	[x座標一時保存]
+	REG_0c_REG4 	[y座標一時保存]
 	REG_0d_REG5 	難易度別定数1
 	REG_0e_REG6 	難易度別定数2
 ---------------------------------------------------------*/
-local void spell_init_0e_aka_2nd(SPRITE *src)
+local void spell_init_0e_aka_2nd(OBJ *src)
 {
-	REG_0d_REG5 	= const_init_nan_ido_table[AKA_01_DIV_NUMS	+(REG_0f_GAME_DIFFICULTY)];
-	REG_0e_REG6 	= const_init_nan_ido_table[AKA_02_DIV_ANGLE +(REG_0f_GAME_DIFFICULTY)];/*(((REG_10_BOSS_SPELL_TIMER)&0x20)>>3)+*/
+	REG_0d_REG5 	= const_init_nan_ido_table	[tama_const_H06_NUMS_ALICE_RED		+(REG_0f_GAME_DIFFICULTY)];
+	REG_0e_REG6 	= const_init_nan_ido_table	[tama_const_H07_DIVS_ALICE_RED		+(REG_0f_GAME_DIFFICULTY)];/*(((REG_10_BOSS_SPELL_TIMER)&0x20)>>3)+*/
 }
-local void spell_create_0e_aka_2nd(SPRITE *src)
+local void spell_create_0e_aka_2nd(OBJ *src)
 {
 	count_up_limit_NUM(REG_NUM_08_REG0, 4);//	if (0==((REG_10_BOSS_SPELL_TIMER)&0x03))
 	if (0==(REG_08_REG0))
 	{
 		if (0==((REG_10_BOSS_SPELL_TIMER)&0x0f))
 		{
-			HATSUDAN_01_speed256				= (t256(1.0));							/* 弾速 */
+			REG_0b_REG3 = REG_02_DEST_X;//[ボスx座標一時保存]
+			REG_0c_REG4 = REG_03_DEST_Y;//[ボスy座標一時保存]
+			//------------------
+			HATSUDAN_01_speed256	= (t256(1.0));
+			HATSUDAN_03_angle65536	= deg1024to65536((((REG_10_BOSS_SPELL_TIMER<<2))));
+			sincos256();/*(破壊レジスタ多いので注意)*/
+		//	src->cx256 = REG_03_DEST_Y;//sin_value_t256 // 下CCWの場合(右CWの場合ととxyが逆)
+		//	src->cy256 = REG_02_DEST_X;//cos_value_t256 // 下CCWの場合(右CWの場合ととxyが逆)
+			//------------------
+			//
+		//[重複]	HATSUDAN_01_speed256				= (t256(1.0));							/* 弾速 */
 			HATSUDAN_02_speed_offset			= t256(1);/*6(テスト)*/
 			HATSUDAN_04_tama_spec				= (DANMAKU_LAYER_00)|(TAMA_SPEC_0000_TILT);/* (r33-)標準弾 */
 			HATSUDAN_05_bullet_obj_type 		= (BULLET_KOME_BASE + TAMA_IRO_01_AKA); 				/* [赤米弾] */
 			HATSUDAN_06_n_way					= (8);						/* [8way] */
 			HATSUDAN_07_div_angle65536			= (int)(65536/48);			/* 分割角度(1024/(6*8) ) １周を8分割した領域をさらに6分割した角度 */
 			{
-				int sin_value_t256; 		//	sin_value_t256 = 0;
-				int cos_value_t256; 		//	cos_value_t256 = 0;
-				int256_sincos1024( ((REG_10_BOSS_SPELL_TIMER<<2)), &sin_value_t256, &cos_value_t256);
 				/* hatudan_system_regist_katayori_n_wayの仕様が単純な為、補正する */
 				#define BA_HOSEI48	((65536/(48/8))/2)	/* 一周 65536系で 48分割弾 x 8 way の真中(つまり/2)付近 */
 				const int tmp_kakudo =
 					(65536/(4*2)) + 	/* (65536/(4*2)) == まず(90/360)度の半分加える。(後で2倍になる) */	/* 弾が絶対にこない範囲 */
 				//	(65536/(8*2)) + 	/* (65536/(8*2)) == まず(45/360)度の半分加える。(後で2倍になる) */	/* 弾が絶対にこない範囲 */
 				//	(65536/128) +		/* まず(2.8125/360)度加える。(左右なので2倍==5.625度になる) */		/* 弾が絶対にこない範囲 */
-					((256 + (sin_value_t256))<<4);					/* 次に揺らぎ分を加える。 */
+					((256 + (REG_03_DEST_Y/*sin_value_t256*/))<<4);					/* 次に揺らぎ分を加える。 */
+				// 発射座標リストア。
+				REG_02_DEST_X = REG_0b_REG3;//[ボスx座標復活]
+				REG_03_DEST_Y = REG_0c_REG4;//[ボスy座標復活]
 				/* 右側 */
 				HATSUDAN_03_angle65536		= (( tmp_kakudo-BA_HOSEI48)&(65536-1)); 	/* 角度(下CCWなので正方向==右側) */
 				hatudan_system_regist_katayori_n_way();/* (r33-) */
@@ -99,7 +111,7 @@ local void spell_create_0e_aka_2nd(SPRITE *src)
 	使用レジスタ
 ---------------------------------------------------------*/
 
-local void spell_create_17_alice_nejiri10sec(SPRITE *src)
+local void spell_create_17_alice_nejiri10sec(OBJ *src)
 {
 	if ((64*1)<(REG_10_BOSS_SPELL_TIMER))
 	{
@@ -197,12 +209,12 @@ local void spell_create_17_alice_nejiri10sec(SPRITE *src)
 8 x 7 x 7 x 7 == 最大2744[弾](妖々夢)
 2 x 7 x 7 x 7 == 最大 686[弾](模倣風)	//9 x 8 x 8 == 576
 ---------------------------------------------------------*/
-
-local void spell_create_0b_alice_doll(SPRITE *src)
+extern void add_zako_alice_doll_type_a(OBJ *src);/* アリス人形カード */
+local void spell_create_0b_alice_zako_doll(OBJ *src)
 {
 	if (50==((REG_10_BOSS_SPELL_TIMER) ))
 	{
-		add_zako_alice_doll(src);
+		add_zako_alice_doll_type_a(src);
 		#if (1)
 	//	voice_play(VOICE15_BOSS_KOUGEKI_01, TRACK04_TEKIDAN);
 		bullet_play_04_auto(VOICE15_BOSS_KOUGEKI_01);
@@ -221,10 +233,10 @@ local void exchange_damnaku_alice_7_bunretu(void)
 {
 	int jj = 0;
 	int ii;
-	for (ii=0; ii<OBJ_POOL_00_TAMA_MAX; ii++)/* 全部調べる。 */
+	for (ii=0; ii<OBJ_POOL_00_TAMA_1024_MAX; ii++)/* 全部調べる。 */
 	{
-		SPRITE *s;
-		s = &obj99[OBJ_HEAD_00_TAMA+ii];
+		OBJ *s;
+		s = &obj99[OBJ_HEAD_00_0x0000_TAMA+ii];
 		/* 色に関係なく鱗弾[ ... ]なら */
 		if (((BULLET_UROKO14_03_AOI+1) & 0xfff8) == (s->type & 0xfff8) )	/* [赤鱗弾]なら */
 		{
@@ -240,8 +252,8 @@ local void exchange_damnaku_alice_7_bunretu(void)
 	}
 }
 #endif
-extern void add_zako_alice_doll_type_b(SPRITE *src);/* アリス人形カード */
-local void spell_create_1e_alice_doll(SPRITE *src)
+extern void add_zako_alice_doll_type_b(OBJ *src);/* アリス人形カード */
+local void spell_create_1e_alice_tama_doll(OBJ *src)
 {
 	if (250==((REG_10_BOSS_SPELL_TIMER) ))
 	{
@@ -306,7 +318,7 @@ local void spell_create_1e_alice_doll(SPRITE *src)
 
 ---------------------------------------------------------*/
 
-local void spell_create_25_alice_suwako(SPRITE *src)
+local void spell_create_25_alice_suwako(OBJ *src)
 {
 //	if ((0) ==((REG_10_BOSS_SPELL_TIMER)&0x01))/* 2回に1回 */
 	{
@@ -330,7 +342,7 @@ local void spell_create_25_alice_suwako(SPRITE *src)
 			/* 0 [...赤] 150 [...青+赤] 180 [...青] 255 */
 			if (0==((REG_10_BOSS_SPELL_TIMER)&1))
 			{
-				if ( (s32)(128+((REG_0f_GAME_DIFFICULTY)<<2)) > (REG_10_BOSS_SPELL_TIMER))
+				if ((s32)(128+((REG_0f_GAME_DIFFICULTY)<<2)) > (REG_10_BOSS_SPELL_TIMER))
 				{
 					HATSUDAN_02_speed_offset		= t256(2);					/* 調整減速弾 */	/* この方式になるか検討中 */
 					HATSUDAN_03_angle65536			= (REG_08_REG0);			/* 向き */
@@ -340,7 +352,7 @@ local void spell_create_25_alice_suwako(SPRITE *src)
 			}
 			else
 			{
-				if ( (s32)(128-((REG_0f_GAME_DIFFICULTY)<<2)) < (REG_10_BOSS_SPELL_TIMER))
+				if ((s32)(128-((REG_0f_GAME_DIFFICULTY)<<2)) < (REG_10_BOSS_SPELL_TIMER))
 				{
 					HATSUDAN_02_speed_offset		= t256(1);					/* 調整減速弾 */	/* この方式になるか検討中 */
 					HATSUDAN_03_angle65536			= (65536-REG_08_REG0);		/* 向き */

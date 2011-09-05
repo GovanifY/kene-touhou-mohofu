@@ -277,4 +277,4 @@ include $(SRC)/PSPL/PSPL.mak
 include $(SRC)/libgu/libgu.mak
 
 # pgc
-include $(SRC)/debug/debug.mak
+#include $(SRC)/debug/debug.mak

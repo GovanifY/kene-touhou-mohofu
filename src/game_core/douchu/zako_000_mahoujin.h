@@ -1,7 +1,7 @@
 
 /*---------------------------------------------------------
 	東方模倣風 ～ Toho Imitation Style.
-	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	道中のザコ
 	-------------------------------------------------------
@@ -24,7 +24,7 @@
 	敵攻撃しない
 ---------------------------------------------------------*/
 
-static void attack_kougeki_mahoujin00(SPRITE *src)
+static void attack_kougeki_mahoujin00(OBJ *src)
 {
 	/* 攻撃しない */
 }
@@ -32,7 +32,7 @@ static void attack_kougeki_mahoujin00(SPRITE *src)
 	1:縦攻撃のカード
 ---------------------------------------------------------*/
 
-static void attack_kougeki_mahoujin01(SPRITE *src)
+static void attack_kougeki_mahoujin01(OBJ *src)
 {
 	/* 攻撃開始フレームから16フレーム経過後に 1回だけ攻撃 */
 	if ((MAHOU_TIME_LIMIT_02_ADJ-16) == src->jyumyou)
@@ -45,7 +45,7 @@ static void attack_kougeki_mahoujin01(SPRITE *src)
 	2:ランダムばらまき攻撃("魔方陣2")のカード
 ---------------------------------------------------------*/
 
-static void attack_kougeki_mahoujin02(SPRITE *src)
+static void attack_kougeki_mahoujin02(OBJ *src)
 {
 	if (0 < src->MAHOU_TEKI_wait2)
 	{
@@ -64,7 +64,7 @@ static void attack_kougeki_mahoujin02(SPRITE *src)
 	とりあえず共通部分
 ---------------------------------------------------------*/
 
-static void attack_kougeki_mahoujin_common(SPRITE *src)
+static void attack_kougeki_mahoujin_common(OBJ *src)
 {
 			zako_shot_supeka(src, ZAKO_SPEKA_0f_mahou_common);
 
@@ -73,10 +73,10 @@ static void attack_kougeki_mahoujin_common(SPRITE *src)
 	3:ランダムばらまき攻撃+自機狙い("魔方陣1")のカード
 ---------------------------------------------------------*/
 
-static void attack_kougeki_mahoujin03(SPRITE *src)
+static void attack_kougeki_mahoujin03(OBJ *src)
 {
-		SPRITE *zzz_player;
-		zzz_player = &obj99[OBJ_HEAD_02_KOTEI+FIX_OBJ_00_PLAYER];
+		OBJ *zzz_player;
+		zzz_player = &obj99[OBJ_HEAD_02_0x0900_KOTEI+FIX_OBJ_00_PLAYER];
 	if (
 			(src->cy256 > zzz_player->cy256)
 	 || 	(src->cy256 > t256(100))
@@ -106,9 +106,9 @@ static void attack_kougeki_mahoujin03(SPRITE *src)
 	6:円状攻撃のカード(大左)
 ---------------------------------------------------------*/
 
-static void attack_kougeki_mahoujin4564(SPRITE *src)
-//atic void attack_kougeki_mahoujin05(SPRITE *src)
-//atic void attack_kougeki_mahoujin06(SPRITE *src)
+static void attack_kougeki_mahoujin4564(OBJ *src)
+//atic void attack_kougeki_mahoujin05(OBJ *src)
+//atic void attack_kougeki_mahoujin06(OBJ *src)
 {
 	/* 攻撃開始フレームから16フレーム経過後に 1回だけ攻撃 */
 	//if ((MAHOU_TIME_LIMIT_02_ADJ-16) == src->time_out)
@@ -130,7 +130,7 @@ static void attack_kougeki_mahoujin4564(SPRITE *src)
 		{			attack_kougeki_mahoujin03(src); }	/* ("魔方陣1") ばらまき攻撃魔方陣 */
 		#endif
 
-static void move_kougeki_mahoujin(SPRITE *src)
+static void move_kougeki_mahoujin(OBJ *src)
 {
 	/* 出現 */
 	if (MAHOU_TIME_LIMIT_02_ADJ < src->jyumyou)
@@ -141,7 +141,8 @@ static void move_kougeki_mahoujin(SPRITE *src)
 	else
 	if (MAHOU_TIME_LIMIT_02_ADJ == src->jyumyou)
 	{
-		src->flags		|= ( (SP_FLAG_COLISION_CHECK)); 	/* あたり判定あり */
+		src->atari_hantei			= (1/*スコア兼用*/);	/* あたり判定あり */
+		/*(ここでスコアを設定する)*/
 	}
 	/* 攻撃 */
 	else
@@ -149,7 +150,7 @@ static void move_kougeki_mahoujin(SPRITE *src)
 	{
 	//	set_REG_DEST_XY(src);	/* 弾源x256 y256 中心から発弾。 */
 		/* カード選択 */
-		void (*aaa[8])(SPRITE *src) =
+		void (*aaa[8])(OBJ *src) =
 		{
 			attack_kougeki_mahoujin00,		/* 攻撃しない */
 			attack_kougeki_mahoujin01,		/* 縦弾 */
@@ -166,11 +167,12 @@ static void move_kougeki_mahoujin(SPRITE *src)
 	else
 	if (MAHOU_TIME_LIMIT_01_ADJ == src->jyumyou)
 	{
-		src->flags		&= (~(SP_FLAG_COLISION_CHECK)); 	/* あたり判定無し */
+		src->atari_hantei			= (ATARI_HANTEI_OFF/*スコア兼用*/); 	/* あたり判定無し */
+		/*(あたり判定無し==スコアは無い)*/
 	}
 	/* 消える */
 	else
-	if ( MAHOU_TIME_LIMIT_03_EPS < src->jyumyou )	/*	if ( 0x04 0x00 > (unsigned int)(src->alpha))*/
+	if (MAHOU_TIME_LIMIT_03_EPS < src->jyumyou) 	/*	if (0x04 0x00 > (unsigned int)(src->alpha))*/
 	{
 		src->color32 -= 0x03000000; 	/*	src->alpha += 0x03;*/ /*4*/ /*fps_factor*/
 	}
@@ -195,9 +197,10 @@ static void move_kougeki_mahoujin(SPRITE *src)
 /*---------------------------------------------------------
 	敵を追加する
 ---------------------------------------------------------*/
-static void add_common_mahoujin(GAME_COMMAND *l, SPRITE *h)
+static void add_common_mahoujin(GAME_COMMAND *l, OBJ *h)
 {
-	h->flags		&= (~(SP_FLAG_COLISION_CHECK)); 	/* あたり判定無し */
+	h->atari_hantei		= (ATARI_HANTEI_OFF/*スコア兼用*/); 	/* あたり判定無し */
+	/*(あたり判定==獲得スコア)*/
 	/* KETMの相対座標指定は廃止。画面座標指定にする */
 	h->cx256						= (((short)l->user_x)<<8)|(((char)l->user_kougeki_type)&0x07);/* こっそりインターリーブ */
 	h->start_y256					= (((short)l->user_y)<<8);
@@ -210,7 +213,7 @@ static void add_common_mahoujin(GAME_COMMAND *l, SPRITE *h)
 }
 
 /* ばらまき攻撃魔方陣 */	/* "魔方陣1" "GROUNDER",*/
-static void regist_zako_000_mahoujin1(GAME_COMMAND *l, SPRITE *h)// MAHOUJIN A
+static void regist_zako_000_mahoujin1(GAME_COMMAND *l, OBJ *h)// MAHOUJIN A
 {
 	{
 		h->m_Hit256R				= ZAKO_ATARI04_PNG;/* あたり判定サイズを変える */
@@ -222,7 +225,7 @@ static void regist_zako_000_mahoujin1(GAME_COMMAND *l, SPRITE *h)// MAHOUJIN A
 }
 
 /* 消える魔方陣 */	/* "魔方陣2" "MAGICF",*/
-static void regist_zako_001_mahoujin2(GAME_COMMAND *l, SPRITE *h)// MAHOUJIN B
+static void regist_zako_001_mahoujin2(GAME_COMMAND *l, OBJ *h)// MAHOUJIN B
 {
 	{
 		h->m_Hit256R				= ZAKO_ATARI16_PNG;

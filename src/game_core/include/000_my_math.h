@@ -1,7 +1,7 @@
 
 /*---------------------------------------------------------
 	東方模倣風 ～ Toho Imitation Style.
-	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	このファイルは直接インクルードしません。
 	"game_main.h" からのみ間接的にインクルードします。
@@ -90,12 +90,16 @@ enum
 */
 
 
-extern void error(int errorlevel, char *msg, ...);
+extern void psp_fatal_error(char *msg, ...);/*int errorlevel,*/
 
 extern void *my_calloc(size_t size);
 
-extern SDL_Surface *load_chache_bmp(void);/*char *filename*/	//, int use_alpha, int use_chache);
-extern void unloadbmp_by_surface(SDL_Surface *s);
+/*  */
+#define USE_KETM_IMAGE_CHACHE (1)
+#if (1==USE_KETM_IMAGE_CHACHE)
+	extern SDL_Surface *load_chache_bmp(void);/*char *filename*/	//, int use_alpha, int use_chache);
+	extern void unloadbmp_by_surface(SDL_Surface *surface);
+#endif /*(1==USE_KETM_IMAGE_CHACHE)*/
 
 extern char get_stage_chr(int i);
 

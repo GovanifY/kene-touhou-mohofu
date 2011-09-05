@@ -1,7 +1,7 @@
 
 /*---------------------------------------------------------
 	東方模倣風 ～ Toho Imitation Style.
-	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	道中のザコ
 	-------------------------------------------------------
@@ -27,7 +27,7 @@
 	敵移動
 ---------------------------------------------------------*/
 
-static void move_meido3(SPRITE *src)
+static void move_meido3(OBJ *src)
 {
 	if (512 > src->jyumyou) 				// SS03:	/* 左(斜め上)へ移動中 */
 	{
@@ -46,11 +46,11 @@ static void move_meido3(SPRITE *src)
 		src->tmp_angleCCW1024 -= src->turnspeed1024;/*fps_factor*/		/* CCWの場合 */
 		mask1024(src->tmp_angleCCW1024);
 		/* 左(斜め上)を向いたら */
-	//	if ( (512+32) < src->tmp_angleCCW1024 ) 			//cv1024r(180 /*270*/ /*90+*/ /*180-90-90*/ /*+10*/)
+	//	if ((512+32) < src->tmp_angleCCW1024) 			//cv1024r(180 /*270*/ /*90+*/ /*180-90-90*/ /*+10*/)
 		/* CCWの場合 */
-		if ( 0!=(0x200 & src->tmp_angleCCW1024) )			/* (cv1024r(180) < src->tmp_angleCCW1024) */
+		if (0 != (0x200 & src->tmp_angleCCW1024))			/* (cv1024r(180) < src->tmp_angleCCW1024) */
 		{
-			if ( (512+256-32) > src->tmp_angleCCW1024 ) 	//cv1024r(180 /*270*/ /*90+*/ /*180-90-90*/ /*+10*/)
+			if ((512+256-32) > src->tmp_angleCCW1024) 	//cv1024r(180 /*270*/ /*90+*/ /*180-90-90*/ /*+10*/)
 			{
 			//	src->tmp_angleCCW1024 = cv1024r(180/*+10*/);
 				src->jyumyou = (512-1);/*SS03*/
@@ -77,11 +77,11 @@ static void move_meido3(SPRITE *src)
 		mask1024(src->tmp_angleCCW1024);
 		/* 右(斜め上)を向いたら */
 		/* CWの場合 */
-	//	if ( (1024-32) < src->tmp_angleCCW1024 )		/*eps*/ /*<= cv1024r(0)*/	//cv1024r(10/*90*/ /*-90*/ /*360*/ /*-10*/
+	//	if ((1024-32) < src->tmp_angleCCW1024)		/*eps*/ /*<= cv1024r(0)*/	//cv1024r(10/*90*/ /*-90*/ /*360*/ /*-10*/
 		/* CCWの場合 */
-		if ( 0==(0x200 & src->tmp_angleCCW1024) )/* (cv1024r(180) > src->tmp_angleCCW1024) */
+		if (0 == (0x200 & src->tmp_angleCCW1024))/* (cv1024r(180) > src->tmp_angleCCW1024) */
 		{
-			if ( (256+32) < src->tmp_angleCCW1024 ) 	/*eps*/ /*<= cv1024r(0)*/	//cv1024r(10/*90*/ /*-90*/ /*360*/ /*-10*/
+			if ((256+32) < src->tmp_angleCCW1024) 	/*eps*/ /*<= cv1024r(0)*/	//cv1024r(10/*90*/ /*-90*/ /*360*/ /*-10*/
 			{
 			//	src->tmp_angleCCW1024 = cv1024r(0/*360*/ /*-10*/)/*cv1024r(360)*/;
 				src->jyumyou = (512+512+512-1);/*SS01*/
@@ -101,7 +101,7 @@ static void move_meido3(SPRITE *src)
 	敵を追加する
 ---------------------------------------------------------*/
 
-static void regist_zako_017_meido3(GAME_COMMAND *l, SPRITE *h)
+static void regist_zako_017_meido3(GAME_COMMAND *l, OBJ *h)
 {
 	h->speed256 			= t256(1.5);		/*3+difficulty*/ /*はやすぎ*/
 	h->turnspeed1024		= (7*2);

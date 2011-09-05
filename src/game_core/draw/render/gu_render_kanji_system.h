@@ -1,7 +1,7 @@
 
 /*---------------------------------------------------------
 	東方模倣風 ～ Toho Imitation Style.
-	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	このファイルは直接インクルードしません。
 	"draw_screen.c" からのみ間接的にインクルードします。
@@ -82,7 +82,7 @@ static void gu_draw_text_lines(void)
 			 */
 			unsigned int j;
 			unsigned int i;
-			/* [※1] ((16/2)[dots]+1[dots](Gu干渉ライン)) */
+			/* [※1] ((16/2)[pixel]+1[pixel](Gu干渉ライン)) */
 			/* 8[ライン(depth_32bit_int)]==16[ライン(depth_16bit_short)] */
 			#if 0
 			unsigned int count29;

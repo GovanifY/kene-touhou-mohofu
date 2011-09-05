@@ -3,7 +3,7 @@
 
 /*---------------------------------------------------------
 	東方模倣風 ～ Toho Imitation Style.
-	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 ---------------------------------------------------------*/
 
@@ -15,11 +15,11 @@
 
 /*---------------------------------------------------------
 	制限: この swizzle 変換ルーチンは、
-		幅が 16dots 未満(8, 4, 2, 1)の場合と、
-		高さが 8dots 未満(7, 6, 5, 4, 3, 2, 1)の場合は、
+		幅が 16[pixel] 未満(8, 4, 2, 1)の場合と、
+		高さが 8[pixel] 未満(7, 6, 5, 4, 3, 2, 1)の場合は、
 	変換できない。
-	しかしながら、そういう場合はsizzleしないか、
-	あるいは幅を16dotsにしてswizzleしmask描画した方が描画が速い。
+	しかしながら、そういう場合は sizzle しないか、
+	あるいは幅を16[pixel]にして swizzle し mask描画 した方が描画が速い。
 ---------------------------------------------------------*/
 
 //#define USE_T128_SWIZZLE 0
@@ -112,7 +112,10 @@ static void convert_swizzle
 	{
 	//	my_resource[num].my_texture = NULL;
 		#if (1)
-		error(ERR_FATAL, (char*)"texture:cant load image %s:", my_resource[num].file_name);/*" %s"*/ /*,SDL_GetError()*/
+		psp_fatal_error( (char*)
+		//	"0123456789012345678901234567890123456789"	// 半角40字"最大表示文字数"
+			"gu texture: 画像ファイルがありません。" "\\n"
+			"%s", my_resource[num].file_name);
 		#endif
 		return;
 	}
@@ -125,11 +128,13 @@ static void convert_swizzle
 //	nonalign = 0;
 	nonalign = (my_resource[num].my_texture)->MY_DIB_DATA;
 
-	int mymap_128;
-	//	mymap_128 = (my_resource[num].my_texture)->texture_width;
-		mymap_128 = my_resource[num].texture_width;
-		#define my_map_TW128 mymap_128
-		#define my_map_TH128 mymap_128
+	int mymap_aaa;
+	int mymap_bbb;
+	//	mymap_aaa = (my_resource[num].my_texture)->texture_width;
+		mymap_aaa = my_resource[num].texture_width;
+		mymap_bbb = my_resource[num].texture_height;
+		#define my_map_TW128 mymap_aaa
+		#define my_map_TH128 mymap_bbb
 
 	unsigned int msize;
 //	msize = 0;
@@ -137,7 +142,7 @@ static void convert_swizzle
 	msize = ((my_resource[num].my_texture)->w * (my_resource[num].my_texture)->h)
 		 * (my_resource[num].my_texture)->format->BytesPerPixel;
 	#else
-	msize = (/*w*/my_map_TW128/*512*/ * /*h*/my_map_TH128/*512*/) * /*bpp*/4;
+	msize = (/*w*/my_map_TW128/*512*/ * /*h*/my_map_TH128/*512*/) * /*bpp*/(4);
 	#endif
 
 #if (0==USE_32BIT_DRAW_MODE)
@@ -145,9 +150,9 @@ static void convert_swizzle
 #if (1==USE_COLOR_16_AND_32)
 	/* --- PSP で簡易16ビット色を指定した場合は16bitに落とす */
 	#if (1==USE_SDL_image)
-	if (my_texture[num]->format->BytesPerPixel == 4)	/* PSP16bit mode && DIB==32bit color */
+	if (my_texture[num]->format->BytesPerPixel == (4))	/* PSP16bit mode && DIB==32bit color */
 	#else
-	if (/*BytesPerPixel*/4 == 4)	/* PSP16bit mode && DIB==32bit color */
+	if (/*BytesPerPixel*/(4) == (4))	/* PSP16bit mode && DIB==32bit color */
 	#endif
 	//if (0)
 	{
@@ -175,8 +180,8 @@ static void convert_swizzle
 	//		pixsrc2++;
 	//	}
 		#if (1==USE_SDL_image)
-		my_texture[num]->format->BytesPerPixel =  2;
-		my_texture[num]->format->BitsPerPixel  = 16;
+		my_texture[num]->format->BytesPerPixel =  (2);
+		my_texture[num]->format->BitsPerPixel  = (16);
 		my_texture[num]->format->Rmask = /*PSP_SCREEN_FORMAT_RMASK*/RMASK16;/*RMASK16*/
 		my_texture[num]->format->Gmask = /*PSP_SCREEN_FORMAT_GMASK*/GMASK16;/*GMASK16*/
 		my_texture[num]->format->Bmask = /*PSP_SCREEN_FORMAT_BMASK*/BMASK16;/*BMASK16*/

@@ -3,16 +3,32 @@
 
 /*---------------------------------------------------------
 	東方模倣風 ～ Toho Imitation Style.
-	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	プロジェクトページ				http://code.google.com/p/kene-touhou-mohofu/
+	ソースコード表示				http://code.google.com/p/kene-touhou-mohofu/source/browse/trunk/
+	ソースファイル単体ダウンロード	http://kene-touhou-mohofu.googlecode.com/svn/trunk/
+	ダウンロード例					http://kene-touhou-mohofu.googlecode.com/files/231_kene_r35-r37.zip
+	231の開発報告ページ 			http://mohou.huuryuu.com/
 	-------------------------------------------------------
 	pspの起動ルーチン等
 ---------------------------------------------------------*/
+
+/* */
 #define FIX_TEST (1)
 //#define FIX_TEST (0)
 
-#if 0
-	/* makefile に -Dmain=SDL_main がある場合 */
-/*
+//#define USE_FIX_GP	(0)
+#define USE_FIX_GP	(1)
+
+
+/*---------------------------------------------------------
+	Makefileに -Dmain=SDL_main があっても、強制的に -Dmain=SDL_main を無効にする。
+---------------------------------------------------------*/
+
+#ifdef main/* makefile に -Dmain=SDL_main がある場合 */
+	#undef main/* 強制的に -Dmain=SDL_main を無効にする。 */
+	/* -Dmain=SDL_main は非サポートです。 */
+//	error! -Dmain=SDL_main は非サポートです。
+	/*
 	 makefile に -Dmain=SDL_main がある場合は、
 	SDLが用意したメインルーチンを使用するので、ここには
 	書けません。(C言語はmain()関数を2つリンク出来ません)
@@ -22,22 +38,25 @@
 	PSP-1000でもversionによって起動したりしなかったり、
 	PSP-2000は起動しなかったり、C++を使うと何故か起動したりしなかったり、
 	と色々問題が多いので使わない方が賢明です。
-*/
-#else
-	/* makefile に -Dmain=SDL_main がない場合 */
-/*
+	*/
+#endif
+
+/*---------------------------------------------------------
+	PSP module info section
+---------------------------------------------------------*/
+
+#if (1)/* Makefile に -Dmain=SDL_main がない場合 */
+	/*
 	こちらの場合は PSPSDK の用意した起動ルーチンを使用する場合です。
 	起動ルーチンは簡単なアセンブラ＋PSPのOSに利用関数を知らせる表で
 	下記マクロは起動アセンブラの一部にに展開されますし、
 	表は PSPSDK が自動作成してくれます。
-*/
-/*---------------------------------------------------------
-	PSP module info section
----------------------------------------------------------*/
+	*/
+
 #if 0
 PSP_THREAD_ATTR_VFPU			VFPUの利用を有効にします。
 PSP_THREAD_ATTR_USER			ユーザモードでスレッドを起動します。親スレッドがユーザモードの場合は、特に指定しなくともユーザモードで起動されます。
-SP_THREAD_ATTR_USBWLAN			USB/WlanAPIで使われています。通常、指定することはありません。
+PSP_THREAD_ATTR_USBWLAN			USB/WlanAPIで使われています。通常、指定することはありません。
 PSP_THREAD_ATTR_VSH 			VSHAPIで使われています。通常、指定することはありません。
 PSP_THREAD_ATTR_SCRATCH_SRAM	スクラッチパッドの利用を許可します。FW1.0では使われておらず、特に指定しなくとも自由に利用が可能です。
 PSP_THREAD_ATTR_NO_FILLSTACK	スレッド起動時にスタックを0xffで埋めないように指定します。
@@ -70,7 +89,7 @@ enum PspThreadAttributes
 
 #if (1)/* Makefile が間違ってなければ本来要らないが、コンパイルできないお便りが届くと面倒なので。 */
 	#ifndef KENE_RELEASE_VERSION
-		#define KENE_RELEASE_VERSION	(35)
+		#define KENE_RELEASE_VERSION	(36)
 	#endif
 	#ifndef KENE_UPDATE_VERSION
 		#define KENE_UPDATE_VERSION 	(1)
@@ -114,8 +133,12 @@ PSP_MAIN_THREAD_ATTR(						/* このプログラムが使うOS資源。*/
 	// 0 == ofw対応版
 	// 署名版
 //	PSP_HEAP_SIZE_KB(4*1024); // fatal error: load0 cant load image data/bg/title_bg.png
-	PSP_HEAP_SIZE_KB(12*1024); // (oslib 12MBytes)
-	PSP_MAIN_THREAD_STACK_SIZE_KB(512); //
+	PSP_HEAP_SIZE_KB(12*1024); // (12MBytes, oslib) (r38)MusicRoomでハングアップする。
+//	PSP_HEAP_SIZE_KB(14*1024); // (14MBytes)
+//	PSP_MAIN_THREAD_STACK_SIZE_KB(512); // (r38)MusicRoomでハングアップする。(512k[bytes]==0.5M[bytes]は大きすぎる。)
+//	PSP_MAIN_THREAD_STACK_SIZE_KB(256); // (r38)minimalist, MusicRoomでハングアップする。cygwinなら ok!
+	PSP_MAIN_THREAD_STACK_SIZE_KB(128); // (r38) 多分128k[bytes]もあれば十分なんじゃないかな?
+//	PSP_MAIN_THREAD_STACK_SIZE_KB(64); //
 	#endif
 
 	// ヒープ12MBの場合
@@ -182,8 +205,6 @@ ffff+------------------------+
 	だと思われる。
 */
 
-//#define USE_FIX_GP	(0)
-#define USE_FIX_GP	(1)
 /*---------------------------------------------------------
 	GPレジスタの値をチェックし、異常な場合は変更する
 	-------------------------------------------------------
@@ -211,13 +232,21 @@ static void FixedGP(void)
 #endif /*(1==FIX_TEST)*/
 
 
-
 global GAME_CORE_GLOBAL_CALLBACK cb;
 /*---------------------------------------------------------
 	[HOME]キーで終了処理部分
 	-------------------------------------------------------
 	[HOME]キーで終了するためのコールバックを登録
 	([HOME]キーメニューで、終了しますか？「はい」が選択されると実行される部分)
+	-------------------------------------------------------
+	コールバック側でゲームの保存や解放等などの処理をしてはいけない。
+	メイン側でこれらの処理は必ず行うので、
+	ここでこれらの処理をすると、結果的に２回処理を行う事になる。
+	(メイン側は２回処理を行っても問題無いように作ってない)
+	-------------------------------------------------------
+	それ以外の事をしたらまずい(メイン側で同じ事をするので)
+	game_exit();←あるとまずい(game_exit()が２回になっちゃう)
+	sceKernelExitGame();←あるとまずい(home終了した場合、ゲームセーブが出来ない、終了処理が出来ない)
 ---------------------------------------------------------*/
 
 static int exit_callback(int arg1, int arg2, void *common)
@@ -232,9 +261,6 @@ static int exit_callback(int arg1, int arg2, void *common)
 	#endif
 	return (0); 	/* コールバック側の終了 */
 }
-	/* それ以外の事をしたらまずい(メイン側で同じ事をするので) */
-//	game_exit();/* ←あるとまずい(game_exit()が２回になっちゃう) */
-//	sceKernelExitGame();/* ←あるとまずい(home終了した場合、ゲームセーブが出来ない、終了処理が出来ない) */
 
 
 /*---------------------------------------------------------
@@ -252,6 +278,7 @@ static int CallbackThread(SceSize args, void *argp)
 	sceKernelSleepThreadCB();
 	return (0);
 }
+
 
 /*---------------------------------------------------------
 	[HOME]キー用、スレッド作成
@@ -272,6 +299,7 @@ static /*int*/void SetupCallbacks(void)
 	}
 //	return (thread_id);
 }
+
 
 /*---------------------------------------------------------
 	game_main()
@@ -299,7 +327,7 @@ my_loop:
 /*---------------------------------------------------------
 	boot_main()
 ---------------------------------------------------------*/
-
+// CFLAGS += -DHACK_FPU=1 は、src/alegrex/alegrex.mak で指定しています。
 #if (1==HACK_FPU)
 extern void disable_FPU_exeptions_in_main(void);	/* FPU例外を無効にする。 disablefpu.S */
 #endif
@@ -312,13 +340,19 @@ extern void game_system_exit(void); 	/* ゲームシステム終了 */
 extern void game_main(void);
 
 /* ここは -Dmain=SDL_main の場合、マクロなので自動的に int SDL_main(int argc, char *argv[]) になる。それをSDL側のmain()から呼ぶ。 */
+/*
+	-Dmain=SDL_main は強制的に無効になっているので、(PSPSDKのローダー後に)ここから起動する。
+	模倣風では atexit はフックされていない事を想定しているので、 exit(); は使わない。
+	模倣風では sceKernelExitGame(); で終了する。
+*/
 global int main(int argc, char *argv[])
 {
 #if (1==FIX_TEST)
 	#if (1==USE_FIX_GP)
-	FixedGP();	/* */
+	FixedGP();	/* 起動時の GPレジスタが異常値であれば、修正する。 */
 	#endif
 	#if (1==HACK_FPU)
+	/* fpu 例外が発生した場合の割り込み処理を、pspのハードウェアーレベルで無効にする。 */
 	disable_FPU_exeptions_in_main();	/* この関数はmain()直下に書かないとダメかもしれない($31を弄るので) */
 	#endif
 #endif

@@ -3,7 +3,7 @@
 
 /*---------------------------------------------------------
 	東方模倣風 ～ Toho Imitation Style.
-	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	スプライト マネージャ
 	-------------------------------------------------------
@@ -39,7 +39,7 @@
 		※2. レーザーは一定の太さ(laser1->aw256)がある。太さの外側は当たらない。
 		※3. レーザー発生源から、反対方向はあたらない。
 		※4. レーザーは発生源から(laser1->angle65536)[n/65536度]傾いている。
-.   -------------------------------------------------------
+.	-------------------------------------------------------
   .     ↓レーザー発生源
 .   .  ---
  .    .     .
@@ -59,7 +59,7 @@
 
 --------------------------------------------------------- */
 #if 0/* めも */
-int collision_laser( /* obj_t */SPRITE *obj1, LASER *laser1)
+int collision_laser( /* obj_t */OBJ *obj1, LASER *laser1)
 {
 //	分割処理１．判定有効なオブジェクト
 
@@ -91,22 +91,22 @@ int collision_laser( /* obj_t */SPRITE *obj1, LASER *laser1)
 	hantei_y = (((sabun_x256 * cos_angle) - (sabun_y256 * sin_angle))>>8);
 	#endif
 //	分割処理２．領域大小判定(直線外はあたらない。)
-//	if ( (0) > hantei_y)/* レーザー発生源から、反対方向はあたらない。 */
-	if ( (laser1->ar256) > hantei_y)/* レーザー発生源から、反対方向はあたらない。 */
+//	if ((0) > hantei_y)/* レーザー発生源から、反対方向はあたらない。 */
+	if ((laser1->ar256) > hantei_y)/* レーザー発生源から、反対方向はあたらない。 */
 	{
 		return (0);/* FALSE */	/* not hit. 当たってない */
 	}
-	if ( (0+(laser1->aw256)) > hantei_x)/* 一定の太さ(laser1->aw256)の直線。直線外はあたらない。 */
+	if ((0+(laser1->aw256)) > hantei_x)/* 一定の太さ(laser1->aw256)の直線。直線外はあたらない。 */
 	{
 		return (0);/* FALSE */	/* not hit. 当たってない */
 	}
-	if ( (0-(laser1->aw256)) < hantei_x)/* 一定の太さ(laser1->aw256)の直線。直線外はあたらない。 */
+	if ((0-(laser1->aw256)) < hantei_x)/* 一定の太さ(laser1->aw256)の直線。直線外はあたらない。 */
 	{
 		return (0);/* FALSE */	/* not hit. 当たってない */
 	}
 
 //	分割処理３．距離で判定(円内はあたらない。)
-//	if ( laser1->ar256 > ra256)
+//	if (laser1->ar256 > ra256)
 //	{
 //		return (0);/* FALSE */	/* not hit. 当たってない */
 //	}
@@ -127,17 +127,17 @@ int collision_laser( /* obj_t */SPRITE *obj1, LASER *laser1)
 --------------------------------------------------------- */
 
 #if (1)
-static /* BOOL */int collision_hit( /* obj_t */SPRITE *obj1, /* obj_t */SPRITE *obj2 )
+static /* BOOL */int collision_hit( /* obj_t */OBJ *obj1, /* obj_t */OBJ *obj2 )
 {
 	#if (0)/* この機能は要らない(?)かも。 */
 	/*--- 判定有効なオブジェクトでなかったら終了 */
 //	if (obj2->m_Hit256R == 0/* .0 */ /* FALSE */)
-	if ( (16) > obj2->m_Hit256R )	/*t256(1.00)t256(0.10)*/
+	if ((16) > obj2->m_Hit256R) 	/*t256(1.00)t256(0.10)*/
 	{
 		return (0);/* FALSE */	/* not hit. 当たってない */
 	}
 //	if (obj1->m_Hit256R == 0/* .0 */ /* FALSE */)
-	if ( (16) > obj1->m_Hit256R )	/*t256(1.00)t256(0.10)*/
+	if ((16) > obj1->m_Hit256R) 	/*t256(1.00)t256(0.10)*/
 	{
 		return (0);/* FALSE */	/* not hit. 当たってない */
 	}
@@ -165,7 +165,7 @@ static /* BOOL */int collision_hit( /* obj_t */SPRITE *obj1, /* obj_t */SPRITE *
 	dy *= dy;
 	dx += dy;
 	/* 当たり判定外なら */
-	if (dr < dx)/* if ( (dr^2) < ( (dx^2) + (dy^2) )) */
+	if (dr < dx)/* if ((dr^2) < ( (dx^2) + (dy^2) )) */
 	{
 		return (0);/* FALSE */	/* not hit. 当たってない */
 	}
@@ -178,25 +178,20 @@ static /* BOOL */int collision_hit( /* obj_t */SPRITE *obj1, /* obj_t */SPRITE *
 	スプライトのあたり判定
 	-------------------------------------------------------
 	入力値: type
-		SP_GROUP_BULLETS	(弾)
-		SP_GROUP_ITEMS		(アイテム)
+		OBJ_Z04_TAMA		(弾)
+		OBJ_Z03_ITEM		(アイテム)
 --------------------------------------------------------- */
 /*---------------------------------------------------------
 	(敵専用)スプライトのあたり判定
 --------------------------------------------------------- */
 
-global SPRITE obj99[OBJ99_MAX]; 	/* 全スプライト */
-//global SPRITE obj99[OBJ_HEAD_00_TAMA+OBJ_POOL_00_TAMA_MAX];	/* 弾専用スプライトのリスト構造 */
-//global SPRITE obj99[OBJ_HEAD_01_TEKI+OBJ_POOL_01_TEKI_MAX];	/* 敵専用スプライトのリスト構造 */
-//global SPRITE obj99[OBJ_HEAD_02_KOTEI+OBJ_POOL_02_KOTEI_MAX]; /* 自機等固定スプライト */
-//global SPRITE obj99[OBJ_HEAD_03_PANEL+OBJ_POOL_03_PANEL_MAX]; /* パネル用スプライト */
+global OBJ obj99[OBJ_LAST_99_0x0948_MAX]; 	/* 全スプライト */
 
-static SPRITE *sprite_collision_check(SPRITE *tocheck, SPRITE *s, int type, unsigned int length)
+static OBJ *sprite_collision_check(OBJ *tocheck, OBJ *s, int set_obj_type, unsigned int length)
 {
 	unsigned int ii;
 	for (ii=0; ii<length; ii++)/* 全部調べる。 */
 	{
-	//	if (SP_DELETE != s->type)/* 消去済みは飛ばす。 */
 		if (JYUMYOU_NASI < s->jyumyou)/* 消去済みは飛ばす。 */
 		{
 			/* 1. 自分自身チェック */
@@ -205,20 +200,18 @@ static SPRITE *sprite_collision_check(SPRITE *tocheck, SPRITE *s, int type, unsi
 			{
 				/* 2. 判定種類チェック */
 				if (
-					//		(s->type != SP_DELETE ) && /* 削除済みは飛ばす */	/* SP_DELETEが 0 になったので要らなくなった． */
-							(s->type & type)			/* typeが一致する場合のみ */
+							(s->obj_type_set & set_obj_type)			/* obj_type_set が一致する場合のみ */
 					)	/* do collision only mach type. */
 				{
 					/* 3. 判定フラグチェック */
 					if (
-							( (SP_FLAG_COLISION_CHECK/*|SP_FLAG_VISIBLE*/) == (s->flags&(SP_FLAG_COLISION_CHECK/*|SP_FLAG_VISIBLE*/)))
-							/* あたり判定があり、かつ、表示可能なもののみチェック */
-						)	/* do collision only visible and, use collision check type. */
+							( (ATARI_HANTEI_OFF) != (s->atari_hantei))/*(あたり判定があるもののみチェック)*/
+						)	/* do collision only, use collision check type. */
 					{
 						/* 4. 矩形/円あたり判定チェック   大まかに矩形で判別した後、近そうなら円の衝突判定 */
-						if (collision_hit(s,tocheck))	/* 矩形/円あたり判定 */ 	/* hit collision rectangle to circle check. */
+						if (collision_hit(s, tocheck))	/* 矩形/円あたり判定 */ 	/* hit collision rectangle to circle check. */
 						{
-							return (s);/* あたった */	/* hit collisioning! */
+							return (s);/*(あたった)*/	/* hit collisioning! */
 						}
 					}
 				}
@@ -226,27 +219,27 @@ static SPRITE *sprite_collision_check(SPRITE *tocheck, SPRITE *s, int type, unsi
 		}
 		s++;
 	}
-	return (NULL);/* あたってない */	/* no hit collisioning. */
+	return (NULL);/*(あたってない)*/	/* no hit collisioning. */
 }
-/*static*/global SPRITE *obj_collision_check_00_tama(SPRITE *tocheck, int type)
+/*static*/global OBJ *obj_collision_check_00_tama(OBJ *tocheck, int type)
 {
-	SPRITE *s;
-	s = &obj99[OBJ_HEAD_00_TAMA+0];
-	return sprite_collision_check(tocheck, s, type, OBJ_POOL_00_TAMA_MAX);
+	OBJ *s;
+	s = &obj99[OBJ_HEAD_00_0x0000_TAMA+0];
+	return sprite_collision_check(tocheck, s, type, OBJ_POOL_00_TAMA_1024_MAX);
 }
-//	/*static*/global SPRITE *obj_collision_check_01_teki(SPRITE *tocheck, int type)
-/*static*/global SPRITE *obj_collision_check_01_teki(SPRITE *tocheck)/*, (SP_GROUP_TEKI)int ty pe*/
+//	/*static*/global OBJ *obj_collision_check_01_teki(OBJ *tocheck, int type)
+/*static*/global OBJ *obj_collision_check_01_teki(OBJ *tocheck)/*, (OBJ_Z02_TEKI)int ty pe*/
 {
-	SPRITE *s;
-	s = &obj99[OBJ_HEAD_01_TEKI+0];
-	return sprite_collision_check(tocheck, s, /*type*/(SP_GROUP_TEKI), OBJ_POOL_01_TEKI_MAX);
+	OBJ *s;
+	s = &obj99[OBJ_HEAD_01_0x0800_TEKI+0];
+	return sprite_collision_check(tocheck, s, /*type*/(OBJ_Z02_TEKI), OBJ_POOL_01_TEKI_0256_MAX);
 }
 
 
 /*---------------------------------------------------------
 	スプライト リストに登録されたスプライトを全部消す。
 --------------------------------------------------------- */
-static void obj_remove_all(SPRITE *s, unsigned int length)
+static void obj_remove_all(OBJ *s, unsigned int length)
 {
 	unsigned int ii;
 	for (ii=0; ii<length; ii++)/* 全部調べる。 */
@@ -259,47 +252,58 @@ static void obj_remove_all(SPRITE *s, unsigned int length)
 	}
 }
 
-
+#if 0
 static void s_obj_remove_all_00_tama(void)	/* 弾専用 */
 {
-	SPRITE *s;
-	s = &obj99[OBJ_HEAD_00_TAMA+0];
-	obj_remove_all(s, OBJ_POOL_00_TAMA_MAX);
+	OBJ *s;
+	s = &obj99[OBJ_HEAD_00_0x0000_TAMA+0];
+	obj_remove_all(s, OBJ_POOL_00_TAMA_1024_MAX);
 }
 static void s_obj_remove_all_01_teki(void)	/* gu汎用(旧SDL) */
 {
-	SPRITE *s;
-	s = &obj99[OBJ_HEAD_01_TEKI+0];
-	obj_remove_all(s, OBJ_POOL_01_TEKI_MAX);
+	OBJ *s;
+	s = &obj99[OBJ_HEAD_01_0x0800_TEKI+0];
+	obj_remove_all(s, OBJ_POOL_01_TEKI_0256_MAX);
 }
-global void sprite_all_cleanup(void)
+global void obj_cleanup_all(void)
 {
 	s_obj_remove_all_01_teki();/* gu汎用 */
 	s_obj_remove_all_00_tama();/* 弾専用 */
 }
+#endif
 
+#if 1/*(r36)*/
+
+/* [A00弾領域]と[A01敵領域]と[A02固定領域]と[A03パネル領域]のOBJを全消去。 */
+global void obj_cleanup_all(void)
+{
+	OBJ *s;
+	s = &obj99[OBJ_HEAD_00_0x0000_TAMA+0];
+	obj_remove_all(s, (OBJ_POOL_00_TAMA_1024_MAX+OBJ_POOL_01_TEKI_0256_MAX+OBJ_POOL_02_KOTEI_0016_MAX+OBJ_POOL_03_PANEL_0056_MAX));
+}
+#endif
+
+#if 0
+global void obj_cleanup_A02_A03_kotei_panel(void)
+{
+}
+#endif
 /*---------------------------------------------------------
 	スプライトを一フレーム分動作させる。
 --------------------------------------------------------- */
-static void sprite_move_main(SPRITE *s, unsigned int length)
+static void sprite_move_main(OBJ *s, unsigned int length)
 {
 	unsigned int iii;
 //	for (iii=0; iii<length; iii++)/* 全部調べる。 */
 	iii = length;/* レーザーの実装を簡単にする為に、逆順にする。 */
 	{
 		my_loop:
-	//	#if 1/* 要らない気がする(てすとちう) */
-	//	if (s->type != SP_DELETE ) /* 削除済みは飛ばす */
-	//	#endif
 		if (JYUMYOU_NASI < s->jyumyou)/* 消去済みは飛ばす。 */
 		{
 			s->jyumyou--;/* 寿命経過 */
-		//	#if 0
-		//	if (s->type != SP_DELETE ) /* 削除済みは飛ばす */	/* SP_DELETEが 0 になったので要らなくなった． */
-		//	#endif
 			{
 				#if 1/*???*/
-				if (s->type & (SP_GROUP_ALL_SDL_CORE_TYPE)/*type*/) /* typeが一致する場合のみ */
+				if (s->obj_type_set & (SP_GROUP_ALL_SDL_CORE_TYPE)) /* obj_type_setが一致する場合のみ */
 				#endif
 				{
 					if (NULL != s->callback_mover)
@@ -317,47 +321,73 @@ static void sprite_move_main(SPRITE *s, unsigned int length)
 		}
 	}
 }
-
-	#if 0/*(r32)*/
-static void obj_move_main_00_tama(void) 	/* gu弾専用 */
+	#if(0)/*(ダメ)*/
+extern void hatudan_effect_move_all(void);
+global void obj_area_move_A00_A01_A02(void)
 {
-	SPRITE *s;
-	s = &obj99[OBJ_HEAD_00_TAMA+OBJ_POOL_00_TAMA_MAX+0];
-	sprite_move_main(s, OBJ_POOL_00_TAMA_MAX);
+	hatudan_effect_move_all();
+	/*
+	[非動作]	弾専用スプライト(1024)
+	[動作]		敵専用スプライト(256)
+	[動作]		自機等固定スプライト(16)
+	[非動作]	パネル用スプライト(56)
+	*/
+	OBJ *s;
+	s = &obj99[OBJ_HEAD_03_0x0910_PANEL];
+	sprite_move_main(s, (OBJ_POOL_01_TEKI_0256_MAX+OBJ_POOL_02_KOTEI_0016_MAX));
 }
-
-static void obj_move_main_01_teki(void) /* gu汎用(旧SDL) */
+/*(r35, 将来的に弾の移動は無し)*/
+	#endif
+	//
+	#if(1)/*(めもr33)*/
+global void obj_area_move_A00_A01_A02(void)
 {
-	SPRITE *s;
-	s = &obj99[OBJ_HEAD_01_TEKI+OBJ_POOL_01_TEKI_MAX+0];
-	sprite_move_main(s, OBJ_POOL_01_TEKI_MAX);
-}
-static void obj_move_main_02_kotei(void)
-{
-	SPRITE *s;
-	s = &obj99[OBJ_HEAD_02_KOTEI+OBJ_POOL_02_KOTEI_MAX+0];
-	sprite_move_main(s, OBJ_POOL_02_KOTEI_MAX);
-}
-global void sprite_move_all(void)
-{
-	obj_move_main_02_kotei();/* 自機等固定オブジェクト */
-	obj_move_main_01_teki();/* gu汎用 */
-	obj_move_main_00_tama();/* 弾専用 */
-}
-	#else/*(r33)*/
-global void sprite_move_all(void)
-{
-	SPRITE *s;
-	s = &obj99[OBJ_HEAD_03_PANEL];
-	sprite_move_main(s, (OBJ_POOL_00_TAMA_MAX+OBJ_POOL_01_TEKI_MAX+OBJ_POOL_02_KOTEI_MAX));
+	/*
+	[動作]		弾専用スプライト(1024)[アイテムや星点や発弾エフェクトの動作]
+	[動作]		敵専用スプライト(256)
+	[動作]		自機等固定スプライト(16)
+	[非動作]	パネル用スプライト(56)
+	*/
+	OBJ *s;
+	s = &obj99[OBJ_HEAD_03_0x0910_PANEL];
+	sprite_move_main(s, (OBJ_POOL_00_TAMA_1024_MAX+OBJ_POOL_01_TEKI_0256_MAX+OBJ_POOL_02_KOTEI_0016_MAX));
 }
 /*(r35, 将来的に弾の移動は無しになる可能性が高い。その場合 effect は別システムになる)*/
 	#endif
+	//
+	#if 0/*(めもr32)*/
+static void obj_move_main_00_tama(void) 	/* 弾専用スプライト(1024) gu弾専用 */
+{
+	OBJ *s;
+	s = &obj99[OBJ_HEAD_00_0x0000_TAMA+OBJ_POOL_00_TAMA_1024_MAX+0];
+	sprite_move_main(s, OBJ_POOL_00_TAMA_1024_MAX);
+}
+
+static void obj_move_main_01_teki(void) /* 敵専用スプライト(256) gu汎用(旧SDL) */
+{
+	OBJ *s;
+	s = &obj99[OBJ_HEAD_01_0x0800_TEKI+OBJ_POOL_01_TEKI_0256_MAX+0];
+	sprite_move_main(s, OBJ_POOL_01_TEKI_0256_MAX);
+}
+static void obj_move_main_02_kotei(void)/* 自機等固定スプライト(16) */
+{
+	OBJ *s;
+	s = &obj99[OBJ_HEAD_02_0x0900_KOTEI+OBJ_POOL_02_KOTEI_0016_MAX+0];
+	sprite_move_main(s, OBJ_POOL_02_KOTEI_0016_MAX);
+}
+global void obj_area_move_A00_A01_A02(void)
+{
+	obj_move_main_02_kotei();/* 自機等固定スプライト(16) (自機等固定オブジェクト) */
+	obj_move_main_01_teki();/* 敵専用スプライト(256) (gu汎用) */
+	obj_move_main_00_tama();/* 弾専用スプライト(1024) (弾専用) */
+}
+	#endif
+
 #if 1
 /*---------------------------------------------------------
 	画面外ならおしまい(個別、主に汎用objで使用)
 ---------------------------------------------------------*/
-global void gamen_gai_nara_zako_osimai(SPRITE *src)
+global void gamen_gai_nara_zako_osimai(OBJ *src)
 {
 	if (
 		(src->cx256 < t256(GAME_X_OFFSET)) ||
@@ -376,7 +406,7 @@ global void gamen_gai_nara_zako_osimai(SPRITE *src)
 /*---------------------------------------------------------
 	画面外ならおしまい(個別、主に汎用objで使用)
 ---------------------------------------------------------*/
-//global void gamen_gai_limit_30_nara_zako_osimai(SPRITE *src)
+//global void gamen_gai_limit_30_nara_zako_osimai(OBJ *src)
 //{
 //	if ((JYUMYOU_ZAKO_CLIP) > src->jyumyou) 		/* 離脱 */
 //	{
@@ -388,21 +418,23 @@ global void gamen_gai_nara_zako_osimai(SPRITE *src)
 
 
 /*---------------------------------------------------------
-	共通ボス、初期化off
+	使用中であるが退避したい場合。画面外にスプライトを移動させ、無効にする。
+	-------------------------------------------------------
 	スプライトを確保したまま退避させる。
+	ボスobj, effect obj で使用中。
 ---------------------------------------------------------*/
-global void sprite_initialize_position(SPRITE *h)
+global void sprite_kotei_obj_r36_taihi(OBJ *h)
 {
+	h->jyumyou						= (JYUMYOU_MUGEN);/* 時間で自動消去しない */	/*(固定確保で判別されるフラグ)*/
 	h->m_Hit256R					= ZAKO_ATARI16_PNG;
-	h->flags				&= (~(SP_FLAG_OPTION_VISIBLE)); 	/* 可視フラグのOFF(不可視) */
-	h->flags				&= (~(SP_FLAG_COLISION_CHECK)); 	/* あたり判定のOFF(無敵) */
-	h->type 						= BOSS_00_11;
+	h->atari_hantei 				= (ATARI_HANTEI_OFF/*スコア兼用*/); 	/* あたり判定のOFF(無敵) */
 	h->callback_mover				= NULL;
 	h->callback_loser				= NULL;
 	h->callback_hit_teki			= NULL; 	/* ダミーコールバック登録 */
 	h->cx256		= (t256( GAME_X_OFFSET + ((GAME_320_WIDTH)/2) ));
 	h->cy256		= (t256(-256));
 }
+//???	h->obj_type_set 				= BOSS_00_11;
 
 /*---------------------------------------------------------
 	スプライトの初期化をする。
@@ -410,15 +442,14 @@ global void sprite_initialize_position(SPRITE *h)
 	リスト方式でないスプライトも初期化する為、
 	外部からも呼ばれるので注意。
 --------------------------------------------------------- */
-//tern void sprite_initialize_gu(SPRITE *obj);
-global void sprite_initialize_gu(SPRITE *obj)
+//tern void sprite_initialize_gu(OBJ *obj);
+global void sprite_initialize_gu(OBJ *obj)
 {
 	#if (0==USE_MEM_CLEAR)/* [メモリゼロクリアー機能]を使わない場合は、初期化が必要。 */
 	#else
-	memset(obj, 0, sizeof(SPRITE));
+	memset(obj, 0, sizeof(OBJ));
 	#endif
 //
-	obj->flags		= 0;				/*set_flags*/
 	obj->color32	= MAKE32RGBA(0xff, 0xff, 0xff, 0xff);		/*	obj->alpha		= 0xff;*/
 	#if 1/* 自動的に消える機能 */
 	obj->jyumyou	= JYUMYOU_1MIN; 		/* 1分したら勝手に自動消去。 */
@@ -445,28 +476,41 @@ global void sprite_initialize_gu(SPRITE *obj)
 	登録できない場合、NULLを返す。
 --------------------------------------------------------- */
 
-global SPRITE *obj_add_00_tama_error(void)/*int image_resource_num*/
+global OBJ *obj_add_Ann_direct(unsigned int direct_register_number)/*OBJ_HEAD_02_0x0900_KOTEI+*/
+{
+//	int priority;		priority		= image_resource_ptr->priority;
+	OBJ *obj;/* 新規作成するスプライト */
+	obj = &obj99[direct_register_number];
+	sprite_initialize_gu(obj);			/* 新規作成したスプライトを初期化 */
+	return (obj);
+}
+
+global OBJ *obj_add_A00_tama_error(void)
 {
 	#if 1
 	/* private (この関数で)プライベートな変数 */
-	static unsigned int register_num;	/* 登録できる可能性が高そうな位置を保持 */
+	static u16 register_num;	/* 登録できる可能性が高そうな位置を保持 */
 	#endif
-//	if (登録できない場合)	{	return (NULL);	}
-//	int priority;		priority		= image_resource_ptr->priority;
-	SPRITE *obj;/* 新規作成するスプライト */
+	OBJ *obj;/* 新規作成するスプライト */
 	{
-		unsigned int search_count;
+		u16 search_count;
 		search_count = 0;
 my_retry:
 		search_count++;
-		if ( (OBJ_POOL_00_TAMA_MAX-1) < search_count)
-		{	return (NULL);	}	/* (登録できない場合) */
-
+		if ((OBJ_POOL_00_TAMA_1024_MAX-1) <= search_count)
+		{
+			#if (0)/*(デバッグ)*/
+			/*(アリスはともかく文で出る!!何でだろ？)*/
+			psp_fatal_error( (char*)
+			//	"0123456789012345678901234567890123456789"	// 半角40字"最大表示文字数"
+				"regist tama: %d 登録可能\最大弾数を、" "\\n"
+				"超えています。", search_count);
+			#endif
+			return (NULL);
+		}	/* (登録できない場合) */
 		register_num++; 	/* 登録できる可能性が高そうな位置 */
-		register_num &= (OBJ_POOL_00_TAMA_MAX-1);
-		obj = &obj99[OBJ_HEAD_00_TAMA+register_num];
-	//
-	//	if (SP_DELETE != obj->type)/* 使用中ならもう一度探す。 */
+		register_num &= (OBJ_POOL_00_TAMA_1024_MAX-1);
+		obj = &obj99[OBJ_HEAD_00_0x0000_TAMA+register_num];
 		if (JYUMYOU_NASI < obj->jyumyou)/* 使用中ならもう一度探す。 */
 		{
 			goto my_retry;	/* 探す。 */
@@ -475,33 +519,34 @@ my_retry:
 	sprite_initialize_gu(obj);			/* 新規作成したスプライトを初期化 */
 	#if 1
 	/* 標準初期化 */
-	obj->flags			|= (SP_FLAG_COLISION_CHECK/*|SP_FLAG_VISIBLE|SP_FLAG_TIME_OVER*/);	/* あたり判定あり */
+	obj->atari_hantei			|= (1/*(スコア兼用)*/); 	/* あたり判定あり */
 	#endif
 	return (obj);
 }
 
-global SPRITE *obj_add_01_teki_error(void)
+/*
+(r36)boss objは敵汎用objから固定確保するように仕様変更した。
+*/
+
+/*bossを固定確保する分*/
+#define BOSS_OBJ_KOTEI_KAKUHO_BUN (1)
+global OBJ *obj_add_A01_teki_error(void)
 {
 	#if 1
 	/* private (この関数で)プライベートな変数 */
-	static unsigned int register_num;	/* 登録できる可能性が高そうな位置を保持 */
+	static u32 register_num;	/* 登録できる可能性が高そうな位置を保持 */
 	#endif
-//	if (登録できない場合)	{	return (NULL);	}
-//	int priority;		priority		= image_resource_ptr->priority;
-	SPRITE *obj;/* 新規作成するスプライト */
+	OBJ *obj;/* 新規作成するスプライト */
 	{
-		unsigned int search_count;
+		u32 search_count;
 		search_count = 0;
 my_retry:
 		search_count++;
-		if ( (OBJ_POOL_01_TEKI_MAX-1) < search_count)
+		if ((OBJ_POOL_01_TEKI_0256_MAX-1-(BOSS_OBJ_KOTEI_KAKUHO_BUN)) < search_count)
 		{	return (NULL);	}	/* (登録できない場合) */
-
 		register_num++; 	/* 登録できる可能性が高そうな位置 */
-		register_num &= (OBJ_POOL_01_TEKI_MAX-1);
-		obj = &obj99[OBJ_HEAD_01_TEKI+register_num];
-	//
-	//	if (SP_DELETE != obj->type)/* 使用中ならもう一度探す。 */
+		register_num &= (OBJ_POOL_01_TEKI_0256_MAX-1);
+		obj = &obj99[OBJ_HEAD_01_0x0800_TEKI+register_num];
 		if (JYUMYOU_NASI < obj->jyumyou)/* 使用中ならもう一度探す。 */
 		{
 			goto my_retry;	/* 探す。 */
@@ -512,23 +557,14 @@ my_retry:
 }
 
 
-global SPRITE *obj_add_nn_direct(unsigned int direct_register_number)/*OBJ_HEAD_02_KOTEI+*/
-{
-//	int priority;		priority		= image_resource_ptr->priority;
-	SPRITE *obj;/* 新規作成するスプライト */
-	obj = &obj99[direct_register_number];
-	sprite_initialize_gu(obj);			/* 新規作成したスプライトを初期化 */
-	return (obj);
-}
-
 #define PPP (GAME_WIDTH)
 global void sprite_panel_init(void)
 {
 	unsigned int ii;
-	for (ii=0; ii<OBJ_POOL_03_PANEL_MAX; ii++)/* 全部 */
+	for (ii=0; ii<OBJ_POOL_03_PANEL_0056_MAX; ii++)/* 全部 */
 	{
-		SPRITE *obj;/* 初期化するスプライト */
-		obj = &obj99[OBJ_HEAD_03_PANEL+ii];
+		OBJ *obj;/* 初期化するスプライト */
+		obj = &obj99[OBJ_HEAD_03_0x0910_PANEL+ii];
 		sprite_initialize_gu(obj);			/* スプライトを初期化 */
 	}
 	unsigned int kk;
@@ -537,13 +573,13 @@ global void sprite_panel_init(void)
 //	for (jj=0; jj<(2); jj++)/* */
 	for (ii=0; ii<(10); ii++)/* */
 	{
-		SPRITE *obj;/* 初期化するスプライト */
+		OBJ *obj;/* 初期化するスプライト */
 		/* スコア */
-		obj = &obj99[OBJ_HEAD_03_PANEL+ii+PANEL_OBJ_00_S00];
+		obj = &obj99[OBJ_HEAD_03_0x0910_PANEL+ii+PANEL_OBJ_00_S00];
 		obj->cx256 = (kk);
 		obj->cy256 = ((6*8+7)<<8);
 		/* ハイスコア */
-		obj = &obj99[OBJ_HEAD_03_PANEL+ii+PANEL_OBJ_10_H00];
+		obj = &obj99[OBJ_HEAD_03_0x0910_PANEL+ii+PANEL_OBJ_10_H00];
 		obj->cx256 = (kk);
 		obj->cy256 = ((3*8+2)<<8);
 		//

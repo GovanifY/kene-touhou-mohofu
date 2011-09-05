@@ -1,7 +1,7 @@
 
 /*---------------------------------------------------------
 	東方模倣風 ～ Toho Imitation Style.
-	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	道中のザコ
 	-------------------------------------------------------
@@ -20,7 +20,7 @@
 	敵移動
 ---------------------------------------------------------*/
 
-static void move_tatsumaki1(SPRITE *src)
+static void move_tatsumaki1(OBJ *src)
 {
 	if (512 > src->jyumyou)/* 下へ移動 */
 	{
@@ -68,7 +68,7 @@ static void move_tatsumaki1(SPRITE *src)
 	敵を追加する
 ---------------------------------------------------------*/
 
-static void regist_zako_003_tatsumaki1(GAME_COMMAND *l, SPRITE *h)
+static void regist_zako_003_tatsumaki1(GAME_COMMAND *l, OBJ *h)
 {
 //	h->rotationCCW1024		= ((i&(16-1))<<6);
 //
@@ -76,7 +76,7 @@ static void regist_zako_003_tatsumaki1(GAME_COMMAND *l, SPRITE *h)
 	h->speed256 			= t256(1.2);/* t256(2.0)速すぎ */	/*3+difficulty+lv/3*/
 	h->px256				= t256(GAME_WIDTH-10);	/*0*/	/*t256(GAME_WIDTH/2)*/
 	/* 画面右側の場合、左方向へ進む */
-	if ( t256((GAME_WIDTH)/2) < h->cx256)
+	if (t256((GAME_WIDTH)/2) < h->cx256)
 	{
 		h->vx_r = (10); /*左方向*/
 	}

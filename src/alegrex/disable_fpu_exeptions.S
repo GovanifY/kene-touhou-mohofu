@@ -2,7 +2,7 @@
 # /*
 # ---------------------------------------------------------
 #   東方模倣風 ～ Toho Imitation Style.
-#   プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+#   http://mohou.huuryuu.com/
 # ---------------------------------------------------------
 # これは PSPSDK の サンプル
 # /pspsdk/psp/sdk/samples/gu/spharm/disablefpu.S

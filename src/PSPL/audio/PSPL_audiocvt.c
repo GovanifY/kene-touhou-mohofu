@@ -1,7 +1,7 @@
 
 /*---------------------------------------------------------
 	東方模倣風 ～ Toho Imitation Style.
-	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	http://mohou.huuryuu.com/
 	-------------------------------------------------------
 	PSPL - PSP customised SDL Layer port.
 	SDL Copyright (C) 1997-2004 Sam Lantinga.
@@ -551,7 +551,9 @@ int PSPL_BuildAudioCVT(
 	int src_rate,
 	//--変換先
 	u16 dst_format,
-	//	(2),//	u8 dst_channels, //(2)pspステレオ再生固定
+	#ifdef _OLD_SDL_LINK_MODE_/*(旧互換機能)*/
+	u8 dst_channels, //(2)pspステレオ再生固定
+	#endif
 	int dst_rate)
 {
 /*	printf("Build format %04x->%04x, channels %u->%u, rate %d->%d\n",

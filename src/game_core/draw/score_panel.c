@@ -3,16 +3,20 @@
 
 /*---------------------------------------------------------
 	東方模倣風 ～ Toho Imitation Style.
-	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	スコアパネル(表示)関連
 	-------------------------------------------------------
 	現在(r33)SDLの為、処理落ちするとかなり酷いです。
 ---------------------------------------------------------*/
 #include "111_my_file.h"/*(my_file_common_name)*/
+#include "gu_draw_screen.h"
+#include "../menu/kaiwa_sprite.h"
+
 
 static SDL_Surface *panel_base; 	// パネルベース
-static SDL_Surface *star_gauge;
+//static S_DL_Surface *star_gauge;
+/*static*/extern SDL_Surface *FONT_fontimg;
 
 /* サイドパネルの横表示位置 pannel x offset */
 //#define PPP (380)
@@ -34,9 +38,9 @@ static SDL_Surface *star_gauge;
 	//#define STR_EXTRA_	"hijkl" 		/*5つ*/
 //
 //	#define STR_MAX 		"ABCD"			/*4つ*/
-//	#define STR_EASY		"EFGH" " "  	/*4つ*/
-//	#define STR_NORMAL		"IJKLM"     	/*5つ*/
-//	#define STR_HARD		"NOPQ" " "  	/*4つ*/
+//	#define STR_EASY		"EFGH" " "		/*4つ*/
+//	#define STR_NORMAL		"IJKLM" 		/*5つ*/
+//	#define STR_HARD		"NOPQ" " "		/*4つ*/
 //	#define STR_LUNATIC 	"RSTUV" 		/*5つ*/
 //	#define CHR_PIRIOD_ 	'W' 			/*1つ*/
 //	#define STR_FPS_		"XYZ"			/*3つ*/
@@ -50,9 +54,9 @@ static SDL_Surface *star_gauge;
 
 	//(r35font)
 	#define STR_MAX 		"ABCD"			/*4つ*/
-	#define STR_EASY		"EFGH" " "  	/*4つ*/
-	#define STR_NORMAL		"JKLMN"     	/*5つ*/
-	#define STR_HARD		"PQRS" " "  	/*4つ*/
+	#define STR_EASY		"EFGH" " "		/*4つ*/
+	#define STR_NORMAL		"JKLMN" 		/*5つ*/
+	#define STR_HARD		"PQRS" " "		/*4つ*/
 	#define STR_LUNATIC 	"UVWXY" 		/*5つ*/
 	#define CHR_PIRIOD_ 	'a' 			/*1つ*/
 	#define STR_FPS_		"bcd"			/*3つ*/
@@ -143,6 +147,51 @@ global void dec_print_format(
 }
 
 
+/*---------------------------------------------------------
+	SDL転送
+---------------------------------------------------------*/
+static SDL_Rect rect_dest;
+static SDL_Rect rect_src;
+static void SDL_blit_common(void)
+{
+//	PSPL_UpperBlit(star_gauge, &rect_src, cb.sdl_screen[SDL_00_VIEW_SCREEN], &rect_dest);
+//	PSPL_UpperBlit(star_gauge/*power_gauge*/, &rect_src, cb.sdl_screen[SDL_00_VIEW_SCREEN], &rect_dest);
+//	PSPL_UpperBlit(FONT_fontimg, &rect_src, cb.sdl_screen[SDL_00_VIEW_SCREEN], &rect_dest);/*power_gauge*/
+	PSPL_UpperBlit(FONT_fontimg, &rect_src, cb.sdl_screen[SDL_00_VIEW_SCREEN], &rect_dest);
+//	SDL_LowerBlit(FONT_fontimg, &rect_src, cb.sdl_screen[SDL_00_VIEW_SCREEN], &rect_dest);
+}
+
+
+/*---------------------------------------------------------
+	任意のサーフェイスに、文字列をレンダリング
+---------------------------------------------------------*/
+
+global void s_font88_print_screen_xy(void)
+{
+	rect_src.w = ( 8); rect_dest.w = (rect_src.w);
+	rect_src.h = (10); rect_dest.h = (rect_src.h);
+	unsigned int/*char*/ i;
+	unsigned int/*char*/ j;
+	i = 0;
+//	for (i=0; i<strlen(my_font_text); i++)
+	{
+	loop_str:
+		j = my_font_text[i];
+		if (0==j)
+		{
+			return;
+		}
+		j -= 0x20;//0x20==' ';(space)
+		rect_src.x = (j & 0x0f)*(rect_src.w);
+		rect_src.y = ((j>>4))*(rect_src.h) + (0)/* y_offset*/;
+		rect_dest.x = cg.PSPL_font_x + (i)*(rect_src.w);
+		rect_dest.y = cg.PSPL_font_y;			/*0*/
+		SDL_blit_common();/*(抜き色0転送)*/
+		i++;
+		goto loop_str;
+	}
+}
+
 
 /*---------------------------------------------------------
 	プレイヤーの星の表示の子関数
@@ -156,20 +205,20 @@ enum
 
 static void draw_stars_status(int img_num, int value, int y_offset)
 {
-	SDL_Rect rect_dest;
-	SDL_Rect rect_src;
-	if (value<1)	{	value=0;}
+//	if (value<1)	{	value=0;}
+	value = psp_max(value, 0);
 //
-	rect_src.x = (0);
+//	rect_src.x = (0);
+	rect_src.x = (156);
 	rect_src.y = (img_num);/*(0)*/
 	rect_src.w = (10*value);
 	rect_src.h = (10);
 //
 	rect_dest.x = PSP_WIDTH480-4-(10*value);
 	rect_dest.y = y_offset;
-	rect_dest.w = 100;
-	rect_dest.h = 11;
-	PSPL_UpperBlit(star_gauge, &rect_src, cb.sdl_screen[SDL_00_VIEW_SCREEN], &rect_dest);
+	rect_dest.w = (100);
+	rect_dest.h = (11);
+	SDL_blit_common();/*(単純転送)*/
 }
 
 /*---------------------------------------------------------
@@ -180,22 +229,21 @@ static void draw_power_gauge(int weapon)/*, int dx, int dy*/
 {
 	#define WP_GAUGE_X_OFS (PPP+48-2)
 	#define WP_GAUGE_Y_OFS (128+8+4)
-	SDL_Rect rect_dest;
-	SDL_Rect rect_src;
-	rect_src.x = (0);
+//	rect_src.x = (0);
+	rect_src.x = (156);
 	rect_src.y = (20);/*(0)*/
 	rect_src.h = (13);
 	#if 0
 //	rect_src.w = (int)((dou ble)weapon / 127/*128*/ * (dou ble)power_gauge->w);
 	#else
-	/* 1[dot]ぐらい誤差あるかもしれないけど簡略化(高速化) */
+	/* 1[pixel]ぐらい誤差あるかもしれないけど簡略化(高速化) */
 	rect_src.w = ((int)(weapon * (80)/*power_gauge->w*/)>>7);
 	#endif
 	rect_dest.w = (80);/*power_gauge->w*/
 	rect_dest.h = (13);/*power_gauge->h*/
 	rect_dest.x = WP_GAUGE_X_OFS;/*dx*/
 	rect_dest.y = WP_GAUGE_Y_OFS;/*dy*/
-	PSPL_UpperBlit(star_gauge/*power_gauge*/, &rect_src, cb.sdl_screen[SDL_00_VIEW_SCREEN], &rect_dest);
+	SDL_blit_common();/*(単純転送)*/
 }
 
 /*---------------------------------------------------------
@@ -239,23 +287,89 @@ extern void player_check_extend_score(void);
 	//	ttt = ( (unsigned int)(60*60*16666) / (ttt));					/*"60fps"*/
 	//	ttt = ( (unsigned int)(60*60*166666) / (unsigned int)(ttt));	/*"60.0fps"*/
 	//	ttt = ( (u64)(60*60*1666666) / (u64)(ttt)); 					/*"60.00fps"*/
-	/*"60.00fps"(整数型で計算するには 33bit 要るので、unsigned int (32bit) で足りない)*/
+	/*"60.00fps"[普通に考えると整数型で計算するには 33bit 要るので、unsigned int (32bit) で足りない。]*/
+	/*[しかし、(60*60 == 3600) は、16 で割り切れる。(60*60)/16==(225)]*/
+	/*[そこで 16(==4bit)で割れば、必要なのは 29bit(==33-4)なので、unsigned int (32bit) で足りる。]*/
 		ttt = ( (unsigned int)((((60*60)/16)*(1666666))) / (unsigned int)(ttt>>4));
-		/* 60*60 == 3600 は、 16 で割り切れるので、225 になる。 */
 	}
 	return (ttt);
 }
-
-
+#define USE_PANEL_BASE_DIRECT (1)
+#if (1==USE_PANEL_BASE_DIRECT)
+//static u8 *pb_image;
+static void 	blit_panel_base(void)
+{
+//	#define BG_PANEL_HAIKEI_OFFSET		((512*10))
+	#define BG_PANEL_HAIKEI_OFFSET		((480-128))
+int x;
+int y;
+	x= 0;
+	y= 0;
+		int haikei_offset;
+		haikei_offset	= (0);
+		unsigned int dy;
+		for (dy=0; dy<272/*16*/ /*KANJI_FONT_16_HEIGHT_P0*/; dy++)
+		{
+			unsigned int dx;
+			for (dx=0; dx<(128)/*16*/ /*KANJI_FONT_08_HARF_WIDTH*/; dx++)
+			{
+				{
+					#if (0==USE_32BIT_DRAW_MODE)/*(16bit mode)*/
+					/*
+						いまいち良くわかんない(が、とりあえず動く)。
+						アドレスはバイト単位なので u8 ポインタでＣ言語に計算させてる。
+						(short なら2で割るとか、int なら4で割るとか)
+						変える場合は、定数(BG_PANEL_HAIKEI_OFFSET_U16等)や変数(dy,y,他)も変えないとダメ。
+					*/
+				//	s_getpixel16
+				volatile u8 *src_p = (u8 *)(/*font_bg_bitmap_surface_image*/((panel_base->pixels)/*FONT_fontimg->pixels*/)/*cb.kanji_window_screen_image*/) /*surface*/
+						+ (dy * (/*幅128なので*/256/*512*/ /*font_bg_bitmap_surface_pitch*/))		/*surface*/
+						+ (dx+dx)
+						+ (haikei_offset+haikei_offset);
+				//	putpixel16
+				volatile u8 *dst_p = (u8 *)(cb.sdl_screen[SDL_00_VIEW_SCREEN]->pixels/*cb.kanji_window_screen_image*/)/*surface->pixels*/
+						+ (((dy+y))*(512*2))/*surface->pitch*/
+						+ (dx+dx)
+						+ (x+x)
+						+ (BG_PANEL_HAIKEI_OFFSET*2);	/* 512[pixel]x 2[bytes](short) */
+					*(u16 *)dst_p = (u32)(*(u16 *)src_p);
+					#else/*(32bit mode)*/
+					/*
+						いまいち良くわかんない(が、とりあえず動く)。
+						アドレスはバイト単位なので u8 ポインタでＣ言語に計算させてる。
+						(short なら2で割るとか、int なら4で割るとか)
+						変える場合は、定数(BG_PANEL_HAIKEI_OFFSET_U16等)や変数(dy,y,他)も変えないとダメ。
+					*/
+				//	s_getpixel16
+				volatile u8 *src_p = (u8 *)(/*font_bg_bitmap_surface_image*/((panel_base->pixels)/*FONT_fontimg->pixels*/)/*cb.kanji_window_screen_image*/) 	/*surface*/
+						+ (dy * (2*512/*font_bg_bitmap_surface_pitch*/))		/*surface*/
+						+ (dx+dx+dx+dx)
+						+ (haikei_offset+haikei_offset+haikei_offset+haikei_offset);
+				//	putpixel16
+				volatile u8 *dst_p = (u8 *)(cb.sdl_screen[SDL_00_VIEW_SCREEN]->pixels/*cb.kanji_window_screen_image*/)/*surface->pixels*/
+						+ (((dy+y))*(2*512*2))/*surface->pitch*/
+						+ (dx+dx+dx+dx)
+						+ (x+x+x+x)
+						+ (BG_PANEL_HAIKEI_OFFSET*4);	/* 512[pixel]x 2[bytes](short) */
+				//	*(u16 *)dst_p = (u32)(*(u16 *)src_p);
+					*(u32 *)dst_p = (u32)(*(u16 *)src_p);
+					#endif
+				}
+			}
+		}
+}
+#endif
 static u32 top_score;
 global void score_display(void)
 {
-	#if 1/*テストoff*/
+	#if (0==USE_PANEL_BASE_DIRECT)/*テストoff*/
 	/* [ パネルベースを表示 ] */
 	{
 		SDL_Rect panel_base_r = {GAME_WIDTH, 0, 0, 0};	// データウィンドウ用rect_srct->w,h,x,y
 		PSPL_UpperBlit(panel_base, NULL, cb.sdl_screen[SDL_00_VIEW_SCREEN], &panel_base_r);
 	}
+	#else
+	blit_panel_base();/*(単純転送)*/
 	#endif
 //
 	/* [ プレイヤー数表示 ] */
@@ -268,26 +382,25 @@ global void score_display(void)
 
 	/* 通常時(デバッグ以外は死ぬ(喰らいボムモードへ)) */
 		/* [ ハイスコア表示 ] */
-		if (top_score < cg.game_score)
-		{	top_score = cg.game_score;}
+	//	if (top_score < cg.game_score)
+	//	{	top_score = cg.game_score;}
+		top_score = psp_max(top_score, cg.game_score);
 	//	sp rintf(my_font_text,"%09d0", top_score);
 		strcpy(my_font_text, "0000000000");
 		dec_print_format(top_score, 	9/*8*/, (char *)my_font_text);
 		//
-		cg.SDL_font_type 	= FONT10W;
-		cg.SDL_font_x 		= (PPP+5*8+4);
-		cg.SDL_font_y 		= (3*8+2);
-		font88_print_screen_xy();
+		cg.PSPL_font_x		= (PPP+5*8+4);
+		cg.PSPL_font_y		= (3*8+2);
+		s_font88_print_screen_xy();
 	//
 		/* [ スコア表示 ] */
 	//	sp rintf(my_font_text,"%09d0", pd_game_score);
 		strcpy(my_font_text, "0000000000");
 		dec_print_format(cg.game_score, 9/*8*/, (char *)my_font_text);
 		//
-	//	cg.SDL_font_type 	= FONT10W;
-	//	cg.SDL_font_x 		= (PPP+5*8+4);
-		cg.SDL_font_y 		= (6*8+7);
-		font88_print_screen_xy();
+	//	cg.PSPL_font_x		= (PPP+5*8+4);
+		cg.PSPL_font_y		= (6*8+7);
+		s_font88_print_screen_xy();
 	//
 
 
@@ -322,31 +435,9 @@ global void score_display(void)
 			#endif
 		}
 		//
-	//	cg.SDL_font_type = FONT10W;
-		cg.SDL_font_x = (PPP+10*8+7);//PPP+8*8+3
-		cg.SDL_font_y = (17*8+5);//125/*+1*/-2
-		font88_print_screen_xy();
-	//
-		#if 0/* 地味に処理落ち要因になっていたので廃止。(r33) */
-		/* [ ボム有効時間表示 ] */
-		//if (p->ex tra_type!=PLX_NONE)
-		if (0 != cg.bomber_time)
-		{
-		//	sp rintf(my_font_text, STR_TIME_"%3d",(int)(((int)pd_bomber_time)/10));
-		//	cg.SDL_font_type	= FONT10W;
-		//	cg.SDL_font_x		= (PPP+3*8-6);
-		//	cg.SDL_font_y		= (160);
-		//	font88_print_screen_xy();
-			strcpy(my_font_text, STR_TIME_"   ");
-			dec_print_format( (int)(((int)cg.bomber_time) ), 3, (char *)&my_font_text[5]);
-			my_font_text[7] = (0);	/*' '*/ 	/* 1桁目は表示しない */
-		//
-		//	cg.SDL_font_type	= FONT10W;
-			cg.SDL_font_x		= (PPP+8*8+4);
-			cg.SDL_font_y		= (22*8);
-			font88_print_screen_xy();
-		}
-		#endif
+		cg.PSPL_font_x = (PPP+10*8+7);//PPP+8*8+3
+		cg.PSPL_font_y = (17*8+5);//125/*+1*/-2
+		s_font88_print_screen_xy();
 	//
 		/* --- 妖のグレイズカンスト 99999回 (5桁) --- */
 		/* [ グレイズスコア表示 ] */
@@ -354,10 +445,9 @@ global void score_display(void)
 			strcpy(my_font_text,"   0");
 			dec_print_format( cg.graze_point, 4, (char *)&my_font_text[0]);
 		//
-		//	cg.SDL_font_type	= FONT10W;
-			cg.SDL_font_x		= (PPP+11*8+4);//(PPP+7*8+3)
-			cg.SDL_font_y		= (20*8);//(140)
-			font88_print_screen_xy();/*4桁(稼げる)*/ /*3桁(足りない)*/
+			cg.PSPL_font_x		= (PPP+11*8+4);//(PPP+7*8+3)
+			cg.PSPL_font_y		= (20*8);//(140)
+			s_font88_print_screen_xy();/*4桁(稼げる)*/ /*3桁(足りない)*/
 	//
 		/* [ 難易度表示 ] */
 		{
@@ -372,10 +462,9 @@ global void score_display(void)
 			};
 		//
 			strcpy(my_font_text, (char *)rank_name[((cg.game_difficulty))&(4-1)]);
-		//	cg.SDL_font_type	= FONT10W;
-			cg.SDL_font_x		= (PPP+/*7*/1*8);
-			cg.SDL_font_y		= (256);
-			font88_print_screen_xy();
+			cg.PSPL_font_x		= (PPP+/*7*/1*8);
+			cg.PSPL_font_y		= (256);
+			s_font88_print_screen_xy();
 		}
 	//
 		#if 1
@@ -404,14 +493,14 @@ global void score_display(void)
 	//		strcpy(my_font_text, STR_TIME_"00");
 	//	//	dec_print_format(ttt,	3, (char *)&my_font_text[0/*5*/]);
 	//		dec_print_format(ttt,	2, (char *)&my_font_text[0/*5*/]);
-	//		font88_print_screen_xy(my_font_text, FONT10W, PPP,256);
+	//		s_font88_print_screen_xy(my_font_text, FONT10W, PPP,256);
 //
 	//		/*"60.0fps"*/
 	//		strcpy(my_font_text, STR_TIME_"0000");
 	//		dec_print_format(ttt,	3, (char *)&my_font_text[0/*5*/]);
 	//		my_font_text[8-5] = my_font_text[7-5];
 	//		my_font_text[7-5] = CHR_PIRIOD_;/*' ' '.'*/
-	//		font88_print_screen_xy(my_font_text, FONT10W, PPP,256);
+	//		s_font88_print_screen_xy(my_font_text, FONT10W, PPP,256);
 //
 			/*"60.00fps"*/
 			strcpy(my_font_text, /*STR_TIME_*/"00000"STR_FPS_);
@@ -420,24 +509,86 @@ global void score_display(void)
 			my_font_text[8-5] = my_font_text[7-5];
 			my_font_text[7-5] = CHR_PIRIOD_;/*' ' '.'*/
 		//
-		//	cg.SDL_font_type	= FONT10W;
-			cg.SDL_font_x		= (PPP+8*8+2);
-			cg.SDL_font_y		= (256);
-			font88_print_screen_xy();
+			cg.PSPL_font_x		= (PPP+8*8+2);
+			cg.PSPL_font_y		= (256);
+			s_font88_print_screen_xy();
 		}
 		#endif
 	//}
 }
 
 /*---------------------------------------------------------
+
+---------------------------------------------------------*/
+//extern void kaiwa_obj_set2n(unsigned int obj_number);
+static/*global*/ void kaiwa_obj_set2n(unsigned int obj_number)
+{
+	KAIWA_OBJ *my_std_obj;
+	my_std_obj = &kaiwa_sprite[obj_number]; /* 汎用オブジェ */
+	/*(Guの場合)*/
+	my_std_obj->draw_flag = (1);	/* 描画する。 */
+	/*(縦横共、強制的に2^nに変換)*/
+	my_std_obj->width_2n	= (1<<(32 - __builtin_allegrex_clz((my_resource[TEX_09_TACHIE_L+obj_number].texture_width)-1)));/*/frames*/ 	//tmp->cw		= ((tmp->w)>>1);
+	my_std_obj->height_2n	= (1<<(32 - __builtin_allegrex_clz((my_resource[TEX_09_TACHIE_L+obj_number].texture_height)-1)));				//tmp->ch		= ((tmp->h)>>1);
+}
+
+/*---------------------------------------------------------
 	パネル表示、初期化
 ---------------------------------------------------------*/
-
 global void score_panel_init(void)
 {
+	#if 0/*(???)*/
+	/*(会話スプライトの設定。表示をoffにする。)*/
+	kaiwa_sprite[0].draw_flag = (1);	/* 描画する。 */
+	kaiwa_sprite[1].draw_flag = (1);	/* 描画する。 */
+	kaiwa_sprite[0].cx256 = t256(480+256);
+	kaiwa_sprite[1].cx256 = t256(480+256);
+	kaiwa_sprite[0].cy256 = t256(272+256);
+	kaiwa_sprite[1].cy256 = t256(272+256);
+	#endif
+	/*(会話スプライトの設定。サイズを128x256にする。)*/
+	unsigned int i;
+	for (i=0; i<KAIWA_OBJ_99_MAX; i++)
+	{
+		my_resource[TEX_09_TACHIE_L+i].texture_width	= (128);/*(転送先画像の横幅)*/
+		my_resource[TEX_09_TACHIE_L+i].texture_height	= (256);/*(転送先画像の縦幅)*/
+		my_resource[TEX_09_TACHIE_L+i].buffer_width 	= (128);/*(転送元画像のバッファ幅)*/
+		kaiwa_obj_set2n(i);
+	}
+	/*(会話スプライトの設定。表示をoffにする。)*/
+	kaiwa_sprite[0].draw_flag = (0);	/* 描画しない。 */
+	kaiwa_sprite[1].draw_flag = (0);	/* 描画しない。 */
+	//
 	top_score			= high_score_table[(cg_game_select_player)][0].score;	// 常に表示するハイコアの取得=>score.cで利用
-	strcpy(my_file_common_name, (char*)DIRECTRY_NAME_DATA_STR"/fonts/" "panel_base.png");	panel_base	= load_chache_bmp();//, 0, 1);
-	strcpy(my_file_common_name, (char*)DIRECTRY_NAME_DATA_STR"/fonts/" "hosi_gauge.png");	star_gauge	= load_chache_bmp();//, 0, 1);	/*(char *)img_name[img_num]*/
-	SDL_SetColorKey(star_gauge, (SDL_SRCCOLORKEY|SDL_RLEACCEL), 0x00000000);/* 現状 SDL合成のため必要 */
+	strcpy(my_file_common_name, (char*)DIRECTRY_NAME_DATA_STR"/fonts/" "panel_base.png");
+	//#if 0// memory on load で解放しない。==画像キャッシュしない。(1==USE_KETM_IMAGE_CHACHE)
+	#if (1==USE_KETM_IMAGE_CHACHE)/*(????)*/
+	panel_base	= load_chache_bmp();
+	#else
+	panel_base	= IMG_Load(my_file_common_name);/*(何故か、巧くいかない)*/
+	#endif /*(1==USE_KETM_IMAGE_CHACHE)*/
+
+
+	#if (1==USE_PANEL_BASE_DIRECT)
+//	pb_image = (panel_base->pixels);
+	#endif
+
+}
+
+
+/*---------------------------------------------------------
+	会話スプライトの設定。サイズを 256x256にする。
+---------------------------------------------------------*/
+
+global void kaiwa_obj_set_256(void)
+{
+	unsigned int i;
+	for (i=0; i<KAIWA_OBJ_99_MAX; i++)
+	{
+		my_resource[TEX_09_TACHIE_L+i].texture_width	= (256);/*(転送先画像の横幅)*/
+		my_resource[TEX_09_TACHIE_L+i].texture_height	= (256);/*(転送先画像の縦幅)*/
+		my_resource[TEX_09_TACHIE_L+i].buffer_width 	= (256);/*(転送元画像のバッファ幅)*/
+		kaiwa_obj_set2n(i);
+	}
 }
 

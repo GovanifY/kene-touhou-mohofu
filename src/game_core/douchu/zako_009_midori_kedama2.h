@@ -1,7 +1,7 @@
 
 /*---------------------------------------------------------
 	東方模倣風 ～ Toho Imitation Style.
-	プロジェクトページ http://code.google.com/p/kene-touhou-mohofu/
+	http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	道中のザコ
 	-------------------------------------------------------
@@ -14,7 +14,7 @@
 	敵移動
 ---------------------------------------------------------*/
 
-static void move_midori_kedama2(SPRITE *src)
+static void move_midori_kedama2(OBJ *src)
 {
 	if (0 < src->kaisu_nnn)
 	{
@@ -75,7 +75,7 @@ static void move_midori_kedama2(SPRITE *src)
 	敵を追加する
 ---------------------------------------------------------*/
 
-static void regist_zako_009_midori_kedama2(GAME_COMMAND *l, SPRITE *h)
+static void regist_zako_009_midori_kedama2(GAME_COMMAND *l, OBJ *h)
 {
 	h->wait1				= 0;
 	h->kaisu_nnn			= (5);/*2*/

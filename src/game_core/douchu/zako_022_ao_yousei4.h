@@ -1,21 +1,21 @@
 
 /*---------------------------------------------------------
 	“Œ•û–Í•í•— ` Toho Imitation Style.
-	ƒvƒƒWƒFƒNƒgƒy[ƒW http://code.google.com/p/kene-touhou-mohofu/
+	http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	“¹’†‚ÌƒUƒR
 	-------------------------------------------------------
 		"Â—d¸4",(—\’è)		"FAIRY",	(r27‚©‚çV‹K’Ç‰Á)
 	-------------------------------------------------------
 	user_x: 	‘¬“x256[speed256]
-	user_y: 	‰¡ˆÊ’u[dots]
+	user_y: 	‰¡ˆÊ’u[pixel]
 ---------------------------------------------------------*/
 
 /*---------------------------------------------------------
 	“GˆÚ“®
 ---------------------------------------------------------*/
 
-static void move_ao_yousei4(SPRITE *src)
+static void move_ao_yousei4(OBJ *src)
 {
 	if (512 > src->jyumyou) 	/* —£’E */
 	{
@@ -64,7 +64,7 @@ static void move_ao_yousei4(SPRITE *src)
 	“G‚ğ’Ç‰Á‚·‚é
 ---------------------------------------------------------*/
 
-static void regist_zako_022_ao_yousei4(GAME_COMMAND *l, SPRITE *h)
+static void regist_zako_022_ao_yousei4(GAME_COMMAND *l, OBJ *h)
 {
 	h->cy256				= t256(-30);
 	h->cx256				= ((l->user_y)<<8);/*lv*t256(35)+t256(40)*/
