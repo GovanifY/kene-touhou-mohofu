@@ -58,8 +58,8 @@ static void render_object_no_rot_zoom(OBJ *spr)
 	unsigned int/*short*/ w_size;
 	w_size	= SLICE_64_SIZE;
 	/* 回転しないので x,y 座標は、「画面の座標で」つまり、「画面の左上を原点o(0,0)とした、絶対座標」で計算しておく。 */
-	unsigned int/*short*/ absolute_x_pos = ((spr->cx256>>8)-(spr->w >> 1));/* 中心座標から画像サイズの半分を引き、左上座標を計算 */
-	unsigned int/*short*/ absolute_y_pos = ((spr->cy256>>8)-(spr->h >> 1));/* 中心座標から画像サイズの半分を引き、左上座標を計算 */
+	unsigned int/*short*/ absolute_x_pos = ((spr->center.x256>>8)-(spr->w >> 1));/* 中心座標から画像サイズの半分を引き、左上座標を計算 */
+	unsigned int/*short*/ absolute_y_pos = ((spr->center.y256>>8)-(spr->h >> 1));/* 中心座標から画像サイズの半分を引き、左上座標を計算 */
 	for (; i<count2; )
 	{
 	//	if ((i1+1) < count)

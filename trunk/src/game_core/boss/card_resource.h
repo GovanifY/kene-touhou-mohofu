@@ -50,7 +50,7 @@ typedef struct
 
 
 /* 註: 符名はテキトーです。 */
-
+#define kaiwa_00_keitai NULL_keitai
 /*---------------------------------------------------------
 	氷符「アイシクルフォール」動かないでカードを撃つ。
 ---------------------------------------------------------*/
@@ -150,7 +150,7 @@ static CARD_ADDRESS_RESOURCE my_card_resource[CARD_ADDRESS_MAX] __attribute__((a
 	{	s_hp(16),		s_time(20), 		NULL,									SPELL_0e_remilia_00,				NULL_keitai,				boss_move_16_sakuya_nazo_keitai,		},	/* "第10形態: 最終形態(その2)"	*/
 	{	s_hp(16),		s_time(20), 		NULL,									SPELL_0e_remilia_00,				NULL_keitai,				boss_move_16_sakuya_nazo_keitai,		},	/* "第10形態: 最終形態(その2)"	*/
 	{	s_hp(16),		s_time(20), 		NULL,									SPELL_0e_remilia_00,				NULL_keitai,				boss_move_16_sakuya_nazo_keitai,		},	/* "第10形態: 最終形態(その2)"	*/
-//	0.5
+//	0.5 	// "ボム「無くても辱しくないもん」"
 	{	s_hp(12),		s_time(99), 		NULL,									SPELL_00,							gekiha_keitai,				NULL_keitai,							},/*[撃破]*/	// (easyは一段階少ない。ここで終了する)
 	{	s_hp(64),		s_time(66), 		"　　メイド秘密「残虐行為手当」" "\n",	SPELL_0e_remilia_00,				NULL_keitai,				boss_move_17_sakuya_bimyou_idou,		},	/* "第11形態: 最終形態(その3)"				*/
 	{	s_hp(64),		s_time(66), 		"　メイド秘宝「あつくて死ぬぜ」" "\n",	SPELL_0e_remilia_00,				NULL_keitai,				boss_move_17_sakuya_bimyou_idou,		},	/* "第11形態: 最終形態(その3)"				*/
@@ -384,10 +384,10 @@ static CARD_ADDRESS_RESOURCE my_card_resource[CARD_ADDRESS_MAX] __attribute__((a
 	{	s_hp(8),		s_time(40), 		"　　　　　　過剰「山葵大被害」" "\n",	SPELL_24_aya_doll,					NULL_keitai,				boss_move_03_x_douki,					},/*(4)"岐符「未作成カード002」"*/
 	{	s_hp(8),		s_time(40), 		"　　　　　大量「麦酒十\升呑過」" "\n", SPELL_24_aya_doll,					NULL_keitai,				boss_move_03_x_douki,					},/*(4)"岐符「未作成カード002」"*/
 	//	2.0
-	{	s_hp(20),		s_time(100),		"　　　　　　　実況「風速３Ｍ」" "\n",	SPELL_r34_GOKAN_KINOU,				init_48_r34_gokan_kinou,	boss_move_13_aya_taifu, 				},/*(5)"岐符「未作成カード003」"*/
-	{	s_hp(20),		s_time(100),		"　　　　　　実況「風速３３Ｍ」" "\n",	SPELL_r34_GOKAN_KINOU,				init_48_r34_gokan_kinou,	boss_move_13_aya_taifu, 				},/*(5)"岐符「未作成カード003」"*/
-	{	s_hp(20),		s_time(100),		"　　　　　　実況「風速９８Ｍ」" "\n",	SPELL_r34_GOKAN_KINOU,				init_48_r34_gokan_kinou,	boss_move_13_aya_taifu, 				},/*(5)"岐符「未作成カード003」"*/
-	{	s_hp(20),		s_time(100),		"　　　　　　実況「風速測定中」" "\n",	SPELL_r34_GOKAN_KINOU,				init_48_r34_gokan_kinou,	boss_move_13_aya_taifu, 				},/*(5)"岐符「未作成カード003」"*/
+	{	s_hp(12),		s_time(66), 		"　　　　　　　実況「風速３Ｍ」" "\n",	SPELL_r34_GOKAN_KINOU,				init_48_r34_gokan_kinou,	boss_move_13_aya_taifu, 				},/*(5)"岐符「未作成カード003」"*/
+	{	s_hp(14),		s_time(77), 		"　　　　　　実況「風速３３Ｍ」" "\n",	SPELL_r34_GOKAN_KINOU,				init_48_r34_gokan_kinou,	boss_move_13_aya_taifu, 				},/*(5)"岐符「未作成カード003」"*/
+	{	s_hp(18),		s_time(88), 		"　　　　　　実況「風速９８Ｍ」" "\n",	SPELL_r34_GOKAN_KINOU,				init_48_r34_gokan_kinou,	boss_move_13_aya_taifu, 				},/*(5)"岐符「未作成カード003」"*/
+	{	s_hp(20),		s_time(99), 		"　　　　　　実況「風速測定中」" "\n",	SPELL_r34_GOKAN_KINOU,				init_48_r34_gokan_kinou,	boss_move_13_aya_taifu, 				},/*(5)"岐符「未作成カード003」"*/
 	//	1.5
 	{	s_hp(20),		s_time(99), 		"　　　　　　路符「小耳の調べ」" "\n",	SPELL_1d_amefuri_test,				init_00_boss_clip111,		boss_move_01_taihi_ue_naka, 			},/*(4)"岐符「未作成カード004」"*/
 	{	s_hp(20),		s_time(99), 		"　　　　　　路符「小手の調べ」" "\n",	SPELL_1d_amefuri_test,				init_00_boss_clip111,		boss_move_01_taihi_ue_naka, 			},/*(4)"岐符「未作成カード004」"*/
@@ -480,13 +480,13 @@ static CARD_ADDRESS_RESOURCE my_card_resource[CARD_ADDRESS_MAX] __attribute__((a
 	// 1.00
 	{	s_hp(26),		s_time(40), 		NULL,/* "通常攻撃" "\n"*/				SPELL_23_meirin_magaru_kunai,		NULL_keitai,				boss_move_01_taihi_ue_naka, 			},	/* 上広タイプ */
 	{	s_hp(24),		s_time(40), 		NULL,/* "通常攻撃" "\n"*/				SPELL_23_meirin_magaru_kunai,		NULL_keitai,				boss_move_01_taihi_ue_naka, 			},	/* 上広タイプ */
-	{	s_hp(28),		s_time(50), 		NULL,/* "通常攻撃" "\n"*/				SPELL_23_meirin_magaru_kunai,		NULL_keitai,				boss_move_01_taihi_ue_naka, 			},	/* 上広タイプ */
-	{	s_hp(44),		s_time(60), 		NULL,/* "通常攻撃" "\n"*/				SPELL_23_meirin_magaru_kunai,		NULL_keitai,				boss_move_01_taihi_ue_naka, 			},	/* 上広タイプ */
+	{	s_hp(28),		s_time(30), 		NULL,/* "通常攻撃" "\n"*/				SPELL_23_meirin_magaru_kunai,		NULL_keitai,				boss_move_01_taihi_ue_naka, 			},	/* 上広タイプ */
+	{	s_hp(44),		s_time(20), 		NULL,/* "通常攻撃" "\n"*/				SPELL_23_meirin_magaru_kunai,		NULL_keitai,				boss_move_01_taihi_ue_naka, 			},	/* 上広タイプ */
 	// 1.--
 	{	s_hp(16),		s_time(40), 		"　　　　　　　華符「芳華絢爛」" "\n",	SPELL_25_houka_kenran,				NULL_keitai,				boss_move_01_taihi_ue_naka, 			},	/* 通常タイプ */
 	{	s_hp(18),		s_time(40), 		"　　　　　　　華符「芳華絢爛」" "\n",	SPELL_25_houka_kenran,				NULL_keitai,				boss_move_01_taihi_ue_naka, 			},	/* 通常タイプ */
-	{	s_hp(18),		s_time(40), 		"　　　　　　　薫符「芳薫絢爛」" "\n",	SPELL_25_houka_kenran,				NULL_keitai,				boss_move_01_taihi_ue_naka, 			},	/* 通常タイプ */
-	{	s_hp(22),		s_time(40), 		"　　　　　　　蘭符「芳華兼蘭」" "\n",	SPELL_25_houka_kenran,				NULL_keitai,				boss_move_01_taihi_ue_naka, 			},	/* 通常タイプ */
+	{	s_hp(18),		s_time(20), 		"　　　　　　　薫符「芳薫絢爛」" "\n",	SPELL_25_houka_kenran,				NULL_keitai,				boss_move_01_taihi_ue_naka, 			},	/* 通常タイプ */
+	{	s_hp(22),		s_time(15), 		"　　　　　　　蘭符「芳華兼蘭」" "\n",	SPELL_25_houka_kenran,				NULL_keitai,				boss_move_01_taihi_ue_naka, 			},	/* 通常タイプ */
 	// 1.--
 	{	s_hp(10),		s_time(60), 		" 　　　未定「未作成カードE05」" "\n",	SPELL_18_hana_test, 				NULL_keitai,				boss_move_02_xy_hidouki,				},
 	{	s_hp(12),		s_time(60), 		" 　　　未定「未作成カードN05」" "\n",	SPELL_18_hana_test, 				NULL_keitai,				boss_move_02_xy_hidouki,				},
@@ -510,10 +510,15 @@ static CARD_ADDRESS_RESOURCE my_card_resource[CARD_ADDRESS_MAX] __attribute__((a
 	{s_hp(4*7+32*1.00), s_time(300),		NULL,/* "形態変更" "\n"*/				SPELL_00,							init_00_boss_clip000,		kaiwa_00_keitai,						},/* 16384==8192*2 */	/* "通常攻撃"の時間(?) */ /* "通常攻撃"のライフ */
 	{s_hp(4*7+32*1.25), s_time(300),		NULL,/* "形態変更" "\n"*/				SPELL_00,							init_00_boss_clip000,		kaiwa_00_keitai,						},/* 16384==8192*2 */	/* "通常攻撃"の時間(?) */ /* "通常攻撃"のライフ */
 	// 1.25 easy(10) 道中で[F]出るので、パワーは問題ない。まず始めに弾幕は簡単という事に慣れてもらう為、長め。(easy はプレイヤーに死んでもらっては困るので、ボスと戦った気にさせるのが難しい)
-	{	s_hp(8),		s_time(12), 		NULL,/* "通常攻撃" "\n"*/				SPELL_14_alice_youmu300,			NULL_keitai,				boss_move_01_taihi_ue_naka, 			},// 明らかに簡単な弾幕
-	{	s_hp(10),		s_time(16), 		NULL,/* "通常攻撃" "\n"*/				SPELL_14_alice_youmu300,			NULL_keitai,				boss_move_01_taihi_ue_naka, 			},
-	{	s_hp(9),		s_time(16), 		NULL,/* "通常攻撃" "\n"*/				SPELL_13_alice_suwako,				NULL_keitai,				boss_move_01_taihi_ue_naka, 			},
-	{	s_hp(8),		s_time(16), 		NULL,/* "通常攻撃" "\n"*/				SPELL_13_alice_suwako,				NULL_keitai,				boss_move_01_taihi_ue_naka, 			},
+	/*(r39, [アリス通常攻撃っぽいテスト]同じ弾なので、秒数で難易度差をつける。easyは見るだけ、normalは5秒くらい避ける。以下長くなる。)*/
+	{	s_hp(8),		s_time(10/*12てすと*/), 		NULL,/* "通常攻撃" "\n"*/				SPELL_14_alice_youmu300,			init_set_dolls_alice_T07,				boss_move_01_taihi_ue_naka, 			},// 明らかに簡単な弾幕
+	{	s_hp(10),		s_time(12/*16てすと*/), 		NULL,/* "通常攻撃" "\n"*/				SPELL_14_alice_youmu300,			init_set_dolls_alice_T07,				boss_move_01_taihi_ue_naka, 			},
+	{	s_hp(9),		s_time(12/*16てすと*/), 		NULL,/* "通常攻撃" "\n"*/				SPELL_14_alice_youmu300,			init_set_dolls_alice_T07,				boss_move_01_taihi_ue_naka, 			},
+	{	s_hp(8),		s_time(12/*16てすと*/), 		NULL,/* "通常攻撃" "\n"*/				SPELL_14_alice_youmu300,			init_set_dolls_alice_T07,				boss_move_01_taihi_ue_naka, 			},
+//	{	s_hp(8),		s_time(12), 		NULL,/* "通常攻撃" "\n"*/				SPELL_14_alice_youmu300,			NULL_keitai,				boss_move_01_taihi_ue_naka, 			},// 明らかに簡単な弾幕
+//	{	s_hp(10),		s_time(16), 		NULL,/* "通常攻撃" "\n"*/				SPELL_14_alice_youmu300,			NULL_keitai,				boss_move_01_taihi_ue_naka, 			},
+//	{	s_hp(9),		s_time(16), 		NULL,/* "通常攻撃" "\n"*/				SPELL_13_alice_suwako,				NULL_keitai,				boss_move_01_taihi_ue_naka, 			},
+//	{	s_hp(8),		s_time(16), 		NULL,/* "通常攻撃" "\n"*/				SPELL_13_alice_suwako,				NULL_keitai,				boss_move_01_taihi_ue_naka, 			},
 	// 1.--
 	{	s_hp(16),		s_time(12), 		"　　　　　懐古「紅の魔法Lv.2」" "\n",	SPELL_15_alice_aka_2nd, 			NULL_keitai,				boss_move_01_taihi_ue_naka, 			},/* "蒼符「溺愛の仏蘭西人形」"のライフ */
 	{	s_hp(18),		s_time(16), 		" 　　　　懐古「紅の魔法Lv.16」" "\n",	SPELL_15_alice_aka_2nd, 			NULL_keitai,				boss_move_01_taihi_ue_naka, 			},/* "蒼符「溺愛の仏蘭西人形」"のライフ */
@@ -551,7 +556,7 @@ static CARD_ADDRESS_RESOURCE my_card_resource[CARD_ADDRESS_MAX] __attribute__((a
 
 
 //	" 　　　蒼符「博愛の仏蘭西人形」" "\n"
-//	" 　蒼符「博愛のオルレアソ\人形」" "\n" " 　蒼符「博愛のオルレアン人形」"...現在の方式では無理です。
+//	" 　蒼符「博愛のオルレアソ\人形」" "\n" "　蒼符「博愛のオルレアン人形」"...現在の方式では無理です。
 //	{	 (1024*16), 	s_time(40), 		"　操符「未作成の阿蘭陀人形L1」" "\n",	SPELL_00,							NULL_keitai,				alice_04_keitai,						},/* 白符「博愛の円谷人形」 */
 //	{	(20000*4),		s_time(20), 		"操符「未作成の伊太利亜人形L2」" "\n",	SPELL_00,							NULL_keitai,				boss_move_02_xy_hidouki,				},/* 炎符「浅草の人形焼き」 */
 //	{	 (5000*4),		s_time(20), 		"　操符「未作成の英吉利人形L3」" "\n",	SPELL_00,							NULL_keitai,				alice_02_keitai,						},

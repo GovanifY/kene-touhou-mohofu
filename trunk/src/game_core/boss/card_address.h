@@ -460,8 +460,8 @@ enum
 	SPELL_13_alice_suwako,				/* [アリス] 諏訪子っぽい(?)カード */
 	SPELL_14_alice_youmu300,			/* [アリス] 妖3面ボス  normal通常攻撃3(の一部) */
 	SPELL_15_alice_aka_2nd, 			/* [アリス] 怪EX面ボス 赤の魔法2段階目もどき */
-	SPELL_16_alice_zako_doll,				/* [アリス] 妖3面ボス [アリス]人形カード(もどき) */ // 40[sec]
-	SPELL_17_alice_tama_doll_02,			/* [アリス] 作成中 */
+	SPELL_16_alice_zako_doll,			/* [アリス] 妖3面ボス [アリス]人形カード(もどき) */ // 40[sec]
+	SPELL_17_alice_tama_doll_02,		/* [アリス] 作成中 */
 //
 	SPELL_18_hana_test, 				/* [魅魔] 花てすとカード */
 	SPELL_40_SONOTA_DEBUG_CW_AO,		/* [その他] デバッグカードCW青 */
@@ -472,14 +472,14 @@ enum
 	SPELL_1e_momiji_no_nonoji,			/* [椛] ののじカード */
 	SPELL_1f_koakuma,					/* [小悪魔] てすと用 */
 //	/* ボス用 */
-	SPELL_20_aya_misogi1,				/*	1[文] の通常弾っぽいカード撃たせてみるテスト1 */
-	SPELL_21_aya_misogi2,				/*	2[文] の通常弾っぽいカード撃たせてみるテスト2 */
-	SPELL_22_ame_no_yatimata,			/*	3[文] 岐符「天の八衢」 */
-	SPELL_23_meirin_magaru_kunai,		/*	4[美鈴] 通常攻撃 */
-	SPELL_24_aya_doll,					/*	5[文] 人形カード */ //40[sec]
-	SPELL_25_houka_kenran,				/*	6[紅美鈴] 華符「芳華絢爛」にちょっとだけ似たカード(予定) */
-	SPELL_26_aya_saifu, 				/*	7[文] 塞符 */
-	SPELL_27_hosigata_test, 			/*	8 [その他] 星型テスト */
+	SPELL_20_aya_misogi1,				/* 1[文] の通常弾っぽいカード撃たせてみるテスト1 */
+	SPELL_21_aya_misogi2,				/* 2[文] の通常弾っぽいカード撃たせてみるテスト2 */
+	SPELL_22_ame_no_yatimata,			/* 3[文] 岐符「天の八衢」 */
+	SPELL_23_meirin_magaru_kunai,		/* 4[美鈴] 通常攻撃 */
+	SPELL_24_aya_doll,					/* 5[文] 人形カード */ //40[sec]
+	SPELL_25_houka_kenran,				/* 6[紅美鈴] 華符「芳華絢爛」にちょっとだけ似たカード(予定) */
+	SPELL_26_aya_saifu, 				/* 7[文] 塞符 */
+	SPELL_27_hosigata_test, 			/* 8[その他] 星型テスト */
 //
 	SPELL_28,							/* 未定 */
 	SPELL_29_rumia_demarcation, 		/* 10[ルーミア] 紅1面ボス 闇符「ディマーケイション」にちょっとだけ似たカード(予定) */
@@ -523,9 +523,9 @@ enum
 	SPELL_4a,							/* 未定 */
 	SPELL_4b,							/* 未定 */
 	SPELL_4c,							/* 未定 */
-	SPELL_4d_remilia_rasen_knife,		/*	9[咲夜/レミリア] 紅6面ボス 赤ナイフ螺旋弾(予定) */
-	SPELL_4e_remilia_vlad_tepes,		/*	9[咲夜/レミリア] 紅6面ボス 呪詛「ブラド・ツェペシュの呪い」*/
-	SPELL_4f_remilia_red_magic, 		/*	9[咲夜/レミリア] 紅6面ボス 「レッドマジック」っぽい(?) */
+	SPELL_4d_remilia_rasen_knife,		/* 9[咲夜/レミリア] 紅6面ボス 赤ナイフ螺旋弾(予定) */
+	SPELL_4e_remilia_vlad_tepes,		/* 9[咲夜/レミリア] 紅6面ボス 呪詛「ブラド・ツェペシュの呪い」*/
+	SPELL_4f_remilia_red_magic, 		/* 9[咲夜/レミリア] 紅6面ボス 「レッドマジック」っぽい(?) */
 	#endif
 //
 	SPELL_MAX,

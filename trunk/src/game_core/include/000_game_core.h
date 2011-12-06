@@ -21,29 +21,29 @@ enum /*_game_rank_*/
 	RANK_LUNATIC,	/*=3*/
 	RANK_MAX		/* ランクの最大数==(最高ランク+1) */
 };
+
 /*---------------------------------------------------------
 	コールバック
 ---------------------------------------------------------*/
-
 #if 1/*単純コールバック方式*/
-extern void common_load_init(void);
-extern void stage_clear_result_screen_start(void);/* for game_core.c ??stage_clear.c */
+extern MAIN_CALL_FUNC(common_load_init);
+extern MAIN_CALL_FUNC(stage_clear_result_screen_start);/* for game_core.c ??stage_clear.c */
 //
-extern void stage_first_init(void);/* for game_core.c select_player.c */
-extern void shooting_game_core_work(void);/* for pause.c ask_continue.c */
-extern void gameover_start(void);/* for ask_continue.c */
-extern void name_entry_start(void);/* for game_over.c */
+extern MAIN_CALL_FUNC(stage_first_init);/* for game_core.c select_player.c */
+extern MAIN_CALL_FUNC(shooting_game_core_work);/* for pause.c ask_continue.c */
+extern MAIN_CALL_FUNC(gameover_start);/* for ask_continue.c */
+extern MAIN_CALL_FUNC(name_entry_start);/* for game_over.c */
 //
-extern void stage_select_menu_start(void);
-extern void option_menu_start(void);
-extern void story_mode_start(void);
-extern void yume_no_kiroku_start(void);
-extern void key_config_start(void);
-extern void music_room_start(void);
-extern void title_menu_start(void);/*for pause.c ... */
-extern void pause_menu_start(void);
-extern void ask_continue_menu_start(void);
-extern void rank_select_menu_start(void);
+extern MAIN_CALL_FUNC(stage_select_menu_start);
+extern MAIN_CALL_FUNC(option_menu_start);
+extern MAIN_CALL_FUNC(story_mode_start);
+extern MAIN_CALL_FUNC(yume_no_kiroku_start);
+extern MAIN_CALL_FUNC(key_config_start);
+extern MAIN_CALL_FUNC(music_room_start);
+extern MAIN_CALL_FUNC(title_menu_start);/*for pause.c ... */
+extern MAIN_CALL_FUNC(pause_menu_start);
+extern MAIN_CALL_FUNC(ask_continue_menu_start);
+extern MAIN_CALL_FUNC(rank_select_menu_start);
 //
 
 #define pause_out_call_func 	return_call_func/* ポーズ時の戻り先 */
@@ -254,6 +254,18 @@ enum
 	SDL_99_MAX_SCREEN,
 };
 
+#define USE_PAD_STRUCT (1)
+/*(0: 共通 / GAME_CORE_GLOBAL_CALLBACKに入れる)*/
+/*(1: 独立 / GAME_CORE_GLOBAL_CALLBACKに入れない)*/
+
+/*(0: アナログ量を使わない[リプレイ対応するならアナログ量を使わない方が妥当な気がする。1byteフォーマット(上下左右,ＡＢＣ[Slow])に出来る。さらにメモリ上でランレングス圧縮できる。(圧縮しながら記録/再生)])*/
+/*(1: アナログ量を使う[アナログの場合ランレングス圧縮が効かないので純粋にメモリを食う。0.5M[bytes]程メモリを食うが、取れるか不明])*/
+#define USE_ANALOG_VALUE (0)
+/*[1/60sec]==4[byte]*/
+/*[1sec]==60*4[byte]*/
+/*[1min]==60*60*4[byte]*/
+/*[30min]==30*60*60*4[byte]==432000==421.875k[Bytes]==0.4119873046875M[Bytes]*/
+/*(模倣風はクリアまで30分以上かかる)*/
 typedef struct _game_core_global_callback_
 {
 	void (*main_call_func)(void);/* メインコールバック */
@@ -262,7 +274,7 @@ typedef struct _game_core_global_callback_
 	void *callback_gu_draw_haikei_modosu;	/* (カード時から通常時へ)戻す用。(==通常時) */
 	/* カード時のプログラムを指示 */
 	void *callback_gu_draw_haikei_supeka;	/* カード時用 */
-
+//
 	/* 現在使用するプログラムを設定 */
 	void (*callback_gu_draw_haikei)(void);	/* ゲーム中、背景ウィンドウ表示フラグ */
 /*
@@ -275,12 +287,47 @@ typedef struct _game_core_global_callback_
 		#endif
 //extern S_DL_Surface *screen;
 /*extern*/ SDL_Surface *sdl_screen[SDL_99_MAX_SCREEN];/*(4)*/
-
+//
+	//
+//	u16 *show_frame;	/*(表示画面)*/
+//	u16 *draw_frame;	/*(描画画面)*/
+//	u16 *work_frame;	/*(一時作業用画面)*/
+//	u16 *tex_frame; 	/*(キャッシュ画像用画面)*/
+	//
+	#if (0==USE_PAD_STRUCT)
+	/*(共通)*/
+	u32 pad_data;						/*今回入力*/				//	extern	u32 cg_m y_pad;
+	u32 pad_data_alter; 				/*前回入力*/				//	extern	u32 cg_m y_pad_alter;
+	#if (1==USE_ANALOG_VALUE)
+	s16 analog_absolute_value_x;		/* アナログ量、補正済み */	//	extern	s16 cg_analog_x;
+	s16 analog_absolute_value_y;		/* アナログ量、補正済み */	//	extern	s16 cg_analog_y;
+	#endif/*(USE_ANALOG_VALUE)*/
+	#endif/*(USE_PAD_STRUCT)*/
 } GAME_CORE_GLOBAL_CALLBACK;
 extern GAME_CORE_GLOBAL_CALLBACK cb;
+
+	#if (1==USE_PAD_STRUCT)/*(r34)*/
+	/*(独立)*/
+	/* アライメント関係(???) (s16)で GAME_CORE_GLOBAL_CLASSに入れると巧くいかない */
+	/* 意図的に入れないもの */
+typedef struct _psp_pad_global_class_
+{
+	u32 pad_data;						/*今回入力*/				//	extern	u32 cg_m y_pad;
+	u32 pad_data_alter; 				/*前回入力*/				//	extern	u32 cg_m y_pad_alter;
+	#if (1==USE_ANALOG_VALUE)
+	s16 analog_absolute_value_x;		/* アナログ量、補正済み */	//	extern	s16 cg_analog_x;
+	s16 analog_absolute_value_y;		/* アナログ量、補正済み */	//	extern	s16 cg_analog_y;
+	#endif/*(USE_ANALOG_VALUE)*/
+} PSP_PAD_GLOBAL_CLASS;
+extern PSP_PAD_GLOBAL_CLASS psp_pad;
+	#else/*(0==USE_PAD_STRUCT)*/
+		/*(共通)*/
+		#define psp_pad cb/*_global_pad_*/
+	#endif/*(USE_PAD_STRUCT)*/
+
 typedef struct _game_core_global_class_
 {
-	int state_flag; 	/* 設定フラグ(集) */
+	u32 state_flag; 	/* 設定フラグ(集) */
 	int weapon_power;	/* 0x00-0x80  (0-128 の129段階==本家と同じ)   max==128==「129段階」*/
 	int chain_point;
 	s32 bomber_time;	/* Use Gu */  // /* bomb_wait */ /* ボムの有効時間 */
@@ -349,28 +396,10 @@ extern GAME_CORE_GLOBAL_CLASS cg;
 /* 意図的に入れないもの */
 extern unsigned int cg_game_select_player;/* cg.game_difficulty: (将来はともかく)現状(r33)は GAME_CORE_GLOBAL_CLASSに入れない方が良いっぽい。 */
 
-	#if (1)/*(r34)*/
-typedef struct _psp_pad_global_class_
-{
-	u32 pad_data;						/*今回入力*/
-	u32 pad_data_alter; 				/*前回入力*/
-	s16 analog_absolute_value_x;		/* アナログ量、補正済み */
-	s16 analog_absolute_value_y;		/* アナログ量、補正済み */
-} PSP_PAD_GLOBAL_CLASS;
-extern PSP_PAD_GLOBAL_CLASS psp_pad;
-	#endif
+
 
 #if 1
-
-	#if (0)/* アライメント関係(???) (s16)で GAME_CORE_GLOBAL_CLASSに入れると巧くいかない */
-	/* 意図的に入れないもの */
-	extern	u32 cg_m y_pad; 		/*今回入力*/
-	extern	u32 cg_m y_pad_alter;	/*前回入力*/
-	extern	s16 cg_analog_x;		/* アナログ量、補正済み */
-	extern	s16 cg_analog_y;		/* アナログ量、補正済み */
-	#endif
 //
-//??????????extern int draw_boss_hp_value;	/* ボスhp描画値 */
 //extern int bo ss_life_value;	/* ボスhp体力値 / ボス魔方陣サイズ描画値 */
 #endif
 
@@ -465,14 +494,16 @@ extern u32 adjust_score_by_difficulty(u32 convert_score);
 #define _LOAD_STAGE_FILE_H_
 
 //#define  MAX_IVENT_ENTRY	512
-#define  MAX_PARA1_36		/*64*/(64-20-8-4+32)/*(64-(4*5))*/
+//#define  MAX_PARA1_36		/*64*/(64-20-8-4+32)/*(64-(4*5))*/
 
 typedef struct _stage_command_
 {
 	u32 		v_time; 				/* 正数(0<v_time)の場合 1/60 単位の出現時間カウンタ。(-1)の場合出現済み。(0の場合error何もしない。) */
 	struct _stage_command_ *next;
-	u32 		user_x; 				/* x */
-	int 		user_y; 				/* y */
+	s32 		user_locate_x;			/* [pixel単位] locate_x */
+	s32 		user_locate_y;			/* [pixel単位] locate_y */
+	s32 		user_angle1024;			/* [deg1024単位] vector_x */
+	s32 		user_speed256;			/* [t256単位] vector_y */
 //(16[Bytes] == (4x4) )
 	u8			user_i_code;			/* intermediate code 中間コード */
 	u8			user_255_code;			/* 'E'とか'T'とか	*/
@@ -482,7 +513,7 @@ typedef struct _stage_command_
 	int 		user_score; 			/* score */
 	int 		user_kougeki_type;		/* 敵が攻撃する場合のカードの種類 */
 //(20[Bytes] == (4x5) )
-	char		user_string[MAX_PARA1_36/*(64)*/];/* strings */
+//	char		user_string[MAX_PARA1_36/*(64)*/];/* strings */
 //(64[Bytes] == (4x4)+(4)+(44) )
 } GAME_COMMAND; 	/* .align 64 [bytes] */
 //	u16 	dummy_scroll_speed256;	/* para3 scroll speed256 */
@@ -494,14 +525,19 @@ typedef struct _stage_command_
 enum /*_game_command_code_*/
 {
 /*中間コード*/
-/*0x00*/	GC_CODE_00_SJIS_TEXT = 0,		/* 漢字表示[番兵区切りとしても必要] */
-/*0x01*/	GC_CODE_01_ALL_CLEAR,			/* ゲーム 全ステージ クリアー */
-/*0x02*/	GC_CODE_02_BG_CONTROL,			/* 背景コントロール。(スクロール速度等) */
-/*0x03*/	GC_CODE_03_CHECK_SECRET_BONUS,	/* 隠しボーナスチェック "出力" */
-/*0x04*/	GC_CODE_04_BEGIN_SECRET_BONUS,	/* 隠しボーナスチェック "確認" */
-/*0x05*/	GC_CODE_05_BOSS_COMMON, 		/* 敵 (ボス / 中-ボス)用 スク リプト起動 */
-/*0x06*/	GC_CODE_06_CHUU_BOSS_COMMON,	/* 敵 ザコ中-ボス(スク リプト起動しない) */
-/*0x07*/	GC_CODE_07_ZAKO,				/* 敵 ザコ */
+/*0x07*/		GC_CODE_00_ZAKO = 0,				/* 敵 ザコ */
+/*0x06*/		GC_CODE_01_CHUU_BOSS_COMMON,	/* 敵 ザコ中-ボス(スク リプト起動しない) */
+/*0x05*/		GC_CODE_02_BOSS_COMMON, 		/* 敵 (ボス / 中-ボス)用 スク リプト起動 */
+/*0x02*/		GC_CODE_03_BG_CONTROL,			/* 背景コントロール。(スクロール速度等) */
+//
+/*0x01*/		GC_CODE_04_ALL_CLEAR,			/* ゲーム 全ステージ クリアー */
+/*0x01*/		GC_CODE_05_RESURVED,			/* 予約 */
+/*0x01*/		GC_CODE_06_RESURVED,			/* 予約 */
+/*0x01*/		GC_CODE_07_RESURVED,			/* 予約 */
+//
+/*0x00*/	//	GC_CODE_00_SJIS_TEXT = 0,		/* 漢字表示[番兵区切りとしても必要] */
+/*0x03*/	//	GC_CODE_03_CHECK_SECRET_BONUS,	/* 隠しボーナスチェック "出力" */
+/*0x04*/	//	GC_CODE_04_BEGIN_SECRET_BONUS,	/* 隠しボーナスチェック "確認" */
 			//
 /*0x08*/	/* 拡張可能 */
 /*...*/ 	/* ... */
@@ -518,8 +554,8 @@ enum /*_game_command_code_*/
 /* カードシステム */
 
 /* カードの初期化。カードが変わると毎回行う必要がある。 */
-extern void card_maikai_init(OBJ *src); 						/*(毎回初期化)*/
-extern void card_maikai_init_and_get_spell_number(OBJ *src);	/*(毎回初期化)+(現在撃つべく番号をカードシステムから取得)*/
+extern OBJ_CALL_FUNC(card_maikai_init); 						/*(毎回初期化)*/
+extern OBJ_CALL_FUNC(card_maikai_init_and_get_spell_number);	/*(毎回初期化)+(現在撃つべく番号をカードシステムから取得)*/
 
 
 #endif /* _BOSS_H_ */
@@ -588,10 +624,10 @@ typedef struct /*_clip_class_*/
 extern RECT_CLIP_CLASS rect_clip;
 
 extern void bakuhatsu_add_type_ccc(int type);
-extern void bakuhatsu_add_rect(OBJ *src);
-extern void bakuhatsu_add_circle(OBJ *src, int mode);
-extern void bakuhatsu_add_zako04(OBJ *src);
+extern OBJ_CALL_FUNC(bakuhatsu_add_rect);
+extern void bakuhatsu_add_circle(OBJ/**/ *src, int mode);
+extern OBJ_CALL_FUNC(bakuhatsu_add_zako04);
 
-extern void callback_hit_zako(OBJ *src, OBJ *t);
+extern void callback_hit_zako(OBJ/**/ *src, OBJ/**/ *tama);
 
 #endif /* _ATARI_HANTEI_H_ */

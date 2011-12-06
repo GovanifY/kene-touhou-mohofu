@@ -2,7 +2,7 @@
 #include "boss.h"//#include "game_main.h"
 
 #if (1)
-void add_zako_alice_doll_type_b(OBJ *src)
+OBJ_CALL_FUNC(add_zako_alice_doll_type_b)
 {
 	/*(r36Œ»ÝŽg‚Á‚Ä‚È‚¢!!!)*/
 }
@@ -71,7 +71,7 @@ void add_zako_alice_doll_type_b(OBJ *src)
 	BU LLET_UROKO14_03_MIDORI,	luna
 ---------------------------------------------------------*/
 
-static void move_alice_doll_last_burrets(OBJ *src)
+static OBJ_CALL_FUNC(move_alice_doll_last_burrets)
 {
 	set_REG_DEST_XY(src);	/* ’eŒ¹x256 y256 ’†S‚©‚ç”­’eB */
 //	HATSUDAN_01_speed256			= (t256(2.0));						/* ’e‘¬ */
@@ -89,12 +89,12 @@ static void move_alice_doll_last_burrets(OBJ *src)
 	“GˆÚ“®
 ---------------------------------------------------------*/
 
-static void move_alice_doll_all(OBJ *src)
+static OBJ_CALL_FUNC(move_alice_doll_all)
 {
 	src->BOSS_DATA_05_move_jyumyou--;/* ŽžŠÔŒo‰ß */
 	if (0 > src->BOSS_DATA_05_move_jyumyou)/* ˆÚ“®I—¹ */
 	{
-		if (ENEMY_LAST_SHOT_LINE256 > src->cy256)	/* ‚±‚Ìƒ‰ƒCƒ“‚æ‚è‰º‚©‚ç‚Í“G‚ªŒ‚‚½‚È‚¢ */
+		if (ENEMY_LAST_SHOT_LINE256 > src->center.y256)	/* ‚±‚Ìƒ‰ƒCƒ“‚æ‚è‰º‚©‚ç‚Í“G‚ªŒ‚‚½‚È‚¢ */
 		{
 			move_alice_doll_last_burrets(src);/* ’e‚ðŒ‚‚ÂB */
 		}
@@ -116,17 +116,17 @@ static void move_alice_doll_all(OBJ *src)
 			mask1024(bbb_tmp_angleCCW1024);
 			src->radius++;
 			#if (0)//
-			src->cx256	= src->BOSS_DATA_00_target_x256 + ((si n1024((bbb_tmp_angleCCW1024))*(src->radius)));	/*fps_factor*/	/* CCW‚Ìê‡ */
-			src->cx256	= src->BOSS_DATA_00_target_x256 + ((si n1024((bbb_tmp_angleCCW1024))*(src->radius)));	/*fps_factor*/
-			src->cy256	= src->BOSS_DATA_01_target_y256 + ((co s1024((bbb_tmp_angleCCW1024))*(src->radius)));	/*fps_factor*/
-			src->cy256	= src->BOSS_DATA_01_target_y256 + ((co s1024((bbb_tmp_angleCCW1024))*(src->radius)));	/*fps_factor*/
+			src->center.x256	= src->BOSS_DATA_00_target_x256 + ((si n1024((bbb_tmp_angleCCW1024))*(src->radius)));	/*fps_factor*/	/* CCW‚Ìê‡ */
+			src->center.x256	= src->BOSS_DATA_00_target_x256 + ((si n1024((bbb_tmp_angleCCW1024))*(src->radius)));	/*fps_factor*/
+			src->center.y256	= src->BOSS_DATA_01_target_y256 + ((co s1024((bbb_tmp_angleCCW1024))*(src->radius)));	/*fps_factor*/
+			src->center.y256	= src->BOSS_DATA_01_target_y256 + ((co s1024((bbb_tmp_angleCCW1024))*(src->radius)));	/*fps_factor*/
 			#else
 			{
 				int sin_value_t256; 		//	sin_value_t256 = 0;
 				int cos_value_t256; 		//	cos_value_t256 = 0;
 				int256_sincos1024( (bbb_tmp_angleCCW1024), &sin_value_t256, &cos_value_t256);
-				src->cx256			= src->BOSS_DATA_00_target_x256 + ((sin_value_t256)*(src->radius));/*fps_factor*/
-				src->cy256			= src->BOSS_DATA_01_target_y256 + ((cos_value_t256)*(src->radius));/*fps_factor*/
+				src->center.x256			= src->BOSS_DATA_00_target_x256 + ((sin_value_t256)*(src->radius));/*fps_factor*/
+				src->center.y256			= src->BOSS_DATA_01_target_y256 + ((cos_value_t256)*(src->radius));/*fps_factor*/
 			}
 			#endif
 		}
@@ -137,7 +137,7 @@ static void move_alice_doll_all(OBJ *src)
 	“G‚ð’Ç‰Á‚·‚é(1st)
 ---------------------------------------------------------*/
 
-void add_zako_alice_doll_type_b(OBJ *src)
+/**/ OBJ_CALL_FUNC(add_zako_alice_doll_type_b)
 {
 	const int aaa_tbl[(4)] =
 	{
@@ -162,7 +162,7 @@ void add_zako_alice_doll_type_b(OBJ *src)
 	for (i_angle1024=0; i_angle1024<(1024); i_angle1024 += add_angle1024)	/* ˆêŽü */
 	{
 		OBJ *h;
-		h							= obj_add_A01_teki_error();
+		h							= obj_regist_teki();
 		if (NULL!=h)/* “o˜^‚Å‚«‚½ê‡‚Ì‚Ý */
 		{
 			h->m_Hit256R			= ZAKO_ATARI02_PNG;
@@ -180,8 +180,8 @@ void add_zako_alice_doll_type_b(OBJ *src)
 			h->BOSS_DATA_05_move_jyumyou			= (60);
 			{
 				/* ‰ŠúˆÊ’u */
-			/*	h->cx256 =*/ h->BOSS_DATA_00_target_x256 = (src->cx256);
-			/*	h->cy256 =*/ h->BOSS_DATA_01_target_y256 = (src->cy256);
+			/*	h->center.x256 =*/ h->BOSS_DATA_00_target_x256 = (src->center.x256);
+			/*	h->center.y256 =*/ h->BOSS_DATA_01_target_y256 = (src->center.y256);
 			//
 		//		h->v x256 = (0);/*‰E•ûŒü*/
 		//		h->v y256 = (0);/*‰º•ûŒü*/

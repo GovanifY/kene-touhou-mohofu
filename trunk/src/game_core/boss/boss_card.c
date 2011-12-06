@@ -34,40 +34,36 @@
 
 // チルノ EX1面
 // 咲夜 6面
-extern void boss_move_17_sakuya_bimyou_idou(OBJ *src);/*(微妙に移動する)*/
-extern void boss_move_16_sakuya_nazo_keitai(OBJ *src);/*(差分氏の謎形態)*/
-extern void boss_move_15_sakuya_festival_knife(OBJ *src);/*(幻葬「フェスティバルナイフ」)*/
-extern void boss_move_14_sakuya_miss_direction(OBJ *src);/*(奇術「ミスディレクション」)*/
+extern OBJ_CALL_FUNC(boss_move_17_sakuya_bimyou_idou);/*(微妙に移動する)*/
+extern OBJ_CALL_FUNC(boss_move_16_sakuya_nazo_keitai);/*(差分氏の謎形態)*/
+extern OBJ_CALL_FUNC(boss_move_15_sakuya_festival_knife);/*(幻葬「フェスティバルナイフ」)*/
+extern OBJ_CALL_FUNC(boss_move_14_sakuya_miss_direction);/*(奇術「ミスディレクション」)*/
 
 // パチェ 5面
 //レーザー
-extern void add_laser_off(OBJ *src);
-extern void add_laser_on(OBJ *src);
+extern OBJ_CALL_FUNC(add_laser_off);
+extern OBJ_CALL_FUNC(add_laser_on);
 // 文 4面
-extern void boss_move_13_aya_taifu(OBJ *src);
+extern OBJ_CALL_FUNC(boss_move_13_aya_taifu);
 // 輝夜 3面
-extern void boss_move_12_kaguya_funya_idou(OBJ *src);
-extern void boss_move_11_kaguya_yureru(OBJ *src);
-extern void boss_init_kaguya(OBJ *src);
+extern OBJ_CALL_FUNC(boss_move_12_kaguya_funya_idou);
+extern OBJ_CALL_FUNC(boss_move_11_kaguya_yureru);
+extern OBJ_CALL_FUNC(boss_init_kaguya);
 // 魅魔 2面
-extern void boss_move_10_mima_keitai(OBJ *src);
+extern OBJ_CALL_FUNC(boss_move_10_mima_keitai);
 // アリス 1面
 
-
 // 共通形態
-extern void boss_move_05_xy_douki_differential64(OBJ *src);
-extern void boss_move_04_xy_douki_differential32(OBJ *src);
-extern void boss_move_03_x_douki(OBJ *src);
-extern void boss_move_02_xy_hidouki(OBJ *src);
-extern void boss_move_01_taihi_ue_naka(OBJ *src);
-
+extern OBJ_CALL_FUNC(boss_move_05_xy_douki_differential64);
+extern OBJ_CALL_FUNC(boss_move_04_xy_douki_differential32);
+extern OBJ_CALL_FUNC(boss_move_03_x_douki);
+extern OBJ_CALL_FUNC(boss_move_02_xy_hidouki);
+extern OBJ_CALL_FUNC(boss_move_01_taihi_ue_naka);
 
 /* 共通部 */
-static void init_00_boss_clip000(OBJ *h);/* 標準タイプ */
-static void init_00_boss_clip111(OBJ *h);/* 上に広いタイプ */
-static void init_00_boss_clip222(OBJ *h);/* 上だけ広いタイプ */
-
-
+static OBJ_CALL_FUNC(init_00_boss_clip000);/* 標準タイプ */
+static OBJ_CALL_FUNC(init_00_boss_clip111);/* 上に広いタイプ */
+static OBJ_CALL_FUNC(init_00_boss_clip222);/* 上だけ広いタイプ */
 
 //------------ カード関連
 #include "card_address.h"
@@ -82,14 +78,6 @@ static void init_00_boss_clip222(OBJ *h);/* 上だけ広いタイプ */
 	//	#define SPELL_r34_GOKAN_KINOU		SPELL_00/*(ダメ)*/
 	#endif
 #endif
-//
-// int card.limit_health;	/* 規定値以下になれば カードモード解除 */
-// int card.boss_state; 	/* 負値になればボス カードモードに入らない */
-// int card.mode;			/* カードモード */
-// int card.boss_timer; 	/* 共用 */	// 制限時間
-// int card.number; 		/* 共用 */	// カード番号
-
-global CARD_SYSTEM_GLOBAL_CLASS card;
 
 /*---------------------------------------------------------
 	スプライト リストに登録されたスプライトを全部 。
@@ -103,7 +91,7 @@ static void sprite_sethide_all(OBJ *s, unsigned int length)
 	{
 		s->BOSS_DATA_05_move_jyumyou	= 0xff;
 		#if (1)/* デバッグてすと */
-		s->cx256		= (-1);
+		s->center.x256		= (-1);
 		#endif
 		s++;
 	}
@@ -111,8 +99,8 @@ static void sprite_sethide_all(OBJ *s, unsigned int length)
 static void zako_all_timeup(void)/*int ty pe*/
 {
 	OBJ *s;
-	s = &obj99[OBJ_HEAD_01_0x0800_TEKI+0];
-	sprite_sethide_all(s, OBJ_POOL_01_TEKI_0256_MAX);
+	s = &obj99[OBJ_HEAD_02_0x0900_TEKI_FIX+0];
+	sprite_sethide_all(s, OBJ_POOL_02_TEKI_FIX_0256_MAX);
 }
 #endif
 
@@ -132,7 +120,7 @@ static int bos_ddd_obj_target_y256;
 	ボス誘導移動のみ。
 ---------------------------------------------------------*/
 /* 誘導移動/誘導計算 */
-static void boss_r36_yuudou(OBJ *src)
+static OBJ_CALL_FUNC(boss_r36_yuudou)
 {
 	{	/*(とりあえず)*/
 		src->BOSS_DATA_04_toutatu_wariai256 -= (6);/*(ボス退避、速度。1/t256()形式。(逆数で指定する) )*/
@@ -172,20 +160,20 @@ static void boss_r36_yuudou(OBJ *src)
 			// REG_02_DEST_X: 合成値
 			// REG_03_DEST_Y: 合成値
 			//-----------------------
-			src->cx256 = (REG_02_DEST_X);
-			src->cy256 = (REG_03_DEST_Y);
+			src->center.x256 = (REG_02_DEST_X);
+			src->center.y256 = (REG_03_DEST_Y);
 		}
 	}
 }
 /*---------------------------------------------------------
 	ボス誘導移動のみ。
 ---------------------------------------------------------*/
-global void boss_set_new_position(OBJ *src)
+global OBJ_CALL_FUNC(boss_set_new_position)
 {
 	src->BOSS_DATA_04_toutatu_wariai256 	= t256(1.0);/*(初期値)*/
 	/*(現在位置を設定)*/
-	bos_ddd_obj_alt_x256		= (src->cx256);
-	bos_ddd_obj_alt_y256		= (src->cy256);
+	bos_ddd_obj_alt_x256		= (src->center.x256);
+	bos_ddd_obj_alt_y256		= (src->center.y256);
 	/*(退避位置を設定)*/
 	bos_ddd_obj_target_x256 	= REG_02_DEST_X;/*(t256()形式)*/
 	bos_ddd_obj_target_y256 	= REG_03_DEST_Y;/*(t256()形式)*/
@@ -198,7 +186,7 @@ global void boss_set_new_position(OBJ *src)
 	[カードシステム内に移動予定]
 ---------------------------------------------------------*/
 
-static void common_99_keitai(OBJ *src)
+static OBJ_CALL_FUNC(common_99_keitai)
 {
 	boss_r36_yuudou(src);
 	/* 移動完了座標に等しいかはみ出したら、完了とする。 */
@@ -214,7 +202,7 @@ static void common_99_keitai(OBJ *src)
 	}
 }
 /* 撃破後に画面外にボスが逃げる */
-static void common_88_keitai(OBJ *src)
+static OBJ_CALL_FUNC(common_88_keitai)
 {
 	/*(レーザーモードは、強制的にoffにする。)*/
 	add_laser_off(NULL);
@@ -224,8 +212,8 @@ static void common_88_keitai(OBJ *src)
 	REG_03_DEST_Y = -t256((50.0/2));/* +t256(50.0) ボスグラの最大サイズ(50[pixel]) */
 	boss_set_new_position(src);
 	#endif
-	src->BOSS_DATA_05_boss_base_state777			= (0);	/*ST_00*/	/*初期値を0にする。*/
-	src->callback_mover 	= common_99_keitai; 		/* 最終形態にする。 */
+	src->BOSS_DATA_05_boss_base_state777	= (0);	/*ST_00*/	/*初期値を0にする。*/
+	src->callback_mover 					= common_99_keitai; 	/* 最終形態にする。 */
 }
 
 /*---------------------------------------------------------
@@ -246,11 +234,14 @@ extern void set_bg_alpha(int set_bg_alpha);
 
 /* 共通ボス退避(撃破後に画面外にボスが逃げる) */
 /*(撃破形態)*/
-/*(???)*/static void NULL_keitai(OBJ *src)/*(src==ボス敵本体)*/
+/*(???)*/static OBJ_CALL_FUNC(NULL_keitai)/*(src==ボス敵本体)*/
 {
 	/*(card.boss_move_card_callbackがNULLに対応してない場合に、必要なダミー形態)*/
 }
-//	/*static*/ void boss_destroy_check_type(OBJ *src/*敵自体*/, int check_type)
+//	/*static*/ void boss_destroy_check_type(OBJ/**/ *src/*敵自体*/, int check_type)
+//static OBJ_CALL_FUNC(kaiwa_000_dummy)/*(ダミー形態)*/
+//{
+//}
 
 
 //	if (0 >= src->base_hp)			/* ０か負値なら、倒した。 */
@@ -266,19 +257,20 @@ extern void set_bg_alpha(int set_bg_alpha);
 //	if (DESTROY_CHECK_00_WIN_BOSS == check_type)
 //	#endif
 
-static void gekiha_keitai(OBJ *src)/*(src==ボス敵本体)*/
+static OBJ_CALL_FUNC(gekiha_keitai)/*(src==ボス敵本体)*/
 {
 	#if 0
 //	bakuhatsu_add_circle(src, 1);/*(爆発エフェクト)*/
 	#endif
 	src->base_hp = 0;
 	/* コールバック登録 */
-	src->callback_hit_teki			= NULL; 	/* ダミーコールバック登録 */
+	src->callback_hit_teki			= NULL; 	/*(ダミーコールバック登録)*/
 	src->callback_mover 			= common_88_keitai;/* 共通ボス退避(撃破後に画面外にボスが逃げる) */
+	src->callback_root_supeka		= NULL; 	/*(ダミーコールバック登録[念の為])*/
 //重複(既に設定済み)	card.boss_move_card_callback	= NULL_keitai;/*(テスト)*/
 	{
 		#if (1==USE_BOSS_JIKANGIRE)/*(使用予定あり。未検証)*/
-		if (0 != (cg.state_flag&JIKI_FLAG_16_0x8000_BOSS_JIKAN_GIRE))/*0 >= card.boss_timer*/
+		if (0 != (cg.state_flag&JIKI_FLAG_16_0x8000_BOSS_JIKAN_GIRE))/*0 >= card.card_timer*/
 		{
 			;/* 時間切れの場合はボーナスアイテムと得点なし。 */
 		}
@@ -304,17 +296,12 @@ static void gekiha_keitai(OBJ *src)/*(src==ボス敵本体)*/
 //	obj_maru->color32	= MAKE32RGBA(0xff, 0xff, 0xff, 0x50);	//	obj_maru->alpha = 0x50; 	/* 半透明 */
 	// ボスを倒したときの処理
 	bullets_to_hosi();/* 弾全部、星アイテムにする */
-	voice_play(VOICE03_BOSS_HAKAI, TRACK03_SHORT_MUSIC/*TRACK02_ALEART_IVENT*/);
-//	voice_play(VOICE03_BOSS_HAKAI, TRACK01_EXPLODE);/*予備(うるさい)*/
+	voice_play(VOICE03_BOSS_HAKAI, TRACK03_IVENT_DAN/*TRACK02_JIKI_BOMBER*/);
+//	voice_play(VOICE03_BOSS_HAKAI, TR ACK01_PICHUN);/*予備(うるさい)*/
 
 	cg.draw_boss_hp_value	= (0); /* 必要 */ /*(boss_hp_frame_check()を無効にする。Gu側でチェックさせない)*/
 	cg.bomber_time			= (0); /* 都合上 */
 	{
-		#if (1==USE_r36_SCENE_FLAG)
-		/*(無し==NEXT_SCENE;と統合)*/
-		#else
-		cg.state_flag &= (~(STATE_FLAG_15_DRAW_BOSS_GAUGE));/*off*/
-		#endif
 //		cg.state_flag		&= (~(JIKI_FLAG_0x0040_BOSS_GO_ITEM_JIDOU_SYUU_SYUU));		/* 終わり */
 		cg.state_flag		|= ( (JIKI_FLAG_0x0040_BOSS_GO_ITEM_JIDOU_SYUU_SYUU));		/* 自動収集開始 */
 		/* 自動収集モードはステージロード時に強制解除される。 */
@@ -333,8 +320,6 @@ static void gekiha_keitai(OBJ *src)/*(src==ボス敵本体)*/
 			#if (1==USE_r36_SCENE_FLAG)
 			NEXT_SCENE;/*(次の場面へ設定)*/
 			#else
-		//	pd_bo ssmode	= B07_AFTER_LOAD;
-			cg.state_flag |= STATE_FLAG_0x0100_IS_LOAD_KAIWA_TXT;
 			#endif
 		}
 		else/* 練習モードの場合、終了する */
@@ -349,76 +334,34 @@ static void gekiha_keitai(OBJ *src)/*(src==ボス敵本体)*/
 }
 
 
-/*---------------------------------------------------------
-	[カードシステム内に移動予定]
----------------------------------------------------------*/
 
 
-/*---------------------------------------------------------
-	ボスを攻撃した場合の共通ルーチン
-	-------------------------------------------------------
-	OBJ *src;	ボス敵自体
-	OBJ *tama;	自弾
----------------------------------------------------------*/
-
-/*static*/static/*global*/	void s_callback_hit_boss(OBJ *src, OBJ *tama)
-{
-	/* ボス & 中-ボスに自弾があたった場合の火花エフェクトを登録(現在Gu部分がないので描画してない) */
-	set_REG_DEST_XY(tama);/* 発弾位置 座標xy */
-	bakuhatsu_add_type_ccc(BAKUHATSU_MOVE12/*BAKUHATSU_MINI00*/);/* 先に実行した方が速い */
-//
-	/* 上と分離した方がコード効率があがる。 */
-	{
-		card.boss_hp_dec_by_frame += /*w->*/tama->kougeki_ti; /* 攻撃して体力減らす(強さ分引く) */
-	}
-}
 
 
-/*---------------------------------------------------------
-	ボスの共通、１回目初期化ルーチン
-	初回、攻撃不可[会話中の形態]、初期設定
 
----------------------------------------------------------*/
-
-/*---------------------------------------------------------
-	ボスの共通、２回目初期化ルーチン
-	[会話中の形態]、会話終了まで待機する。
-	待機が終わったら、攻撃可能にする。
----------------------------------------------------------*/
-/*([会話中の形態]、初期設定)*/
-/* 出現時x座標 */
-//#define BOSS_XP256		(t256(GAME_WIDTH/2))	/* 中心座標なので */
-#define BOSS_XP256			(t256(GAME_X_OFFSET)+t256(GAME_320_WIDTH/2))	/* 中心座標なので */
-
-static void card_address_incliment(void);
-static void card_set_boss_move_callback(void);
-static void kaiwa_00_keitai(OBJ *src)/*([会話中の形態]、会話終了まで待機する)*/
-{
-	#if (1==USE_r36_SCENE_FLAG)
-	if (SCENE_NUMBER_0x0800_BOSS_TATAKAU==(cg.state_flag & 0x0f00)) /* ボス戦闘前の会話終了済み? */
-	#else
-	if (cg.state_flag & STATE_FLAG_0x0800_IS_BOSS)	/* ボス戦闘前の会話終了済み? */
-	#endif
-	{
-		/* プレイヤー弾受け付け、コールバックを登録 */
-		src->callback_hit_teki = s_callback_hit_boss;	/* コールバック登録 */
-		/* card common init */
-		card.mode_timer 	= (CARD_BOSS_TIMER_0255_IDO_JYUNNBI);/*on*/
-	//	card.mode		= (0);/*off*/
-	//	/*時間制限カウント有効化*/
-	//	data->boss_base.state001++/* = ST_02*/;
-		card_address_incliment();
-		card_set_boss_move_callback();
-	}
-}
 
 
 ////////  形態系はここより上に記述く。
+
+
+/*---------------------------------------------------------
+	カード登録
+	-------------------------------------------------------
+		[カード攻撃のみに仕様変更]
+		(準備時の移動などもカード扱い)
+		(カード無くなった後もカード扱い)
+---------------------------------------------------------*/
+
+// int card.number; 		/* 共用 */	// カード番号
+
+global CARD_SYSTEM_GLOBAL_CLASS card;
 
 /*---------------------------------------------------------
 	カード設定。
 ---------------------------------------------------------*/
 #include "card_resource.h"
+
+
 
 /*---------------------------------------------------------
 	カードを次に進める。
@@ -426,11 +369,13 @@ static void kaiwa_00_keitai(OBJ *src)/*([会話中の形態]、会話終了まで待機する)*/
 static void card_address_incliment(void)
 {
 	/*(撃破形態の場合、カードを次に進めない。)*/
-//	if (SPELL_49_r36_gekiha != my_card_resource[(card.address_set)].spell_set_number)
+//	if (SPE LL_49_r36_gekiha != my_card_resource[(card.address_set)].spell_set_number)
 	{
 		card.address_set += (4);/*(カードを次に進める。)*/
 	}
 }
+
+
 /*---------------------------------------------------------
 	card内ボス移動処理を設定する。
 ---------------------------------------------------------*/
@@ -445,47 +390,230 @@ static void set_new_limit(void)
 	//
 	#if 0
 	/*(制限時間を足す)*/
-	card.boss_timer += (((my_card_resource[(card.address_set + (4))].spell_limit_time)));	/* 75*64==75[count] 	約99[秒(64/60)](単位は秒ではない) */
+	card.card_timer += (((my_card_resource[(card.address_set + (4))].spell_limit_time)));	/* 75*64==75[count] 	約99[秒(64/60)](単位は秒ではない) */
 	#else
 	/*
 		(r35 固定制限時間を設定[仮仕様])
 		タイマー値の保持が現状一ヶ所しか無いので、とりあえずこういう形にしといた。(制限時間の設定部分が無い為)
 	*/
-	card.boss_timer = (((my_card_resource[(card.address_set + (4))].spell_limit_time)));	/* 75*64==75[count] 	約99[秒(64/60)](単位は秒ではない) */
+	card.card_timer = (((my_card_resource[(card.address_set + (4))].spell_limit_time)));	/* 75*64==75[count] 	約99[秒(64/60)](単位は秒ではない) */
 	#endif
 }
 /*---------------------------------------------------------
 	カードシステムのボス形態に登録されたカード番号を取得し、
 //	同時にカードの時間切れを設定する。
 	同時にスペルの初期化を行う。
-
 ---------------------------------------------------------*/
 
-global void card_maikai_init_and_get_spell_number(OBJ *src)
+global OBJ_CALL_FUNC(card_maikai_init_and_get_spell_number)
 {
 	card.spell_used_number	= my_card_resource[(card.address_set)].spell_set_number;	/* カードをセット */
 	//
 	card_maikai_init(src);		/* カードの制限時間を設定(予めカードごとに設定されている標準時間に設定) */
 }
 
-/*---------------------------------------------------------
-	ボス形態変更時の共通ルーチン
-	カード撃破後アイテム出す。
----------------------------------------------------------*/
 
-global void common_boss_put_items(OBJ *src)
+/*---------------------------------------------------------
+	[ボス行動01: カード撃破後の処理]
+	ボスのカードを撃破して、次のカードに移る場合の処理。
+---------------------------------------------------------*/
+static OBJ_CALL_FUNC(boss_action_a02_new_card_set);
+static OBJ_CALL_FUNC(boss_action_01_gekiha_go)
 {
-//++	pd_bo ssmode=B04_CHANGE;
-	bullets_to_hosi();/* 弾全部、星アイテムにする */
-	item_create_for_boss(src, ITEM_CREATE_MODE_02);
 	#if (0)/*あやや*/
 	bakuhatsu_add_circle(src, 1);
 	#endif
+	//
+	/* ボス形態変更時の共通ルーチン カード撃破後アイテム出す。 */
+	//++	pd_bo ssmode=B04_CHANGE;
+	bullets_to_hosi();/* 弾全部、星アイテムにする */
+	/*(時間内の場合)*/
+	if (0 < (card.card_timer)) /*1	(set_new_limit();以前に必要) */
+	{
+		item_create_for_boss(src, ITEM_CREATE_MODE_02); 	/* アイテム吐く */
+	}
+	/* [(とりあえず)カード攻撃のみに仕様変更]したので、最後撃てるカードがなくなった場合に攻撃させる為。 */
+	/*(規定値の算出)*/
+	/*(リミット分引く)*/
+	set_new_limit();
+	card_address_incliment();
+	card_set_boss_move_callback();
+	#if 0//(1==TEST_ZAKO_HIDE)/* ボスも影響受ける */
+	zako_all_timeup();/* ザコタイムアウト(フェイドアウト消去処理へ移行) */
+	#endif
+	//
+	voice_play(VOICE07_BOMB, TRACK02_JIKI_BOMBER);/*テキトー*/
+	/*--- BOSS 共通して値を 0 にする。------------*/
+	src->BOSS_DATA_05_move_jyumyou = (0);
+//	src->BOSS_DATA_05_boss_base_state777 = (0);/* 共通して 値を 0 にする */
+//	player_dummy_add_score(src->boss_base_score);
+	src->callback_root_supeka		= boss_action_a02_new_card_set;
+}
+
+
+
+/*---------------------------------------------------------
+	[ボス行動04: カード攻撃中]
+	01カード攻撃中
+	ボス、スペカで攻撃中。
+---------------------------------------------------------*/
+static OBJ_CALL_FUNC(boss_action_04_speka_kougeki)
+{
+	{
+		/*(時間制限カウント)*/
+		card.card_timer--;/*fps_factor*/	/*(スペカ時間経過)*/
+		if (0 >= (card.card_timer)) /*1*/
+		{
+			card.card_timer 	= (0);/*(一時的に0にする)*/
+			/*(もし次のスペカがあれば、スペカシステム側で次へ移行する。その際に card.card_timer に時間が加算される。)*/
+			src->base_hp		= card.limit_health;		/* (とりあえず) */
+		//	boss_destroy_check_type(h/*敵自体*/, DESTROY_CHECK_01_IS_TIME_OUT);/*	★ 攻撃の場合の死亡判定 	★ 時間切れの場合の死亡判定 */
+			#if (1==USE_BOSS_JIKANGIRE)/*(使用予定あり。未検証)*/
+			cg.state_flag |= JIKI_FLAG_16_0x8000_BOSS_JIKAN_GIRE;/*(時間切れフラグon)*/
+			#endif
+		}
+	}
+//	#if (0)/*(r36, NULLは登録できない。何もしない場合は NULL_keitai を登録する。)*/
+//	if (NULL != card.boss_move_card_callback)
+//	#endif
+	{
+		(card.boss_move_card_callback)(src);/*(ボス移動形態毎に、ボス移動処理を実行する)*/
+	}
+	boss_r36_yuudou(src);
+	if (TUKAIMA_00_OFF != card.tukaima_used_number) 	/* 使い魔生成は必要？ */
+	{
+		tukaima_system_add_dolls(src);/*(複数の使い魔達の生成をする。使い魔は一人でなくて複数の方が多い。)*/
+		card.tukaima_used_number = TUKAIMA_00_OFF;/*(生成完了したので off にする。)*/
+	}
+	/*---------------------------------------------------------
+	ボスを攻撃した場合のフレームチェック
+	-------------------------------------------------------
+	ライフが少なくなるとボスがなかなか死なないのは、演出だそうです。
+	てきとーに再現？
+	-------------------------------------------------------
+	ToDo:
+	う－ん、最近はライフはやっぱりリニアに減ってて、
+	表示だけlogなんじゃね？って気がしてきた。
+	そういう風にしようかな。ゲームバランスとか色々変わるから。
+	---------------------------------------------------------*/
+	/*ボスを攻撃した場合のフレームチェック/カードモードチェック*/
+//	boss_hp_frame_check(src);
+//	static OBJ_CALL_FUNC(boss_hp_frame_check)/*(ボス本体)*/
+	{
+		s32 limit_max_hp_dec_boss_by_frame;
+	//	u8 test_boss_hp_value;
+		u16 test_boss_hp_value;
+	//	test_boss_hp_value = (src->base_hp>>5) & 0xff; /* 8192/32 == 256 (r32) */
+	//	test_boss_hp_value = (src->base_hp>>7) & 0xff; /* 32768/32 == 256 (r33) */
+		test_boss_hp_value = (src->base_hp>>9) & 0x03ff;	/* ?/32 == 256*4 (r35u2-) */
+		#if 1
+	//	limit_max_hp_dec_boss_by_frame = (test_boss_hp_value>>2) | (0x0f);
+	//	limit_max_hp_dec_boss_by_frame = (test_boss_hp_value>>2) | (0x08);
+	//	limit_max_hp_dec_boss_by_frame = (test_boss_hp_value) | (0x10);/*(-r35u1)*/
+		limit_max_hp_dec_boss_by_frame = (test_boss_hp_value) | (0x40);/*(r35u2-)*/
+		#endif
+		//
+	//	if (limit_max_hp_dec_boss_by_frame < card.boss_hp_dec_by_frame)
+	//	{
+	//		card.boss_hp_dec_by_frame = limit_max_hp_dec_boss_by_frame;
+	//	}
+		card.boss_hp_dec_by_frame = psp_min(card.boss_hp_dec_by_frame, limit_max_hp_dec_boss_by_frame);
+	}
 //
-	voice_play(VOICE07_BOMB, TRACK02_ALEART_IVENT);/*テキトー*/
+	src->base_hp -= card.boss_hp_dec_by_frame;
+	card.boss_hp_dec_by_frame = 0;/* 使ったので消す(フレーム単位) */
+	if (card.limit_health >= src->base_hp)	/* 規定値以下になればカードモード解除 */
+	{
+		src->base_hp = card.limit_health;	/* 規定値未満にしない。 */
+		src->callback_root_supeka		= boss_action_01_gekiha_go;
+	//	boss_destroy_check_type(src, DESTROY_CHECK_00_WIN_BOSS);
+		cb.callback_gu_draw_haikei		= cb.callback_gu_draw_haikei_modosu;
+	}
+}
+
+
+/*---------------------------------------------------------
+	[ボス行動03: カード開始移動]
+	02カード開始移動
+	カード開始位置までボスが移動する。
+	立ち絵の処理も行う。
+---------------------------------------------------------*/
+static int aaa_wait;
+static OBJ_CALL_FUNC(boss_action_03_move_start_position)
+{
+	#if 1/*(r32p)*/
+//	bo ss_y uudou_idou_nomi(src);/*(r32p)*/ //	src->BOSS_DATA_04_toutatu_wariai256 -= (1); /* [約	4 秒]== 4.2666==(256/60[frame]) */
+//	bo ss_y uudou_hiritu_keisan(src);
+	boss_r36_yuudou(src);
+	#if 0
+//	if (0 > src->BOSS_DATA_04_toutatu_wariai256 )	/* ほぼ画面中心付近まで、移動した。 */
+	if ((0==src->BOSS_DATA_04_toutatu_wariai256))
+	{
+//		src->BOSS_DATA_04_toutatu_wariai256 = (0);
+	}
+	#endif
+	#endif/*(r32p)*/
+	// ボス(立ち絵移動)
+	#if 0/*(等速移動)*/
+	kaiwa_sprite[1].center.y256 	= t256(272+128) - ((aaa_wait)<<9);
+	#else/*(加減速移動)*/
+	{
+		u32 aaa = (aaa_wait)+(aaa_wait);
+		aaa += 128;/*(上下入れ替え)*/
+		aaa &= 0xff;/*(0...255)*/
+	//	aaa = ((aaa)|(aaa<<8));/*(0...65535)*/
+		aaa <<= 8;/*(0...65535)*/
+		aaa = vfpu_ease_in_out65536(aaa);
+		aaa += 32768;/*(上下入れ替え)*/
+		aaa &= 0xffff;/*(0...65535)*/
+		aaa += aaa;/*(2倍)*/
+		kaiwa_sprite[1].center.y256 	= t256(272+128) - (aaa);
+	}
+	#endif
+	aaa_wait--; /* ボス行動 */
+	if (0 > aaa_wait)
+	{
+		src->callback_root_supeka		= boss_action_04_speka_kougeki;
+	}
+}
+
+/*---------------------------------------------------------
+	[ボス行動02: カード設定]
+	03カード設定
+	次のカードを始める為の初期設定を行う。
+---------------------------------------------------------*/
+/* ボスホームポジジョン。x座標。(カード開始時に必ずホームポジジョンへ移動する。) */
+//#define BOSS_XP256		(t256(GAME_WIDTH/2))	/* 中心座標なので */
+#define BOSS_XP256			(t256(GAME_X_OFFSET)+t256(GAME_320_WIDTH/2))	/* 中心座標なので */
+static OBJ_CALL_FUNC(boss_action_a02_new_card_set)
+{
+	REG_10_BOSS_SPELL_TIMER = (0);	/* カード生成を強制的に止める。 */
+	bullets_to_hosi();		/* 総ての敵弾を、hosiアイテムに変える */
+	/* 真中付近に退避 */
+//	src->BOSS_DATA_04_to utatu_wariai256	= t256(  0);/* 初期化済みの必要あり */
+//	src->BOSS_DATA_04_to utatu_wariai256	= t256(1.0);/* 初期化済みの必要あり */
+//	src->BOSS_DATA_00_ta rget_x256			= BOSS_XP256; //t256(0); t256(153);
+//	src->BOSS_DATA_01_ta rget_y256			= t256(16.0); //t256(0); src->center.y256;
+	REG_02_DEST_X	= (BOSS_XP256);/*(t256()形式)*/
+	REG_03_DEST_Y	= (t256(16.0));/*(t256()形式)*/
+	boss_set_new_position(src);/*(誘導移動座標を設定)*/
+	src->callback_root_supeka		= boss_action_03_move_start_position;
+	// ボス
+	kaiwa_sprite[1].center.x256 	= t256(256);
+	aaa_wait	= (127);/*on*/
+	//
+	#if 1/* (新[カード始まる前に初期化]) 第0形態から、必ず呼ぶ筈。 */
+	/* カード初期化 */
+//	#if (0)/*(r36, NULLは登録できない。何もしない場合は NULL_keitai を登録する。)*/
+//	if (NULL != my_card_resource[(card.address_set)].spell_init_callback)
+//	#endif
+	{
+		(my_card_resource[(card.address_set)].spell_init_callback)(src);
+	}
+	#endif
 	#if (1)
 	/*---------------------------------------------------------
-		カード名称表示
+		カード名称(符名)表示
 		カード背景は、まだ無いけど、将来的に拡張予定。
 	---------------------------------------------------------*/
 	//static void draw_card_name(void)
@@ -520,210 +648,57 @@ global void common_boss_put_items(OBJ *src)
 		}
 	}
 	#endif
-	/*--- BOSS 共通して値を 0 にする。------------*/
-	src->BOSS_DATA_05_move_jyumyou = (0);
-//	src->BOSS_DATA_05_boss_base_state777 = (0);/* 共通して 値を 0 にする */
-//	player_dummy_add_score(src->boss_base_score);
 }
 
-
 /*---------------------------------------------------------
-	ボスを攻撃した場合のフレームチェック
+	[カードシステム内に移動予定]
 	-------------------------------------------------------
-	ライフが少なくなるとボスがなかなか死なないのは、演出だそうです。
-	てきとーに再現？
+	ボスを攻撃した場合の共通ルーチン
 	-------------------------------------------------------
-	ToDo:
-	う－ん、最近はライフはやっぱりリニアに減ってて、
-	表示だけlogなんじゃね？って気がしてきた。
-	そういう風にしようかな。ゲームバランスとか色々変わるから。
+	OBJ *src;	ボス敵自体
+	OBJ *tama;	自弾
 ---------------------------------------------------------*/
 
-static void boss_hp_frame_check(OBJ *src)/*(ボス本体)*/
+/*static*/static/*global*/	void s_callback_hit_boss(OBJ/**/ *src, OBJ *tama)
 {
-	{
-		s32 limit_max_hp_dec_boss_by_frame;
-	//	u8 test_draw_boss_hp_value;
-		u16 test_draw_boss_hp_value;
-	//	test_draw_boss_hp_value = (src->base_hp>>5) & 0xff; /* 8192/32 == 256 (r32) */
-	//	test_draw_boss_hp_value = (src->base_hp>>7) & 0xff; /* 32768/32 == 256 (r33) */
-		test_draw_boss_hp_value = (src->base_hp>>9) & 0x03ff;	/* ?/32 == 256*4 (r35u2-) */
-		#if 1
-	//	limit_max_hp_dec_boss_by_frame = (test_draw_boss_hp_value>>2) | (0x0f);
-	//	limit_max_hp_dec_boss_by_frame = (test_draw_boss_hp_value>>2) | (0x08);
-	//	limit_max_hp_dec_boss_by_frame = (test_draw_boss_hp_value) | (0x10);/*(-r35u1)*/
-		limit_max_hp_dec_boss_by_frame = (test_draw_boss_hp_value) | (0x40);/*(r35u2-)*/
-		#endif
-		//
-	//	if (limit_max_hp_dec_boss_by_frame < card.boss_hp_dec_by_frame)
-	//	{
-	//		card.boss_hp_dec_by_frame = limit_max_hp_dec_boss_by_frame;
-	//	}
-		card.boss_hp_dec_by_frame = psp_min(card.boss_hp_dec_by_frame, limit_max_hp_dec_boss_by_frame);
-	}
+	/* ボス & 中-ボスに自弾があたった場合の火花エフェクトを登録(現在Gu部分がないので描画してない) */
+	set_REG_DEST_XY(tama);/* 発弾位置 座標xy */
+	bakuhatsu_add_type_ccc(BAKUHATSU_MOVE12/*BAKUHATSU_MINI00*/);/* 先に実行した方が速い */
 //
-	src->base_hp -= card.boss_hp_dec_by_frame;
-	card.boss_hp_dec_by_frame = 0;/* 使ったので消す(フレーム単位) */
-	if (card.limit_health >= src->base_hp)	/* 規定値以下になればカードモード解除 */
+	/* 上と分離した方がコード効率があがる。 */
 	{
-		src->base_hp = card.limit_health;	/* 規定値未満にしない。 */
-		card.mode_timer 		= (CARD_BOSS_TIMER_0256_SET);
-	//	boss_destroy_check_type(src, DESTROY_CHECK_00_WIN_BOSS);
-		cb.callback_gu_draw_haikei = cb.callback_gu_draw_haikei_modosu;
+		card.boss_hp_dec_by_frame += /*w->*/tama->kougeki_ti; /* 攻撃して体力減らす(強さ分引く) */
 	}
 }
+
+
 /*---------------------------------------------------------
-
+	[ボス行動00: 会話終了待ち]
+	[会話中の形態]攻撃不可、会話終了まで待機する。
+	-------------------------------------------------------
+	待機が終わったら、攻撃可能にする。
 ---------------------------------------------------------*/
-/*---------------------------------------------------------
-	カード登録
----------------------------------------------------------*/
 
-/*
-	 [-1]発弾時
-  >
- 0
-	 [0...253]立ち絵移動
-  >
- 254 == 256-2
-	 [254]設定
- 255 == 256-1
-	 [255...]
-
-*/
-
-
-/*global*/global/*static*/ void card_boss_move_generate_check_regist(OBJ *src)
+static OBJ_CALL_FUNC(boss_action_a01_kaiwa_syuuryou_mati)
 {
-	card.mode_timer--;
-	/*
-		[カード攻撃のみに仕様変更]
-		(準備時の移動などもカード扱い)
-		(カード無くなった後も扱い)
-	*/
-	/* ボス行動 */
-	if (CARD_BOSS_TIMER_0000_HATUDAN > card.mode_timer)/*発弾時*/ /*(カード中)*/
+	/* ボス戦闘前の会話終了済み? */
+	if (SCENE_NUMBER_0x0800_BOSS_TATAKAU==(cg.state_flag & 0x0f00))
 	{
-		/* (とりあえず)カードモード時のみボス時間経過 */
-		{
-			card.boss_timer--;/*fps_factor*/
-			if (0 >= (card.boss_timer)) /*1*/
-			{
-				card.boss_timer 	= (0);/*(一時的に0にする)*/ 	/*(もし次のスペカがあれば、スペカシステム側で次へ移行する。その際に card.boss_timer に時間が加算される。)*/
-				card.mode_timer 	= CARD_BOSS_TIMER_0000_HATUDAN/*off*/;/**/
-				src->base_hp		= card.limit_health;		/* (とりあえず) */
-			//	boss_destroy_check_type(h/*敵自体*/, DESTROY_CHECK_01_IS_TIME_OUT);/*	★ 攻撃の場合の死亡判定 	★ 時間切れの場合の死亡判定 */
-				#if (1==USE_BOSS_JIKANGIRE)/*(使用予定あり。未検証)*/
-				cg.state_flag |= JIKI_FLAG_16_0x8000_BOSS_JIKAN_GIRE;/*(時間切れフラグon)*/
-				#endif
-			}
-		}
-	//	#if (0)/*(r36, NULLは登録できない。何もしない場合は NULL_keitai を登録する。)*/
-	//	if (NULL != card.boss_move_card_callback)
-	//	#endif
-		{
-			(card.boss_move_card_callback)(src);/*(ボス移動形態毎に、ボス移動処理を実行する)*/
-		}
-		boss_r36_yuudou(src);
-		if (TUKAIMA_00_OFF != card.tukaima_used_number) 	/* 使い魔生成は必要？ */
-		{
-			tukaima_system_add_dolls(src);/*(複数の使い魔達の生成をする。使い魔は一人でなくて複数の方が多い。)*/
-			card.tukaima_used_number = TUKAIMA_00_OFF;/*(生成完了したので off にする。)*/
-		}
-		/*ボスを攻撃した場合のフレームチェック*/
-		if (0!=cg.draw_boss_hp_value)/*(boss_mode)*/
-		{	boss_hp_frame_check(src);}/*ボスを攻撃した場合のフレームチェック/カードモードチェック*/
+		/*(プレイヤー弾受け付けコールバックを登録し、ボスへの攻撃が可能になる。)*/
+		src->callback_hit_teki		= s_callback_hit_boss;/*(プレイヤー弾受け付けコールバック登録)*/
+		src->callback_root_supeka	= boss_action_a02_new_card_set;/*(カードをセットする状態へ移行。)*/
+		card_address_incliment();/*(0枚目→1枚目のカードをセットする。)*/
+		card_set_boss_move_callback();/*(ボス移動コールバック登録)*/
 	}
-	else
-//	if (CARD_BO SS_MODE_02_TAIHI==card.mode) /* 発弾位置まで移動中。 */
-	if ((CARD_BOSS_TIMER_0256_SET-2) > card.mode_timer) /* 発弾位置まで移動中。 */
-	{
-		#if 1/*(r32p)*/
-	//	bo ss_y uudou_idou_nomi(src);/*(r32p)*/ //	src->BOSS_DATA_04_toutatu_wariai256 -= (1); /* [約	4 秒]== 4.2666==(256/60[frame]) */
-	//	bo ss_y uudou_hiritu_keisan(src);
-		boss_r36_yuudou(src);
-		#if 0
-	//	if (0 > src->BOSS_DATA_04_toutatu_wariai256 )	/* ほぼ画面中心付近まで、移動した。 */
-		if ((0==src->BOSS_DATA_04_toutatu_wariai256))
-		{
-	//		src->BOSS_DATA_04_toutatu_wariai256 = (0);
-			card.mode_timer 	= (CARD_BOSS_TIMER_0000_HATUDAN);/*on*/
-		}
-		#endif
-		#endif/*(r32p)*/
-		// ボス(立ち絵移動)
-		#if 0/*(等速移動)*/
-		kaiwa_sprite[1].cy256		= t256(272+128) - ((card.mode_timer)<<9);
-		#else/*(加減速移動)*/
-		{
-			u32 aaa = (card.mode_timer);
-			aaa += 128;/*(上下入れ替え)*/
-			aaa &= 0xff;/*(0...255)*/
-		//	aaa = ((aaa)|(aaa<<8));/*(0...65535)*/
-			aaa <<= 8;/*(0...65535)*/
-			aaa = vfpu_ease_in_out65536(aaa);
-			aaa += 32768;/*(上下入れ替え)*/
-			aaa &= 0xffff;/*(0...65535)*/
-			aaa += aaa;/*(2倍)*/
-			kaiwa_sprite[1].cy256		= t256(272+128) - (aaa);
-		}
-		#endif
-	}
-	else
-	if ((CARD_BOSS_TIMER_0256_SET-1) > card.mode_timer) /* 発弾位置まで移動中。 */
-	{
-		REG_10_BOSS_SPELL_TIMER = (0);	/* カード生成を強制的に止める。 */
-		bullets_to_hosi();		/* 総ての敵弾を、hosiアイテムに変える */
-		/* 真中付近に退避 */
-	//	src->BOSS_DATA_04_to utatu_wariai256	= t256(  0);/* 初期化済みの必要あり */
-	//	src->BOSS_DATA_04_to utatu_wariai256	= t256(1.0);/* 初期化済みの必要あり */
-	//	src->BOSS_DATA_00_ta rget_x256			= BOSS_XP256; //t256(0); t256(153);
-	//	src->BOSS_DATA_01_ta rget_y256			= t256(16.0); //t256(0); src->cy256;
-		REG_02_DEST_X	= (BOSS_XP256);/*(t256()形式)*/
-		REG_03_DEST_Y	= (t256(16.0));/*(t256()形式)*/
-		boss_set_new_position(src);/*(誘導移動座標を設定)*/
-		//
-		#if 1/* (新[カード始まる前に初期化]) 第0形態から、必ず呼ぶ筈。 */
-		/* カード初期化 */
-	//	#if (0)/*(r36, NULLは登録できない。何もしない場合は NULL_keitai を登録する。)*/
-	//	if (NULL != my_card_resource[(card.address_set)].spell_init_callback)
-	//	#endif
-		{
-			(my_card_resource[(card.address_set)].spell_init_callback)(src);
-		}
-		#endif
-		// ボス
-		kaiwa_sprite[1].cx256		= t256(256);
-	}
-	else
-//	if ((CARD_BOSS_TIMER_0256_SET) > card.mode_timer)/*(判断)*/  /*off*/
-	{
-		/* [(とりあえず)カード攻撃のみに仕様変更]したので、最後撃てるカードがなくなった場合に攻撃させる為。 */
-		/*(規定値の算出)*/
-		/*(リミット分引く)*/
-		set_new_limit();
-		{
-			card_address_incliment();
-			card_set_boss_move_callback();
-			#if 0//(1==TEST_ZAKO_HIDE)/* ボスも影響受ける */
-			zako_all_timeup();/* ザコタイムアウト(フェイドアウト消去処理へ移行) */
-			#endif
-			/* アイテム吐く */
-			if (NULL != src->callback_loser)
-			{
-				(src->callback_loser)(src); 	/* sakuya_put_items(src); */
-			}
-		}
-	}
+	boss_r36_yuudou(src);/*(要るかも？？)*/
 }
-
 
 /*---------------------------------------------------------
 	弾の範囲を「標準」に設定
 	-------------------------------------------------------
 	set_default_bullet_clip
 ---------------------------------------------------------*/
-static void init_00_boss_clip000(OBJ *h)/* call from load_stage.c */
+static OBJ_CALL_FUNC(init_00_boss_clip000)/* call from load_stage.c */
 {
 	rect_clip.bullet_clip_min.x256 = t256(GAME_X_OFFSET);						/*(横は標準範囲)*/
 	rect_clip.bullet_clip_max.x256 = t256(GAME_X_OFFSET)+t256(GAME_320_WIDTH);	/*(横は標準範囲)*/
@@ -736,7 +711,7 @@ static void init_00_boss_clip000(OBJ *h)/* call from load_stage.c */
 	-------------------------------------------------------
 	set_aya_bullet_clip
 ---------------------------------------------------------*/
-static void init_00_boss_clip111(OBJ *h)/* call from load_stage.c */
+static OBJ_CALL_FUNC(init_00_boss_clip111)/* call from load_stage.c */
 {
 	rect_clip.bullet_clip_min.x256 = t256(GAME_X_OFFSET)					  + t256(-100);/*(横は広範囲)*/
 	rect_clip.bullet_clip_max.x256 = t256(GAME_X_OFFSET)+t256(GAME_320_WIDTH) + t256( 100);/*(横は広範囲)*/
@@ -750,7 +725,7 @@ static void init_00_boss_clip111(OBJ *h)/* call from load_stage.c */
 	set_cirno_bullet_clip
 ---------------------------------------------------------*/
 
-static void init_00_boss_clip222(OBJ *h)/* call from load_stage.c */
+static OBJ_CALL_FUNC(init_00_boss_clip222)/* call from load_stage.c */
 {
 	rect_clip.bullet_clip_min.x256 = t256(GAME_X_OFFSET);						/*(横は標準範囲)*/
 	rect_clip.bullet_clip_max.x256 = t256(GAME_X_OFFSET)+t256(GAME_320_WIDTH);	/*(横は標準範囲)*/
@@ -759,6 +734,8 @@ static void init_00_boss_clip222(OBJ *h)/* call from load_stage.c */
 }
 
 /*---------------------------------------------------------
+	外部インターフェイス。
+	-------------------------------------------------------
 	道中用の、弾の範囲を「標準」に設定。(from load_stage.c)
 ---------------------------------------------------------*/
 global void set_default_bullet_clip(void)	/* 標準タイプ */
@@ -768,22 +745,21 @@ global void set_default_bullet_clip(void)	/* 標準タイプ */
 
 
 /*---------------------------------------------------------
-	ボス敵の初期化。
+	会話システムからボス敵(キャラ)を読みこんで、
+	基本的な初期化を行う。
 ---------------------------------------------------------*/
-		#if 0/* 初期化済みの必要あり */
-		h->vx256						= t256( 0);
-		h->vy256						= t256( 0);
-		#endif
-	//
-
-	extern void stage_boss_load_texture(void);
+	#if 0/* 初期化済みの必要あり(?) */
+	h->math_vector.x256 					= t256( 0);
+	h->math_vector.y256 					= t256( 0);
+	#endif
+extern void stage_boss_load_texture(void);
 // src/core/douchu/boss.h の初期化も参照する事。
-extern void root_boss_mover(OBJ *src);
+extern OBJ_CALL_FUNC(root_boss_mover);
 global void called_from_kaiwa_system_boss_load(int boss_number)
 {
 	/*(ボス番号は 0-7 のいずれかに勝手に固定(r36現在)。)*/
 	boss_number &= (8-1);
-	/*(ボス本体の行動範囲を制限する。)*/
+	/*(ボス本体の移動範囲を制限する。)*/
 	{
 		/* boss_rect_init */
 		rect_clip.boss_clip_min.x256	= t256(GAME_X_OFFSET)+t256( 			0)+t256(24);
@@ -793,11 +769,12 @@ global void called_from_kaiwa_system_boss_load(int boss_number)
 	}
 	//----[BOSS]
 	OBJ *h;
-	h					= &obj99[OBJ_HEAD_01_0x0800_TEKI+TEKI_OBJ_00_BOSS_HONTAI];/*(ボス本体)*/
+	h					= &obj99[OBJ_HEAD_02_0x0900_TEKI_FIX+TEKI_OBJ_00_BOSS00_HONTAI];/*(ボス本体)*/
 	{
-		h->obj_type_set 				= BOSS_00_11;	/*(再定義の必要あり)*/
-		h->callback_mover				= root_boss_mover;
-		h->callback_hit_teki			= NULL; 	/* ダミーコールバック登録 */
+		h->obj_type_set 				= BOSS_00_11;/*(再定義の必要あり(?))*/
+		h->callback_mover				= root_boss_mover;/*(ボス「ルート処理」を追加。ボスの全ての行動は「ルート処理」から処理する。)*/
+		h->callback_hit_teki			= NULL;/*(ダミーコールバック登録) (会話時にプレイヤー弾は受け付けない)*/
+		h->callback_root_supeka 		= boss_action_a01_kaiwa_syuuryou_mati;/*(会話終了待ち)*/
 	//
 		h->BOSS_DATA_03_kougeki_anime_count 		= (0);	/* 攻撃アニメーション用カウンタ / 0以下なら移動アニメーション */
 		h->BOSS_DATA_05_boss_base_state777			= (0);	/*ST_00*/	/*(初期値を0にする。) (-1) */
@@ -828,23 +805,34 @@ global void called_from_kaiwa_system_boss_load(int boss_number)
 				aaa = ((((cg_game_select_player)&(4-1)))<<2);/* 4種(0 ... 3)に制限してから、4倍する。(rank == E,N,H,L) */
 				card.address_set += ((aaa<<3)+(aaa));/*(aaa *= 9; 9倍する。r36_gekiha 含めスペカ領域 9 種類。)*/
 			}
-			h->base_hp				= (my_card_resource[(card.address_set)].spell_life);	/* 全体の体力 */	/*(再定義の必要あり)*/
+			h->base_hp					= (my_card_resource[(card.address_set)].spell_life);	/* 全体の体力 */	/*(再定義の必要あり)*/
 			/*(初回の規定値)*/
 			card.limit_health			= (h->base_hp);
-			card.mode_timer 			= (CARD_BOSS_TIMER_0000_HATUDAN);/*on*/ 	/* 会話形態 */	/* 特殊？ (CARD_BOSS_TIMER_0255_IDO_JYUNNBI) */
+		}
+	}
 			card.spell_used_number		= SPELL_00; 	/* カード生成終了フラグ */
 			card.address_temporaly		= (0);			/*(SPELL_08_rumia-1)*/ /*0*/
 			#if (0)//(1)
 			card_set_boss_move_callback();
 			#else/*(たぶん、同じ)*/
-			card.boss_move_card_callback = kaiwa_00_keitai;/*(必ず、会話0形態から始まる。)*/
+			card.boss_move_card_callback = NULL_keitai;/*(会話終了後に形態が設定されるので、それまで何もしない。)*/
 			#endif
-		}
-	}
+	//
 	/*(リミット分引く)*/		/*(初回攻撃)の攻撃分引く */
 	set_new_limit();			/* 通常攻撃(初回攻撃)の攻撃分 */
 	// ボステクスチャ読み込み
 	stage_boss_load_texture();
+
+	/*---------------------------------------------------------
+		「datで設定したボス出現位置」から、
+		「ボス出現固定位置」まで移動する。
+		これらの初期設定を行う。
+	---------------------------------------------------------*/
+	// 出現座標の初期設定。
+	REG_02_DEST_X	= (BOSS_XP256);/*(t256()形式、ボス出現固定位置)*/
+	REG_03_DEST_Y	= (t256(16.0));/*(t256()形式、ボス出現固定位置)*/
+	boss_set_new_position(h);/*(誘導移動座標を設定)*/
+}
 
 	#if (0)/*(デバッグ)*/
 	kanji_window_clear_line(0); 			/* 漢字ウィンドウの1行目(==0)の内容を消す。 */
@@ -865,14 +853,22 @@ global void called_from_kaiwa_system_boss_load(int boss_number)
 			"ボス、ロードテストOK。", cg.game_now_stage);
 	}
 	#endif
-	/*---------------------------------------------------------
-		「datで設定したボス出現位置」から、
-		「ボス出現固定位置」まで移動する。
-		ように初期設定を行う。
-	---------------------------------------------------------*/
-	// 出現座標の初期設定。
-	REG_02_DEST_X	= (BOSS_XP256);/*(t256()形式、ボス出現固定位置)*/
-	REG_03_DEST_Y	= (t256(16.0));/*(t256()形式、ボス出現固定位置)*/
-	boss_set_new_position(h);/*(誘導移動座標を設定)*/
+/*---------------------------------------------------------
+	外部インターフェイス。
+	-------------------------------------------------------
+	ボスがスペカを変えた場合、同期してボスオプションを消す。
+	ボスオプション、消えるかどうかの判断。
+---------------------------------------------------------*/
+global int check_boss_action(void)
+{
+	OBJ *src;
+	src 				= &obj99[OBJ_HEAD_02_0x0900_TEKI_FIX+TEKI_OBJ_00_BOSS00_HONTAI];/*(ボス本体)*/
 	//
+	if (boss_action_04_speka_kougeki != src->callback_root_supeka)/*ボス、スペカで攻撃中。以外*/ /*(カード中以外)*/
+	{
+		/*(攻撃中以外なら消す)*/
+		return (1);/*(消す)*/
+	}
+		/*(攻撃中なら消さない)*/
+	return (0);/*(消さない)*/
 }

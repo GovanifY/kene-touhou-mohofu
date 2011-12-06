@@ -34,7 +34,7 @@
     魅魔様は 50x50[pixel]とする。
 ---------------------------------------------------------*/
 
-local void mima_set_REG_DEST_XY(OBJ *src)
+local OBJ_CALL_FUNC(mima_set_REG_DEST_XY)
 {
 	/* 弾源 発弾 位置を修正 */
 	REG_02_DEST_X += ((0==(src->obj_type_set&4))?(t256(22)):-(t256(22)));/* 右移動中は右側から撃つ */
@@ -48,12 +48,14 @@ local void mima_set_REG_DEST_XY(OBJ *src)
 	使用レジスタ
 //	REG_08_REG0 	カウンタ。
 	REG_09_REG1 	adj_hari65536	開始地点
+	REG_0a_REG2 	x位置/退避/復旧
+	REG_0b_REG3 	y位置/退避/復旧
 ---------------------------------------------------------*/
 /*---------------------------------------------------------
 	#001 角度弾の移動を行う(通常弾用)
 ---------------------------------------------------------*/
 
-static void mima_danmaku_01_callback(OBJ *src)
+static OBJ_CALL_FUNC(mima_danmaku_01_callback)
 {
 	#if (1)
 	if ((HATUDAN_ITI_NO_JIKAN-64) < src->jyumyou)/* 発弾エフェクト時は無効 */
@@ -72,15 +74,22 @@ static void mima_danmaku_01_callback(OBJ *src)
 //	danmaku_00_standard_angle_mover(src);/*(角度弾移動+画面外弾消し)*/
 	hatudan_system_B_move_angle_001(src);/*(角度弾移動)*/
 }
-local void mima_boss01_nway_fire(OBJ *src)
+local OBJ_CALL_FUNC(mima_boss01_nway_fire)
 {
-	REG_02_DEST_X	= ((src->cx256));
-	REG_03_DEST_Y	= ((src->cy256));
+	REG_02_DEST_X	= ((src->center.x256));
+	REG_03_DEST_Y	= ((src->center.y256));
 	calculate_jikinerai();/* 自機狙い角作成 */
 	REG_09_REG1 = (HATSUDAN_03_angle65536);
 //
 	const int speed256 = (/*0x200*/0x100)+(ra_nd()&0xff)-((3-(REG_0f_GAME_DIFFICULTY))<<6);/* 難易度別で速度低下 */
 	mima_set_REG_DEST_XY(src);	/* 向きで撃つ位置を変える。 */
+	#if (1)
+	//------------------
+	// 退避
+	REG_0a_REG2 = REG_02_DEST_X;
+	REG_0b_REG3 = REG_03_DEST_Y;
+	//------------------
+	#endif
 //
 //	HATSUDAN_02_speed_offset			= t256(1/*0*/);/*(テスト)*/
 	HATSUDAN_04_tama_spec				= (DANMAKU_LAYER_01)|(TAMA_SPEC_0000_TILT);/* (r33-)標準弾 */
@@ -89,17 +98,31 @@ local void mima_boss01_nway_fire(OBJ *src)
 	int ii65536;
 	for (ii65536=(REG_09_REG1/*0*/); ii65536<(REG_09_REG1+65536-(20*64)); ii65536+=(65536/5) )
 	{
-		int jj1024;
+		int jj65536;
 		int kk65536;
 		kk65536 = (0);
-		for (jj1024 = (0); jj1024<(1024/2); jj1024 += (32) )
+		for (jj65536 = (0); jj65536<(65536/2); jj65536 += deg1024to65536(32) )
 		{
+			#if (0)//
 			{
 				int sin_value_t256; 		// sin_value_t256 = 0;
 				int cos_value_t256; 		// cos_value_t256 = 0;
-				int256_sincos1024( (((jj1024)/*&(1024-1)*/)), &sin_value_t256, &cos_value_t256);
+				int256_si ncos1024( ((deg65536to1024(jj65536) )), &sin_value_t256, &cos_value_t256);
 				HATSUDAN_01_speed256		= (int)(speed256 + ((sin_value_t256))); 	/* 弾速 */
 			}
+			#else
+			//------------------
+			HATSUDAN_01_speed256	= t256(1.00);
+			HATSUDAN_03_angle65536	= (((jj65536)));
+			sincos256();/*(破壊レジスタ多いので注意)*/
+			HATSUDAN_01_speed256 = (int)(speed256 + ((REG_03_DEST_Y))); 	/* 弾速 */
+		//	h->center.y256 = (REG_02_DEST_X);/*fps_factor*/
+			//------------------
+			// 復旧
+			REG_02_DEST_X = REG_0a_REG2;
+			REG_03_DEST_Y = REG_0b_REG3;
+			//------------------
+			#endif
 			#if 0
 		//	HATSUDAN_02_speed_offset	= -t256(HATSUDAN_01_speed256>>(6));/* (魅魔様lunaticで)これでも良い気もするけど。 */
 			HATSUDAN_02_speed_offset	= -(HATSUDAN_01_speed256<<(8-6));/* (魅魔様lunaticで)これでも良い気もするけど。 */
@@ -126,14 +149,14 @@ local void mima_boss01_nway_fire(OBJ *src)
 -01 1 0000 luna hard norm
 -00 1 0000 luna hard norm easy
 ---------------------------------------------------------*/
-local void spell_init_0c_hana_test(OBJ *src)
+local OBJ_CALL_FUNC(spell_init_0c_hana_test)
 {
 	card.danmaku_callback[1] = mima_danmaku_01_callback;/*(。)*/
 //	card.danmaku_callback[2] = NULL;/*(0)*/
 //	card.danmaku_callback[3] = NULL;/*(0)*/
 }
 
-local void spell_create_0c_hana_test(OBJ *src)
+local OBJ_CALL_FUNC(spell_create_0c_hana_test)
 {
 //	if (0x40==((REG_10_BOSS_SPELL_TIMER)&0xcf))/* 4回 */
 //	if (0x10==((REG_10_BOSS_SPELL_TIMER)&0x1f))/* (16回に1回)(128なら計8回) */
@@ -160,7 +183,7 @@ local void spell_create_0c_hana_test(OBJ *src)
 //	REG_08_REG0 	カウンタ。
 	REG_0e_REG6 	src_shot_angle65536 開始地点
 ---------------------------------------------------------*/
-local void spell_create_0d_mima_sekkin(OBJ *src)
+local OBJ_CALL_FUNC(spell_create_0d_mima_sekkin)
 {
 //	if (0x40==((REG_10_BOSS_SPELL_TIMER)&0xcf))/* 4回 */
 //	if (0x10==((REG_10_BOSS_SPELL_TIMER)&0x1f))/* (32回に1回)(128なら計 回) */
@@ -199,7 +222,7 @@ local void spell_create_0d_mima_sekkin(OBJ *src)
 	REG_09_REG1 	kaiten_aaa
 	REG_0a_REG2 	kaiten_bbb
 ---------------------------------------------------------*/
-local void spell_create_24_mima_toge(OBJ *src)
+local OBJ_CALL_FUNC(spell_create_24_mima_toge)
 {
 	if (0x00==((REG_10_BOSS_SPELL_TIMER)&0x03))
 	{
@@ -264,26 +287,50 @@ local void spell_create_24_mima_toge(OBJ *src)
 	使用レジスタ
 //	REG_08_REG0 	カウンタ。
 	REG_09_REG1 	kaiten_aaa
-	REG_0a_REG2 	kakudo_111
+	REG_0a_REG2 	x位置/退避/復旧
+	REG_0b_REG3 	y位置/退避/復旧
+	REG_0c_REG4 	kakudo_111
 ---------------------------------------------------------*/
-local void spell_create_24_mima_toge(OBJ *src)
+local OBJ_CALL_FUNC(spell_create_24_mima_toge)
 {
 	if (0x00==((REG_10_BOSS_SPELL_TIMER)&0x33))
 	{
+		#if (1)
+		//------------------
+		// 退避
+		REG_0a_REG2 = REG_02_DEST_X;
+		REG_0b_REG3 = REG_03_DEST_Y;
+		//------------------
+		#endif
 		if (0x00==((REG_10_BOSS_SPELL_TIMER)&0x3f))
 		{	/* ちょっとアリス風味 */
-			REG_0a_REG2 += (7);
+			REG_0c_REG4 += deg1024to65536(7);
+			#if 0
 			{
 				int sin_value_t256; 		// sin_value_t256 = 0;
 				int cos_value_t256; 		// cos_value_t256 = 0;
-				int256_sincos1024( (((REG_0a_REG2)/*&(1024-1)*/)), &sin_value_t256, &cos_value_t256);
+				int256_si ncos1024( ((deg65536to1024(REG_0c_REG4)/*&(1024-1)*/)), &sin_value_t256, &cos_value_t256);
 				REG_09_REG1 -= (( (sin_value_t256))<<6);
 			}
+			#else
+			//------------------
+			HATSUDAN_01_speed256	= t256(64.00);
+			HATSUDAN_03_angle65536	= (((REG_0c_REG4)));
+			sincos256();/*(破壊レジスタ多いので注意)*/
+			REG_09_REG1 -= ( ((REG_03_DEST_Y))); 	/* 弾速 */
+		//	h->center.y256 = (REG_02_DEST_X);/*fps_factor*/
+			//------------------
+			#endif
 			#if (1)
 			voice_play(VOICE11_BOSS_KIRARIN, TRACK04_TEKIDAN);
 		//	bullet_play_04_auto(VOICE11_BOSS_KIRARIN);
 			#endif
 		}
+		//------------------
+		// 復旧
+		REG_02_DEST_X = REG_0a_REG2;
+		REG_03_DEST_Y = REG_0b_REG3;
+		//------------------
 		HATSUDAN_01_speed256				= (t256(1.5));		/* 弾速 */
 		HATSUDAN_04_tama_spec				= (DANMAKU_LAYER_00)|(TAMA_SPEC_0000_TILT);/* (r33-)標準弾 */
 		HATSUDAN_05_bullet_obj_type 		= (BULLET_HARI32_00_AOI);				/* [水色針弾] */

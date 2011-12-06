@@ -11,6 +11,7 @@
 	時間でアドバタイズ(オートプレイデモ)になったりする予定は
 	あるけど、今(r36)の所未定です。(だいぶ先かと)
 ---------------------------------------------------------*/
+#include "111_my_file.h"/*(bg読みこみ。)*/
 
 #include "kanji_system.h"
 
@@ -37,13 +38,13 @@ typedef struct
 	int x256;
 	int y256;
 //
-	int x_yurehaba; 	// 揺れ幅(メニュー選択時、横 x の揺れ幅) */
-	int x_okureti;		// 遅れ値(揺れ幅が徐々に戻る用のディレイフレームを設定) 3[フレーム] */
+	int x_yurehaba; 	// 揺れ幅(メニュー選択時、横 x の揺れ幅[pixel]) */
+	int x_okureti;		// 遅れ値(揺れ幅が徐々に戻る用のディレイフレームを設定) 3[frame] */
 } MY_OBJ;
 
 //typedef struct
 //{
-static MY_OBJ	menu_item_my_obj[MENU_ITEM_99_MAX];			/* オブジェクト */
+static MY_OBJ	menu_item_my_obj[MENU_ITEM_99_MAX]; 		/* オブジェクト */
 static int		active_item;		/* 現在メニュー上で選択されている項目番号。(選択中カーソル位置) */
 static int		toutatu_wariai; 	/* メニューの到達割合(0 ... 255)。 */
 static int		time_out_flag;		/* -3==,  -2==, -1==時間切れなし, 0==時間切れ, 時間カウント中=1... */
@@ -144,7 +145,7 @@ static void move_menu_str(void)
 		{
 			if (i==active_item) /*(選択された)*/
 			{
-				menu_item_my_obj[i].x_yurehaba = (12);	/*(揺れ幅を 12 に設定。)*/
+				menu_item_my_obj[i].x_yurehaba = (12);	/*(揺れ幅を 12[pixel] に設定。)*/
 			}
 			else	/*(選択されてない)*/
 			{
@@ -153,7 +154,7 @@ static void move_menu_str(void)
 				)
 				{
 					menu_item_my_obj[i].x_yurehaba--;	/*(揺れ幅を減らす。)*/
-					menu_item_my_obj[i].x_okureti = (3);/*(遅れ値を 3 フレームに設定。)*/
+					menu_item_my_obj[i].x_okureti = (3);/*(遅れ値を 3[frame]に設定。)*/
 				}
 			}
 			/*(遅れ値を計算)*/
@@ -327,7 +328,7 @@ static void title_menu_02_select_menu(void)
 		{
 			if (psp_pad.pad_data & (PSP_KEY_DOWN|PSP_KEY_UP|PSP_KEY_PAUSE|PSP_KEY_RIGHT))
 			{
-				voice_play(VOICE02_MENU_SELECT, TRACK01_EXPLODE);
+				voice_play(VOICE02_MENU_SELECT, TRACK01_MENU01);
 			}
 			if (psp_pad.pad_data & PSP_KEY_DOWN)
 			{
@@ -377,7 +378,7 @@ static void title_menu_02_select_menu(void)
 			}
 			if (psp_pad.pad_data & PSP_KEY_SHOT_OK)
 			{
-				voice_play(VOICE01_MENU_OK/*VOICE02_MENU_SELECT*/, TRACK01_EXPLODE);
+				voice_play(VOICE01_MENU_OK/*VOICE02_MENU_SELECT*/, TRACK01_MENU01);
 				move_mode++;//(2)になる。
 				cb.main_call_func = title_menu_03_moji_taihi;	/* メニュー文字退避移動 */
 				time_out_flag	= M1_NOT_TIME_OUT;/* 時間切れなし */
@@ -422,26 +423,26 @@ static void title_menu_02_select_menu(void)
 			};
 			{
 				OBJ *h;
-				h					= obj_add_Ann_direct(OBJ_HEAD_02_0x0900_KOTEI+FIX_OBJ_08_EFFECT01+i);	/* 必ず登録できる。 */
+				h					= obj_regist_direct_number(OBJ_HEAD_03_0x0a00_KOTEI+FIX_OBJ_08_EFFECT01+i); 	/* 必ず登録できる。 */
 			//
-				h					= &obj99[OBJ_HEAD_02_0x0900_KOTEI+FIX_OBJ_08_EFFECT01+i];
+				h					= &obj99[OBJ_HEAD_03_0x0a00_KOTEI+FIX_OBJ_08_EFFECT01+i];
 				h->jyumyou			= JYUMYOU_MUGEN;/* 時間で自動消去しない */
 //				h->m_Hit256R		= JIKI_ATARI_ITEM_16;/*???*/
 				h->atari_hantei 	= ATARI_HANTEI_OFF; 		/* あたり判定のOFF(無敵) */
 			//	h->type 			= AAA;
 				h->obj_type_set 			= PANEL_STR_EASY+i;//(SPELL_SQUERE_);
 				//
-			//	h->cx256			= t256(100);//src->cx256 + ((si n1024((ww_angle1024))*radius));
-			//	h->cy256			= (i<<(8+5));//src->cy256 + ((co s1024((ww_angle1024))*radius));
+			//	h->center.x256			= t256(100);//src->center.x256 + ((si n1024((ww_angle1024))*radius));
+			//	h->center.y256			= (i<<(8+5));//src->center.y256 + ((co s1024((ww_angle1024))*radius));
 				#if (0)
-				h->cx256			= t256(128);//src->cx256 + ((si n1024((ww_angle1024))*radius));
+				h->center.x256			= t256(128);//src->center.x256 + ((si n1024((ww_angle1024))*radius));
 				#else
 				/* (r35でも)対応が間にあわなかった。 */
-				h->cx256			= t256(480+1);//src->cx256 + ((si n1024((ww_angle1024))*radius));
+				h->center.x256			= t256(480+1);//src->center.x256 + ((si n1024((ww_angle1024))*radius));
 				#endif
-				h->cy256			= ((aaa_y[(i)])<<8);//src->cy256 + ((co s1024((ww_angle1024))*radius));
-				h->m_zoom_x256		= t256(1.0);
-				h->m_zoom_y256		= t256(1.0);
+				h->center.y256			= ((aaa_y[(i)])<<8);//src->center.y256 + ((co s1024((ww_angle1024))*radius));
+				h->m_zoom.x256		= t256(1.0);
+				h->m_zoom.y256		= t256(1.0);
 				#if 1
 				/* 描画用角度(下が0度で左回り(反時計回り)) */
 				h->rotationCCW1024	= (0);
@@ -450,15 +451,7 @@ static void title_menu_02_select_menu(void)
 		}
 	}
 	#endif
-//	#define TEISOKU_EFFECT_00_OBJ (6)
-//	#define TEISOKU_EFFECT_01_OBJ (7)
-	#if 0
-	// 低速effect
-	OBJ *h;
-	h					= &obj99[OBJ_HEAD_02_0x0900_KOTEI+FIX_OBJ_15_JIKI_TEISOKU_EFFECT];
-	h->atari_hantei 	= ATARI_HANTEI_OFF; 		/* あたり判定のOFF(無敵) */
-	h->color32			= MAKE32RGBA(0xff, 0x22, 0x22, 0x80);	/* 自機、半透明 */	/*	s1->alpha			= 0x50;*/
-	#endif
+
 }
 	#endif
 /*---------------------------------------------------------
@@ -466,11 +459,13 @@ static void title_menu_02_select_menu(void)
 ---------------------------------------------------------*/
 
 /*static*/extern void kaiwa_init_obj_position(void);
-/*static*/global void title_menu_start(void)
+/*static*/global MAIN_CALL_FUNC(title_menu_start)
 {
-	cb.callback_gu_draw_haikei	= NULL;//dr aw_bg_screen = 0;	/* 背景ウィンドウ表示off */
 	set_music_volume(128);/*とりあえず*/
-	load_SDL_bg(BG_TYPE_00_title_bg);
+	play_music_num(BGM_27_menu01);
+	//
+	cb.callback_gu_draw_haikei	= NULL;//dr aw_bg_screen = 0;	/* 背景ウィンドウ表示off */
+	my_file_common_name[0] = BG_TYPE_00_title_bg;psp_load_bg_file_name();
 	psp_pop_screen();
 //	title_logo_reset_position();
 //	int res_num,//		RES00_MAIN_MENU,
@@ -501,8 +496,8 @@ static void title_menu_02_select_menu(void)
 		{
 			menu_item_my_obj[i].x256			= t256(0);
 			menu_item_my_obj[i].y256			= t256(0);
-			menu_item_my_obj[i].x_yurehaba		= (0);	/*(揺れ幅を 0 に初期化する。)*/
-			menu_item_my_obj[i].x_okureti		= (0);	/*(遅れ値を 0 に初期化する。)*/
+			menu_item_my_obj[i].x_yurehaba		= (0);	/*(揺れ幅を 0[pixel] に初期化する。)*/
+			menu_item_my_obj[i].x_okureti		= (0);	/*(遅れ値を 0[frame] に初期化する。)*/
 		}
 		ml_font[i].x = ((((my_menu_resource[i].x_offset[0]) )) );/*(X位置)*/
 		ml_font[i].y = ((((my_menu_resource[i].y_offset[0]) )) );/*(Y位置)*/
@@ -549,13 +544,4 @@ static void title_menu_02_select_menu(void)
 		kaiwa_all_obj_draw_on_off(0);	/* 立ち絵を描画しない。 */
 	}
 	cb.main_call_func = title_menu_01_move_atumaru;
-}
-
-/*---------------------------------------------------------
-
----------------------------------------------------------*/
-
-global void old_menu_system_init(void)
-{
-//	active_item 		= (0);
 }

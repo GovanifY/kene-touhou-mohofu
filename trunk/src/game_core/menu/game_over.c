@@ -50,7 +50,6 @@ global void gamecore_term(void)
 	kaiwa_obj_set_256();
 	kaiwa_all_obj_draw_on_off(0);	/* 立ち絵を描画しない。 */
 	//
-//廃止	cg.dr aw_flag_kaiwa_screen	= (0); /* 会話画面の会話用せりふウィンドウ表示フラグ off */
 	cg.bomber_time = (0);
 	#if (1==USE_r36_SCENE_FLAG)
 	/*(??????????????)*/
@@ -62,8 +61,8 @@ global void gamecore_term(void)
 	/* 現在の version はボスを倒さないで抜けると Gu がまずいので対策 */
 	cg.state_flag &= (~(STATE_FLAG_15_DRAW_BOSS_GAUGE));	/* Guは書かないとマズイ */
 	#endif
-	#if 1
-	cg.draw_boss_hp_value	= 0;/* よくわかんない */			/* Guは書かないとマズイ */
+	#if (1)
+	cg.draw_boss_hp_value	= (0);/* よくわかんない */			/* Guは書かないとマズイ */
 	#endif
 //
 	gu_set_bg_u32_clear_color(0xff000000);	/*AABBGGRR*/	/*(黒)*/
@@ -72,10 +71,9 @@ global void gamecore_term(void)
 	/*
 		この辺で boss とか core とか開放しなくていいんだっけ？
 	*/
-	obj_cleanup_all();/* [A00弾領域]と[A01敵領域]と[A02固定領域]と[A03パネル領域]のOBJを全消去。 */
+	obj_system_cleanup_all();/* [A00弾領域]と[A01固定敵領域]と[A02敵領域]と[A03固定領域]と[A04パネル領域]のOBJを全消去。 */
 //	score_cleanup();
 	set_music_volume(128);
-	play_music_num(BGM_27_menu01);
 }
 
 
@@ -326,7 +324,7 @@ static int result_time_out;
 #define MUSIC_SKIP_TIME 	byou60(5)	/* 約 5 秒(ボタンで飛ばせる時間) */
 #define MUSIC_FADE_OUT_TIME byou60(4)	/* 約 4 秒(飛ばせない時間) */
 
-static void stage_clear_result_screen_local_work(void)
+static MAIN_CALL_FUNC(stage_clear_result_screen_local_work)
 {
 	result_time_out--;
 	/* ボタンで飛ばせる時間ならキーチェック */
@@ -368,8 +366,7 @@ static void stage_clear_result_screen_local_work(void)
 		#if (1==USE_r36_SCENE_FLAG)
 		/*(??????????????)*/
 		if (cg.state_flag & 0x00008000u)//プレイヤーループを抜ける処理(とりあえず??????)
-		#else
-		if (cg.state_flag & STATE_FLAG_13_GAME_TERMINATE)/* 会話システムで終了指示されたら、終了する */
+		/* 会話システムで終了指示されたら、終了する */
 		#endif
 		{
 		//	#if 1/* この２つのセットで自動的に終了(GAME OVER)する */
@@ -407,7 +404,7 @@ static void stage_clear_result_screen_local_work(void)
 	RESULT表示(ゲーム各面クリアー時)の処理開始
 ---------------------------------------------------------*/
 
-global void stage_clear_result_screen_start(void)
+global MAIN_CALL_FUNC(stage_clear_result_screen_start)
 {
 	kanji_window_all_clear();				/* 漢字画面を全行消す。漢字カーソルをホームポジションへ移動。 */
 	render_stage_clear_result();
@@ -423,7 +420,7 @@ global void stage_clear_result_screen_start(void)
 
 static int game_over_time_out;/*wait*/
 
-static void gameover_local_work(void)
+static MAIN_CALL_FUNC(gameover_local_work)
 {
 //	psp_pop_screen();
 	if (0==psp_pad.pad_data_alter)/* さっき何も押されてなかった場合にキーチェック */
@@ -436,6 +433,7 @@ static void gameover_local_work(void)
 	game_over_time_out--;
 	if (0 > game_over_time_out)
 	{
+		/*(r39)*/cg.side_panel_draw_flag = (0);/*(Gu描画: 右サイドのスコアパネル表示を非表示にする。でないと名前入力画面がおかしくなる)*/
 		if (
 			#if (0==USE_CONTINUED_RANKING)
 		//	( (/*3*/DEFAULT_MAX_CONTINUE-1) == cg.game_now_max_continue ) &&
@@ -460,7 +458,7 @@ static void gameover_local_work(void)
 	ゲームオーバーの処理開始
 ---------------------------------------------------------*/
 
-global void gameover_start(void)/* init */
+global MAIN_CALL_FUNC(gameover_start)/* init */
 {
 	/* 初期化 */
 	//void gameover_init(void)

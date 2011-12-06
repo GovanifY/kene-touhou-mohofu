@@ -63,8 +63,10 @@ error! "‚±‚ÌƒvƒƒOƒ‰ƒ€‚Í SDL_mixer.h ‚ªƒCƒ“ƒNƒ‹[ƒh‚³‚ê‚Ä‚¢‚é‚ÆAƒRƒ“ƒpƒCƒ‹‚Å‚«‚
 	#define SDL_SetError_bbb(aaa)
 #endif
 
+//static /*size_t*/void sdl_read_func_ void(void *ptr, size_t size, size_t nmemb, void *datasource)
 static size_t sdl_read_func(void *ptr, size_t size, size_t nmemb, void *datasource)
 {
+//	/*return*/ SDL_RWread_ void((SDL_RWops*)datasource, ptr, size, nmemb);
 	return SDL_RWread((SDL_RWops*)datasource, ptr, size, nmemb);
 }
 
@@ -112,10 +114,11 @@ PSPL_AUDIO_SPEC *Mix_LoadOGG_RW(
 	if ( (!src) || (!audio_buf) || (!audio_len) )	/* sanity checks. */
 	{	goto done;}
 
-	callbacks.read_func = sdl_read_func;
-	callbacks.seek_func = sdl_seek_func;
-	callbacks.tell_func = sdl_tell_func;
-	callbacks.close_func = freesrc ? sdl_close_func_freesrc : sdl_close_func_nofreesrc;
+//	callbacks.read_func_ void 	= sdl_read_func_ void;
+	callbacks.read_func 		= sdl_read_func;
+	callbacks.seek_func 		= sdl_seek_func;
+	callbacks.tell_func 		= sdl_tell_func;
+	callbacks.close_func 		= freesrc ? sdl_close_func_freesrc : sdl_close_func_nofreesrc;
 
 	if (ov_open_callbacks(src, &vf, NULL, 0, callbacks) != 0)
 	{

@@ -27,7 +27,6 @@ enum
 	// ------------- これより上は特別機能 ----------
 	OPTION_MENU_07_RESET,
 	OPTION_MENU_08_KEYCONFIG,
-//	OPTION_MENU_08_MUSIC_ROOM,//廃止
 	OPTION_MENU_09_QUIT,
 	OPTION_MENU_MAX,
 };
@@ -50,10 +49,6 @@ enum
 //	KEY_TAB_10_OFF,
 //	KEY_TAB_11_OGG,
 //	KEY_TAB_12_IT,
-//	KEY_TAB_13_EASY,
-//	KEY_TAB_14_NOR,
-//	KEY_TAB_15_HARD,
-//	KEY_TAB_16_LUNA,
 //
 	KEY_TAB_17_MAX,
 };
@@ -69,17 +64,17 @@ typedef struct
 	u8 item;
 	u8 chr_length;
 	u8 offset;
-	u8 item_default;
+	u8 item_default;/*[初期設定値(オプションファイルの読み込みに失敗した場合、や初期化した場合)]*/
 } OPTION_STATUS_SETTING;
 #define EXT_MAX (2)
 static const OPTION_STATUS_SETTING option_status_setting[OPTION_MENU_CONFIG_MAX+EXT_MAX] =
 {
-	{5, (2<<4), KEY_TAB_01_1,		(2)}, // (2)==3機設定。 OPTION_CONFIG_00_PLAYER = 0,
+	{5, (2<<4), KEY_TAB_01_1,		(2)}, // (2)==3機設定。 	OPTION_CONFIG_00_PLAYER = 0,
 	{4, (2<<4), KEY_TAB_00_0,		(3)}, // (3)==3ボム設定。	OPTION_CONFIG_01_BOMB,
-	{2, (4<<4), KEY_TAB_08_OFF, 	(1)}, // (1)==BGM 音出す。	OPTION_CONFIG_02_BGM,/*3 KEY_TAB_10_OFF*/
+	{2, (4<<4), KEY_TAB_08_OFF, 	(1)}, // (1)==BGM 音出す。	OPTION_CONFIG_02_BGM,
 	{2, (4<<4), KEY_TAB_08_OFF, 	(1)}, // (1)==効果音出す。	OPTION_CONFIG_03_SOUND,
 //OPTION_MENU_CONFIG_MAX
-	{4, (4<<4), KEY_TAB_00_0,		(1)}, // (1)==normal, (0)==easy OPTION_CONFIG_04_CURRENT_DIFFICULTY,	KEY_TAB_13_EASY
+	{4, (4<<4), KEY_TAB_00_0,		(1)}, // (1)==normal, (0)==easy OPTION_CONFIG_04_CURRENT_DIFFICULTY,
 	{8, (1<<4), KEY_TAB_00_0,		(1)}, // (1)==霊夢(A)	OPTION_CONFIG_05_CURRENT_PLAYER,
 //	{2, (4<<4), KEY_TAB_08_OFF, 	(1)}, // OPTION_CONFIG_06_ANALOG,
 //	ゲーム進捗設定							OPTION_CONFIG_07_OPEN,
@@ -126,10 +121,10 @@ global /*static*/ void check_limit_value_option(int *option_setting_map)
 	変数 / 定数
 ---------------------------------------------------------*/
 
-static int option_setting[OPTION_CONFIG_08_MAX/*OPTION_MENU_MAX*/]; 					// オプション項目
+static int option_setting[OPTION_CONFIG_08_MAX/*OPTION_MENU_MAX*/]; 	/* オプション項目 */
 
 #define MAX_KEY_NAMES_12	((KEY_TAB_17_MAX+1-1)+(OPTION_MENU_MAX))
-static SDL_Surface *option_menu_name_surface[(MAX_KEY_NAMES_12)];	/* 文字の表示用画像 */
+static SDL_Surface *option_menu_name_surface[(MAX_KEY_NAMES_12)];		/* 文字の表示用画像 */
 
 #define X_LOCATE_OFFSET_02	(8/*80*/)
 #define X_LOCATE_OFFSET_04	(160/*250*/)
@@ -202,35 +197,10 @@ static void option_menu_byouga(void)
 
 
 /*---------------------------------------------------------
-	廃止
----------------------------------------------------------*/
-
-//static void option_menu_state_02_fade_init(void)
-//{
-//		play_music_num(BGM_22_menu01);
-//	//	load_SDL_bg(BG_TYPE_00_title_bg);
-//		bg_alpha_aaa		= 255;
-//		bg_alpha_aaa		= 0;
-//		bg_alpha_aaa += /*1*/2/*8*/;/*fps_factor*/
-//		if ((/*250-8*/224) < bg_alpha_aaa)
-//		{
-//			bg_alpha_aaa = 255;
-//			/* タイトルメニューへ移動 */	/* キーコンフィグメニューへ移動 */	/* ミュージックルームへ移動 */
-//			cb.main_call_func = menu_out_call_func;
-//			return;/* 描画しない(ハングアップするので) */
-//		}
-//		SDL_SetAlpha(sdl_screen[SDL_01_BACK_SCREEN], SDL_SRCALPHA, bg_alpha_aaa);
-//		psp_pop_screen();
-//	}
-//	option_menu_byouga();/*(描画)*/
-//}
-
-
-/*---------------------------------------------------------
 	おしまい
 ---------------------------------------------------------*/
 
-static void option_menu_terminate(void)
+static MAIN_CALL_FUNC(option_menu_terminate)
 {
 	#if 1/* 文字の表示用画像を開放する */
 	{
@@ -251,7 +221,7 @@ static void option_menu_terminate(void)
 	選択中
 ---------------------------------------------------------*/
 
-static void option_menu_state_01_select_menu(void)
+static MAIN_CALL_FUNC(option_menu_state_01_select_menu)
 {
 	/* メニュー選択 */
 	{
@@ -261,19 +231,19 @@ static void option_menu_state_01_select_menu(void)
 			if (OPTION_MENU_07_RESET > menu_cursor1)
 			{
 				/* あまり重要でないので上下音、無しにしてみた */
-				if (psp_pad.pad_data & (/*PSP_KEY_UP|PSP_KEY_DOWN|*/PSP_KEY_LEFT|PSP_KEY_RIGHT))				// 上下左右ボタン入力
+				if (psp_pad.pad_data & (/*PSP_KEY_UP|PSP_KEY_DOWN|*/PSP_KEY_LEFT|PSP_KEY_RIGHT))	// 上下左右ボタン入力 */
 				{
-					voice_play(VOICE02_MENU_SELECT, TRACK01_EXPLODE);
+					voice_play(VOICE02_MENU_SELECT, TRACK01_MENU01);
 				}
 			}
 		//
-			if (psp_pad.pad_data & PSP_KEY_UP)				// 上ボタン入力
+			if (psp_pad.pad_data & PSP_KEY_UP)				// 上ボタン入力 */
 			{
 				if (OPTION_MENU_00_PLAYER == menu_cursor1)		{	menu_cursor1 = (OPTION_MENU_MAX-1);}
 				else											{	menu_cursor1--;}
 			}
 			else
-			if (psp_pad.pad_data & PSP_KEY_DOWN)			// 下ボタン入力
+			if (psp_pad.pad_data & PSP_KEY_DOWN)			// 下ボタン入力 */
 			{
 				if ((OPTION_MENU_MAX-1) == menu_cursor1)		{	menu_cursor1 = OPTION_MENU_00_PLAYER;}
 				else											{	menu_cursor1++;}
@@ -282,9 +252,9 @@ static void option_menu_state_01_select_menu(void)
 			{
 				if (OPTION_MENU_07_RESET == menu_cursor1)			// 項目[ RESET ] を選んでいる場合
 				{
-					if (psp_pad.pad_data & PSP_KEY_SHOT_OK) // ショットボタン入力
+					if (psp_pad.pad_data & PSP_KEY_SHOT_OK) // ショットボタン入力 */
 					{
-						voice_play(VOICE07_BOMB, TRACK01_EXPLODE);/*テキトー*/
+						voice_play(VOICE07_BOMB, TRACK01_MENU01);/*テキトー*/
 						set_default_option(option_setting);
 						menu_cursor1 = OPTION_MENU_09_QUIT;
 					}
@@ -294,73 +264,63 @@ static void option_menu_state_01_select_menu(void)
 				{
 					if (psp_pad.pad_data & PSP_KEY_BOMB_CANCEL) 	// キャンセルボタン入力
 					{
-						voice_play(VOICE04_SHIP_HAKAI, TRACK03_SHORT_MUSIC/*TRACK01_EXPLODE*/);/* 自機死に音は、なるべく重ねない */
+						voice_play(VOICE04_SHIP_HAKAI, TRACK02_MENU02/*TRACK01_MENU01*/);/* 自機死に音は、なるべく重ねない */
 						cb.menu_out_call_func	= title_menu_start; 	/* タイトルメニューへ移動指示 */
 						cb.main_call_func		= option_menu_terminate;
 					}
 					else
-					if (psp_pad.pad_data & PSP_KEY_SHOT_OK) 	// ショットボタン入力
+					if (psp_pad.pad_data & PSP_KEY_SHOT_OK) 	// ショットボタン入力 */
 					{
-						// メニューを抜ける。
+						// メニューを抜ける。 */
 						{
-							// 最終的に代入される物
+							// 最終的に代入される物 */
 							{
 								int i;
 								for (i=0; i<OPTION_CONFIG_08_MAX; i++)
 								{
-									//	システム(PSPのハードウェア)順
+									//	システム(PSPのハードウェア)順 */
 									option_config[i] = option_setting[i];
 								}
 							}
-						//	ini_save();
-							voice_play(VOICE02_MENU_SELECT, TRACK01_EXPLODE);/*テキトー*/
+						//	ini_file_save(); */
+							voice_play(VOICE02_MENU_SELECT, TRACK01_MENU01);/*(トラック配置はテキトー)*/
 						}
 						cb.menu_out_call_func	= title_menu_start; 	/* タイトルメニューへ移動指示 */
 						cb.main_call_func		= option_menu_terminate;
 					}
 				}
 				else
-				if (OPTION_MENU_08_KEYCONFIG == menu_cursor1)			// 項目[ KEY CONFIG ] を選んでいる場合
+				if (OPTION_MENU_08_KEYCONFIG == menu_cursor1)	/* 項目[ KEY CONFIG ] を選んでいる場合 */
 				{
-					if (psp_pad.pad_data & PSP_KEY_SHOT_OK) // ショットボタン入力
+					if (psp_pad.pad_data & PSP_KEY_SHOT_OK) 	/* ショットボタン入力 */
 					{
-						voice_play(VOICE07_BOMB, TRACK01_EXPLODE);/*テキトー*/
+						voice_play(VOICE07_BOMB, TRACK01_MENU01);/*(トラック配置はテキトー)*/
 						cb.menu_out_call_func	= key_config_start; 	/* キーコンフィグメニューへ移動指示 */
 						cb.main_call_func		= option_menu_terminate;
 					}
 				}
-//				else//廃止
-//				if (OPTION_MENU_08_MUSIC_ROOM == menu_cursor1)			// 項目[ MUSIC ROOM ] を選んでいる場合
-//				{
-//					if (psp_pad.pad_data & PSP_KEY_SHOT_OK) // ショットボタン入力
-//					{
-//						voice_play(VOICE07_BOMB, TRACK01_EXPLODE);/*テキトー*/
-//						cb.menu_out_call_func	= music_room_start; 	/* ミュージックルームへ移動指示 */
-//						cb.main_call_func		= option_menu_terminate;
-//					}
-//				}
 				else	/* 設定項目を変更する場合( 項目[ RESET ] 項目[ QUIT ]以外を選んでいる場合) */
 				{
-					if (psp_pad.pad_data & (PSP_KEY_LEFT|PSP_KEY_RIGHT))		// 左右ボタン入力
+					if (psp_pad.pad_data & (PSP_KEY_LEFT|PSP_KEY_RIGHT))	/* 左右ボタン入力 */
 					{
 						int menu_cursor2;
-						// 選択した所に何が入っているのか調べる
+						/* 選択した所に何が入っているのか調べる */
 						menu_cursor2 = option_setting[menu_cursor1];
 						//
-						if (psp_pad.pad_data & PSP_KEY_LEFT)			// 左ボタン入力
+						if (psp_pad.pad_data & PSP_KEY_LEFT)			/* 左ボタン入力 */
 						{
 							menu_cursor2--;
 							if ((0/*KINOU_00_NONE*/) > menu_cursor2)	{	menu_cursor2 = (option_status_setting[menu_cursor1].item-1); }
 						}
 						else
-						if (psp_pad.pad_data & PSP_KEY_RIGHT)		// 右ボタン入力
+						if (psp_pad.pad_data & PSP_KEY_RIGHT)		/* 右ボタン入力 */
 						{
 							menu_cursor2++;
 							if ((option_status_setting[menu_cursor1].item-1) < menu_cursor2)	{	menu_cursor2 = 0/*KINOU_00_NONE*/; }
 						}
 						option_setting[menu_cursor1] = menu_cursor2;
 						//
-//						voice_play(VOICE02_MENU_SELECT, TRACK01_EXPLODE);/*テキトー*/
+//						voice_play(VOICE02_MENU_SELECT, TRACK01_MENU01);/*テキトー*/
 					}
 				}
 			}
@@ -374,7 +334,7 @@ static void option_menu_state_01_select_menu(void)
 	フェードイン中
 ---------------------------------------------------------*/
 
-static void option_menu_state_00_slide_in(void)
+static MAIN_CALL_FUNC(option_menu_state_00_slide_in)
 {
 	{
 	//	bg_alpha_aaa += /*1*/2/*6*/;/*fps_factor*/
@@ -398,10 +358,8 @@ static void option_menu_state_00_slide_in(void)
 	開始
 ---------------------------------------------------------*/
 
-global void option_menu_start(void)
+global MAIN_CALL_FUNC(option_menu_start)
 {
-//	play_music_num(BGM_05_stage5);
-//	load_SDL_bg(BG_TYPE_02_key_config);
 	#if 0
 	//	システム(PSPのハードウェア)順
 	option_setting[ 0] = option_config[ 0];
@@ -438,10 +396,6 @@ global void option_menu_start(void)
 //			"Off",
 //			"Ogg",
 //			"IT",
-//			"Easy",
-//			"Normal",
-//			"Hard",
-//			"Lunatic",
 
 			"Player",
 			"Bomb",
@@ -453,7 +407,6 @@ global void option_menu_start(void)
 
 			"Reset",
 			"Keyconfig",
-//			"Music Room",//廃止
 			"Quit",
 		};
 		{

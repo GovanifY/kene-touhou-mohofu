@@ -52,13 +52,13 @@
 /*---------------------------------------------------------
 	[‰Šú‰»ƒZƒNƒVƒ‡ƒ“]
 ---------------------------------------------------------*/
-local void spell_init_10_cirno_misogi(OBJ *src)
+local OBJ_CALL_FUNC(spell_init_10_cirno_misogi)
 {
 //	if ((64-1)==((src->boss_sp ell_timer)))
 //	if ((SPELL_TIME_0060-1)==((src->boss_sp ell_timer)))
 	{
-		REG_02_DEST_X	= ((src->cx256));
-		REG_03_DEST_Y	= ((src->cy256));
+		REG_02_DEST_X	= ((src->center.x256));
+		REG_03_DEST_Y	= ((src->center.y256));
 		calculate_jikinerai();/* ©‹@‘_‚¢Špì¬ */
 	//	/*•Ê•Ï”‚Å‚à—Ç‚¢?*/src->tmp_angleCCW65536
 		REG_0a_REG2 = ((REG_0f_GAME_DIFFICULTY)>>1);
@@ -79,7 +79,7 @@ local void spell_init_10_cirno_misogi(OBJ *src)
 	REG_0d_REG5 	“ïˆÕ“x•Ê’è”1
 	REG_0e_REG6 	“ïˆÕ“x•Ê’è”2
 ---------------------------------------------------------*/
-local void spell_create_10_cirno_misogi(OBJ *src)
+local OBJ_CALL_FUNC(spell_create_10_cirno_misogi)
 {
 	count_up_limit_NUM(REG_NUM_08_REG0, 8);
 //	if (0x40==((src->boss_sp ell_timer)&0xc7))/* 8‰ñ(C³1-2-3-4-5-6-7’e:0way‚ÍŒ‚‚½‚È‚¢‚Ì‚ÅŒ‚‚Â‚Ì‚Í7‰ñ) */
@@ -110,8 +110,8 @@ local void spell_create_10_cirno_misogi(OBJ *src)
 			{
 				// hard 18•ûŒü(1‰ñ)
 				// Luna 36•ûŒü(2‰ñ)
-				REG_02_DEST_X	= ((src->cx256));
-				REG_03_DEST_Y	= ((src->cy256));
+				REG_02_DEST_X	= ((src->center.x256));
+				REG_03_DEST_Y	= ((src->center.y256));
 				calculate_jikinerai();/* 1:‚¢‚¿‚¢‚¿ì¬‚·‚é‚Á‚Û‚¢B */
 				//
 				HATSUDAN_01_speed256			= (t256(2.0));				/* ’e‘¬(2.5) */
@@ -184,7 +184,7 @@ local void spell_create_10_cirno_misogi(OBJ *src)
 	[’e–‹ƒOƒ‹[ƒv(1)ƒZƒNƒVƒ‡ƒ“]
 	-------------------------------------------------------
 ---------------------------------------------------------*/
-local void cirno_icecle_fall_danmaku_11_callback(OBJ *src)/* •X•„uƒAƒCƒVƒNƒ‹ƒtƒH[ƒ‹v */
+local OBJ_CALL_FUNC(cirno_icecle_fall_danmaku_11_callback)/* •X•„uƒAƒCƒVƒNƒ‹ƒtƒH[ƒ‹v */
 {
 //	if (((32*18)-HATUDAN_FRAME64)==((REG_0a_REG2) ))/* –ñ0.33[•b](==20[frame])’â~ */
 	if ((HATUDAN_ITI_NO_JIKAN-64) == src->jyumyou)/* ”­’eƒGƒtƒFƒNƒgŒã‚©‚ç[64]ƒJƒEƒ“ƒg‚Ì’e */
@@ -215,7 +215,7 @@ local void cirno_icecle_fall_danmaku_11_callback(OBJ *src)/* •X•„uƒAƒCƒVƒNƒ‹ƒtƒ
 	-------------------------------------------------------
 ---------------------------------------------------------*/
 
-local void spell_init_1b_cirno_icecle_fall(OBJ *src)
+local OBJ_CALL_FUNC(spell_init_1b_cirno_icecle_fall)
 {
 //	card.danmaku_callback[1] = danmaku_01_standard_angle_sayuu_hansya_mover;/*(’Êí’e—p)*/	/*(‰æ–ÊŠO‚È‚ç”½ËŒ¸‘¬)*/
 	card.danmaku_callback[1] = cirno_icecle_fall_danmaku_11_callback;/*(•X•„uƒAƒCƒVƒNƒ‹ƒtƒH[ƒ‹v—pB)*/
@@ -226,13 +226,13 @@ local void spell_init_1b_cirno_icecle_fall(OBJ *src)
 	[”­’eƒZƒNƒVƒ‡ƒ“]
 	-------------------------------------------------------
 ---------------------------------------------------------*/
-local void spell_create_1b_cirno_icecle_fall(OBJ *src)
+local OBJ_CALL_FUNC(spell_create_1b_cirno_icecle_fall)
 {
 //	if ((64-1)==((src->boss_sp ell_timer)))
 //	if ((SPELL_TIME_0060-1)==((src->boss_sp ell_timer)))
 //	{
-//		REG_02_DEST_X	= ((src->cx256));
-//		REG_03_DEST_Y	= ((src->cy256));
+//		REG_02_DEST_X	= ((src->center.x256));
+//		REG_03_DEST_Y	= ((src->center.y256));
 //		calculate_jikinerai();/* ©‹@‘_‚¢Špì¬ */
 //		HATSUDAN_03_angle65536 = HATSUDAN_03_angle65536;	/* [Šp“x‚ğ‚¨‚Ú‚¦‚Æ‚­] */
 //	}
@@ -278,8 +278,8 @@ local void spell_create_1b_cirno_icecle_fall(OBJ *src)
 	{
 		if (0 < (REG_0f_GAME_DIFFICULTY) )
 		{
-			REG_02_DEST_X	= ((src->cx256));
-			REG_03_DEST_Y	= ((src->cy256));
+			REG_02_DEST_X	= ((src->center.x256));
+			REG_03_DEST_Y	= ((src->center.y256));
 			calculate_jikinerai();/* 1:‚¢‚¿‚¢‚¿ì¬‚·‚é‚Á‚Û‚¢B */
 			HATSUDAN_01_speed256			= (t256(1.0));				/* (t256(2.0)) ’e‘¬(2.5) */
 			HATSUDAN_02_speed_offset		= t256(1);/*(ƒeƒXƒg)*/
@@ -376,7 +376,7 @@ local void spell_create_1b_cirno_icecle_fall(OBJ *src)
 	[’e–‹ƒOƒ‹[ƒv(1)ƒZƒNƒVƒ‡ƒ“]
 	-------------------------------------------------------
 ---------------------------------------------------------*/
-local void cirno_danmaku_01_callback(OBJ *src)/* ƒp[ƒtƒFƒNƒgƒtƒŠ[ƒY */
+local OBJ_CALL_FUNC(cirno_danmaku_01_callback)/* ƒp[ƒtƒFƒNƒgƒtƒŠ[ƒY */
 {
 	if ((7*64)==(REG_0a_REG2)/*(‚Æ‚è‚ ‚¦‚¸)*/)	/*Œ¸‘¬ŠJn*/
 	{
@@ -409,7 +409,7 @@ local void cirno_danmaku_01_callback(OBJ *src)/* ƒp[ƒtƒFƒNƒgƒtƒŠ[ƒY */
 		src->hatudan_register_tra65536	= t256(0.0);		/* ’²®‰Á‘¬’e */
 		src->hatudan_register_speed65536	= t256(0.0);		/* ’e‘¬ */
 		src->obj_type_set						= (BULLET_WAKU12_BASE + TAMA_IRO_00_SIRO);
-		reflect_sprite_spec444(src, OBJ_BANK_SIZE_00_TAMA); 	/* ’eƒOƒ‰‚Æ’e‚ ‚½‚è”»’è‚ğ•ÏX‚·‚éB */
+		reflect_sprite_spec(src, OBJ_BANK_SIZE_00_TAMA); 	/* ’eƒOƒ‰‚Æ’e‚ ‚½‚è”»’è‚ğ•ÏX‚·‚éB */
 	}
 	else
 	if ((3*64)==(REG_0a_REG2)/*(‚Æ‚è‚ ‚¦‚¸)*/)	/*Ä‰Á‘¬*/
@@ -460,7 +460,7 @@ local void cirno_danmaku_01_callback(OBJ *src)/* ƒp[ƒtƒFƒNƒgƒtƒŠ[ƒY */
 	[‰Šú‰»ƒZƒNƒVƒ‡ƒ“]
 	-------------------------------------------------------
 ---------------------------------------------------------*/
-local void spell_init_13_perfect_freeze(OBJ *src)
+local OBJ_CALL_FUNC(spell_init_13_perfect_freeze)
 {
 	card.danmaku_callback[1] = cirno_danmaku_01_callback;/*(ƒp[ƒtƒFƒNƒgƒtƒŠ[ƒY—pB)*/
 //	card.danmaku_callback[2] = NULL;/*(–¢g—p)*/
@@ -475,7 +475,7 @@ local void spell_init_13_perfect_freeze(OBJ *src)
 	REG_0a_REG2 	ƒ{ƒXƒ^ƒCƒ}[’lAƒR[ƒ‹ƒoƒbƒN‘¤‚É˜A——pB(‚Æ‚è‚ ‚¦‚¸)
 	REG_0b_REG3 	Ä‰Á‘¬‚Ì‘¬“x—p‚Éˆêg—pB
 ---------------------------------------------------------*/
-local void spell_create_13_perfect_freeze(OBJ *src)
+local OBJ_CALL_FUNC(spell_create_13_perfect_freeze)
 {
 	REG_0a_REG2 = (REG_10_BOSS_SPELL_TIMER);/*(‚Æ‚è‚ ‚¦‚¸)*/
 	//
@@ -564,8 +564,8 @@ local void spell_create_13_perfect_freeze(OBJ *src)
 		{
 			if ((4+(REG_0f_GAME_DIFFICULTY))>((REG_10_BOSS_SPELL_TIMER)&0x07))
 			{
-				REG_02_DEST_X	= ((src->cx256));
-				REG_03_DEST_Y	= ((src->cy256));
+				REG_02_DEST_X	= ((src->center.x256));
+				REG_03_DEST_Y	= ((src->center.y256));
 				calculate_jikinerai();/* 1:‚¢‚¿‚¢‚¿ì¬‚·‚é‚Á‚Û‚¢B */
 				int aaa_angle65536;
 				aaa_angle65536 = (HATSUDAN_03_angle65536);/* ©‹@‘_‚¢Šp */
@@ -607,7 +607,7 @@ local void spell_create_13_perfect_freeze(OBJ *src)
 	REG_0b_REG3 	cosine ‚Ì’l—pB
 ---------------------------------------------------------*/
 
-local void spell_create_16_diamond_blizzard(OBJ *src)
+local OBJ_CALL_FUNC(spell_create_16_diamond_blizzard)
 {
 //	if (0==((REG_10_BOSS_SPELL_TIMER)&0x1f))/*(32‰ñ‚É1‰ñ)*/
 	/*(–ˆƒtƒŒ[ƒ€”­’e)*/

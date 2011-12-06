@@ -151,7 +151,7 @@ static char *malloc_buf;			// 仮想ファイルバッファ
 		goto error111;
 	}
 	sceIoLseek32(fd, 0, PSP_SEEK_SET);				// 実シーク位置を先頭に移動。
-	sceIoRead( fd, malloc_buf, file_size);			// 一気に全部メモリに読み込む。
+	sceIoRead(fd, malloc_buf, file_size);			// 一気に全部メモリに読み込む。
 	sceIoClose(fd);
 //	my_buf = malloc_buf;
 //
@@ -336,15 +336,15 @@ static const char *my_config_title[OPTION_CONFIG_08_MAX]=
 extern void set_default_key(u32 *key_setting_map, int key_setting_type);
 extern void set_default_option(int *option_setting_map);
 extern void check_limit_value_option(int *option_setting_map);
-global void ini_load(void)
+global void ini_file_load(void)
 {
 	#if 1
+	/* sceIoMkdir();でパスを作成する場合、最後が '/' だと作成されないので注意。 */
 	// 要望があったので全力で対応
 //	sceIoMkdir(const char *aaa_dir, SceMode mode);
 	sceIoMkdir("ms0:/PICTURE", 0777);	/* "ms0:/PICTURE"がない場合、
 	"ms0:/PICTURE/東方模倣風"が作れないので、必ず必要。
 	ない場合、無視されるのではなくて、最悪「ハングアップしたりする」。
-	(SDL側のせいって気もするけど???)
  */
 //	sceIoMkdir("ms0:/PICTURE/東方模倣風/", 0777);/* 出来ない */
 	sceIoMkdir("ms0:/PICTURE/東方模倣風", 0777);/* 出来る */
@@ -358,7 +358,7 @@ global void ini_load(void)
 	ng1 = 0;/*fopen()成功*/
 //
 //	FILE *fp;
-	if (NULL == /* fp =*/ my_file_fopen()) 	/* 開けなかったとき */		/*my_file_common_name, "r"*/
+	if (NULL == /* fp =*/ my_file_fopen())	/* 開けなかったとき */		/*my_file_common_name, "r"*/
 	{	/* 読み込み失敗 */
 		ng1 = 1;/*fopen()失敗*/ goto error00;
 	}
@@ -540,7 +540,7 @@ static void write_line_buffer_to_file(SceUID fd)/*FILE *fp*/ /*, char *str_buf*/
 //	fprintf(fp, "%s\n", str_pointer);
 	sceIoWrite(fd, my_file_line_buffer256, len);/*sizeof(int)*/ /**save_data_size*/ /*, 1, fp*/
 }
-global void ini_save(void)
+global void ini_file_save(void)
 {
 //	FILE *fp;
 //	char buf[128];/*64 50*/

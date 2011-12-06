@@ -81,8 +81,10 @@ int IMG_isPNG(SDL_RWops *src)
 {
 	unsigned char buf[PNG_BYTES_TO_CHECK08];
 	/* Read in the signature bytes */
-	if (SDL_RWread(src, buf, 1, PNG_BYTES_TO_CHECK08) != PNG_BYTES_TO_CHECK08)
-	{	return (0); 	}
+//	SDL_RWread_ void(src, buf, 1, PNG_BYTES_TO_CHECK08);
+	SDL_RWread(src, buf, 1, PNG_BYTES_TO_CHECK08);
+//	if ( != PNG_BYTES_TO_CHECK08)
+//	{	return (0); 	}
 	/* Compare the first PNG_BYTES_TO_CHECK08 bytes of the signature. */
 //	return ( !png_sig_cmp(buf, (png_size_t)0, PNG_BYTES_TO_CHECK08));
 	return ( !png_sig_cmp08(buf/*, (png_size_t)0, PNG_BYTES_TO_CHECK08*/));
@@ -94,6 +96,7 @@ static void png_read_data(png_structp ctx, png_bytep area, png_size_t size)
 {
 	SDL_RWops *src;
 	src = (SDL_RWops *)png_get_io_ptr(ctx);
+//	SDL_RWread_ void(src, area, size, 1);
 	SDL_RWread(src, area, size, 1);
 }
 
@@ -270,7 +273,7 @@ SDL_Surface *IMG_LoadPNG_RW(SDL_RWops *src)
 							Amask = 0x000000ff >> s;
 						}
 					}
-					surface = SDL_AllocSurface(SDL_SWSURFACE, width, height,
+					surface = SDL_CreateRGBSurface(SDL_SWSURFACE, width, height,
 						bit_depth*info_ptr->channels, Rmask,Gmask,Bmask,Amask);
 				}
 			}
@@ -293,7 +296,8 @@ SDL_Surface *IMG_LoadPNG_RW(SDL_RWops *src)
 			}
 		}
 		/* Create the array of pointers to image data */
-		row_pointers = (png_bytep*) malloc(sizeof(png_bytep)*height);
+//		row_pointers = (png_bytep*)mal loc((sizeof(png_bytep)*height));
+		row_pointers = (png_bytep*)memalign(16, (sizeof(png_bytep)*height));
 		if ( (row_pointers == NULL) )
 		{
 			SDL_SetError_bbb("Out of memory");

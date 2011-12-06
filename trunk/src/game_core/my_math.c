@@ -13,6 +13,11 @@ psp の MIPS CPU 内 のコプロセッサが処理をする。
 
 参考:TECH I Vol.39 MIPSプロセッサ入門	http://www.cqpub.co.jp/interface/TechI/Vol39/
 ---------------------------------------------------------*/
+
+#include "../../libgu/pspgu.h"//#include <pspgu.h>
+#include "../../libgu/pgc.h"
+
+
 #include "111_my_file.h"/*(my_file_common_name)*/
 
 #include "kanji_system.h"
@@ -51,7 +56,10 @@ global void set_rnd_seed(int set_seed)
 ---------------------------------------------------------*/
 
 global u32 pad_config[KINOU_08_WARIATE_MAX];
+
+#if (1==USE_PAD_STRUCT)
 global PSP_PAD_GLOBAL_CLASS psp_pad;/*(r34)*/
+#endif
 
 static int	use_analog; 	/* アナログ使用フラグ(0:使用しない、1:使用する) */
 
@@ -89,6 +97,7 @@ global void psp_pad_init(void)
 }
 
 
+
 global void do_input_vbl(void)
 {
 	psp_pad.pad_data_alter = psp_pad.pad_data;
@@ -98,9 +107,9 @@ global void do_input_vbl(void)
 	/* 現在無効(r99) 将来的にはv_sync取るが、主にSDLを色々しないと何ともならない。*/
 	{
 		sceCtrlPeekBufferPositive(&pad, 1);
+		#if (1)
 		/* 欠点：vblankをとらない限り、新しくpollingした保証がない。
-			vblankをとらない場合は、何らかの時間待ち制御が必要。
-	 */
+			vblankをとらない場合は、何らかの時間待ち制御が必要。 */
 		static u32 last_time = 0;/* 最終時間(前回の時間) */
 		u32 now_time;/* 現在の時間(今回の時間) */
 		now_time = pad.TimeStamp;/* 現在の時間(今回の時間)を取得 */
@@ -132,6 +141,7 @@ global void do_input_vbl(void)
 			sceDisplayWaitVblankStart();	/* 1 [frame]以内の場合のみ v_sync取る。 */
 		}
 		last_time = pad.TimeStamp;/* 現在の時間を最終時間として保存 */
+		#endif
 	}
 	#else
 	/* こちらの方式では v-sync 取るの無理っぽい(?)。 */
@@ -162,18 +172,23 @@ global void do_input_vbl(void)
 	#endif /* (1==USE_KEY_CONFIG) */
 	pad_data = pad.Buttons;
 	{
+	#if (1==USE_ANALOG_VALUE)
 		psp_pad.analog_absolute_value_x = 0;
 		psp_pad.analog_absolute_value_y = 0;
+		#define UAX(aaa) aaa
+	#else
+		#define UAX(aaa) /**/
+	#endif
 		/* 標準アナログキー機能 */
 	//	if (1==use_analog)
 		if (0 != use_analog)
 		{
 			/* PSPのアナログ入力はデジタル入力へ変換、アナログ量は中心を削除し256固定小数点形式へ補正 */
-			if (pad.Lx < 64/*70*/)			{	pad_data |= PSP_CTRL_LEFT;		psp_pad.analog_absolute_value_x = ((64-pad.Lx)<<2); 	}
-			else if (pad.Lx > 192/*185*/)	{	pad_data |= PSP_CTRL_RIGHT; 	psp_pad.analog_absolute_value_x = ((pad.Lx-192)<<2);	}
+			if (pad.Lx < 64/*70*/)			{	pad_data |= PSP_CTRL_LEFT;		UAX(psp_pad.analog_absolute_value_x = ((64-pad.Lx)<<2)); 	}
+			else if (pad.Lx > 192/*185*/)	{	pad_data |= PSP_CTRL_RIGHT; 	UAX(psp_pad.analog_absolute_value_x = ((pad.Lx-192)<<2));	}
 			//
-			if (pad.Ly < 64/*70*/)			{	pad_data |= PSP_CTRL_UP;		psp_pad.analog_absolute_value_y = ((64-pad.Ly)<<2); 	}
-			else if (pad.Ly > 192/*185*/)	{	pad_data |= PSP_CTRL_DOWN;		psp_pad.analog_absolute_value_y = ((pad.Ly-192)<<2);	}
+			if (pad.Ly < 64/*70*/)			{	pad_data |= PSP_CTRL_UP;		UAX(psp_pad.analog_absolute_value_y = ((64-pad.Ly)<<2)); 	}
+			else if (pad.Ly > 192/*185*/)	{	pad_data |= PSP_CTRL_DOWN;		UAX(psp_pad.analog_absolute_value_y = ((pad.Ly-192)<<2));	}
 		}
 	}
 	#if (1==USE_KEY_CONFIG)
@@ -198,6 +213,7 @@ global void do_input_vbl(void)
 	if (psp_pad.pad_data & PSP_KEY_SNAP_SHOT)	{	save_screen_shot(); 	 }/*keyboard[KINOU_07_SNAP_SHOT]*/
 
 	/* アナログサポート機能 */
+	#if (1==USE_ANALOG_VALUE)
 //	if (1==use_analog)
 	{
 		/* デジタルよりアナログ優先 */
@@ -216,6 +232,8 @@ global void do_input_vbl(void)
 			#endif
 		}
 	}
+	#endif/*(USE_ANALOG_VALUE)*/
+
 }
 //		 if (keyboard[KINOU_06_LEFT])	{psp_pad.pad_data |= PSP_CTRL_LEFT; 	/*direction=-1;*/		}
 //	else if (keyboard[KINOU_04_RIGHT])	{psp_pad.pad_data |= PSP_CTRL_RIGHT;	/*direction=1;*/		}
@@ -475,45 +493,42 @@ global void unloadbmp_by_surface(SDL_Surface *img_surface)
 /*---------------------------------------------------------
 	ファイル名で指定
 ---------------------------------------------------------*/
-global void load_SDL_bg_file_name(void)/*char *file_name*/
+global void psp_load_bg_file_name(void)/*char *file_name*/
 {
-	SDL_Surface *loadpic;
-	#if (1==USE_KETM_IMAGE_CHACHE)
-	loadpic 	= load_chache_bmp();/* file_name */
-	#else
-	loadpic 	= IMG_Load(my_file_common_name);/* file_name */
-	#endif
-//	psp_clear_screen();
-//	SDL_SetAlpha(loadpic, SDL_SRCALPHA, 255);
-//	PSPL_UpperBlit(loadpic, NULL, cb.sdl_screen[SDL_00_VIEW_SCREEN], NULL);
-	PSPL_UpperBlit(loadpic, NULL, cb.sdl_screen[SDL_01_BACK_SCREEN], NULL);
-	#if (1==USE_KETM_IMAGE_CHACHE)
-	unloadbmp_by_surface(loadpic);	// キャッシュに入ってるのでNULLに出来ない。loadpic = NULL;
-	#else
-	SDL_FreeSurface(loadpic);	// キャッシュに入ってるのでNULLに出来ない。
-	loadpic = NULL;
-	#endif
-}
-
-
-/*---------------------------------------------------------
-	ファイル番号で指定
----------------------------------------------------------*/
-global void load_SDL_bg(int bg_type_number)
-{
-	static const char *const_aaa_str[(BG_TYPE_99_MAX_HAIKEI)] =
+	/* ファイル番号で指定(0x00-0x1fまで0x20==' ') */
+	if ((u8)my_file_common_name[0] < (u8)' ')
 	{
-		DIRECTRY_NAME_DATA_STR"/bg/""title_bg.png",
-		DIRECTRY_NAME_DATA_STR"/bg/""name_regist.png",
-		DIRECTRY_NAME_DATA_STR"/bg/""key_config.png",
-		DIRECTRY_NAME_DATA_STR"/bg/""music_room.png",
-		DIRECTRY_NAME_DATA_STR"/bg/""loading.png",
-	};
-	#if 1
-//	char file_name[128];	/* 128==4*32 (pspの構造上32の倍数で指定) */ 	/*64 50*/
-	strcpy(my_file_common_name, (char *)const_aaa_str[bg_type_number]);
-	load_SDL_bg_file_name();/*file_name*/
-	#else
+		static const char *const_aaa_str[(BG_TYPE_99_MAX_HAIKEI)] =
+		{
+			DIRECTRY_NAME_DATA_STR "/bg/" "title_bg.png",
+			DIRECTRY_NAME_DATA_STR "/bg/" "name_regist.png",
+			DIRECTRY_NAME_DATA_STR "/bg/" "key_config.png",
+			DIRECTRY_NAME_DATA_STR "/bg/" "music_room.png",
+			DIRECTRY_NAME_DATA_STR "/bg/" "loading.png",
+		};
+	//	char file_name[128];	/* 128==4*32 (pspの構造上32の倍数で指定) */ 	/*64 50*/
+		strcpy(my_file_common_name, (char *)const_aaa_str[(int)/*bg_type_number*/(my_file_common_name[0])]);
+	}
+	{
+		SDL_Surface *loadpic;
+		#if (1==USE_KETM_IMAGE_CHACHE)
+		loadpic 	= load_chache_bmp();/* file_name */
+		#else
+		loadpic 	= IMG_Load(my_file_common_name);/* file_name */
+		#endif
+	//	psp_clear_screen();
+	//	SDL_SetAlpha(loadpic, SDL_SRCALPHA, 255);
+	//	PSPL_UpperBlit(loadpic, NULL, cb.sdl_screen[SDL_00_VIEW_SCREEN], NULL);
+		PSPL_UpperBlit(loadpic, NULL, cb.sdl_screen[SDL_01_BACK_SCREEN], NULL);
+		#if (1==USE_KETM_IMAGE_CHACHE)
+		unloadbmp_by_surface(loadpic);	// キャッシュに入ってるのでNULLに出来ない。loadpic = NULL;
+		#else
+		SDL_FreeSurface(loadpic);	// キャッシュに入ってるのでNULLに出来ない。
+		loadpic = NULL;
+		#endif
+	}
+}
+	#if 0
 	SDL_Surface *loadpic	= load_chache_bmp2((char *)const_aaa_str[bg_type_number]);//, 0, 0/*1*/);
 //	psp_clear_screen();
 //	SDL_SetAlpha(loadpic, SDL_SRCALPHA, 255);
@@ -521,7 +536,7 @@ global void load_SDL_bg(int bg_type_number)
 	PSPL_UpperBlit(loadpic, NULL, cb.sdl_screen[SDL_01_BACK_SCREEN], NULL);
 	unloadbmp_by_surface(loadpic);	// キャッシュに入ってるのでNULLに出来ない。loadpic = NULL;
 	#endif
-}
+
 
 
 /*---------------------------------------------------------

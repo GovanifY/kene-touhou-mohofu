@@ -10,11 +10,7 @@
 #ifndef _KAIWA_SYSTEM_H_
 #define _KAIWA_SYSTEM_H_
 
-extern void kaiwa_system_init(void);/* 組み込み */
-extern void kaiwa_system_exit(void);/* 外す */
-
 extern void kaiwa_system_set_re_draw(void); 	/* 会話システムにSDL再描画指示。 */
-
 
 ///////////////////////////////////// 分離予定(?)
 

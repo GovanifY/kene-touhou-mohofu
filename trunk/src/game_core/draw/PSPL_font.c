@@ -34,7 +34,7 @@ global char my_font_text[MY_FONT_256_TEXT_LENGTH];
 	SDLフォントを起動時に一度だけ初期化する。
 ---------------------------------------------------------*/
 
-global void font_init(void)
+/*only boot once*/global void font_system_boot_init(void)
 {
 	strcpy(my_file_common_name, DIRECTRY_NAME_DATA_STR "/fonts/" "r35font.png");
 	#if (0)/*(キャッシュしたらマズい。と思う。多分。)*/
@@ -46,7 +46,7 @@ global void font_init(void)
 		FONT_fontimg = SDL_DisplayFormat(s1);/* サーフェスを表示フォーマットに変換する。 */
 	}
 	#endif
-	SDL_SetColorKey(FONT_fontimg, (SDL_SRCCOLORKEY|SDL_RLEACCEL), 0x00000000);
+	SDL_SetColorKey(FONT_fontimg, (SDL_SRCCOLORKEY/*|SDL_RLEACCEL*/), 0x00000000);
 }
 
 
@@ -131,12 +131,13 @@ count_loop:
 	count += 16;
 	goto count_loop;
 }
-
 /*char *text, int font_number*/
 global SDL_Surface *font16_render_new_surface(void)
 {
 	SDL_Surface *txt_image_surface;
-	txt_image_surface = SDL_CreateRGBSurface(
+	txt_image_surface = /*()*/
+	SDL_CreateSurface
+	(
 		/* この辺(ハングアップする)バグあるんだけど、良くわからない。 */
 		#if 0
 		/* VRAMに取った方が速いはずだが、実際は遅くなったりする。始めだけ速くて、だんだん遅くなり(数フレーム分とか)耐えられない程遅くなる。 */
@@ -151,14 +152,10 @@ global SDL_Surface *font16_render_new_surface(void)
 		#endif
 	//	my_strlen(my_font_text)*(16)/*font width*/,
 		my_font_len16()/*font width*/,
-		(16)/*font height*/,
-		cb.sdl_screen[SDL_00_VIEW_SCREEN]->format->BitsPerPixel,
-		cb.sdl_screen[SDL_00_VIEW_SCREEN]->format->Rmask,
-		cb.sdl_screen[SDL_00_VIEW_SCREEN]->format->Gmask,
-		cb.sdl_screen[SDL_00_VIEW_SCREEN]->format->Bmask,
-		cb.sdl_screen[SDL_00_VIEW_SCREEN]->format->Amask);
+		(16)/*font height*/
+	);
 	SDL_FillRect(txt_image_surface, NULL, 0/*SD L_MapRGB(txt_image_surface->format,0,0,0)*/);
-	SDL_SetColorKey(txt_image_surface, (SDL_SRCCOLORKEY|SDL_RLEACCEL), 0x00000000);
+	SDL_SetColorKey(txt_image_surface, (SDL_SRCCOLORKEY/*|SDL_RLEACCEL*/), 0x00000000);
 	cg.PSPL_font_x = 0;
 	cg.PSPL_font_y = 0;
 	font16_render_surface_xy(txt_image_surface);/*, text, font_number, 0, 0*/

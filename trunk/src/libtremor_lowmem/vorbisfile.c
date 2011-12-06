@@ -82,15 +82,15 @@ static long _get_data(OggVorbis_File *vf)
 	if (vf->datasource)
 	{
 		unsigned char *buffer = ogg_sync_bufferin(vf->oy, CHUNKSIZE);
-		long bytes = (vf->callbacks.read_func)(buffer, 1, CHUNKSIZE, vf->datasource);
+		long bytes =
+	//	(vf->callbacks.read_func_ void)(buffer, 1, CHUNKSIZE, vf->datasource);
+		(vf->callbacks.read_func)(buffer, 1, CHUNKSIZE, vf->datasource);
 		if (bytes > 0)
 		{
-			ogg_sync_wrote(vf->oy,bytes);
+			ogg_sync_wrote(vf->oy, bytes);
 		}
 		#if (1==USE_errno)
-		if (bytes==0
-			 && errno
-		)
+		if ((bytes==0) && (errno))
 		{
 			return (-1);
 		}
@@ -104,14 +104,16 @@ static long _get_data(OggVorbis_File *vf)
 }
 
 /* save a tiny smidge of verbosity to make the code more readable */
-static void _seek_helper(OggVorbis_File *vf,ogg_int64_t offset)
+static void _seek_helper(OggVorbis_File *vf, ogg_int64_t offset)
 {
 	if (vf->datasource)
 	{
 		(vf->callbacks.seek_func)(vf->datasource, offset, SEEK_SET);
-		vf->offset=offset;
+		vf->offset = offset;
 		ogg_sync_reset(vf->oy);
-	}else{
+	}
+	else
+	{
 		/* shouldn't happen unless someone writes a broken callback */
 		return;
 	}
@@ -133,7 +135,7 @@ static void _seek_helper(OggVorbis_File *vf,ogg_int64_t offset)
 			  produces a refcounted page */
 
 static ogg_int64_t _get_next_page(
-	OggVorbis_File *vf,ogg_page *og,
+	OggVorbis_File *vf, ogg_page *og,
 	ogg_int64_t boundary)
 {
 	if (boundary>0)boundary+=vf->offset;
@@ -142,23 +144,27 @@ static ogg_int64_t _get_next_page(
 		long more;
 
 		if (boundary>0 && vf->offset>=boundary)return (OV_FALSE);
-		more=ogg_sync_pageseek(vf->oy,og);
+		more=ogg_sync_pageseek(vf->oy, og);
 
 		if (more<0)
 		{
 			/* skipped n bytes */
 			vf->offset-=more;
-		}else{
+		}
+		else
+		{
 			if (more==0)
 			{
 				/* send more paramedics */
 				if (!boundary)return (OV_FALSE);
 				{
-					long ret=_get_data(vf);
+					long ret = _get_data(vf);
 					if (ret==0)return (OV_EOF);
 					if (ret<0)return (OV_EREAD);
 				}
-			}else{
+			}
+			else
+			{
 				/*	got a page.  Return the offset at the page beginning,
 					advance the internal offset past the page end */
 				ogg_int64_t ret=vf->offset;
@@ -175,12 +181,12 @@ static ogg_int64_t _get_next_page(
 	read. */
 /*	returns offset or OV_EREAD, OV_FAULT and produces a refcounted page */
 
-static ogg_int64_t _get_prev_page(OggVorbis_File *vf,ogg_page *og)
+static ogg_int64_t _get_prev_page(OggVorbis_File *vf, ogg_page *og)
 {
-	ogg_int64_t begin=vf->offset;
-	ogg_int64_t end=begin;
+	ogg_int64_t begin = vf->offset;
+	ogg_int64_t end = begin;
 	ogg_int64_t ret;
-	ogg_int64_t offset=-1;
+	ogg_int64_t offset = -1;
 
 	while (offset==-1)
 	{
@@ -190,7 +196,7 @@ static ogg_int64_t _get_prev_page(OggVorbis_File *vf,ogg_page *og)
 		_seek_helper(vf,begin);
 		while (vf->offset<end)
 		{
-			ret=_get_next_page(vf,og,end-vf->offset);
+			ret = _get_next_page(vf,og,end-vf->offset);
 			if (ret==OV_EREAD)return (OV_EREAD);
 			if (ret<0)
 			{
@@ -205,7 +211,7 @@ static ogg_int64_t _get_prev_page(OggVorbis_File *vf,ogg_page *og)
 
 	/* we have the offset.	Actually snork and hold the page now */
 	_seek_helper(vf,offset);
-	ret=_get_next_page(vf,og,CHUNKSIZE);
+	ret = _get_next_page(vf,og,CHUNKSIZE);
 	if (ret<0)
 	{	/* this shouldn't be possible */
 		return (OV_EFAULT);
@@ -246,7 +252,7 @@ static int _bisect_forward_serialno(
 		}
 
 		_seek_helper(vf,bisect);
-		ret=_get_next_page(vf,&og,-1);
+		ret = _get_next_page(vf,&og,-1);
 		if (ret==OV_EREAD)return (OV_EREAD);
 		if (ret<0 || ogg_page_serialno(&og)!=currentno)
 		{
@@ -260,7 +266,7 @@ static int _bisect_forward_serialno(
 		ogg_page_release(&og);
 	}
 	_seek_helper(vf,next);
-	ret=_get_next_page(vf,&og,-1);
+	ret = _get_next_page(vf,&og,-1);
 	if (ret==OV_EREAD)return (OV_EREAD);
 
 	if (searched>=end || ret<0)
@@ -368,7 +374,7 @@ static int _fetch_headers(
 		{
 			if (_get_next_page(vf,og_ptr,CHUNKSIZE)<0)
 			{
-				ret=OV_EBADHEADER;
+				ret = OV_EBADHEADER;
 				goto bail_header;
 			}
 		}
@@ -467,7 +473,7 @@ static void _prefetch_all_offsets(OggVorbis_File *vf, ogg_int64_t dataoffset)
 			{
 				ogg_packet op={0,0,0,0,0,0};
 
-				ret=_get_next_page(vf,&og,-1);
+				ret = _get_next_page(vf,&og,-1);
 				if (ret<0)
 					/* this should not be possible unless the file is
 					   truncated/mangled */
@@ -713,9 +719,10 @@ static int _fetch_and_process_packet(
 				ret=0;
 				goto cleanup;
 			}
-			if ((ret=_get_next_page(vf,&og,-1))<0)
+			ret = _get_next_page(vf,&og,-1);
+			if ((ret)<0)
 			{
-				ret=OV_EOF; /* eof. leave unitialized */
+				ret = OV_EOF; /* EOF. leave unitialized. */
 				goto cleanup;
 			}
 
@@ -939,7 +946,8 @@ int ov_test_callbacks(void *f,OggVorbis_File *vf,char *initial,long ibytes,
 
 int ov_test(FILE *f,OggVorbis_File *vf,char *initial,long ibytes)
 {
-	ov_callbacks callbacks = {
+	ov_callbacks callbacks =
+	{
 		(size_t (*)(void *, size_t, size_t, void *))	fread,
 		(int (*)(void *, ogg_int64_t, int)) 			_fseek64_wrap,
 		(int (*)(void *))								fclose,
@@ -1215,7 +1223,7 @@ int ov_raw_seek(OggVorbis_File *vf,ogg_int64_t pos)
 			{
 				if (_get_next_page(vf,&og,-1)<0)
 				{
-					vf->pcm_offset=ov_pcm_total(vf,-1);
+					vf->pcm_offset = ov_pcm_total(vf,-1);
 					break;
 				}
 			}
@@ -1350,19 +1358,24 @@ int ov_pcm_seek_page(OggVorbis_File *vf,ogg_int64_t pos)
 
 			while (begin<end)
 			{
-				result=_get_next_page(vf,&og,end-vf->offset);
+				result = _get_next_page(vf,&og,end-vf->offset);
 				if (result==OV_EREAD) goto seek_error;
 				if (result<0)
 				{
 					if (bisect<=begin+1)
+					{
 						end=begin; /* found it */
-					else{
+					}
+					else
+					{
 						if (bisect==0) goto seek_error;
 						bisect-=CHUNKSIZE;
 						if (bisect<=begin)bisect=begin+1;
 						_seek_helper(vf,bisect);
 					}
-				}else{
+				}
+				else
+				{
 					ogg_int64_t granulepos=ogg_page_granulepos(&og);
 					if (granulepos==-1)continue;
 					if (granulepos<target)
@@ -1558,8 +1571,8 @@ int ov_pcm_seek(OggVorbis_File *vf,ogg_int64_t pos)
 			ogg_stream_pagein(vf->os,&og);
 		}
 	}
-	vf->bittrack=0;
-	vf->samptrack=0;
+	vf->bittrack = 0;
+	vf->samptrack = 0;
 	/* discard samples until we reach the desired position. Crossing a
 	   logical bitstream boundary with abandon is OK. */
 	while (vf->pcm_offset<pos)

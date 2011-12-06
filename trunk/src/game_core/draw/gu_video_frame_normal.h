@@ -5,6 +5,25 @@
 	-------------------------------------------------------
 ---------------------------------------------------------*/
 
+/*--------------------------------------------------------
+	スクリーンをフリップする。
+--------------------------------------------------------*/
+
+//global void psp_video_flip_screen(int vsync)
+#if 0
+	#define PSP_VIDEO_FLIP_SCREEN \
+	{ \
+	/*	if (vsync)*/\
+	/*	{*/\
+	/*		sceDisplayWaitVblankStart();*/\
+	/*	}*/\
+		cb.show_frame = cb.draw_frame;\
+		cb.draw_frame = sceGuSwapBuffers();\
+	}
+#else
+	#define PSP_VIDEO_FLIP_SCREEN sceGuSwapBuffers();
+#endif
+
 /*---------------------------------------------------------
 	画面描画(汎用)
 ---------------------------------------------------------*/
@@ -21,18 +40,19 @@ void vbl_draw_screen(void)
 	/* [Gu時間を最大に取るタイプ](色々制限あり) */
 //	sceGuFinish();実験
 	/* - パケット描画終了待ち */
-	sceGuSync(0, 0);/* (ここまで Gu) */
+	sceGuSync(0, GU_SYNC_FINISH);/* (ここまで Gu) */
 
 	/* --- VSync and swap frame buffer */
 	#if (1==USE_VSYNC)
 	sceDisplayWaitVblankStart();/*vsync*/
 	#endif /* (1==USE_VSYNC) */
 //	/*r99*/do_input_vbl();/*キー入力(将来的にはv_syncとる予定)*/
-	sceGuSwapBuffers();
+	PSP_VIDEO_FLIP_SCREEN;
 	#endif /* (USE_MAX_GU_TIME) */
 	/* ここから Gu */
 	/* --- スクリーンアップデート */
 	sceGuStart(GU_DIRECT, gulist);
+// 初期化状態と同じ。	sceGuDrawBufferList(SDL_GU_PSM_0000/*GU_PSM_5551*/ /*4444*/, cb.draw_frame/*dst*/, PSP_BUFFER_WIDTH512);
 
 	/* --- プライオリティー＃１．画面クリア */
 	#if 1
@@ -162,8 +182,8 @@ void vbl_draw_screen(void)
 				gu_set_texture(TEX_09_TACHIE_L+nnn);
 				PGC_SEND(PGC_TEX_FILTER,PU8(GU_NEAREST,GU_NEAREST));	// sceGuTexFilter(GU_NEAREST, GU_NEAREST);/*くっきり拡大画面*/
 				gu_draw_tache_screen(
-					/*dst_r.x =*/ (t256_floor(kaiwa_sprite[nnn].cx256)),
-					/*dst_r.y =*/ (t256_floor(kaiwa_sprite[nnn].cy256)),
+					/*dst_r.x =*/ (t256_floor(kaiwa_sprite[nnn].center.x256)),
+					/*dst_r.y =*/ (t256_floor(kaiwa_sprite[nnn].center.y256)),
 				//	/*color32*/ 0x88ffffff
 					/*color32*/ kaiwa_sprite[nnn].color32,
 					/*(立ち絵画像の幅)*/(kaiwa_sprite[nnn].width_2n)
@@ -215,7 +235,7 @@ void vbl_draw_screen(void)
 
 	/* プライオリティー＃22．☆ フロント面エフェクト(テクスチャ共用) */
 	//{
-	if (0 != cg.bomber_time)
+	if (0 != (cg.bomber_time))
 	{
 		gu_draw_front_spell_logo();
 	}
@@ -259,13 +279,13 @@ void vbl_draw_screen(void)
 //
 	#if (0==USE_MAX_GU_TIME)
 	/* [通常タイプ] */
-	sceGuSync(0, 0);/* (ここまで Gu) */
+	sceGuSync(0, GU_SYNC_FINISH);/* (ここまで Gu) */
 	/* --- VSync and swap frame buffer */
 	#if (1==USE_VSYNC)
 	sceDisplayWaitVblankStart();/*(vsync)*/
 	#endif /* (1==USE_VSYNC) */
 //	/*r99*/do_input_vbl();/*キー入力(将来的にはv_syncとる予定)*/
-	sceGuSwapBuffers();
+	PSP_VIDEO_FLIP_SCREEN;
 	#endif /* (USE_MAX_GU_TIME) */
 //
 	#endif

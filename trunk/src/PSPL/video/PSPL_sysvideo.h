@@ -29,11 +29,8 @@ static char rcsid =
    This is designed to be easily converted to C++ in the future.
  */
 
-/* The SDL video driver */
-typedef struct SDL_VideoDevice SDL_VideoDevice;
 
 /* Define the SDL video driver structure */
-#define _THIS   SDL_VideoDevice *_this
 #ifndef _STATUS
 #define _STATUS SDL_status *status
 #endif
@@ -109,25 +106,23 @@ typedef struct SDL_VideoDevice SDL_VideoDevice;
 
 	/* Get the gamma ramp */
 //??		int (*GetGammaRamp)(_THIS, u16 *ramp);
+/* The SDL video driver */
 
-struct SDL_VideoDevice
-{
+
+//”pŽ~’†	SDL_Surface *shadow;
+	/* * * */
+
+
 	/* This pointer should exist in the native video subsystem and should
 	   point to an appropriate update function for the current video mode
 	 */
-	void (*UpdateRects)(_THIS, int numrects, SDL_Rect *rects);
+//”pŽ~’†	void (*UpdateRects)(_THIS, int numrects, SDL_Rect *rects);
 
-	/* Information about the video hardware */
-	SDL_VideoInfo info;
 
-	/* The pixel format used when SDL_CreateRGBSurface creates SDL_HWSURFACEs with alpha */
-	SDL_PixelFormat* displayformatalphapixel;
 
-	/* * * */
-	/* Data common to all drivers */
-	SDL_Surface *screen;
-	SDL_Surface *shadow;
-	SDL_Surface *visible;
+
+
+
 //int dummy2;//”pŽ~	SDL_Palette *physpal;   /* physical palette, if != logical palette */
 //int dummy1;//”pŽ~	SDL_Color *gammacols;   /* gamma-corrected colours, or NULL */
 //	int offset_x;
@@ -138,27 +133,64 @@ struct SDL_VideoDevice
 
 
 
-	/* * * */
-};
-#undef _THIS
 
 //typedef struct VideoBootStrap
 //{
 //	const char *name;
 //	const char *desc;
 //	int (*available)(void);
-//	SDL_VideoDevice *(*create)(int devindex);
+//	SDL_VIDEO_DEVICE *(*create)(int devindex);
 //} VideoBootStrap;
 
 //#ifdef ENABLE_PSP
 //extern VideoBootStrap PSP_bootstrap;
 //#endif
 
-/* This is the current video device */
-extern SDL_VideoDevice *current_video;
+//”pŽ~’†#define SD L_ShadowSurface		(shadow)
 
-#define SDL_VideoSurface		(current_video->screen)
-#define SDL_ShadowSurface		(current_video->shadow)
-#define SDL_PublicSurface		(current_video->visible)
+
+//typedef struct /*SDL_VideoInfo_tag*/
+//{
+//	info.wm_available		= 0;
+//	info.hw_available		= 1;
+//	info.blit_fill		= 0; /* todo: fixme */
+//	info.blit_hw 			= 1;
+//	info.blit_hw_CC		= 1;
+//	info.blit_hw_A		= 0; /* todo: implement me */
+//
+//1	u32 hw_available :1; /* Flag: Can you create hardware surfaces? */
+//0	u32 wm_available :1; /* Flag: Can you talk to a window manager? */
+//	u32 UnusedBits1 :6;
+//	u32 UnusedBits2 :1;
+//1	u32 blit_hw 	:1; /* Flag: Accelerated blits HW --> HW */
+//1	u32 blit_hw_CC	:1; /* Flag: Accelerated blits with Colorkey */
+//0	u32 blit_hw_A	:1; /* Flag: Accelerated blits with Alpha */
+//	u32 blit_sw 	:1; /* Flag: Accelerated blits SW --> HW */
+//	u32 blit_sw_CC	:1; /* Flag: Accelerated blits with Colorkey */
+//	u32 blit_sw_A	:1; /* Flag: Accelerated blits with Alpha */
+//0	u32 blit_fill	:1; /* Flag: Accelerated color fill */
+//	u32 UnusedBits3 :16;
+//} SDL_VideoInfo;
+
+//extern const SDL_VideoInfo * /*SD LCALL*/ SDL_GetVideoInfo(void);
+
+
+//typedef struct /*SDL_VID EO_DEVICE_tag*/
+//{
+//	/* Data common to all drivers */
+//	SDL_Surface *screen;
+//} SDL_VID EO_DEVICE;
+
+/* This is the current video device */
+//extern SDL_VID EO_DEVICE pspl_vid eo_device;
+extern SDL_Surface *pspl_screen;
+	/* Information about the video hardware */
+//	u32 info_video_mem; 	/* The total amount of video memory (in K) */
+
+	/* The pixel format used when SDL_CreateRGBSurface creates SDL_HWSURFACEs with alpha */
+//0	SDL_PixelFormat* display_form_at_alpha_pixel;
+//	SDL_VideoInfo info;
+//	SDL_PixelFormat *info_vfmt;	/* Value: The format of the video surface */
+
 
 #endif /* _PSPL_sysvideo_h */

@@ -14,13 +14,13 @@
 static void gu_blit_laser_test(void)
 {
 	OBJ *obj_boss;
-	obj_boss			= &obj99[OBJ_HEAD_01_0x0800_TEKI+TEKI_OBJ_00_BOSS_HONTAI];/*(ボス本体)*/
-	int boss_center_x = ((obj_boss->cx256)>>8);/*+(16)*/
-	int boss_center_y = ((obj_boss->cy256)>>8);/*+(24)*/
+	obj_boss			= &obj99[OBJ_HEAD_02_0x0900_TEKI_FIX+TEKI_OBJ_00_BOSS00_HONTAI];/*(ボス本体)*/
+	int boss_center_x = ((obj_boss->center.x256)>>8);/*+(16)*/
+	int boss_center_y = ((obj_boss->center.y256)>>8);/*+(24)*/
 	OBJ *zzz_player;
-	zzz_player = &obj99[OBJ_HEAD_02_0x0900_KOTEI+FIX_OBJ_00_PLAYER];
-	int player_center_x = ((zzz_player->cx256)>>8);/*+(16)*/
-	int player_center_y = ((zzz_player->cy256)>>8);/*+(24)*/
+	zzz_player = &obj99[OBJ_HEAD_03_0x0a00_KOTEI+FIX_OBJ_00_PLAYER];
+	int player_center_x = ((zzz_player->center.x256)>>8);/*+(16)*/
+	int player_center_y = ((zzz_player->center.y256)>>8);/*+(24)*/
 
 	/* --  を描画 */
 	/* テクスチャーがあるとテクスチャー優先でフラットポリゴンが描画出来ないので */

@@ -41,14 +41,12 @@
 	ここに追記するとシューティングゲーム本体が遅くなるので追記しません。
 	字句解析(parth)等は load_stage.c で予め済ませておきます。
 ---------------------------------------------------------*/
-extern void game_command_00_kanji_hyouji(			GAME_COMMAND *l);/* どの敵でもない場合は、漢字表示 */
-extern void game_command_01_game_all_clear( 		GAME_COMMAND *l);/* 全面クリアーの場合、このゲームコマンドを追加 */
-extern void game_command_02_bg_control( 			GAME_COMMAND *l);/* 背景コントロール(スクロール速度等を指定) */
-extern void game_command_03_check_secret_bonus( 	GAME_COMMAND *l);/* 隠しボーナスチェック終了。結果表示。 */
-extern void game_command_04_begin_secret_bonus( 	GAME_COMMAND *l);/* 隠しボーナスチェック開始。 */
-extern void game_command_05_kaiwa_start_boss(		GAME_COMMAND *l);/* ボス、シナリオ会話起動 */
-extern void game_command_06_regist_chuu_boss(		GAME_COMMAND *l);/* [中型敵]妖怪、生成処理 */
-extern void game_command_07_regist_zako(			GAME_COMMAND *l);/* ザコ、生成処理 */
+
+extern void game_command_04_game_all_clear( 		GAME_COMMAND *l);/* 全面クリアーの場合、このゲームコマンドを追加 */
+extern void game_command_03_bg_control( 			GAME_COMMAND *l);/* 背景コントロール(スクロール速度等を指定) */
+extern void game_command_02_kaiwa_start_boss(		GAME_COMMAND *l);/* ボス、シナリオ会話起動 */
+extern void game_command_01_regist_chuu_boss(		GAME_COMMAND *l);/* [中型敵]妖怪、生成処理 */
+extern void game_command_00_regist_zako(			GAME_COMMAND *l);/* ザコ、生成処理 */
 
 /*---------------------------------------------------------
 
@@ -98,8 +96,9 @@ extern void load_stage_init(void);
 
 extern void player_init_stage(void);
 
-global void common_load_init(void)
+global MAIN_CALL_FUNC(common_load_init)
 {
+	//
 	set_rnd_seed(cg.game_now_stage);	/* 乱数系列の初期化 */
 //
 	#if (1==USE_r36_SCENE_FLAG)
@@ -128,6 +127,8 @@ global void common_load_init(void)
 	//
 	kanji_init_standard();/*(漢字関連の標準初期化)*/
 	//
+	play_music_num(BGM_00_stop);/*(それまで鳴っていたBGMの強制停止[やり直し時は始めからBGMを再生する])*/
+	//
 	#if (1==USE_HOLD_GAME_MODE)
 	hold_game_mode_off();/* ゲーム時間の動作開始 */
 	#endif /* (1==USE_HOLD_GAME_MODE) */
@@ -148,7 +149,7 @@ global void common_load_init(void)
 //global void shooting_game_core_1st_init(void)
 extern void score_panel_init(void);
 extern void jiki_class_initialize(void);
-global void stage_first_init(void)
+global MAIN_CALL_FUNC(stage_first_init)
 {
 	score_panel_init();
 //	sprite_controller_remove_all();
@@ -191,17 +192,15 @@ static void game_core_teki_tuika(void)
 						/* game_commandの生成を番号で管理(load_stage.c の ctype_name[]に対応している) */
 						void (*bbb[/*(6)*/GC_CODE_MAX/*(8)*/])(GAME_COMMAND *aaa) =
 						{
-							game_command_00_kanji_hyouji,			/* 漢字で文字表示。 */		//	NULL,/* [番兵区切り] (で必要)*/
-							game_command_01_game_all_clear, 		/* ゲーム 全ステージ クリアーを指示。 */
-							game_command_02_bg_control, 			/* 背景の制御コマンド。 */
-							game_command_03_check_secret_bonus, 	/* 隠しボーナスチェック終了。結果表示。 */
-						//
-							game_command_04_begin_secret_bonus, 	/* 隠しボーナスチェック開始。 */
-							game_command_05_kaiwa_start_boss,		/* ボスを追加する(r35)。かつ ボスのシナリオ会話を起動する。(シナリオ会話内でボス追加) */
-							game_command_06_regist_chuu_boss,		/* 中ボスを追加する。 (特殊敵[中型敵]) */
-							game_command_07_regist_zako,			/* ザコを追加する。 */
-						//	game_command_01_game_all_clear, 		/* (.align)ダミー。 */
-						//	game_command_01_game_all_clear, 		/* (.align)ダミー。 */
+							game_command_00_regist_zako,			/* 0"妖怪" ザコを追加する。 */
+							game_command_01_regist_chuu_boss,		/* 1"魔法" 中ボスを追加する。 (特殊敵[中型敵]) */
+							game_command_02_kaiwa_start_boss,		/* 2"会話" ボスを追加する(r35)。かつ ボスのシナリオ会話を起動する。(シナリオ会話内でボス追加) */
+							game_command_03_bg_control, 			/* 3"BG" 背景の制御コマンド。 */
+							//
+							game_command_04_game_all_clear, 		/* 4"QUIT" ゲーム 全ステージ クリアーを指示。 */
+							game_command_04_game_all_clear, 		/* (.align)ダミー。 */		//	NULL,/* [番兵区切り] (で必要)*/
+							game_command_04_game_all_clear, 		/* (.align)ダミー。 */		//	NULL,/* [番兵区切り] (で必要)*/
+							game_command_04_game_all_clear, 		/* (.align)ダミー。 */		//	NULL,/* [番兵区切り] (で必要)*/
 						};
 						(*bbb[ (int)(aaa->user_i_code) ])(aaa); 	/* 中間コード形式のコマンドから各関数に分岐する */
 					}
@@ -240,11 +239,7 @@ extern void kaiwa_load_ivent(void);
 	/* シナリオ会話をロードして開始処理 */
 	if (IS_SCENE_KAIWA_LOAD)
 	{
-		#if (1==USE_r36_SCENE_FLAG)
 	//	NEXT_SCENE;/*(次の場面へ設定)*/kaiwa_load_ivent();内部で進める。のでダブる。
-		#else
-		cg.state_flag &= (~(STATE_FLAG_0x0100_IS_LOAD_KAIWA_TXT));/*off*/
-		#endif
 		kaiwa_load_ivent();/*(シナリオ会話をロードして開始する)*/
 	}
 	#if (1==USE_r36_SCENE_FLAG)
@@ -253,40 +248,21 @@ extern void kaiwa_load_ivent(void);
 	/*(会話モード処理が終わった？)*/
 	if (IS_SCENE_END_KAIWA_MODE)
 	{
-		#if (1==USE_r36_SCENE_FLAG)
 		NEXT_SCENE;/*(次の場面へ設定)*/ //ダブる。？？？？？？？？？？？？？？？
-		#else
-		cg.state_flag &= (~(STATE_FLAG_0x0300_END_KAIWA_MODE));/*off*/
-		#endif
 		//inc liment_scene();/*(次の状態に進める)*/
 		/* (シナリオ会話処理が終わったので)
 			イベントシーンを次に進める。 */
 		{
 			set_kanji_hide_line(ML_LINE_02);/*(2行目以下を非表示にする。)*/
-			#if (1==USE_r36_SCENE_FLAG)
 			if (0x0c00==((cg.state_flag & SCENE_NUMBER_MASK)))/*(good end の場合)*/
 			{
 				cg.state_flag += 0x0400;/*(ボス終了後へ進める)*/
 			}
 		//	if (0x1000==((cg.state_flag & SCENE_NUMBER_MASK)))
 			if (0x1000u <= ((unsigned)(cg.state_flag & SCENE_NUMBER_MASK)))
-			#else
-			if ((cg.state_flag & STATE_FLAG_0x0800_IS_BOSS))
-			#endif
 			{	/*(「ボス戦闘後の会話が終了した状態」の場合)*/
 				cb.main_call_func = stage_clear_result_screen_start;	/* ステージクリアー時のリザルト画面 */
 			}
-			#if (1==USE_r36_SCENE_FLAG)
-			#else
-			else
-			{
-			//	cg.state_flag |= STATE_FLAG_0x0800_IS_BOSS; 	/* ボス戦闘前の会話終了を設定 */
-				/*(「ボス戦闘前の会話が終了した状態」の場合)*/
-				/*(r32)*/cg.state_flag |= (STATE_FLAG_0x0800_IS_BOSS|STATE_FLAG_15_DRAW_BOSS_GAUGE);
-				/* 道中コマンド追加読み込み処理を停止する。 */
-				cg.state_flag			&= (~STATE_FLAG_14_DOUCHU_TUIKA);	/* off */
-			}
-			#endif
 		}
 	}
 	#if (1==USE_r36_SCENE_FLAG)
@@ -313,7 +289,7 @@ extern void kaiwa_load_ivent(void);
 	unsigned int jj;
 	for (jj=0; jj<DANMAKU_LAYER_04_MAX; jj++)/*(登録を全部調べる。)*/
 	{
-		/*(登録されていない場合は何もしない。)*/
+		/*(レイヤーが登録されていない場合は何もしない。)*/
 		if (NULL != card.danmaku_callback[jj])
 		{
 			unsigned int ii;
@@ -321,9 +297,9 @@ extern void kaiwa_load_ivent(void);
 			{
 				OBJ *obj;
 				obj = &obj99[OBJ_HEAD_00_0x0000_TAMA+ii];
-				if (ATARI_HANTEI_OFF!=(obj->atari_hantei))/*(あたり判定の無い弾は対象外。発弾エフェクト用。)*/
+				if (ATARI_HANTEI_OFF != (obj->atari_hantei))/*(あたり判定の無い弾は対象外。発弾エフェクト用。)*/
 				{
-					if (jj == ((obj->hatudan_register_spec_data)&(0x03)) )	/* 弾幕[n]なら */
+					if (jj == ((obj->hatudan_register_spec_data)&(0x03)) )	/* 弾幕レイヤー[n]なら */
 					{
 						(card.danmaku_callback[jj])(obj);
 					}
@@ -344,7 +320,7 @@ extern void vbl_draw_screen(void);/*support.c*/
 extern void score_display(void);
 extern void bg_move_all(void);
 extern void draw_SDL_score_chache(void);
-global void shooting_game_core_work(void)
+global MAIN_CALL_FUNC(shooting_game_core_work)
 {
 	{
 my_game_core_loop:
@@ -362,22 +338,14 @@ my_game_core_loop:
 		/* [B] 特殊処理イベントが発生している場合、特殊処理を行う。 */
 		#if (1)
 		/* 特殊処理(たまにしか実行しない処理)
-			コアvoid shooting_game_core_work(void)関数のサイズが大きいと、
+			コア MAIN_CALL_FUNC(shooting_game_core_work)関数のサイズが大きいと、
 			CPUの命令キャッシュがフローする事により処理落ちするので、
 			特殊処理(たまにしか実行しない処理)はコアの外に追い出します。
 			その際「 static関数にしない」様に注意します。
 			static関数にすると、GCCが勝手に __inline__ 関数に変換する為(-O3の場合)
 			追い出した意味が無くなります。(インライン展開される)
 		 */
-		#if (1==USE_r36_SCENE_FLAG)
 		if (0x0800!=(cg.state_flag & (0xff00))) 	// ボス戦闘中以外の状態ならば、すべて特殊処理が必要。
-		#else
-		if (cg.state_flag & (
-			STATE_FLAG_0x0100_IS_LOAD_KAIWA_TXT |	//
-			STATE_FLAG_0x0300_END_KAIWA_MODE |		//
-			STATE_FLAG_0x0200_IS_KAIWA_MODE |		//
-			STATE_FLAG_14_DOUCHU_TUIKA))			// 道中はザコ追加必要なので特殊処理
-		#endif
 		{
 			my_special();/* 注意：(動作速度低下するので)static関数にしない */
 		}
@@ -388,20 +356,18 @@ my_game_core_loop:
 			もし、処理が遅くなって、描画をフレームスキップさせる場合でも、
 			動作(移動)はフレームスキップさせない。
 		*/
-		bg_move_all();	/* 背景の移動処理 */
-		#if (1)
+		bg_move_all();/* 背景の移動処理 */
 		game_core_danmaku_layer_system();/*(弾幕レイヤーシステム)*/
-		#endif
-		obj_area_move_A00_A01_A02();	/* [A00弾領域][A01敵領域][A02固定領域]オブジェクトの移動処理 */
+		obj_system_move_all();/*(スプライトオブジェクトの移動処理)*/
 		/* [D] 描画 */
 		// この辺は速度低下するのでコールバックにすべき
 		if (0!=(cg.side_panel_draw_flag))
 		{
-			score_display();		/* スコアパネル SDL 描画(遅い) */
+			score_display();/* スコアパネル SDL 描画(遅い) */
 		}
 		/* Gu描画 */
 		{
-			vbl_draw_screen();	/* 画面描画とキー入力(本当は v-blanc タイミングで) */
+			vbl_draw_screen();/* 画面描画とキー入力(本当は v-blanc タイミングで) */
 		}
 		/* シューティングゲーム中は、常にポーズ可能。 */
 		if (0==(psp_pad.pad_data_alter & PSP_KEY_PAUSE))/* さっきポーズが押されてなくて */

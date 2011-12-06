@@ -35,7 +35,7 @@
 	REG_0d_REG5 	難易度別定数4
 ---------------------------------------------------------*/
 
-local void spell_init_0a_houka_kenran(OBJ *src)
+local OBJ_CALL_FUNC(spell_init_0a_houka_kenran)
 {
 	REG_0c_REG4 	= const_init_nan_ido_bunkatu_nums_table [tama_const_H00_NUMS_HOUGA_YELLOW	+(REG_0f_GAME_DIFFICULTY)];
 	REG_0a_REG2 	= const_init_nan_ido_bunkatu_nums_table [tama_const_H01_NUMS_HOUGA_RED		+(REG_0f_GAME_DIFFICULTY)];
@@ -43,13 +43,13 @@ local void spell_init_0a_houka_kenran(OBJ *src)
 	REG_0b_REG3 	= const_init_nan_ido_table				[tama_const_H03_DIVS_HOUGA_RED		+(REG_0f_GAME_DIFFICULTY)];//[tama_const_10_HOUGA_YELLOW_ROTATE_ANGLE]
 }
 #if 1
-local void spell_create_0a_houka_kenran(OBJ *src)
+local OBJ_CALL_FUNC(spell_create_0a_houka_kenran)
 {
 //	if ((0x10)==((REG_10_BOSS_SPELL_TIMER)&0x1f))/* (16回に1回)(128なら計8回) */
 	if ((0x40)==((REG_10_BOSS_SPELL_TIMER)&0x7f))/* (16回に1回)(128なら計8回) */
 	{
-		REG_02_DEST_X	= ((src->cx256));
-		REG_03_DEST_Y	= ((src->cy256));
+		REG_02_DEST_X	= ((src->center.x256));
+		REG_03_DEST_Y	= ((src->center.y256));
 		calculate_jikinerai();/* 1:いちいち作成するっぽい。 */
 		HATSUDAN_01_speed256				= (t256(1.75)); 									/* 弾速 */	/* 3.5 2.5 2.0 */
 		HATSUDAN_02_speed_offset			= t256(0);/*(テスト)*/
@@ -130,7 +130,7 @@ sta tic const s8 step_tbl[(4+4)] =
 	-------------------------------------------------------
 	赤青クナイ用青赤
 ---------------------------------------------------------*/
-local void meirin_danmaku_03_aka_ao_kunai_time256_callback(OBJ *src)
+local OBJ_CALL_FUNC(meirin_danmaku_03_aka_ao_kunai_time256_callback)
 {
 	// [128] ダメ早い
 	/*(発弾から約4[秒]経過した弾は、通常弾へ変身する)*/
@@ -147,7 +147,7 @@ local void meirin_danmaku_03_aka_ao_kunai_time256_callback(OBJ *src)
 	-------------------------------------------------------
 	赤青クナイ用青赤
 ---------------------------------------------------------*/
-local void meirin_danmaku_02_aka_ao_kunai_callback(OBJ *src)
+local OBJ_CALL_FUNC(meirin_danmaku_02_aka_ao_kunai_callback)
 {
 	if ((HATUDAN_ITI_NO_JIKAN-64) == src->jyumyou)/* 発弾エフェクト後から64カウント経過した弾 */
 	{
@@ -195,7 +195,7 @@ local void meirin_danmaku_02_aka_ao_kunai_callback(OBJ *src)
 	-------------------------------------------------------
 ---------------------------------------------------------*/
 
-local void spell_create_12_meirin_magaru_kunai(OBJ *src)
+local OBJ_CALL_FUNC(spell_create_12_meirin_magaru_kunai)
 {
 	#if 1/*(デバッグ用)*/
 //		REG_03_DEST_Y	 = t256(256);

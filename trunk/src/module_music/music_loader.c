@@ -93,8 +93,8 @@
 	#endif // LINK_IT
 
 #if defined(ML0000)
-//tern int mod_music_file_read_string(MF_READER *reader, MM_CHAR *buffer, int number);
-static int mod_music_file_read_string(MF_READER *reader, MM_CHAR* buffer, int number)
+//tern int mod_music_file_read_string(MF_READER *reader, MM_s8 *buffer, int number);
+static int mod_music_file_read_string(MF_READER *reader, MM_s8* buffer, int number)
 {
 	return (reader->Read(reader, buffer, number));
 }

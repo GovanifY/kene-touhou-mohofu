@@ -19,10 +19,9 @@ TARGET = mohoufu
 
 #RELESE_DATE = 2011/12/04(r39)冬
 #RELESE_DATE = 2011/09/04(r38)秋
-#差分氏の活躍
-RELESE_DATE = 2011/09/04
+RELESE_DATE = 2011/12/04
 
-VERSION_MAJOR =38
+VERSION_MAJOR =39
 VERSION_MINOR =1
 
 # psp の XMB 設定
@@ -69,8 +68,8 @@ PSP_LARGE_MEMORY = 1
 PSP_FW_VERSION = 371
 
 # 注意: 署名版は fw1.00 では起動できません。(BUILD_PRX = 1が無理)
-PSP_SYOMEI_OFW = 0
-#PSP_SYOMEI_OFW = 1
+#PSP_SYOMEI_OFW = 0
+PSP_SYOMEI_OFW = 1
 
 # 注意: (r38)Minimalistの場合、署名版は MusicRoom に入るとハングアップします。原因はメモリ不足なのですが、
 # 時間内に原因を追求しきれませんでした。
@@ -92,7 +91,7 @@ PSP_SYOMEI_OFW = 0
 # ENCRYPT と BUILD_PRX の 2項目 はペア。古い *.elf があるとリコンパイル失敗するので注意。
 ifneq ($(PSP_SYOMEI_OFW),1)
 	# 0 == 非署名版、fw1.00対応版
-	KENE_UTF8_SYMEI_STR = $(KENE_UTF8_HI_SYOMEI_BAN)
+	APP_UTF8_SYMEI_STR = $(APP_UTF8_HI_SYOMEI_BAN)
 	# prx->eboot   // FW1.00			起動に失敗しました(80020148)
 	# fw1.00, prxは無理なのかな(???)
 	## 暗号化しない。
@@ -101,9 +100,9 @@ ifneq ($(PSP_SYOMEI_OFW),1)
 	#BUILD_PRX = 0
 	# BUILD_PRX = 1 の場合、fw1.00で起動できません。
 	# src/game_core/bootmain.cで利用する。
-	CORE_CFLAGS += -DKENE_SYOMEI_OFW=0
+	CORE_CFLAGS += -DAPP_SYOMEI_OFW=0
 else
-	KENE_UTF8_SYMEI_STR = $(KENE_UTF8_SYOMEI_BAN)
+	APP_UTF8_SYMEI_STR = $(APP_UTF8_SYOMEI_BAN)
 	# 1 == 署名版(cfw5.00m33-6 では ok だった)
 	# 公式FWで起動出来るように署名を付加する。
 	## 暗号化する。
@@ -112,7 +111,7 @@ else
 	## PRXでビルトする。(EBOOT.PBPでビルトしない)
 	BUILD_PRX = 1
 	# src/game_core/bootmain.cで利用する。
-	CORE_CFLAGS += -DKENE_SYOMEI_OFW=1
+	CORE_CFLAGS += -DAPP_SYOMEI_OFW=1
 endif
 #BUILD_PRX = 1
 
@@ -253,16 +252,16 @@ OBJ = obj
 
 VERSION_ALL = r$(VERSION_MAJOR)u$(VERSION_MINOR)
 
-#CORE_CFLAGS += -DKENE_NAME_STR="KENE"
-CORE_CFLAGS += -DKENE_RELEASE_VERSION=$(VERSION_MAJOR)
-CORE_CFLAGS += -DKENE_UPDATE_VERSION=$(VERSION_MINOR)
+#CORE_CFLAGS += -DAPP_NAME_STR="KENE"
+CORE_CFLAGS += -DAPP_RELEASE_VERSION=$(VERSION_MAJOR)
+CORE_CFLAGS += -DAPP_UPDATE_VERSION=$(VERSION_MINOR)
 
 include ./$(SRC)/UTF8_title.mak
 
 #PSP_EBOOT_TITLE = kene_r34_debug
 #PSP_EBOOT_TITLE = kene$(RELESE_DATE)(r35)
 #PSP_EBOOT_TITLE = kene$(RELESE_DATE)(r34u0)
-PSP_EBOOT_TITLE = $(KENE_UTF8_TITLE)$(RELESE_DATE)$(KENE_UTF8_SYMEI_STR)$(VERSION_ALL)
+PSP_EBOOT_TITLE = $(APP_UTF8_TITLE)$(RELESE_DATE)$(APP_UTF8_SYMEI_STR)$(VERSION_ALL)
 
 ifneq ($(USE_EBOOT_TITLE),1)
 	# 0 == リリース版(タイトルの文字無し)
@@ -1115,11 +1114,15 @@ $(OBJ)/PSPL/audio/mixer/%.o: $(SRC)/PSPL/audio/mixer/%.c
 #	psp-gcc $(CFLAGS_OPTIMIZE) $(CFLAGS) $(LIB_CFLAGS) -c $< -o $@
 
 # エラーが出るのでとりあえず。(???????)。
-$(OBJ)/PSPL/video/PSPL_pspvideo.o: $(SRC)/PSPL/video/PSPL_pspvideo.c
+#$(OBJ)/PSPL/video/PSPL_pspvideo.o: $(SRC)/PSPL/video/PSPL_pspvideo.c
+#	psp-gcc $(CFLAGS_OPTIMIZE) $(CFLAGS) $(LIB_CFLAGS) -c $< -o $@
+
+# エラーが出るのでとりあえず。
+$(OBJ)/PSPL/video/PSPL_bmp.o: $(SRC)/PSPL/video/PSPL_bmp.c
 	psp-gcc $(CFLAGS_OPTIMIZE) $(CFLAGS) $(LIB_CFLAGS) -c $< -o $@
 
 # エラーが出るのでとりあえず。(???????)。
-$(OBJ)/debug/scr_printf.o: $(SRC)/debug/scr_printf.c
+$(OBJ)/PSPL/video/PSPL_video.o: $(SRC)/PSPL/video/PSPL_video.c
 	psp-gcc $(CFLAGS_OPTIMIZE) $(CFLAGS) $(LIB_CFLAGS) -c $< -o $@
 
 
@@ -1281,6 +1284,12 @@ patch:
 	@$(RM) -f PARAM.SFO
 	@$(RM) -f EBOOT.PBP
 
+
+# gu 作りなおしたい場合に。
+# Make gu ↓ (但しcygwin)
+gu:
+	@echo Remove custom font files.
+	@$(RM) -f $(OBJ)/game_core/draw/*.o
 
 # font 作りなおしたい場合に。
 # Make font ↓ (但しcygwin)

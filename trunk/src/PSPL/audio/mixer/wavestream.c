@@ -137,12 +137,14 @@ static int WAV_ReadChunk(SDL_RWops *src, Chunk *chunk, int read_data)
 			Mix_SetError_bbb("Out of memory");
 			return (-1);
 		}
-		if ( SDL_RWread(src, chunk->data, chunk->length, 1) != 1 )
-		{
-			Mix_SetError_bbb("Couldn't read chunk");
-			free(chunk->data);
-			return (-1);
-		}
+	//	SDL_RWread_ void(src, chunk->data, chunk->length, 1);
+		SDL_RWread(src, chunk->data, chunk->length, 1);
+	//	if (  != 1 )
+	//	{
+	//		Mix_SetError_bbb("Couldn't read chunk");
+	//		free(chunk->data);
+	//		return (-1);
+	//	}
 	}
 	else
 	{
@@ -551,7 +553,7 @@ void WAVStream_PlaySome(u8 *stream, int len)
 					free(music->cvt.buf);
 				}
 				worksize = original_len*music->cvt.len_mult;
-				music->cvt.buf=(u8 *)malloc(worksize);
+				music->cvt.buf = (u8 *)malloc(worksize);
 				if ( music->cvt.buf == NULL )
 				{
 					return;
@@ -562,7 +564,7 @@ void WAVStream_PlaySome(u8 *stream, int len)
 			{
 				original_len = (music->stop - pos);
 			}
-			original_len = fread(music->cvt.buf,1,original_len,music->wavefp);
+			original_len = fread(music->cvt.buf, 1, original_len, music->wavefp);
 			/* At least at the time of writing, PSPL_ConvertAudio()
 			   does byte-order swapping starting at the end of the
 			   buffer. Thus, if we are reading 16-bit samples, we

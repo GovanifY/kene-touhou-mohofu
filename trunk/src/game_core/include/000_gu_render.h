@@ -30,11 +30,7 @@ extern void gu_set_bg_u32_clear_color(u32 set_u32_clear_color);
 /*---------------------------------------------------------
 	背景の描画プログラムを登録する。
 	背景カード
-
 ---------------------------------------------------------*/
-
-
-
 
 /* カード時に背景のプログラム種類を設定 */
 
@@ -46,7 +42,7 @@ extern void gu_set_bg_u32_clear_color(u32 set_u32_clear_color);
 //extern void psp_pop_screen(void);/* 仮想スクリーンを復活 */
 #define psp_push_screen(aaa) psp_move_screen( SDL_00_VIEW_SCREEN, SDL_01_BACK_SCREEN )
 #define psp_pop_screen(aaa)  psp_move_screen( SDL_01_BACK_SCREEN, SDL_00_VIEW_SCREEN )
-extern void psp_move_screen(int src_screen_number, int dst_screen_number );
+extern void psp_move_screen(int src_screen_number, int dst_screen_number);
 
 
 /*---------------------------------------------------------

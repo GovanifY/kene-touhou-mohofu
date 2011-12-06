@@ -102,7 +102,7 @@ OBJDIRS += $(OBJ)/PSPL/audio/mixer
 #	CFLAGS += -DDISABLE_THREADS
 #
 #/audio/psp/
-	OBJS += $(OBJ)/PSPL/audio/PSPL_pspaudio.o
+#(r39)	OBJS += $(OBJ)/PSPL/audio/PSPL_pspaudio.o[ãzé˚ PSPL_audio.c]
 #/audio/
 	OBJS += $(OBJ)/PSPL/audio/PSPL_audio.o
 	OBJS += $(OBJ)/PSPL/audio/PSPL_audiocvt.o
@@ -125,11 +125,11 @@ OBJDIRS += $(OBJ)/PSPL/audio/mixer
 	OBJS += $(OBJ)/PSPL/thread/PSPL_syssem.o
 	#
 	OBJS += $(OBJ)/PSPL/thread/PSPL_sysmutex.o
-	OBJS += $(OBJ)/PSPL/thread/PSPL_systhread.o
+#(r39)	OBJS += $(OBJ)/PSPL/thread/PSPL_systhread.o[ãzé˚ PSPL_thread.c]
 	OBJS += $(OBJ)/PSPL/thread/PSPL_thread.o
 #/timer/
 #/video/psp/
-	OBJS += $(OBJ)/PSPL/video/PSPL_pspvideo.o
+#(r39)	OBJS += $(OBJ)/PSPL/video/PSPL_pspvideo.o[ãzé˚  .c]
 #/video/
 	OBJS += $(OBJ)/PSPL/video/PSPL_blit.o
 	OBJS += $(OBJ)/PSPL/video/PSPL_blit_0.o
@@ -139,11 +139,11 @@ OBJDIRS += $(OBJ)/PSPL/audio/mixer
 	OBJS += $(OBJ)/PSPL/video/PSPL_bmp.o
 
 	OBJS += $(OBJ)/PSPL/video/PSPL_pixels.o
-	OBJS += $(OBJ)/PSPL/video/PSPL_RLEaccel.o
+#	OBJS += $(OBJ)/PSPL/video/PSPL_RLEaccel.o
 	OBJS += $(OBJ)/PSPL/video/PSPL_surface.o
 	OBJS += $(OBJ)/PSPL/video/PSPL_video.o
 #
-	OBJS += $(OBJ)/PSPL/PSPL.o
+#	OBJS += $(OBJ)/PSPL/PSPL.o
 #------------ É_É~Å[
 #	OBJS += $(OBJ)/PSPL/PSPL_error.oîpé~
 #	OBJS += $(OBJ)/PSPL/PSPL_timer.o

@@ -11,7 +11,7 @@
 	-------------------------------------------------------
 	テキトー
 ---------------------------------------------------------*/
-local void spell_create_09_zako_sentakki(OBJ *src)
+local OBJ_CALL_FUNC(spell_create_09_zako_sentakki)
 {
 	if (0==((REG_10_BOSS_SPELL_TIMER)&0x03))
 	{

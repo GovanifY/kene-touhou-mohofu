@@ -376,34 +376,34 @@ enum	/* ☆ フロント面エフェクト */
 	BAKUHA0d,	/* 火炎爆発 */
 	BAKUHA0e,	/* 火炎爆発 */
 	BAKUHA0f,	/* 火炎爆発 */
-//
+//0x20
 	SPELL_SQUERE_,	/* [□] x 5 */
-	SP_DUMMY_MUTEKI,//
-	SP_FRONT_YUKI,// //	SPELL_LOGO_,/* Border Power of Spiritual */ 	//	SPELL_TACHIE_,
+	PANEL_STR_EXTRA,//
+	SP_FRONT_YUKI,// // SPELL_LOGO_,/* Border Power of Spiritual */ 	//	SPELL_TACHIE_,
 	PANEL_STR_MAX,
 	PANEL_STR_EASY,
 	PANEL_STR_NORMAL,
 	PANEL_STR_HARD,
 	PANEL_STR_LUNATIC,
-//
-	PANEL_STR_EXTRA,
-	PANEL_STR_TIME,
-	PANEL_STR_fps,
-	PANEL_STR_0_roman,
-	PANEL_STR_1_roman,
-	PANEL_STR_2_roman,
-	PANEL_STR_3_roman,
-	PANEL_STR_4_roman,
-//
-	PANEL_STR_5_roman,
-	PANEL_STR_6_roman,
-	PANEL_STR_7_roman,
-	PANEL_STR_8_roman,
-	PANEL_STR_9_roman,
-	PANEL_STR_ene_my,
+//0x28
+	PANEL_STR_0_roman,	//[r39]PANEL_STR_EXTRA,
+	PANEL_STR_1_roman,	//[r39]PANEL_STR_TIME,
+	PANEL_STR_2_roman,	//[r39]PANEL_STR_fps,
+	PANEL_STR_3_roman,	//[r39]PANEL_STR_0_roman,
+	PANEL_STR_4_roman,	//[r39]PANEL_STR_1_roman,
+	PANEL_STR_5_roman,	//[r39]PANEL_STR_2_roman,
+	PANEL_STR_6_roman,	//[r39]PANEL_STR_3_roman,
+	PANEL_STR_7_roman,	//[r39]PANEL_STR_4_roman,
+//0x30
+	PANEL_STR_8_roman,	//[r39]PANEL_STR_5_roman,
+	PANEL_STR_9_roman,	//[r39]PANEL_STR_6_roman,
+	SP_DUMMY_MUTEKI,	//[r39]PANEL_STR_7_roman,
+	PANEL_STR_TIME, 	//PANEL_STR_8_roman,
+	PANEL_STR_fps,		//PANEL_STR_9_roman,
+	PANEL_STR_ene_my,	//PANEL_STR_ene_my,
 	PANEL_STR_0_kanji,
 	PANEL_STR_1_kanji,
-//
+//0x38
 	PANEL_STR_2_kanji,
 	PANEL_STR_3_kanji,
 	PANEL_STR_4_kanji,
@@ -412,7 +412,7 @@ enum	/* ☆ フロント面エフェクト */
 	PANEL_STR_7_kanji,
 	PANEL_STR_8_kanji,
 	PANEL_STR_9_kanji,
-//
+//0x40
 };
 /*
 	SP_DUMMY_MUTEKI == FRONT 面なのであたり判定なし。それから表示されない。

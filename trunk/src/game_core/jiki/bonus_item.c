@@ -19,7 +19,8 @@
 /*hatudan_register_speed65536*/
 //	/*hatudan_register_tra65536 共用 */#define ITEM_DATA_flag_first 	user_data01 	/* firstフラグ */
 
-#define ITEM_DATA_02_flags00		user_data02 	/* (user_data02==hatudan_register_spec_data)収集フラグ(hatudan_register_spec_dataと合わせる必要がある) */
+//????#define ITEM_DATA_02_flags00		user_data02 	/* (user_data02==hatudan_register_spec_data)収集フラグ(hatudan_register_spec_dataと合わせる必要がある) */
+#define ITEM_DATA_02_flags00		user_data03 	/* (user_data02==hatudan_register_spec_data)収集フラグ(hatudan_register_spec_dataと合わせる必要がある) */
 
 #define ITEM_DATA_04_y_sum256		user_data04 				/* アイテム投げ出し用 y軸 積算値(y軸、上方がマイナス) */
 #define ITEM_DATA_04_count256		ITEM_DATA_04_y_sum256		/* 自動収拾用カウンタ(共用) */
@@ -34,38 +35,38 @@
 	if (JYUMYOU_NASI < src->jyumyou)/* あれば */
 	{
 		/* 画面内に変換 */
-		src->cy256 = src->ITEM_DATA_07_true_y256;
+		src->center.y256 = src->ITEM_DATA_07_true_y256;
 		#if (0)/*(自動収集の場合画面外変換処理をしない。するとおかしくなる。)*/
 		#endif
-	//	if (t256(0) >= src->cy256)		/* 上にいると取れないけど速い */
-		if (t256(-16) >= src->cy256)	/* この辺の仕様はたぶん変わる。(Guスプライト座標中心管理とかで) */
-	//	if (t256(FIX_LABEL_ITEM_HEIGHT_DIV2) >= src->cy256) 	/* 中心座標なので */
+	//	if (t256(0) >= src->center.y256)		/* 上にいると取れないけど速い */
+		if (t256(-16) >= src->center.y256)	/* この辺の仕様はたぶん変わる。(Guスプライト座標中心管理とかで) */
+	//	if (t256(FIX_LABEL_ITEM_HEIGHT_DIV2) >= src->center.y256)	/* 中心座標なので */
 		{
-			src->cy256 = t256(FIX_LABEL_ITEM_HEIGHT_DIV2);/* 画面外表示アイテム高さの半分 */
+			src->center.y256 = t256(FIX_LABEL_ITEM_HEIGHT_DIV2);/* 画面外表示アイテム高さの半分 */
 			src->obj_type_set |= 0x08;
 		}
 		else
 		{
 			src->obj_type_set &= (~0x08);
 		}
-		reflect_sprite_spec444(src, OBJ_BANK_SIZE_01_ITEM);
+		reflect_sprite_spec(src, OBJ_BANK_SIZE_01_ITEM);
 	}
 	#endif
 		#define FIX_LABEL_ITEM_HEIGHT_DIV2 (8/2)/* 画面外表示アイテム高さの半分 */
-static void  gamen_gai_item_sub(OBJ *src)	/* 自動収集ならば、自分に集まる */
+static OBJ_CALL_FUNC(gamen_gai_item_sub)	/* 自動収集ならば、自分に集まる */
 {
 	if (JYUMYOU_NASI < src->jyumyou)/* あれば */
 	{
 		/* 画面内に変換 */
-		src->cy256 = src->ITEM_DATA_07_true_y256;
-//		if (t256(0) >= src->cy256)		/* 上にいると取れないけど速い */
-		if (t256(-16) >= src->cy256)	/* この辺の仕様はたぶん変わる。(Guスプライト座標中心管理とかで) */
-//		if (t256(FIX_LABEL_ITEM_HEIGHT_DIV2) >= src->cy256) 	/* 中心座標なので */
+		src->center.y256 = src->ITEM_DATA_07_true_y256;
+//		if (t256(0) >= src->center.y256)		/* 上にいると取れないけど速い */
+		if (t256(-16) >= src->center.y256)	/* この辺の仕様はたぶん変わる。(Guスプライト座標中心管理とかで) */
+//		if (t256(FIX_LABEL_ITEM_HEIGHT_DIV2) >= src->center.y256)	/* 中心座標なので */
 		{	/* 画面外の場合 */
 			src->obj_type_set |= (0x08);
 			/* 距離に応じて透明度が変わる。(距離が遠いと暗くなる) */
 			int toumeido;
-			toumeido = (src->cy256);
+			toumeido = (src->center.y256);
 		//	toumeido += t256(16);
 		//	toumeido = ( (toumeido));
 			/* 0 ... */
@@ -78,7 +79,7 @@ static void  gamen_gai_item_sub(OBJ *src)	/* 自動収集ならば、自分に集まる */
 		//	toumeido = psp_min(0xff, toumeido);/*(無くて良い筈だが、念の為)*/
 			src->color32		= (0x00ffffff) | ((toumeido)<<24);
 		//
-			src->cy256 = t256(FIX_LABEL_ITEM_HEIGHT_DIV2);/* 画面外表示アイテム高さの半分 */
+			src->center.y256 = t256(FIX_LABEL_ITEM_HEIGHT_DIV2);/* 画面外表示アイテム高さの半分 */
 			src->atari_hantei	= (0);/*(取れない)*/
 		}
 		else
@@ -92,14 +93,14 @@ static void  gamen_gai_item_sub(OBJ *src)	/* 自動収集ならば、自分に集まる */
 			src->atari_hantei	= (0);/*(取れない)*/
 			#endif
 		}
-		reflect_sprite_spec444(src, OBJ_BANK_SIZE_01_ITEM);
+		reflect_sprite_spec(src, OBJ_BANK_SIZE_01_ITEM);
 	}
 }
 /*---------------------------------------------------------
 	アイテムの移動(自動収集の場合)
 ---------------------------------------------------------*/
 
-static void move_item_type02(OBJ *src)	/* 自動収集ならば、自分に集まる */
+static OBJ_CALL_FUNC(move_item_type02)	/* 自動収集ならば、自分に集まる */
 {
 	{
 		src->ITEM_DATA_04_count256--;
@@ -118,13 +119,13 @@ static void move_item_type02(OBJ *src)	/* 自動収集ならば、自分に集まる */
 	//		src->ITEM_DATA_04_count256 = t256(2.0/*1.0*/);	/* pspは解像度が低いので細工(x2) */ 	/* (2.5==5*0.5) */
 	//	}
 		OBJ *zzz_player;
-		zzz_player = &obj99[OBJ_HEAD_02_0x0900_KOTEI+FIX_OBJ_00_PLAYER];
+		zzz_player = &obj99[OBJ_HEAD_03_0x0a00_KOTEI+FIX_OBJ_00_PLAYER];
 		//#define ITEM_DATA_05_x_sa256		user_data05 	/* 差分 x */ /* 自動収集 */
 		//#define ITEM_DATA_06_y_sa256		user_data06 	/* 差分 y */ /* 自動収集 */
-		s32 src_ITEM_DATA_05_x_sa256 = (src->cx256 - zzz_player->cx256);
-		s32 src_ITEM_DATA_06_y_sa256 = (src->ITEM_DATA_07_true_y256 - zzz_player->cy256);
+		s32 src_ITEM_DATA_05_x_sa256 = (src->center.x256 - zzz_player->center.x256);
+		s32 src_ITEM_DATA_06_y_sa256 = (src->ITEM_DATA_07_true_y256 - zzz_player->center.y256);
 		/* 自機狙い角を HATSUDAN_03_angle65536 に作成 */
-		REG_02_DEST_X	= ((src->cx256));
+		REG_02_DEST_X	= ((src->center.x256));
 		REG_03_DEST_Y	= ((src->ITEM_DATA_07_true_y256));
 		calculate_jikinerai();
 		/* 「1周が65536分割」から「1周が1024分割」へ変換する。 */
@@ -152,20 +153,20 @@ static void move_item_type02(OBJ *src)	/* 自動収集ならば、自分に集まる */
 			{
 				src->jyumyou = JYUMYOU_NASI;/* 星点のみ特別処理 */				/* おしまい */
 //
-				voice_play(VOICE05_BONUS, /*TRACK07_GRAZE*/TRACK06_ALEART_IVENT_02);/* テキトー */
+				voice_play(VOICE05_BONUS, TRACK06_ITEM);/* テキトー */
 			}
 		}
-//		src->cx256					= zzz_player->cx256 + (aaa_x256);	/*fps_factor*/
-//		src->ITEM_DATA_07_true_y256 = zzz_player->cy256 + (aaa_y256);	/*fps_factor*/
+//		src->center.x256					= zzz_player->center.x256 + (aaa_x256); /*fps_factor*/
+//		src->ITEM_DATA_07_true_y256 = zzz_player->center.y256 + (aaa_y256); /*fps_factor*/
 			#if (0)//
-			src->vx256 = ((si n1024((deg65536to1024(HATSUDAN_03_angle65536)))*(src->speed256))>>8);/*fps_factor*/	/* CCWの場合 */
-			src->vy256 = ((co s1024((deg65536to1024(HATSUDAN_03_angle65536)))*(src->speed256))>>8);/*fps_factor*/
+			src->math_vector.x256 = ((si n1024((deg65536to1024(HATSUDAN_03_angle65536)))*(src->speed256))>>8);/*fps_factor*/	/* CCWの場合 */
+			src->math_vector.y256 = ((co s1024((deg65536to1024(HATSUDAN_03_angle65536)))*(src->speed256))>>8);/*fps_factor*/
 			#else
 			{
 				int sin_value_t256; 	//	sin_value_t256 = 0;
 				int cos_value_t256; 	//	cos_value_t256 = 0;
 				int256_sincos1024( (deg65536to1024(HATSUDAN_03_angle65536)), &sin_value_t256, &cos_value_t256); /* 「1周が65536分割」から「1周が1024分割」へ変換する。 */
-				src->cx256						+= ((sin_value_t256*(/*t256*/(5)))/*>>8*/);/*fps_factor*/
+				src->center.x256						+= ((sin_value_t256*(/*t256*/(5)))/*>>8*/);/*fps_factor*/
 				src->ITEM_DATA_07_true_y256 	+= ((cos_value_t256*(/*t256*/(5)))/*>>8*/);/*fps_factor*/
 			}
 			#endif
@@ -260,7 +261,7 @@ static void move_item_type02(OBJ *src)	/* 自動収集ならば、自分に集まる */
 		「一つのアイテムに絞れば必ず取れる」という調整にする為には、
 		縦が異常に狭いので、アイテムの見た目線速が倍以上遅くしないと取れません。
 	*/
-static void move_item_type01(OBJ *src)
+static OBJ_CALL_FUNC(move_item_type01)
 {
 	/* 自動収集モードのどれかが作動してたら、 */
 	if (0 != (
@@ -356,20 +357,20 @@ static void move_item_type01(OBJ *src)
 	初回時の投げ出し処理。
 	投げ出し中はあたり判定なし。(回収できない)
 ---------------------------------------------------------*/
-static void move_item_type00(OBJ *src)
+static OBJ_CALL_FUNC(move_item_type00)
 {
 	src->ITEM_DATA_04_count256--;
 	if (0 <= src->ITEM_DATA_04_count256)/*0レジスタ使う*/
 	{
 		;
-			src->cx256	+= src->vx256;
-			src->cy256	+= src->vy256;
+			src->center.x256	+= src->math_vector.x256;
+			src->center.y256	+= src->math_vector.y256;
 	}
 	else
 //	if (1 > src->ITEM_DATA_04_count256)
 	{
 		src->atari_hantei				= (1/*スコア兼用*/);/*(あたり判定on==取れる)*/
-		src->ITEM_DATA_07_true_y256 	= (src->cy256); /* 仮想 */
+		src->ITEM_DATA_07_true_y256 	= (src->center.y256); /* 仮想 */
 		src->ITEM_DATA_04_y_sum256		= (0);			/* アイテム投げ出し初期値(y軸、上方がマイナス) */
 		src->callback_mover 			= move_item_type01;
 	}
@@ -389,7 +390,7 @@ static void move_item_type00(OBJ *src)
 	とはいえ難しそうだな～。
 ---------------------------------------------------------*/
 /*int x, int y*/
-static OBJ *aaa_item_mono_create(OBJ *src, int set_sel_type)/* */
+static OBJ *aaa_item_mono_create(OBJ/**/ *src, int set_sel_type)/* */
 {
 	{
 		// チルノ(氷符)の場合、グレイズでパワーアップするので[小p][大P][F]は出さない。[点](氷)になる。
@@ -411,15 +412,13 @@ static OBJ *aaa_item_mono_create(OBJ *src, int set_sel_type)/* */
 	//
 	//	アイテムの種類を選ぶ
 	OBJ *obj;
-	obj 					= obj_add_A00_tama_error();
+	obj 							= obj_regist_tama();
 	if (NULL != obj)
 	{
-		obj->obj_type_set				= set_sel_type; 	/* アイテムの種類 == グラフィックの種類 */
-		reflect_sprite_spec444(obj, OBJ_BANK_SIZE_01_ITEM);
-		obj->m_Hit256R			= ZAKO_ATARI16_PNG;
-	//
-
-	//
+		obj->obj_type_set			= set_sel_type; 	/* アイテムの種類 == グラフィックの種類 */
+		obj->m_zoom.y256			= M_ZOOM_Y256_NO_TILT;/* 特殊機能で傾かないようシステム拡張(r33)。 */
+		reflect_sprite_spec(obj, OBJ_BANK_SIZE_01_ITEM);
+		obj->m_Hit256R				= ZAKO_ATARI16_PNG;
 	//
 		if (SP_ITEM_06_HOSI == set_sel_type)	/* 星点のみ特別処理 */
 		{
@@ -458,17 +457,21 @@ static void s_item_convert_hosi(OBJ *obj)
 		{
 			int temp_cx256;
 			int temp_cy256;
-			temp_cx256 = obj->cx256;
-			temp_cy256 = obj->cy256;
+			temp_cx256 = obj->center.x256;
+			temp_cy256 = obj->center.y256;
 			/* バグるので、とりあえず対応。 */
 			memset(obj, 0, sizeof(OBJ));
 			obj->color32	= MAKE32RGBA(0xff, 0xff, 0xff, 0xff);		/*	obj->alpha		= 0xff;*/
 			obj->jyumyou	= JYUMYOU_1MIN; 		/* 1分したら勝手に自動消去。 */
-			obj->m_zoom_x256			= t256(1.00);	/* 表示拡大率 256 == [ x 1.00 ] */
-			obj->m_zoom_y256			= t256(1.00);	/* 表示拡大率 256 == [ x 1.00 ] */
-		//	obj->hatudan_register_spec_data = (0);/*(良くわかんない)*/
-			obj->cx256 = temp_cx256;
-			obj->cy256 = temp_cy256;
+			obj->m_zoom.x256			= t256(1.00);	/* 表示拡大率 256 == [ x 1.00 ] */
+			obj->m_zoom.y256			= t256(1.00);	/* 表示拡大率 256 == [ x 1.00 ] */
+			#if (1)
+			/*(レイヤー[0]は(r36以降)必ずdanmaku_00_standard_angle_moverなのでレイヤー[0]に強制設定。)*/
+			/*(良くわかんない)*/
+			obj->hatudan_register_spec_data = (DANMAKU_LAYER_00)|(TAMA_SPEC_8000_NON_TILT);/* (r33-)非傾き弾 */
+			#endif
+			obj->center.x256 = temp_cx256;
+			obj->center.y256 = temp_cy256;
 		}
 		#endif
 		obj->callback_mover 	= move_item_type01;
@@ -490,19 +493,19 @@ static void s_item_convert_hosi(OBJ *obj)
 	}
 		/* エフェクトの場合も星点になる。 */
 		obj->obj_type_set = SP_ITEM_06_HOSI;
+		obj->rotationCCW1024				= (0);			/* 描画用角度(下が0度で左回り(反時計回り)) */	/* 0 == 傾かない。下が0度 */
 		{
 			/* エフェクトの場合半透明なので、白に戻す。 */
 			obj->color32		= (0xffffffff);
 			/* エフェクトの場合半透明なので、原寸に戻す。 */
-			obj->m_zoom_x256	= t256(1.0);
-			obj->m_zoom_y256	= t256(1.0);
+		//	obj->m_zoom.x256	= t256(1.0);M_ZOOM_Y256_NO_TILTは強制1.00倍なので要らない。
+		//	obj->m_zoom.y256	= t256(1.0);M_ZOOM_Y256_NO_TILTは強制1.00倍なので要らない。
+			obj->m_zoom.y256	= M_ZOOM_Y256_NO_TILT;/* 特殊機能で傾かないようシステム拡張(r33)。 */
 		}
-		reflect_sprite_spec444(obj, OBJ_BANK_SIZE_01_ITEM);
-		obj->ITEM_DATA_07_true_y256 	= (/*src*/obj->cy256); /* 仮想 */
-
-		obj->ITEM_DATA_02_flags00			= /*(DANMAKU_LAYER_03)|*/((ITEM_MOVE_FLAG_01_COLLECT|ITEM_MOVE_FLAG_06_RAND_XY)&ITEM_MOVE_FLAG_01_COLLECT);
-//	}
-	obj->rotationCCW1024				= (0);			/* 描画用角度(下が0度で左回り(反時計回り)) */	/* 0 == 傾かない。下が0度 */
+		obj->ITEM_DATA_07_true_y256 	= (/*src*/obj->center.y256); /* 仮想 */
+		obj->ITEM_DATA_02_flags00	= /*(DANMAKU_LAYER_03)|*/((ITEM_MOVE_FLAG_01_COLLECT|ITEM_MOVE_FLAG_06_RAND_XY)&ITEM_MOVE_FLAG_01_COLLECT);
+		//
+		reflect_sprite_spec(obj, OBJ_BANK_SIZE_01_ITEM);
 }
 
 
@@ -575,7 +578,7 @@ static void item_create_flags(
 		if (NULL != h)
 		#endif
 		{
-			h->ITEM_DATA_07_true_y256		= (src->cy256); /* 仮想 */
+			h->ITEM_DATA_07_true_y256		= (src->center.y256); /* 仮想 */
 
 			s32 x_offset;
 			x_offset = 0;
@@ -592,8 +595,8 @@ static void item_create_flags(
 				HATSUDAN_01_speed256	= ((rnd_spd256));/*(t256形式)*/
 				HATSUDAN_03_angle65536	= (my_rand & ((65536/4)-1)) + (65536/4) + (65536/8);
 				sincos256();/*(破壊レジスタ多いので注意)*/
-				h->vx256 = REG_03_DEST_Y;//sin_value_t256	// 縦
-				h->vy256 = REG_02_DEST_X;//cos_value_t256	// 横
+				h->math_vector.x256 = REG_03_DEST_Y;//sin_value_t256	// 縦
+				h->math_vector.y256 = REG_02_DEST_X;//cos_value_t256	// 横
 			}
 			else/*(通常モード)*/
 			{
@@ -602,7 +605,7 @@ static void item_create_flags(
 				#if 0
 				/* 基本的に画面外(上)にあまり喰み出さない(旧タイプ) */
 				/* アイテムマーカーを作成しない事が前提の動き */
-				h->ITEM_DATA_04_y_sum256		= -(/*256*/((src->cy256)>>7))-(ra_nd()&0xff);	/* アイテム投げ出し初期値(y軸、上方がマイナス) */
+				h->ITEM_DATA_04_y_sum256		= -(/*256*/((src->center.y256)>>7))-(ra_nd()&0xff); /* アイテム投げ出し初期値(y軸、上方がマイナス) */
 				#else
 				/* 画面外(上)に喰み出す(喰み出しマーカー必須) */
 				/* アイテムマーカーを作成する事が前提の動き */
@@ -615,16 +618,16 @@ static void item_create_flags(
 					#define ITEM_WIDTH16	(16*256)/* 16はアイテム幅 */
 					#define ITEM_X_LIMIT	(GAME_WIDTH*256+OFFSET_X64-ITEM_WIDTH16)
 					s32 x256;
-					x256 = (src->cx256);
+					x256 = (src->center.x256);
 					x256 += ((ra_nd()&((OFFSET_X64+OFFSET_X64)-1)));	/*(リプレイ時に再現性が必要)*/
 							if (x256 < OFFSET_X64)			{		x256 = OFFSET_X64;			}
 					else	if (x256 > (ITEM_X_LIMIT))		{		x256 = (ITEM_X_LIMIT);		}
 				//	登録する
-					x_offset	= (x256)-(OFFSET_X64) - (src->cx256);
+					x_offset	= (x256)-(OFFSET_X64) - (src->center.x256);
 				}
 			}
-			h->cx256					= src->cx256 + (x_offset);
-			h->cy256					= src->cy256;
+			h->center.x256					= src->center.x256 + (x_offset);
+			h->center.y256					= src->center.y256;
 			h->ITEM_DATA_02_flags00 			= /*(DANMAKU_LAYER_03)|*/(set_item_flags & ITEM_MOVE_FLAG_01_COLLECT);
 		}
 	}
@@ -660,7 +663,7 @@ global void item_create_mono(
 ---------------------------------------------------------*/
 //	#define ITEM_CREATE_MODE_01 	(12*0)
 //	#define ITEM_CREATE_MODE_02 	(12*1)
-global void item_create_for_boss(OBJ *src, int item_create_mode)
+global void item_create_for_boss(OBJ/**/ *src, int item_create_mode)
 {
 	#define ITEM_03 	(4*0)
 	#define ITEM_02 	(4*1)
@@ -769,7 +772,7 @@ static int s_teki_get_random_item(void)
 	敵やられ
 ---------------------------------------------------------*/
 
-global /*static*/ void item_create_random_table(OBJ *src)
+global /*static*/ OBJ_CALL_FUNC(item_create_random_table)
 {
 	item_create_mono(src, s_teki_get_random_item());//, (1), (/*IT EM_MOVE_FLAG_01_COLLECT|*/ITEM_MOVE_FLAG_06_RAND_XY)/*(up_flags)*/
 }
@@ -858,8 +861,8 @@ global void player_check_extend_score(void)
 			実際やってみたら２つ鳴らして、丁度良い。
 			特にうるさくはなかった。
 		*/
-		voice_play(VOICE06_EXTEND, TRACK03_SHORT_MUSIC/*TRACK02_ALEART_IVENT*/);		/* エクステンド音 */
-		voice_play(VOICE06_EXTEND, TRACK01_EXPLODE);/*予備(必要)*/						/* エクステンド音 */
+		voice_play(VOICE06_EXTEND, TRACK03_IVENT_DAN/*TRACK02_JIKI_BOMBER*/);		/* エクステンド音 */
+		voice_play(VOICE06_EXTEND, TRACK01_PICHUN);/*予備(必要)*/					/* エクステンド音 */
 		{
 			/*
 			★ 模倣風で 1000万 エクステンドが無いのは、

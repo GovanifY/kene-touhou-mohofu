@@ -301,7 +301,7 @@ static u16 GetPeriod(u16 note, u32 speed)
 	return (getoldperiod(note, speed));
 }
 
-static s16 InterpolateEnv(s16 p, ENVPT *a, ENVPT *b)
+static s16 InterpolateEnv(s16 p, MM_ENVPT *a, MM_ENVPT *b)
 {
 	return (Interpolate(p, a->pos, b->pos, a->val, b->val));
 }
@@ -344,14 +344,14 @@ static s16 DoPan(s16 envpan, s16 pan)
 }
 
 static void StartEnvelope(
-	ENVPR *t,
+	MM_ENVPR *t,
 	u8 flg,
 	u8 pts,
 	u8 susbeg,
 	u8 susend,
 	u8 beg,
 	u8 end,
-	ENVPT *p,
+	MM_ENVPT *p,
 	u8 keyoff
 )
 {
@@ -392,7 +392,7 @@ static void StartEnvelope(
    Misc:
 	 Sustain loops are loops that are only active as long as the keyoff flag is
 	 clear.  When a volume envelope terminates, so does the current fadeout.  */
-static s16 ProcessEnvelope(ENVPR *t, s16 v, u8 keyoff)
+static s16 ProcessEnvelope(MM_ENVPR *t, s16 v, u8 keyoff)
 {
 	if (t->flg & EF_ON)
 	{

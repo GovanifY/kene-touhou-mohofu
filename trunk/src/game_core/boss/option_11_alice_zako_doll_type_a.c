@@ -78,7 +78,7 @@
 	bul let_reg ist_multi_vec tor();
 	#endif
 
-static void move_alice_doll_last_burrets(OBJ *src)
+static OBJ_CALL_FUNC(move_alice_doll_last_burrets)
 {
 	set_REG_DEST_XY(src);	/* 弾源x256 y256 中心から発弾。 */
 	#if 1
@@ -143,14 +143,14 @@ static void move_alice_doll_last_burrets(OBJ *src)
 /*---------------------------------------------------------
 	敵移動
 ---------------------------------------------------------*/
-static void add_zako_alice_doll_2nd_CCW(OBJ *src);
+static OBJ_CALL_FUNC(add_zako_alice_doll_2nd_CCW);
 
-static void move_alice_doll_all(OBJ *src)
+static OBJ_CALL_FUNC(move_alice_doll_all)
 {
 	src->BOSS_DATA_05_move_jyumyou--;/* 時間経過 */
 	if (0 > src->BOSS_DATA_05_move_jyumyou)/* 移動終了 */
 	{
-		if (ENEMY_LAST_SHOT_LINE256 > src->cy256)	/* このラインより下からは敵が撃たない */
+		if (ENEMY_LAST_SHOT_LINE256 > src->center.y256)	/* このラインより下からは敵が撃たない */
 		{
 			if (0 > src->recursive)/* 再分裂する必要あり？ */
 			{
@@ -175,15 +175,15 @@ static void move_alice_doll_all(OBJ *src)
 			mask1024(bbb_rotationCCW1024);
 			src->radius++;
 			#if (0)//
-			src->cx256 = src->BOSS_DATA_00_target_x256 + ((si n1024((bbb_rotationCCW1024))*(src->radius)));/*fps_factor*/	/* CCWの場合 */
-			src->cy256 = src->BOSS_DATA_01_target_y256 + ((co s1024((bbb_rotationCCW1024))*(src->radius)));/*fps_factor*/
+			src->center.x256 = src->BOSS_DATA_00_target_x256 + ((si n1024((bbb_rotationCCW1024))*(src->radius)));/*fps_factor*/	/* CCWの場合 */
+			src->center.y256 = src->BOSS_DATA_01_target_y256 + ((co s1024((bbb_rotationCCW1024))*(src->radius)));/*fps_factor*/
 			#else
 			{
 				int sin_value_t256; 	//	sin_value_t256 = 0;
 				int cos_value_t256; 	//	cos_value_t256 = 0;
 				int256_sincos1024( (bbb_rotationCCW1024), &sin_value_t256, &cos_value_t256);
-				src->cx256 = src->BOSS_DATA_00_target_x256 + ((sin_value_t256*(src->radius)));/*fps_factor*/
-				src->cy256 = src->BOSS_DATA_01_target_y256 + ((cos_value_t256*(src->radius)));/*fps_factor*/
+				src->center.x256 = src->BOSS_DATA_00_target_x256 + ((sin_value_t256*(src->radius)));/*fps_factor*/
+				src->center.y256 = src->BOSS_DATA_01_target_y256 + ((cos_value_t256*(src->radius)));/*fps_factor*/
 			}
 			#endif
 		}
@@ -193,7 +193,7 @@ static void move_alice_doll_all(OBJ *src)
 /*---------------------------------------------------------
 	敵を追加する(2nd)
 ---------------------------------------------------------*/
-static void add_zako_alice_doll_2nd_CCW(OBJ *src)
+static OBJ_CALL_FUNC(add_zako_alice_doll_2nd_CCW)
 {
 //	const int add_angle = ( (1024/7) ); /* 加算角度 */	/* ２回目以降の分列数は常に7回 */
 	int first_angle1024;	/* 開始角度 */
@@ -204,7 +204,7 @@ static void add_zako_alice_doll_2nd_CCW(OBJ *src)
 	for (i_angle1024=(0); i_angle1024<(1024/2); i_angle1024 += (1024/(7*2))/*add_angle*/)	/* 弾数 */
 	{
 		OBJ *h;
-		h						= obj_add_A01_teki_error();
+		h						= obj_regist_teki();
 		if (NULL!=h)/* 登録できた場合のみ */
 		{
 			h->m_Hit256R			= ZAKO_ATARI02_PNG;
@@ -221,10 +221,11 @@ static void add_zako_alice_doll_2nd_CCW(OBJ *src)
 			h->BOSS_DATA_05_move_jyumyou			= (60);/* 1[秒](60[frame])後に、再分裂 */
 			{
 				/* 初期位置 */
-			/*	h->cx256 =*/ h->BOSS_DATA_00_target_x256 = (src->cx256);
-			/*	h->cy256 =*/ h->BOSS_DATA_01_target_y256 = (src->cy256);
+			/*	h->center.x256 =*/ h->BOSS_DATA_00_target_x256 = (src->center.x256);
+			/*	h->center.y256 =*/ h->BOSS_DATA_01_target_y256 = (src->center.y256);
 			}
-			h->user_data02			= (0);/*(よくわかんない)*/
+			// [レガシーシステム対応]敵領域だから無駄(?)
+			h->hatudan_register_spec_data	= (0);/*([レイヤーシステムが働かないようにする]よくわかんない)*/
 			h->radius				= (0);
 			h->recursive			= ( ((src->recursive)-1) );/* 再分裂回数を1減らす。(テロメア) */
 		}
@@ -236,7 +237,7 @@ static void add_zako_alice_doll_2nd_CCW(OBJ *src)
 	敵を追加する(1st)
 ---------------------------------------------------------*/
 
-void add_zako_alice_doll_type_a(OBJ *src)
+/**/ OBJ_CALL_FUNC(add_zako_alice_doll_type_a)
 {
 	#if (1)
 	const int aaa_tbl[(4)] =
@@ -268,7 +269,7 @@ void add_zako_alice_doll_type_a(OBJ *src)
 	for (i_angle1024=0; i_angle1024<(1024); i_angle1024 += add_angle1024)	/* 一周 */
 	{
 		OBJ *h;
-		h							= obj_add_A01_teki_error();
+		h							= obj_regist_teki();
 		if (NULL!=h)/* 登録できた場合のみ */
 		{
 			h->m_Hit256R			= ZAKO_ATARI02_PNG;
@@ -285,10 +286,11 @@ void add_zako_alice_doll_type_a(OBJ *src)
 			h->BOSS_DATA_05_move_jyumyou			= (60);
 			{
 				/* 初期位置 */
-			/*	h->cx256 =*/ h->BOSS_DATA_00_target_x256 = (src->cx256);
-			/*	h->cy256 =*/ h->BOSS_DATA_01_target_y256 = (src->cy256);
+			/*	h->center.x256 =*/ h->BOSS_DATA_00_target_x256 = (src->center.x256);
+			/*	h->center.y256 =*/ h->BOSS_DATA_01_target_y256 = (src->center.y256);
 			}
-			h->user_data02			= (0);/*(よくわかんない)*/
+			// [レガシーシステム対応]敵領域だから無駄(?)
+//			h->hatudan_register_spec_data			= (0);/*([レイヤーシステムが働かないようにする]よくわかんない)*/
 			h->radius				= (0);
 			h->recursive			= ( ((3==(REG_0f_GAME_DIFFICULTY))?(1):(0)));/*(Lunatic==オルレアン人形)*/
 		}
@@ -302,7 +304,7 @@ void add_zako_alice_doll_type_a(OBJ *src)
 	敵を追加する(common)
 ---------------------------------------------------------*/
 
-static void add_zako_alice_doll_common(OBJ *src, int is_the_first)
+static void add_zako_alice_doll_common(OBJ/**/ *src, int is_the_first)
 {
 	const int aaa_tbl[(4)] =
 	{
@@ -318,11 +320,11 @@ static void add_zako_alice_doll_common(OBJ *src, int is_the_first)
 	for (i_angle1024=0; i_angle1024<(1024); i_angle1024 += add_angle1024)	/* 弾数 */
 	{
 		OBJ *h;
-		h						= obj_add_A01_teki_error();
+		h							= obj_regist_teki();
 		if (NULL!=h)/* 登録できた場合のみ */
 		{
 			h->m_Hit256R			= ZAKO_ATARI02_PNG;
-			h->obj_type_set 				= (TEKI_16_10)+((src->recursive)<<2);
+			h->obj_type_set 		= (TEKI_16_10)+((src->recursive)<<2);
 			h->atari_hantei 		= (1/*スコア兼用*/);
 		//
 			h->callback_mover		= move_alice_doll_all;
@@ -336,8 +338,8 @@ static void add_zako_alice_doll_common(OBJ *src, int is_the_first)
 			h->BOSS_DATA_05_move_jyumyou			= (60);
 			{
 				/* 初期位置 */
-			/*	h->cx256 =*/ h->BOSS_DATA_00_target_x256 = (src->cx256);
-			/*	h->cy256 =*/ h->BOSS_DATA_01_target_y256 = (src->cy256);
+			/*	h->center.x256 =*/ h->BOSS_DATA_00_target_x256 = (src->center.x256);
+			/*	h->center.y256 =*/ h->BOSS_DATA_01_target_y256 = (src->center.y256);
 			}
 			h->user_data02		= (0);/*(よくわかんない)*/
 			h->radius		= (0);
@@ -350,7 +352,7 @@ static void add_zako_alice_doll_common(OBJ *src, int is_the_first)
 /*---------------------------------------------------------
 	敵を追加する(2nd)
 ---------------------------------------------------------*/
-static void add_zako_alice_doll_2nd_CCW(OBJ *src)
+static OBJ_CALL_FUNC(add_zako_alice_doll_2nd_CCW)
 {
 	add_zako_alice_doll_common(src, 0);
 }
@@ -360,7 +362,7 @@ static void add_zako_alice_doll_2nd_CCW(OBJ *src)
 	敵を追加する(1st)
 ---------------------------------------------------------*/
 
-void add_zako_alice_doll(OBJ *src)
+global OBJ_CALL_FUNC(add_zako_alice_doll)
 {
 	add_zako_alice_doll_common(src, 1);
 }

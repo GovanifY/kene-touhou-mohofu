@@ -203,8 +203,12 @@ static ScePspQuatMatrix p9_qb;		/* 行列Ｂ(正確には行列じゃなくてクォータニオン。
 static ScePspQuatMatrix p9_test;	/* テスト用 */
 #endif
 
-
+		#define USE_5SEC (0)
+		#if (1==USE_5SEC)/* 周期カウンタ値の計算 */
 static	int nnn;
+		#else
+static	u8 nnn;
+		#endif
 	// run sample
 //	/*int*/float val_x;
 //	/*int*/float val_y;
@@ -256,7 +260,7 @@ static void test_auto_rot_aaaa(void)
 	vfpu_quaternion_ln(&p9_qb, &p9_qb); 		/* 向きを計算する。 */
 	#else
 	/* 簡略化して大体こんな感じでも良いかも。このままだと露骨に遅くなりそうだけど)*/
-//	vfpu_quaternion_identity(&p9_qb); 	/* 単位クォータニオンで初期化 */
+//	vfpu_quaternion_identity(&p9_qb);	/* 単位クォータニオンで初期化 */
 	p9_qb.x = (float)((vfpu_rand_8888(0, 255))&(512-1))/512.0f;//。x
 	p9_qb.y = (float)((vfpu_rand_8888(0, 255))&(512-1))/512.0f;//。y
 	p9_qb.z = (float)((vfpu_rand_8888(0, 255))&(512-1))/512.0f;//。z
@@ -316,24 +320,34 @@ static void gu_init_vfpu(void)
 static void gu_draw_bg_3D_test01(void)
 {
 
-		// when we reach the limit of our interpolation:
-		//		copy qb to qa
-		//		generate a new random quaternion in qb
-		//		take the log of quaternion qb
-		//		reset the time counter
-
-		#if (1)/* 周期カウンタ値の計算 */
-		/*
-		nnn: 周期カウンタ値: 0 ... 299 までの値。1フレームに1増分。
-		*/
-		nnn++;
-		if (nnn >= byou60(5) ) /* 300==(5[sec] x 60[frame])*/
-		{
-			nnn = 0;
-			/* 300カウントに一度だけ、新カメラ位置を決めなおす。 */
-			test_auto_rot_aaaa();
-		}
-		#endif
+	// when we reach the limit of our interpolation:
+	//		copy qb to qa
+	//		generate a new random quaternion in qb
+	//		take the log of quaternion qb
+	//		reset the time counter
+	#if (1==USE_5SEC)/* 周期カウンタ値の計算 */
+	/*
+	nnn: 周期カウンタ値: 0 ... 299 までの値。1フレームに1増分。
+	*/
+	nnn++;
+	if (nnn >= byou60(5) ) /* 300==(5[sec] x 60[frame])*/
+	{
+		nnn = 0;
+		/* 300カウントに一度だけ、新カメラ位置を決めなおす。 */
+		test_auto_rot_aaaa();
+	}
+	#else
+	/*
+	nnn: 周期カウンタ値: 0 ... 255 までの値。1フレームに1増分。
+	*/
+	nnn++;
+	nnn &= 0xff;
+	if (0==nnn) /* 256==(4.266...[sec] x 60[frame])*/
+	{
+		/* 256カウントに一度だけ、新カメラ位置を決めなおす。 */
+		test_auto_rot_aaaa();
+	}
+	#endif
 
 #if 0
 		{
@@ -370,11 +384,16 @@ static void gu_draw_bg_3D_test01(void)
 			/*
 			t65536: 等分カウンタ値: 0 ... 65536 までの値。1フレームに(65536/300)増分。
 			*/
-		#if (1)/* 等分値の計算 */
+		#if (1==USE_5SEC)/* 等分値の計算 */
 		//	float t = (nnn)*((float)(1.0f/300.0f));
 			u32 t65536 = (nnn)*((u32)(65536.0/300.0));
 		//	vfpu_quaternion_sample_linear(&p9_qcam, &p9_qa, &p9_qb, vfpu_ease_in_out(t));
 			/* 周期カウンタが 0 ... 300 なので、非等分値の計算で使える形式の 0 ... 65536 へ変換する。 */
+		#else
+		//	float t = (nnn)*((float)(1.0f/256.0f));
+			u32 t65536 = (((nnn)<<8)|(nnn));
+		//	vfpu_quaternion_sample_linear(&p9_qcam, &p9_qa, &p9_qb, vfpu_ease_in_out(t));
+			/* 周期カウンタが 0 ... 255 なので、非等分値の計算で使える形式の 0 ... 65536 へ変換する。 */
 		#endif
 		#if (1)/* 非等分値の計算 */
 		u32 i_rate65536;

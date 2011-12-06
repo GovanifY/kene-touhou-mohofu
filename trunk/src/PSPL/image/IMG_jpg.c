@@ -50,12 +50,16 @@ int IMG_isJPG(SDL_RWops *src)
 	int is_JPG;
 	u8 magic[4];
 	is_JPG = 0;
-	if ( SDL_RWread(src, magic, 2, 1) )
+//	SDL_RWread_ void(src, magic, 2, 1);
+	SDL_RWread(src, magic, 2, 1);
+//	if ()
 	{
 		if ( (magic[0] == 0xff) && (magic[1] == 0xD8) )
 		{
-			SDL_RWread(src, magic, 4, 1);
-			SDL_RWread(src, magic, 4, 1);
+		//	SDL_RWread_ void(src, magic, 4, 1);/*1st*/
+		//	SDL_RWread_ void(src, magic, 4, 1);/*2nd*/
+			SDL_RWread(src, magic, 4, 1);/*1st*/
+			SDL_RWread(src, magic, 4, 1);/*2nd*/
 			if ( memcmp((char *)magic, "JFIF", 4) == 0 ||
 				 memcmp((char *)magic, "Exif", 4) == 0 )
 			{
@@ -91,19 +95,26 @@ typedef struct
 static int fill_input_buffer(j_decompress_ptr cinfo)
 {
 	my_source_mgr * src = (my_source_mgr *) cinfo->src;
-	int nbytes;
-
-	nbytes = SDL_RWread(src->ctx, src->buffer, 1, INPUT_BUFFER_SIZE);
-	if (nbytes <= 0)
-	{
-		/* Insert a fake EOI marker */
-		src->buffer[0] = (u8) 0xff;
-		src->buffer[1] = (u8) JPEG_EOI;
-		nbytes = 2;
-	}
+//	int nbytes;
+//
+//	nbytes =
+//	SDL_RWread_ void(src->ctx, src->buffer, 1, INPUT_BUFFER_SIZE);
+	SDL_RWread(src->ctx, src->buffer, 1, INPUT_BUFFER_SIZE);
+//	if (nbytes <= 0)/*(よくわかんない)*/
+//	{
+//		/* Insert a fake EOI marker */
+//		src->buffer[0] = (u8) 0xff;
+//		src->buffer[1] = (u8) JPEG_EOI;
+//		nbytes = 2;
+//	}
 	src->pub.next_input_byte = src->buffer;
-	src->pub.bytes_in_buffer = nbytes;
+	src->pub.bytes_in_buffer = /*(たぶんこれで良い筈)*/(INPUT_BUFFER_SIZE)/*nbytes*/;/*(pspの場合失敗しないのでこれで良い筈)*/
 	return (TRUE);
+	/*
+	fread()は実際に読めたサイズを返す。
+	sceIoRead()は実際に読めたサイズを返さない。
+	sceIoRead()は読めたかどうかを返す。
+	*/
 }
 
 
@@ -261,7 +272,7 @@ SDL_Surface *IMG_LoadJPG_RW(SDL_RWops *src)
 	jpeg_calc_output_dimensions(&cinfo);
 
 	/* Allocate an output surface to hold the image */
-	surface = SDL_AllocSurface(SDL_SWSURFACE,
+	surface = SDL_CreateRGBSurface(SDL_SWSURFACE,
 		cinfo.output_width, cinfo.output_height, 24,
 		#if SDL_BYTEORDER == SDL_LIL_ENDIAN
 		0x0000ff, 0x00ff00, 0xff0000,

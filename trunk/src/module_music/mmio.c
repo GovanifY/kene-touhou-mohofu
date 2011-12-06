@@ -79,9 +79,9 @@ typedef struct MYMOD_FILE_READER
 
 
 
-//FILE* mod_music_fopen(MM_CHAR *fname, MM_CHAR *attrib)
-//FILE *mod_music_fopen_FILE(MM_CHAR *fname)
-MYMOD_FILE_ptr mod_music_fopen_FILE(MM_CHAR *fname)
+//FILE* mod_music_fopen(MM_s8 *fname, MM_s8 *attrib)
+//FILE *mod_music_fopen_FILE(MM_s8 *fname)
+MYMOD_FILE_ptr mod_music_fopen_FILE(MM_s8 *fname)
 {
 //	FILE *fp;
 	MYMOD_FILE_ptr fp;
@@ -96,7 +96,7 @@ MYMOD_FILE_ptr mod_music_fopen_FILE(MM_CHAR *fname)
 }
 
 #if 0/*(未使用)*/
-MM_BOOL mod_music_MYMOD_FILE_Exists(MM_CHAR *fname)
+MM_BOOL mod_music_MYMOD_FILE_Exists(MM_s8 *fname)
 {
 	FILE *fp;
 	fp = MYMOD_fopen(fname, "r");
@@ -149,17 +149,32 @@ static MM_BOOL mod_music_MYMOD_FILE_Reader_Eof(MF_READER *reader)
 	else	{return (0);}
 	#endif
 }
-
+#if 0
+static /*MM_BOOL*/void mod_music_MYMOD_FILE_Reader_Read_ void(MF_READER *reader, void* ptr, size_t size)
+{
+	#if (MYMOD_psp_FILE_system==USE_MYMOD_FILE_MODE)
+	/*(サイズが取得できない)*/
+	#endif
+	#if (MYMOD_stdio_FILE_system==USE_MYMOD_FILE_MODE)
+	/*return*/ fread(ptr, size, 1, ((MYMOD_FILE_READER*)reader)->fp_rw);
+	#endif
+	#if (MYMOD_SDL_rw_FILE_system==USE_MYMOD_FILE_MODE)
+	/* SDL用、fread()互換(FILEと引数の順序が違う。寧ろfread()が変) */
+	/*return*/ SDL_RWread(((MYMOD_FILE_READER*)reader)->fp_rw, ptr, size, 1);
+	#endif
+}
+#endif
 static MM_BOOL mod_music_MYMOD_FILE_Reader_Read(MF_READER *reader, void* ptr, size_t size)
 {
 	#if (MYMOD_psp_FILE_system==USE_MYMOD_FILE_MODE)
+	/*(サイズが取得できない)*/
 	#endif
 	#if (MYMOD_stdio_FILE_system==USE_MYMOD_FILE_MODE)
 	return fread(ptr, size, 1, ((MYMOD_FILE_READER*)reader)->fp_rw);
 	#endif
 	#if (MYMOD_SDL_rw_FILE_system==USE_MYMOD_FILE_MODE)
 	/* SDL用、fread()互換(FILEと引数の順序が違う。寧ろfread()が変) */
-	return (SDL_RWread(((MYMOD_FILE_READER*)reader)->fp_rw, ptr, size, 1));
+	return SDL_RWread(((MYMOD_FILE_READER*)reader)->fp_rw, ptr, size, 1);
 	#endif
 }
 
@@ -221,12 +236,13 @@ MF_READER *mod_music_new_rwops_reader(MYMOD_FILE_ptr fp_rw)
 	if (reader)
 	{
 		/* ファイルアクセスはクラス化して隠蔽 */
-		reader->core.Eof	= &mod_music_MYMOD_FILE_Reader_Eof;
-		reader->core.Read	= &mod_music_MYMOD_FILE_Reader_Read;
-		reader->core.Get	= &mod_music_MYMOD_FILE_Reader_Get;
-		reader->core.Seek	= &mod_music_MYMOD_FILE_Reader_Seek;
-		reader->core.Tell	= &mod_music_MYMOD_FILE_Reader_Tell;
-		reader->fp_rw		= fp_rw;
+		reader->core.Eof		= &mod_music_MYMOD_FILE_Reader_Eof;
+	//	reader->core.Read_ void	= &mod_music_MYMOD_FILE_Reader_Read_ void;
+		reader->core.Read		= &mod_music_MYMOD_FILE_Reader_Read;
+		reader->core.Get		= &mod_music_MYMOD_FILE_Reader_Get;
+		reader->core.Seek		= &mod_music_MYMOD_FILE_Reader_Seek;
+		reader->core.Tell		= &mod_music_MYMOD_FILE_Reader_Tell;
+		reader->fp_rw			= fp_rw;
 		#if (MYMOD_SDL_rw_FILE_system==USE_MYMOD_FILE_MODE)
 		/* RWops does not explicitly support an eof check, so we shall find
 		   the end manually - this requires seek support for the RWop */
@@ -321,7 +337,7 @@ void mod_music_delete_file_writer(MF_WRITER* writer)
 
 /*---------- Write functions */
 
-void mod_music_write_string(MF_WRITER* writer, MM_CHAR *data )
+void mod_music_write_string(MF_WRITER* writer, MM_s8 *data )
 {
 	if (data)
 	{	mod_music_write_multi_u8(writer, data, strlen(data) );}

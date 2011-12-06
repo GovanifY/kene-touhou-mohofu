@@ -17,7 +17,7 @@
 /*---------------------------------------------------------
 	カード生成終了ならカード設定し、生成。
 ---------------------------------------------------------*/
-/*static*/global void boss_move_00_card_settei_seisei(OBJ *src)
+/*static*/global OBJ_CALL_FUNC(boss_move_00_card_settei_seisei)
 {
 	if (SPELL_00==card.spell_used_number)	/* カード生成終了ならカード生成 */
 	{
@@ -30,12 +30,12 @@
 	yランダム 8[pixel]以内差分移動。
 ---------------------------------------------------------*/
 
-static void boss_set_position_differential32(OBJ *src)
+static OBJ_CALL_FUNC(boss_set_position_differential32)
 {
 	#if 1
 	/* 現在位置より左右 32[pixel] の範囲でランダム移動。但し最低16[pixel]は動く。 */
 	const unsigned short ra_nd16	= ra_nd();
-	REG_02_DEST_X	= src->cx256;
+	REG_02_DEST_X	= src->center.x256;
 	{	const unsigned short vector_value = ((ra_nd16&(((32)*256)-1))|(16*256));/* 移動量を決める。 但し最低16[pixel]は動く */
 	//	if (ra_nd16&0x2000) /* 移動方向を決める */ /* 0x1fff == ((32)*256-1) */
 	//	if (REG_02_DEST_X < (ra_nd16+ra_nd16)) /* 移動方向を決める */
@@ -44,7 +44,7 @@ static void boss_set_position_differential32(OBJ *src)
 		else	{	REG_02_DEST_X -= (vector_value);	}
 	}
 	/* 現在位置より上下 8[pixel] の範囲でランダム移動 */
-	REG_03_DEST_Y = src->cy256;
+	REG_03_DEST_Y = src->center.y256;
 	REG_03_DEST_Y += ((((ra_nd16))&((8+8)-1))<<8);
 	REG_03_DEST_Y -= (t256(8));
 	#endif
@@ -55,12 +55,12 @@ static void boss_set_position_differential32(OBJ *src)
 	yランダム 8[pixel]以内差分移動。
 ---------------------------------------------------------*/
 
-static void boss_set_position_differential64(OBJ *src)
+static OBJ_CALL_FUNC(boss_set_position_differential64)
 {
 	#if 1
 	/* 現在位置より左右 64[pixel] の範囲でランダム移動。但し最低16[pixel]は動く。 */
 	const unsigned short ra_nd16	= ra_nd();
-	REG_02_DEST_X	= src->cx256;
+	REG_02_DEST_X	= src->center.x256;
 	{	const unsigned short vector_value = ((ra_nd16&(((64)*256)-1))|(16*256));/* 移動量を決める。 但し最低16[pixel]は動く */
 	//	if (ra_nd16&0x2000) /* 移動方向を決める */ /* 0x1fff == ((32)*256-1) */
 	//	if (REG_02_DEST_X < (ra_nd16+ra_nd16)) /* 移動方向を決める */
@@ -69,7 +69,7 @@ static void boss_set_position_differential64(OBJ *src)
 		else	{	REG_02_DEST_X -= (vector_value);	}
 	}
 	/* 現在位置より上下 8[pixel] の範囲でランダム移動 */
-	REG_03_DEST_Y = src->cy256;
+	REG_03_DEST_Y = src->center.y256;
 	REG_03_DEST_Y += ((((ra_nd16))&((8+8)-1))<<8);
 	REG_03_DEST_Y -= (t256(8));
 	#endif
@@ -80,8 +80,8 @@ static void boss_set_position_differential64(OBJ *src)
 	xyランダム差分移動。
 ---------------------------------------------------------*/
 
-//obal/*static*/ void boss_move_05_xy_douki_differential64(OBJ *src)
-global/*static*/ void boss_move_04_xy_douki_differential32(OBJ *src)
+//obal/*static*/ OBJ_CALL_FUNC(boss_move_05_xy_douki_differential64)
+global/*static*/ OBJ_CALL_FUNC(boss_move_04_xy_douki_differential32)
 {
 	/* カードを撃ってない場合に追加 */
 	if (SPELL_00==card.spell_used_number)	/* カード生成終了なら、新移動先を決める。 */
@@ -106,7 +106,7 @@ global/*static*/ void boss_move_04_xy_douki_differential32(OBJ *src)
 	y移動しない。
 ---------------------------------------------------------*/
 
-global void boss_move_03_x_douki(OBJ *src)
+global OBJ_CALL_FUNC(boss_move_03_x_douki)
 {
 	/* カードを撃ってない場合に追加 */
 	if (SPELL_00==card.spell_used_number)	/* カード生成終了なら、新移動先を決める。 */
@@ -114,7 +114,7 @@ global void boss_move_03_x_douki(OBJ *src)
 		#if 1
 		const unsigned short ra_nd16	= ra_nd();
 		REG_02_DEST_X	= ((ra_nd16/*&((256*256)-1)*/));	/* 0(???) =:= t256(((480-128-256)/2)-50)) */
-		REG_03_DEST_Y	= (src->cy256);/*(t256()形式)*/
+		REG_03_DEST_Y	= (src->center.y256);/*(t256()形式)*/
 		#endif
 		#if (1)
 		/* 移動座標を決める */
@@ -134,7 +134,7 @@ global void boss_move_03_x_douki(OBJ *src)
 	yランダム移動。
 ---------------------------------------------------------*/
 
-global void boss_move_02_xy_hidouki(OBJ *src)
+global OBJ_CALL_FUNC(boss_move_02_xy_hidouki)
 {
 	/* カード生成の間隔と移動時間の間隔が非同期。 */
 	src->BOSS_DATA_05_move_jyumyou--;/*fps_factor*/
@@ -169,7 +169,7 @@ global void boss_move_02_xy_hidouki(OBJ *src)
 	固定退避位置は上部、X軸は中心。とりあえず。
 ---------------------------------------------------------*/
 
-global void boss_move_01_taihi_ue_naka(OBJ *src)
+global OBJ_CALL_FUNC(boss_move_01_taihi_ue_naka)
 {
 	#if (1)
 	/* 移動座標を決める */
@@ -188,15 +188,14 @@ global void boss_move_01_taihi_ue_naka(OBJ *src)
 	第11形態: 最終形態(その3)
 ---------------------------------------------------------*/
 
-global void boss_move_17_sakuya_bimyou_idou(OBJ *src)
+global OBJ_CALL_FUNC(boss_move_17_sakuya_bimyou_idou)
 {
-//
 	u32 iii;
 	iii = ra_nd();
 	if (0==(iii&0x07))
 	{
-		src->vx256 = (((signed int)((iii>> 8)&0xff))-127);
-		src->vy256 = (((signed int)((iii>>16)&0xff))-127);
+		src->math_vector.x256 = (((signed int)((iii>> 8)&0xff))-127);
+		src->math_vector.y256 = (((signed int)((iii>>16)&0xff))-127);
 	}
 	/*(以下は将来的に共通化される予定)*/
 	boss_move_00_card_settei_seisei(src);/*(カード生成終了ならカード設定し、生成。)*/
@@ -228,23 +227,23 @@ global void boss_move_17_sakuya_bimyou_idou(OBJ *src)
 	ボス誘導比率計算。
 ---------------------------------------------------------*/
 
-static void boss_move_vx_vy_animation(OBJ *src)
+static OBJ_CALL_FUNC(boss_move_vx_vy_animation)
 {
-	src->cx256 += (src->vx256);
-	src->cy256 += (src->vy256);
+	src->center.x256 += (src->math_vector.x256);
+	src->center.y256 += (src->math_vector.y256);
 	#define USE_BOSS_HAMIDASI_CHECK (0)
 	#if (1==USE_BOSS_HAMIDASI_CHECK)
-		 if (src->cx256 < rect_clip.boss_clip_min.x256 )	{	src->cx256 = rect_clip.boss_clip_min.x256;	card.boss_hamidasi = (1);	}
-	else if (src->cx256 > rect_clip.boss_clip_max.x256 )	{	src->cx256 = rect_clip.boss_clip_max.x256;	card.boss_hamidasi = (1);	}
+		 if (src->center.x256 < rect_clip.boss_clip_min.x256 )	{	src->center.x256 = rect_clip.boss_clip_min.x256;	card.boss_hamidasi = (1);	}
+	else if (src->center.x256 > rect_clip.boss_clip_max.x256 )	{	src->center.x256 = rect_clip.boss_clip_max.x256;	card.boss_hamidasi = (1);	}
 //
-		 if (src->cy256 < rect_clip.boss_clip_min.y256 )	{	src->cy256 = rect_clip.boss_clip_min.y256;	card.boss_hamidasi = (1);	}
-	else if (src->cy256 > rect_clip.boss_clip_max.y256 )	{	src->cy256 = rect_clip.boss_clip_max.y256;	card.boss_hamidasi = (1);	}
+		 if (src->center.y256 < rect_clip.boss_clip_min.y256 )	{	src->center.y256 = rect_clip.boss_clip_min.y256;	card.boss_hamidasi = (1);	}
+	else if (src->center.y256 > rect_clip.boss_clip_max.y256 )	{	src->center.y256 = rect_clip.boss_clip_max.y256;	card.boss_hamidasi = (1);	}
 	#else
 	/*(とりあえず)*/
-	src->cx256 = psp_min(src->cx256, rect_clip.boss_clip_max.x256);/* 右チェック(喰み出す) */
-	src->cx256 = psp_max(src->cx256, rect_clip.boss_clip_min.x256);/* 左チェック(喰み出す) */
-	src->cy256 = psp_min(src->cy256, rect_clip.boss_clip_max.y256);/* 下チェック(喰み出す) */
-	src->cy256 = psp_max(src->cy256, rect_clip.boss_clip_min.y256);/* 上チェック(喰み出す) */
+	src->center.x256 = psp_min(src->center.x256, rect_clip.boss_clip_max.x256);/* 右チェック(喰み出す) */
+	src->center.x256 = psp_max(src->center.x256, rect_clip.boss_clip_min.x256);/* 左チェック(喰み出す) */
+	src->center.y256 = psp_min(src->center.y256, rect_clip.boss_clip_max.y256);/* 下チェック(喰み出す) */
+	src->center.y256 = psp_max(src->center.y256, rect_clip.boss_clip_min.y256);/* 上チェック(喰み出す) */
 	#endif
 //
 	/*(攻撃アニメーション指示があれば、攻撃アニメーションを優先する。)*/
@@ -259,7 +258,7 @@ static void boss_move_vx_vy_animation(OBJ *src)
 	else	/* 移動アニメーション */
 	{
 		s32 aaa;
-		aaa = (src->cx256 > src->BOSS_DATA_00_target_x256)?(BOSS_00_11/*0x00*/):(BOSS_04_21/*0x10*/); /* 左右 */
+		aaa = (src->center.x256 > src->BOSS_DATA_00_target_x256)?(BOSS_00_11/*0x00*/):(BOSS_04_21/*0x10*/); /* 左右 */
 		s32 bbb;
 		bbb = src->BOSS_DATA_04_toutatu_wariai256;
 		bbb = psp_min(bbb, (0xff) );
@@ -274,10 +273,16 @@ static void boss_move_vx_vy_animation(OBJ *src)
 	(boss->callback_mover)で呼ばれるルート(根源)。
 ---------------------------------------------------------*/
 
-global void root_boss_mover(OBJ *src)
+global OBJ_CALL_FUNC(root_boss_mover)
 {
-	card_boss_move_generate_check_regist(src);	/* カード登録可能なら登録 / カード生成 */
+	/*(ボス行動選択処理)*/
+	if (NULL != src->callback_root_supeka)
+	{
+		(*src->callback_root_supeka)(src);
+	}
+//	card_boss_move_generate_check_regist(src);	/* カード登録可能なら登録 / カード生成 */
 	boss_move_vx_vy_animation(src);
 	move_card_square_effect(src);				/* 回エフェクト */
+	/*(スペル生成処理)*/
 	card_generate(src); 						/* スペルをCPU実行し、カードを１フレーム生成する。 */
 }

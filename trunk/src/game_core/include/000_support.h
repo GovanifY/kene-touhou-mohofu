@@ -329,9 +329,9 @@ R8G8B8A8フォーマットで色を設定する事になりますが、PSPはリトルエンディアンのCPUを
 #define t8_floor(x) 			((x)>>(3))
 
 /* 秒単位の時間で */
-#define byou60(x)	(x*60)
+#define byou60(x)	((int)(x*60))
 /* 約秒単位の時間で */
-#define byou64(x)	(x*64)
+#define byou64(x)	((int)(x*64))
 
 /* aaa%の確率で */
 #define rand_percent(aaa) ((unsigned char)(ra_nd())<=(unsigned char)( (aaa*256)/100 ) ) /* aaa%の確率で */

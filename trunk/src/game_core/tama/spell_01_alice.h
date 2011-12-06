@@ -20,12 +20,12 @@
 	REG_0d_REG5 	難易度別定数1
 	REG_0e_REG6 	難易度別定数2
 ---------------------------------------------------------*/
-local void spell_init_0e_aka_2nd(OBJ *src)
+local OBJ_CALL_FUNC(spell_init_0e_aka_2nd)
 {
 	REG_0d_REG5 	= const_init_nan_ido_table	[tama_const_H06_NUMS_ALICE_RED		+(REG_0f_GAME_DIFFICULTY)];
 	REG_0e_REG6 	= const_init_nan_ido_table	[tama_const_H07_DIVS_ALICE_RED		+(REG_0f_GAME_DIFFICULTY)];/*(((REG_10_BOSS_SPELL_TIMER)&0x20)>>3)+*/
 }
-local void spell_create_0e_aka_2nd(OBJ *src)
+local OBJ_CALL_FUNC(spell_create_0e_aka_2nd)
 {
 	count_up_limit_NUM(REG_NUM_08_REG0, 4);//	if (0==((REG_10_BOSS_SPELL_TIMER)&0x03))
 	if (0==(REG_08_REG0))
@@ -38,8 +38,8 @@ local void spell_create_0e_aka_2nd(OBJ *src)
 			HATSUDAN_01_speed256	= (t256(1.0));
 			HATSUDAN_03_angle65536	= deg1024to65536((((REG_10_BOSS_SPELL_TIMER<<2))));
 			sincos256();/*(破壊レジスタ多いので注意)*/
-		//	src->cx256 = REG_03_DEST_Y;//sin_value_t256 // 下CCWの場合(右CWの場合ととxyが逆)
-		//	src->cy256 = REG_02_DEST_X;//cos_value_t256 // 下CCWの場合(右CWの場合ととxyが逆)
+		//	src->center.x256 = REG_03_DEST_Y;//sin_value_t256 // 下CCWの場合(右CWの場合ととxyが逆)
+		//	src->center.y256 = REG_02_DEST_X;//cos_value_t256 // 下CCWの場合(右CWの場合ととxyが逆)
 			//------------------
 			//
 		//[重複]	HATSUDAN_01_speed256				= (t256(1.0));							/* 弾速 */
@@ -99,6 +99,68 @@ local void spell_create_0e_aka_2nd(OBJ *src)
 }
 
 
+#if 1/*(r39)*/
+/*---------------------------------------------------------
+	アリス normal通常攻撃3(の一部)
+	-------------------------------------------------------
+	-------------------------------------------------------
+	使用レジスタ
+---------------------------------------------------------*/
+
+/*---------------------------------------------------------
+	[弾幕グループ(1)セクション]
+	-------------------------------------------------------
+	交差弾。反時計回り。
+	[弾幕グループ(2)セクション]
+	-------------------------------------------------------
+	交差弾。時計回り。
+---------------------------------------------------------*/
+local OBJ_CALL_FUNC(alice_aaa_danmaku_01_callback)
+{
+	/* 0-256 カウントまで */ 	/* [0]カウント==発弾位置 */
+	if ((HATUDAN_ITI_NO_JIKAN-80) < src->jyumyou)/* 発弾エフェクト後から[0-79]カウント経過した弾 */
+	{
+		if (0==(src->hatudan_register_spec_data & TAMA_SPEC_KAITEN_HOUKOU_BIT))
+		{
+			src->rotationCCW1024++;/* 曲げてみるテスト */
+		}
+		else
+		{
+			src->rotationCCW1024--;/* 曲げてみるテスト */
+		}
+	}
+	// (この方が解かりやすい？)
+	else
+//	if ((HATUDAN_ITI_NO_JIKAN-256) == src->jyumyou/*(寿命なので自動で減る)*/)/* 発弾エフェクト後から[256]カウント経過した弾 */
+	{
+		/* (通常弾へ変身する==画面内では弾は消えない) */
+		src->hatudan_register_spec_data 	= (DANMAKU_LAYER_00)|(TAMA_SPEC_8000_NON_TILT);/* (r33-)非傾き弾 */
+		#if (1)/*(デバッグ)*/
+		src->obj_type_set						= (BULLET_MINI8_BASE + TAMA_IRO_01_AKA);		/* [ミニ赤丸弾] */
+		reflect_sprite_spec(src, OBJ_BANK_SIZE_00_TAMA); 	/* 弾グラと弾あたり判定を変更する。 */
+		#endif
+	}
+//	danmaku_00_standard_angle_mover(src);/*(角度弾移動+画面外弾消し)*/
+	hatudan_system_B_move_angle_001(src);/*(角度弾移動)*/
+}
+/*---------------------------------------------------------
+	[初期化セクション]
+	-------------------------------------------------------
+---------------------------------------------------------*/
+
+local OBJ_CALL_FUNC(spell_init_17_alice_nejiri10sec)
+{
+	card.danmaku_callback[1] = alice_aaa_danmaku_01_callback;/*(米弾。交差弾。反時計回り。) (米弾。交差弾。時計回り。)*/
+//	card.danmaku_callback[2] = rumia_danmaku_02_callback;/*(丸弾。連弾。自機狙い。)*/
+//	card.danmaku_callback[3] = NULL;
+}
+
+local OBJ_CALL_FUNC(spell_create_17_alice_nejiri10sec)
+{
+}
+#endif
+
+#if 0/*(r38)*/
 /*---------------------------------------------------------
 	アリス normal通常攻撃3(の一部)
 	-------------------------------------------------------
@@ -111,7 +173,7 @@ local void spell_create_0e_aka_2nd(OBJ *src)
 	使用レジスタ
 ---------------------------------------------------------*/
 
-local void spell_create_17_alice_nejiri10sec(OBJ *src)
+local OBJ_CALL_FUNC(spell_create_17_alice_nejiri10sec)
 {
 	if ((64*1)<(REG_10_BOSS_SPELL_TIMER))
 	{
@@ -184,7 +246,7 @@ local void spell_create_17_alice_nejiri10sec(OBJ *src)
 		}
 	}
 }
-
+#endif
 
 /*---------------------------------------------------------
 	アリス	アリス人形カード
@@ -209,8 +271,8 @@ local void spell_create_17_alice_nejiri10sec(OBJ *src)
 8 x 7 x 7 x 7 == 最大2744[弾](妖々夢)
 2 x 7 x 7 x 7 == 最大 686[弾](模倣風)	//9 x 8 x 8 == 576
 ---------------------------------------------------------*/
-extern void add_zako_alice_doll_type_a(OBJ *src);/* アリス人形カード */
-local void spell_create_0b_alice_zako_doll(OBJ *src)
+extern OBJ_CALL_FUNC(add_zako_alice_doll_type_a);/* アリス人形カード */
+local OBJ_CALL_FUNC(spell_create_0b_alice_zako_doll)
 {
 	if (50==((REG_10_BOSS_SPELL_TIMER) ))
 	{
@@ -252,8 +314,8 @@ local void exchange_damnaku_alice_7_bunretu(void)
 	}
 }
 #endif
-extern void add_zako_alice_doll_type_b(OBJ *src);/* アリス人形カード */
-local void spell_create_1e_alice_tama_doll(OBJ *src)
+extern OBJ_CALL_FUNC(add_zako_alice_doll_type_b);/* アリス人形カード */
+local OBJ_CALL_FUNC(spell_create_1e_alice_tama_doll)
 {
 	if (250==((REG_10_BOSS_SPELL_TIMER) ))
 	{
@@ -318,7 +380,7 @@ local void spell_create_1e_alice_tama_doll(OBJ *src)
 
 ---------------------------------------------------------*/
 
-local void spell_create_25_alice_suwako(OBJ *src)
+local OBJ_CALL_FUNC(spell_create_25_alice_suwako)
 {
 //	if ((0) ==((REG_10_BOSS_SPELL_TIMER)&0x01))/* 2回に1回 */
 	{

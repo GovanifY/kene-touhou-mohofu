@@ -14,104 +14,19 @@
 
 
 /*---------------------------------------------------------
-	ゲームシステム初期化処理
----------------------------------------------------------*/
-
-extern void render_blit_fake_loading_init(void);
-extern void render_blit_fake_loading_full(void);
-
-extern void kanji_system_init(void);/* 組み込み */
-extern void kanji_system_exit(void);/* 外す */
-
-extern void init_imglist(void);
-//extern void init_math(void);
-extern void ini_load(void);
-extern void ini_save(void);
-//extern void bg2_system_init(void);
-//extern void pr eload_gfx(void);
-extern void psp_pad_init(void);
-extern void psp_video_init01(void);
-extern void psp_video_init02(void);
-extern void old_menu_system_init(void);
-
-void game_system_init(void)
-{
-	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO); /*| SDL_INIT_JOYSTICK*/
-	#if 0
-	if (atexit(SDL_Quit))
-	{
-		CHECKPOINT;
-		error(ERR_WARN, "atexit dont returns zero");
-	}
-	#endif
-	/* ----- */
-//	pspDe bugScreenInit();
-//	render_blit_fake_loading_init();
-//	render_blit_fake_loading_full();
-	ini_load();
-
-	/* ----- 初期化 */
-	psp_video_init01();
-//	kanji_system_init();/* 組み込み */	/*(漢字システムが無いとエラーが表示できない。)*/
-//
-
-//	render_blit_fake_loading_full();
-	psp_video_init02();
-	psp_pad_init(); 	/* psp_video_init()より後でないと正常に pad check 出来ない。 */
-
-
-	/* ----- ゲーム本体初期化 */
-	init_audio();
-//	init_math();/*keyboard_clear();*/
-	#if (1==USE_KETM_IMAGE_CHACHE)
-	init_imglist();
-	#endif /*(1==USE_KETM_IMAGE_CHACHE)*/
-//
-	kaiwa_system_init();/* 組み込み */
-	kanji_system_init();/* 組み込み */	/*(漢字システムが無いとエラーが表示できない。)*/
-//未定	ending_system_init();/* 組み込み */
-	#if 1//(1==US E_GU)
-	#else
-	load_SDL_bg(BG_TYPE_xx_loading);
-	psp_pop_screen();
-	#endif
-//
-	#if (1)/*Guで描く前に必要な初期化*/
-	cg.bomber_time = 0;
-	#endif
-//
-	#if 1//(1==US E_GU)
-	#else
-	SDL_Flip(sdl_screen[SDL_00_VIEW_SCREEN]);
-	#endif
-//	pr eload_gfx(); /*	読み込んだ順番に画像キャッシュに配置されるので、
-//						画像キャッシュの順番を決める為の読み込み */
-//
-	font_init();
-
-	//fps_init();
-//	obj_se nd1		= my_calloc(sizeof(OBJ));/* 引数受け渡し用 */
-//	bg2_system_init();//	psp起動時に一度だけ初期化する
-	/* ゲームコア game_core_init(); */
-	cg.game_continue_stage			= (1-1);	/* (0) 0は1面から開始という意味。 */
-//	pr actice_mode					= 0;
-//	vo lume 						= 0;
-//	za nki							= 2;
-	old_menu_system_init();
-//
-	play_music_num(BGM_27_menu01);
-	cb.main_call_func = title_menu_start;	/* タイトルメニューへ移動 */
-}
-
-
-/*---------------------------------------------------------
 	ゲームシステム開放処理
 ---------------------------------------------------------*/
+extern void ini_file_save(void);
+/*only exit once*/extern void kanji_system_boot_exit(void);/* 外す */
+/*only exit once*/extern void kaiwa_system_boot_exit(void);/* 外す */
+
+/*only exit once*/extern void /*SD LCALL*/ PSPL_AudioQuit(void);
+/*only exit once*/extern void /*SD LCALL*/ PSPL_VideoQuit(void);
 void game_system_exit(void)
 {
-	ini_save();
-	kanji_system_exit();
-//	kaiwa_system_exit();
+	ini_file_save();
+	kanji_system_boot_exit();
+//	kaiwa_system_boot_exit();
 	exit_audio();
 //	psp_denug_printf("Thank you for playing");
 	#if (0)/*(r34)原因解からず、[とりあえずoff](たぶんフォント関係のメモリーリーク)*/	//(1)/* r31 現状うまくいかないです。*/
@@ -119,13 +34,66 @@ void game_system_exit(void)
 	登録(具体的にはmallocとかでメモリ確保)してないのに
 	開放(freeとか)して、辻褄が合わなくなってる。
  */
-	SDL_Quit();
+//	SDL_Quit();
+	PSPL_VideoQuit();/*only exit once*/
+	PSPL_AudioQuit();/*only exit once*/
 	#endif /* (0) */
 	#ifdef ENABLE_PROFILE
 	gprof_cleanup();
 	#endif
 	sceKernelExitGame();
 }
+
+/*---------------------------------------------------------
+	ゲームシステム初期化処理
+---------------------------------------------------------*/
+
+/*only boot once*/extern void kanji_system_boot_init(void);/* 組み込み */
+
+extern void init_imglist(void);
+//extern void init_math(void);
+extern void ini_file_load(void);
+
+extern void psp_pad_init(void);
+extern void psp_video_init01(void);
+extern void psp_video_init02(void);
+
+/*only boot once*/extern void font_system_boot_init(void);
+/*only boot once*/extern void kaiwa_system_boot_init(void);/* 組み込み */
+void game_system_init(void)
+{
+	/* ----- 模倣風設定ファイルの読み込み */
+	ini_file_load();
+
+	/* ----- 初期化 */
+	psp_video_init01();
+//	kanji_system_init();/* 組み込み */	/*(漢字システムが無いとエラーが表示できない。)*/
+	psp_video_init02();
+	psp_pad_init(); 	/* psp_video_init()より後でないと正常に pad check 出来ない。 */
+
+	/* ----- ゲーム本体初期化 */
+	init_audio();
+//	init_math();
+	#if (1==USE_KETM_IMAGE_CHACHE)
+	init_imglist();
+	#endif /*(1==USE_KETM_IMAGE_CHACHE)*/
+//
+	kaiwa_system_boot_init();/* 組み込み */
+	kanji_system_boot_init();/* 組み込み */ 	/*(漢字システムが無いとエラーが表示できない。)*/
+//未定	ending_system_init();/* 組み込み */
+//
+	font_system_boot_init();/*"256x256, SDLフォントをロード"*/
+
+	/* ゲームコア game_core_init(); */
+	#if (1)/*Guで描く前に必要な初期化*/
+	cg.bomber_time = 0;
+	#endif
+	cg.game_continue_stage			= (1-1);	/* (0) 0は1面から開始という意味。 */
+//
+//	pl ay_music_num(BGM_27_menu01);
+	cb.main_call_func = title_menu_start;	/* タイトルメニューへ移動 */
+}
+
 
 /*---------------------------------------------------------
 	プロファイラー gprof の使い方メモ。

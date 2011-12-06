@@ -16,7 +16,7 @@
 	4面専用
 ---------------------------------------------------------*/
 
-local void kaguya_uroko_dan_seisei(OBJ *src)
+local OBJ_CALL_FUNC(kaguya_uroko_dan_seisei)
 {
 	/* 4面の場合---- */
 	const u16 my_ra_nd = ra_nd();
@@ -66,7 +66,7 @@ local void kaguya_uroko_dan_seisei(OBJ *src)
 	左右ショット
 ---------------------------------------------------------*/
 
-local void kaguya_hari_shot(OBJ *src)
+local OBJ_CALL_FUNC(kaguya_hari_shot)
 {
 	static int hari=0;
 	hari--;
@@ -118,7 +118,7 @@ local void kaguya_hari_shot(OBJ *src)
 	左右ショット
 ---------------------------------------------------------*/
 
-local void kaguya_hari_dan_seisei(OBJ *src)
+local OBJ_CALL_FUNC(kaguya_hari_dan_seisei)
 {
 //	if (CARD_ADDRESS_00_kaguya_000 < sp ell_card_number)
 	{
@@ -151,7 +151,7 @@ local void kaguya_hari_dan_seisei(OBJ *src)
 
 static int fire_wait3;
 static int bomb_aaa;
-local void kaguya_pong_boll(OBJ *src)
+local OBJ_CALL_FUNC(kaguya_pong_boll)
 {
 	/* 4面の場合跳ねる珠 */
 	{
@@ -210,9 +210,9 @@ local void kaguya_pong_boll(OBJ *src)
 /*---------------------------------------------------------
 	敵を追加する
 ---------------------------------------------------------*/
-global void boss_init_kaguya(OBJ *h)
+global OBJ_CALL_FUNC(boss_init_kaguya)
 {
-	init_set_dolls_kaguya_T01(h);/*(使い魔システム)*/
+	init_set_dolls_kaguya_T01(src);/*(使い魔システム)*/
 	fire_wait3			= 0;
 	bomb_aaa			= 0;
 }
@@ -220,7 +220,7 @@ global void boss_init_kaguya(OBJ *h)
 /*---------------------------------------------------------
 	敵を追加する
 ---------------------------------------------------------*/
-local void spell_create_18_kaguya01(OBJ *src)
+local OBJ_CALL_FUNC(spell_create_18_kaguya01)
 {
 //	if (50==((REG_10_BOSS_SPELL_TIMER) ))
 	if ((64-10)==((REG_10_BOSS_SPELL_TIMER) ))
@@ -229,7 +229,7 @@ local void spell_create_18_kaguya01(OBJ *src)
 	}
 	kaguya_hari_dan_seisei(src);
 }
-local void spell_create_19_kaguya04(OBJ *src)
+local OBJ_CALL_FUNC(spell_create_19_kaguya04)
 {
 //	if (50==((REG_10_BOSS_SPELL_TIMER) ))
 	if ((64-10)==((REG_10_BOSS_SPELL_TIMER) ))
@@ -257,7 +257,7 @@ local void spell_create_19_kaguya04(OBJ *src)
 // 4096 == 65536/16
 // 3855.05882352941176470588235294118 == 65536/17
 //	240.941176470588235294117647058824 == ((65536/16)-(16636/17)) 差分
-local void spell_create_23_kaguya_tamanoe(OBJ *src)
+local OBJ_CALL_FUNC(spell_create_23_kaguya_tamanoe)
 {
 //	if ((0x02)==((REG_10_BOSS_SPELL_TIMER)&0x03))/* (2回に1回)(8回毎に発弾) */
 	if ((0x04)==((REG_10_BOSS_SPELL_TIMER)&0x07))/* (2回に1回)(8回毎に発弾) */

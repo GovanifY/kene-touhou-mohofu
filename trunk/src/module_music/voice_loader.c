@@ -112,44 +112,27 @@ typedef struct ITPACK
 	u16 bits;	/* current number of bits */
 	u16 bufbits; /* bits in buffer */
 	s16 last;	/* last output */
-	u8 buf;		/* bit buffer */
+	u8 buf; 	/* bit buffer */
 } ITPACK;
 
-MM_BOOL SL_Init(MOD_MUSIC_INTERNAL_SAMPLE_LOAD* s)
-{
-	if (!sl_buffer)
-	{
-		sl_buffer = mod_music_malloc(SLBUFSIZE*sizeof(s16));
-		if (!sl_buffer)
-		{
-			/*(error!)*/
-			return (0);
-		}
-	}
-	sl_rlength = s->length;
-	if (s->infmt & SF_16BITS)	{sl_rlength>>=1;}
-	sl_old = 0;
-	return (1);
-}
-
-void SL_Exit(MOD_MUSIC_INTERNAL_SAMPLE_LOAD *s)
-{
-	if (sl_rlength>0)	{	mod_music_file_seek_cur(s->sample_FILE_reader, sl_rlength);}
-	if (sl_buffer)
-	{
-		free(sl_buffer);
-		sl_buffer = NULL;
-	}
-}
-
 /* unpack a 8bit IT packed sample */
-static MM_BOOL read_itcompr8(MF_READER *reader, ITPACK* status, s16 *sl_buffer, u16 count, u16* incnt)
+static MM_BOOL read_itcompr8(
+	MF_READER *reader,
+	ITPACK* status,
+	s16 *sl_buffer,
+	u16 count,
+	u16* incnt)
 {
-	s16 *dest	= sl_buffer, *end=sl_buffer+count;
-	u16 x, y, needbits, havebits, new_count=0;
-	u16 bits 	= status->bits;
-	u16 bufbits	= status->bufbits;
-	s8 last		= status->last;
+	s16 *dest	= sl_buffer;
+	s16 *end	= sl_buffer+count;
+	u16 x;
+	u16 y;
+	u16 needbits;
+	u16 havebits;
+	u16 new_count = 0;
+	u16 bits	= status->bits;
+	u16 bufbits = status->bufbits;
+	s8 last 	= status->last;
 	u8 buf		= status->buf;
 
 	while (dest<end)
@@ -227,17 +210,22 @@ static MM_BOOL read_itcompr8(MF_READER *reader, ITPACK* status, s16 *sl_buffer, 
 	status->bufbits = bufbits;
 	status->last	= last;
 	status->buf 	= buf;
-	return dest-sl_buffer;
+	return (dest-sl_buffer);
 }
 
 /* unpack a 16bit IT packed sample */
-static MM_BOOL read_itcompr16(MF_READER *reader, ITPACK *status, s16 *sl_buffer, u16 count, u16* incnt)
+static MM_BOOL read_itcompr16(
+	MF_READER *reader,
+	ITPACK *status,
+	s16 *sl_buffer,
+	u16 count,
+	u16* incnt)
 {
 	s16 *dest	= sl_buffer, *end=sl_buffer+count;
 	s32 x, y, needbits, havebits, new_count=0;
-	u16 bits 	= status->bits;
-	u16 bufbits	= status->bufbits;
-	s16 last 	= status->last;
+	u16 bits	= status->bits;
+	u16 bufbits = status->bufbits;
+	s16 last	= status->last;
 	u8 buf		= status->buf;
 
 	while (dest<end)
@@ -318,9 +306,16 @@ static MM_BOOL read_itcompr16(MF_READER *reader, ITPACK *status, s16 *sl_buffer,
 	return (dest-sl_buffer);
 }
 
-static MM_BOOL SL_LoadInternal(void* buffer, u16 infmt, u16 outfmt, int scalefactor, u32 length, MF_READER* sample_FILE_reader, MM_BOOL dither)
+static MM_BOOL SL_LoadInternal(
+	void* buffer,
+	u16 infmt,
+	u16 outfmt,
+	int scalefactor,
+	u32 length,
+	MF_READER* sample_FILE_reader,
+	MM_BOOL dither)
 {
-	s8 *bptr 	= (s8*)buffer;
+	s8 *bptr	= (s8*)buffer;
 	s16 *wptr	= (s16*)buffer;
 	int stodo, t, u;
 
@@ -458,7 +453,10 @@ static MM_BOOL SL_LoadInternal(void* buffer, u16 infmt, u16 outfmt, int scalefac
 	return (0);
 }
 
-MM_BOOL SL_Load(void* buffer, MOD_MUSIC_INTERNAL_SAMPLE_LOAD *smp, u32 length)
+MM_BOOL SL_Load(
+	void* buffer,
+	MOD_MUSIC_INTERNAL_SAMPLE_LOAD *smp,
+	u32 length)
 {
 	return SL_LoadInternal(
 		buffer, smp->infmt, smp->outfmt, smp->scalefactor,
@@ -466,7 +464,10 @@ MM_BOOL SL_Load(void* buffer, MOD_MUSIC_INTERNAL_SAMPLE_LOAD *smp, u32 length)
 }
 
 /* Registers a sample for loading when SL_LoadSamples() is called. */
-MOD_MUSIC_INTERNAL_SAMPLE_LOAD* SL_RegisterSample(MF_READER* reader, MM_SAMPLE* s, int type)
+MOD_MUSIC_INTERNAL_SAMPLE_LOAD* SL_RegisterSample(
+	MF_READER* reader,
+	MM_SAMPLE* s,
+	int type)
 {
 	MOD_MUSIC_INTERNAL_SAMPLE_LOAD *news, **samplist, *cruise;
 
@@ -523,33 +524,33 @@ static void FreeSampleList(MOD_MUSIC_INTERNAL_SAMPLE_LOAD* s)
 	}
 }
 
-#if 1
-static u32 /*VC1_SampleLength*/s_MOD_VIRTUAL_MIXER_SampleLength_soft_ware(/*int type,*/ MM_SAMPLE* s)
-{
-//	if (!s) 	{return (0);}
-	return (s->length*((s->flags&SF_16BITS)?2:1))+16;
-}
+#if 0
+//static u32 /*VC1_SampleLength*/s_MOD_VIRTUAL_MIXER_SampleLength_soft_ware(/*int type,*/ MM_SAMPLE* s)
+//{
+//	//if (!s)	{return (0);}
+//	return (s->length*((s->flags&SF_16BITS)?2:1))+16;
+//}
 /* Returns the total amount of memory required by the samplelist queue. */
-static u32 SampleTotal(MOD_MUSIC_INTERNAL_SAMPLE_LOAD* samplist/*, int type*/)
-{
-	int total = 0;
-	while (samplist)
-	{
-		samplist->sample->flags = (samplist->sample->flags&~SF_FORMATMASK)|samplist->outfmt;
-		if (samplist->sample)
-		{
-			total += s_MOD_VIRTUAL_MIXER_SampleLength_soft_ware(/*type,*/ (MM_SAMPLE*)samplist->sample);
-		}
-		samplist = samplist->next;
-	}
-	return (total);
-}
+//static u32 SampleTotal(MOD_MUSIC_INTERNAL_SAMPLE_LOAD* samplist/*, int type*/)
+//{
+//	int total = 0;
+//	while (samplist)
+//	{
+//		samplist->sample->flags = (samplist->sample->flags&~SF_FORMATMASK)|samplist->outfmt;
+//		if (samplist->sample)
+//		{
+//			total += s_MOD_VIRTUAL_MIXER_SampleLength_soft_ware(/*type,*/ (MM_SAMPLE*)samplist->sample);
+//		}
+//		samplist = samplist->next;
+//	}
+//	return (total);
+//}
 #endif
 
-static u32 RealSpeed(MOD_MUSIC_INTERNAL_SAMPLE_LOAD *s)
-{
-	return (s->sample->speed / (s->scalefactor?s->scalefactor:1));
-}
+//static u32 RealSpeed(MOD_MUSIC_INTERNAL_SAMPLE_LOAD *s)
+//{
+//	return (s->sample->speed / (s->scalefactor?s->scalefactor:1));
+//}
 
 /*global*/ void SL_SampleSigned(MOD_MUSIC_INTERNAL_SAMPLE_LOAD* s)/*virch32.c*/
 {
@@ -570,21 +571,49 @@ static void s_SL_SampleUnsigned(MOD_MUSIC_INTERNAL_SAMPLE_LOAD* s)
 	s->sample->flags = (s->sample->flags&~SF_FORMATMASK) | s->outfmt;
 }
 
-static void s_SL_Sample16to8(MOD_MUSIC_INTERNAL_SAMPLE_LOAD* s)
+//static void s_SL_Sample16to8(MOD_MUSIC_INTERNAL_SAMPLE_LOAD* s)
+//{
+//	s->outfmt &= ~SF_16BITS;
+//	s->sample->flags = (s->sample->flags&~SF_FORMATMASK) | s->outfmt;
+//}
+
+//static void s_SL_HalveSample(MOD_MUSIC_INTERNAL_SAMPLE_LOAD* s, int factor)
+//{
+//	s->scalefactor = (0<factor) ? factor:2;
+//
+//	s->sample->divfactor	= s->scalefactor;
+//	s->sample->length		= s->length / s->scalefactor;
+//	s->sample->loopstart	= s->loopstart / s->scalefactor;
+//	s->sample->loopend		= s->loopend / s->scalefactor;
+//}
+
+void SL_Exit(MOD_MUSIC_INTERNAL_SAMPLE_LOAD *s)
 {
-	s->outfmt &= ~SF_16BITS;
-	s->sample->flags = (s->sample->flags&~SF_FORMATMASK) | s->outfmt;
+	if (sl_rlength>0)	{	mod_music_file_seek_cur(s->sample_FILE_reader, sl_rlength);}
+	if (sl_buffer)
+	{
+		free(sl_buffer);
+		sl_buffer = NULL;
+	}
 }
 
-static void s_SL_HalveSample(MOD_MUSIC_INTERNAL_SAMPLE_LOAD* s, int factor)
+MM_BOOL SL_Init(MOD_MUSIC_INTERNAL_SAMPLE_LOAD* s)
 {
-	s->scalefactor = (0<factor) ? factor:2;
-
-	s->sample->divfactor	= s->scalefactor;
-	s->sample->length		= s->length / s->scalefactor;
-	s->sample->loopstart	= s->loopstart / s->scalefactor;
-	s->sample->loopend		= s->loopend / s->scalefactor;
+	if (!sl_buffer)
+	{
+		sl_buffer = mod_music_malloc(SLBUFSIZE*sizeof(s16));
+		if (!sl_buffer)
+		{
+			/*(error!)*/
+			return (0);
+		}
+	}
+	sl_rlength = s->length;
+	if (s->infmt & SF_16BITS)	{sl_rlength>>=1;}
+	sl_old = 0;
+	return (1);
 }
+
 #if (1)
 //extern s16 MD_SampleLoad(/*struct*/ MOD_MUSIC_INTERNAL_SAMPLE_LOAD*, int);
 static s16 MD_SampleLoad_soft_ware(/*struct*/ MOD_MUSIC_INTERNAL_SAMPLE_LOAD* s)//, int type)/* sloader.c */
@@ -604,48 +633,49 @@ static s16 MD_SampleLoad_soft_ware(/*struct*/ MOD_MUSIC_INTERNAL_SAMPLE_LOAD* s)
 //{
 //	return (vc_me mory);
 //}
+
 static MM_BOOL DitherSamples(MOD_MUSIC_INTERNAL_SAMPLE_LOAD* samplist/*, int type*/)
 {
-	MOD_MUSIC_INTERNAL_SAMPLE_LOAD *c2smp = NULL;
-	u32 maxsize, speed;
+//	MOD_MUSIC_INTERNAL_SAMPLE_LOAD *c2smp = NULL;
+//	u32 maxsize, speed;
 	MOD_MUSIC_INTERNAL_SAMPLE_LOAD *s;
-
+	//
 	if (!samplist) return (0);
-	maxsize = 0;//MOD_VIRTUAL_MIXER_SampleSpace_soft_ware(/*type*/)*(1024);/*(‚½‚Ô‚ñ)*/
-	if (maxsize)
-	{	while (SampleTotal(samplist/*, type*/)>maxsize)
-		{
-			/* First Pass - check for any 16 bit samples */
-			s = samplist;
-			while (s)
-			{
-				if (s->outfmt & SF_16BITS)
-				{
-					s_SL_Sample16to8(s);
-					break;
-				}
-				s = s->next;
-			}
-			/* Second pass (if no 16bits found above) is to take the sample with
-			   the highest speed and dither it by half. */
-			if (!s)
-			{
-				s = samplist;
-				speed = 0;
-				while (s)
-				{
-					if ((s->sample->length) && (RealSpeed(s)>speed))
-					{
-						speed = RealSpeed(s);
-						c2smp = s;
-					}
-					s = s->next;
-				}
-				if (c2smp)
-				{	s_SL_HalveSample(c2smp, 2);}
-			}
-		}
-	}
+//	maxsize = 0;//MOD_VIRTUAL_MIXER_SampleSpace_soft_ware(/*type*/)*(1024);/*(‚½‚Ô‚ñ)*/
+//	if (maxsize)
+//	{	while (SampleTotal(samplist/*, type*/)>maxsize)
+//		{
+//			/* First Pass - check for any 16 bit samples */
+//			s = samplist;
+//			while (s)
+//			{
+//				if (s->outfmt & SF_16BITS)
+//				{
+//					s_SL_Sample16to8(s);
+//					break;
+//				}
+//				s = s->next;
+//			}
+//			/* Second pass (if no 16bits found above) is to take the sample with
+//			   the highest speed and dither it by half. */
+//			if (!s)
+//			{
+//				s = samplist;
+//				speed = 0;
+//				while (s)
+//				{
+//					if ((s->sample->length) && (RealSpeed(s)>speed))
+//					{
+//						speed = RealSpeed(s);
+//						c2smp = s;
+//					}
+//					s = s->next;
+//				}
+//				if (c2smp)
+//				{	s_SL_HalveSample(c2smp, 2);}
+//			}
+//		}
+//	}
 
 	/* Samples dithered, now load them ! */
 	s = samplist;

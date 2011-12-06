@@ -22,14 +22,17 @@ static char rcsid =
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <malloc.h>
 
-#include "./../include/PSPL_error.h"	/* Žæ‚èŠ¸‚¦‚¸(‰¼) */
-//#include "./../include/PSPL_endian.h" /* Žæ‚èŠ¸‚¦‚¸(‰¼) */
-#include "./../include/PSPL_video.h"	/* Žæ‚èŠ¸‚¦‚¸(‰¼) */
+#include "../include/PSPL_error.h"	/* Žæ‚èŠ¸‚¦‚¸(‰¼) */
+#include "../include/PSPL_video.h"	/* Žæ‚èŠ¸‚¦‚¸(‰¼) */
 #include "PSPL_sysvideo.h"
 #include "PSPL_blit.h"
 #include "PSPL_pixels_c.h"
-#include "PSPL_RLEaccel_c.h"
+
+#if (1==USE_RLEACCEL)
+	#include "PSPL_RLEaccel_c.h"
+#endif
 
 #ifndef SDL_OutOfMemory_bbb
 	#define SDL_OutOfMemory_bbb(aaa)
@@ -45,7 +48,8 @@ SDL_PixelFormat *SDL_AllocFormat(int bpp, u32 Rmask, u32 Gmask, u32 Bmask, u32 A
 	u32 mask;
 
 	/* Allocate an empty pixel format structure */
-	format = malloc(sizeof(*format));
+//	format = mal loc((sizeof(*format)));
+	format = memalign(16, (sizeof(*format)));
 	if ( format == NULL )
 	{
 		SDL_OutOfMemory_bbb();
@@ -59,78 +63,64 @@ SDL_PixelFormat *SDL_AllocFormat(int bpp, u32 Rmask, u32 Gmask, u32 Bmask, u32 A
 	format->BytesPerPixel = (bpp+7)/8;
 	if ( Rmask || Bmask || Gmask )	/* Packed pixels with custom mask */
 	{
-		format->palette = NULL;
-		format->Rshift = 0;
-		format->Rloss = 8;
-		if ( Rmask )
-		{
-			for ( mask = Rmask; !(mask&0x01); mask >>= 1 )
-				++format->Rshift;
-			for ( ; (mask&0x01); mask >>= 1 )
-				--format->Rloss;
-		}
-		format->Gshift = 0;
-		format->Gloss = 8;
-		if ( Gmask )
-		{
-			for ( mask = Gmask; !(mask&0x01); mask >>= 1 )
-				++format->Gshift;
-			for ( ; (mask&0x01); mask >>= 1 )
-				--format->Gloss;
-		}
-		format->Bshift = 0;
-		format->Bloss = 8;
-		if ( Bmask )
-		{
-			for ( mask = Bmask; !(mask&0x01); mask >>= 1 )
-				++format->Bshift;
-			for ( ; (mask&0x01); mask >>= 1 )
-				--format->Bloss;
-		}
-		format->Ashift = 0;
-		format->Aloss = 8;
-		if ( Amask )
-		{
-			for ( mask = Amask; !(mask&0x01); mask >>= 1 )
-				++format->Ashift;
-			for ( ; (mask&0x01); mask >>= 1 )
-				--format->Aloss;
-		}
-		format->Rmask = Rmask;
-		format->Gmask = Gmask;
-		format->Bmask = Bmask;
 		format->Amask = Amask;
+		format->Bmask = Bmask;
+		format->Gmask = Gmask;
+		format->Rmask = Rmask;
+		//
+		format->Ashift	= 0;
+		format->Bshift	= 0;
+		format->Gshift	= 0;
+		format->Rshift	= 0;
+		//
+		format->Aloss	= 8;
+		format->Bloss	= 8;
+		format->Gloss	= 8;
+		format->Rloss	= 8;
+		//
+		format->palette = NULL;
+		if (Amask)	{	for (mask=Amask; !(mask&0x01); mask>>=1)	{	format->Ashift++;}
+						for (		   ;  (mask&0x01); mask>>=1)	{	format->Aloss--;}	}
+		if (Bmask)	{	for (mask=Bmask; !(mask&0x01); mask>>=1)	{	format->Bshift++;}
+						for (		   ;  (mask&0x01); mask>>=1)	{	format->Bloss--;}	}
+		if (Gmask)	{	for (mask=Gmask; !(mask&0x01); mask>>=1)	{	format->Gshift++;}
+						for (		   ;  (mask&0x01); mask>>=1)	{	format->Gloss--;}	}
+		if (Rmask)	{	for (mask=Rmask; !(mask&0x01); mask>>=1)	{	format->Rshift++;}
+						for (		   ;  (mask&0x01); mask>>=1)	{	format->Rloss--;}	}
 	}
 	else
 	if ( bpp > 8 )	/* Packed pixels with standard mask */
 	{
-		/* R-G-B */
-		if ( bpp > 24 )
-		{	bpp = 24;	}
-		format->Rloss = 8-(bpp/3);
-		format->Gloss = 8-(bpp/3)-(bpp%3);
-		format->Bloss = 8-(bpp/3);
-		format->Rshift = ((bpp/3)+(bpp%3))+(bpp/3);
-		format->Gshift = (bpp/3);
-		format->Bshift = 0;
-		format->Rmask = ((0xff>>format->Rloss)<<format->Rshift);
-		format->Gmask = ((0xff>>format->Gloss)<<format->Gshift);
 		format->Bmask = ((0xff>>format->Bloss)<<format->Bshift);
+		format->Gmask = ((0xff>>format->Gloss)<<format->Gshift);
+		format->Rmask = ((0xff>>format->Rloss)<<format->Rshift);
+		/* R-G-B */
+		if ( bpp > 24 ) 	{	bpp = 24;	}
+		int bpp_div3;
+		bpp_div3 = bpp;
+		bpp_div3 *= (86);/*(int)(256/3)*/
+		bpp_div3 >>= 8;/*(8==(24*86)/256)*/
+		format->Bshift = 0;
+		format->Gshift = (bpp_div3);
+		format->Rshift = ((bpp_div3)+(bpp%3))+(bpp_div3);
+		format->Bloss = 8-(bpp_div3);
+		format->Gloss = 8-(bpp_div3)-(bpp%3);
+		format->Rloss = 8-(bpp_div3);
 	}
 	else	/* Palettized formats have no mask info */
 	{
-		format->Rloss = 8;
-		format->Gloss = 8;
-		format->Bloss = 8;
-		format->Aloss = 8;
-		format->Rshift = 0;
-		format->Gshift = 0;
-		format->Bshift = 0;
-		format->Ashift = 0;
-		format->Rmask = 0;
-		format->Gmask = 0;
-		format->Bmask = 0;
-		format->Amask = 0;
+		format->Amask	= 0;
+		format->Bmask	= 0;
+		format->Gmask	= 0;
+		format->Rmask	= 0;
+		format->Ashift	= 0;
+		format->Bshift	= 0;
+		format->Gshift	= 0;
+		format->Rshift	= 0;
+		format->Aloss	= 8;
+		format->Bloss	= 8;
+		format->Gloss	= 8;
+		format->Rloss	= 8;
 	}
 	if ( bpp <= 8 ) 	/* Palettized mode */
 	{
@@ -138,7 +128,8 @@ SDL_PixelFormat *SDL_AllocFormat(int bpp, u32 Rmask, u32 Gmask, u32 Bmask, u32 A
 		#ifdef DEBUG_PALETTE
 		fprintf(stderr,"bpp=%d ncolors=%d\n",bpp,ncolors);
 		#endif
-		format->palette = (SDL_Palette *)malloc(sizeof(SDL_Palette));
+//		format->palette = (SDL_Palette *)mal loc((sizeof(SDL_Palette)));
+		format->palette = (SDL_Palette *)memalign(16, (sizeof(SDL_Palette)));
 		if ( format->palette == NULL )
 		{
 			SDL_FreeFormat(format);
@@ -146,8 +137,8 @@ SDL_PixelFormat *SDL_AllocFormat(int bpp, u32 Rmask, u32 Gmask, u32 Bmask, u32 A
 			return (NULL);
 		}
 		(format->palette)->ncolors = ncolors;
-		(format->palette)->colors = (SDL_Color *)malloc(
-				(format->palette)->ncolors*sizeof(SDL_Color));
+//		(format->palette)->colors = (SDL_Color *)mal loc(((format->palette)->ncolors*sizeof(SDL_Color)));
+		(format->palette)->colors = (SDL_Color *)memalign(16, ((format->palette)->ncolors*sizeof(SDL_Color)));
 		if ( (format->palette)->colors == NULL )
 		{
 			SDL_FreeFormat(format);
@@ -163,65 +154,32 @@ SDL_PixelFormat *SDL_AllocFormat(int bpp, u32 Rmask, u32 Gmask, u32 Bmask, u32 A
 			#ifdef ENABLE_PALETTE_ALPHA
 			int Am=0,Aw=0;
 			#endif
-			if (Rmask)
-			{
-				Rw=8-format->Rloss;
-				for (i=format->Rloss;i>0;i-=Rw)
-					Rm|=1<<i;
-			}
+			if (Rmask)	{	Rw=8-format->Rloss; 	for (i=format->Rloss;i>0;i-=Rw) 	{	Rm|=1<<i;	}	}
+			if (Gmask)	{	Gw=8-format->Gloss; 	for (i=format->Gloss;i>0;i-=Gw) 	{	Gm|=1<<i;	}	}
+			if (Bmask)	{	Bw=8-format->Bloss; 	for (i=format->Bloss;i>0;i-=Bw) 	{	Bm|=1<<i;	}	}
 			#ifdef DEBUG_PALETTE
 			fprintf(stderr,"Rw=%d Rm=0x%02X\n",Rw,Rm);
-			#endif
-			if (Gmask)
-			{
-				Gw=8-format->Gloss;
-				for (i=format->Gloss;i>0;i-=Gw)
-					Gm|=1<<i;
-			}
-			#ifdef DEBUG_PALETTE
 			fprintf(stderr,"Gw=%d Gm=0x%02X\n",Gw,Gm);
-			#endif
-			if (Bmask)
-			{
-				Bw=8-format->Bloss;
-				for (i=format->Bloss;i>0;i-=Bw)
-				{	Bm|=1<<i;	}
-			}
-			#ifdef DEBUG_PALETTE
 			fprintf(stderr,"Bw=%d Bm=0x%02X\n",Bw,Bm);
 			#endif
 		#ifdef ENABLE_PALETTE_ALPHA
-			if (Amask)
-			{
-				Aw=8-format->Aloss;
-				for (i=format->Aloss;i>0;i-=Aw)
-				{	Am|=1<<i;	}
-			}
+			if (Amask)	{	Aw=8-format->Aloss; 	for (i=format->Aloss;i>0;i-=Aw) 	{	Am|=1<<i;	}	}
 			#ifdef DEBUG_PALETTE
 			fprintf(stderr,"Aw=%d Am=0x%02X\n",Aw,Am);
 			#endif
 		#endif
-			for (i=0; i < ncolors; ++i)
+			for (i=0; i < ncolors; i++)
 			{
 				int r,g,b;
-				r=(i&Rmask)>>format->Rshift;
-				r=(r<<format->Rloss)|((r*Rm)>>Rw);
-				format->palette->colors[i].r=r;
-
-				g=(i&Gmask)>>format->Gshift;
-				g=(g<<format->Gloss)|((g*Gm)>>Gw);
-				format->palette->colors[i].g=g;
-
-				b=(i&Bmask)>>format->Bshift;
-				b=(b<<format->Bloss)|((b*Bm)>>Bw);
-				format->palette->colors[i].b=b;
-
+				r=(i&Rmask)>>format->Rshift;	r=(r<<format->Rloss)|((r*Rm)>>Rw);		format->palette->colors[i].r=r;
+				g=(i&Gmask)>>format->Gshift;	g=(g<<format->Gloss)|((g*Gm)>>Gw);		format->palette->colors[i].g=g;
+				b=(i&Bmask)>>format->Bshift;	b=(b<<format->Bloss)|((b*Bm)>>Bw);		format->palette->colors[i].b=b;
 		#ifdef ENABLE_PALETTE_ALPHA
-				a=(i&Amask)>>format->Ashift;
-				a=(a<<format->Aloss)|((a*Am)>>Aw);
-				format->palette->colors[i].unused=a;
+				a = (i&Amask)>>format->Ashift;
+				a = (a<<format->Aloss)|((a*Am)>>Aw);
+				format->palette->colors[i].a/*unused*/ = a;
 		#else
-				format->palette->colors[i].unused=0;
+				format->palette->colors[i].a/*unused*/ = (0);
 		#endif
 			}
 		}
@@ -265,7 +223,7 @@ SDL_PixelFormat *SDL_ReallocFormat(
 void SDL_FormatChanged(SDL_Surface *surface)
 {
 	static int format_version = 0;
-	++format_version;
+	format_version++;
 	if ( format_version < 0 )	/* It wrapped... */
 	{
 		format_version = 1;
@@ -327,14 +285,9 @@ u16 SDL_CalculatePitch(SDL_Surface *surface)
 	pitch = surface->w*surface->format->BytesPerPixel;
 	switch (surface->format->BitsPerPixel)
 	{
-	case 1:
-		pitch = (pitch+7)/8;
-		break;
-	case 4:
-		pitch = (pitch+1)/2;
-		break;
-	default:
-		break;
+	case 1: 	pitch = (pitch+7)/8;		break;
+	case 4: 	pitch = (pitch+1)/2;		break;
+	default:								break;
 	}
 	pitch = (pitch + 3) & ~3;		/* 4-byte aligning */
 	return (pitch);
@@ -345,27 +298,32 @@ u16 SDL_CalculatePitch(SDL_Surface *surface)
 u8 SDL_FindColor(SDL_Palette *pal, u8 r, u8 g, u8 b)
 {
 	/* Do colorspace distance matching */
+	u8 pixel = 0;
 	unsigned int smallest;
-	unsigned int distance;
-	int rd, gd, bd;
-	int i;
-	u8 pixel=0;
-
 	smallest = ~0;
-	for (i=0; i<pal->ncolors; i++)
 	{
-		rd = pal->colors[i].r - r;
-		gd = pal->colors[i].g - g;
-		bd = pal->colors[i].b - b;
-		distance = (rd*rd)+(gd*gd)+(bd*bd);
-		if ( distance < smallest )
+		int i;
+		for (i=0; i<pal->ncolors; i++)
 		{
-			pixel = i;
-			if ( distance == 0 )	/* Perfect match! */
+			unsigned int distance;
 			{
-				break;
+				int rd;
+				int gd;
+				int bd;
+				rd = pal->colors[i].r - r;
+				gd = pal->colors[i].g - g;
+				bd = pal->colors[i].b - b;
+				distance = (rd*rd)+(gd*gd)+(bd*bd);
 			}
-			smallest = distance;
+			if ( distance < smallest )
+			{
+				pixel = i;
+				if ( distance == 0 )	/* Perfect match! */
+				{
+					break;
+				}
+				smallest = distance;
+			}
 		}
 	}
 	return (pixel);
@@ -418,16 +376,12 @@ void SDL_GetRGBA(u32 pixel, SDL_PixelFormat *fmt,
 		 * wide, which is almost always the case.
 		 */
 		unsigned v;
-		v = (pixel & fmt->Rmask) >> fmt->Rshift;
-		*r = (v << fmt->Rloss) + (v >> (8 - (fmt->Rloss << 1)));
-		v = (pixel & fmt->Gmask) >> fmt->Gshift;
-		*g = (v << fmt->Gloss) + (v >> (8 - (fmt->Gloss << 1)));
-		v = (pixel & fmt->Bmask) >> fmt->Bshift;
-		*b = (v << fmt->Bloss) + (v >> (8 - (fmt->Bloss << 1)));
+		v = (pixel & fmt->Rmask) >> fmt->Rshift;		*r = (v << fmt->Rloss) + (v >> (8 - (fmt->Rloss << 1)));
+		v = (pixel & fmt->Gmask) >> fmt->Gshift;		*g = (v << fmt->Gloss) + (v >> (8 - (fmt->Gloss << 1)));
+		v = (pixel & fmt->Bmask) >> fmt->Bshift;		*b = (v << fmt->Bloss) + (v >> (8 - (fmt->Bloss << 1)));
 		if (fmt->Amask)
 		{
-			v = (pixel & fmt->Amask) >> fmt->Ashift;
-			*a = (v << fmt->Aloss) + (v >> (8 - (fmt->Aloss << 1)));
+			v = (pixel & fmt->Amask) >> fmt->Ashift;	*a = (v << fmt->Aloss) + (v >> (8 - (fmt->Aloss << 1)));
 		}
 		else
 		{
@@ -449,12 +403,9 @@ void SDL_GetRGB(u32 pixel, SDL_PixelFormat *fmt, u8 *r, u8 *g, u8 *b)
 	{
 		/* the note for SDL_GetRGBA above applies here too */
 		unsigned v;
-		v = (pixel & fmt->Rmask) >> fmt->Rshift;
-		*r = (v << fmt->Rloss) + (v >> (8 - (fmt->Rloss << 1)));
-		v = (pixel & fmt->Gmask) >> fmt->Gshift;
-		*g = (v << fmt->Gloss) + (v >> (8 - (fmt->Gloss << 1)));
-		v = (pixel & fmt->Bmask) >> fmt->Bshift;
-		*b = (v << fmt->Bloss) + (v >> (8 - (fmt->Bloss << 1)));
+		v = (pixel & fmt->Rmask) >> fmt->Rshift;	*r = (v << fmt->Rloss) + (v >> (8 - (fmt->Rloss << 1)));
+		v = (pixel & fmt->Gmask) >> fmt->Gshift;	*g = (v << fmt->Gloss) + (v >> (8 - (fmt->Gloss << 1)));
+		v = (pixel & fmt->Bmask) >> fmt->Bshift;	*b = (v << fmt->Bloss) + (v >> (8 - (fmt->Bloss << 1)));
 	}
 	else
 	{
@@ -482,14 +433,12 @@ void SDL_ApplyGamma(
 static u8 *Map1to1(SDL_Palette *src, SDL_Palette *dst, int *identical)
 {
 	u8 *map;
-	int i;
-	if ( identical )
+	if (identical)
 	{
 		if ( src->ncolors <= dst->ncolors )
 		{
 			/* If an identical palette, no need to map */
-			if ( memcmp(src->colors, dst->colors, src->ncolors*
-						sizeof(SDL_Color)) == 0 )
+			if (0 == memcmp(src->colors, dst->colors, (src->ncolors * sizeof(SDL_Color))))
 			{
 				*identical = 1;
 				return (NULL);
@@ -497,16 +446,20 @@ static u8 *Map1to1(SDL_Palette *src, SDL_Palette *dst, int *identical)
 		}
 		*identical = 0;
 	}
-	map = (u8 *)malloc(src->ncolors);
+//	map = (u8 *)mal loc((src->ncolors));
+	map = (u8 *)memalign(16, (src->ncolors));
 	if ( map == NULL )
 	{
 		SDL_OutOfMemory_bbb();
 		return (NULL);
 	}
-	for (i=0; i<src->ncolors; i++)
 	{
-		map[i] = SDL_FindColor(dst,
-			src->colors[i].r, src->colors[i].g, src->colors[i].b);
+		int i;
+		for (i=0; i<src->ncolors; i++)
+		{
+			map[i] = SDL_FindColor(dst,
+				src->colors[i].r, src->colors[i].g, src->colors[i].b);
+		}
 	}
 	return (map);
 }
@@ -514,25 +467,30 @@ static u8 *Map1to1(SDL_Palette *src, SDL_Palette *dst, int *identical)
 static u8 *Map1toN(SDL_Palette *src, SDL_PixelFormat *dst)
 {
 	u8 *map;
-	int i;
 	int  bpp;
 	unsigned alpha;
 
 	bpp = ((dst->BytesPerPixel == 3) ? 4 : dst->BytesPerPixel);
-	map = (u8 *)malloc(src->ncolors*bpp);
+//	map = (u8 *)mal loc((src->ncolors*bpp));
+	map = (u8 *)memalign(16, (src->ncolors*bpp));
 	if ( map == NULL )
 	{
 		SDL_OutOfMemory_bbb();
 		return (NULL);
 	}
-
 	alpha = dst->Amask ? SDL_ALPHA_OPAQUE : 0;
 	/* We memory copy to the pixel map so the endianness is preserved */
-	for (i=0; i<src->ncolors; i++)
 	{
-		ASSEMBLE_RGBA(&map[i*bpp], dst->BytesPerPixel, dst,
-				  src->colors[i].r, src->colors[i].g,
-				  src->colors[i].b, alpha);
+		int i;
+		for (i=0; i<src->ncolors; i++)
+		{
+			ASSEMBLE_RGBA(&map[i*bpp],
+				dst->BytesPerPixel, dst,
+				src->colors[i].r,
+				src->colors[i].g,
+				src->colors[i].b,
+				alpha);
+		}
 	}
 	return (map);
 }
@@ -557,7 +515,8 @@ SDL_BlitMap *SDL_AllocBlitMap(void)
 {
 	SDL_BlitMap *map;
 	/* Allocate the empty map */
-	map = (SDL_BlitMap *)malloc(sizeof(*map));
+//	map = (SDL_BlitMap *)mal loc((sizeof(*map)));
+	map = (SDL_BlitMap *)memalign(16, (sizeof(*map)));
 	if ( map == NULL )
 	{
 		SDL_OutOfMemory_bbb();
@@ -566,7 +525,8 @@ SDL_BlitMap *SDL_AllocBlitMap(void)
 	memset(map, 0, sizeof(*map));
 
 	/* Allocate the software blit data */
-	map->sw_data = (struct private_swaccel *)malloc(sizeof(*map->sw_data));
+//	map->sw_data = (struct private_swaccel *)mal loc((sizeof(*map->sw_data)));
+	map->sw_data = (struct private_swaccel *)memalign(16, (sizeof(*map->sw_data)));
 	if ( map->sw_data == NULL )
 	{
 		SDL_FreeBlitMap(map);
@@ -600,10 +560,12 @@ int SDL_MapSurface (SDL_Surface *src, SDL_Surface *dst)
 
 	/* Clear out any previous mapping */
 	map = src->map;
+	#if (1==USE_RLEACCEL)
 	if ( (src->flags & SDL_RLEACCEL) == SDL_RLEACCEL )
 	{
 		SDL_UnRLESurface(src, 1);
 	}
+	#endif /*(USE_RLEACCEL)*/
 	SDL_InvalidateMap(map);
 
 	/* Figure out what kind of mapping we're doing */

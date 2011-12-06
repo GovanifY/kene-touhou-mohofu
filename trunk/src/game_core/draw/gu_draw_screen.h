@@ -10,8 +10,8 @@
 
 
 
-extern void TGameTexture_Load_Surface( int num );
-//static void TGameTexture_Load_Surface(int num);
+extern void psp_load_texture( int num );
+//static void psp_load_texture(int num);
 
 
 
