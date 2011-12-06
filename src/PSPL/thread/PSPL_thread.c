@@ -1,9 +1,12 @@
 /*
 http://psp.jim.sh/svn/filedetails.php?repname=psp&path=%2Ftrunk%2FSDL%2Fsrc%2Fthread%2FSDL_thread.c
+ƒŠƒrƒWƒ‡ƒ“ 440
+Subversion ƒŠƒ|ƒWƒgƒŠˆê——: pspps2ps2wareps3ps3warepspwareƒŠƒrƒWƒ‡ƒ“:(root)/trunk/SDL/src/thread/SDL_thread.c
 
-
-psp - ƒŠƒrƒWƒ‡ƒ“ 440Subversion ƒŠƒ|ƒWƒgƒŠˆê——: pspps2ps2wareps3ps3warepspwareƒŠƒrƒWƒ‡ƒ“:(root)/trunk/SDL/src/thread/SDL_thread.c
-Ú×•\¦ - ÅIXV“ú - ƒƒO‚ğŒ©‚é -
+http://psp.jim.sh/svn/filedetails.php?repname=psp&path=%2Ftrunk%2FSDL%2Fsrc%2Fthread%2Fpsp%2FSDL_systhread.c
+ƒŠƒrƒWƒ‡ƒ“ 2315
+Subversion ƒŠƒ|ƒWƒgƒŠˆê——: pspps2ps2wareps3ps3warepspwareƒŠƒrƒWƒ‡ƒ“:(root)/trunk/SDL/src/thread/psp/SDL_systhread.c
+ƒŠƒrƒWƒ‡ƒ“ 1221
 */
 
 /*---------------------------------------------------------
@@ -16,12 +19,17 @@ psp - ƒŠƒrƒWƒ‡ƒ“ 440Subversion ƒŠƒ|ƒWƒgƒŠˆê——: pspps2ps2wareps3ps3warepspwareƒŠƒ
 
 #ifdef SAVE_RCSID
 static char rcsid =
- "@(#) $Id: PSPL_thread.c,v 1.8 2004/01/04 16:49:18 slouken Exp $";
+ "@(#) $Id: PSPL_thread.c,v 1.8 2004/01/04 16:49:18 slouken Exp $"
+ "@(#) $Id: PSPL_systhread.c,v 1.5 2004/01/04 16:49:19 slouken Exp $";
 #endif
 
 /* System independent thread management routines for SDL */
+/* PSP port contributed by Marcus R. Brown <mrbrown@ocgnet.org>. */
+/* PSP thread management routines for SDL */
 
 #include <psptypes.h>
+#include <pspkerneltypes.h>
+#include <pspthreadman.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -39,6 +47,85 @@ static char rcsid =
 #ifndef SDL_OutOfMemory_bbb
 	#define SDL_OutOfMemory_bbb(aaa)
 #endif
+
+#ifndef SDL_SetError_bbb
+	#define SDL_SetError_bbb( ... )
+#endif
+
+static int ThreadEntry(SceSize args, void *argp)
+{
+	SDL_RunThread(*(void **) argp);
+	return (0);
+}
+
+static int s_SDL_SYS_CreateThread(SDL_Thread *thread, void *args)
+{
+	SceKernelThreadInfo status;
+	int priority = 32;
+
+	/* Set priority of new thread to the same as the current thread */
+	status.size = sizeof(SceKernelThreadInfo);
+	if (sceKernelReferThreadStatus(sceKernelGetThreadId(), &status) == 0)
+	{
+		priority = status.currentPriority;
+	}
+	#if (1)/*(SDL•W€)*/
+	thread->handle = sceKernelCreateThread(
+		/*(‚±‚ÌƒXƒŒƒbƒh‚Ì–¼‘O)*/"SDL thread",
+		/*(‚±‚ÌƒXƒŒƒbƒh‚ÌÀˆÊ’u[ŠÖ”–¼])*/ThreadEntry,
+		/*(‚±‚ÌƒXƒŒƒbƒh‚Ì—Dæ“x)*/priority, /*[’l‚ª¬‚³‚¢•û‚ª—Dæ‡ˆÊ‚ª‚‚¢])*/
+		/*(‚±‚ÌƒXƒŒƒbƒh‚ÉŠ„‚è“–‚Ä‚éƒXƒ^ƒbƒN‚Ì—Ê)*/0x8000,
+		/*(ƒTƒEƒ“ƒhƒXƒŒƒbƒh“à‚Åvfpu‚ğg‚í‚È‚¢==0)*/PSP_THREAD_ATTR_VFPU,
+		NULL);
+	#else/*(–Í•í•—)*/
+	thread->handle = sceKernelCreateThread(
+		/*(‚±‚ÌƒXƒŒƒbƒh‚Ì–¼‘O)*/"SDL thread",
+		/*(‚±‚ÌƒXƒŒƒbƒh‚ÌÀˆÊ’u[ŠÖ”–¼])*/ThreadEntry,
+		/*(‚±‚ÌƒXƒŒƒbƒh‚Ì—Dæ“x)*/(8)/*priority*/, /*(–Í•í•—‚Å‚ÍƒTƒEƒ“ƒhƒXƒŒƒbƒh‚ğì‚é‚Ì‚ÅÀŒ±“I‚Éƒvƒ‰ƒCƒIƒŠƒeƒB[‚ğ(32->8‚É)ã‚°‚Ä‚İ‚é[’l‚ª¬‚³‚¢•û‚ª—Dæ‡ˆÊ‚ª‚‚¢])*/
+		/*(‚±‚ÌƒXƒŒƒbƒh‚ÉŠ„‚è“–‚Ä‚éƒXƒ^ƒbƒN‚Ì—Ê)*/(0x1000),/*(–Í•í•—‚Å‚Í‚ ‚Ü‚è‘å‚«‚ÈSDLƒXƒŒƒbƒh‚Íì‚ç‚È‚¢)*/
+		/*(ƒTƒEƒ“ƒhƒXƒŒƒbƒh“à‚Åvfpu‚ğg‚í‚È‚¢==0)*/(0)/*PSP_THREAD_ATTR_VFPU*/,/*(–Í•í•—‚Å‚ÍSDLƒXƒŒƒbƒh“à‚Åvfpu‚ğg‚¤ƒvƒƒOƒ‰ƒ€‚Í–³‚¢)*/
+		NULL);
+	#endif
+	if (thread->handle < 0)
+	{
+		SDL_SetError_bbb("sceKernelCreateThread() failed");
+		return (-1);
+	}
+
+	sceKernelStartThread(thread->handle, 4, &args);
+	return (0);
+}
+
+static void s_SDL_SYS_WaitThread(SDL_Thread *thread)
+{
+	sceKernelWaitThreadEnd(thread->handle, NULL);
+	sceKernelDeleteThread(thread->handle);
+}
+
+#if (00)
+static void s_SDL_SYS_KillThread(SDL_Thread *thread)
+{
+	sceKernelTerminateDeleteThread(thread->handle);
+}
+
+void SDL_SYS_SetupThread(void)
+{
+	/* Do nothing. */
+}
+#endif /*(00)*/
+
+u32 SDL_ThreadID(void)
+{
+	return (u32) sceKernelGetThreadId();
+}
+
+/* vim: ts=4 sw=4
+ */
+
+
+
+
+
 
 #define ARRAY_CHUNKSIZE 32
 /* The array of threads currently active in the application
@@ -172,7 +259,7 @@ void SDL_WaitThread(SDL_Thread *thread, int *status)
 {
 	if ( thread )
 	{
-		SDL_SYS_WaitThread(thread);
+		s_SDL_SYS_WaitThread(thread);
 		if ( status )
 		{
 			*status = thread->status;
@@ -198,7 +285,7 @@ void SDL_RunThread(void *data)
 	/* Perform any system-dependent setup
 	   - this function cannot fail, and cannot use SDL_SetError_bbb()
 	 */
-	SDL_SYS_SetupThread();
+//	SDL_SYS_SetupThread();
 	{
 		int (*userfunc)(void *);
 		void *userdata;
@@ -261,7 +348,7 @@ SDL_Thread *SDL_CreateThread(int (*fn)(void *), void *data)
 		/* Create the thread and go! */
 		{
 			int ret;
-			ret = SDL_SYS_CreateThread(thread, args);
+			ret = s_SDL_SYS_CreateThread(thread, args);
 			if ( ret >= 0 )
 			{
 				/* Wait for the thread function to use arguments */
@@ -269,7 +356,7 @@ SDL_Thread *SDL_CreateThread(int (*fn)(void *), void *data)
 			}
 			else
 			{
-				/* Oops, failed.  Gotta free everything */
+				/* Oops, failed. Gotta free everything */
 				SDL_DelThread(thread);
 				free(thread);
 				thread = NULL;
@@ -335,7 +422,7 @@ void SDL_KillThread(SDL_Thread *thread)
 {
 	if ( thread )
 	{
-		SDL_SYS_KillThread(thread);
+		s_SDL_SYS_KillThread(thread);
 		SDL_WaitThread(thread, NULL);
 	}
 }

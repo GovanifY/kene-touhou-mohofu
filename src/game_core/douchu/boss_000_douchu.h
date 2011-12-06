@@ -8,20 +8,14 @@
 	道中のボス
 ---------------------------------------------------------*/
 /* from game_core.c */
-extern void common_boss_put_items(OBJ *src);
-global void game_command_05_kaiwa_start_boss(GAME_COMMAND *l)
+//extern OBJ_CALL_FUNC(common_bo ss_put_items);
+global void game_command_02_kaiwa_start_boss(GAME_COMMAND *l)
 {
 	//----[BOSS]
 	OBJ *h;
-	h					= &obj99[OBJ_HEAD_01_0x0800_TEKI+TEKI_OBJ_00_BOSS_HONTAI];/*(ボス本体)*/
-	{
-		regist_settei_common(l, h);/* 中ボスと共用する必要がある。 */
-		/*(再定義の必要あり)*/	h->callback_loser				= common_boss_put_items;
-	}
-	#if (1==USE_r36_SCENE_FLAG)
+	h					= &obj99[OBJ_HEAD_02_0x0900_TEKI_FIX+TEKI_OBJ_00_BOSS00_HONTAI];/*(ボス本体)*/
+	regist_settei_common(l, h);/* 中ボス/(boss)と共用する必要がある。(h->callback_loserが設定される) */
+//[強制共通]	/*(再定義の必要あり)*/	h->callback_loser				= common_bo ss_put_items;
 	NEXT_SCENE;/*(次の場面へ設定)*/
-	#else
-	/*(会話読みこみ、開始指示)*/
-	cg.state_flag |= STATE_FLAG_0x0100_IS_LOAD_KAIWA_TXT;
-	#endif
 }
+

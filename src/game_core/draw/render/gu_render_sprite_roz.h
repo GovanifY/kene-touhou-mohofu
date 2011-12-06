@@ -223,9 +223,9 @@ static void render_object_use_rot_zoom(OBJ *spr)
 //	int gh;
 	int trans;
 	int turn;
-	x			 = ((spr->cx256)>>8);//dxpt.p01;
-	y			 = ((spr->cy256)>>8);//xpt.p02;
-	scale_t256	 = (spr->m_zoom_x256);//dxpt.p03;
+	x			 = ((spr->center.x256)>>8);//dxpt.p01;
+	y			 = ((spr->center.y256)>>8);//xpt.p02;
+	scale_t256	 = (spr->m_zoom.x256);//dxpt.p03;
 	angle_1024	 = (spr->rotationCCW1024);//dxpt.p04;
 //	gh			 = dxpt.p05;
 	trans		 = 1;//dxpt.p06;
@@ -436,10 +436,10 @@ static void render_object_use_rot_zoom(OBJ *spr)
 	unsigned int/*short*/ w_size;
 	w_size	= SLICE_64_SIZE;
 	/* ‰ñ“]‚·‚é‚Ì‚Å x,y À•W‚ÍAu‰æ–Ê‚ÌÀ•W‚Å‚Í‚È‚­vAuobj’†S‚ðŒ´“_o(0,0)‚Æ‚µ‚½A‘Š‘ÎÀ•Wv‚ÅŒvŽZ‚µ‚Ä‚¨‚­B */
-//	unsigned int/*short*/ x_pos = ((spr->cx256>>8));
-//	unsigned int/*short*/ y_pos = ((spr->cy256>>8));
-//(r32) unsigned int/*short*/ x_pos = ((spr->cx256>>8)-(spr->w >> 1));/* ’†SÀ•W‚©‚ç‰æ‘œƒTƒCƒY‚Ì”¼•ª‚ðˆø‚«A¶ãÀ•W‚ðŒvŽZ */
-//(r32) unsigned int/*short*/ y_pos = ((spr->cy256>>8)-(spr->h >> 1));/* ’†SÀ•W‚©‚ç‰æ‘œƒTƒCƒY‚Ì”¼•ª‚ðˆø‚«A¶ãÀ•W‚ðŒvŽZ */
+//	unsigned int/*short*/ x_pos = ((spr->center.x256>>8));
+//	unsigned int/*short*/ y_pos = ((spr->center.y256>>8));
+//(r32) unsigned int/*short*/ x_pos = ((spr->center.x256>>8)-(spr->w >> 1));/* ’†SÀ•W‚©‚ç‰æ‘œƒTƒCƒY‚Ì”¼•ª‚ðˆø‚«A¶ãÀ•W‚ðŒvŽZ */
+//(r32) unsigned int/*short*/ y_pos = ((spr->center.y256>>8)-(spr->h >> 1));/* ’†SÀ•W‚©‚ç‰æ‘œƒTƒCƒY‚Ì”¼•ª‚ðˆø‚«A¶ãÀ•W‚ðŒvŽZ */
 	unsigned int/*short*/ x_pos = ( -(spr->w >> 1));/* ’†SÀ•W‚©‚ç‰æ‘œƒTƒCƒY‚Ì”¼•ª‚ðˆø‚«A¶ãÀ•W‚ðŒvŽZ */
 	unsigned int/*short*/ y_pos = ( -(spr->h >> 1));/* ’†SÀ•W‚©‚ç‰æ‘œƒTƒCƒY‚Ì”¼•ª‚ðˆø‚«A¶ãÀ•W‚ðŒvŽZ */
 	i = 0;
@@ -491,16 +491,16 @@ static void render_object_use_rot_zoom(OBJ *spr)
 		/* --- ‰ñ“]Šg‘åˆ— */
 		int center_x;
 		int center_y;
-//		center_x = ((spr->cx256>>8) 	) + (spr->w >> 1);/*/2*/
-//		center_y = ((spr->cy256>>8) 	) + (spr->h >> 1);/*/2*/
-		center_x = ((spr->cx256>>8) 	) ;/*/2*/
-		center_y = ((spr->cy256>>8) 	) ;/*/2*/
+//		center_x = ((spr->center.x256>>8) 	) + (spr->w >> 1);/*/2*/
+//		center_y = ((spr->center.y256>>8) 	) + (spr->h >> 1);/*/2*/
+		center_x = ((spr->center.x256>>8) 	) ;/*/2*/
+		center_y = ((spr->center.y256>>8) 	) ;/*/2*/
 		int zoom_x256;
 		int zoom_y256;
-	//	zoom_x256 = (spr->m_zoom_x256) * ((65536/256)); /* Šg‘å—¦‚Í0-256”{‚È‚Ì‚Å0-65536”{‚Ö•ÏŠ·B */
-	//	zoom_y256 = (spr->m_zoom_y256) * ((65536/256)); /* Šg‘å—¦‚Í0-256”{‚È‚Ì‚Å0-65536”{‚Ö•ÏŠ·B */
-		zoom_x256 = (spr->m_zoom_x256) /*<< (8)*/;		/* Šg‘å—¦‚Í0-256”{‚È‚Ì‚Å0-65536”{‚Ö•ÏŠ·B */
-		zoom_y256 = (spr->m_zoom_y256) /*<< (8)*/;		/* Šg‘å—¦‚Í0-256”{‚È‚Ì‚Å0-65536”{‚Ö•ÏŠ·B */
+	//	zoom_x256 = (spr->m_zoom.x256) * ((65536/256)); /* Šg‘å—¦‚Í0-256”{‚È‚Ì‚Å0-65536”{‚Ö•ÏŠ·B */
+	//	zoom_y256 = (spr->m_zoom.y256) * ((65536/256)); /* Šg‘å—¦‚Í0-256”{‚È‚Ì‚Å0-65536”{‚Ö•ÏŠ·B */
+		zoom_x256 = (spr->m_zoom.x256) /*<< (8)*/;		/* Šg‘å—¦‚Í0-256”{‚È‚Ì‚Å0-65536”{‚Ö•ÏŠ·B */
+		zoom_y256 = (spr->m_zoom.y256) /*<< (8)*/;		/* Šg‘å—¦‚Í0-256”{‚È‚Ì‚Å0-65536”{‚Ö•ÏŠ·B */
 		unsigned int j;
 		for (j=0; j<4; j++)
 		{

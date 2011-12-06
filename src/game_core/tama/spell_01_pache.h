@@ -9,10 +9,10 @@
 /*---------------------------------------------------------
 	赤弾
 ---------------------------------------------------------*/
-local void test_pache_16_shot_AKA(OBJ *src)
+local OBJ_CALL_FUNC(test_pache_16_shot_AKA)
 {
-//	REG_02_DEST_X	= ((src->cx256));
-//	REG_03_DEST_Y	= ((src->cy256));
+//	REG_02_DEST_X	= ((src->center.x256));
+//	REG_03_DEST_Y	= ((src->center.y256));
 	calculate_jikinerai();
 	//
 	HATSUDAN_04_tama_spec				= (DANMAKU_LAYER_00)|(TAMA_SPEC_8000_NON_TILT);/* (r33-)非傾き弾 */
@@ -32,7 +32,7 @@ local void test_pache_16_shot_AKA(OBJ *src)
 /*---------------------------------------------------------
 	青弾
 ---------------------------------------------------------*/
-local void test_pache_16_shot_AOI(OBJ *src)
+local OBJ_CALL_FUNC(test_pache_16_shot_AOI)
 {
 	HATSUDAN_04_tama_spec				= (DANMAKU_LAYER_00)|(TAMA_SPEC_8000_NON_TILT);/* (r33-)非傾き弾 */
 	HATSUDAN_05_bullet_obj_type 		= (BULLET_MARU10_BASE + TAMA_IRO_03_AOI);		/* [青丸弾] */
@@ -52,16 +52,16 @@ local void test_pache_16_shot_AOI(OBJ *src)
 		REG_02_DEST_X	 = (((REG_0c_REG4)*(REG_09_REG1))>>8);
 		REG_03_DEST_Y	 = (((REG_0d_REG5)*(REG_09_REG1))>>8);
 		//
-		REG_02_DEST_X	+= ((src->cx256));
-		REG_03_DEST_Y	+= ((src->cy256));
+		REG_02_DEST_X	+= ((src->center.x256));
+		REG_03_DEST_Y	+= ((src->center.y256));
 		//
 		calculate_jikinerai();
 		//
 	//	REG_0c_REG4 = ((HATSUDAN_03_angle65536) );
 	//	//
 	//	HATSUDAN_03_angle65536 = (REG_0c_REG4 );
-	//	REG_02_DEST_X	= ((src->cx256));
-	//	REG_03_DEST_Y	= ((src->cy256));
+	//	REG_02_DEST_X	= ((src->center.x256));
+	//	REG_03_DEST_Y	= ((src->center.y256));
 		/* 弾源x256 y256 弾の中心から発弾。 */
 	//	set_REG_DEST_XY(src);	/*(親の位置から発弾)*/
 		unsigned int jj;
@@ -76,8 +76,8 @@ local void test_pache_16_shot_AOI(OBJ *src)
 /*---------------------------------------------------------
 	魔方陣の位置から(赤丸弾)自機狙い弾(2回)
 ---------------------------------------------------------*/
-extern void add_zako_pache_laser(OBJ *src);/* アリス人形カード */
-local void spell_create_42_pache_laser1(OBJ *src)
+extern OBJ_CALL_FUNC(add_zako_pache_laser);/* アリス人形カード */
+local OBJ_CALL_FUNC(spell_create_42_pache_laser1)
 {
 	static int laser_muki=0;
 	static int laser_count=0;
@@ -151,7 +151,7 @@ local void spell_create_42_pache_laser1(OBJ *src)
 	-------------------------------------------------------
 ---------------------------------------------------------*/
 
-local void spell_init_43_pache_laser2(OBJ *src)
+local OBJ_CALL_FUNC(spell_init_43_pache_laser2)
 {
 	REG_09_REG1 	= (t256(64));//[定数1]発弾位置までの距離。
 }
@@ -164,7 +164,7 @@ local void spell_init_43_pache_laser2(OBJ *src)
 //	REG_0a_REG2 	z
 //	REG_0b_REG3 	難易度別定数。
 ---------------------------------------------------------*/
-local void spell_create_43_pache_laser2(OBJ *src)
+local OBJ_CALL_FUNC(spell_create_43_pache_laser2)
 {
 	static int laser_muki=0;
 	static int laser_count=0;
@@ -239,8 +239,8 @@ local void spell_create_43_pache_laser2(OBJ *src)
 	[弾幕グループ(1)セクション]
 	-------------------------------------------------------
 ---------------------------------------------------------*/
-#define aaa_TAMA_DATA_10_TAMA_OKI_KANKAKU	src->hatudan_register_user_data10
-local void aaa_tamaoki_danmaku_01_callback(OBJ *src)/* 珠置き */
+#define aaa_TAMA_DATA_10_TAMA_OKI_KANKAKU	src->hatudan_register_user_data_a01
+local OBJ_CALL_FUNC(aaa_tamaoki_danmaku_01_callback)/* 珠置き */
 {
 	/*(225==1+224==1+7*32)*/
 //	if ((HATUDAN_ITI_NO_JIKAN-224) < src->jyumyou)/* 発弾エフェクト後から[224]カウント未満の弾 */
@@ -271,8 +271,8 @@ local void aaa_tamaoki_danmaku_01_callback(OBJ *src)/* 珠置き */
 
 			#if 0
 			//
-		//	REG_02_DEST_X	= (src->cx256); 	/* 弾源x256 ボス中心から発弾。 */
-		//	REG_03_DEST_Y	= (src->cy256); 	/* 弾源y256 ボス中心から発弾。 */
+		//	REG_02_DEST_X	= (src->center.x256); 	/* 弾源x256 ボス中心から発弾。 */
+		//	REG_03_DEST_Y	= (src->center.y256); 	/* 弾源y256 ボス中心から発弾。 */
 			set_REG_DEST_XY(src);
 			REG_00_SRC_X	= (REG_0c_REG4);
 			REG_01_SRC_Y	= (REG_0d_REG5);
@@ -306,7 +306,7 @@ local void aaa_tamaoki_danmaku_01_callback(OBJ *src)/* 珠置き */
 	2hard:			8
 	3lunatic:		4
 ---------------------------------------------------------*/
-local void spell_init_2e_pache_agni_shine_1(OBJ *src)
+local OBJ_CALL_FUNC(spell_init_2e_pache_agni_shine_1)
 {
 //	aaa_TAMA_DATA_10_TAMA_OKI_KANKAKU	= (0);// カウンタ
 	REG_09_REG1 	= ( (16)-((REG_0f_GAME_DIFFICULTY)<<2));//[定数1]n回に一回弾を置く。
@@ -328,7 +328,7 @@ local void spell_init_2e_pache_agni_shine_1(OBJ *src)
 	REG_0c_REG4 	発弾後、集まるX座標(t256形式)
 	REG_0d_REG5 	発弾後、集まるY座標(t256形式)
 ---------------------------------------------------------*/
-local void spell_create_2e_pache_agni_shine_1(OBJ *src)
+local OBJ_CALL_FUNC(spell_create_2e_pache_agni_shine_1)
 {
 //	if ((SPELL_TIME_0256-1)==((REG_10_BOSS_SPELL_TIMER) ))/*(一番始め)*/
 //	if (0== (REG_10_BOSS_SPELL_TIMER & 0x7f) ) /* 128回に1回なら撃つ */
@@ -395,7 +395,7 @@ local void spell_create_2e_pache_agni_shine_1(OBJ *src)
 	REG_09_REG1 	temp00_angle
 ---------------------------------------------------------*/
 
-local void spell_create_2f_pache_princess_undine(OBJ *src)
+local OBJ_CALL_FUNC(spell_create_2f_pache_princess_undine)
 {
 	if (64 > ((REG_10_BOSS_SPELL_TIMER) ))
 	{
@@ -407,8 +407,8 @@ local void spell_create_2f_pache_princess_undine(OBJ *src)
 		if (0==((REG_10_BOSS_SPELL_TIMER)&(16-1)))
 		{
 			/* 自機狙い 角を作成 */
-			REG_02_DEST_X	= ((src->cx256));
-			REG_03_DEST_Y	= ((src->cy256));
+			REG_02_DEST_X	= ((src->center.x256));
+			REG_03_DEST_Y	= ((src->center.y256));
 			calculate_jikinerai();
 		//	REG_09_REG1 = HATSUDAN_03_angle65536;
 			/* 自機狙い 3way 白laser弾 */
@@ -435,7 +435,7 @@ local void spell_create_2f_pache_princess_undine(OBJ *src)
 		//	HATSUDAN_01_speed256			= (t256(1.50)); 	/* 弾速 */
 			HATSUDAN_01_speed256			= (t256(4.00)); 	/* 弾速 */
 			HATSUDAN_02_speed_offset		= (t256(3));/*(テスト)*/
-			HATSUDAN_04_tama_spec			= (DANMAKU_LAYER_00)|(TAMA_SPEC_0000_TILT);/* (r33-)標準弾 */
+			HATSUDAN_04_tama_spec			= (DANMAKU_LAYER_00)|(TAMA_SPEC_3000_EFFECT_NONE)|(TAMA_SPEC_0000_TILT);/* (r33-)標準弾 */
 			HATSUDAN_05_bullet_obj_type 	= (BULLET_HARI32_00_AOI);// 				/* [青針弾] */
 			/* 1レーザーの長さ */
 			#define pache_02_LASER_LENGTH (4)
@@ -470,8 +470,8 @@ local void spell_create_2f_pache_princess_undine(OBJ *src)
 	if (254 == ((REG_10_BOSS_SPELL_TIMER) ))
 	{
 		/* 自機狙い 角を作成 */
-		REG_02_DEST_X	= ((src->cx256));
-		REG_03_DEST_Y	= ((src->cy256));
+		REG_02_DEST_X	= ((src->center.x256));
+		REG_03_DEST_Y	= ((src->center.y256));
 		calculate_jikinerai();
 		REG_09_REG1 = HATSUDAN_03_angle65536;
 	}
@@ -501,7 +501,7 @@ local void spell_create_2f_pache_princess_undine(OBJ *src)
 	交差弾。反時計回り。(0x0000)
 	交差弾。時計回り。(0x0100)
 ---------------------------------------------------------*/
-local void pache_sh1_danmaku_01_callback(OBJ *src)/* シルフィホルン */
+local OBJ_CALL_FUNC(pache_sh1_danmaku_01_callback)/* シルフィホルン */
 {
 	#if 1
 	if ((HATUDAN_ITI_NO_JIKAN-64) < src->jyumyou)/* 発弾エフェクト時は無効 */
@@ -513,15 +513,15 @@ local void pache_sh1_danmaku_01_callback(OBJ *src)/* シルフィホルン */
 	if ((HATUDAN_ITI_NO_JIKAN-64) == src->jyumyou)/* 発弾エフェクト後から64カウント経過した弾 */
 	{
 		angle_to_vector(src);
-	//	src->vx256	= -t256(1.0);
-	//	src->vy256	=  t256(1.0);
+	//	src->math_vector.x256	= -t256(1.0);
+	//	src->math_vector.y256	=  t256(1.0);
 	//	src->hatudan_register_tra65536 = (0);
 	}
 	#endif
-//	src->cx256 &= (0x0001ffff);
-	if (t256(32) > (src->cx256) )
+//	src->center.x256 &= (0x0001ffff);
+	if (t256(32) > (src->center.x256) )
 	{
-		src->cx256 += t256(320);/*(320==480-128-32)*/
+		src->center.x256 += t256(320);/*(320==480-128-32)*/
 	}
 //	move_vector_gamen_sita(src);/*(ベクトル移動+画面下消去)*/
 
@@ -531,18 +531,18 @@ local void pache_sh1_danmaku_01_callback(OBJ *src)/* シルフィホルン */
 	REG_0c_REG4 &= 0xff;
 
 	// ベクトル弾移動。move vector.
-//	src->cx256 -= (t256(1.0));	/*fps_factor*/
-//	src->cy256 += (t256(1.0));	/*fps_factor*/
-//	src->cx256 += (src->vx256); 	/*fps_factor*/
-//	src->cy256 += (src->vy256); 	/*fps_factor*/
-//	src->cx256 += (((src->vx256)*(REG_0c_REG4))>>8);	/*fps_factor*/
-//	src->cy256 += (((src->vy256)*(REG_0c_REG4))>>8);	/*fps_factor*/
-	src->cx256 += (((src->vx256)*(REG_0c_REG4))>>7);/*特殊*/	/* 弾速(###x256倍) */	/*fps_factor*/
-	src->cy256 += (((src->vy256)*(REG_0c_REG4))>>7);/*特殊*/	/* 弾速(###x256倍) */	/*fps_factor*/
-//	src->cx256 += 1;//(t256( 0.1)); 	/*fps_factor*/
-//	src->cy256 += 1;//(t256(-0.1)); 	/*fps_factor*/
-//	src->vy256 += ((src->hatudan_register_tra65536)<<8);	/* 加減速調整 */
-//	src->vy256 += ((src->hatudan_register_tra65536) );	/* 加減速調整 */
+//	src->center.x256 -= (t256(1.0));	/*fps_factor*/
+//	src->center.y256 += (t256(1.0));	/*fps_factor*/
+//	src->center.x256 += (src->math_vector.x256); 	/*fps_factor*/
+//	src->center.y256 += (src->math_vector.y256); 	/*fps_factor*/
+//	src->center.x256 += (((src->math_vector.x256)*(REG_0c_REG4))>>8);	/*fps_factor*/
+//	src->center.y256 += (((src->math_vector.y256)*(REG_0c_REG4))>>8);	/*fps_factor*/
+	src->center.x256 += (((src->math_vector.x256)*(REG_0c_REG4))>>7);/*特殊*/	/* 弾速(###x256倍) */	/*fps_factor*/
+	src->center.y256 += (((src->math_vector.y256)*(REG_0c_REG4))>>7);/*特殊*/	/* 弾速(###x256倍) */	/*fps_factor*/
+//	src->center.x256 += 1;//(t256( 0.1)); 	/*fps_factor*/
+//	src->center.y256 += 1;//(t256(-0.1)); 	/*fps_factor*/
+//	src->math_vector.y256 += ((src->hatudan_register_tra65536)<<8);	/* 加減速調整 */
+//	src->math_vector.y256 += ((src->hatudan_register_tra65536) );	/* 加減速調整 */
 
 
 	// 消去判定
@@ -551,12 +551,12 @@ local void pache_sh1_danmaku_01_callback(OBJ *src)/* シルフィホルン */
 //	hatudan_system_B_gamen_gai_tama_kesu(src);/*(通常弾用)*/
 	/* 画面外の場合は弾を消す。 */
 	if (
-//	(0 < (rect_clip.bullet_clip_min.x256)-(src->cx256) ) ||
-//	(0 > (rect_clip.bullet_clip_max.x256)-(src->cx256) ) ||
-//	(0 < (rect_clip.bullet_clip_min.y256)-(src->cy256) ) ||
-//	(0 > (rect_clip.bullet_clip_max.y256)-(src->cy256) ) )	/*(画面下のみ)*/
-//	( (src->cy256) > (rect_clip.bullet_clip_max.y256) ) )	/*(画面下のみ)*/
-	( (src->cy256) > (t256(272)) ) )	/*(画面下のみ)*/
+//	(0 < (rect_clip.bullet_clip_min.x256)-(src->center.x256) ) ||
+//	(0 > (rect_clip.bullet_clip_max.x256)-(src->center.x256) ) ||
+//	(0 < (rect_clip.bullet_clip_min.y256)-(src->center.y256) ) ||
+//	(0 > (rect_clip.bullet_clip_max.y256)-(src->center.y256) ) )	/*(画面下のみ)*/
+//	( (src->center.y256) > (rect_clip.bullet_clip_max.y256) ) )	/*(画面下のみ)*/
+	( (src->center.y256) > (t256(272)) ) )	/*(画面下のみ)*/
 	{
 		src->jyumyou = JYUMYOU_NASI;
 	}
@@ -569,7 +569,7 @@ local void pache_sh1_danmaku_01_callback(OBJ *src)/* シルフィホルン */
 	-------------------------------------------------------
 ---------------------------------------------------------*/
 
-local void spell_init_30_pache_sylphy_horn_1(OBJ *src)
+local OBJ_CALL_FUNC(spell_init_30_pache_sylphy_horn_1)
 {
 	REG_09_REG1 	= (t256(1.0));// [定数1]雨の速度
 	card.danmaku_callback[1] = pache_sh1_danmaku_01_callback;/*(枠付き丸弾。交差弾。? 回り。)*/
@@ -582,7 +582,7 @@ local void spell_init_30_pache_sylphy_horn_1(OBJ *src)
 	-------------------------------------------------------
 	使用レジスタ
 ---------------------------------------------------------*/
-local void spell_create_30_pache_sylphy_horn_1(OBJ *src)
+local OBJ_CALL_FUNC(spell_create_30_pache_sylphy_horn_1)
 {
 //	sta tic int REG_08_REG0;
 	REG_08_REG0 += (REG_10_BOSS_SPELL_TIMER<<4);
@@ -630,7 +630,7 @@ local void spell_create_30_pache_sylphy_horn_1(OBJ *src)
 	交差弾。反時計回り。(0x0000)
 	交差弾。時計回り。(0x0100)
 ---------------------------------------------------------*/
-local void pache_rt1_danmaku_01_callback(OBJ *src)/* マーキュリポイズン */
+local OBJ_CALL_FUNC(pache_rt1_danmaku_01_callback)/* マーキュリポイズン */
 {
 	int aaa_jikan;
 	aaa_jikan = ((src->jyumyou) & 0x3f);/* 64で割った余り */
@@ -657,7 +657,7 @@ local void pache_rt1_danmaku_01_callback(OBJ *src)/* マーキュリポイズン */
 	-------------------------------------------------------
 ---------------------------------------------------------*/
 
-local void spell_init_31_pache_rage_tririton_1(OBJ *src)
+local OBJ_CALL_FUNC(spell_init_31_pache_rage_tririton_1)
 {
 	card.danmaku_callback[1] = pache_rt1_danmaku_01_callback;/*(枠付き丸弾。交差弾。? 回り。)*/
 //	card.danmaku_callback[2] = NULL;/*(未使用)*/
@@ -669,7 +669,7 @@ local void spell_init_31_pache_rage_tririton_1(OBJ *src)
 	-------------------------------------------------------
 	使用レジスタ
 ---------------------------------------------------------*/
-local void spell_create_31_pache_rage_tririton_1(OBJ *src)
+local OBJ_CALL_FUNC(spell_create_31_pache_rage_tririton_1)
 {
 	// 最初の発射 (64フレーム==約1秒)ばら撒く。
 	if (((64))<(REG_10_BOSS_SPELL_TIMER)) // 192== (64*3)
@@ -709,7 +709,7 @@ local void spell_create_31_pache_rage_tririton_1(OBJ *src)
 	交差弾。反時計回り。(0x0000)
 	交差弾。時計回り。(0x0100)
 ---------------------------------------------------------*/
-local void pache_mt1_danmaku_01_callback(OBJ *src)/* シルバードラゴン */
+local OBJ_CALL_FUNC(pache_mt1_danmaku_01_callback)/* シルバードラゴン */
 {
 	if ((HATUDAN_ITI_NO_JIKAN-32) < src->jyumyou)/* 発弾エフェクト後から[64]カウント未満の弾 */
 	{
@@ -745,7 +745,7 @@ local void pache_mt1_danmaku_01_callback(OBJ *src)/* シルバードラゴン */
 	-------------------------------------------------------
 ---------------------------------------------------------*/
 
-local void spell_init_32_pache_metal_fatigue(OBJ *src)
+local OBJ_CALL_FUNC(spell_init_32_pache_metal_fatigue)
 {
 	card.danmaku_callback[1] = pache_mt1_danmaku_01_callback;/*(黄色 大玉弾。)*/
 //	card.danmaku_callback[2] = NULL;/*(未使用)*/
@@ -762,7 +762,7 @@ local void spell_init_32_pache_metal_fatigue(OBJ *src)
 //	REG_0b_REG3 	弾角度(交差弾)。	弾角度(連弾)。
 ---------------------------------------------------------*/
 
-local void spell_create_32_pache_metal_fatigue(OBJ *src)
+local OBJ_CALL_FUNC(spell_create_32_pache_metal_fatigue)
 {
 	if ((SPELL_TIME_0128-1)==((REG_10_BOSS_SPELL_TIMER) ))/*(一番始め)*/
 	{
@@ -785,7 +785,7 @@ local void spell_create_32_pache_metal_fatigue(OBJ *src)
 	-------------------------------------------------------
 ---------------------------------------------------------*/
 #if (0)/*(とりあえず)*/
-local void spell_create_33_pache_agni_shine_2(OBJ *src)
+local OBJ_CALL_FUNC(spell_create_33_pache_agni_shine_2)
 {
 }
 #else
@@ -799,7 +799,7 @@ local void spell_create_33_pache_agni_shine_2(OBJ *src)
 	-------------------------------------------------------
 ---------------------------------------------------------*/
 #if (0)/*(とりあえず)*/
-local void spell_create_34_pache_sylphy_horn_2(OBJ *src)
+local OBJ_CALL_FUNC(spell_create_34_pache_sylphy_horn_2)
 {
 }
 #else
@@ -814,7 +814,7 @@ local void spell_create_34_pache_sylphy_horn_2(OBJ *src)
 	てすと
 ---------------------------------------------------------*/
 #if 0
-local void spell_init_31_pache_rage_tririton_1(OBJ *src)
+local OBJ_CALL_FUNC(spell_init_31_pache_rage_tririton_1)
 {
 	card.danmaku_callback[1] = pache_rt1_danmaku_01_callback;/*(枠付き丸弾。交差弾。? 回り。)*/
 //	card.danmaku_callback[2] = NULL;/*(未使用)*/
@@ -822,7 +822,7 @@ local void spell_init_31_pache_rage_tririton_1(OBJ *src)
 }
 #endif
 #if (1)/*(とりあえず)*/
-local void spell_create_35_pache_rage_tririton_2(OBJ *src)
+local OBJ_CALL_FUNC(spell_create_35_pache_rage_tririton_2)
 {
 	// 最初の発射 (64フレーム==約1秒)ばら撒く。
 //	if (((64))<(REG_10_BOSS_SPELL_TIMER)) // 192== (64*3)
@@ -850,7 +850,7 @@ local void spell_create_35_pache_rage_tririton_2(OBJ *src)
 		"赤大玉"
 ---------------------------------------------------------*/
 /*(とりあえず)*/
-local void spell_create_36_pache_agni_radiance(OBJ *src)
+local OBJ_CALL_FUNC(spell_create_36_pache_agni_radiance)
 {
 	if (0== (REG_10_BOSS_SPELL_TIMER & 0x01) ) /* 2回に1回なら撃つ */
 	{
@@ -885,10 +885,10 @@ local void spell_create_36_pache_agni_radiance(OBJ *src)
 		の上級版だがこちらの方が簡単。
 	-------------------------------------------------------
 	仕様:
-		LunaticはHardに比べて動きが激しい。
+		Lunatic は Hard に比べて動きが激しい。
 ---------------------------------------------------------*/
 #if (0)/*(とりあえず)*/
-local void spell_create_37_pache_bury_in_lake(OBJ *src)
+local OBJ_CALL_FUNC(spell_create_37_pache_bury_in_lake)
 {
 }
 #else
@@ -901,7 +901,7 @@ local void spell_create_37_pache_bury_in_lake(OBJ *src)
 	シルフィホルン上級の上級版。
 ---------------------------------------------------------*/
 #if (0)/*(とりあえず)*/
-local void spell_create_38_pache_green_storm(OBJ *src)
+local OBJ_CALL_FUNC(spell_create_38_pache_green_storm)
 {
 }
 #else
@@ -918,14 +918,14 @@ local void spell_create_38_pache_green_storm(OBJ *src)
 		"七方向大玉弾。自機狙い。"
 ---------------------------------------------------------*/
 #if 0
-local void spell_init_31_pache_rage_tririton_1(OBJ *src)
+local OBJ_CALL_FUNC(spell_init_31_pache_rage_tririton_1)
 {
 	card.danmaku_callback[1] = pache_rt1_danmaku_01_callback;/*(枠付き丸弾。交差弾。? 回り。)*/
 //	card.danmaku_callback[2] = NULL;/*(未使用)*/
 //	card.danmaku_callback[3] = NULL;/*(未使用)*/
 }
 #endif
-local void spell_create_39_pache_tririton_shake(OBJ *src)
+local OBJ_CALL_FUNC(spell_create_39_pache_tririton_shake)
 {
 //	count_up_limit_NUM(REG_NUM_08_REG0, 192);// 	/*	繰り返しカウンタ。 */
 	// 最初の発射 (64フレーム==約1秒)ばら撒く。
@@ -944,8 +944,8 @@ local void spell_create_39_pache_tririton_shake(OBJ *src)
 	if (0== (REG_10_BOSS_SPELL_TIMER & 0xf) ) /* 16回に1回なら撃つ */
 	{
 		#if 1
-	//	REG_02_DEST_X	= ((src->cx256));
-	//	REG_03_DEST_Y	= ((src->cy256));
+	//	REG_02_DEST_X	= ((src->center.x256));
+	//	REG_03_DEST_Y	= ((src->center.y256));
 		calculate_jikinerai();/* 自機狙い角作成 */
 	//	REG_0a_REG2 = HATSUDAN_03_angle65536;/* 自機狙い角 */
 		#endif
@@ -977,7 +977,7 @@ local void spell_create_39_pache_tririton_shake(OBJ *src)
 	交差弾。反時計回り。(0x0000)
 	交差弾。時計回り。(0x0100)
 ---------------------------------------------------------*/
-local void pache_mt2_danmaku_01_callback(OBJ *src)/* シルバードラゴン */
+local OBJ_CALL_FUNC(pache_mt2_danmaku_01_callback)/* シルバードラゴン */
 {
 	if ((HATUDAN_ITI_NO_JIKAN-32) < src->jyumyou)/* 発弾エフェクト後から[64]カウント未満の弾 */
 	{
@@ -1019,7 +1019,7 @@ local void pache_mt2_danmaku_01_callback(OBJ *src)/* シルバードラゴン */
 	-------------------------------------------------------
 ---------------------------------------------------------*/
 
-local void spell_init_3a_pache_silver_dragon(OBJ *src)
+local OBJ_CALL_FUNC(spell_init_3a_pache_silver_dragon)
 {
 	card.danmaku_callback[1] = pache_mt2_danmaku_01_callback;/*(白弾。)*/
 //	card.danmaku_callback[2] = NULL;/*(未使用)*/
@@ -1036,7 +1036,7 @@ local void spell_init_3a_pache_silver_dragon(OBJ *src)
 //	REG_0b_REG3 	弾角度(交差弾)。	弾角度(連弾)。
 ---------------------------------------------------------*/
 
-local void spell_create_3a_pache_silver_dragon(OBJ *src)
+local OBJ_CALL_FUNC(spell_create_3a_pache_silver_dragon)
 {
 	if (30==REG_10_BOSS_SPELL_TIMER)
 	{
@@ -1071,20 +1071,20 @@ local void spell_create_3a_pache_silver_dragon(OBJ *src)
 
 ---------------------------------------------------------*/
 #if 0
-local void spell_init_31_pache_rage_tririton_1(OBJ *src)
+local OBJ_CALL_FUNC(spell_init_31_pache_rage_tririton_1)
 {
 	card.danmaku_callback[1] = pache_rt1_danmaku_01_callback;/*(枠付き丸弾。交差弾。? 回り。)*/
 	card.danmaku_callback[2] = NULL;/*(未使用)*/
 //	card.danmaku_callback[3] = NULL;/*(未使用)*/
 }
 #endif
-local void spell_create_3b_pache_lava_cromlech(OBJ *src)
+local OBJ_CALL_FUNC(spell_create_3b_pache_lava_cromlech)
 {
 //	count_up_limit_NUM(REG_NUM_08_REG0, 192);// 	/*	繰り返しカウンタ。 */
 	// 最初の発射 (64フレーム==約1秒)ばら撒く。
 	if (((64))<(REG_10_BOSS_SPELL_TIMER)) // 192== (64*3)
 	{
-		HATSUDAN_01_speed256			= (t256(2.0) ); 					/* 弾速 */
+		HATSUDAN_01_speed256			= (t256(2.00) ); 					/* 弾速 */
 		HATSUDAN_02_speed_offset		= (t256(3));/*(テスト)*/
 		HATSUDAN_03_angle65536			= (ra_nd() &(0x7fff)) + (65536/4)+(65536/2);/*(下半分)*/
 		HATSUDAN_04_tama_spec			= (DANMAKU_LAYER_01)|(TAMA_SPEC_8000_NON_TILT);/* (r33-)非傾き弾 */
@@ -1112,7 +1112,7 @@ local void spell_create_3b_pache_lava_cromlech(OBJ *src)
 	-------------------------------------------------------
 ---------------------------------------------------------*/
 #if (0)/*(未作成)*/
-local void spell_create_3c_pache_forest_blaze(OBJ *src)
+local OBJ_CALL_FUNC(spell_create_3c_pache_forest_blaze)
 {
 }
 #else
@@ -1132,7 +1132,7 @@ local void spell_create_3c_pache_forest_blaze(OBJ *src)
 	REG_08_REG0 	角度。
 	REG_09_REG1 	角度保存用。
 ---------------------------------------------------------*/
-local void spell_create_3d_pache_water_elf(OBJ *src)
+local OBJ_CALL_FUNC(spell_create_3d_pache_water_elf)
 {
 	/* 水符 自機狙い 24方向全方位、水色弾 BULLET_MARU10_04_MIZU_IRO */
 	/* 木符 自機狙い 20方向全方位、緑色弾 BULLET_MARU10_05_MIDORI */
@@ -1143,8 +1143,8 @@ local void spell_create_3d_pache_water_elf(OBJ *src)
 	{
 	//	int REG_09_REG1;
 		/* 自機狙い 角を作成 */
-		REG_02_DEST_X	= ((src->cx256));
-		REG_03_DEST_Y	= ((src->cy256));
+		REG_02_DEST_X	= ((src->center.x256));
+		REG_03_DEST_Y	= ((src->center.y256));
 		calculate_jikinerai();
 		REG_09_REG1 = HATSUDAN_03_angle65536;/* hatudan_system_regist_katayori_n_way()は角度破壊するので、まず保存。 */
 		REG_08_REG0 += (REG_09_REG1);
@@ -1199,7 +1199,7 @@ local void spell_create_3d_pache_water_elf(OBJ *src)
 	交差弾。反時計回り。(0x0000)
 	交差弾。時計回り。(0x0100)
 ---------------------------------------------------------*/
-local void pache_mp1_danmaku_01_callback(OBJ *src)/* マーキュリポイズン */
+local OBJ_CALL_FUNC(pache_mp1_danmaku_01_callback)/* マーキュリポイズン */
 {
 //	if (cnt < 80)/* 80未満は減速 */
 	if ((HATUDAN_ITI_NO_JIKAN-64) < src->jyumyou)/* 発弾エフェクト後から[64]カウント未満の弾 */
@@ -1267,7 +1267,7 @@ local void pache_mp1_danmaku_01_callback(OBJ *src)/* マーキュリポイズン */
 	-------------------------------------------------------
 ---------------------------------------------------------*/
 
-local void spell_init_3e_pache_mercury_poison(OBJ *src)
+local OBJ_CALL_FUNC(spell_init_3e_pache_mercury_poison)
 {
 	card.danmaku_callback[1] = pache_mp1_danmaku_01_callback;/*(枠付き丸弾。交差弾。反時計回り/時計回り。)*/
 //	card.danmaku_callback[2] = NULL;/*(未使用)*/
@@ -1286,7 +1286,7 @@ local void spell_init_3e_pache_mercury_poison(OBJ *src)
 ---------------------------------------------------------*/
 #define MERCURY_POISON_KANKAKU_030 (30)
 #define MERCURY_POISON_KANKAKU_015 (15)
-local void spell_create_3e_pache_mercury_poison(OBJ *src)
+local OBJ_CALL_FUNC(spell_create_3e_pache_mercury_poison)
 {
 	REG_08_REG0--;
 	if (0>REG_08_REG0)
@@ -1349,7 +1349,7 @@ local void spell_create_3e_pache_mercury_poison(OBJ *src)
 	[初期化セクション]
 	-------------------------------------------------------
 ---------------------------------------------------------*/
-local void spell_init_3f_pache_emerald_megalith(OBJ *src)
+local OBJ_CALL_FUNC(spell_init_3f_pache_emerald_megalith)
 {
 	/* easyは1方向, hardは1方向, lunatic は3方向 */
 	REG_0b_REG3 = (((3==REG_0f_GAME_DIFFICULTY)?3:1));
@@ -1363,7 +1363,7 @@ local void spell_init_3f_pache_emerald_megalith(OBJ *src)
 //	REG_0a_REG2 	z
 	REG_0b_REG3 	難易度別定数。
 ---------------------------------------------------------*/
-local void spell_create_3f_pache_emerald_megalith(OBJ *src)
+local OBJ_CALL_FUNC(spell_create_3f_pache_emerald_megalith)
 {
 	REG_08_REG0 += (REG_10_BOSS_SPELL_TIMER<<4);
 	// ランダム緑枠弾

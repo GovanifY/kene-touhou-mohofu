@@ -64,6 +64,7 @@ extern "C" {
  * signal handlers for some commonly ignored fatal signals (like SIGSEGV)
  */
 extern int /*SD LCALL*/ SDL_Init(u32 flags);
+extern /*int*/void /*SD LCALL*/ PSPL_Init(void/*u32 flags*/);
 
 /* This function initializes specific SDL subsystems */
 //îpé~extern int /*SD LCALL*/ SDL_InitSubSystem(u32 flags);

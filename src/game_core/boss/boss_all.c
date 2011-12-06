@@ -1,7 +1,7 @@
 
 #include "boss.h"
 
-extern void boss_move_00_card_settei_seisei(OBJ *src);
+extern OBJ_CALL_FUNC(boss_move_00_card_settei_seisei);
 /*---------------------------------------------------------
 	東方模倣風 ～ Toho Imitation Style.
 	http://code.google.com/p/kene-touhou-mohofu/
@@ -15,7 +15,7 @@ extern void boss_move_00_card_settei_seisei(OBJ *src);
 	ボス行動、第 1形態
 ---------------------------------------------------------*/
 
-global void boss_move_10_mima_keitai(OBJ *src)
+global OBJ_CALL_FUNC(boss_move_10_mima_keitai)
 {
 	static int mima_zako_tuika_timer = 0;	/* 雑魚、追加タイマー。追加間隔をあまり短くしない。 */
 	if (0 < mima_zako_tuika_timer)
@@ -70,11 +70,11 @@ global void boss_move_10_mima_keitai(OBJ *src)
 		{
 			/* 移動座標を決める */
 			OBJ *zzz_player;
-			zzz_player = &obj99[OBJ_HEAD_02_0x0900_KOTEI+FIX_OBJ_00_PLAYER];
-		//	src->BOSS_DATA_00_target_x256 = (zzz_player->cx256);
-		//	src->BOSS_DATA_01_target_y256 = (zzz_player->cy256);
-			REG_02_DEST_X	= (zzz_player->cx256);/*(t256()形式)*/
-			REG_03_DEST_Y	= (zzz_player->cy256);/*(t256()形式)*/
+			zzz_player = &obj99[OBJ_HEAD_03_0x0a00_KOTEI+FIX_OBJ_00_PLAYER];
+		//	src->BOSS_DATA_00_target_x256 = (zzz_player->center.x256);
+		//	src->BOSS_DATA_01_target_y256 = (zzz_player->center.y256);
+			REG_02_DEST_X	= (zzz_player->center.x256);/*(t256()形式)*/
+			REG_03_DEST_Y	= (zzz_player->center.y256);/*(t256()形式)*/
 			boss_set_new_position(src);/*(誘導移動座標を設定)*/
 			#if 1
 			/* スペルを決める */
@@ -99,7 +99,7 @@ global void boss_move_10_mima_keitai(OBJ *src)
 	-------------------------------------------------------
 ---------------------------------------------------------*/
 
-static void kaguya_common_shot_check(OBJ *src)
+static OBJ_CALL_FUNC(kaguya_common_shot_check)
 {
 	/* 移動方向を決める */
 	src->BOSS_DATA_05_boss_base_state777++;
@@ -121,7 +121,7 @@ static void kaguya_common_shot_check(OBJ *src)
 	REG_0e_REG6 	目標座標 x256
 ---------------------------------------------------------*/
 
-global void boss_move_12_kaguya_funya_idou(OBJ *src)
+global OBJ_CALL_FUNC(boss_move_12_kaguya_funya_idou)
 {
 	/* カードを撃ってない場合に追加 */
 	if (SPELL_00==card.spell_used_number)	/* スペル生成終了ならカード生成 */
@@ -160,7 +160,7 @@ global void boss_move_12_kaguya_funya_idou(OBJ *src)
 	REG_08_REG0 	カウンタ。()
 ---------------------------------------------------------*/
 
-global void boss_move_11_kaguya_yureru(OBJ *src)
+global OBJ_CALL_FUNC(boss_move_11_kaguya_yureru)
 {
 	/* カードを撃ってない場合に追加 */
 	if (SPELL_00==card.spell_used_number)	/* スペル生成終了ならカード生成 */
@@ -173,7 +173,7 @@ global void boss_move_11_kaguya_yureru(OBJ *src)
 		int sin_value_t256; 		//	sin_value_t256 = 0;
 		int cos_value_t256; 		//	cos_value_t256 = 0;
 		int256_sincos1024( ((((REG_08_REG0))/*&(1024-1)*/)), &sin_value_t256, &cos_value_t256);
-		src->cy256 = (t256(25)+( ((sin_value_t256))<<2));
+		src->center.y256 = (t256(25)+( ((sin_value_t256))<<2));
 	}
 //
 }
@@ -225,7 +225,7 @@ enum
 	攻撃タイプ
 ---------------------------------------------------------*/
 
-static void aya_kougeki_all(OBJ *src)
+static OBJ_CALL_FUNC(aya_kougeki_all)
 {
 	//(r35でカードの場合のみ省略可能)	set_REG_DEST_XY(src);	/* 弾源x256 y256 中心から発弾。 */
 	set_REG_DEST_XY(src);	/* 弾源x256 y256 中心から発弾。 */
@@ -316,7 +316,7 @@ static void aya_kougeki_all(OBJ *src)
 //#define BOSS_XP256		(t256(GAME_WIDTH/2))	/* 中心座標なので */
 #define BOSS_XP256			(t256(GAME_X_OFFSET)+t256(GAME_320_WIDTH/2))	/* 中心座標なので */
 
-global void boss_move_13_aya_taifu(OBJ *src)
+global OBJ_CALL_FUNC(boss_move_13_aya_taifu)
 {
 	const u8 sst[8] = { 0, 0, 0, 1, 1, 1, 2, 2 }; /* (1/3)の確率で分岐する。 */
 	REG_08_REG0++;
@@ -338,7 +338,7 @@ global void boss_move_13_aya_taifu(OBJ *src)
 	//	ca se SS02: /* 不定:初期位置へ戻る->SS03へ */
 	//	if (/*150*/200 > src->BOSS_DATA_04_toutatu_wariai256 )	/* 時間で */
 		/*(攻撃条件[A])*/
-		if (t256(31.0) > src->cy256)
+		if (t256(31.0) > src->center.y256)
 		{
 //m 		src->BOSS_DATA_04_toutatu_wariai256 = t256(1.00);
 			REG_08_REG0 = (SS_TAN_I_JIKAN*2);
@@ -364,10 +364,10 @@ global void boss_move_13_aya_taifu(OBJ *src)
 			if (0 == REG_0a_REG2)
 			{
 				OBJ *zzz_player;
-				zzz_player = &obj99[OBJ_HEAD_02_0x0900_KOTEI+FIX_OBJ_00_PLAYER];
+				zzz_player = &obj99[OBJ_HEAD_03_0x0a00_KOTEI+FIX_OBJ_00_PLAYER];
 			//	src->BOSS_DATA_00_target_x256 = BOSS_XP256; /* 真中へワープ */
-				src->BOSS_DATA_00_target_x256 = zzz_player->cx256;
-				src->BOSS_DATA_01_target_y256 = zzz_player->cy256;
+				src->BOSS_DATA_00_target_x256 = zzz_player->center.x256;
+				src->BOSS_DATA_01_target_y256 = zzz_player->center.y256;
 			//	#define KYORI_AAA (t256(128.0)+((cg_game_di fficulty)<<(8+4/*5*/)))
 				#define KYORI_AAA (t256(128.0)+((3)<<(8+4/*5*/)))
 				if (src->BOSS_DATA_01_target_y256 > (signed)KYORI_AAA)
@@ -380,7 +380,7 @@ global void boss_move_13_aya_taifu(OBJ *src)
 			if (1 == REG_0a_REG2)
 			{
 				src->BOSS_DATA_00_target_x256 = t256(GAME_X_OFFSET); /* */
-			//	src->cy256 += t256(6.0);/*fps_factor*/	/* よくわかんない(???) */
+			//	src->center.y256 += t256(6.0);/*fps_factor*/	/* よくわかんない(???) */
 				src->BOSS_DATA_01_target_y256 += t256(6.0);/*fps_factor*/	/* よくわかんない(???) */
 			}
 			else
@@ -388,7 +388,7 @@ global void boss_move_13_aya_taifu(OBJ *src)
 			{
 			//	src->BOSS_DATA_00_target_x256 = t256((GAME_X_OFFSET+GAME_320_WIDTH-AYA_OBJ_WIDTH50)); /* */
 				src->BOSS_DATA_00_target_x256 = t256((GAME_X_OFFSET+GAME_320_WIDTH)); /* */
-			//	src->cy256 += t256(6.0);/*fps_factor*/	/* よくわかんない(???) */
+			//	src->center.y256 += t256(6.0);/*fps_factor*/	/* よくわかんない(???) */
 				src->BOSS_DATA_01_target_y256 += t256(6.0);/*fps_factor*/	/* よくわかんない(???) */
 			}
 		}
@@ -498,7 +498,7 @@ global void boss_move_13_aya_taifu(OBJ *src)
 	第10形態: 最終形態(その2)
 ---------------------------------------------------------*/
 
-global void boss_move_16_sakuya_nazo_keitai(OBJ *src)
+global OBJ_CALL_FUNC(boss_move_16_sakuya_nazo_keitai)
 {
 	{
 		if (src->color32 > 0xf9000000)	/*	if (src->alpha > 0xf9) */	/* (src->alpha>0xff) */
@@ -510,15 +510,15 @@ global void boss_move_16_sakuya_nazo_keitai(OBJ *src)
 			src->color32 += 0x05000000; /*	src->alpha += 0x05;*/
 		}
 		#if (0)//
-		src->cx256 -= ((si n1024((src->tmp_angleCCW1024))*(t256(0.03)))>>8);/*fps_factor*/		/* CCWの場合 */
-		src->cy256 -= ((co s1024((src->tmp_angleCCW1024))*(t256(0.03)))>>8);/*fps_factor*/
+		src->center.x256 -= ((si n1024((src->tmp_angleCCW1024))*(t256(0.03)))>>8);/*fps_factor*/		/* CCWの場合 */
+		src->center.y256 -= ((co s1024((src->tmp_angleCCW1024))*(t256(0.03)))>>8);/*fps_factor*/
 		#else
 		{
 			int sin_value_t256; 	//	sin_value_t256 = 0;
 			int cos_value_t256; 	//	cos_value_t256 = 0;
 			int256_sincos1024( (src->tmp_angleCCW1024), &sin_value_t256, &cos_value_t256);
-			src->cx256 -= ((sin_value_t256*(t256(0.03)))>>8);/*fps_factor*/
-			src->cy256 -= ((cos_value_t256*(t256(0.03)))>>8);/*fps_factor*/
+			src->center.x256 -= ((sin_value_t256*(t256(0.03)))>>8);/*fps_factor*/
+			src->center.y256 -= ((cos_value_t256*(t256(0.03)))>>8);/*fps_factor*/
 		}
 		#endif
 	}
@@ -537,8 +537,8 @@ global void boss_move_16_sakuya_nazo_keitai(OBJ *src)
 	-------------------------------------------------------
 	REG_0e_REG6 	[発弾連絡レジスタ]
 		0:	なし。
-		1:	extern void bullet_create_sakuya_ ryoute_knife(OBJ *src); 咲夜 両手ナイフカード
-		2:	extern void bullet_create_sakuya_ kurukuru(OBJ *src);     咲夜 くるくるナイフカード
+		1:	extern OBJ_CALL_FUNC(bullet_create_sakuya_ ryoute_knife); 咲夜 両手ナイフカード
+		2:	extern OBJ_CALL_FUNC(bullet_create_sakuya_ kurukuru);     咲夜 くるくるナイフカード
 	-------------------------------------------------------
 ---------------------------------------------------------*/
 /*
@@ -558,7 +558,7 @@ global void boss_move_16_sakuya_nazo_keitai(OBJ *src)
 	[G] 待機時間作成し、戻る。
 */
 
-global void boss_move_15_sakuya_festival_knife(OBJ *src)
+global OBJ_CALL_FUNC(boss_move_15_sakuya_festival_knife)
 {
 	REG_08_REG0++;
 	if (80 > REG_08_REG0) /* [A] 何もしない(待機時間) */
@@ -569,8 +569,8 @@ global void boss_move_15_sakuya_festival_knife(OBJ *src)
 	if (81 > REG_08_REG0) /* [B] 待機時間が終わったら移動準備 */
 	{
 //++		pd->bo ssmode = B00_NONE/*B01_BA TTLE*/;
-		//(r35でカードの場合のみ省略可能)	REG_02_DEST_X	= ((src->cx256));
-		//(r35でカードの場合のみ省略可能)	REG_03_DEST_Y	= ((src->cy256));
+		//(r35でカードの場合のみ省略可能)	REG_02_DEST_X	= ((src->center.x256));
+		//(r35でカードの場合のみ省略可能)	REG_03_DEST_Y	= ((src->center.y256));
 		//(r35でカードの場合のみ省略可能)	set_REG_DEST_XY(src);	/* 弾源x256 y256 中心から発弾。 */
 			REG_00_SRC_X	= (t256(GAME_X_OFFSET+(GAME_320_WIDTH/2))); 		/* 弾源x256 */
 			REG_01_SRC_Y	= (t256(30));					/* 弾源y256 */
@@ -580,9 +580,9 @@ global void boss_move_15_sakuya_festival_knife(OBJ *src)
 	else
 	if (1024 > REG_08_REG0) /* [C] 真ん中に来るまで移動 */
 	{
-		if ( (src->cx256 < t256(GAME_X_OFFSET+(GAME_320_WIDTH/2)+20) ) &&
-			 (src->cx256 > t256(GAME_X_OFFSET+(GAME_320_WIDTH/2)-20) ) &&
-			 (src->cy256 < t256(50.0)) ) /* 真ん中に来たら */
+		if ( (src->center.x256 < t256(GAME_X_OFFSET+(GAME_320_WIDTH/2)+20) ) &&
+			 (src->center.x256 > t256(GAME_X_OFFSET+(GAME_320_WIDTH/2)-20) ) &&
+			 (src->center.y256 < t256(50.0)) ) /* 真ん中に来たら */
 		{
 			REG_08_REG0 = (1024+1024-1)-(20);// REG_08_REG0++;/* = SG02*/
 			REG_0c_REG4 = 0;
@@ -591,17 +591,17 @@ global void boss_move_15_sakuya_festival_knife(OBJ *src)
 		else
 		{
 			#if (0)//
-			src->cx256 += ((si n1024((src->BOSS_DATA_06_sakuya_data_move_angle1024))*(t256(3.0)))>>8);/*fps_factor*/	/* CCWの場合 */
-			src->cx256 += ((si n1024((src->BOSS_DATA_06_sakuya_data_move_angle1024))*(t256(3.0)))>>8);/*fps_factor*/	/* CCWの場合 */
-			src->cy256 += ((co s1024((src->BOSS_DATA_06_sakuya_data_move_angle1024))*(t256(3.0)))>>8);/*fps_factor*/
-			src->cy256 += ((co s1024((src->BOSS_DATA_06_sakuya_data_move_angle1024))*(t256(3.0)))>>8);/*fps_factor*/
+			src->center.x256 += ((si n1024((src->BOSS_DATA_06_sakuya_data_move_angle1024))*(t256(3.0)))>>8);/*fps_factor*/	/* CCWの場合 */
+			src->center.x256 += ((si n1024((src->BOSS_DATA_06_sakuya_data_move_angle1024))*(t256(3.0)))>>8);/*fps_factor*/	/* CCWの場合 */
+			src->center.y256 += ((co s1024((src->BOSS_DATA_06_sakuya_data_move_angle1024))*(t256(3.0)))>>8);/*fps_factor*/
+			src->center.y256 += ((co s1024((src->BOSS_DATA_06_sakuya_data_move_angle1024))*(t256(3.0)))>>8);/*fps_factor*/
 			#else
 			{
 				int sin_value_t256; 		//	sin_value_t256 = 0;
 				int cos_value_t256; 		//	cos_value_t256 = 0;
 				int256_sincos1024( (src->BOSS_DATA_06_sakuya_data_move_angle1024), &sin_value_t256, &cos_value_t256);
-				src->cx256 += ((sin_value_t256*(t256(3.0)))>>8);/*fps_factor*/
-				src->cy256 += ((cos_value_t256*(t256(3.0)))>>8);/*fps_factor*/
+				src->center.x256 += ((sin_value_t256*(t256(3.0)))>>8);/*fps_factor*/
+				src->center.y256 += ((cos_value_t256*(t256(3.0)))>>8);/*fps_factor*/
 			}
 			#endif
 		}
@@ -618,7 +618,7 @@ global void boss_move_15_sakuya_festival_knife(OBJ *src)
 			//	[SAKUYA_ANIME_12_HATUDAN_START]
 			//	[SAKUYA_ANIME_15_HATUDAN_END]
 			REG_0e_REG6=(1);/*[咲夜 両手ナイフカード]*/
-			if (src->cy256 > t256(150))
+			if (src->center.y256 > t256(150))
 		//	{	src->BOSS_DATA_06_sakuya_data_move_angle1024 = cv1024r(   210) + (((ra_nd()&(4096-1))*21)>>8) /*(ra_nd()%(deg_360_to_512(120)))*/;} 	/* CWの場合 */
 		//	{	src->BOSS_DATA_06_sakuya_data_move_angle1024 = cv1024r(360-210) + (((ra_nd()&(4096-1))*21)>>8) /*(ra_nd()%(deg_360_to_512(120)))*/;}	/* CCWの場合 */
 			{	src->BOSS_DATA_06_sakuya_data_move_angle1024 = cv1024r(360-210) + (((ra_nd()&(4096-1))*21)>>8) /*(ra_nd()%(deg_360_to_512(120)))*/;}
@@ -634,15 +634,15 @@ global void boss_move_15_sakuya_festival_knife(OBJ *src)
 	if ((1024+1024 +1+40) > REG_08_REG0) /* [F]移動 */
 	{
 		#if (0)//
-		src->cx256 += ((si n1024((src->BOSS_DATA_06_sakuya_data_move_angle1024))*(t256(3.5)))>>8);/*fps_factor*/	/* CCWの場合 */
-		src->cy256 += ((co s1024((src->BOSS_DATA_06_sakuya_data_move_angle1024))*(t256(3.5)))>>8);/*fps_factor*/
+		src->center.x256 += ((si n1024((src->BOSS_DATA_06_sakuya_data_move_angle1024))*(t256(3.5)))>>8);/*fps_factor*/	/* CCWの場合 */
+		src->center.y256 += ((co s1024((src->BOSS_DATA_06_sakuya_data_move_angle1024))*(t256(3.5)))>>8);/*fps_factor*/
 		#else
 		{
 			int sin_value_t256; 	//	sin_value_t256 = 0;
 			int cos_value_t256; 	//	cos_value_t256 = 0;
 			int256_sincos1024( (src->BOSS_DATA_06_sakuya_data_move_angle1024), &sin_value_t256, &cos_value_t256);
-			src->cx256 += ((sin_value_t256*(t256(3.5)))>>8);/*fps_factor*/
-			src->cy256 += ((cos_value_t256*(t256(3.5)))>>8);/*fps_factor*/
+			src->center.x256 += ((sin_value_t256*(t256(3.5)))>>8);/*fps_factor*/
+			src->center.y256 += ((cos_value_t256*(t256(3.5)))>>8);/*fps_factor*/
 		}
 		#endif
 	}
@@ -652,10 +652,10 @@ global void boss_move_15_sakuya_festival_knife(OBJ *src)
 	}
 	//
 	OBJ *zzz_player;
-	zzz_player = &obj99[OBJ_HEAD_02_0x0900_KOTEI+FIX_OBJ_00_PLAYER];
+	zzz_player = &obj99[OBJ_HEAD_03_0x0a00_KOTEI+FIX_OBJ_00_PLAYER];
 	#if 1/*Gu(中心座標)*/
-	if ((zzz_player->cx256 < src->cx256 + t256(25)) &&	/* ???????????? */
-		(zzz_player->cx256 > src->cx256 - t256(25)))
+	if ((zzz_player->center.x256 < src->center.x256 + t256(25)) &&	/* ???????????? */
+		(zzz_player->center.x256 > src->center.x256 - t256(25)))
 	#endif
 	{
 		REG_0c_REG4++;/*fps_factor*/
@@ -703,14 +703,16 @@ global void boss_move_15_sakuya_festival_knife(OBJ *src)
 
 250 	反対側へワープ
 */
-global void boss_move_14_sakuya_miss_direction(OBJ *src)
+/*(ゲーム画面のx座標中心位置)==(左端のパネル部分)+(ゲーム領域画面の半分)*/
+#define SAKUYA_POINT_X_MID			(t256(GAME_X_OFFSET+(GAME_320_WIDTH/2)))
+
+global OBJ_CALL_FUNC(boss_move_14_sakuya_miss_direction)
 {
 	if (/*(256-64)*/(255/*192+64*/) == REG_10_BOSS_SPELL_TIMER) /* 反転移動方向セット */
 	{
 		/* 第二形態では使って無いから利用(共用)する */
 		#define sakuya_data_sayuu_mode BOSS_DATA_07_sakuya_data_common_wait256
 		{	/* 咲夜さんの誘導ポイント座標 */
-			#define SAKUYA_POINT_X_MID			(t256(GAME_X_OFFSET+(GAME_320_WIDTH/2)))
 			src->sakuya_data_sayuu_mode ^= (2-1);/* 反転 */
 			if (/*0==*/src->sakuya_data_sayuu_mode & (2-1))
 					{	src->BOSS_DATA_00_target_x256 = SAKUYA_POINT_X_MID-(t256(128)); }//96==128*0.75
@@ -729,7 +731,7 @@ global void boss_move_14_sakuya_miss_direction(OBJ *src)
 //	if (/*(256-256)*/(59)/*((251+64)-256)*/ == REG_10_BOSS_SPELL_TIMER) /* 真中へワープ */
 	if (/*(256-256)*/(59)/*((251+64)-256)*/ == REG_10_BOSS_SPELL_TIMER) /* 真中へワープ */
 	{
-		src->BOSS_DATA_00_target_x256 = src->cx256 = t256(GAME_X_OFFSET+(GAME_320_WIDTH/2)); /* 真中へワープ */
+		src->BOSS_DATA_00_target_x256 = src->center.x256 = SAKUYA_POINT_X_MID; /* 真中へワープ */
 		#if (1)
 		/* 移動座標を決める */
 	//	src->BOSS_DATA_04_toutatu_wariai256 = t256(1.0);	/* 攻撃アニメーション */
@@ -739,13 +741,17 @@ global void boss_move_14_sakuya_miss_direction(OBJ *src)
 		#endif
 	}
 	else
-	if (/*(256-256)*/(58)/*((250+64)-256)*/ == REG_10_BOSS_SPELL_TIMER) /* 真中へワープ */
+	if (/*(256-256)*/(58)/*((250+64)-256)*/ == REG_10_BOSS_SPELL_TIMER) /* 反対側へワープ */
 //	if (/*(256-256)*/(0) == REG_10_BOSS_SPELL_TIMER) /* 真中へワープ */
 //	if (/*(256-192)*/(64) == REG_10_BOSS_SPELL_TIMER) /* 真中へワープ */
 //	if (/*(256-180)*/(76) == REG_10_BOSS_SPELL_TIMER) /* 真中へワープ */
 	{
-	//	src->BOSS_DATA_00_target_x256 = src->cx256 = t256(GAME_X_OFFSET) + ( t256(GAME_320_WIDTH) - ( (src->cx256) - t256(GAME_X_OFFSET) ) );	/* 反対側へワープ */
-		src->BOSS_DATA_00_target_x256 = src->cx256 = t256(GAME_X_OFFSET) + t256(GAME_320_WIDTH) - (src->cx256) + t256(GAME_X_OFFSET);			/* 反対側へワープ */
+	/*
+		 反対側の座標==(左端のパネル部分)+(ゲーム領域画面)-(現在の座標-(左端のパネル部分));
+		 反対側の座標==(左端のパネル部分)+(左端のパネル部分)+(ゲーム領域画面)-(現在の座標));
+	*/
+	//	src->BOSS_DATA_00_target_x256 = src->center.x256 = t256(GAME_X_OFFSET) + ( t256(GAME_320_WIDTH) - ( (src->center.x256) - t256(GAME_X_OFFSET) ) );	/* 反対側へワープ */
+		src->BOSS_DATA_00_target_x256 = src->center.x256 = t256((GAME_X_OFFSET+GAME_X_OFFSET+GAME_320_WIDTH)) - (src->center.x256); 			/* 反対側へワープ */
 		#if (1)
 		/* 移動座標を決める */
 	//	src->BOSS_DATA_04_toutatu_wariai256 = t256(1.0);	/* 攻撃アニメーション */

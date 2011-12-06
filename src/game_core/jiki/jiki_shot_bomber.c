@@ -11,7 +11,7 @@
 ---------------------------------------------------------*/
 
 #include "jiki_local.h"
-#define SP_GROUP_SHOT_SPECIAL				(0x0080)/*0x0100*/		/* 霊夢の回転ショット */	/* kodomo_hlaserの判別 */
+#define OBJ_Z80_SHOT_SPECIAL				(0x8000)/*0x0100*/		/* 霊夢の回転ショット / kodomo_hlaserの判別 */
 
 /* 霊夢 A (座布団巫女) / 魔理沙 A (森魔法使い) 用の誘導目標座標 */
 #define PL_SHOT_DATA_target_x256		user_data00
@@ -157,7 +157,7 @@ erase_shot_type:
 /* static */global void player_weapon_collision_check(OBJ *shot, int erase_shot_type)
 {
 //	OBJ *shot;	/* 自弾 */
-	OBJ *tt; 	/* 一時使用のテンポラリ(敵スプライト、または、敵弾スプライト) */
+	OBJ *tt;	/* 一時使用のテンポラリ(敵スプライト、または、敵弾スプライト) */
 	#define teki_obj		tt
 	#define tekidan_obj 	tt
 	/* 敵弾にあたった場合に敵弾を消す(ボム系のみ) */
@@ -168,13 +168,13 @@ erase_shot_type:
 		if (NULL != tekidan_obj)		/* 敵弾に当たったら */
 		{
 			tekidan_obj->jyumyou = JYUMYOU_NASI;	/* 敵弾が消滅 */
-			voice_play(VOICE02_MENU_SELECT, TRACK01_EXPLODE);
+			voice_play(VOICE02_MENU_SELECT, /*TRACK03_IVENT_DAN*//*(???)*/TRACK05_ZAKO_DEATH /*TRA CK01_PICHUN*/);
 		}
 	}
 	/* 敵にあたった場合に敵を消す */
 	{
 		/* 自弾にあたったのは敵自体なのか調べる． */
-		teki_obj = obj_collision_check_01_teki(shot);//, (OBJ_Z02_TEKI));
+		teki_obj = obj_collision_check_A01_A02_teki(shot);//, (OBJ_Z02_TEKI));
 		if (NULL != teki_obj)			/* 敵自体に当たったら */
 		{
 			if (NULL != (teki_obj->callback_hit_teki))	/*	 */
@@ -207,9 +207,9 @@ erase_shot_type:
 	画面外なら消去。
 ---------------------------------------------------------*/
 
-static void check_collision_gamengai(OBJ *src)
+static OBJ_CALL_FUNC(check_collision_gamengai)
 {
-	if (((src->cy256)+(t256(-10))) < t256(0))/*(画面外に出たら)*/
+	if (((src->center.y256)+(t256(-10))) < t256(0))/*(画面外に出たら)*/
 	{
 		src->jyumyou = JYUMYOU_NASI;/*(ショットおしまい)*/
 	}
@@ -223,29 +223,29 @@ static void check_collision_gamengai(OBJ *src)
 	その他汎用、ショット弾の移動
 ---------------------------------------------------------*/
 
-static void other_move_object(OBJ *src)
+static OBJ_CALL_FUNC(other_move_object)
 {
-	src->cx256 += src->vx256;		/*fps_factor*/
-	src->cy256 += src->vy256;		/*fps_factor*/
+	src->center.x256 += src->math_vector.x256;		/*fps_factor*/
+	src->center.y256 += src->math_vector.y256;		/*fps_factor*/
 	check_collision_gamengai(src);
 }
 /*---------------------------------------------------------
 	レミリア専用、ショット弾の移動
 ---------------------------------------------------------*/
 
-static void remilia_move_object(OBJ *src)
+static OBJ_CALL_FUNC(remilia_move_object)
 {
 //	if (REMILIA==(cg_ga me_select_player))	/* レミリアはゆらゆら */
 	{	u16 rand_int;
 		rand_int = ra_nd(); 	/*(リプレイ時に再現性が必要)*/
 	//	rand_int = vfpu_rand_8888(0, 255);
-		src->cx256 -= (rand_int&0x0200);/*0x0100*/
-		src->cx256 += (rand_int&0x0100);/*0x0080*/
-		src->cx256 += (rand_int&0x0100);/*0x0080*/
+		src->center.x256 -= (rand_int&0x0200);/*0x0100*/
+		src->center.x256 += (rand_int&0x0100);/*0x0080*/
+		src->center.x256 += (rand_int&0x0100);/*0x0080*/
 	}
 	#if (0)
-	src->cx256 += src->vx256;		/*fps_factor*/
-	src->cy256 += src->vy256;		/*fps_factor*/
+	src->center.x256 += src->math_vector.x256;		/*fps_factor*/
+	src->center.y256 += src->math_vector.y256;		/*fps_factor*/
 	check_collision_gamengai(src);
 	#else
 	other_move_object(src);
@@ -255,31 +255,31 @@ static void remilia_move_object(OBJ *src)
 /*---------------------------------------------------------
 	誘導サブ。
 ---------------------------------------------------------*/
-static void yuudo_aaa(OBJ *src, int bbb)
+static void yuudo_aaa(OBJ/**/ *src, int bbb)
 {
 	#if (1)
 	/* パワーの量に比例してショットの軌跡を曲げる。 */
-	src->vx256 += ((src->vx256 * bbb)>>11);
+	src->math_vector.x256 += ((src->math_vector.x256 * bbb)>>11);
 	#endif
 	//
 	#if (1)
 	/* ショットを誘導する。 */
 	OBJ *obj_boss;
-	obj_boss			= &obj99[OBJ_HEAD_01_0x0800_TEKI+TEKI_OBJ_00_BOSS_HONTAI];/*(ボス本体)*/
-	if (obj_boss->cx256 < src->cx256)/*(ボスが左 < 幽々子が右)*/
+	obj_boss			= &obj99[OBJ_HEAD_02_0x0900_TEKI_FIX+TEKI_OBJ_00_BOSS00_HONTAI];/*(ボス本体)*/
+	if (obj_boss->center.x256 < src->center.x256)/*(ボスが左 < 幽々子が右)*/
 	{
-		if (0 < src->vx256)/*(正==幽々子ショットが右へ移動中)*/
+		if (0 < src->math_vector.x256)/*(正==幽々子ショットが右へ移動中)*/
 		{
-			src->vx256 -= src->vx256;/* 符号反転(負方向==幽々子ショットを左へ誘導) */
+			src->math_vector.x256 -= src->math_vector.x256;/* 符号反転(負方向==幽々子ショットを左へ誘導) */
 		}
 	//	else/*(負==幽々子ショットが左へ移動中)*/
 	//	{;}/*(補正する必要は無し)*/
 	}
 	else/*(幽々子が左 > ボスが右)*/
 	{
-		if (0 > src->vx256)/*(負==幽々子ショットが左へ移動中)*/
+		if (0 > src->math_vector.x256)/*(負==幽々子ショットが左へ移動中)*/
 		{
-			src->vx256 -= src->vx256;/* 符号反転(正方向==幽々子ショットを右へ誘導) */
+			src->math_vector.x256 -= src->math_vector.x256;/* 符号反転(正方向==幽々子ショットを右へ誘導) */
 		}
 	//	else/*(正==幽々子ショットが右へ移動中)*/
 	//	{;}/*(補正する必要は無し)*/
@@ -288,28 +288,28 @@ static void yuudo_aaa(OBJ *src, int bbb)
 }
 	#if 0
 	/* 誘導する */
-	if (src->cx256 < src->PL_SHOT_DATA_target_x256 )
+	if (src->center.x256 < src->PL_SHOT_DATA_target_x256 )
 	{
-	//	src->cx256 += src->vx256;		/*fps_factor*/
-	//	src->cx256 -= src->vx256;		/*fps_factor*/
+	//	src->center.x256 += src->math_vector.x256;		/*fps_factor*/
+	//	src->center.x256 -= src->math_vector.x256;		/*fps_factor*/
 	}
 	else
 	{
-		src->cx256 -= src->vx256;		/*fps_factor*/
-		src->cx256 -= src->vx256;		/*fps_factor*/
+		src->center.x256 -= src->math_vector.x256;		/*fps_factor*/
+		src->center.x256 -= src->math_vector.x256;		/*fps_factor*/
 	}
 	#endif
 
 /*---------------------------------------------------------
 	霊夢Aザブトン専用、ショット弾の移動
 ---------------------------------------------------------*/
-static void zabuton_move_object(OBJ *src)
+static OBJ_CALL_FUNC(zabuton_move_object)
 {
 	//[旧位置]
 //	if (REIMU==(cg_ga me_select_player))			/* 霊夢の回転ショット */
 //	if ((REIMU_B+1) > (cg_ga me_select_player)) 	/* 霊夢の回転ショット */
 	{
-	//ザブトン専用	if (((JIKI_SHOT_01)|SP_GROUP_SHOT_SPECIAL)==src->obj_type_set)
+	//ザブトン専用	if (((JIKI_SHOT_01)|OBJ_Z80_SHOT_SPECIAL)==src->obj_type_set)
 		{
 			/* 描画用グラ回転 */
 			src->rotationCCW1024 += (32);	/* cv1024r(10) */
@@ -318,8 +318,8 @@ static void zabuton_move_object(OBJ *src)
 	}
 	yuudo_aaa(src, (128) );
 	#if (0)
-	src->cx256 += src->vx256;		/*fps_factor*/
-	src->cy256 += src->vy256;		/*fps_factor*/
+	src->center.x256 += src->math_vector.x256;		/*fps_factor*/
+	src->center.y256 += src->math_vector.y256;		/*fps_factor*/
 	check_collision_gamengai(src);
 	#else
 	other_move_object(src);
@@ -331,7 +331,7 @@ static void zabuton_move_object(OBJ *src)
 ---------------------------------------------------------*/
 /* 幽々子はそれる */
 
-static void yuyuko_move_object(OBJ *src)
+static OBJ_CALL_FUNC(yuyuko_move_object)
 {
 	static unsigned short pow_low;
 	pow_low++;
@@ -347,8 +347,8 @@ static void yuyuko_move_object(OBJ *src)
 	yuudo_aaa(src, (cg.weapon_power) );
 	//
 	#if (0)
-	src->cx256 += src->vx256;		/*fps_factor*/
-	src->cy256 += src->vy256;		/*fps_factor*/
+	src->center.x256 += src->math_vector.x256;		/*fps_factor*/
+	src->center.y256 += src->math_vector.y256;		/*fps_factor*/
 	check_collision_gamengai(src);
 	#else
 	other_move_object(src);
@@ -402,11 +402,11 @@ enum
 代わりに、回転しないホーミングアミュレットになっている。
 */
 
-//global void player_register_shot_object(OBJ *src, int /*set_*/shot_type);
-/*static*/static/*global*/ void player_register_shot_object(OBJ *src, int /*set_*/shot_type)
+//global void player_register_shot_object(OBJ/**/ *src, int /*set_*/shot_type);
+/*static*/static/*global*/ void player_register_shot_object(OBJ/**/ *src, int /*set_*/shot_type)
 {
 	OBJ *h;/* shot */
-	h					= obj_add_A01_teki_error();
+	h					= obj_regist_teki();
 	if (NULL!=h)/* 登録できた場合のみ */
 	{
 		static const s8 r_tbl[REIMU_SHOT_TYPE_MAX][REI04_MAX] =
@@ -448,12 +448,12 @@ enum
 	//	h->m_Hit256R			= ((base_shot_atari[(OFFS_IS_NEEDLE)])<<8);/* あたり判定の大きさ */
 		h->m_Hit256R			= (((int)current.shot_status[SHOT_STATUS_0E_SHOT_ATARI_HANKEI+is_needle])<<8);/* あたり判定の大きさ */
 
-	//	h->type 			= (/*OBJ_Z01_JIKI_GET_ITEM*/JI KI_SHOT_02|SP_GROUP_SHOT_SPECIAL)-shot_status_hari;
+	//	h->type 			= (/*OBJ_Z01_JIKI_GET_ITEM*/JI KI_SHOT_02|OBJ_Z80_SHOT_SPECIAL)-shot_status_hari;
 		#if 1
 	//	else
 	//	if (0x01== shot_status) 	/* 針 */
 		{
-			h->obj_type_set 			= (JIKI_SHOT_07|SP_GROUP_SHOT_SPECIAL); 	/*OBJ_Z01_JIKI_GET_ITEM*/	/*SP_PL_FIREBALL*/
+			h->obj_type_set 			= (JIKI_SHOT_07|OBJ_Z80_SHOT_SPECIAL);	/*OBJ_Z01_JIKI_GET_ITEM*/	/*SP_PL_FIREBALL*/
 		}
 	//
 		if (0x00 == shot_status_hari)	/* 針以外 */
@@ -463,7 +463,7 @@ enum
 			//	if (0x02== shot_status_hari) /* 霊夢の回転ショット */
 				if (REIMU_SHOT_TYPE_00 != shot_type)/* 誘導ショット以外？ */
 				{
-					h->obj_type_set 			= (JIKI_SHOT_01|SP_GROUP_SHOT_SPECIAL); 	/*OBJ_Z01_JIKI_GET_ITEM*/
+					h->obj_type_set 			= (JIKI_SHOT_01|OBJ_Z80_SHOT_SPECIAL);	/*OBJ_Z01_JIKI_GET_ITEM*/
 					/* 描画用グラ回転 */
 					/*(リプレイ時に再現性が必要ない)*/
 				//	h->rotationCCW1024	= (ra_nd() & (1024-1));/* 出だしの角度はランダムでないと(レーザーみたいな)変な画面になる */
@@ -473,17 +473,17 @@ enum
 			}
 			else
 			{
-				h->obj_type_set 			= (JIKI_SHOT_02|SP_GROUP_SHOT_SPECIAL); 	/*OBJ_Z01_JIKI_GET_ITEM*/
+				h->obj_type_set 			= (JIKI_SHOT_02|OBJ_Z80_SHOT_SPECIAL);	/*OBJ_Z01_JIKI_GET_ITEM*/
 			}
 		}
 	//	else
 		#endif
 		#if 1/*Gu(中心座標)*/
-		h->cx256			= (src->cx256) + ((r_tbl[shot_type][REI00_x_offset])<<8); /*+ x_offs*/
-		h->cy256			= (src->cy256) + ((r_tbl[shot_type][REI01_y_offset])<<8);/*(20)*/
+		h->center.x256			= (src->center.x256) + ((r_tbl[shot_type][REI00_x_offset])<<8); /*+ x_offs*/
+		h->center.y256			= (src->center.y256) + ((r_tbl[shot_type][REI01_y_offset])<<8);/*(20)*/
 		#endif
 	//	h->callback_mover	= player_move_shot;
-		void (*player_move_shot_table[16])(OBJ *src) =
+		void (*player_move_shot_table[16])(OBJ/**/ *src) =
 		{
 			reimu_a_move_shot,		/* 霊夢A */
 			reimu_b_move_shot,		/* 霊夢B */
@@ -527,20 +527,20 @@ enum
 			#endif
 			{
 				OBJ *zzz_player;
-				zzz_player = &obj99[OBJ_HEAD_02_0x0900_KOTEI+FIX_OBJ_00_PLAYER];
+				zzz_player = &obj99[OBJ_HEAD_03_0x0a00_KOTEI+FIX_OBJ_00_PLAYER];
 				OBJ *target;
-				target = search_teki_from_obj();
+				target = obj_teki_search();
 				if (target != zzz_player)/* 見つかったら */
 				{
-					h->PL_SHOT_DATA_target_x256  = target->cx256;/* 誘導目標座標を覚えとく */
-				//	h->PL_SHOT_DATA_target_y256  = target->cy256;/* 誘導目標座標を覚えとく */
+					h->PL_SHOT_DATA_target_x256  = target->center.x256;/* 誘導目標座標を覚えとく */
+				//	h->PL_SHOT_DATA_target_y256  = target->center.y256;/* 誘導目標座標を覚えとく */
 					//
 				//	if (REIMU_SHOT_TYPE_00 == shot_type)/* 誘導ショットか？ */
 					{
-						REG_00_SRC_X	= (target->cx256);			/*(狙い先)*/
-						REG_01_SRC_Y	= (target->cy256);			/*(狙い先)*/
-						REG_02_DEST_X	= (zzz_player->cx256);		/*(狙い元)*/
-						REG_03_DEST_Y	= (zzz_player->cy256);		/*(狙い元)*/
+						REG_00_SRC_X	= (target->center.x256);			/*(狙い先)*/
+						REG_01_SRC_Y	= (target->center.y256);			/*(狙い先)*/
+						REG_02_DEST_X	= (zzz_player->center.x256);		/*(狙い元)*/
+						REG_03_DEST_Y	= (zzz_player->center.y256);		/*(狙い元)*/
 						tmp_angleCCW65536_src_nerai();
 						int int_angle1024;
 						int_angle1024	= HATSUDAN_03_angle65536;
@@ -551,15 +551,15 @@ enum
 							/*16==ccc_tbl[CCC_SPEED+(cg_ga me_select_player)]*/
 							/*16==ccc_tbl[CCC_SPEED+(cg_ga me_select_player)]*/
 							#if (0)//
-							h->vx256	 = si n1024((int_angle1024))*(/*p->speed*/(16));/*fps_factor*/		/* CCWの場合 */
-							h->vy256	 = co s1024((int_angle1024))*(/*p->speed*/(16));/*fps_factor*/
+							h->math_vector.x256  = si n1024((int_angle1024))*(/*p->speed*/(16));/*fps_factor*/		/* CCWの場合 */
+							h->math_vector.y256  = co s1024((int_angle1024))*(/*p->speed*/(16));/*fps_factor*/
 							#else
 							{
 								int sin_value_t256; 		//	sin_value_t256 = 0;
 								int cos_value_t256; 		//	cos_value_t256 = 0;
 								int256_sincos1024( (int_angle1024), &sin_value_t256, &cos_value_t256);
-								h->vx256	 = sin_value_t256*(/*p->speed*/(16));/*fps_factor*/
-								h->vy256	 = cos_value_t256*(/*p->speed*/(16));/*fps_factor*/
+								h->math_vector.x256  = sin_value_t256*(/*p->speed*/(16));/*fps_factor*/
+								h->math_vector.y256  = cos_value_t256*(/*p->speed*/(16));/*fps_factor*/
 							}
 							#endif
 							#if 1
@@ -585,10 +585,10 @@ enum
 	//
 	//	if (0==ok)/* 自動追尾不可？ */
 		{	/* 固有の設定角度を使う */
-		//	h->vx256 = ((/*int_vx*/r_tbl[shot_type][REI02_vx256]))*/*p->speed*/(ccc_tbl[CCC_SPEED+OFFS_IS_NEEDLE]);/*fps_factor*/
-		//	h->vy256 = -(((int)ccc_tbl[CCC_SPEED+OFFS_IS_NEEDLE])<<8);/*fps_factor*/ /*p->speed*/
-			h->vx256 = ((/*int_vx*/r_tbl[shot_type][REI02_vx256]))*/*p->speed*/(current.shot_status[SHOT_STATUS_06_SHOT_SPEED+is_needle]);/*fps_factor*/
-			h->vy256 = -(((int)current.shot_status[SHOT_STATUS_06_SHOT_SPEED+is_needle])<<8);/*fps_factor*/ /*p->speed*/
+		//	h->math_vector.x256 = ((/*int_vx*/r_tbl[shot_type][REI02_vx256]))*/*p->speed*/(ccc_tbl[CCC_SPEED+OFFS_IS_NEEDLE]);/*fps_factor*/
+		//	h->math_vector.y256 = -(((int)ccc_tbl[CCC_SPEED+OFFS_IS_NEEDLE])<<8);/*fps_factor*/ /*p->speed*/
+			h->math_vector.x256 = ((/*int_vx*/r_tbl[shot_type][REI02_vx256]))*/*p->speed*/(current.shot_status[SHOT_STATUS_06_SHOT_SPEED+is_needle]);/*fps_factor*/
+			h->math_vector.y256 = -(((int)current.shot_status[SHOT_STATUS_06_SHOT_SPEED+is_needle])<<8);/*fps_factor*/ /*p->speed*/
 		}
 	}
 }
@@ -612,7 +612,7 @@ static void shot_regist_yuyuko(OBJ *s)	/* 幽々子 */
 
 /* 霊夢B (針巫女) / 魔理沙A/B / レミリア ＆ チルノ */
 
-static void shot_regist_re_hari(OBJ *s)	/* 魔理沙A/B */
+static void shot_regist_re_hari(OBJ *s) /* 魔理沙A/B */
 {
 	player_register_shot_object(s, NEEDLE_ANGLE_270_M);
 }
@@ -625,7 +625,7 @@ static void shot_regist_re_hari(OBJ *s)	/* 魔理沙A/B */
 	チルノ A
 	チルノ Q
 ---------------------------------------------------------*/
-static void shot_regist_ci_gggg(OBJ *s)	/* 霊夢 B ＆ レミリア ＆ チルノ */
+static void shot_regist_ci_gggg(OBJ *s) /* 霊夢 B ＆ レミリア ＆ チルノ */
 {
 	if (REIMU_B==(cg_game_select_player))/* 霊夢Bは3針に成長する。 */
 	{	/*(3針)*/	/* 霊夢 Bのみ */
@@ -762,7 +762,7 @@ static void regist_0_way(OBJ *s)
  WEAPON_L4(P064-P127)
  WEAPON_L5(P128)
 */
-/*static*/static  void shot_regist_option_glow(OBJ *src)
+/*static*/static OBJ_CALL_FUNC(shot_regist_option_glow)
 {	/* 攻撃支援 */
 	if (src->PL_OPTION_DATA_opt_anime_add_id < OPTION_C3)
 	{
@@ -788,7 +788,7 @@ static void regist_0_way(OBJ *s)
 	オプション アニメーション
 ---------------------------------------------------------*/
 
-static void player_animate_option(OBJ *src)
+static OBJ_CALL_FUNC(player_animate_option)
 {
 //	if (0==anime_fix_status[BASE_OPT_ANIM_TYPE+(cg_ga me_select_player)])
 	if (0==current.shot_status[SHOT_STATUS_26_OPTION_ANIME_KAITEN])
@@ -817,8 +817,8 @@ static void player_animate_option(OBJ *src)
 /*---------------------------------------------------------
 	プレイヤー、オプションの移動制御
 ---------------------------------------------------------*/
-/*static*/extern void player_control_option(OBJ *src);	/* 全員 */
-/*static*/global void player_move_option(OBJ *src)	/* 全員 */
+/*static*/extern OBJ_CALL_FUNC(player_control_option);	/* 全員 */
+/*static*/global OBJ_CALL_FUNC(player_move_option)		/* 全員 */
 {
 	/* オプションが非表示の場合、何もしない。 */
 	if (PL_OPTION_FLAG_00_OPTION_OFF==(src->PL_OPTION_DATA_yuukou_flag)) {	return; 	}
@@ -877,7 +877,7 @@ global void register_main_shot(OBJ *s1)
 		//	/*cg.*/weapon_interval = jiki_auto_shot_interval_table[(weapon_List<<3)+(cg_ga me_select_player)];
 		//	/*cg.*/weapon_interval = jiki_auto_shot_interval_table[(cg.jiki_weapon_level_offset)];
 			/*cg.*/weapon_interval = current.shot_status[SHOT_STATUS_10_JIKI_SHOT_INTERVAL_L1+(cg.jiki_weapon_level)];
-			voice_play(VOICE00_SHOT, TRACK00_BULLETS);
+			voice_play(VOICE00_SHOT, TRACK00_JIKI_SHOT);
 			static /*const*/ void (*bbb[(WEAPON_L_MAX)*(PLAYERS8)])(OBJ *sss) =
 			{	/* 誘導巫女(A)	 針巫女(B)		 ミサマリ(A)	 レイマリ(B)  */
 				/*REIMU_A*/ 	/*REIMU_B*/ 	/*MARISA_A*/	/*MARISA_B*/	/*REMILIA*/ 	/*YUYUKO*/		/*CIRNO_A*/ 	/*CIRNO_Q*/
@@ -916,7 +916,7 @@ global void register_main_shot(OBJ *s1)
 //	int speed256;
 //	int state;
 //	int time_out;			/* 設定時間内に見つけられない場合はおしまい */
-//	OBJ *target_obj; 	/* int target_id */
+//	OBJ *target_obj;	/* int target_id */
 //} PL_HOMING_DATA; 		/* == PL_HLASER_DATA */
 
 #define YUUDOU_BOMBER_speed256					user_data01
@@ -934,7 +934,7 @@ global void register_main_shot(OBJ *s1)
 #define PL_HOMING_KODOMO_DATA_check_y256		user_data01
 /*???*/#define PL_HOMING_KODOMO_DATA_time_out	user_data03 		/* 設定時間内に見つけられない場合はおしまい */
 //#define PL_HOMING_KODOMO_DATA_color256		user_data04
-//	OBJ *target_obj; 	/* int target_id */
+//	OBJ *target_obj;	/* int target_id */
 //} PL_HOMING_KODOMO_DATA;	/* == PL_HLASER_DATA */
 
 //typedef struct
@@ -953,11 +953,11 @@ collision_check あたり判定 -----------------------------------------------------
 /*---------------------------------------------------------
 	プレイヤー、高速時ボム。画面外はみ出しチェック。あたり判定チェック。
 ---------------------------------------------------------*/
-static void player_bomber_out_collision_check(OBJ *src)
+static OBJ_CALL_FUNC(player_bomber_out_collision_check)
 {
 	#if 1/*Gu(中心座標)*/
-	if ((src->cx256 < t256(0))||(src->cx256 > t256(GAME_WIDTH))||
-		(src->cy256 < t256(0))||(src->cy256 > t256(GAME_HEIGHT)))
+	if ((src->center.x256 < t256(0))||(src->center.x256 > t256(GAME_WIDTH))||
+		(src->center.y256 < t256(0))||(src->center.y256 > t256(GAME_HEIGHT)))
 	#endif
 	{
 		src->jyumyou = JYUMYOU_NASI;/* 画面外に出たらおしまい */
@@ -980,7 +980,7 @@ move ショット/ボム移動 ---------------------------------------------------------
 	高速時ボムの移動(幽々子)
 ---------------------------------------------------------*/
 
-static void reimu_yuyuko_move_rotate_kekkai(OBJ *src) /* 霊夢 */
+static OBJ_CALL_FUNC(reimu_yuyuko_move_rotate_kekkai) /* 霊夢 */
 {
 	src->PL_KEKKAI_DATA_angleCCW1024 += (src->PL_KEKKAI_DATA_add_r1024);	/*fps_factor*/	/*...*/
 	mask1024(src->PL_KEKKAI_DATA_angleCCW1024);
@@ -993,22 +993,22 @@ static void reimu_yuyuko_move_rotate_kekkai(OBJ *src) /* 霊夢 */
 	int genten_cy256;
 	{
 		OBJ *zzz_player;
-		zzz_player = &obj99[OBJ_HEAD_02_0x0900_KOTEI+((YUYUKO==(cg_game_select_player))?(FIX_OBJ_02_BOMBER_HONTAI):(FIX_OBJ_00_PLAYER))];
-		genten_cx256 = zzz_player->cx256;
-		genten_cy256 = zzz_player->cy256;
+		zzz_player = &obj99[OBJ_HEAD_03_0x0a00_KOTEI+((YUYUKO==(cg_game_select_player))?(FIX_OBJ_02_BOMBER_HONTAI):(FIX_OBJ_00_PLAYER))];
+		genten_cx256 = zzz_player->center.x256;
+		genten_cy256 = zzz_player->center.y256;
 	}
 	#if (0)//
-	src->cx256 = genten_cx256 + ((si n1024((src->PL_KEKKAI_DATA_angleCCW1024))*(src->PL_KEKKAI_DATA_radius)) );/*fps_factor*/		/* CCWの場合 */
-	src->cx256 = genten_cx256 + ((si n1024((src->PL_KEKKAI_DATA_angleCCW1024))*(src->PL_KEKKAI_DATA_radius)) );/* CCWの場合 */
-	src->cy256 = genten_cy256 + ((co s1024((src->PL_KEKKAI_DATA_angleCCW1024))*(src->PL_KEKKAI_DATA_radius)) );
-	src->cy256 = genten_cy256 + ((co s1024((src->PL_KEKKAI_DATA_angleCCW1024))*(src->PL_KEKKAI_DATA_radius)) );/*fps_factor*/
+	src->center.x256 = genten_cx256 + ((si n1024((src->PL_KEKKAI_DATA_angleCCW1024))*(src->PL_KEKKAI_DATA_radius)) );/*fps_factor*/ 	/* CCWの場合 */
+	src->center.x256 = genten_cx256 + ((si n1024((src->PL_KEKKAI_DATA_angleCCW1024))*(src->PL_KEKKAI_DATA_radius)) );/* CCWの場合 */
+	src->center.y256 = genten_cy256 + ((co s1024((src->PL_KEKKAI_DATA_angleCCW1024))*(src->PL_KEKKAI_DATA_radius)) );
+	src->center.y256 = genten_cy256 + ((co s1024((src->PL_KEKKAI_DATA_angleCCW1024))*(src->PL_KEKKAI_DATA_radius)) );/*fps_factor*/
 	#else
 	{
 		int sin_value_t256; 	//	sin_value_t256 = 0;
 		int cos_value_t256; 	//	cos_value_t256 = 0;
 		int256_sincos1024( (src->PL_KEKKAI_DATA_angleCCW1024), &sin_value_t256, &cos_value_t256);
-		src->cx256 = genten_cx256 + ((sin_value_t256*(src->PL_KEKKAI_DATA_radius)) );/*fps_factor*/
-		src->cy256 = genten_cy256 + ((cos_value_t256*(src->PL_KEKKAI_DATA_radius)) );/*fps_factor*/
+		src->center.x256 = genten_cx256 + ((sin_value_t256*(src->PL_KEKKAI_DATA_radius)) );/*fps_factor*/
+		src->center.y256 = genten_cy256 + ((cos_value_t256*(src->PL_KEKKAI_DATA_radius)) );/*fps_factor*/
 	}
 	#endif
 
@@ -1018,15 +1018,15 @@ static void reimu_yuyuko_move_rotate_kekkai(OBJ *src) /* 霊夢 */
 	{
 		if (0 < src->PL_KEKKAI_DATA_add_r1024)
 		{
-			if (genten_cx256 < src->cx256)
-					{	src->cx256 = genten_cx256 + ((src->PL_KEKKAI_DATA_radius)<<8);	}
-			else	{	src->cx256 = genten_cx256 - ((src->PL_KEKKAI_DATA_radius)<<8);	}
+			if (genten_cx256 < src->center.x256)
+					{	src->center.x256 = genten_cx256 + ((src->PL_KEKKAI_DATA_radius)<<8);	}
+			else	{	src->center.x256 = genten_cx256 - ((src->PL_KEKKAI_DATA_radius)<<8);	}
 		}
 		else
 		{
-			if (genten_cy256 < src->cy256)
-					{	src->cy256 = genten_cy256 + ((src->PL_KEKKAI_DATA_radius)<<8);	}
-			else	{	src->cy256 = genten_cy256 - ((src->PL_KEKKAI_DATA_radius)<<8);	}
+			if (genten_cy256 < src->center.y256)
+					{	src->center.y256 = genten_cy256 + ((src->PL_KEKKAI_DATA_radius)<<8);	}
+			else	{	src->center.y256 = genten_cy256 - ((src->PL_KEKKAI_DATA_radius)<<8);	}
 		}
 	}
 //	if (REIMU==(cg_game_select_player))
@@ -1064,14 +1064,14 @@ static void reimu_yuyuko_move_rotate_kekkai(OBJ *src) /* 霊夢 */
 	プレイヤー、高速時ボムの移動(魔理沙B マスタースパーク専用)
 ---------------------------------------------------------*/
 #define MASKER_SPARK_LENGTH144 (144)
-static void marisa_move_master_spark(OBJ *src)
+static OBJ_CALL_FUNC(marisa_move_master_spark)
 {
 	OBJ *zzz_player;
-	zzz_player = &obj99[OBJ_HEAD_02_0x0900_KOTEI+FIX_OBJ_00_PLAYER];
-//	src->cx256 += src->vx256;	/*fps_factor*/
-//	src->cy256 += src->vy256;	/*fps_factor*/
-	src->cx256 = zzz_player->cx256; 			/*fps_factor*/
-	src->cy256 = zzz_player->cy256-t256(MASKER_SPARK_LENGTH144);	/*fps_factor*/
+	zzz_player = &obj99[OBJ_HEAD_03_0x0a00_KOTEI+FIX_OBJ_00_PLAYER];
+//	src->center.x256 += src->math_vector.x256;	/*fps_factor*/
+//	src->center.y256 += src->math_vector.y256;	/*fps_factor*/
+	src->center.x256 = zzz_player->center.x256; 			/*fps_factor*/
+	src->center.y256 = zzz_player->center.y256-t256(MASKER_SPARK_LENGTH144);	/*fps_factor*/
 	{
 		static const u16 maspa_kaiten[4] =
 		{
@@ -1107,10 +1107,10 @@ static void marisa_move_master_spark(OBJ *src)
 	プレイヤー、高速時ボムの移動(魔理沙、チルノ、仮幽々子(違う感じにしたい) )
 ---------------------------------------------------------*/
 
-static void marisa_yuyuko_move_levarie_gyastry_dream(OBJ *src)
+static OBJ_CALL_FUNC(marisa_yuyuko_move_levarie_gyastry_dream)
 {
-	src->cx256 += src->vx256;	/*fps_factor*/
-	src->cy256 += src->vy256;	/*fps_factor*/
+	src->center.x256 += src->math_vector.x256;	/*fps_factor*/
+	src->center.y256 += src->math_vector.y256;	/*fps_factor*/
 	#if 1
 	/* YUYUKO MARISA_A 以外 */
 	if (
@@ -1120,9 +1120,9 @@ static void marisa_yuyuko_move_levarie_gyastry_dream(OBJ *src)
 	)
 	#endif
 	{	/*チルノ用(暫定的)*/	/*1.5*(d->speed);*/ 	/*fps_factor*/
-		src->cy256 -= (abs((src->vx256+(src->vx256>>1) )));
-		src->cy256 -= (abs((src->vy256+(src->vy256>>1) )));
-		src->cy256 -= t256(1.0);
+		src->center.y256 -= (abs((src->math_vector.x256+(src->math_vector.x256>>1) )));
+		src->center.y256 -= (abs((src->math_vector.y256+(src->math_vector.y256>>1) )));
+		src->center.y256 -= t256(1.0);
 	}
 	{
 
@@ -1130,12 +1130,12 @@ static void marisa_yuyuko_move_levarie_gyastry_dream(OBJ *src)
 	//	src->rotationCCW1024	+= aaa_sss[(cg_game_select_player)];
 		src->rotationCCW1024	+= current.shot_status[SHOT_STATUS_20_BOMBER_KAITEN_SOKUDO];
 		mask1024((src->rotationCCW1024));
-		if (t256(4.0) > src->m_zoom_x256)
+		if (t256(4.0) > src->m_zoom.x256)
 		{
-		//	src->m_zoom_y256 += aaa_sss[(cg_game_select_player)+(PLAYERS8)];
-		//	src->m_zoom_x256 += aaa_sss[(cg_game_select_player)+(PLAYERS8)];
-			src->m_zoom_x256 += current.shot_status[SHOT_STATUS_21_BOMBER_KAKUDAI_SOKUDO];
-			src->m_zoom_y256 = src->m_zoom_x256;
+		//	src->m_zoom.y256 += aaa_sss[(cg_game_select_player)+(PLAYERS8)];
+		//	src->m_zoom.x256 += aaa_sss[(cg_game_select_player)+(PLAYERS8)];
+			src->m_zoom.x256 += current.shot_status[SHOT_STATUS_21_BOMBER_KAKUDAI_SOKUDO];
+			src->m_zoom.y256 = src->m_zoom.x256;
 		}
 	}
 	player_bomber_out_collision_check(src);
@@ -1145,24 +1145,24 @@ static void marisa_yuyuko_move_levarie_gyastry_dream(OBJ *src)
 	プレイヤー、高速時ボムの移動(レミリア)
 ---------------------------------------------------------*/
 
-static void remilia_move_burn_fire(OBJ *src)
+static OBJ_CALL_FUNC(remilia_move_burn_fire)
 {
 	#if 1
 	// 加速
 	// x1.10
-//	src->vx256 = ((src->vx256 * t256(1.1))>>8);//co_s1024((data->angle1024))*p->speed;/*fps_factor*/
-//	src->vy256 = ((src->vx256 * t256(1.1))>>8);//si_n1024((data->angle1024))*p->speed;/*fps_factor*/
+//	src->math_vector.x256 = ((src->math_vector.x256 * t256(1.1))>>8);//co_s1024((data->angle1024))*p->speed;/*fps_factor*/
+//	src->math_vector.y256 = ((src->math_vector.x256 * t256(1.1))>>8);//si_n1024((data->angle1024))*p->speed;/*fps_factor*/
 	// x1.125
-	src->vx256 += ((src->vx256)>>3);//co_s1024((data->angle1024))*p->speed;/*fps_factor*/
-	src->vy256 += ((src->vy256)>>3);//si_n1024((data->angle1024))*p->speed;/*fps_factor*/
+	src->math_vector.x256 += ((src->math_vector.x256)>>3);//co_s1024((data->angle1024))*p->speed;/*fps_factor*/
+	src->math_vector.y256 += ((src->math_vector.y256)>>3);//si_n1024((data->angle1024))*p->speed;/*fps_factor*/
 	// x1.0625
-//	src->vx256 += ((src->vx256)>>4);//co_s1024((data->angle1024))*p->speed;/*fps_factor*/
-//	src->vy256 += ((src->vy256)>>4);//si_n1024((data->angle1024))*p->speed;/*fps_factor*/
+//	src->math_vector.x256 += ((src->math_vector.x256)>>4);//co_s1024((data->angle1024))*p->speed;/*fps_factor*/
+//	src->math_vector.y256 += ((src->math_vector.y256)>>4);//si_n1024((data->angle1024))*p->speed;/*fps_factor*/
 	/* 描画が重すぎるので加速性能、若干速く( x1.0625→ x1.125)する */
 	//
 	#endif
-	src->cx256 += src->vx256;	//	src->vx256;//co_s1024((data->angle1024))*p->speed;/*fps_factor*/
-	src->cy256 += src->vy256;	//	src->vy256;//si_n1024((data->angle1024))*p->speed;/*fps_factor*/
+	src->center.x256 += src->math_vector.x256;	//	src->math_vector.x256;//co_s1024((data->angle1024))*p->speed;/*fps_factor*/
+	src->center.y256 += src->math_vector.y256;	//	src->math_vector.y256;//si_n1024((data->angle1024))*p->speed;/*fps_factor*/
 	//
 	player_bomber_out_collision_check(src);
 }
@@ -1171,25 +1171,25 @@ static void remilia_move_burn_fire(OBJ *src)
 	誘導弾の誘導移動サブルーチン
 ---------------------------------------------------------*/
 
-static void yuudou_idou(OBJ *src)
+static OBJ_CALL_FUNC(yuudou_idou)
 {
-	OBJ *target; 	/* 目標 */
+	OBJ *target;	/* 目標 */
 	target = src->target_obj;
 	/* 目標が画面内ならば目標に向かう */
 	if (
-		(target->cx256 > t256(0)) &&
-		(target->cx256 < (t256(GAME_WIDTH)) ) &&
-		(target->cy256 > t256(0)) &&
-		(target->cy256 < (t256(GAME_HEIGHT)) )) 	/*Gu(中心座標)*/
+		(target->center.x256 > t256(0)) &&
+		(target->center.x256 < (t256(GAME_WIDTH)) ) &&
+		(target->center.y256 > t256(0)) &&
+		(target->center.y256 < (t256(GAME_HEIGHT)) ))	/*Gu(中心座標)*/
 	{
 		#if (1)/*誘導(000)*/
 		{int ta1024;
 		#if 1
 		/* CCWの場合 */
-			REG_00_SRC_X	= (target->cx256);		/*(狙い先)*/
-			REG_01_SRC_Y	= (target->cy256);		/*(狙い先)*/
-			REG_02_DEST_X	= (src->cx256); 		/*(狙い元)*/
-			REG_03_DEST_Y	= (src->cy256); 		/*(狙い元)*/
+			REG_00_SRC_X	= (target->center.x256);		/*(狙い先)*/
+			REG_01_SRC_Y	= (target->center.y256);		/*(狙い先)*/
+			REG_02_DEST_X	= (src->center.x256);		/*(狙い元)*/
+			REG_03_DEST_Y	= (src->center.y256);		/*(狙い元)*/
 			tmp_angleCCW65536_src_nerai();
 			ta1024 = HATSUDAN_03_angle65536;
 			ta1024 >>= (6);
@@ -1226,7 +1226,7 @@ static void yuudou_idou(OBJ *src)
 	else	/* 目標が画面外ならば新しい目標を探す。 */
 	{
 		/* Ziel wurde anderweitig vernichtet, neues Ziel suchen */
-		src->target_obj = &obj99[OBJ_HEAD_02_0x0900_KOTEI+FIX_OBJ_00_PLAYER];		/* 画面外に逃げられた */
+		src->target_obj = &obj99[OBJ_HEAD_03_0x0a00_KOTEI+FIX_OBJ_00_PLAYER];		/* 画面外に逃げられた */
 	}
 }
 
@@ -1241,13 +1241,13 @@ enum
 	HOMING_096_TIME_OUT = 96,
 	HOMING_128_TIME_OUT = 128,
 };
-static void marisa_move_parrent_hlaser(OBJ *src)
+static OBJ_CALL_FUNC(marisa_move_parrent_hlaser)
 {
 	/* 他の誘導ボムが、既に倒したか？ */
-	if (&obj99[OBJ_HEAD_02_0x0900_KOTEI+FIX_OBJ_00_PLAYER] == src->target_obj) /* 見つからない(他の誘導ボムが倒してしまった場合) */
+	if (&obj99[OBJ_HEAD_03_0x0a00_KOTEI+FIX_OBJ_00_PLAYER] == src->target_obj) /* 見つからない(他の誘導ボムが倒してしまった場合) */
 	{
 		/* ターゲット検索、敵を探す。 */
-		src->target_obj = search_teki_from_obj();
+		src->target_obj = obj_teki_search();
 	}
 	else	/* まだターゲットが生きてる */
 	{
@@ -1278,15 +1278,15 @@ static void marisa_move_parrent_hlaser(OBJ *src)
 	#endif
 	/*src->YUUDOU_BOMBER_angleCCW1024*/
 	#if (0)//
-	src->cx256 += ((si n1024((src->rotationCCW1024))*(src->YUUDOU_BOMBER_speed256))>>8);/*fps_factor*/		/* CCWの場合 */
-	src->cy256 += ((co s1024((src->rotationCCW1024))*(src->YUUDOU_BOMBER_speed256))>>8);/*fps_factor*/
+	src->center.x256 += ((si n1024((src->rotationCCW1024))*(src->YUUDOU_BOMBER_speed256))>>8);/*fps_factor*/		/* CCWの場合 */
+	src->center.y256 += ((co s1024((src->rotationCCW1024))*(src->YUUDOU_BOMBER_speed256))>>8);/*fps_factor*/
 	#else
 	{
 		int sin_value_t256; 	//	sin_value_t256 = 0;
 		int cos_value_t256; 	//	cos_value_t256 = 0;
 		int256_sincos1024( (src->rotationCCW1024), &sin_value_t256, &cos_value_t256);
-		src->cx256 += ((sin_value_t256*(src->YUUDOU_BOMBER_speed256))>>8);/*fps_factor*/
-		src->cy256 += ((cos_value_t256*(src->YUUDOU_BOMBER_speed256))>>8);/*fps_factor*/
+		src->center.x256 += ((sin_value_t256*(src->YUUDOU_BOMBER_speed256))>>8);/*fps_factor*/
+		src->center.y256 += ((cos_value_t256*(src->YUUDOU_BOMBER_speed256))>>8);/*fps_factor*/
 	}
 	#endif
 	player_weapon_collision_check(src, PLAYER_WEAPON_TYPE_00_SHOT);
@@ -1303,13 +1303,13 @@ static void marisa_move_parrent_hlaser(OBJ *src)
 	霊符霊夢
 ---------------------------------------------------------*/
 
-static void move_reimu_musou_fuuin(OBJ *src)
+static OBJ_CALL_FUNC(move_reimu_musou_fuuin)
 {
 	/* 他の誘導ボムが、既に倒したか？ */
-	if (&obj99[OBJ_HEAD_02_0x0900_KOTEI+FIX_OBJ_00_PLAYER] == src->target_obj) /* 見つからない(他の誘導ボムが倒してしまった場合) */
+	if (&obj99[OBJ_HEAD_03_0x0a00_KOTEI+FIX_OBJ_00_PLAYER] == src->target_obj) /* 見つからない(他の誘導ボムが倒してしまった場合) */
 	{
 		/* ターゲット検索、敵を探す。 */
-		src->target_obj = search_teki_from_obj();
+		src->target_obj = obj_teki_search();
 	}
 	else	/* まだターゲットが生きてる */
 	{
@@ -1326,20 +1326,20 @@ static void move_reimu_musou_fuuin(OBJ *src)
 	{
 		/*src->YUUDOU_BOMBER_angleCCW1024*/
 		#if (0)//
-		src->vx256 = ((si n1024((src->rotationCCW1024))*(src->YUUDOU_BOMBER_speed256))>>8);/*fps_factor*/		/* CCWの場合 */
-		src->vy256 = ((co s1024((src->rotationCCW1024))*(src->YUUDOU_BOMBER_speed256))>>8);/*fps_factor*/
+		src->math_vector.x256 = ((si n1024((src->rotationCCW1024))*(src->YUUDOU_BOMBER_speed256))>>8);/*fps_factor*/		/* CCWの場合 */
+		src->math_vector.y256 = ((co s1024((src->rotationCCW1024))*(src->YUUDOU_BOMBER_speed256))>>8);/*fps_factor*/
 		#else
 		{
 			int sin_value_t256; 	//	sin_value_t256 = 0;
 			int cos_value_t256; 	//	cos_value_t256 = 0;
 			int256_sincos1024( (src->rotationCCW1024), &sin_value_t256, &cos_value_t256);
-			src->vx256 = ((sin_value_t256*(src->YUUDOU_BOMBER_speed256))>>8);/*fps_factor*/
-			src->vy256 = ((cos_value_t256*(src->YUUDOU_BOMBER_speed256))>>8);/*fps_factor*/
+			src->math_vector.x256 = ((sin_value_t256*(src->YUUDOU_BOMBER_speed256))>>8);/*fps_factor*/
+			src->math_vector.y256 = ((cos_value_t256*(src->YUUDOU_BOMBER_speed256))>>8);/*fps_factor*/
 		}
 		#endif
 	}
-		src->cx256 += (src->vx256);/*fps_factor*/
-		src->cy256 += (src->vy256);/*fps_factor*/
+		src->center.x256 += (src->math_vector.x256);/*fps_factor*/
+		src->center.y256 += (src->math_vector.y256);/*fps_factor*/
 	player_weapon_collision_check(src, PLAYER_WEAPON_TYPE_01_BOMB_PLAYER/*PLAYER_WEAPON_TYPE_00_SHOT*/);
 //
 	if (0 >= cg.bomber_time)	/* 時間切れの場合 */
@@ -1354,15 +1354,15 @@ static void move_reimu_musou_fuuin(OBJ *src)
 	プレイヤー、誘導弾の移動(子供)
 ---------------------------------------------------------*/
 
-static void marisa_move_kodomo_hlaser(OBJ *src)
+static OBJ_CALL_FUNC(marisa_move_kodomo_hlaser)
 {
 	#if 1
 	OBJ *oya;
 	oya = src->target_obj;
 	if (
 			(JYUMYOU_NASI > oya->jyumyou) ||			/* 親が消去済みならば子も消去 */
-		//	((OBJ_Z01_JIKI_GET_ITEM|SP_GROUP_SHOT_SPECIAL) != oya->obj_type_set)			/* (OBJ_Z01_JIKI_GET_ITEM|SP_GROUP_SHOT_SPECIAL)以外は親でないので消去 */
-			(0==(SP_GROUP_SHOT_SPECIAL & oya->obj_type_set))	/* (OBJ_Z01_JIKI_GET_ITEM|SP_GROUP_SHOT_SPECIAL)以外は親でないので消去 */
+		//	((OBJ_Z01_JIKI_GET_ITEM|OBJ_Z80_SHOT_SPECIAL) != oya->obj_type_set) 		/* (OBJ_Z01_JIKI_GET_ITEM|OBJ_Z80_SHOT_SPECIAL)以外は親でないので消去 */
+			(0==(OBJ_Z80_SHOT_SPECIAL & oya->obj_type_set)) /* (OBJ_Z01_JIKI_GET_ITEM|OBJ_Z80_SHOT_SPECIAL)以外は親でないので消去 */
 		)
 	{
 		src->jyumyou = JYUMYOU_NASI;/*おしまい*/
@@ -1372,16 +1372,16 @@ static void marisa_move_kodomo_hlaser(OBJ *src)
 	/* 表示用 */
 	src->rotationCCW1024	= oya->rotationCCW1024;/*src->PL_HOMING_KODOMO_DATA_angleCCW1024*/
 	#endif
-	src->cx256 = oya->cx256;
-	src->cy256 = oya->cy256;
+	src->center.x256 = oya->center.x256;
+	src->center.y256 = oya->center.y256;
 //	src->PL_HOMING_KODOMO_DATA_color256 = ((oya->PL_HOMING_KODOMO_DATA_color256*t256(0.96))>>8)&0xff;
 //	src->PL_HOMING_KODOMO_DATA_color256 = ((oya->PL_HOMING_KODOMO_DATA_color256*t256(0.90))>>8)&0xff;
 //	src->PL_HOMING_KODOMO_DATA_color256 = ((oya->PL_HOMING_KODOMO_DATA_color256 - 0x10)&0xff);
 //	src->color32 = (src->PL_HOMING_KODOMO_DATA_color256<<24)|(0x00ffffff);
 	#if (1)/*???*/
 	/* 数フレーム動かない場合は、自動消去する */
-	if ((src->PL_HOMING_KODOMO_DATA_check_x256 != src->cx256) ||
-		(src->PL_HOMING_KODOMO_DATA_check_y256 != src->cy256))
+	if ((src->PL_HOMING_KODOMO_DATA_check_x256 != src->center.x256) ||
+		(src->PL_HOMING_KODOMO_DATA_check_y256 != src->center.y256))
 	{
 		src->PL_HOMING_KODOMO_DATA_time_out = 8;/* 動いたら自動消去しない */
 	}
@@ -1391,8 +1391,8 @@ static void marisa_move_kodomo_hlaser(OBJ *src)
 		src->jyumyou = JYUMYOU_NASI;/*おしまい*/
 	}
 	#endif
-	src->PL_HOMING_KODOMO_DATA_check_x256 = src->cx256;
-	src->PL_HOMING_KODOMO_DATA_check_y256 = src->cy256;
+	src->PL_HOMING_KODOMO_DATA_check_x256 = src->center.x256;
+	src->PL_HOMING_KODOMO_DATA_check_y256 = src->center.y256;
 	#endif
 }
 
@@ -1414,20 +1414,20 @@ static void set_bomb_str_LOW(OBJ *h)
 }
 /* (幽々子低速)十字炎ボムの炎の部分 */
 
-static void yuyuko_add_meifu(OBJ *src)
+static OBJ_CALL_FUNC(yuyuko_add_meifu)
 {
 		/* (24+(1))  、ここでの cg.bomber_time は、最大0x7fなので。 */
 		src->color32		= (cg.bomber_time<<(24+(1)))|0x00ffffff;
-		src->m_zoom_x256	+= (10);
-		src->m_zoom_y256	+= (10);
+		src->m_zoom.x256	+= (10);
+		src->m_zoom.y256	+= (10);
 //	int j;
 //	for (j=0; j<(1); j++)
 	{
 		OBJ *h;
-		h = obj_add_A01_teki_error();
+		h = obj_regist_teki();
 		if (NULL!=h)/* 登録できた場合のみ */
 		{	set_bomb_str_LOW(h);
-			h->obj_type_set 			= (JIKI_BOMBER_01|SP_GROUP_SHOT_SPECIAL);/* ボスに有効 */
+			h->obj_type_set 			= (JIKI_BOMBER_01|OBJ_Z80_SHOT_SPECIAL);/* ボスに有効 */
 			h->callback_mover	= remilia_move_burn_fire;
 		//	h->color32			= MAKE32RGBA(0xff, 0xff, 0xff, 0x64);		/*	h->alpha			= 0x64 100;*/
 			h->color32			= MAKE32RGBA(0xff, 0xff, 0xff, 0x64);		/*	h->alpha			= 0x64 100;*/
@@ -1439,8 +1439,8 @@ static void yuyuko_add_meifu(OBJ *src)
 		u32 my_rand;
 			my_rand = ra_nd();
 			{
-				h->cx256			= (src->cx256) - t256(16) + (((my_rand<<8)&0x1fff));//+ ((0==j)?(-t256(32)):t256(32));
-				h->cy256			= (src->cy256) - t256(16) + (((my_rand   )&0x1fff));//(u16)((my_rand>>16)) + t256((GAME_HEIGHT-256)/2);
+				h->center.x256			= (src->center.x256) - t256(16) + (((my_rand<<8)&0x1fff));//+ ((0==j)?(-t256(32)):t256(32));
+				h->center.y256			= (src->center.y256) - t256(16) + (((my_rand   )&0x1fff));//(u16)((my_rand>>16)) + t256((GAME_HEIGHT-256)/2);
 			}
 		int rnd_spd256		= (my_rand & 0xff/*angCCW512*/) + t256(1.5);
 		int ang_aaa_1024;
@@ -1450,8 +1450,8 @@ static void yuyuko_add_meifu(OBJ *src)
 			HATSUDAN_01_speed256	= ((rnd_spd256));/*(t256形式)*/
 			HATSUDAN_03_angle65536	= deg1024to65536(ang_aaa_1024);
 			sincos256();/*(破壊レジスタ多いので注意)*/
-			h->vx256 = REG_03_DEST_Y;//sin_value_t256	// 縦
-			h->vy256 = REG_02_DEST_X;//cos_value_t256	// 横
+			h->math_vector.x256 = REG_03_DEST_Y;//sin_value_t256	// 縦
+			h->math_vector.y256 = REG_02_DEST_X;//cos_value_t256	// 横
 			}
 		}
 	}
@@ -1459,22 +1459,22 @@ static void yuyuko_add_meifu(OBJ *src)
 
 /* 十字ショットボムの炎の部分 */
 
-static void remilia_add_burn_shot(OBJ *src)
+static OBJ_CALL_FUNC(remilia_add_burn_shot)
 {
 	{
 		OBJ *h;
-		h = obj_add_A01_teki_error();
+		h = obj_regist_teki();
 		if (NULL!=h)/* 登録できた場合のみ */
 		{	set_bomb_str_STD(h);
 			//
-//			h->obj_type_set 			= (/*OBJ_Z01_JIKI_GET_ITEM*/JIKI_BOMBER_04|SP_GROUP_SHOT_SPECIAL)/*ボスに有効*/;
-			h->obj_type_set 			= (/*OBJ_Z01_JIKI_GET_ITEM*/JIKI_BOMBER_01|SP_GROUP_SHOT_SPECIAL);/*ボスに有効*/
+//			h->obj_type_set 			= (/*OBJ_Z01_JIKI_GET_ITEM*/JIKI_BOMBER_04|OBJ_Z80_SHOT_SPECIAL)/*ボスに有効*/;
+			h->obj_type_set 			= (/*OBJ_Z01_JIKI_GET_ITEM*/JIKI_BOMBER_01|OBJ_Z80_SHOT_SPECIAL);/*ボスに有効*/
 			h->callback_mover	= remilia_move_burn_fire;
 //			h->color32			= MAKE32RGBA(0xff, 0xff, 0xff, 0x64);		/*	h->alpha			= 0x64 100;*/
 			h->color32			= MAKE32RGBA(0xff, 0xff, 0xff, 0xff);		/*	h->alpha			= 0x64 100;*/
 			#if 1/*Gu(中心座標)*/
-			h->cx256			= src->cx256;
-			h->cy256			= src->cy256+t256(15);
+			h->center.x256			= src->center.x256;
+			h->center.y256			= src->center.y256+t256(15);
 			#endif
 			{
 			#if 1
@@ -1482,12 +1482,12 @@ static void remilia_add_burn_shot(OBJ *src)
 //			h->rotationCCW1024		= ang_aaa_1024;
 			h->rotationCCW1024		= (0);
 			#endif
-			h->vx256		= (src->vx256);/*fps_factor*/ /* CCWの場合 */
-			h->vy256		= (src->vy256);/*fps_factor*/
+			h->math_vector.x256 	= (src->math_vector.x256);/*fps_factor*/ /* CCWの場合 */
+			h->math_vector.y256 	= (src->math_vector.y256);/*fps_factor*/
 			u32 rnd_spd 		= (ra_nd() ) ;
-			if (rnd_spd&0x03)	{	h->vx256 += h->vx256;	}/* [位置2倍(正/負)-2なら-4, 2なら4 ] */
-			if (rnd_spd&0x01)	{	h->vx256 = - h->vx256;	}
-			if (rnd_spd&0x02)	{	h->vy256 = - h->vy256;	}
+			if (rnd_spd&0x03)	{	h->math_vector.x256 += h->math_vector.x256; }/* [位置2倍(正/負)-2なら-4, 2なら4 ] */
+			if (rnd_spd&0x01)	{	h->math_vector.x256 = - h->math_vector.x256;	}
+			if (rnd_spd&0x02)	{	h->math_vector.y256 = - h->math_vector.y256;	}
 			}
 		}
 	}
@@ -1501,7 +1501,7 @@ static void remilia_add_burn_shot(OBJ *src)
 	威力は恋符についで高く、無敵時間も長い。光弾の軌跡、炸裂に弾消し。
 ---------------------------------------------------------*/
 
-static void reimu_add_reifu_musofuuin(OBJ *src)
+static OBJ_CALL_FUNC(reimu_add_reifu_musofuuin)
 {
 	{
 		static int musou_id;
@@ -1509,16 +1509,16 @@ static void reimu_add_reifu_musofuuin(OBJ *src)
 		musou_id &= 0x07;
 		{
 			OBJ *h;
-			h						= obj_add_A01_teki_error();
+			h						= obj_regist_teki();
 			if (NULL!=h)/* 登録できた場合のみ */
 			{	set_bomb_str_LOW(h);
-	//			h->obj_type_set 			= (OBJ_Z01_JIKI_GET_ITEM|SP_GROUP_SHOT_SPECIAL)/*ボスに有効*/;
-				h->obj_type_set 			= (/*OBJ_Z01_JIKI_GET_ITEM*/JIKI_BOMBER_01|SP_GROUP_SHOT_SPECIAL);/*ボスに有効*/
+	//			h->obj_type_set 			= (OBJ_Z01_JIKI_GET_ITEM|OBJ_Z80_SHOT_SPECIAL)/*ボスに有効*/;
+				h->obj_type_set 			= (/*OBJ_Z01_JIKI_GET_ITEM*/JIKI_BOMBER_01|OBJ_Z80_SHOT_SPECIAL);/*ボスに有効*/
 				#if 1/*Gu(中心座標)*/
-			//	h->cx256			= src->cx256 - t256(5);
-			//	h->cy256			= src->cy256 + t256(15);
-				h->cx256			= src->cx256;
-				h->cy256			= src->cy256;
+			//	h->center.x256			= src->center.x256 - t256(5);
+			//	h->center.y256			= src->center.y256 + t256(15);
+				h->center.x256			= src->center.x256;
+				h->center.y256			= src->center.y256;
 				#endif
 	//			if (0==i)
 				{
@@ -1535,8 +1535,8 @@ static void reimu_add_reifu_musofuuin(OBJ *src)
 					h->YUUDOU_BOMBER_speed256				= t256(1.2);
 					h->jyumyou								= byou60(20);	/* 20秒 テキトー */ 	/* (100) (200)*/
 					h->YUUDOU_BOMBER_reimu_musou_id 		= (musou_id);	/*(ii)(200)*/
-					h->target_obj							= &obj99[OBJ_HEAD_02_0x0900_KOTEI+FIX_OBJ_00_PLAYER];
-				/* (h->target_obj == obj99[OBJ_HEAD_02_0x0900_KOTEI+FIX_OBJ_00_PLAYER])==見つからない */
+					h->target_obj							= &obj99[OBJ_HEAD_03_0x0a00_KOTEI+FIX_OBJ_00_PLAYER];
+				/* (h->target_obj == obj99[OBJ_HEAD_03_0x0a00_KOTEI+FIX_OBJ_00_PLAYER])==見つからない */
 				}
 			}
 		}
@@ -1550,12 +1550,12 @@ add2-------------------------------------------------------------------------
 	プレイヤー誘導弾生成
 ---------------------------------------------------------*/
 
-static void marisa_add_teisoku_yuudoudan(OBJ *src)
+static OBJ_CALL_FUNC(marisa_add_teisoku_yuudoudan)
 {
 	int j;	j=(ra_nd()&(2-1));//for (j=0;j<2;j++)
 	{
-		OBJ *h_old;	h_old = NULL;
-		OBJ *h;		h = NULL;
+		OBJ *h_old; h_old = NULL;
+		OBJ *h; 	h = NULL;
 		//#define hlaser_NUM_OF_ENEMIES (24)
 		//#define hlaser_NUM_OF_ENEMIES (12)		/* 半分にしてみる */
 		#define hlaser_NUM_OF_ENEMIES (8)			/* 8枚位で十分かも(?) */
@@ -1565,19 +1565,19 @@ static void marisa_add_teisoku_yuudoudan(OBJ *src)
 		for (i=0; i<hlaser_NUM_OF_ENEMIES; i++)
 		#undef hlaser_NUM_OF_ENEMIES
 		{	h_old = h;
-			h					= obj_add_A01_teki_error();
+			h					= obj_regist_teki();
 		//	if (NULL!=h)/* 登録できた場合のみ */	/* 強制登録 */
 			if (NULL==h)return;/* 登録できた場合のみ */
 			{
 /* うーん... */
 				set_bomb_str_LOW(h);
-//				h->obj_type_set 			= (OBJ_Z01_JIKI_GET_ITEM|SP_GROUP_SHOT_SPECIAL)/*ボスに有効*/;
-				h->obj_type_set 			= (/*OBJ_Z01_JIKI_GET_ITEM*/JIKI_BOMBER_01|SP_GROUP_SHOT_SPECIAL)/*ボスに有効*/;
+//				h->obj_type_set 			= (OBJ_Z01_JIKI_GET_ITEM|OBJ_Z80_SHOT_SPECIAL)/*ボスに有効*/;
+				h->obj_type_set 			= (/*OBJ_Z01_JIKI_GET_ITEM*/JIKI_BOMBER_01|OBJ_Z80_SHOT_SPECIAL)/*ボスに有効*/;
 				#if 1/*Gu(中心座標)*/
-			//	h->cx256			= src->cx256 - t256(5);
-			//	h->cy256			= src->cy256 + t256(15);
-				h->cx256			= src->cx256;
-				h->cy256			= src->cy256;
+			//	h->center.x256			= src->center.x256 - t256(5);
+			//	h->center.y256			= src->center.y256 + t256(15);
+				h->center.x256			= src->center.x256;
+				h->center.y256			= src->center.y256;
 				#endif
 //				h->PL_HOMING_KODOMO_DATA_color256		= (t256(1.0));	/* 明るさ(アルファ初期値) */
 				h->color32			= tmp_color32;
@@ -1591,8 +1591,8 @@ static void marisa_add_teisoku_yuudoudan(OBJ *src)
 					h->rotationCCW1024						= (j&1)?(cv1024r(  0+10)):(cv1024r(360-10));
 					h->YUUDOU_BOMBER_speed256				= t256(4.0);//t256(12.0);
 					h->jyumyou								= (HOMING_128_TIME_OUT);	/*100(200)*/
-					h->target_obj							= &obj99[OBJ_HEAD_02_0x0900_KOTEI+FIX_OBJ_00_PLAYER];
-				/* (h->target_obj==obj99[OBJ_HEAD_02_0x0900_KOTEI+FIX_OBJ_00_PLAYER])==見つからない */
+					h->target_obj							= &obj99[OBJ_HEAD_03_0x0a00_KOTEI+FIX_OBJ_00_PLAYER];
+				/* (h->target_obj==obj99[OBJ_HEAD_03_0x0a00_KOTEI+FIX_OBJ_00_PLAYER])==見つからない */
 				}
 				else
 				{
@@ -1618,7 +1618,7 @@ static void marisa_add_teisoku_yuudoudan(OBJ *src)
 
 /* tuika 追加系 ------------------------------------------------------------------------ */
 
-static void bomber_hontai_off_check(OBJ *src)
+static OBJ_CALL_FUNC(bomber_hontai_off_check)
 {
 	if (0 >= cg.bomber_time)
 	{
@@ -1632,7 +1632,7 @@ static void bomber_hontai_off_check(OBJ *src)
 	霊夢 A (通常ボム) / チルノ A(低速ボム) の親
 ---------------------------------------------------------*/
 
-static void bomber_hontai_reimu_tuika_musofuuin_shot(OBJ *src)
+static OBJ_CALL_FUNC(bomber_hontai_reimu_tuika_musofuuin_shot)
 {
 	/* シナリオ時には誘導弾を追加しない */
 	if (IS_SCENE_KAIWA_MODE)	{	return; 	}
@@ -1642,7 +1642,7 @@ static void bomber_hontai_reimu_tuika_musofuuin_shot(OBJ *src)
 	if (32 > cg.bomber_time)	{	return; 	}
 	//
 	OBJ *zzz_player;
-	zzz_player = &obj99[OBJ_HEAD_02_0x0900_KOTEI+FIX_OBJ_00_PLAYER];
+	zzz_player = &obj99[OBJ_HEAD_03_0x0a00_KOTEI+FIX_OBJ_00_PLAYER];
 	//
 //	if (0x3f==(((int)pd_bomber_time)&0x3f))
 //	if (0x0f==(((int)pd_bomber_time)&0x0f))
@@ -1651,22 +1651,22 @@ static void bomber_hontai_reimu_tuika_musofuuin_shot(OBJ *src)
 		reimu_add_reifu_musofuuin(zzz_player);/* 波動発動(早口言葉?) */
 	}
 	#if 1/*Gu(中心座標)*/
-	src->cx256 = zzz_player->cx256;
-	src->cy256 = zzz_player->cy256;
+	src->center.x256 = zzz_player->center.x256;
+	src->center.y256 = zzz_player->center.y256;
 	#endif
 }
 
 /*---------------------------------------------------------
 	魔理沙、チルノ等、低速ボムの追加[ボム追加本体]
 ---------------------------------------------------------*/
-static void bomber_hontai_marisa_tuika_bomber_teisoku_yuudoudan(OBJ *src)
+static OBJ_CALL_FUNC(bomber_hontai_marisa_tuika_bomber_teisoku_yuudoudan)
 {
 	/* シナリオ時には誘導弾を追加しない */
 	if (IS_SCENE_KAIWA_MODE)	{	return; 	}
 	bomber_hontai_off_check(src);
 	//
 	OBJ *zzz_player;
-	zzz_player = &obj99[OBJ_HEAD_02_0x0900_KOTEI+FIX_OBJ_00_PLAYER];
+	zzz_player = &obj99[OBJ_HEAD_03_0x0a00_KOTEI+FIX_OBJ_00_PLAYER];
 	//
 //	if (0==(((int)pd_bomber_time)&0x3f))
 //	if (0==(((int)pd_bomber_time)&0x0f))/*(r31)*/
@@ -1684,7 +1684,7 @@ static void bomber_hontai_marisa_tuika_bomber_teisoku_yuudoudan(OBJ *src)
 	レミリアボムの十字ショットの追加[ボム追加本体]
 ---------------------------------------------------------*/
 
-static void bomber_hontai_remilia_tuika_cross_shot(OBJ *src)
+static OBJ_CALL_FUNC(bomber_hontai_remilia_tuika_cross_shot)
 {
 	/* シナリオ時には誘導弾を追加しない */
 	if (IS_SCENE_KAIWA_MODE)	{	return; 	}
@@ -1697,8 +1697,8 @@ static void bomber_hontai_remilia_tuika_cross_shot(OBJ *src)
 	}
 	#if 1/*Gu(中心座標)*/
 	/* 親移動 */
-	src->cx256 += src->vx256;
-	src->cy256 += src->vy256;
+	src->center.x256 += src->math_vector.x256;
+	src->center.y256 += src->math_vector.y256;
 	#endif
 }
 
@@ -1706,7 +1706,7 @@ static void bomber_hontai_remilia_tuika_cross_shot(OBJ *src)
 	(幽々子低速)レミリアボムの十字炎の追加[ボム追加本体]
 ---------------------------------------------------------*/
 
-static void bomber_hontai_yuyuko_tuika_meifu(OBJ *src)
+static OBJ_CALL_FUNC(bomber_hontai_yuyuko_tuika_meifu)
 {
 	/* シナリオ時には誘導弾を追加しない */
 	if (IS_SCENE_KAIWA_MODE)	{	return; 	}
@@ -1714,8 +1714,8 @@ static void bomber_hontai_yuyuko_tuika_meifu(OBJ *src)
 	//
 	yuyuko_add_meifu(src);/* 波動発動(早口言葉?) */
 	#if 1/*Gu(中心座標)*/
-//	src->cx256 = zzz_player->cx256;
-//	src->cy256 = zzz_player->cy256;
+//	src->center.x256 = zzz_player->center.x256;
+//	src->center.y256 = zzz_player->center.y256;
 	#endif
 }
 
@@ -1733,7 +1733,7 @@ parrent 親系 -------------------------------------------------------------------
 	プレイヤーシールド生成の親(霊夢)
 ---------------------------------------------------------*/
 
-/*static*/global void reimu_yuyuko_create_bomber_kekkai_parrent(OBJ *src)		/* 霊夢 */		//シールドの追加
+/*static*/global OBJ_CALL_FUNC(reimu_yuyuko_create_bomber_kekkai_parrent)		/* 霊夢 */		//シールドの追加
 {
 	int ii;//	int i;	/* 半象限ずつ */
 	int jj;
@@ -1742,7 +1742,7 @@ parrent 親系 -------------------------------------------------------------------
 	for (jj=0; jj<(1024);  )//	for (i=0; i<360; i+=45)
 	{
 		OBJ *h;
-		h				= obj_add_A01_teki_error();
+		h				= obj_regist_teki();
 	//	if (NULL!=h)/* 登録できた場合のみ */
 		if (NULL==h)return;/* 登録できた場合のみ */
 		{
@@ -1778,17 +1778,17 @@ parrent 親系 -------------------------------------------------------------------
 				}
 			}
 			/* 霊夢 ＆ 幽々子 */
-			h->obj_type_set 			= (ii&(4-1))+(/*OBJ_Z01_JIKI_GET_ITEM*/JIKI_BOMBER_04|SP_GROUP_SHOT_SPECIAL);/* ボスに有効 */
+			h->obj_type_set 			= (ii&(4-1))+(/*OBJ_Z01_JIKI_GET_ITEM*/JIKI_BOMBER_04|OBJ_Z80_SHOT_SPECIAL);/* ボスに有効 */
 			h->callback_mover			= reimu_yuyuko_move_rotate_kekkai;		/*	時計回り ＆ 反時計回り ＆ スクエア結界(霊夢B) 兼用 */
 			h->PL_KEKKAI_DATA_angleCCW1024		= (jj);//(ii<<7);	/* (1024/8) */
 			/* 出始めはプレイヤー座標 */
 		//	{
 		//		OBJ *zzz_player;
-		//		zzz_player = &obj99[OBJ_HEAD_02_0x0900_KOTEI+FIX_OBJ_00_PLAYER];
-		//		h->cx256					= zzz_player->cx256;
-		//		h->cy256					= zzz_player->cy256;
-				h->cx256					= src->cx256; /* 発弾時のプレイヤーの座標を引き継ぐ。 */
-				h->cy256					= src->cy256; /* 発弾時のプレイヤーの座標を引き継ぐ。 */
+		//		zzz_player = &obj99[OBJ_HEAD_03_0x0a00_KOTEI+FIX_OBJ_00_PLAYER];
+		//		h->center.x256					= zzz_player->center.x256;
+		//		h->center.y256					= zzz_player->center.y256;
+				h->center.x256					= src->center.x256; /* 発弾時のプレイヤーの座標を引き継ぐ。 */
+				h->center.y256					= src->center.y256; /* 発弾時のプレイヤーの座標を引き継ぐ。 */
 		//	}
 		}
 		/* 霊夢Aは	 8 == 4弾 x 2種類 */
@@ -1801,9 +1801,9 @@ parrent 親系 -------------------------------------------------------------------
 	#if (1)/*(幽々子用)*/
 	{
 		OBJ *s1;
-		s1					= &obj99[OBJ_HEAD_02_0x0900_KOTEI+FIX_OBJ_02_BOMBER_HONTAI];
-		s1->cx256			= (src->cx256); /* 発弾時のプレイヤーの座標を引き継ぐ。 */
-		s1->cy256			= (src->cy256); /* 発弾時のプレイヤーの座標を引き継ぐ。 */
+		s1					= &obj99[OBJ_HEAD_03_0x0a00_KOTEI+FIX_OBJ_02_BOMBER_HONTAI];
+		s1->center.x256 		= (src->center.x256); /* 発弾時のプレイヤーの座標を引き継ぐ。 */
+		s1->center.y256 		= (src->center.y256); /* 発弾時のプレイヤーの座標を引き継ぐ。 */
 	}
 	#endif
 }
@@ -1813,7 +1813,7 @@ parrent 親系 -------------------------------------------------------------------
 	プレイヤーボム生成の親
 ---------------------------------------------------------*/
 
-//	/*static*/global void yuyuko_create_bomber_gyastry_dream_parrent(OBJ *src)		/* 霊夢 */		//シールドの追加
+//	/*static*/global OBJ_CALL_FUNC(yuyuko_create_bomber_gyastry_dream_parrent)		/* 霊夢 */		//シールドの追加
 //{
 //	reimu_create_bomber_kekkai_parrent(src);
 //}
@@ -1823,13 +1823,13 @@ parrent 親系 -------------------------------------------------------------------
 	(魔理沙B 専用)
 ---------------------------------------------------------*/
 
-/*static*/global void marisa_create_bomber_master_spark_parrent(OBJ *src)
+/*static*/global OBJ_CALL_FUNC(marisa_create_bomber_master_spark_parrent)
 {
 	int iii;
 	for (iii=0; iii<(3)/*16*/; iii++)
 	{
 		OBJ *h;
-		h					= obj_add_A01_teki_error();
+		h					= obj_regist_teki();
 	//	if (NULL!=h)/* 登録できた場合のみ */
 		if (NULL==h)return;/* 登録できた場合のみ */ 	/*うーん？？？*/
 		{	set_bomb_str_STD(h);
@@ -1842,17 +1842,17 @@ parrent 親系 -------------------------------------------------------------------
 				MAKE32RGBA(0xff, 0xff, 0xff, 0x3f), 	// (白)
 			};
 			h->color32					= (color_mask32[iii]);
-			h->obj_type_set 					= (/*OBJ_Z01_JIKI_GET_ITEM*/JIKI_BOMBER_04|SP_GROUP_SHOT_SPECIAL);/* ボスに有効 */
+			h->obj_type_set 					= (/*OBJ_Z01_JIKI_GET_ITEM*/JIKI_BOMBER_04|OBJ_Z80_SHOT_SPECIAL);/* ボスに有効 */
 			h->callback_mover			= marisa_move_master_spark;
 			h->tmp_angleCCW1024 		= ((iii)<<8);
-			h->m_zoom_x256				= (256*4);	/* 描画用ボムの初期サイズ / size of bomb at first. */
-			h->m_zoom_y256				= (256*4);	/* 描画用ボムの初期サイズ / size of bomb at first. */
+			h->m_zoom.x256				= (256*4);	/* 描画用ボムの初期サイズ / size of bomb at first. */
+			h->m_zoom.y256				= (256*4);	/* 描画用ボムの初期サイズ / size of bomb at first. */
 
-			h->vx256					= (0);	/*fps_factor*/	/* CCWの場合 */
-			h->vy256					= (0);	/*fps_factor*/
+			h->math_vector.x256 				= (0);	/*fps_factor*/	/* CCWの場合 */
+			h->math_vector.y256 				= (0);	/*fps_factor*/
 			#if (1)/* 省略可能かも？ */
-			h->cx256					= src->cx256;
-			h->cy256					= src->cy256-t256(MASKER_SPARK_LENGTH144);
+			h->center.x256					= src->center.x256;
+			h->center.y256					= src->center.y256-t256(MASKER_SPARK_LENGTH144);
 			#endif
 //			/* 描画用角度(下が0度で左回り(反時計回り)) */
 //			h->rotationCCW1024		= (0);
@@ -1866,15 +1866,15 @@ parrent 親系 -------------------------------------------------------------------
 	プレイヤーボム生成の親
 ---------------------------------------------------------*/
 
-/*static*/global void chrno_q_create_bomber_gyastry_dream_parrent(OBJ *src)
+/*static*/global OBJ_CALL_FUNC(chrno_q_create_bomber_gyastry_dream_parrent)
 {
 	int jjj;		jjj=0;
-	int angCCW1024; angCCW1024 = (0);/* 0 チルノ用(暫定的)*/
+	int angCCW1024; angCCW1024 = (0);
 	int iii;
 	for (iii=0; iii<(18*3)/*16*/; iii++)
 	{
 		OBJ *h;
-		h					= obj_add_A01_teki_error();
+		h					= obj_regist_teki();
 	//
 	//	if (NULL!=h)/* 登録できた場合のみ */
 		if (NULL==h)return;/* 登録できた場合のみ */ 	/*うーん？？？*/
@@ -1883,7 +1883,7 @@ parrent 親系 -------------------------------------------------------------------
 			//
 			jjj++;
 			jjj &= 0x03;	//	if (4==jjj) 	{	jjj=0;	}
-			h->obj_type_set 		= (/*OBJ_Z01_JIKI_GET_ITEM*/JIKI_BOMBER_04|SP_GROUP_SHOT_SPECIAL);/* ボスに有効 */
+			h->obj_type_set 		= (/*OBJ_Z01_JIKI_GET_ITEM*/JIKI_BOMBER_04|OBJ_Z80_SHOT_SPECIAL);/* ボスに有効 */
 			h->obj_type_set += jjj;
 	//
 			h->callback_mover	= marisa_yuyuko_move_levarie_gyastry_dream;
@@ -1893,13 +1893,13 @@ parrent 親系 -------------------------------------------------------------------
 				{/* REIMU(A/B) MARISA(A/B) REMILIA YUYUKO CIRNO(A/Q) */
 					256, 256, 256, 256, 32, 256, 32, 32,	/* 描画用ボムの初期サイズ / size of bomb at first. */
 				};
-				h->m_zoom_x256		= player_fix_status_ggg[(cg_game_select_player)];/*8*/ /* 64 == (1/4) */
+				h->m_zoom.x256		= player_fix_status_ggg[(cg_game_select_player)];/*8*/ /* 64 == (1/4) */
 			}
 			#else
 		//	if (YUYUKO!=(cg_game_select_player))
 			{	/*(チルノ用)*/
-				h->m_zoom_x256		= 1+(ra_nd()&(64-1));	/* 描画用ボムの初期サイズ / size of bomb at first. */
-				h->m_zoom_y256		= 1+(ra_nd()&(64-1));	/* 描画用ボムの初期サイズ / size of bomb at first. */
+				h->m_zoom.x256		= 1+(ra_nd()&(64-1));	/* 描画用ボムの初期サイズ / size of bomb at first. */
+				h->m_zoom.y256		= 1+(ra_nd()&(64-1));	/* 描画用ボムの初期サイズ / size of bomb at first. */
 			}
 			#endif
 
@@ -1914,35 +1914,35 @@ parrent 親系 -------------------------------------------------------------------
 			/*d->*/d_speed256	= t256(1.0)+(iii<<3);
 			#endif
 			#if (0)//
-			h->vx256		= ((si n1024((angCCW1024))*(d_speed256))>>8);/*fps_factor*/ 	/* CCWの場合 */
-			h->vy256		= ((co s1024((angCCW1024))*(d_speed256))>>8);/*fps_factor*/
+			h->math_vector.x256 	= ((si n1024((angCCW1024))*(d_speed256))>>8);/*fps_factor*/ 	/* CCWの場合 */
+			h->math_vector.y256 	= ((co s1024((angCCW1024))*(d_speed256))>>8);/*fps_factor*/
 			#else
 			{
 				int sin_value_t256; 		//	sin_value_t256 = 0;
 				int cos_value_t256; 		//	cos_value_t256 = 0;
 				int256_sincos1024( (angCCW1024), &sin_value_t256, &cos_value_t256);
-				h->vx256		= ((sin_value_t256*(d_speed256))>>8);/*fps_factor*/
-				h->vy256		= ((cos_value_t256*(d_speed256))>>8);/*fps_factor*/
+				h->math_vector.x256 	= ((sin_value_t256*(d_speed256))>>8);/*fps_factor*/
+				h->math_vector.y256 	= ((cos_value_t256*(d_speed256))>>8);/*fps_factor*/
 			}
 			#endif
-	//
-			#if 1/*Gu(中心座標)*/
-			h->cx256			= src->cx256;
-			h->cy256			= src->cy256;
-			#endif
-			/* ギャストリドリーム(もどき)。スターダストレヴァリエと違い近接性能は無い。 */
-//			if (YUYUKO==(cg_game_select_player))	/* 幽々子 */
-//			{
-//				h->cx256		+= ((h->vx256)<<5);
-//				h->cy256		+= ((h->vy256)<<5);
-//	//			/* 幽々子 強すぎるからな～(効果弱いが効果あるのも出来るようにシステム見直したほうがいいかも) */
-//			}
 			#if 1
 			/* 描画用角度(下が0度で左回り(反時計回り)) */
 			h->rotationCCW1024		= angCCW1024;
 			#endif
 		//	angCCW1024 += (int)((1024)/16); // 22.5度/360, 2xπ/16 /* 0.392699081698724154810 */
 			angCCW1024 += (int)((1024)/18); // 20.0度/360, 2xπ/18 /* 0.349065850398865915384 */
+	//
+			#if 1/*Gu(中心座標)*/
+			h->center.x256			= src->center.x256;
+			h->center.y256			= src->center.y256;
+			#endif
+			/* ギャストリドリーム(もどき)。スターダストレヴァリエと違い近接性能は無い。 */
+//			if (YUYUKO==(cg_game_select_player))	/* 幽々子 */
+//			{
+//				h->center.x256		+= ((h->math_vector.x256)<<5);
+//				h->center.y256		+= ((h->math_vector.y256)<<5);
+//	//			/* 幽々子 強すぎるからな～(効果弱いが効果あるのも出来るようにシステム見直したほうがいいかも) */
+//			}
 		}
 	}
 }
@@ -1953,42 +1953,44 @@ parrent 親系 -------------------------------------------------------------------
 	-------------------------------------------------------
 	[プレイヤーシールド]ボム生成の親(魔理沙 A)
 	-------------------------------------------------------
-	スターダストレヴァリエ(3x8==計24個星が出る)
-	は8方向に星が出る。星の色は、決まっている。
+    スターダストレヴァリエ(3x8==計24個星が出る)
+    は8方向に星が出る。星の色は、決まっている。
 
-		左上	上		右上
-		(赤0)	(青2)	(緑1)
+        左上    上      右上
+        (赤0)   (青2)   (緑1)
 
-		左				右
-		(緑1)			(青2)
+        左              右
+        (緑1)           (青2)
 
-		左下	下		右下
-		(青2)	(赤0)	(緑1)
+        左下    下      右下
+        (青2)   (赤0)   (緑1)
 
-	赤==0
-	緑==1
-	青==2
+    赤==0
+    緑==1
+    青==2
 
-	-------------------------------------------------------
-	一方向では、3つ星が出る。画像の左上座標を(x,y)とすると、
+    -------------------------------------------------------
+    一方向では、3つ星が出る。画像の左上座標を(x,y)とすると、
 
-	大星=半透明、座標(x,y)
-	中星=半透明、座標(x,y)
-	小星=不透明、座標(x+64,y+64)	// 64 は テキトーな一定値。
-									// pspの場合は、画面が狭いので48が妥当？
-	---------------------------------------------------------*/
+    大星=半透明、座標(x,y)
+    中星=半透明、座標(x,y)
+    小星=不透明、座標(x+64,y+64)    // 64 は テキトーな一定値。
+                                    // pspの場合は、画面が狭いので48が妥当？
+    ---------------------------------------------------------*/
 
-/*static*/global void marisa_create_bomber_star_dust_levarie_parrent(OBJ *src)
+/*static*/global OBJ_CALL_FUNC(marisa_create_bomber_star_dust_levarie_parrent)
 {
-	int angCCW1024; angCCW1024 = (0);/* 0 チルノ用(暫定的)*/
-	int iii;
-	for (iii=0; iii<(8)/*16*/; iii++)/*8方向*/
+	int angCCW1024; angCCW1024 = (0);
+	int mmm;
+	mmm = (0x100);
+	int kkk;
+	for (kkk=0; kkk<(3); kkk++)/*3サイズ*/
 	{
-		int kkk;
-		for (kkk=0; kkk<(3)/*16*/; kkk++)/*3サイズ*/
+		int iii;
+		for (iii=0; iii<(8); iii++)/*8方向*/
 		{
 			OBJ *h;
-			h					= obj_add_A01_teki_error();
+			h					= obj_regist_teki();
 		//	if (NULL!=h)/* 登録できた場合のみ */
 			if (NULL==h)return;/* 登録できた場合のみ */ 	/*うーん？？？*/
 			{
@@ -2005,46 +2007,47 @@ parrent 親系 -------------------------------------------------------------------
 					MAKE32RGBA(0x00, 0xff, 0x00, 0x7f), 	//	左	(緑1)
 					MAKE32RGBA(0x00, 0x00, 0xff, 0x7f), 	//	左下(青2)
 				};
-				h->color32					= (color_mask32[iii]);
-				h->obj_type_set 			= (/*OBJ_Z01_JIKI_GET_ITEM*/JIKI_BOMBER_04|SP_GROUP_SHOT_SPECIAL);/*ボスに有効*/
+				h->color32					= (color_mask32[((iii)/*&0x07*/)]);
+				h->obj_type_set 			= (/*OBJ_Z01_JIKI_GET_ITEM*/JIKI_BOMBER_04|OBJ_Z80_SHOT_SPECIAL);/*ボスに有効*/
 				//
 				h->callback_mover			= marisa_yuyuko_move_levarie_gyastry_dream;
-				h->m_zoom_x256				= (0x100<<(kkk));	/* 描画用ボムの初期サイズ / size of bomb at first. */
-				h->m_zoom_y256				= (0x100<<(kkk));	/* 描画用ボムの初期サイズ / size of bomb at first. */
+				h->m_zoom.x256				= (mmm);	/* 描画用ボムの初期サイズ / size of bomb at first. */
+				h->m_zoom.y256				= (mmm);	/* 描画用ボムの初期サイズ / size of bomb at first. */
 				{
-					const int d_speed256	= t256(1.5);	/* 速度一定 */
+					const int d_speed256	= t256(1.5);	/*(速度一定)*/
 					#if (0)//
-					h->vx256		= ((si n1024((angCCW1024))*(d_speed256))>>8);/*fps_factor*/ 	/* CCWの場合 */
-					h->vy256		= ((co s1024((angCCW1024))*(d_speed256))>>8);/*fps_factor*/
+					h->math_vector.x256 	= ((si n1024((angCCW1024))*(d_speed256))>>8);/*fps_factor*/ 	/* CCWの場合 */
+					h->math_vector.y256 	= ((co s1024((angCCW1024))*(d_speed256))>>8);/*fps_factor*/
 					#else
 					{
 						int sin_value_t256; 				//	sin_value_t256 = 0;
 						int cos_value_t256; 				//	cos_value_t256 = 0;
 						int256_sincos1024( (angCCW1024), &sin_value_t256, &cos_value_t256);
-						h->vx256		= ((sin_value_t256*(d_speed256))>>8);/*fps_factor*/
-						h->vy256		= ((cos_value_t256*(d_speed256))>>8);/*fps_factor*/
+						h->math_vector.x256 	= ((sin_value_t256*(d_speed256))>>8);/*fps_factor*/
+						h->math_vector.y256 	= ((cos_value_t256*(d_speed256))>>8);/*fps_factor*/
 					}
 					#endif
 				}
+					#if 1
+					/* 描画用角度(下が0度で左回り(反時計回り)) */
+					h->rotationCCW1024		= angCCW1024;
+					angCCW1024 += (int)((1024)/8);	// 45.0度/360, 64
+					#endif
 				#if 1/*Gu(中心座標)*/
 				{
-					h->cx256			= src->cx256;
-					h->cy256			= src->cy256;
+					h->center.x256			= src->center.x256;
+					h->center.y256			= src->center.y256;
 				}
-				if (0==kkk)/* 小星の場合。 */
+				if (0==kkk)/*(mini star only.)(小星の場合。)*/
 				{
-					h->cx256			+= (t256(48));	/* 小星のみ(x,y同じ値の)オフセット必ず付く。 */
-					h->cy256			+= (t256(48));	/* 小星のみ(x,y同じ値の)オフセット必ず付く。 */
-					h->color32			|= (MAKE32RGBA(0, 0, 0, 0xff)); 	/* 小星は必ず不透明。 */
+					h->center.x256			+= (t256(48));	/*(小星のみ(x,y同じ値の)オフセット必ず付く。)*/
+					h->center.y256			+= (t256(48));	/*(小星のみ(x,y同じ値の)オフセット必ず付く。)*/
+					h->color32			|= (MAKE32RGBA(0, 0, 0, 0xff)); 	/*(not alpha)(小星は必ず不透明。)*/
 				}
-				#endif
-				#if 1
-				/* 描画用角度(下が0度で左回り(反時計回り)) */
-				h->rotationCCW1024		= angCCW1024;
 				#endif
 			}
 		}
-		angCCW1024 += (int)((1024)/8);	// 45.0度/360, 64
+		mmm += mmm;
 	}
 }
 
@@ -2058,8 +2061,8 @@ parrent 親系 -------------------------------------------------------------------
 //		h->color32			= MAKE32RGBA(0xff, 0xff, 0xff, 0xdc);		/*	h->alpha			= 0xdc;*/	/* 非表示 */
 //	if (NULL!=h)/* 登録できた場合のみ */	/* うーん... */
 	//	#if 1/*Gu(中心座標)*/
-	//	h->cx256			= t256(GAME_NOT_VISIBLE480);//(src->cx256); /* 非表示 */
-//	//	h->cy256			= (src->cy256); /* 非表示 */
+	//	h->center.x256			= t256(GAME_NOT_VISIBLE480);//(src->center.x256); /* 非表示 */
+//	//	h->center.y256			= (src->center.y256); /* 非表示 */
 	//	#endif
 
 
@@ -2070,11 +2073,11 @@ parrent 親系 -------------------------------------------------------------------
 global void jiki_shot_oya_hide(void)
 {
 	OBJ *h;
-	h						= &obj99[OBJ_HEAD_02_0x0900_KOTEI+FIX_OBJ_02_BOMBER_HONTAI];
+	h						= &obj99[OBJ_HEAD_03_0x0a00_KOTEI+FIX_OBJ_02_BOMBER_HONTAI];
 	{
 		#if 1/*Gu(中心座標)*/
-		h->cx256			= t256(GAME_NOT_VISIBLE480);//(src->cx256); /* 非表示 */
-		h->cy256			= t256(272+64); /* 非表示 */
+		h->center.x256			= t256(GAME_NOT_VISIBLE480);//(src->center.x256); /* 非表示 */
+		h->center.y256			= t256(272+64); /* 非表示 */
 		#endif
 	}
 }
@@ -2083,42 +2086,42 @@ global void jiki_shot_oya_hide(void)
 	プレイヤーシールド生成(レミリア)の親[レミリアボムの十字ショット本体]
 ---------------------------------------------------------*/
 
-/*static*/global void remilia_create_bomber_cross_shot_parrent(OBJ *src)
+/*static*/global OBJ_CALL_FUNC(remilia_create_bomber_cross_shot_parrent)
 {
 	OBJ *h;
-	h						= &obj99[OBJ_HEAD_02_0x0900_KOTEI+FIX_OBJ_02_BOMBER_HONTAI];
+	h						= &obj99[OBJ_HEAD_03_0x0a00_KOTEI+FIX_OBJ_02_BOMBER_HONTAI];
 	{
 		h->callback_mover	= bomber_hontai_remilia_tuika_cross_shot;
-		h->obj_type_set 			= (/*OBJ_Z01_JIKI_GET_ITEM*/JIKI_BOMBER_01|SP_GROUP_SHOT_SPECIAL);/* ボスに有効 */
+		h->obj_type_set 			= (/*OBJ_Z01_JIKI_GET_ITEM*/JIKI_BOMBER_01|OBJ_Z80_SHOT_SPECIAL);/* ボスに有効 */
 		OBJ *zzz_player;
-		zzz_player = &obj99[OBJ_HEAD_02_0x0900_KOTEI+FIX_OBJ_00_PLAYER];
+		zzz_player = &obj99[OBJ_HEAD_03_0x0a00_KOTEI+FIX_OBJ_00_PLAYER];
 		#if 1/*Gu(中心座標)*/
 		/*開始時の座標*/
-		h->cx256 = zzz_player->cx256;
-		h->cy256 = zzz_player->cy256;
+		h->center.x256 = zzz_player->center.x256;
+		h->center.y256 = zzz_player->center.y256;
 		#endif
 		{
 			OBJ *obj_boss;
-			obj_boss			= &obj99[OBJ_HEAD_01_0x0800_TEKI+TEKI_OBJ_00_BOSS_HONTAI];/*(ボス本体)*/
+			obj_boss			= &obj99[OBJ_HEAD_02_0x0900_TEKI_FIX+TEKI_OBJ_00_BOSS00_HONTAI];/*(ボス本体)*/
 			int int_angle1024;
 			int int_aaa;
-			REG_00_SRC_X	= (obj_boss->cx256);			/*(狙い先)*/
-			REG_01_SRC_Y	= (obj_boss->cy256);			/*(狙い先)*/
-			REG_02_DEST_X	= (zzz_player->cx256);			/*(狙い元)*/
-			REG_03_DEST_Y	= (zzz_player->cy256);			/*(狙い元)*/
+			REG_00_SRC_X	= (obj_boss->center.x256);			/*(狙い先)*/
+			REG_01_SRC_Y	= (obj_boss->center.y256);			/*(狙い先)*/
+			REG_02_DEST_X	= (zzz_player->center.x256);		/*(狙い元)*/
+			REG_03_DEST_Y	= (zzz_player->center.y256);		/*(狙い元)*/
 			tmp_angleCCW65536_src_nerai();
 			int_angle1024 = HATSUDAN_03_angle65536;
 			int_angle1024 >>= (6);
 			#if (0)//
-			int_aaa = si n1024((int_angle1024));	h->vx256	 = int_aaa+int_aaa;/*fps_factor*/	/* CCWの場合 */
-			int_aaa = co s1024((int_angle1024));	h->vy256	 = int_aaa+int_aaa;/*fps_factor*/
+			int_aaa = si n1024((int_angle1024));	h->math_vector.x256  = int_aaa+int_aaa;/*fps_factor*/	/* CCWの場合 */
+			int_aaa = co s1024((int_angle1024));	h->math_vector.y256  = int_aaa+int_aaa;/*fps_factor*/
 			#else
 			{
 				int sin_value_t256; 		//	sin_value_t256 = 0;
 				int cos_value_t256; 		//	cos_value_t256 = 0;
 				int256_sincos1024( (int_angle1024), &sin_value_t256, &cos_value_t256);
-				int_aaa = (sin_value_t256); 	h->vx256	 = int_aaa+int_aaa;/*fps_factor*/
-				int_aaa = (cos_value_t256); 	h->vy256	 = int_aaa+int_aaa;/*fps_factor*/
+				int_aaa = (sin_value_t256); 	h->math_vector.x256  = int_aaa+int_aaa;/*fps_factor*/
+				int_aaa = (cos_value_t256); 	h->math_vector.y256  = int_aaa+int_aaa;/*fps_factor*/
 			}
 			#endif
 			#if 1
@@ -2136,16 +2139,16 @@ global void jiki_shot_oya_hide(void)
 /*---------------------------------------------------------
 	魔理沙、チルノ等、低速ボムの親
 ---------------------------------------------------------*/
-/*static*/global void marisa_create_bomber_homing_parrent(OBJ *src)
+/*static*/global OBJ_CALL_FUNC(marisa_create_bomber_homing_parrent)
 {
 	OBJ *h;
-	h						= &obj99[OBJ_HEAD_02_0x0900_KOTEI+FIX_OBJ_02_BOMBER_HONTAI];
+	h						= &obj99[OBJ_HEAD_03_0x0a00_KOTEI+FIX_OBJ_02_BOMBER_HONTAI];
 	{
 		h->callback_mover	= bomber_hontai_marisa_tuika_bomber_teisoku_yuudoudan;
 		h->obj_type_set 			= (/*表示しない*/SP_DUMMY_MUTEKI);/*ボスに有効*/	/* 低速ボムもボスに有効とする */
 		#if 1/*Gu(中心座標)*/
-		h->cx256			= t256(GAME_NOT_VISIBLE480);//src->cx256;	/* 非表示 */
-//		h->cy256			= src->cy256;	/* 非表示 */
+		h->center.x256			= t256(GAME_NOT_VISIBLE480);//src->center.x256; /* 非表示 */
+//		h->center.y256			= src->center.y256; /* 非表示 */
 		#endif
 //
 		#if 1
@@ -2158,19 +2161,19 @@ global void jiki_shot_oya_hide(void)
 /*---------------------------------------------------------
 	霊夢 A (通常ボム) / チルノ A(低速ボム) の親
 ---------------------------------------------------------*/
-/*static*/global void reimu_create_bomber_homing_shot_parrent(OBJ *src)	/* reimu_move_add_bomber_hlaser */
+/*static*/global OBJ_CALL_FUNC(reimu_create_bomber_homing_shot_parrent) /* reimu_move_add_bomber_hlaser */
 {
 	OBJ *h;
-	h						= &obj99[OBJ_HEAD_02_0x0900_KOTEI+FIX_OBJ_02_BOMBER_HONTAI];
+	h						= &obj99[OBJ_HEAD_03_0x0a00_KOTEI+FIX_OBJ_02_BOMBER_HONTAI];
 	{
 		h->callback_mover	= bomber_hontai_reimu_tuika_musofuuin_shot;
-		h->obj_type_set 	= (JIKI_BOMBER_01|SP_GROUP_SHOT_SPECIAL);/* ボスに有効 */
+		h->obj_type_set 	= (JIKI_BOMBER_01|OBJ_Z80_SHOT_SPECIAL);/* ボスに有効 */
 		OBJ *zzz_player;
-		zzz_player = &obj99[OBJ_HEAD_02_0x0900_KOTEI+FIX_OBJ_00_PLAYER];
+		zzz_player = &obj99[OBJ_HEAD_03_0x0a00_KOTEI+FIX_OBJ_00_PLAYER];
 		#if 1/*Gu(中心座標)*/
 		/*開始時の座標*/
-		h->cx256 = zzz_player->cx256;
-		h->cy256 = zzz_player->cy256;
+		h->center.x256 = zzz_player->center.x256;
+		h->center.y256 = zzz_player->center.y256;
 		#endif
 		{
 			#if 1
@@ -2190,31 +2193,28 @@ global void jiki_shot_oya_hide(void)
 /*---------------------------------------------------------
 	幽々子専用 低速ボムの親 	[(幽々子低速)ボムの十字炎本体]
 ---------------------------------------------------------*/
-/*static*/global void yuyuko_create_bomber_meifu_parrent(OBJ *src)
+/*static*/global OBJ_CALL_FUNC(yuyuko_create_bomber_meifu_parrent)
 {
 	OBJ *h;
-	h						= &obj99[OBJ_HEAD_02_0x0900_KOTEI+FIX_OBJ_02_BOMBER_HONTAI];
+	h						= &obj99[OBJ_HEAD_03_0x0a00_KOTEI+FIX_OBJ_02_BOMBER_HONTAI];
 	{
-		h->cx256			= (src->cx256); /* 発弾時プレイヤー座標を引き継ぐ */
-		h->cy256			= (src->cy256); /* 発弾時プレイヤー座標を引き継ぐ */
-		h->m_zoom_x256		= t256(1.00);
-		h->m_zoom_y256		= t256(1.00);
+		h->center.x256			= (src->center.x256); /* 発弾時プレイヤー座標を引き継ぐ */
+		h->center.y256			= (src->center.y256); /* 発弾時プレイヤー座標を引き継ぐ */
+		h->m_zoom.x256		= t256(1.00);
+		h->m_zoom.y256		= t256(1.00);
 		h->callback_mover	= bomber_hontai_yuyuko_tuika_meifu;
 //		h->obj_type_set 	= (/*表示しない*/SP_DUMMY_MUTEKI); /* ボスの直接攻撃は禁止 */
 		h->obj_type_set 	= (JIKI_SHOT_00); /* [幽々子ボムの扇本体] */ /* ボスの直接攻撃は禁止 */
 		h->atari_hantei 	= (0); /* ボスの直接攻撃は禁止 */
 		h->color32			= MAKE32RGBA(0xff, 0xff, 0xff, 0x64);		/*	h->alpha			= 0x64 100;*/
 		#if 1/*Gu(中心座標)*/
-//		h->cx256			= t256(GAME_NOT_VISIBLE480);//(src->cx256); /* 非表示 */
-//		h->cy256			= (src->cy256); /* 非表示 */
+//		h->center.x256			= t256(GAME_NOT_VISIBLE480);//(src->center.x256); /* 非表示 */
+//		h->center.y256			= (src->center.y256); /* 非表示 */
 		#endif
 	}
 }
 
 /*----------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------
-------------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------*/
 
 
@@ -2292,7 +2292,7 @@ global void init_player_shot(void)
 				針1,  針2,	針3,  針4,	針5,  針6,		弾判,  針判,
 				自1,  自2,	自3,  自4,	自5,  自6,		標ボ,  低ボ,
 				オ1,  オ2,	オ3,  オ4,	オ5,  オ6		標判,  低判,
-				回速, 拡速, 喰時, グ判, (ボ時), プア, 	回転,  ア速,
+				回速, 拡速, 喰時, グ判, (ボ時), プア,	回転,  ア速,
 			}
 		},
 		#endif
@@ -2302,7 +2302,7 @@ global void init_player_shot(void)
 				 30,  28,  26,	24,  22,  20,		  4, 10,
 				  5,   5,	5,	 5,   5,   5,		 48,160,
 				 99,  77,  55,	33,  10,   4,		  2, 16,	// (r33)誘導巫女のオプションは弱いと全然やる気がない。
-				  0,   0,	0,  16, (180),   8,		  0,  4,
+				  0,   0,	0,	16, (180),	 8, 	  0,  4,
 			}
 		},
 		{	/*(霊夢B)*/
@@ -2311,7 +2311,7 @@ global void init_player_shot(void)
 				 16,  16,  10,	10,  10,  12,		  4,  6,
 				  5,   5,	5,	 5,   5,   5,		 40,192,
 				 13,  11,	9,	 7,   5,   3,		  2, 16,
-				  0,   0,	0,  16, (180),   8,		  0,  4,
+				  0,   0,	0,	16, (180),	 8, 	  0,  4,
 			}
 		},
 		{	/*(魔理沙A)*/
@@ -2320,7 +2320,7 @@ global void init_player_shot(void)
 				 20,  20,  14,	12,  12,  14,		  4,  8,
 				  6,   6,	5,	 5,   5,   5,		 40,240,
 				 11,  10,	9,	 8,   7,   6,		 32, 16,
-				 20,   0,	8,  32, (180),   2,		  0,  6,
+				 20,   0,	8,	32, (180),	 2, 	  0,  6,
 			}
 		},
 		{	/*(魔理沙B / マスパ / 誘導レ)*/
@@ -2329,7 +2329,7 @@ global void init_player_shot(void)
 				 32,  64,  80,	88,  98, 108,		  4,  6,
 				  6,   6,	5,	 5,   5,   5,		255,255,	// 40
 				  4,   4,	4,	 4,   4,   3,		128, 16,	// 255 128 マスパ
-				 16,   0,	8,  32, (180),   2,		  0,  8,
+				 16,   0,	8,	32, (180),	 2, 	  0,  8,
 			}
 		},
 		{	/* レミリア */
@@ -2338,7 +2338,7 @@ global void init_player_shot(void)
 				 48,  48,  49,	49,  50,  52,		  4, 12,
 				 14,  13,  12,	11,  10,  10,		 40,127,	//(r35u1, 40==8*5)	 32,127,
 				  8,   8,	8,	 8,   8,   8,		 16, 16,
-				  0,   0,  12,  16, (180),   3,		  0,  4,
+				  0,   0,  12,	16, (180),	 3, 	  0,  4,
 			}
 		},
 		{	/* 幽々子 /  / 扇(赤弾) */
@@ -2348,7 +2348,7 @@ global void init_player_shot(void)
 				 64,  64,  64,	65,  65,  66,		  8,  8,
 				 17,  16,  15,	14,  13,  13,		 48,127,	// 40(r35u1, 40==8*5)	 48,160,
 				 31,  28,  25,	22,  19,  16,		  4, 16,
-				  0,   0,	4,  48, (255),   4,		  1, 12,
+				  0,   0,	4,	48, (255),	 4, 	  1, 12,
 			}
 		},
 		{	/* チルノA */
@@ -2357,7 +2357,7 @@ global void init_player_shot(void)
 				 48,  48,  48,	48,  56,  80,		  6, 16,
 				  9,   9,	9,	 9,   9,   9,		240,240,
 				  8,   8,	8,	 8,   7,   5,		 32, 16,
-				 18,   3,	3,  48, (180),   1,		  1,  3,
+				 18,   3,	3,	48, (180),	 1, 	  1,  3,
 			}
 		},
 		{	/* チルノ⑨ */
@@ -2366,7 +2366,7 @@ global void init_player_shot(void)
 				 48,  48,  48,	48,  52,  78,		  9, 24,
 				  9,   9,	9,	 9,   9,   9,		255,255,
 				  9,   9,	9,	 9,   8,   6,		 32, 16,
-				 18,   3,	2,  48, (180),   1,		  1,  3,
+				 18,   3,	2,	48, (180),	 1, 	  1,  3,
 			}
 		},
 	};

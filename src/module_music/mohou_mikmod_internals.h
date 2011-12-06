@@ -25,6 +25,8 @@
 //#include "_mik mod_build.h"
 #include "mohou_mikmod.h"
 
+
+
 //#if defined(WIN32) && !defined(__STDC__)
 //	#define __STDC__ 1
 //#endif
@@ -173,7 +175,7 @@ DECLARE_MUTEX(vars);
 
 
 
-extern MM_BOOL mod_music_FileExists(MM_CHAR *fname);
+extern MM_BOOL mod_music_FileExists(MM_s8 *fname);
 
 	#define mod_music_fseek(x, y, z)				x->Seek(x, y, z)
 #if (MYMOD_psp_FILE_system==USE_MYMOD_FILE_MODE)
@@ -190,29 +192,29 @@ extern MM_BOOL mod_music_FileExists(MM_CHAR *fname);
 
 extern void mod_music_iobase_setcur(MF_READER*);
 extern void mod_music_iobase_revert(void);
-//extern FILE *mod_music_fopen(MM_CHAR *file_name, MM_CHAR *attribute);
-//extern FILE *mod_music_fopen(MM_CHAR *file_name, const char *attribute);
-//extern FILE *mod_music_fopen_FILE(MM_CHAR *file_name);
-extern MYMOD_FILE_ptr mod_music_fopen_FILE(MM_CHAR *file_name);
+//extern FILE *mod_music_fopen(MM_s8 *file_name, MM_s8 *attribute);
+//extern FILE *mod_music_fopen(MM_s8 *file_name, const char *attribute);
+//extern FILE *mod_music_fopen_FILE(MM_s8 *file_name);
+extern MYMOD_FILE_ptr mod_music_fopen_FILE(MM_s8 *file_name);
 
 /* support FILE read functions */
 #define mod_music_file_read_byte(x) 	x->Get(x)
 //efine mod_music_file_read_s8(x)	(s8)(mod_music_file_read_byte(x))
 //efine mod_music_file_read_u8(x)	(u8)(mod_music_file_read_byte(x))
-#define music_fgetc()					(mod_music_file_read_byte(mm_midi.mod_FILE_reader))
-//efine music_fgetc()					mm_midi.mod_FILE_reader->Get(mm_midi.mod_FILE_reader)
+#define music_fgetc()					(mod_music_file_read_byte(mmff.mod_FILE_reader))
+//efine music_fgetc()					mmff.mod_FILE_reader->Get(mmff.mod_FILE_reader)
 
-//efine mod_music_file_read_s8(mm_midi.mod_FILE_reader)	(s8)(mod_music_file_read_byte(x))
-//efine mod_music_file_read_u8(mm_midi.mod_FILE_reader)	(u8)(mod_music_file_read_byte(x))
-//efine mod_music_file_read_u16LE(/**/mm_midi.mod_FILE_reader)
-#define music_fget16()					(mod_music_file_read_u16LE(/**/mm_midi.mod_FILE_reader))
-#define music_fget32()					(mod_music_file_read_u32LE(/**/mm_midi.mod_FILE_reader))
-
-
+//efine mod_music_file_read_s8(mmff.mod_FILE_reader) (s8)(mod_music_file_read_byte(x))
+//efine mod_music_file_read_u8(mmff.mod_FILE_reader) (u8)(mod_music_file_read_byte(x))
+//efine mod_music_file_read_u16LE(/**/mmff.mod_FILE_reader)
+#define music_fget16()					(mod_music_file_read_u16LE(/**/mmff.mod_FILE_reader))
+#define music_fget32()					(mod_music_file_read_u32LE(/**/mmff.mod_FILE_reader))
 
 
-//#define mod_music_file_read_s8_mod_FILE_reader()	(s8)mm_midi.mod_FILE_reader->Get(mm_midi.mod_FILE_reader)
-//#define mod_music_file_read_u8_mod_FILE_reader()	(u8)mm_midi.mod_FILE_reader->Get(mm_midi.mod_FILE_reader)
+
+
+//#define mod_music_file_read_s8_mod_FILE_reader()	(s8)mmff.mod_FILE_reader->Get(mmff.mod_FILE_reader)
+//#define mod_music_file_read_u8_mod_FILE_reader()	(u8)mmff.mod_FILE_reader->Get(mmff.mod_FILE_reader)
 
 #define mod_music_file_read_multi_s8(x, y, z) x->Read(x, (void *)y, z)
 #define mod_music_file_read_multi_u8(x, y, z) x->Read(x, (void *)y, z)
@@ -235,7 +237,7 @@ extern void mod_music_delete_file_reader(MF_READER*);
 extern MF_WRITER *mod_music_new_file_writer(FILE *fp);
 extern void mod_music_delete_file_writer(MF_WRITER*);
 
-extern void mod_music_write_string(MF_WRITER *writer, MM_CHAR *data);
+extern void mod_music_write_string(MF_WRITER *writer, MM_s8 *data);
 
 extern void mod_music_write_s16BE(MF_WRITER *writer, s16 data);
 extern void mod_music_write_s16LE(MF_WRITER *writer, s16 data);
@@ -268,13 +270,13 @@ typedef struct MOD_MUSIC_INTERNAL_SAMPLE_LOAD_t
 {
 	struct MOD_MUSIC_INTERNAL_SAMPLE_LOAD_t *next;
 
-	u32	 length;		/* length of sample (in samples!) */
-	u32	 loopstart; 	/* repeat position (relative to start, in samples) */
-	u32	 loopend;		/* repeat end */
-	u16	 infmt;
-	u16	 outfmt;
+	u32  length;		/* length of sample (in samples!) */
+	u32  loopstart; 	/* repeat position (relative to start, in samples) */
+	u32  loopend;		/* repeat end */
+	u16  infmt;
+	u16  outfmt;
 	int 	 scalefactor;
-	struct MM_SAMPLE_t	*sample;
+	MM_SAMPLE	*sample;
 	struct MF_READER_t	*sample_FILE_reader;
 } MOD_MUSIC_INTERNAL_SAMPLE_LOAD;
 
@@ -451,35 +453,34 @@ typedef struct //FILTER_t
 
 #define LAST_PATTERN	(u16)(-1) /* special ``end of song'' pattern */
 
-typedef struct ENVPR_t
+typedef struct /*ENVPR _tag*/
 {
-	u8	flg;		/* envelope flag */
-	u8	pts;		/* number of envelope points */
-	u8	susbeg; 	/* envelope sustain index begin */
-	u8	susend; 	/* envelope sustain index end */
-	u8	beg;		/* envelope loop begin */
-	u8	end;		/* envelope loop end */
-	s16	p;			/* current envelope counter */
-	u16	a;			/* envelope index a */
-	u16	b;			/* envelope index b */
-	struct ENVPT_t	*env;		/* envelope points */
-} ENVPR;
+	u8			flg;		/* envelope flag */
+	u8			pts;		/* number of envelope points */
+	u8			susbeg; 	/* envelope sustain index begin */
+	u8			susend; 	/* envelope sustain index end */
+	u8			beg;		/* envelope loop begin */
+	u8			end;		/* envelope loop end */
+	s16 		p;			/* current envelope counter */
+	u16 		a;			/* envelope index a */
+	u16 		b;			/* envelope index b */
+	MM_ENVPT	*env;		/* envelope points */
+} MM_ENVPR;
 
-struct MM_INSTRUMENT_t;
-struct MM_SAMPLE_t;
+
 struct MP_VOICE_t;
 typedef struct MP_CONTROL_t
 {
-	struct MM_INSTRUMENT_t	*i;
-	struct MM_SAMPLE_t		*s;
+	MM_INSTRUMENT	*i;
+	MM_SAMPLE		*s;
 	u8		sample; 		/* which sample number */
 	u8		note;			/* the audible note as heard, direct rep of period */
-	s16		outvolume;		/* output volume (vol + sampcol + instvol) */
+	s16 	outvolume;		/* output volume (vol + sampcol + instvol) */
 	s8		chanvol;		/* channel's "global" volume */
-	u16		fadevol;		/* fading volume rate */
-	s16		panning;		/* panning position */
+	u16 	fadevol;		/* fading volume rate */
+	s16 	panning;		/* panning position */
 	u8		kick;			/* if true = sample has to be restarted */
-	u16		period; 		/* period to play the sample at */
+	u16 	period; 		/* period to play the sample at */
 	u8		nna;			/* New note action type + master/slave flags */
 
 	u8		volflg; 		/* volume envelope settings */
@@ -487,34 +488,34 @@ typedef struct MP_CONTROL_t
 	u8		pitflg; 		/* pitch envelope settings */
 
 	u8		keyoff; 		/* if true = fade out and stuff */
-	s16		handle; 		/* which sample-handle */
+	s16 	handle; 		/* which sample-handle */
 	u8		notedelay;		/* (used for note delay) */
-	s32		start;			/* The starting byte index in the sample */
+	s32 	start;			/* The starting byte index in the sample */
 
 	struct MP_VOICE_t		*slave; 		/* Audio Slave of current effects control channel */
 
 	u8		slavechn;		/* Audio Slave of current effects control channel */
 	u8		muted;			/* if set, channel not played */
-	u16		ultoffset;		/* fine sample offset memory */
+	u16 	ultoffset;		/* fine sample offset memory */
 	u8		anote;			/* the note that indexes the audible */
 	u8		oldnote;
-	s16		ownper;
-	s16		ownvol;
+	s16 	ownper;
+	s16 	ownvol;
 	u8		dca;			/* duplicate check action */
 	u8		dct;			/* duplicate check type */
-	u8*		row;			/* row currently playing on this channel */
+	u8* 	row;			/* row currently playing on this channel */
 	s8		retrig; 		/* retrig value (0 means don't retrig) */
-	u32		speed;			/* what mm_fine_tune to use */
-	s16		volume; 		/* amiga volume (0 t/m 64) to play the sample at */
+	u32 	speed;			/* what mm_fine_tune to use */
+	s16 	volume; 		/* amiga volume (0 t/m 64) to play the sample at */
 
-	s16		tmp_volume; 	/* tmp volume */
-	u16		tmp_period; 	/* tmp period */
-	u16		wanted_period;	/* period to slide to (with effect 3 or 5) */
+	s16 	tmp_volume; 	/* tmp volume */
+	u16 	tmp_period; 	/* tmp period */
+	u16 	wanted_period;	/* period to slide to (with effect 3 or 5) */
 
 	u8		arpmem; 		/* arpeggio command memory */
 	u8		pansspd;		/* panslide speed */
-	u16		slidespeed;
-	u16		portspeed;		/* noteslide speed (toneportamento) */
+	u16 	slidespeed;
+	u16 	portspeed;		/* noteslide speed (toneportamento) */
 
 	u8		s3m_tremor; 	/* s3m tremor (effect I) counter */
 	u8		s3m_tremor_on_off_time; 	/* s3m tremor ontime/offtime */
@@ -541,8 +542,8 @@ typedef struct MP_CONTROL_t
 	u8		ffportupspd;	/* fx X1 (extra fine portamento up) data */
 	u8		ffportdnspd;	/* fx X2 (extra fine portamento dn) data */
 
-	u32		hioffset;		/* last used high order of sample offset */
-	u16		soffset;		/* last used low order of sample-offset (effect 9) */
+	u32 	hioffset;		/* last used high order of sample offset */
+	u16 	soffset;		/* last used low order of sample-offset (effect 9) */
 
 	u8		sseffect;		/* last used Sxx effect */
 	u8		ssdata; 		/* last used Sxx data info */
@@ -553,50 +554,50 @@ typedef struct MP_CONTROL_t
 	s8		panbspd;		/* "" speed */
 	u8		panbdepth;		/* "" depth */
 
-	u16		newsamp;		/* set to 1 upon a sample / inst change */
+	u16 	newsamp;		/* set to 1 upon a sample / inst change */
 	u8		voleffect;		/* Volume Column Effect Memory as used by IT */
 	u8		voldata;		/* Volume Column Data Memory */
 
-	s16		pat_reppos; 	/* patternloop position */
-	u16		pat_repcnt; 	/* times to loop */
+	s16 	pat_reppos; 	/* patternloop position */
+	u16 	pat_repcnt; 	/* times to loop */
 } MP_CONTROL;
 
 /* Used by NNA only player (audio control.	AUDTMP is used for full effects
 	control). */
 typedef struct MP_VOICE_t
 {
-	struct MM_INSTRUMENT_t	*i;
-	struct MM_SAMPLE_t		*s;
-	u8		sample; 		/* which instrument number */
+	MM_INSTRUMENT	*i;
+	MM_SAMPLE		*s;
+	u8			sample; 		/* which instrument number */
 
-	u8		note;			/* the audible note (as heard, direct rep of period) */
-	s16		volume; 		/* output volume (vol + sampcol + instvol) */
-	s8		chanvol;		/* channel's "global" volume */
-	u16		fadevol;		/* fading volume rate */
-	s16		panning;		/* panning position */
-	u8		kick;			/* if true = sample has to be restarted */
-	u16		period; 		/* period to play the sample at */
-	u8		nna;			/* New note action type + master/slave flags */
-	u8		volflg; 		/* volume envelope settings */
-	u8		panflg; 		/* panning envelope settings */
-	u8		pitflg; 		/* pitch envelope settings */
-	u8		keyoff; 		/* if true = fade out and stuff */
-	s16		handle; 		/* which sample-handle */
-	s32		start;			/* The start byte index in the sample */
+	u8			note;			/* the audible note (as heard, direct rep of period) */
+	s16 		volume; 		/* output volume (vol + sampcol + instvol) */
+	s8			chanvol;		/* channel's "global" volume */
+	u16 		fadevol;		/* fading volume rate */
+	s16 		panning;		/* panning position */
+	u8			kick;			/* if true = sample has to be restarted */
+	u16 		period; 		/* period to play the sample at */
+	u8			nna;			/* New note action type + master/slave flags */
+	u8			volflg; 		/* volume envelope settings */
+	u8			panflg; 		/* panning envelope settings */
+	u8			pitflg; 		/* pitch envelope settings */
+	u8			keyoff; 		/* if true = fade out and stuff */
+	s16 		handle; 		/* which sample-handle */
+	s32 		start;			/* The start byte index in the sample */
 
 /* Below here is info NOT in MP_CONTROL!! */
-	struct ENVPR_t		venv;
-	struct ENVPR_t		penv;
-	struct ENVPR_t		cenv;
+	MM_ENVPR	venv;
+	MM_ENVPR	penv;
+	MM_ENVPR	cenv;
 
-	u16		avibpos;		/* autovibrato pos */
-	u16		aswppos;		/* autovibrato sweep pos */
+	u16 		avibpos;		/* autovibrato pos */
+	u16 		aswppos;		/* autovibrato sweep pos */
 
-	u32		totalvol;		/* total volume of channel (before global mixings) */
+	u32 		totalvol;		/* total volume of channel (before global mixings) */
 
 	MM_BOOL 	mflag;
-	s16		masterchn;
-	u16		masterperiod;
+	s16 		masterchn;
+	u16 		masterperiod;
 
 	struct MP_CONTROL_t *master;		/* index of "master" effects channel */
 } MP_VOICE;
@@ -606,44 +607,51 @@ typedef struct MP_VOICE_t
 typedef struct MOD_MUSIC_INTERNAL_LOADER_t
 {
 	struct MOD_MUSIC_INTERNAL_LOADER_t	*next;
-	const char	*type;		// MM_CHAR* 	type;
-	const char	*version;	// MM_CHAR* 	version;
+	const char	*type;		// MM_s8*	type;
+	const char	*version;	// MM_s8*	version;
 	MM_BOOL 	(*Init)(void);
 	MM_BOOL 	(*Test)(void);
 	MM_BOOL 	(*Load)(MM_BOOL);
 	void		(*Cleanup)(void);
-//曲名廃止	MM_CHAR*		(*LoadTitle)(void); //	曲名(但しシフトjisコード対象外)
+//曲名廃止	MM_s8*		(*LoadTitle)(void); //	曲名(但しシフトjisコード対象外)
 } MOD_MUSIC_INTERNAL_LOADER;
 
 /* internal loader variables */
 
 extern u16	mm_fine_tune[16];
-extern MOD_MUSIC_MODULE  of;						/* static unimod loading space */
-//static /*extern*/ u16	npertab[7*OCTAVE];		/* used only by the original MOD loaders */
+extern MOD_MUSIC_MODULE  	mmoo;						/* static unimod loading space */
+//static /*extern*/ u16 npertab[7*OCTAVE];			/* used only by the original MOD loaders */
 
-extern s8	mm_re_map[UF_MAXCHAN];				/* 64 for removing empty channels */
-extern u8*	mm_position_look_up;				/* lookup table for pattern jumps after
+extern u8*	mm_position_look_up;					/* lookup table for pattern jumps after
 													   blank pattern removal */
-extern u16*	origpositions;
+extern u16* origpositions;
 
 /* (psp) .alignの関係で構造体にいれとく
 	レアケースかもしんないけど、pspのGCCで、(とりあえず今使ってるのは4.3.3)
 	global 変数の.alignが4byte境界に合ってないと(他が)おかしくなる不具合があるっぽい。
 	実際に(他のglobal変数に)異常値を書き込むので困った。
 */
-typedef struct MOD_MUSIC_INTERNAL_MIDI_FILTER_t
+typedef struct /*MOD_MUSIC_INTERNAL_MIDI_FILTER_tag*/
 {
 	// file read write support.
-/*extern*/ MF_READER	*mod_FILE_reader;
-	// mm midi.
-	MM_BOOL 			mm_midi_use_resonant_filters;	/* resonant filters in use */
-	/*u8*/u32 	mm_midi_active_macro;			/* active midi macro number for Sxx */
-	/*u8*/u32 	mm_midi_position_look_up_counter;
-} MOD_MUSIC_INTERNAL_MIDI_FILTER;
-extern MOD_MUSIC_INTERNAL_MIDI_FILTER mm_midi;/* 構造体にいれときゃタブンOK */
+	MF_READER		*mod_FILE_reader;
 //
+//struct MOD_MUSIC_INTERNAL_MIDI_FILTER_tag mma_midi;
+	//
+	s8				re_map[UF_MAXCHAN]; 	/* 64, for removing empty channels */
+	// mm midi.
+	/*u8*/u32		mm_midi_active_macro;			/* active midi macro number for Sxx */
+	/*u8*/u32		mm_midi_position_look_up_counter;
+	#if (1==USE_ITZ_ZXX_MIDI_RESONANT_FILTERS)
+	MM_BOOL 		mm_midi_use_resonant_filters;	/* resonant filters in use */
+	#endif /*(USE_ITZ_ZXX_MIDI_RESONANT_FILTERS)*/
+} MOD_MUSIC_INTERNAL_MIDI_FILTER;
+extern MOD_MUSIC_INTERNAL_MIDI_FILTER mmff;/* 構造体にいれときゃタブンOK */
+//
+#if (1==USE_ITZ_ZXX_MIDI_RESONANT_FILTERS)
 extern u8	mm_filter_macros[UF_MAXMACRO];	/* midi macros settings */
 extern FILTER	filtersettings[UF_MAXFILTER];	/* computed filter settings */
+#endif /*(USE_ITZ_ZXX_MIDI_RESONANT_FILTERS)*/
 
 extern int* 	noteindex;
 
@@ -658,7 +666,7 @@ extern MM_BOOL	AllocPatterns(void);
 extern MM_BOOL	AllocTracks(void);
 extern MM_BOOL	AllocInstruments(void);
 extern MM_BOOL	AllocSamples(void);
-extern MM_CHAR* DupStr(MM_CHAR*, u16, MM_BOOL);
+extern MM_s8* DupStr(MM_s8*, u16, MM_BOOL);
 
 /* loader utility functions */
 extern int* 	AllocLinear(void);
@@ -678,7 +686,7 @@ extern u32	getfrequency(u8, u32);
 
 /* loader shared data */
 #define STM_NTRACKERS	3
-extern MM_CHAR *STM_Signatures[STM_NTRACKERS];
+extern MM_s8 *STM_Signatures[STM_NTRACKERS];
 
 /*---------- Player interface */
 
@@ -712,11 +720,11 @@ extern void (*md_player)(void);
 extern void unsignedtoulaw(char *, int);
 
 /* Parameter extraction helper */
-extern MM_CHAR	*MD_GetAtom(MM_CHAR*, MM_CHAR*, MM_BOOL);
+extern MM_s8	*MD_GetAtom(MM_s8*, MM_s8*, MM_BOOL);
 
 #if defined(unix) || defined(__APPLE__) && defined(__MACH__)
 /* POSIX helper functions */
-extern MM_BOOL	MD_Access(MM_CHAR *);
+extern MM_BOOL	MD_Access(MM_s8 *);
 extern MM_BOOL	MD_DropPrivileges(void);
 #endif
 

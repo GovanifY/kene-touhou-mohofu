@@ -19,7 +19,7 @@
 	REG_0b_REG3 	加算角(テキトー)
 	REG_0c_REG4 	加算角調整値(seed)を保持。(テキトー)
 ---------------------------------------------------------*/
-local void spell_create_1e_momiji_no_nonoji(OBJ *src)
+local OBJ_CALL_FUNC(spell_create_1e_momiji_no_nonoji)
 {
 //	if (64==(REG_10_BOSS_SPELL_TIMER)) /* 始めに初期化 */
 	count_up_limit_NUM(REG_NUM_08_REG0, 192);// 	/*	繰り返しカウンタ。 */

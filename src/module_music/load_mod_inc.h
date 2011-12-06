@@ -32,7 +32,7 @@
 
 typedef struct MSAMPINFO
 {
-	MM_CHAR samplename[23]; 	/* 22 in module, 23 in memory */
+	MM_s8 samplename[23]; 	/* 22 in module, 23 in memory */
 	u16 length;
 	u8 mm_fine_tune;
 	u8 volume;
@@ -42,7 +42,7 @@ typedef struct MSAMPINFO
 
 typedef struct MOD_MUSIC_MODULEHEADER
 {
-	MM_CHAR songname[21];		/* the songname.. 20 in module, 21 in memory */
+	MM_s8 songname[21];		/* the songname.. 20 in module, 21 in memory */
 	MSAMPINFO samples[31];		/* all sampleinfo */
 	u8 songlength;			/* number of patterns used */
 	u8 magic1;				/* should be 127 */
@@ -52,9 +52,9 @@ typedef struct MOD_MUSIC_MODULEHEADER
 
 typedef struct MODTYPE
 {
-	MM_CHAR id[5];
+	MM_s8 id[5];
 	u8 channels;
-	MM_CHAR *name;
+	MM_s8 *name;
 } MODTYPE;
 
 typedef struct MODNOTE
@@ -121,16 +121,16 @@ static int my_is_digit(char *ccc)
 
 /* given the module ID, determine the number of channels and the tracker
    description ; also alters mod_mod_type */
-//îpé~		static const MM_CHAR orpheus[]		= "Imago Orpheus (MOD format)"; 	/* Ç±ÇÃå`éÆÇæÇØÉwÉbÉ_Ç©ÇÁä»íPÇ…ÇÕîªíËÇ≈Ç´Ç»Ç¢ÅB */
+//îpé~		static const MM_s8 orpheus[]		= "Imago Orpheus (MOD format)"; 	/* Ç±ÇÃå`éÆÇæÇØÉwÉbÉ_Ç©ÇÁä»íPÇ…ÇÕîªíËÇ≈Ç´Ç»Ç¢ÅB */
 
-static MM_BOOL MOD_CheckType(u8 *id, u8 *numchn/*, MM_CHAR **descr*/)
+static MM_BOOL MOD_CheckType(u8 *id, u8 *numchn/*, MM_s8 **descr*/)
 {
-//îpé~		static const MM_CHAR protracker[]	= "Protracker";
-//îpé~		static const MM_CHAR startrekker[]	= "Startrekker";
-//îpé~		static const MM_CHAR fasttracker[]	= "Fasttracker";
-//îpé~		static const MM_CHAR oktalyser[]	= "Oktalyser";
-//îpé~		static const MM_CHAR oktalyzer[]	= "Oktalyzer";
-//îpé~		static const MM_CHAR taketracker[]	= "TakeTracker";
+//îpé~		static const MM_s8 protracker[]	= "Protracker";
+//îpé~		static const MM_s8 startrekker[]	= "Startrekker";
+//îpé~		static const MM_s8 fasttracker[]	= "Fasttracker";
+//îpé~		static const MM_s8 oktalyser[]	= "Oktalyser";
+//îpé~		static const MM_s8 oktalyzer[]	= "Oktalyzer";
+//îpé~		static const MM_s8 taketracker[]	= "TakeTracker";
 
 	/* Protracker and variants */
 	if (	(!memcmp(id, "M.K.", 4)) ||
@@ -207,11 +207,10 @@ static MM_BOOL MOD_CheckType(u8 *id, u8 *numchn/*, MM_CHAR **descr*/)
 static MM_BOOL MOD_Test(void)
 {
 	u8 id[4], numchn;
-	mod_music_file_seek_set(mm_midi.mod_FILE_reader, MOD_MUSIC_MODULEHEADERSIZE);
-	if (!mod_music_file_read_multi_u8(mm_midi.mod_FILE_reader, id, 4))
-	{	return (0);
-	}
-//	MM_CHAR *descr;
+	mod_music_file_seek_set(mmff.mod_FILE_reader, MOD_MUSIC_MODULEHEADERSIZE);
+	mod_music_file_read_multi_u8(mmff.mod_FILE_reader, id, 4);
+//	if (0==)	{	return (0);	}
+//	MM_s8 *descr;
 	if (MOD_CheckType(id, &numchn/*, &descr*/))
 	{	return (1);
 	}
@@ -355,11 +354,11 @@ static u8 *ConvertTrack(MODNOTE *n)
 {
 	int t;
 	UniReset();
-	for (t = 0; t < 64; t++)
+	for (t=0; t<64; t++)
 	{
 		ConvertNote(n);
 		UniNewline();
-		n += of.numchn;
+		n += mmoo.numchn;
 	}
 	return UniDup();
 }
@@ -374,26 +373,26 @@ static MM_BOOL ML_LoadPatterns(void)
 	{	return (0);
 	}
 	/* Allocate temporary buffer for loading and converting the patterns */
-	if (!(patbuf = (MODNOTE *)mod_music_calloc(64U * of.numchn, sizeof(MODNOTE))))
+	if (!(patbuf = (MODNOTE *)mod_music_calloc(64U * mmoo.numchn, sizeof(MODNOTE))))
 	{	return (0);
 	}
 	//
 	int tracks = 0;
 	int t;
-	for (t=0; t<of.numpat; t++)
+	for (t=0; t<mmoo.numpat; t++)
 	{
 		/* Load the pattern into the temp buffer and convert it */
 		unsigned int s;
-		for (s=0; s<(64U * of.numchn); s++)
+		for (s=0; s<(64U * mmoo.numchn); s++)
 		{
 			patbuf[s].a = (u8)(music_fgetc());
 			patbuf[s].b = (u8)(music_fgetc());
 			patbuf[s].c = (u8)(music_fgetc());
 			patbuf[s].d = (u8)(music_fgetc());
 		}
-		for (s=0; s<of.numchn; s++)
+		for (s=0; s<mmoo.numchn; s++)
 		{
-			if (!(of.tracks[tracks++] = ConvertTrack(patbuf + s)))
+			if (!(mmoo.tracks[tracks++] = ConvertTrack(patbuf + s)))
 			{
 				return (0);
 			}
@@ -409,87 +408,87 @@ static MM_BOOL MOD_Load(MM_BOOL curious)
 	MSAMPINFO *s;
 
 	/* try to read module header */
-	mod_music_file_read_string(mm_midi.mod_FILE_reader, (MM_CHAR *)mh_mod->songname, 20);
+	mod_music_file_read_string(mmff.mod_FILE_reader, (MM_s8 *)mh_mod->songname, 20);
 	mh_mod->songname[20]	= 0;		/* just in case */
 
 	for (t=0; t<31; t++)
 	{
 		s = &mh_mod->samples[t];
-		mod_music_file_read_string(mm_midi.mod_FILE_reader, s->samplename, 22);
+		mod_music_file_read_string(mmff.mod_FILE_reader, s->samplename, 22);
 		s->samplename[22]	= 0;	/* just in case */
-		s->length			= mod_music_file_read_u16BE(mm_midi.mod_FILE_reader);
+		s->length			= mod_music_file_read_u16BE(mmff.mod_FILE_reader);
 		s->mm_fine_tune 	= (u8)(music_fgetc());
 		s->volume			= (u8)(music_fgetc());
-		s->reppos			= mod_music_file_read_u16BE(mm_midi.mod_FILE_reader);
-		s->replen			= mod_music_file_read_u16BE(mm_midi.mod_FILE_reader);
+		s->reppos			= mod_music_file_read_u16BE(mmff.mod_FILE_reader);
+		s->replen			= mod_music_file_read_u16BE(mmff.mod_FILE_reader);
 	}
 
 	mh_mod->songlength		= (u8)(music_fgetc());
 	mh_mod->magic1			= (u8)(music_fgetc());
-	mod_music_file_read_multi_u8(mm_midi.mod_FILE_reader, mh_mod->positions, 128);
-	mod_music_file_read_multi_u8(mm_midi.mod_FILE_reader, mh_mod->magic2, 4);
+	mod_music_file_read_multi_u8(mmff.mod_FILE_reader, mh_mod->positions, 128);
+	mod_music_file_read_multi_u8(mmff.mod_FILE_reader, mh_mod->magic2, 4);
 
-	if (mod_music_eof(mm_midi.mod_FILE_reader))
+	if (mod_music_eof(mmff.mod_FILE_reader))
 	{
 		mod_music_error_number = MOD_MUSIC_ERROR_LOADING_HEADER;
 		return (0);
 	}
 
 	/* set module variables */
-	of.initspeed	= 6;
-	of.inittempo	= 125;
-//	MM_CHAR *descr;
-	if (!(MOD_CheckType(mh_mod->magic2, &of.numchn/*, &descr*/)))
+	mmoo.initspeed	= 6;
+	mmoo.inittempo	= 125;
+//	MM_s8 *descr;
+	if (!(MOD_CheckType(mh_mod->magic2, &mmoo.numchn/*, &descr*/)))
 	{
 		mod_music_error_number = MOD_MUSIC_ERROR_NOT_A_MOD_MUSIC_MODULE;
 		return (0);
 	}
-//îpé~		ã»ñºï∂éöóÒ: 	of.string_songname = DupStr(mh_mod->songname, 21, 1);
-	of.numpos	= mh_mod->songlength;
-	of.reppos	= 0;
+//îpé~		ã»ñºï∂éöóÒ: 	mmoo.string_songname = DupStr(mh_mod->songname, 21, 1);
+	mmoo.numpos 	= mh_mod->songlength;
+	mmoo.reppos 	= 0;
 
 	/* Count the number of patterns */
-	of.numpat	= 0;
-	for (t=0; t<of.numpos; t++)
-	{	if (mh_mod->positions[t] > of.numpat)
-		{	of.numpat = mh_mod->positions[t];
+	mmoo.numpat 	= 0;
+	for (t=0; t<mmoo.numpos; t++)
+	{	if (mh_mod->positions[t] > mmoo.numpat)
+		{	mmoo.numpat = mh_mod->positions[t];
 		}
 	}
 	/* since some old modules embed extra patterns, we have to check the
 	   whole list to get the samples' file offsets right - however we can find
 	   garbage here, so check carefully */
 	scan	= 1;
-	for (t=of.numpos; t<128; t++)
+	for (t=mmoo.numpos; t<128; t++)
 	{	if (mh_mod->positions[t] >= 0x80)
 		{	scan = 0;
 		}
 	}
 	if (scan)
-	{	for (t=of.numpos; t<128; t++)
+	{	for (t=mmoo.numpos; t<128; t++)
 		{
-			if (mh_mod->positions[t] > of.numpat)
-			{	of.numpat = mh_mod->positions[t];}
+			if (mh_mod->positions[t] > mmoo.numpat)
+			{	mmoo.numpat = mh_mod->positions[t];}
 			if ((curious) && (mh_mod->positions[t]))
-			{	of.numpos = t + 1;}
+			{	mmoo.numpos = t + 1;}
 		}
 	}
-	of.numpat++;
-	of.numtrk = of.numpat * of.numchn;
+	mmoo.numpat++;
+	mmoo.numtrk = mmoo.numpat * mmoo.numchn;
 
-	if (!AllocPositions(of.numpos))
+	if (!AllocPositions(mmoo.numpos))
 	{	return (0);
 	}
-	for (t=0; t<of.numpos; t++)
-	{	of.positions[t] = mh_mod->positions[t];
+	for (t=0; t<mmoo.numpos; t++)
+	{	mmoo.positions[t] = mh_mod->positions[t];
 	}
 	/* Finally, init the sampleinfo structures	*/
-	of.numins = of.numsmp = 31;
+	mmoo.numins = mmoo.numsmp = 31;
 	if (!AllocSamples())
 	{	return (0);
 	}
 	s = mh_mod->samples;
-	q = of.samples;
-	for (t=0; t<of.numins; t++)
+	q = mmoo.samples;
+	for (t=0; t<mmoo.numins; t++)
 	{
 		/* convert the samplename */
 		q->samplename	= DupStr(s->samplename, 23, 1);
@@ -516,7 +515,7 @@ static MM_BOOL MOD_Load(MM_BOOL curious)
 		s++;
 		q++;
 	}
-//îpé~ (MikMODÇ™îªï ÇµÇΩ)ÉÇÉWÉÖÅ[Éãñºï∂éöóÒ:		of.string_modtype = strdup(descr);
+//îpé~ (MikMODÇ™îªï ÇµÇΩ)ÉÇÉWÉÖÅ[Éãñºï∂éöóÒ:		mmoo.string_modtype = strdup(descr);
 	if (!ML_LoadPatterns())
 	{	return (0);
 	}
@@ -524,14 +523,13 @@ static MM_BOOL MOD_Load(MM_BOOL curious)
 }
 
 #if 0/*ã»ñºîpé~*/
-static MM_CHAR *MOD_LoadTitle(void)
+static MM_s8 *MOD_LoadTitle(void)
 {
-	mod_music_file_seek_rewind(mm_midi.mod_FILE_reader);
+	mod_music_file_seek_rewind(mmff.mod_FILE_reader);
 	//
-	MM_CHAR s[21];
-	if (!mod_music_file_read_u8S(s, 20, mm_midi.mod_FILE_reader))
-	{	return (NULL);
-	}
+	MM_s8 s[21];
+	mod_music_file_read_u8S(s, 20, mmff.mod_FILE_reader);
+//	if (0==)	{	return (NULL);	}
 	s[20] = 0;					/* just in case */
 	return (DupStr(s, 21, 1));
 }

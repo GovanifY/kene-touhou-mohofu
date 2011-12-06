@@ -26,7 +26,7 @@
 /* header */
 typedef struct S3MHEADER
 {
-	MM_CHAR  songname[28];
+	MM_s8  songname[28];
 	u8 t1a;
 	u8 type;
 	u8 unused1[2];
@@ -36,7 +36,7 @@ typedef struct S3MHEADER
 	u16 flags;
 	u16 tracker;
 	u16 fileformat;
-	MM_CHAR  scrm[4];
+	MM_s8  scrm[4];
 	u8 mastervol;
 	u8 initspeed;
 	u8 inittempo;
@@ -52,7 +52,7 @@ typedef struct S3MHEADER
 typedef struct S3MSAMPLE
 {
 	u8 type;
-	MM_CHAR  filename[12];
+	MM_s8  filename[12];
 	u8 memsegh;
 	u16 memsegl;
 	u32 length;
@@ -64,8 +64,8 @@ typedef struct S3MSAMPLE
 	u8 flags;
 	u32 c2spd;
 	u8 unused[12];
-	MM_CHAR  sampname[28];
-	MM_CHAR  scrs[4];
+	MM_s8  sampname[28];
+	MM_s8  scrs[4];
 } S3MSAMPLE;
 
 typedef struct S3MNOTE
@@ -86,8 +86,9 @@ static unsigned int tracker;	/* tracker id */
 MM_BOOL S3M_Test(void)
 {
 	u8 id[4];
-	mod_music_file_seek_set(mm_midi.mod_FILE_reader, 0x2c);
-	if (!mod_music_file_read_multi_u8(mm_midi.mod_FILE_reader, id, 4))	{	return (0);}
+	mod_music_file_seek_set(mmff.mod_FILE_reader, 0x2c);
+	mod_music_file_read_multi_u8(mmff.mod_FILE_reader, id, 4);
+//	if (0==)	{	return (0);}
 	if (!memcmp(id,"SCRM",4))	{	return (1);}
 	return (0);
 }
@@ -115,7 +116,7 @@ void S3M_Cleanup(void)
    determines the number of channels that are actually USED by a pattern.
 
    For every channel that's used, it sets the appropriate array entry of
-	the global variable 'mm_re_map'
+	the global variable 'mmff.re_map'
 
    NOTE: You must first seek to the file location of
 	the pattern before calling this procedure.
@@ -128,14 +129,14 @@ static MM_BOOL S3M_GetNumChannels(void)
 	{
 		/*u8*/int flag;
 		flag = (u8)(music_fgetc());
-		if (mod_music_eof(mm_midi.mod_FILE_reader))
+		if (mod_music_eof(mmff.mod_FILE_reader))
 		{
 			mod_music_error_number = MOD_MUSIC_ERROR_LOADING_PATTERN;
 			return (1);
 		}
 		if (flag)
 		{
-			if (mh_s3m->channels[/*ch*/(flag&31)]<32) 	{	mm_re_map[/*ch*/(flag&31)] = 0;}
+			if (mh_s3m->channels[/*ch*/(flag&31)]<32) 	{	mmff.re_map[/*ch*/(flag&31)] = 0;}
 			if (flag&32)	{	(u8)(music_fgetc());(u8)(music_fgetc());	}
 			if (flag&64)	{	(u8)(music_fgetc());									}
 			if (flag&128)	{	(u8)(music_fgetc());(u8)(music_fgetc());	}
@@ -160,7 +161,7 @@ static MM_BOOL S3M_ReadPattern(void)
 	while (row<64)
 	{
 		flag = (u8)(music_fgetc());
-		if (mod_music_eof(mm_midi.mod_FILE_reader))
+		if (mod_music_eof(mmff.mod_FILE_reader))
 		{
 			mod_music_error_number = MOD_MUSIC_ERROR_LOADING_PATTERN;
 			return (0);
@@ -169,7 +170,7 @@ static MM_BOOL S3M_ReadPattern(void)
 		if (flag)
 		{
 			int ch;
-			ch = mm_re_map[flag&31];
+			ch = mmff.re_map[flag&31];
 			if (ch!=-1)
 			{	n = &s3mbuf[(64U*ch)+row];}
 			else
@@ -238,28 +239,28 @@ MM_BOOL S3M_Load(MM_BOOL curious)
 	u8 pan[32];
 
 	/* try to read module header */
-	mod_music_file_read_string(mm_midi.mod_FILE_reader, mh_s3m->songname, 28);
+	mod_music_file_read_string(mmff.mod_FILE_reader, mh_s3m->songname, 28);
 	mh_s3m->t1a 		= (u8)(music_fgetc());
 	mh_s3m->type		= (u8)(music_fgetc());
-	mod_music_file_read_multi_u8(mm_midi.mod_FILE_reader, mh_s3m->unused1, 2);
+	mod_music_file_read_multi_u8(mmff.mod_FILE_reader, mh_s3m->unused1, 2);
 	mh_s3m->ordnum		= music_fget16();
 	mh_s3m->insnum		= music_fget16();
 	mh_s3m->patnum		= music_fget16();
 	mh_s3m->flags		= music_fget16();
 	mh_s3m->tracker 	= music_fget16();
 	mh_s3m->fileformat	= music_fget16();
-	mod_music_file_read_string(mm_midi.mod_FILE_reader, mh_s3m->scrm, 4);
+	mod_music_file_read_string(mmff.mod_FILE_reader, mh_s3m->scrm, 4);
 	mh_s3m->mastervol	= (u8)(music_fgetc());
 	mh_s3m->initspeed	= (u8)(music_fgetc());
 	mh_s3m->inittempo	= (u8)(music_fgetc());
 	mh_s3m->mastermult	= (u8)(music_fgetc());
 	mh_s3m->ultraclick	= (u8)(music_fgetc());
 	mh_s3m->pantable	= (u8)(music_fgetc());
-	mod_music_file_read_multi_u8(mm_midi.mod_FILE_reader, mh_s3m->unused2, 8);
+	mod_music_file_read_multi_u8(mmff.mod_FILE_reader, mh_s3m->unused2, 8);
 	mh_s3m->special 	= music_fget16();
-	mod_music_file_read_multi_u8(mm_midi.mod_FILE_reader, mh_s3m->channels, 32);
+	mod_music_file_read_multi_u8(mmff.mod_FILE_reader, mh_s3m->channels, 32);
 
-	if (mod_music_eof(mm_midi.mod_FILE_reader))
+	if (mod_music_eof(mmff.mod_FILE_reader))
 	{
 		mod_music_error_number = MOD_MUSIC_ERROR_LOADING_HEADER;
 		return (0);
@@ -281,7 +282,7 @@ MM_BOOL S3M_Load(MM_BOOL curious)
 	}
 	#if 0//îpé~ 	(MikMODÇ™îªï ÇµÇΩ)ÉÇÉWÉÖÅ[Éãñºï∂éöóÒ: string_modtype
 	{
-		static const MM_CHAR* S3M_Version[] =
+		static const MM_s8* S3M_Version[] =
 		{
 			"Screamtracker x.xx",
 			"Imago Orpheus x.xx (S3M format)",
@@ -290,29 +291,29 @@ MM_BOOL S3M_Load(MM_BOOL curious)
 			"Impulse Tracker 2.14p3 (S3M format)",
 			"Impulse Tracker 2.14p4 (S3M format)"
 		};
-		of.string_modtype = strdup(S3M_Version[tracker]);
+		mmoo.string_modtype = strdup(S3M_Version[tracker]);
 		if (tracker<NUMTRACKERS)
 		{
 			/* version number position in above array */
 			static int numeric[NUMTRACKERS] =	{14,14,16,16};
-			of.string_modtype[numeric[tracker]	] = ((mh_s3m->tracker>>8)&0x0f)+'0';
-			of.string_modtype[numeric[tracker]+2] = ((mh_s3m->tracker>>4)&0x0f)+'0';
-			of.string_modtype[numeric[tracker]+3] = ((mh_s3m->tracker	)&0x0f)+'0';
+			mmoo.string_modtype[numeric[tracker]	] = ((mh_s3m->tracker>>8)&0x0f)+'0';
+			mmoo.string_modtype[numeric[tracker]+2] = ((mh_s3m->tracker>>4)&0x0f)+'0';
+			mmoo.string_modtype[numeric[tracker]+3] = ((mh_s3m->tracker	)&0x0f)+'0';
 		}
 	}
 	#endif
 	/* set module variables */
-//îpé~ ã»ñºï∂éöóÒ:	of.string_songname		= DupStr(mh_s3m->songname,28,0);
-	of.numpat		= mh_s3m->patnum;
-	of.reppos		= 0;
-	of.numins		= of.numsmp 	= mh_s3m->insnum;
-	of.initspeed	= mh_s3m->initspeed;
-	of.inittempo	= mh_s3m->inittempo;
-	of.initvolume	= mh_s3m->mastervol<<1;
-	of.flags		|= UF_ARPMEM /*| UF_PANNING*/;
+//îpé~ ã»ñºï∂éöóÒ:	mmoo.string_songname		= DupStr(mh_s3m->songname,28,0);
+	mmoo.numpat		= mh_s3m->patnum;
+	mmoo.reppos		= 0;
+	mmoo.numins		= mmoo.numsmp 	= mh_s3m->insnum;
+	mmoo.initspeed	= mh_s3m->initspeed;
+	mmoo.inittempo	= mh_s3m->inittempo;
+	mmoo.initvolume	= mh_s3m->mastervol<<1;
+	mmoo.flags		|= UF_ARPMEM /*| UF_PANNING*/;
 	if ((mh_s3m->tracker==0x1300)||(mh_s3m->flags&64))
-	{	of.flags	|= UF_S3MSLIDES;}
-//	of.bpmlimit 	= 32;
+	{	mmoo.flags	|= UF_S3MSLIDES;}
+//	mmoo.bpmlimit 	= 32;
 
 	/* read the order data */
 	if (!AllocPositions(mh_s3m->ordnum)) 	{	return (0);}
@@ -327,29 +328,29 @@ MM_BOOL S3M_Load(MM_BOOL curious)
 		}
 	}
 
-	if (mod_music_eof(mm_midi.mod_FILE_reader))
+	if (mod_music_eof(mmff.mod_FILE_reader))
 	{
 		mod_music_error_number = MOD_MUSIC_ERROR_LOADING_HEADER;
 		return (0);
 	}
 
-	mm_midi.mm_midi_position_look_up_counter = (u8)mh_s3m->ordnum;
+	mmff.mm_midi_position_look_up_counter = (u8)mh_s3m->ordnum;
 	S3MIT_CreateOrders(curious);
-	paraptr_s3m = (u16*)mod_music_malloc((of.numins+of.numpat)*sizeof(u16));
+	paraptr_s3m = (u16*)mod_music_malloc((mmoo.numins+mmoo.numpat)*sizeof(u16));
 	if (!(paraptr_s3m))
 	{	return (0);
 	}
 	/* read the instrument+pattern parapointers */
-	mod_music_file_read_multi_u16LE(mm_midi.mod_FILE_reader, paraptr_s3m, of.numins+of.numpat);
+	mod_music_file_read_multi_u16LE(mmff.mod_FILE_reader, paraptr_s3m, mmoo.numins+mmoo.numpat);
 
 	if (mh_s3m->pantable==252)
 	{
 		/* read the panning table(ST 3.2 addition.  See below for further
 		   portions of channel panning [past reampper]). */
-		mod_music_file_read_multi_u8(mm_midi.mod_FILE_reader, pan, 32);
+		mod_music_file_read_multi_u8(mmff.mod_FILE_reader, pan, 32);
 	}
 
-	if (mod_music_eof(mm_midi.mod_FILE_reader))
+	if (mod_music_eof(mmff.mod_FILE_reader))
 	{
 		mod_music_error_number = MOD_MUSIC_ERROR_LOADING_HEADER;
 		return (0);
@@ -357,15 +358,15 @@ MM_BOOL S3M_Load(MM_BOOL curious)
 
 	/* load samples */
 	if (!AllocSamples())	{	return (0);}
-	q = of.samples;
-	for (t=0; t<of.numins; t++)
+	q = mmoo.samples;
+	for (t=0; t<mmoo.numins; t++)
 	{
 		S3MSAMPLE s;
 		/* seek to instrument position */
-		mod_music_file_seek_set(mm_midi.mod_FILE_reader, ((long)paraptr_s3m[t])<<4);
+		mod_music_file_seek_set(mmff.mod_FILE_reader, ((long)paraptr_s3m[t])<<4);
 		/* and load sample info */
 		s.type			= (u8)(music_fgetc());
-		mod_music_file_read_string(mm_midi.mod_FILE_reader, s.filename, 12);
+		mod_music_file_read_string(mmff.mod_FILE_reader, s.filename, 12);
 		s.memsegh		= (u8)(music_fgetc());
 		s.memsegl		= music_fget16();
 		s.length		= music_fget32();
@@ -376,14 +377,14 @@ MM_BOOL S3M_Load(MM_BOOL curious)
 		s.pack			= (u8)(music_fgetc());
 		s.flags 		= (u8)(music_fgetc());
 		s.c2spd 		= music_fget32();
-		mod_music_file_read_multi_u8(mm_midi.mod_FILE_reader, s.unused, 12);
-		mod_music_file_read_string(mm_midi.mod_FILE_reader, s.sampname, 28);
-		mod_music_file_read_string(mm_midi.mod_FILE_reader, s.scrs, 4);
+		mod_music_file_read_multi_u8(mmff.mod_FILE_reader, s.unused, 12);
+		mod_music_file_read_string(mmff.mod_FILE_reader, s.sampname, 28);
+		mod_music_file_read_string(mmff.mod_FILE_reader, s.scrs, 4);
 
 	//	/* ScreamTracker imposes a 64000 bytes (not 64k !) limit */
 	//	if (s.length > 64000)
 	//	{	s.length = 64000;}
-		if (mod_music_eof(mm_midi.mod_FILE_reader))
+		if (mod_music_eof(mmff.mod_FILE_reader))
 		{
 			mod_music_error_number	= MOD_MUSIC_ERROR_LOADING_SAMPLEINFO;
 			return (0);
@@ -407,53 +408,53 @@ MM_BOOL S3M_Load(MM_BOOL curious)
 	}
 
 	/* determine the number of channels actually used. */
-	of.numchn = 0;
-	memset(mm_re_map,-1,32*sizeof(u8));
-	for (t=0; t<of.numpat; t++)
+	mmoo.numchn = 0;
+	memset(mmff.re_map, -1, (32*sizeof(u8)) );
+	for (t=0; t<mmoo.numpat; t++)
 	{
 		/* seek to pattern position (+2 skip pattern length) */
-		mod_music_file_seek_set(mm_midi.mod_FILE_reader, (long)((paraptr_s3m[of.numins+t])<<4)+2);
+		mod_music_file_seek_set(mmff.mod_FILE_reader, (long)((paraptr_s3m[mmoo.numins+t])<<4)+2);
 		if (S3M_GetNumChannels())	{return (0);}
 	}
 
-	/* build the mm_re_map array  */
+	/* build the mmff.re_map array  */
 	for (t=0; t<32; t++)
-	{	if (!mm_re_map[t])
-		{	mm_re_map[t] = of.numchn++;
+	{	if (!mmff.re_map[t])
+		{	mmff.re_map[t] = mmoo.numchn++;
 		}
 	}
-	/* set panning positions after building mm_re_map chart! */
+	/* set panning positions after building mmff.re_map chart! */
 	for (t=0; t<32; t++)
-	{	if ((mh_s3m->channels[t]<32)&&(mm_re_map[t]!=-1))
+	{	if ((mh_s3m->channels[t]<32)&&(mmff.re_map[t]!=-1))
 		{
 			if (mh_s3m->channels[t]<8)
-			{	of.panning[mm_re_map[t]] = 0x30;	/* 0x30 = std s3m val / 0x20 */
+			{	mmoo.panning[mmff.re_map[t]] = 0x30;	/* 0x30 = std s3m val / 0x20 */
 			}
 			else
-			{	of.panning[mm_re_map[t]] = 0xc0;	/* 0xc0 = std s3m val / 0xd0 */
+			{	mmoo.panning[mmff.re_map[t]] = 0xc0;	/* 0xc0 = std s3m val / 0xd0 */
 			}
 		}
 	}
 	if (mh_s3m->pantable==252)
 	{	/* set panning positions according to panning table (new for st3.2) */
 		for (t=0; t<32; t++)
-		{	if ((pan[t]&0x20)&&(mh_s3m->channels[t]<32)&&(mm_re_map[t]!=-1))
-			{	of.panning[mm_re_map[t]] = ((pan[t]&0xf)<<4);
+		{	if ((pan[t]&0x20)&&(mh_s3m->channels[t]<32)&&(mmff.re_map[t]!=-1))
+			{	mmoo.panning[mmff.re_map[t]] = ((pan[t]&0xf)<<4);
 			}
 		}
 	}
 	/* load pattern info */
-	of.numtrk = (of.numpat * of.numchn);
+	mmoo.numtrk = (mmoo.numpat * mmoo.numchn);
 	if (!AllocTracks()) 	{return (0);}
 	if (!AllocPatterns())	{return (0);}
 
-	for (t=0; t<of.numpat; t++)
+	for (t=0; t<mmoo.numpat; t++)
 	{
 		/* seek to pattern position (+2 skip pattern length) */
-		mod_music_file_seek_set(mm_midi.mod_FILE_reader, (((long)paraptr_s3m[of.numins+t])<<4)+2);
+		mod_music_file_seek_set(mmff.mod_FILE_reader, (((long)paraptr_s3m[mmoo.numins+t])<<4)+2);
 		if (!S3M_ReadPattern()) 	{return (0);}
-		for (u=0; u<of.numchn; u++)
-		{	if (!(of.tracks[track++]=S3M_ConvertTrack(&s3mbuf[u*64])))
+		for (u=0; u<mmoo.numchn; u++)
+		{	if (!(mmoo.tracks[track++]=S3M_ConvertTrack(&s3mbuf[u*64])))
 			{
 				return (0);
 			}
@@ -463,11 +464,12 @@ MM_BOOL S3M_Load(MM_BOOL curious)
 }
 
 #if 0/*ã»ñºîpé~*/
-MM_CHAR *S3M_LoadTitle(void)
+MM_s8 *S3M_LoadTitle(void)
 {
-	MM_CHAR s[28];
-	mod_music_file_seek_rewind(mm_midi.mod_FILE_reader);
-	if (!mod_music_file_read_u8S(s, 28, mm_midi.mod_FILE_reader)) 	{return (NULL);}
+	MM_s8 s[28];
+	mod_music_file_seek_rewind(mmff.mod_FILE_reader);
+	mod_music_file_read_u8S(s, 28, mmff.mod_FILE_reader);
+//	if (0==) 	{return (NULL);}
 	return (DupStr(s,28,0));
 }
 #endif

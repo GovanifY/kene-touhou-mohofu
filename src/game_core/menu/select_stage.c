@@ -93,10 +93,8 @@ static void stage_select_menu_draw_all(void)
 /*---------------------------------------------------------
 	終了処理と移動処理。
 ---------------------------------------------------------*/
-
-extern void gamecore_term(void);
 extern void player_continue_value(void);
-static void common_menu_work_MENU_STATE_03_FININSH(void)
+static MAIN_CALL_FUNC(common_menu_work_MENU_STATE_03_FININSH)
 {
 //	SDL_SetAlpha(cb.sdl_screen[SDL_01_BACK_SCREEN], SDL_SRCALPHA, 255);
 	psp_pop_screen();
@@ -118,7 +116,7 @@ static void common_menu_work_MENU_STATE_03_FININSH(void)
 	だんだん暗くする。暗くなったら次へ。
 ---------------------------------------------------------*/
 
-static void common_menu_work_MENU_STATE_02_FADE_OUT(void)
+static MAIN_CALL_FUNC(common_menu_work_MENU_STATE_02_FADE_OUT)
 {
 	aaa_menu_brite -= FPS_MENU_FACTOR8;
 	if (0 >= (aaa_menu_brite) )
@@ -132,14 +130,14 @@ static void common_menu_work_MENU_STATE_02_FADE_OUT(void)
 	メニューキー入力受け付け。確定したら次へ。
 ---------------------------------------------------------*/
 
-static void stage_select_menu_work_MENU_STATE_01_WORK_MENU(void)
+static MAIN_CALL_FUNC(stage_select_menu_work_MENU_STATE_01_WORK_MENU)
 {
 	if (0==psp_pad.pad_data_alter)/* さっき何も押されてなかった場合にキーチェック(原作準拠) */
 	{
 		/*(上下を押した場合に操作音を出す。)*/
 		if (psp_pad.pad_data & (PSP_KEY_DOWN|PSP_KEY_UP/*|PSP_KEY_PAUSE|PSP_KEY_SELECT*/))
 		{
-			voice_play(VOICE02_MENU_SELECT, TRACK01_EXPLODE);
+			voice_play(VOICE02_MENU_SELECT, TRACK01_MENU01);
 		}
 		#if 0/*(-r34)*/
 		/*(上下を押した場合、回り込み選択をする。上下は必ずワープ)*/
@@ -167,15 +165,15 @@ static void stage_select_menu_work_MENU_STATE_01_WORK_MENU(void)
 		/*(OKボタン)*/
 		if (psp_pad.pad_data & PSP_KEY_SHOT_OK)
 		{
-			voice_play(VOICE01_MENU_OK/*VOICE02_MENU_SELECT*/, TRACK01_EXPLODE);
+			voice_play(VOICE01_MENU_OK/*VOICE02_MENU_SELECT*/, TRACK01_MENU01);
 			cb.main_call_func = common_menu_work_MENU_STATE_02_FADE_OUT;	/* メニュー消去準備 */
 		}
 		else
 		/*(CANCELボタン)*/
 		if (psp_pad.pad_data & PSP_KEY_BOMB_CANCEL)
 		{
-		//	voice_play(VOICE01_MENU_OK/*VOICE02_MENU_SELECT*/, TRACK01_EXPLODE);
-			voice_play(VOICE04_SHIP_HAKAI, TRACK03_SHORT_MUSIC/*TRACK01_EXPLODE*/);/* 自機死に音は、なるべく重ねない */
+		//	voice_play(VOICE01_MENU_OK/*VOICE02_MENU_SELECT*/, TRACK01_MENU01);
+			voice_play(VOICE04_SHIP_HAKAI, TRACK02_MENU02/*TRACK01_MENU01*/);/* 自機死に音は、なるべく重ねない */
 			aaa_selected_number = (-1);/*(負数ならなんでもいい)*/
 			cb.main_call_func = common_menu_work_MENU_STATE_02_FADE_OUT;	/* メニュー消去準備 */
 		}
@@ -188,7 +186,7 @@ static void stage_select_menu_work_MENU_STATE_01_WORK_MENU(void)
 	だんだん明るくする。明るくなったら次へ。
 ---------------------------------------------------------*/
 
-static void common_menu_work_MENU_STATE_00_FADE_IN_MENU(void)
+static MAIN_CALL_FUNC(common_menu_work_MENU_STATE_00_FADE_IN_MENU)
 {
 	aaa_menu_brite += FPS_MENU_FACTOR8;
 	if ((255) <= (aaa_menu_brite) )
@@ -210,7 +208,7 @@ static void common_menu_work_MENU_STATE_00_FADE_IN_MENU(void)
 	ステージ選択メニューの開始処理。
 	-------------------------------------------------------
 ---------------------------------------------------------*/
-/*static*/global void stage_select_menu_start(void)
+/*static*/global MAIN_CALL_FUNC(stage_select_menu_start)
 {
 	psp_push_screen();
 	{

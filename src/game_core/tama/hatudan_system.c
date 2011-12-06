@@ -7,28 +7,10 @@
 	-------------------------------------------------------
 	発弾システム
 	-------------------------------------------------------
-	(r33)もう一回汎用的な弾発射システムを構築し直してみる。
-	旧 bullet_angle.c と
-	旧 bullet_vector.c は
-	ここに統合される予定。
-	レーザー関連は統合されないで、別システムになる予定。
+	敵が発弾する場合は、発弾エフェクトがあっても無くても、
+	必ず発弾システムを経由して発弾する。
 	-------------------------------------------------------
-	(r32-)喰み出しチェックについて、
-	「移動時に」喰み出しチェックをしない事が前提で設計されているカードが多い。
-	この為「移動時に」システムで喰み出しチェックをしません。
-	例えば画面端で跳ね返る弾は「移動時に」喰み出しチェックをしない事により実現している機能です。
-	「移動と別で」全弾配列を調べて「喰み出しチェック」を行います。
----------------------------------------------------------*/
-
-/*---------------------------------------------------------
-	交差弾は色々弾によって違いが多すぎる。(個々の時間とか)
-	全部システム側で吸収すると、遅くなる気がする。
-	交差弾システム側で吸収するなら、角度弾と統合して角度弾無くすべき
-	だけど(将来はともかく)現状では角度弾汎用にすると遅すぎる。
-	-------------------------------------------------------
-	現状の速度なら、交差弾は全弾配列書き換えで対応すべき。
-	(パチェとか書き換えの嵐になりそうですが。)
-	システム側交差弾対応は、無くなりそう。
+	レーザー関連の発弾は統合されないで、別システムになる予定。
 ---------------------------------------------------------*/
 
 /*---------------------------------------------------------
@@ -36,46 +18,89 @@
 	-------------------------------------------------------
 	角度弾では、ベクトル移動をしない。
 	代わりに基点座標として使う。
+	base基点、origin==原点。
 ---------------------------------------------------------*/
+#define origin									math_vector/*(発弾位置 座標)*/
+#define hatudan_system_kousadan_angle65536		tmp_angleCCW1024
 
-#if 1/* 角度弾規格(策定案tama_system) */
-	#define ox256				vx256/* 発弾位置 座標x */
-	#define oy256				vy256/* 発弾位置 座標y */
-#endif
+//	void (*aaa[4/*8*/])(OBJ/**/ *bbb) =
+//	{
+//	/* 移動処理あり */	move_bullet_hatsudan_effect,/* エフェクト大(旧r34互換) */
+//	/* 移動処理あり */	move_bullet_hatsudan_effect,/* エフェクト中 */
+//	/* 移動処理あり */	move_bullet_hatsudan_effect,/* エフェクト小 */
+//	/* 移動処理あり */	NULL,//hatudan_system_move_angle_001,/* エフェクトなし */
+//	/* 移動処理なし */	move_bullet_hatsudan_effect,/* エフェクト大(旧r34互換) */
+//	/* 移動処理なし */	move_bullet_hatsudan_effect,/* エフェクト中 */
+//	/* 移動処理なし */	move_bullet_hatsudan_effect,/* エフェクト小 */
+//	/* 移動処理なし */	NULL,//hatudan_system_move_dummy_000,/* エフェクトなし */
+//	};
+//	src->callback_mover 	= aaa[((src->hatudan_register_spec_data)>>12)&0x07];
+//	src->callback_mover 	= aaa[((src->hatudan_register_spec_data)>>12)&0x03];
 
-
-#define hatudan_system_kousadan_angle65536 tmp_angleCCW1024
+/*---------------------------------------------------------
+	移動処理選択。
+---------------------------------------------------------*/
+static OBJ_CALL_FUNC(move_bullet_hatsudan_effect);
+static OBJ_CALL_FUNC(set_mover)
+{
+	if (0x03==(((src->hatudan_register_spec_data)>>12)&0x03))
+	{	/* エフェクトなし==発弾開始処理 */
+		src->callback_mover 	= NULL;
+		{
+			/* 発弾開始直前にあたり判定を有効にする。 */
+			/* 非傾き弾は、発弾開始直前に設定。 */
+			src->atari_hantei	= (ATARI_HANTEI_TAOSENAI/*スコア兼用*/);/* あたり判定有効 */
+			if (src->hatudan_register_spec_data & TAMA_SPEC_8000_NON_TILT)/* 非傾き弾 */
+			{
+				src->m_zoom.y256 = M_ZOOM_Y256_NO_TILT;/* 特殊機能で傾かないようシステム拡張(r33)。 */
+			}
+			#if (1)/*(発弾エフェクトが無い場合に困る)*/
+			src->center.x256 = (src->origin.x256);/*fps_factor*/
+			src->center.y256 = (src->origin.y256);/*fps_factor*/
+			#endif
+		}
+	}
+	else/* エフェクトあり==(発弾エフェクト処理)*/
+	{
+		src->callback_mover 	= move_bullet_hatsudan_effect;
+	}
+}
 /*---------------------------------------------------------
 	発弾エフェクト
 	-------------------------------------------------------
 	傾かない弾 / 傾き弾(通常)
 ---------------------------------------------------------*/
-static void set_mover(OBJ *src);
-static void move_bullet_hatsudan_effect(OBJ *src)
+static OBJ_CALL_FUNC(set_mover);
+static OBJ_CALL_FUNC(move_bullet_hatsudan_effect)
 {
 //	hatudan_system_common_hatudan_000(src);
 	{
 		const int aaabbb = (src->hatudan_register_frame_counter);
 		#if (0)
-		src->cx256 = (src->ox256) + ((si n1024((src->rotationCCW1024))*(aaabbb)) );/*fps_factor*/
-		src->cy256 = (src->oy256) + ((co s1024((src->rotationCCW1024))*(aaabbb)) );/*fps_factor*/
+		src->center.x256 = (src->origin.x256) + ((si n1024((src->rotationCCW1024))*(aaabbb)) );/*fps_factor*/
+		src->center.y256 = (src->origin.y256) + ((co s1024((src->rotationCCW1024))*(aaabbb)) );/*fps_factor*/
 		#else
 		{
 			int sin_value_t256; 	// sin_value_t256 = 0;
 			int cos_value_t256; 	// cos_value_t256 = 0;
 			int256_sincos1024( (src->rotationCCW1024), &sin_value_t256, &cos_value_t256);
-			src->cx256 = (src->ox256) + ((sin_value_t256*(aaabbb))>>(((src->hatudan_register_spec_data)>>12)&0x03));/*fps_factor*/
-			src->cy256 = (src->oy256) + ((cos_value_t256*(aaabbb))>>(((src->hatudan_register_spec_data)>>12)&0x03));/*fps_factor*/
+			src->center.x256 = (src->origin.x256) + ((sin_value_t256*(aaabbb))>>(((src->hatudan_register_spec_data)>>12)&0x03));/*fps_factor*/
+			src->center.y256 = (src->origin.y256) + ((cos_value_t256*(aaabbb))>>(((src->hatudan_register_spec_data)>>12)&0x03));/*fps_factor*/
 		}
 		#endif
 		src->color32		= ((256-aaabbb)<<(24))|0x00ffffff;
-		src->m_zoom_x256	= t256(1.0) + (aaabbb) + (aaabbb);
-		src->m_zoom_y256	= t256(1.0) + (aaabbb) + (aaabbb);
+		src->m_zoom.x256	= t256(1.0) + (aaabbb) + (aaabbb);
+		src->m_zoom.y256	= t256(1.0) + (aaabbb) + (aaabbb);
 	}
 	src->hatudan_register_frame_counter -= (4);
 	if (0 > src->hatudan_register_frame_counter)
 	{
-	//	src->hatudan_register_frame_counter = 0;
+		src->hatudan_register_frame_counter = (0);/*(この後で使うなら)*/
+		/*(エフェクトなし に設定する。)*/
+		src->hatudan_register_spec_data |= (TAMA_SPEC_3000_EFFECT_NONE);
+		set_mover(src);
+	}
+}
 //		if (0==(src->hatudan_register_spec_data & TAMA_SPEC_4000_NON_MOVE))
 //		{
 //			src->callback_mover 			= hatudan_system_move_angle_001;/*(雑魚等では問題無いが、弾幕には遅すぎる)*/
@@ -85,47 +110,7 @@ static void move_bullet_hatsudan_effect(OBJ *src)
 //		//	src->callback_mover 			= NULL;/*(弾幕処理中に移動処理もするので、OBJで移動処理は不要)*/
 //			src->callback_mover 			= hatudan_system_move_dummy_000;/*(弾幕処理中に移動処理もするので、OBJで移動処理は不要)*/
 //		}
-		src->hatudan_register_spec_data |= (TAMA_SPEC_3000_EFFECT_NONE);
-		set_mover(src);
-	}
-}
 
-
-/*---------------------------------------------------------
-	移動処理選択。
----------------------------------------------------------*/
-static void set_mover(OBJ *src)
-{
-	void (*aaa[4/*8*/])(OBJ *bbb) =
-	{
-//	/* 移動処理あり */	move_bullet_hatsudan_effect,/* エフェクト大(旧r34互換) */
-//	/* 移動処理あり */	move_bullet_hatsudan_effect,/* エフェクト中 */
-//	/* 移動処理あり */	move_bullet_hatsudan_effect,/* エフェクト小 */
-//	/* 移動処理あり */	NULL,//hatudan_system_move_angle_001,/* エフェクトなし */
-	/* 移動処理なし */	move_bullet_hatsudan_effect,/* エフェクト大(旧r34互換) */
-	/* 移動処理なし */	move_bullet_hatsudan_effect,/* エフェクト中 */
-	/* 移動処理なし */	move_bullet_hatsudan_effect,/* エフェクト小 */
-	/* 移動処理なし */	NULL,//hatudan_system_move_dummy_000,/* エフェクトなし */
-	};
-//	src->callback_mover 	= aaa[((src->hatudan_register_spec_data)>>12)&0x07];
-	src->callback_mover 	= aaa[((src->hatudan_register_spec_data)>>12)&0x03];
-	if (0x03 == (((src->hatudan_register_spec_data)>>12)&0x03)) 	/* 発弾開始処理 */
-	{
-		/* 発弾開始直前にあたり判定を有効にする。 */
-		/* 非傾き弾は、発弾開始直前に設定。 */
-		src->atari_hantei	= (ATARI_HANTEI_TAOSENAI/*スコア兼用*/);/* あたり判定有効 */
-		if (src->hatudan_register_spec_data & TAMA_SPEC_8000_NON_TILT)/* 非傾き弾 */
-		{
-			src->m_zoom_y256 = M_ZOOM_Y256_NO_TILT;/* 特殊機能で傾かないようシステム拡張(r33)。 */
-		}
-	//	src->hatudan_register_frame_counter = 0;/*(この後で使うなら)*/
-		#if (1)/*(発弾エフェクトが無い場合に困る)*/
-		src->cx256 = (src->ox256);/*fps_factor*/
-		src->cy256 = (src->oy256);/*fps_factor*/
-		#endif
-	}
-//	else	{;}/*(発弾エフェクト処理)*/
-}
 /*---------------------------------------------------------
 	弾を登録する。
 	-------------------------------------------------------
@@ -179,14 +164,14 @@ static void set_mover(OBJ *src)
 global void hatudan_system_regist_single(void)
 {
 	OBJ 	*h;
-	h										= obj_add_A00_tama_error();/* 発弾登録 */
+	h											= obj_regist_tama();/* 発弾登録 */
 	if (NULL != h)/* 登録できた場合 */
 	{
-		h->ox256								= REG_02_DEST_X;/* 発弾位置 座標x */
-		h->oy256								= REG_03_DEST_Y;/* 発弾位置 座標y */
+		h->origin.x256							= REG_02_DEST_X;/*(発弾位置 座標x)*/
+		h->origin.y256							= REG_03_DEST_Y;/*(発弾位置 座標y)*/
 		h->obj_type_set 						= (HATSUDAN_05_bullet_obj_type);
 		h->atari_hantei 						= (ATARI_HANTEI_OFF/*スコア兼用*/);/* あたり判定無効(発弾エフェクト用) */
-		reflect_sprite_spec444(h, OBJ_BANK_SIZE_00_TAMA);
+		reflect_sprite_spec(h, OBJ_BANK_SIZE_00_TAMA);
 	//
 		h->hatudan_system_kousadan_angle65536	= (HATSUDAN_03_angle65536); 				/* 交差弾用 */
 		h->rotationCCW1024						= (deg65536to1024(HATSUDAN_03_angle65536)); /* 「1周が65536分割」から「1周が1024分割」へ変換する。 */	/* (i<<4) deg_360_to_512(90) */

@@ -5,19 +5,19 @@
 	東方模倣風 ～ Toho Imitation Style.
 	http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
-
+	(指定画像が無い等)致命的エラーの場合、
+	メッセージを出してゲームを強制終了する。
 ---------------------------------------------------------*/
 #include "kanji_system.h"
 extern void vbl_draw_screen(void);/*support.c*/
 
 /*---------------------------------------------------------
-	キー入力関連の処理(本来デバッグ用)
-	上のキー入力に統合しても良いが、キー入力自体が
-	おかしくなる場合もあるので、暫定的に最低限の入力として
-	残してある。
+	(キーコンフィグ設定中等)致命的エラーでは
+	キー入力自体がおかしくなる場合もあるかもしれないので、
+	最低限の入力として専用簡易入力処理を行う。
 ---------------------------------------------------------*/
 
-/*global*/static void hit_any_key(void)
+static void hit_any_key(void)
 {
 	SceCtrlData cpad;
 	/* 離されるまで待つ */
@@ -51,8 +51,9 @@ extern void vbl_draw_screen(void);/*support.c*/
 	エラー処理
 ---------------------------------------------------------*/
 
-global void psp_fatal_error(char *msg, ...)/*int errorlevel,*/
+global void psp_fatal_error(char *msg, ...)
 {
+	// [エラーメッセージを描画]
 	char msgbuf[128];	/* 128==4*32 (pspの構造上32の倍数で指定) */
 	va_list argptr;
 	//
@@ -60,10 +61,7 @@ global void psp_fatal_error(char *msg, ...)/*int errorlevel,*/
 	vsprintf(msgbuf, msg, argptr);
 	va_end(argptr);
 	strcpy(my_font_text, msgbuf);/*(エラー文字列をmy_font_textに書きこむ)*/
-//	cb.ma in_call_func = error_callback_init;
-//	vbl_draw_screen();	/* 画面描画とキー入力(本当は v-blanc タイミングで) */
-//	static void error_callback_init(void)
-//	sw itch (errorlevel)
+//	sw itch (errorlevel)/*int errorlevel,*/
 	{
 	//ca se ERR_DEBUG:	if (debug)	{ fprintf(stdout,"DEBUG: %s\n",msgbuf); } break;
 	//ca se ERR_INFO:		fprintf(stdout,"INFO: %s\n",msgbuf); break;
@@ -83,26 +81,17 @@ global void psp_fatal_error(char *msg, ...)/*int errorlevel,*/
 	}
 	#endif
 	}
-//	cb.ma in_call_func = error_01_callback_hit_any_key1;
 	vbl_draw_screen();	/* 画面描画とキー入力(本当は v-blanc タイミングで) */
-//	static void error_01_callback_hit_any_key1(void)
-	hit_any_key();
-//	cb.ma in_call_func = error_02_callback_draw_02;
-//	vbl_draw_screen();	/* 画面描画とキー入力(本当は v-blanc タイミングで) */
-//	global void error_02_callback_draw_02(void)
+	hit_any_key();/*[簡易入力待ち]*/
+	//[強制終了します。と描画]
 	kanji_window_all_clear();			/* メッセージウィンドウの内容を消す。 */
 	strcpy(my_font_text, "致命的エラーなので終了します。" "\\n");
 	kanji_color(7);
 	kanji_draw();
-//	cb.ma in_call_func = error_03_callback_hit_any_key2;
 	vbl_draw_screen();	/* 画面描画とキー入力(本当は v-blanc タイミングで) */
-//	static void error_03_callback_hit_any_key2(void)
-	hit_any_key();
-//	cb.ma in_call_func = error_04_callback_draw_03;
-//	vbl_draw_screen();	/* 画面描画とキー入力(本当は v-blanc タイミングで) */
-//	global void error_04_callback_draw_03(void)
+	hit_any_key();/*[簡易入力待ち]*/
+	//[強制終了する]
 	sceKernelExitGame();	//if (errorlevel==ERR_FATAL) exit(1);/*exit(1)はpspで使えないので注意*/
 	//
 //	cb.ma in_call_func = NULL;
-//	vbl_draw_screen();	/* 画面描画とキー入力(本当は v-blanc タイミングで) */
 }

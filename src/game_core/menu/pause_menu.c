@@ -237,7 +237,7 @@ static void common_menu_work_MENU_STATE_03_FININSH(void)
 	//	else
 		if (psp_pad.pad_data & PSP_KEY_LEFT)
 		{
-			#if (1==USE_r36_SCENE_FLAG)
+			#if (1)//(USE_r36_SCENE_FLAG)
 			NEXT_SCENE;
 			#endif
 		//	cg_game_now_max_continue = (90);/*test*/	/* ランキングにさせない */
@@ -284,7 +284,7 @@ static void common_menu_work_MENU_STATE_03_FININSH(void)
 			/* Continue Game */
 			player_continue_value();
 
-			#if (1==USE_r36_SCENE_FLAG)
+			#if (1)//(USE_r36_SCENE_FLAG)
 			/*(??????????????)*/
 			//	  (cg.state_flag & 0x00008000u)//プレイヤーループを抜ける処理(とりあえず??????)
 			cg.state_flag &= 0xffff7fffu;/*(とりあえず、現在仕様が良くわかんない)*/
@@ -332,7 +332,7 @@ static void stage_select_menu_work_MENU_STATE_01_WORK_MENU(void)
 		/*(上下を押した場合に操作音を出す。)*/
 		if (psp_pad.pad_data & (PSP_KEY_DOWN|PSP_KEY_UP/*|PSP_KEY_PAUSE|PSP_KEY_SELECT*/))
 		{
-			voice_play(VOICE02_MENU_SELECT, TRACK01_EXPLODE);
+			voice_play(VOICE02_MENU_SELECT, TRACK01_MENU01);
 		}
 		#if 0/*(-r34)*/
 		/*(上下を押した場合、回り込み選択をする。上下は必ずワープ)*/
@@ -389,7 +389,7 @@ static void stage_select_menu_work_MENU_STATE_01_WORK_MENU(void)
 		}
 		if (psp_pad.pad_data & PSP_KEY_SHOT_OK)
 		{
-			voice_play(VOICE01_MENU_OK/*VOICE02_MENU_SELECT*/, TRACK01_EXPLODE);
+			voice_play(VOICE01_MENU_OK/*VOICE02_MENU_SELECT*/, TRACK01_MENU01);
 			cb.main_call_func = common_menu_work_MENU_STATE_02_FADE_OUT;	/* メニュー消去準備 */
 		}
 	}
@@ -499,7 +499,7 @@ static void common_menu_initialize(void)
 	タイトルへ戻る
 ---------------------------------------------------------*/
 extern void set_core_game_time_MAX(void);
-/*static*/global void pause_menu_start(void)
+/*static*/global MAIN_CALL_FUNC(pause_menu_start)
 {
 	{
 		/*(ポーズメニューの場合の特殊処理)	*/
@@ -535,7 +535,7 @@ extern void set_core_game_time_MAX(void);
 	-------------------------------------------------------
 ---------------------------------------------------------*/
 
-/*static*/global void ask_continue_menu_start(void)
+/*static*/global MAIN_CALL_FUNC(ask_continue_menu_start)
 {
 		render_continue();/*(コンティニューメニューの場合の見出し文字を描画)*/
 	//

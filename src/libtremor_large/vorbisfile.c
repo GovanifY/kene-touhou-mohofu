@@ -690,7 +690,7 @@ static int _fetch_and_process_packet(
 			}
 			if ((ret=_get_next_page(vf,&og,-1))<0)
 			{
-				ret=OV_EOF; /* eof. leave unitialized */
+				ret=OV_EOF; /* EOF. leave unitialized. */
 				goto cleanup;
 			}
 

@@ -4,7 +4,25 @@
 	http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	共通部分。
+	-------------------------------------------------------
+	(r32-)喰み出しチェックについて、
+	「移動時に」喰み出しチェックをしない事が前提で設計されているカードが多い。
+	この為「移動時に」システムで喰み出しチェックをしません。
+	例えば画面端で跳ね返る弾は「移動時に」喰み出しチェックをしない事により実現している機能です。
+	「移動と別で」全弾配列を調べて「喰み出しチェック」を行います。
 ---------------------------------------------------------*/
+
+/*---------------------------------------------------------
+	交差弾は色々弾によって違いが多すぎる。(個々の時間とか)
+	全部システム側で吸収すると、遅くなる気がする。
+	交差弾システム側で吸収するなら、角度弾と統合して角度弾無くすべき
+	だけど(将来はともかく)現状では角度弾汎用にすると遅すぎる。
+	-------------------------------------------------------
+	現状の速度なら、交差弾は全弾配列書き換えで対応すべき。
+	(パチェとか書き換えの嵐になりそうですが。)
+	システム側交差弾対応は、無くなりそう。
+---------------------------------------------------------*/
+
 #if (1)
 	/*(tama_system.cの特殊機能)*/
 	#define hatudan_system_kousadan_angle65536 tmp_angleCCW1024
@@ -13,7 +31,7 @@
 	#001 角度弾の移動を行う(通常弾用)
 ---------------------------------------------------------*/
 
-static void hatudan_system_B_move_angle_001(OBJ *src)/*(角度弾移動)*/
+static OBJ_CALL_FUNC(hatudan_system_B_move_angle_001)/*(角度弾移動)*/
 {
 	#if 1/* 検討中(無くても出来るけど、あった方が簡単) */
 	src->hatudan_register_speed65536		+= (src->hatudan_register_tra65536);		/* 加減速調整 */
@@ -21,30 +39,30 @@ static void hatudan_system_B_move_angle_001(OBJ *src)/*(角度弾移動)*/
 	/*( 1[frame]あたりに進む距離。(半径) )*/int aaa 		 = (src->hatudan_register_speed65536>>8);	/* 速度 */
 //
 	#if (0)//
-	src->cx256 += ((si n1024((src->rotationCCW1024))*(aaa))>>8);/*fps_factor*/
-	src->cy256 += ((co s1024((src->rotationCCW1024))*(aaa))>>8);/*fps_factor*/
+	src->center.x256 += ((si n1024((src->rotationCCW1024))*(aaa))>>8);/*fps_factor*/
+	src->center.y256 += ((co s1024((src->rotationCCW1024))*(aaa))>>8);/*fps_factor*/
 	#else
 	{
 		int sin_value_t256; 	//	sin_value_t256 = 0;
 		int cos_value_t256; 	//	cos_value_t256 = 0;
 		int256_sincos1024( (src->rotationCCW1024), &sin_value_t256, &cos_value_t256);
-		src->cx256 += ((sin_value_t256*(aaa))>>8);/*fps_factor*/
-		src->cy256 += ((cos_value_t256*(aaa))>>8);/*fps_factor*/
+		src->center.x256 += ((sin_value_t256*(aaa))>>8);/*fps_factor*/
+		src->center.y256 += ((cos_value_t256*(aaa))>>8);/*fps_factor*/
 	}
 	#endif
 }
 
-static void danmaku_00_standard_angle_mover(OBJ *src)/*(角度弾移動+画面外弾消し)*/
+static OBJ_CALL_FUNC(danmaku_00_standard_angle_mover)/*(角度弾移動+画面外弾消し)*/
 {
 	hatudan_system_B_move_angle_001(src);/*(角度弾移動)*/
 	hatudan_system_B_gamen_gai_tama_kesu(src);/*(画面外弾消し)*/
 }
-static void danmaku_01_standard_angle_sayuu_hansya_mover(OBJ *src)/*(角度弾移動+画面左右反射弾消し)*/
+static OBJ_CALL_FUNC(danmaku_01_standard_angle_sayuu_hansya_mover)/*(角度弾移動+画面左右反射弾消し)*/
 {
 	hatudan_system_B_move_angle_001(src);/*(角度弾移動)*/
 	hatudan_system_B_side_hansya(src);/*(画面左右反射弾消し)*/
 }
-local void angle_to_vector(OBJ *src)/*(角度をX軸、Y軸のベクトル速度へ変換する)*/
+local OBJ_CALL_FUNC(angle_to_vector)/*(角度をX軸、Y軸のベクトル速度へ変換する)*/
 {
 	//	REG_0b_REG3 = ((src->rotationCCW1024)<<6);/*1024to65536*/
 		REG_0b_REG3 = ((src->hatudan_system_kousadan_angle65536));/*(交差弾用に発弾時の角度が65536であるので使う。)*/
@@ -80,32 +98,32 @@ local void angle_to_vector(OBJ *src)/*(角度をX軸、Y軸のベクトル速度へ変換する)*/
 		}
 		#endif
 	//	src->rotationCCW1024	= (0);/*(重いので角度０にする)*/
-		src->vx256	= (REG_02_DEST_X);/*fps_factor*/
-		src->vy256	= (REG_03_DEST_Y);/*fps_factor*/
+		src->math_vector.x256 = (REG_02_DEST_X);/*fps_factor*/
+		src->math_vector.y256 = (REG_03_DEST_Y);/*fps_factor*/
 }
 
 
-local void move_vector_gamen_sita(OBJ *src)
+local OBJ_CALL_FUNC(move_vector_gamen_sita)
 {
 	// ベクトル弾移動。move vector.
-	src->cx256 += (src->vx256); 	/*fps_factor*/
-	src->cy256 += (src->vy256); 	/*fps_factor*/
-//	src->cx256 += 1;//(t256( 0.1)); 	/*fps_factor*/
-//	src->cy256 += 1;//(t256(-0.1)); 	/*fps_factor*/
-//	src->vy256 += ((src->hatudan_register_tra65536)<<8);	/* 加減速調整 */
-	src->vy256 += ((src->hatudan_register_tra65536) );	/* 加減速調整 */
+	src->center.x256 += (src->math_vector.x256);	/*fps_factor*/
+	src->center.y256 += (src->math_vector.y256);	/*fps_factor*/
+//	src->center.x256 += 1;//(t256( 0.1));	/*fps_factor*/
+//	src->center.y256 += 1;//(t256(-0.1));	/*fps_factor*/
+//	src->math_vector.y256 += ((src->hatudan_register_tra65536)<<8);	/* 加減速調整 */
+	src->math_vector.y256 += ((src->hatudan_register_tra65536) ); /* 加減速調整 */
 	// 消去判定
 	#if 1
 	// 画面外は消す。
 //	hatudan_system_B_gamen_gai_tama_kesu(src);/*(通常弾用)*/
 	/* 画面外の場合は弾を消す。 */
 	if (
-//	(0 < (rect_clip.bullet_clip_min.x256)-(src->cx256) ) ||
-//	(0 > (rect_clip.bullet_clip_max.x256)-(src->cx256) ) ||
-//	(0 < (rect_clip.bullet_clip_min.y256)-(src->cy256) ) ||
-//	(0 > (rect_clip.bullet_clip_max.y256)-(src->cy256) ) )	/*(画面下のみ)*/
-//	( (src->cy256) > (rect_clip.bullet_clip_max.y256) ) )	/*(画面下のみ)*/
-	( (src->cy256) > (t256(272)) ) )	/*(画面下のみ)*/
+//	(0 < (rect_clip.bullet_clip_min.x256)-(src->center.x256) ) ||
+//	(0 > (rect_clip.bullet_clip_max.x256)-(src->center.x256) ) ||
+//	(0 < (rect_clip.bullet_clip_min.y256)-(src->center.y256) ) ||
+//	(0 > (rect_clip.bullet_clip_max.y256)-(src->center.y256) ) )	/*(画面下のみ)*/
+//	( (src->center.y256) > (rect_clip.bullet_clip_max.y256) ) ) /*(画面下のみ)*/
+	( (src->center.y256) > (t256(272)) ) )	/*(画面下のみ)*/
 	{
 		src->jyumyou = JYUMYOU_NASI;
 	}
@@ -141,7 +159,7 @@ local void move_vector_gamen_sita(OBJ *src)
 	[弾幕グループ(1)セクション]
 	-------------------------------------------------------
 ---------------------------------------------------------*/
-local void common_danmaku_01_amefuri_callback(OBJ *src)
+local OBJ_CALL_FUNC(common_danmaku_01_amefuri_callback)
 {
 	#if (1)
 	if ((HATUDAN_ITI_NO_JIKAN-64) < src->jyumyou)/* 発弾エフェクト時は無効 */
@@ -161,9 +179,9 @@ local void common_danmaku_01_amefuri_callback(OBJ *src)
 	[初期化セクション]
 	-------------------------------------------------------
 ---------------------------------------------------------*/
-local void meirin_danmaku_02_aka_ao_kunai_callback(OBJ *src);
-local void meirin_danmaku_03_aka_ao_kunai_time256_callback(OBJ *src);
-local void spell_init_12_common_amefuri(OBJ *src)
+local OBJ_CALL_FUNC(meirin_danmaku_02_aka_ao_kunai_callback);
+local OBJ_CALL_FUNC(meirin_danmaku_03_aka_ao_kunai_time256_callback);
+local OBJ_CALL_FUNC(spell_init_12_common_amefuri)
 {
 	REG_09_REG1 	= (t256(1.5)+((REG_0f_GAME_DIFFICULTY)<<6));//[定数1]雨の速度
 	REG_0a_REG2 	= ((1024/2)+(1024/24)+(REG_0f_GAME_DIFFICULTY<<3));//[定数2]赤青クナイが曲がる角度
@@ -176,7 +194,7 @@ local void spell_init_12_common_amefuri(OBJ *src)
 	[発弾セクション]
 	-------------------------------------------------------
 ---------------------------------------------------------*/
-local void spell_create_common_amefuri(OBJ *src)
+local OBJ_CALL_FUNC(spell_create_common_amefuri)
 {
 	#if 0
 	if (0==((REG_10_BOSS_SPELL_TIMER)&0x03))	// 4カウントに1回上に8way弾を撃つ
@@ -246,7 +264,7 @@ local void spell_create_common_amefuri(OBJ *src)
 	-------------------------------------------------------
 	とりあえず共通規格
 ---------------------------------------------------------*/
-local void spell_init_mima_kaguya(OBJ *src)
+local OBJ_CALL_FUNC(spell_init_mima_kaguya)
 {
 	REG_09_REG1 	= (t256(1.0));//[定数1]雨の速度
 //	REG_0a_REG2 	= ((1024/2)+(1024/24)+(REG_0f_GAME_DIFFICULTY<<3));//[定数2]赤青クナイが曲がる角度
@@ -261,7 +279,7 @@ local void spell_init_mima_kaguya(OBJ *src)
 	使用レジスタ
 	REG_0e_REG6 	src_shot_angle65536 開始地点
 ---------------------------------------------------------*/
-global/*local*/ void shot_common_gin_tama(OBJ *src)
+global/*local*/ OBJ_CALL_FUNC(shot_common_gin_tama)
 {
 	#if (1)/*(共通部分)*/
 	HATSUDAN_01_speed256					= t256(1.0);//t256(1+difficulty)/*(3+difficulty)*/ /*(4+difficulty)*/;
@@ -296,27 +314,10 @@ global/*local*/ void shot_common_gin_tama(OBJ *src)
 	ここが無いとr35の仕様上、通常弾が撃てない。(通常弾の処理が正常に行えない)
 ---------------------------------------------------------*/
 
-local void spell_create_48_r34_gokan_kinou(OBJ *src)
+local OBJ_CALL_FUNC(spell_create_48_r34_gokan_kinou)
 {
 	/* (ここは何も処理を行いませんが、r35現在、必要です) */
 	// (r35-)システム移行したので、(r35-)システムの都合上、(-r34まで)のスペカを再現する為に必要なダミー。
 };
 #endif
 
-
-#if (0)
-/*---------------------------------------------------------
-	r35でハングアップする。
-	-------------------------------------------------------
-	hard, lunatic でハングアップするので取り敢えず。
-	強制的に normalにする。
----------------------------------------------------------*/
-
-local void spell_init_r35_hang_up(OBJ *src)
-{
-	if (0!=REG_0f_GAME_DIFFICULTY)/*(easy以外は)*/
-	{
-		REG_0f_GAME_DIFFICULTY = (1);	/*(強制normal)*/
-	}
-};
-#endif

@@ -7,6 +7,7 @@
 	-------------------------------------------------------
 	ミュージックルーム 幻想音樂室
 ---------------------------------------------------------*/
+#include "111_my_file.h"/*(bg読みこみ。)*/
 
 #include "kanji_system.h"
 
@@ -19,7 +20,12 @@ enum
 	MOJI_16,	MOJI_17,	MOJI_18,	MOJI_19,
 	MOJI_20,	MOJI_21,	MOJI_22,	MOJI_23,
 	MOJI_24,	MOJI_25,	MOJI_26,	MOJI_27,
-	MOJI_28,	MOJI_29,	MOJI_30,	MOJI_31_MAX 	/* 最大数 */
+	MOJI_28,	MOJI_29,	MOJI_30,	MOJI_31,
+	MOJI_32,	MOJI_33,	MOJI_34_MAX,/*(曲の最大数)*/
+	KIDOUYOU_LINE_01,
+	KIDOUYOU_LINE_02,
+	KIDOUYOU_LINE_03,
+	KIDOUYOU_LINE_04_MAX/*(項目最大数)*/
 };
 
 enum
@@ -40,7 +46,7 @@ enum
 	SOUND_INDEX_03_BASE,
 	SOUND_INDEX_06_MAX	/* 最大数 */
 };
-#define MAX_KEY_NAMES_21		(MOJI_31_MAX+SOUND_TYPE_03_MAX)
+#define MAX_KEY_NAMES_21		(MOJI_34_MAX+SOUND_TYPE_03_MAX)
 /*
 だめ文字(シフトJISの2バイト目が0x5c、すなわち'\'('＼')である文字のこと。)
 	ソ噂浬欺圭構蚕十申曾箪貼能表暴予禄兔喀媾彌拿杤歃濬畚秉綵臀藹觸軆鐔饅鷭
@@ -55,7 +61,7 @@ static int bg_alpha_aaa;
 static void music_room_draw_message(unsigned int cursor1, unsigned int cursor2)
 {
 //	kanji_window_all_clear();				/* 漢字画面を全行消す。漢字カーソルをホームポジションへ移動。 */
-	static const char *const_kaisetu_str[(MOJI_31_MAX)+(1)/*(起動用メッセージ)*/][(3)] =
+	static const char *const_kaisetu_str[(KIDOUYOU_LINE_04_MAX)][(3)] =
 	{
 		//								"-------------------------------------"
 		//	"SOUND 解説",				"BGM 解説", 								"-------------------------------------"
@@ -86,11 +92,18 @@ static void music_room_draw_message(unsigned int cursor1, unsigned int cursor2)
 		{	""/*"未使用24音"*/, 		"No.24 妖魔夜行",							"ルーミアのテーマです。",						},/* */
 		{	""/*"未使用25音"*/, 		"No.25 プレイヤーズスコア", 				"エンディングのテーマです。",					},/* */
 		{	""/*"未使用26音"*/, 		"No.26 無何有の郷 ～ Deep Mountain",		"道中曲です。", 								},/* */
-		{	""/*"未使用27音"*/, 		"No.27 紅より儚い永遠", 					"タイトル画面のテーマです。",					},/* */
+		{	""/*"未使用27音"*/, 		"No.27 妖々夢 ～ Snow or Cherry Petal", 	"タイトル画面のテーマです。",					},/* */
 		{	""/*"未使用28音"*/, 		"No.28 バッド・アップル ～ Bad Apple!!",	"道中曲です。", 								},/* */
 		{	""/*"未使用29音"*/, 		"No.29 永夜の報い", 						"使用してますが、本当は没曲です。", 			},/* */
-		{	"あれ？もうお帰りですか？", "No.30 死霊の夜桜", 						"使用してますが、本当は没曲です。", 			},/* */ /*("終了"で使う)*/
-		{	"", 						"ようこそ幻想音樂室へ", 					"BGMは全曲勝手にアレンジ版です。",				},/* */
+		{	""/*"未使用28音"*/, 		"No.30 死霊の夜桜", 						"使用してますが、本当は没曲です。", 			},/* */ /*("終了"で使う)*/
+		{	""/*"未使用27音"*/, 		"No.31 紅より儚い永遠", 					"名前入力画面のテーマです。",					},/* */
+		{	""/*"未使用27音"*/, 		"No.32 妖々跋扈",							"道中曲です。", 								},/* */
+		{	""/*"未使用28音"*/, 		"No.33 ブクレシュティの人形師", 			"道中曲です。", 								},/* */
+		// "起動用メッセージで(4行)必要"
+		{	"あれ？もうお帰りですか？", "まで創りました。", 						"", 											},/* */
+		{	"", 						"ようこそ幻想音樂室へ", 					"で該当BGMを作成すると鳴ります。",				},/* */
+		{	"", 						"BGMは全曲勝手にアレンジ版です。",			"", 											},/* */
+		{	"", 						"アレンジ版が嫌ならば、拡張子.ogg", 		"", 											},/* */
 	};
 	//
 	/*(色はとりあえず白)*/
@@ -137,7 +150,7 @@ static void music_room_draw_message(unsigned int cursor1, unsigned int cursor2)
 				kanji_color((9)|STR_CODE_NO_ENTER);
 				if (0==ii)	/* 1行目のみ */
 				{	/*(見だし行終了メッセージ)*/
-					strcpy(my_font_text, (char *)const_kaisetu_str[30/*cursor2*/][0]);
+					strcpy(my_font_text, (char *)const_kaisetu_str[/*33*/(MOJI_34_MAX)/*cursor2*/][0]);
 				}
 				else	/* 残り(2-7行目)を消す。 */
 				{
@@ -152,7 +165,7 @@ static void music_room_draw_message(unsigned int cursor1, unsigned int cursor2)
 #if 0
 global void music_game_draw_message(int cursor1)
 {
-	static const char *const_music_title_str[(MOJI_31_MAX)] =
+	static const char *const_music_title_str[(MOJI_34_MAX)] =
 	{	/*	最大半角で31文字。 */
 	/*	"feeddccbbaa99887766554433221100",'\0' ワーク文字列バッファ長をこれだけしか用意しない予定なので、あふれたら字が出ない。 */
 		" 　　　　　　　　　　　　　　　", // No. 0 "曲を止めます"
@@ -191,7 +204,7 @@ global void music_game_draw_message(int cursor1)
 	幻想音樂室 フェードアウトしておしまい中
 ---------------------------------------------------------*/
 
-static void music_room_state_03_fade_out(void)
+static MAIN_CALL_FUNC(music_room_state_03_fade_out)
 {
 	bg_alpha_aaa += (2);	/*(1) (8)*/ 	/*fps_factor*/
 	if ((224) < bg_alpha_aaa)/*(250-8)*/
@@ -211,10 +224,11 @@ static void music_room_state_03_fade_out(void)
 	幻想音樂室 メニュー選択して、再生したり、描画したり中
 ---------------------------------------------------------*/
 
-static void music_room_state_02_select_menu(void)
+static void up_down_allow_key_auto_repeat(void)
 {
-	psp_pop_screen();
-	cg.msg_time = /*(永遠に描画)*/byou60(5);	/* 約 5 秒 */
+	#if 1/*(menuでは、強制的にvsyncをとる)*/
+//	sceDisplayWaitVblankStart();
+	#endif
 	#if 1/*(上下ボタン入力の場合、オートリピート処理を行う。)*/
 	{
 		static u32 auto_repeat_counter;/*(オートリピート用カウンタ)*/
@@ -241,6 +255,14 @@ static void music_room_state_02_select_menu(void)
 		{	auto_repeat_counter = 0;/*(オートリピート解除)*/	}
 	}
 	#endif
+}
+
+static MAIN_CALL_FUNC(music_room_state_02_select_menu)
+{
+	psp_pop_screen();
+	cg.msg_time = /*(永遠に描画)*/byou60(5);	/* 約 5 秒 */
+	//
+	up_down_allow_key_auto_repeat();
 	if (0==psp_pad.pad_data_alter)/* さっき何も押されてなかった場合にキーチェック(原作準拠) */
 	{
 		if (psp_pad.pad_data & PSP_KEY_LEFT)			/* 左ボタン入力 */
@@ -261,11 +283,11 @@ static void music_room_state_02_select_menu(void)
 				if (psp_pad.pad_data & (PSP_KEY_SHOT_OK|PSP_KEY_BOMB_CANCEL))	/* ショット || キャンセルボタン入力 */
 				{
 					#if (1)
-					voice_play(VOICE04_SHIP_HAKAI, TRACK03_SHORT_MUSIC/*TRACK01_EXPLODE*/);/* 自機死に音は、なるべく重ねない */
-				//	voice_play(VOICE02_MENU_SELECT, TRACK01_EXPLODE);/*テキトー*/
+					voice_play(VOICE04_SHIP_HAKAI, TRACK02_MENU02/*TRACK01_MENU01*/);/* 自機死に音は、なるべく重ねない */
+				//	voice_play(VOICE02_MENU_SELECT, TRACK01_MENU01);/*テキトー*/
 					#endif
-					play_music_num(BGM_27_menu01);
-					load_SDL_bg(BG_TYPE_00_title_bg);
+				//	pl ay_music_num(BGM_27_menu01);
+					my_file_common_name[0] = BG_TYPE_00_title_bg;psp_load_bg_file_name();/* 裏画面にロード */
 					cg.msg_time = (0);	/* 約 0 秒 */
 //					bg_alpha_aaa		= 255;
 					bg_alpha_aaa		= 0;
@@ -308,13 +330,18 @@ static void music_room_state_02_select_menu(void)
 			{
 				if (SOUND_TYPE_00_BGM == sound_type)	/* 項目[ BGM ] を選んでいる場合 */
 				{
+					#if (1)/*(-r38までと互換させるなら有効にする)*/
+					play_music_num(BGM_00_stop);/*(r39では一度止めないと同じ曲は始めから鳴らない様に仕様変更した)*/
+					/*(別に無くても構わない気もするが、あくまで曲再生の「テストモード」なのだから、始めから鳴らした方が良い。)*/
+					/*(「テストモード」が(存在する事が)「主(目的)」で、曲再生が「従(結果)」。)*/
+					#endif
 					play_music_num(music_room_setting[sound_type+SOUND_INDEX_00_BASE_CURSOR_01]/*BGM_05_stage5*/);
 				}
 				else
 //				if (SOUND_TYPE_01_SOUND == sound_type)	/* 項目[ SOUND ] を選んでいる場合 */
 				{
 					#if (1)
-					voice_play(music_room_setting[sound_type+SOUND_INDEX_00_BASE_CURSOR_01]/*VOICE07_BOMB*/, TRACK01_EXPLODE);/*テキトー*/
+					voice_play(music_room_setting[sound_type+SOUND_INDEX_00_BASE_CURSOR_01]/*VOICE07_BOMB*/, TRACK01_MENU01);/*テキトー*/
 					#endif
 				}
 			}
@@ -365,7 +392,7 @@ static void music_room_state_02_select_menu(void)
 	幻想音樂室 フェードイン中
 ---------------------------------------------------------*/
 
-static void music_room_state_01_fade_in(void)
+static MAIN_CALL_FUNC(music_room_state_01_fade_in)
 {
 	bg_alpha_aaa += (2);	/*fps_factor*/
 	if ((200) < bg_alpha_aaa)/*(250-6) (224)*/
@@ -383,16 +410,16 @@ static void music_room_state_01_fade_in(void)
 	幻想音樂室 開始処理
 ---------------------------------------------------------*/
 
-global void music_room_start(void)
+global MAIN_CALL_FUNC(music_room_start)
 {
 	play_music_num(BGM_11_boss01);/* 人形裁判 */
-	load_SDL_bg(BG_TYPE_03_music_room);
+	my_file_common_name[0] = BG_TYPE_03_music_room;psp_load_bg_file_name();/* 裏画面にロード */
 	music_room_setting[SOUND_TYPE_00_BGM   + SOUND_INDEX_00_BASE_CURSOR_01] = (0);
 	music_room_setting[SOUND_TYPE_01_SOUND + SOUND_INDEX_00_BASE_CURSOR_01] = (0);
 	music_room_setting[SOUND_TYPE_00_BGM   + SOUND_INDEX_04_BASE_CURSOR_02] = (0);
 	music_room_setting[SOUND_TYPE_01_SOUND + SOUND_INDEX_04_BASE_CURSOR_02] = (0);
-	music_room_setting[SOUND_TYPE_00_BGM   + SOUND_INDEX_02_BASE_MAX_NUM] = (USE_31_MUSIC_FILES-1);/*MOJI_31_MAX*/	/*(BGMの最大数)*/
-	music_room_setting[SOUND_TYPE_01_SOUND + SOUND_INDEX_02_BASE_MAX_NUM] = (VOICE18_MAX_FILES-1);/*MOJI_31_MAX*/	/*(効果音の最大数)*/
+	music_room_setting[SOUND_TYPE_00_BGM   + SOUND_INDEX_02_BASE_MAX_NUM] = (USE_31_MUSIC_FILES-1);/*MOJI_34_MAX*/	/*(BGMの最大数)*/
+	music_room_setting[SOUND_TYPE_01_SOUND + SOUND_INDEX_02_BASE_MAX_NUM] = (VOICE18_MAX_FILES-1);/*MOJI_34_MAX*/	/*(効果音の最大数)*/
 //
 	sound_type			= SOUND_TYPE_02_QUIT;
 	bg_alpha_aaa		= (0);
@@ -410,9 +437,11 @@ global void music_room_start(void)
 		ml_font[ML_LINE_08].x		= (160);/* X位置 */
 		ml_font[ML_LINE_08].y		= (240);/* Y位置 */
 	}
-	kanji_window_all_clear();				/* 漢字画面を全行消す。漢字カーソルをホームポジションへ移動。 */
-	cg.msg_time = (65536);	/* 約 18 分 */
+	kanji_window_all_clear();	/* 漢字画面を全行消す。漢字カーソルをホームポジションへ移動。 */
+	cg.msg_time = (65536);		/* 約 18 分 */
 //	cg.msg_time = byou60(5);	/* 約 5 秒 */
-	music_room_draw_message(0, (MOJI_31_MAX)/*(起動用メッセージ)*/ );
+	#if (1)/*(r38署名版でハングアップバグ修正)*/
+	music_room_draw_message(0, (KIDOUYOU_LINE_01)/*(起動用メッセージ)*/ );
+	#endif
 	cb.main_call_func = music_room_state_01_fade_in;
 }

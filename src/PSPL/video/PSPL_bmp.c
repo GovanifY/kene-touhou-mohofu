@@ -31,7 +31,9 @@ static char rcsid =
 
    This code currently supports Win32 DIBs in uncompressed 8 and 24 bpp.
 */
+#include <pspkernel.h>
 
+#include <stdio.h>
 #include <string.h>
 
 #include "./../include/PSPL_error.h"	/* 取り敢えず(仮) */
@@ -407,14 +409,38 @@ done:
 #define PSP_512_WIDE   (512)
 #define PSP_480_WIDE   (480)
 #define PSP_272_HEIGHT (272)
-
+//	u16 BM_magic16;/*(.alignがずれるので無理)*/
+typedef struct
+{
+	u32 bfSize;
+	u16 bfReserved1;
+	u16 bfReserved2;
+	u32 bfOffBits;
+	//
+	u32 biSize;
+	u32 biWidth;
+	u32 biHeight;
+	u16 biPlanes;
+	u16 biBitCount;
+	u32 biCompression;
+	u32 biSizeImage;
+	u32 biXPelsPerMeter;
+	u32 biYPelsPerMeter;
+	u32 biClrUsed;
+	u32 biClrImportant;
+	//
+} BMP_HEADER;
+static BMP_HEADER bmp_header;
 //int SDL_SaveBMP_RW(SDL_Surface *saveme, SDL_RWops *dst, int freedst)
 int PSPL_save_vram16_to_file(const char *save_bmp_file_name)
 {
 	/* Make sure we have somewhere to save */
-	SDL_RWops *dst;
-	dst = SDL_RWFromFile(save_bmp_file_name, "wb");
-	if ( dst )	/* fileを作成出来たら */
+//	SDL_RWops *dst;
+//	dst = SDL_RWFromFile(save_bmp_file_name, "wb");
+	SceUID fd;
+	fd = sceIoOpen(save_bmp_file_name, PSP_O_WRONLY | PSP_O_CREAT | PSP_O_TRUNC, 0777);
+//	if ( dst )	/* fileを作成出来たら */
+	if (0!=fd ) /* fileを作成出来たら */
 	{
 		#define WIN_BH_14 (14)
 		#define WIN_BI_40 (40)
@@ -438,27 +464,31 @@ int PSPL_save_vram16_to_file(const char *save_bmp_file_name)
 		//	}
 		/* Set the BMP file header values */
 		/* The Win32 BMP file header (14 bytes) */
-		//	u32 bfSize;	bfSize			= (0);		/* We'll write this when we're done */
-		//	u16 bfReserved1; 	bfReserved1 	= (0);
-		//	u16 bfReserved2; 	bfReserved2 	= (0);
+		//	u32 bfSize; bfSize			= (0);		/* We'll write this when we're done */
+		//	u16 bfReserved1;	bfReserved1 	= (0);
+		//	u16 bfReserved2;	bfReserved2 	= (0);
 		//	u32 bfOffBits;		bfOffBits		= (0);		/* We'll write this when we're done */
-		SDL_WriteLE16(dst, (((u16)'B')|(((u16)'M')<<8))); 	// $42=='B' $4D=='M'  //$01,$02
-		SDL_WriteLE32(dst, ((WIN_BI_40+WIN_BH_14)+(PSP_480_WIDE * PSP_272_HEIGHT * 3))/*bfSize*/);			// $36 $FA $05 $00	// あとでちゃんとした値を書くのでとりあえず0書いとく。
-		SDL_WriteLE16(dst, (0)/*bfReserved1*/); 	// $00 $00
-		SDL_WriteLE16(dst, (0)/*bfReserved2*/); 	// $00 $00
-		SDL_WriteLE32(dst, (WIN_BI_40+WIN_BH_14)/*bfOffBits*/); 					// $36 $00 $00 $00	// あとでちゃんとした値を書くのでとりあえず0書いとく。
+	//bmp_header.BM 			= (u16)(((u16)'B')|(((u16)'M')<<8));											//	/*	SDL_WriteLE16(dst,*/ sceIoWrite(fd, (int)v32, 2);	// $42=='B' $4D=='M'  //$01,$02
+	{
+		u16 valueBM = (u16)(((u16)'B')|(((u16)'M')<<8));
+		sceIoWrite(fd, &valueBM, 2);
+	}
+bmp_header.bfSize		= (u32)((WIN_BI_40+WIN_BH_14)+(PSP_480_WIDE * PSP_272_HEIGHT * 3))/*bfSize*/;	//	/*	SDL_WriteLE32(dst,*/ sceIoWrite(fd, (int)v32, 4);	// $36 $FA $05 $00	// あとでちゃんとした値を書くのでとりあえず0書いとく。
+bmp_header.bfReserved1	= (u16)(0)/*bfReserved1*/;														//	/*	SDL_WriteLE16(dst,*/ sceIoWrite(fd, (int)v32, 2);	// $00 $00
+bmp_header.bfReserved2	= (u16)(0)/*bfReserved2*/;														//	/*	SDL_WriteLE16(dst,*/ sceIoWrite(fd, (int)v32, 2);	// $00 $00
+bmp_header.bfOffBits	= (u32)(WIN_BI_40+WIN_BH_14)/*bfOffBits*/;										//	/*	SDL_WriteLE32(dst,*/ sceIoWrite(fd, (int)v32, 4);	// $36 $00 $00 $00	// あとでちゃんとした値を書くのでとりあえず0書いとく。
 
 		/* Set the BMP info values */
 		/* The Win32 BITMAPINFOHEADER struct (40 bytes) */
-	//	u32 biSize;				biSize			= (40);/*(biのサイズ==40bytes==&H28)*/
-	//	s32 biWidth; 			biWidth 		= (surface->w);(480)
+	//	u32 biSize; 			biSize			= (40);/*(biのサイズ==40bytes==&H28)*/
+	//	s32 biWidth;			biWidth 		= (surface->w);(480)
 	//	s32 biHeight;			biHeight		= (surface->h);(272)
-	//	u16 biBitCount;			biBitCount		= (surface->format->BitsPerPixel);(24)
-	//	u32 biSizeImage; 		biSizeImage 	= ((surface->h) * (surface->pitch));
+	//	u16 biBitCount; 		biBitCount		= (surface->format->BitsPerPixel);(24)
+	//	u32 biSizeImage;		biSizeImage 	= ((surface->h) * (surface->pitch));
 	//	u16 biPlanes;			biPlanes		= (1);
 	//	u32 biCompression;		biCompression	= BI_RGB;
-	//	s32 biXPelsPerMeter; 	biXPelsPerMeter = (0);
-	//	s32 biYPelsPerMeter; 	biYPelsPerMeter = (0);
+	//	s32 biXPelsPerMeter;	biXPelsPerMeter = (0);
+	//	s32 biYPelsPerMeter;	biYPelsPerMeter = (0);
 	//
 	//	u32 biClrUsed;
 	//	if ( surface->format->palette )
@@ -469,21 +499,22 @@ int PSPL_save_vram16_to_file(const char *save_bmp_file_name)
 	//	{
 	//		biClrUsed = (0);
 	//	}
-	//	u32 biClrImportant;	biClrImportant = (0);
+	//	u32 biClrImportant; biClrImportant = (0);
 
 		/* Write the BMP info values */
-		SDL_WriteLE32(dst, (WIN_BI_40)/*biSize*/);										// $28 $00 $00 $00	// $0e,$0f,$10,$11
-		SDL_WriteLE32(dst, (PSP_480_WIDE)/*biWidth*/);								// $E0 $01 $00 $00	// $12,$13,$14,$15
-		SDL_WriteLE32(dst, (PSP_272_HEIGHT)/*biHeight*/);							// $10 $01 $00 $00	// $16,$17,$18,$19
-		SDL_WriteLE16(dst, (1)/*biPlanes*/);										// $01 $00			// $1a,$1b
-		SDL_WriteLE16(dst, (24)/*biBitCount*/); 									// $18 $00			// $1c,$1d
-		SDL_WriteLE32(dst, (BI_RGB)/*biCompression*/);								// $00 $00 $00 $00	// $1e,$1f,$20,$21 === (0)
-		SDL_WriteLE32(dst, (PSP_480_WIDE * PSP_272_HEIGHT * 3)/*biSizeImage*/); 	// $00 $FA $05 $00 //&hfa0500== 391680==480*272*3	// $22,$23,$24,$25 //00 60 06 00 == &h 00 06 60 00 == 417792 == 272 * 512 * 3[bytes]
-		SDL_WriteLE32(dst, (0)/*biXPelsPerMeter*/); 		// $00 $00 $00 $00	// $26,
-		SDL_WriteLE32(dst, (0)/*biYPelsPerMeter*/); 		// $00 $00 $00 $00
-		SDL_WriteLE32(dst, (0)/*biClrUsed*/);				// $00 $00 $00 $00
-		SDL_WriteLE32(dst, (0)/*biClrImportant*/);			// $00 $00 $00 $00
-
+bmp_header.biSize			= (u32)(WIN_BI_40)/*biSize*/;								//	/*	SDL_WriteLE32(dst,*/ sceIoWrite(fd, (int)v32, 4);	// $28 $00 $00 $00	// $0e,$0f,$10,$11
+bmp_header.biWidth			= (u32)(PSP_480_WIDE)/*biWidth*/;							//	/*	SDL_WriteLE32(dst,*/ sceIoWrite(fd, (int)v32, 4);	// $E0 $01 $00 $00	// $12,$13,$14,$15
+bmp_header.biHeight 		= (u32)(PSP_272_HEIGHT)/*biHeight*/;						//	/*	SDL_WriteLE32(dst,*/ sceIoWrite(fd, (int)v32, 4);	// $10 $01 $00 $00	// $16,$17,$18,$19
+bmp_header.biPlanes 		= (u16)(1)/*biPlanes*/; 									//	/*	SDL_WriteLE16(dst,*/ sceIoWrite(fd, (int)v32, 2);	// $01 $00			// $1a,$1b
+bmp_header.biBitCount		= (u16)(24)/*biBitCount*/;									//	/*	SDL_WriteLE16(dst,*/ sceIoWrite(fd, (int)v32, 2);	// $18 $00			// $1c,$1d
+bmp_header.biCompression	= (u32)(BI_RGB)/*biCompression*/;							//	/*	SDL_WriteLE32(dst,*/ sceIoWrite(fd, (int)v32, 4);	// $00 $00 $00 $00	// $1e,$1f,$20,$21 === (0)
+bmp_header.biSizeImage		= (u32)(PSP_480_WIDE * PSP_272_HEIGHT * 3)/*biSizeImage*/;	//	/*	SDL_WriteLE32(dst,*/ sceIoWrite(fd, (int)v32, 4);	// $00 $FA $05 $00	//&hfa0500== 391680==480*272*3	// $22,$23,$24,$25 //00 60 06 00 == &h 00 06 60 00 == 417792 == 272 * 512 * 3[bytes]
+bmp_header.biXPelsPerMeter	= (u32)(0)/*biXPelsPerMeter*/;								//	/*	SDL_WriteLE32(dst,*/ sceIoWrite(fd, (int)v32, 4);	// $00 $00 $00 $00	// $26,
+bmp_header.biYPelsPerMeter	= (u32)(0)/*biYPelsPerMeter*/;								//	/*	SDL_WriteLE32(dst,*/ sceIoWrite(fd, (int)v32, 4);	// $00 $00 $00 $00
+bmp_header.biClrUsed		= (u32)(0)/*biClrUsed*/;									//	/*	SDL_WriteLE32(dst,*/ sceIoWrite(fd, (int)v32, 4);	// $00 $00 $00 $00
+bmp_header.biClrImportant	= (u32)(0)/*biClrImportant*/;								//	/*	SDL_WriteLE32(dst,*/ sceIoWrite(fd, (int)v32, 4);	// $00 $00 $00 $00
+	sceIoWrite(fd, &bmp_header, sizeof(bmp_header));
+#if 1/*(テスト)*/
 	//	/* Write the palette (in BGR color order) */
 	//	/* Write the bitmap offset */
 	//	bfOffBits = SDL_RWtell(dst)-fp_offset;
@@ -500,7 +531,9 @@ int PSPL_save_vram16_to_file(const char *save_bmp_file_name)
 			#define WRITE_1_LINE_LENGTH 	((PSP_480_WIDE) * (3))
 			#if (1==USE_GU_WORK)
 			#else
-			u8 line_buffer[(WRITE_1_LINE_LENGTH)];/*(16bit色(psp_BGR565) → 24bit色(win_BGR888)変換用バッファ1行分。)*/
+		//	u8 line_buffer[(WRITE_1_LINE_LENGTH*1)];/*(16bit色(psp_BGR565) → 24bit色(win_BGR888)変換用バッファ1行分。[.align合ってないのでハングアップする])*/
+		//	u8 line_buffer[(WRITE_1_LINE_LENGTH*4)];/*(16bit色(psp_BGR565) → 24bit色(win_BGR888)変換用バッファ4行分。)*/
+			u8 line_buffer[(WRITE_1_LINE_LENGTH*16)];/*(16bit色(psp_BGR565) → 24bit色(win_BGR888)変換用バッファ16行分。)*/
 			#endif
 			u16 *src;
 			src = (u16 *)((u32) 0x44000000);/*VRAM*/	/*(pspのVRAM先頭)*/
@@ -511,12 +544,16 @@ int PSPL_save_vram16_to_file(const char *save_bmp_file_name)
 				for (jj=0; jj<(PSP_272_HEIGHT); jj++)
 				{
 					u8/*16*/ *dest;
-				//	dest /*= render_image*/ = (u8/*16*/ *)surface->pixels;
-					#if (1==USE_GU_WORK)
-					dest /*= render_image*/ = (u8/*16*/ *)&gulist[0];
-					#else
-					dest /*= render_image*/ = (u8/*16*/ *)&line_buffer[0];
-					#endif
+				//	if(0==(jj&3))/*(4行に一回セット)*/
+					if(0==(jj&0x0f))/*(16行に一回セット[psp縦==272==(16*17)])*/
+					{
+					//	dest /*= render_image*/ = (u8/*16*/ *)surface->pixels;
+						#if (1==USE_GU_WORK)
+						dest /*= render_image*/ = (u8/*16*/ *)&gulist[0];
+						#else
+						dest /*= render_image*/ = (u8/*16*/ *)&line_buffer[0];
+						#endif
+					}
 					unsigned int ii;
 					for (ii=0; ii<(PSP_480_WIDE); ii++)
 					{
@@ -547,14 +584,25 @@ int PSPL_save_vram16_to_file(const char *save_bmp_file_name)
 					#else
 					src -= ((PSP_512_WIDE+PSP_480_WIDE));	/*(一行上に移動)+(描いた分戻る)*/
 					#endif
-					#if (1==USE_GU_WORK)
-					SDL_RWwrite(dst, gulist/*bits*/, (1), (WRITE_1_LINE_LENGTH) );			/* (1行出力) */
-					#else
-					SDL_RWwrite(dst, line_buffer/*bits*/, (1), (WRITE_1_LINE_LENGTH) ); 	/* (1行出力) */
-					#endif
+					/*(.alignが合っていないとハングアップするので、.align合わせの為4行に一回書きこみ)*/
+					/*(.alignが合っていないとハングアップするので、.align合わせの為16行に一回書きこみ)*/
+				//	if(0x03==(jj&3))/*(4行に一回書きこみ)*/
+					if(0x0f==(jj&0x0f))/*(16行に一回書きこみ[psp縦==272==(16*17)])*/
+					{
+						#if (1==USE_GU_WORK)
+					//	SDL_RWwrite(dst, gulist/*bits*/, (1), (WRITE_1_LINE_LENGTH) );		/* (1行出力[.align合ってないのでハングアップする]) */
+					//	sceIoWrite(fd, gulist/*bits*/, (WRITE_1_LINE_LENGTH)*4 );			/* (4行出力) */
+						sceIoWrite(fd, gulist/*bits*/, (WRITE_1_LINE_LENGTH)*16 );			/* (16行出力) */
+						#else
+					//	SDL_RWwrite(dst, line_buffer/*bits*/, (1), (WRITE_1_LINE_LENGTH) ); 	/* (1行出力[.align合ってないのでハングアップする]) */
+					//	sceIoWrite(fd, line_buffer/*bits*/, (WRITE_1_LINE_LENGTH)*4 );			/* (4行出力) */
+						sceIoWrite(fd, line_buffer/*bits*/, (WRITE_1_LINE_LENGTH)*16 ); 		/* (16行出力) */
+						#endif
+					}
 				}
 			}
 		}
+#endif
 		//
 		//	/* Write the BMP file size */
 		//	bfSize = SDL_RWtell(dst)-fp_offset;
@@ -567,10 +615,25 @@ int PSPL_save_vram16_to_file(const char *save_bmp_file_name)
 		//	{
 		//		SDL_Error_bbb(SDL_EFSEEK);
 		//	}
-		SDL_RWclose(dst);
+
+	//	SDL_RWclose(dst);
+		sceIoClose(fd);
 	}
 //	return ((strcmp(SDL_GetError(), "") == 0) ? (0/*successful*/) : (-1/*error*/));
 	return (0);
 }
+/*
+pspで.alignが合ってない場合ハングアップするが、このハングアップは若干不思議な挙動を取る。
+前提として.alignが合ってない場合、.alignが合ってない部分に dataに 0 が padding されるので、
+(0でpaddingされているのはたまたまかもしれない)
+正常なデーターとしては使えない。(元のデーターよりサイズが増える)
+このルーチンでは、.alignが合ってない瞬間にハングアップするのではなく、
+BMPデーター(0がpaddingされサイズが大きくなっているので使えない)を全て書き終わった後にハングアップする。
+-------------------------------------------
+つまり、
+.align違反でもpspのcpu自体は構わず処理を進める。
+しかし.align違反が一度発生すると、「.align違反が発生していない」という状態から「.align違反が発生した」という状態になる。
+「.align違反が発生した」状態かどうかは、ユーザーとは関係無い「別タスク」が処理をする。
+「別タスク」で「.align違反が発生した」状態が確認されたら、「別タスク」が強制的にpspの電源を切る。
+*/
 #endif /* ENABLE_FILE */
-

@@ -41,23 +41,24 @@ extern "C" {
 
 typedef struct SDL_RWops
 {
+	/* Read up to 'num' objects each of size 'objsize' from the data
+	   source to the area pointed at by 'ptr'.
+	   Returns the number of objects read, or -1 if the read failed.
+	 */
+//	void (/*SD LCALL*/ *read_ void)(struct SDL_RWops *context, void *ptr, int size, int maxnum);
+	int (/*SD LCALL*/ *read)(struct SDL_RWops *context, void *ptr, int size, int maxnum);
+//
 	/* Seek to 'offset' relative to whence, one of stdio's whence values:
 		SEEK_SET, SEEK_CUR, SEEK_END
 	   Returns the final offset in the data source.
 	 */
 	int (/*SD LCALL*/ *seek)(struct SDL_RWops *context, int offset, int whence);
-
-	/* Read up to 'num' objects each of size 'objsize' from the data
-	   source to the area pointed at by 'ptr'.
-	   Returns the number of objects read, or -1 if the read failed.
-	 */
-	int (/*SD LCALL*/ *read)(struct SDL_RWops *context, void *ptr, int size, int maxnum);
-
+//
 	/* Write exactly 'num' objects each of size 'objsize' from the area
 	   pointed at by 'ptr' to data source.
 	   Returns 'num', or -1 if the write failed.
 	 */
-	int (/*SD LCALL*/ *write)(struct SDL_RWops *context, const void *ptr, int size, int num);
+//	int (/*SD LCALL*/ *write)(struct SDL_RWops *context, const void *ptr, int size, int num);
 
 	/* Close and free an allocated SDL_FSops structure */
 	int (/*SD LCALL*/ *close)(struct SDL_RWops *context);
@@ -97,11 +98,12 @@ extern SDL_RWops * /*SD LCALL*/ SDL_AllocRW(void);
 extern void /*SD LCALL*/ SDL_FreeRW(SDL_RWops *area);
 
 /* Macros to easily read and write from an SDL_RWops structure */
-#define SDL_RWseek(ctx, offset, whence)	(ctx)->seek(ctx, offset, whence)
-#define SDL_RWtell(ctx)			(ctx)->seek(ctx, 0, SEEK_CUR)
-#define SDL_RWread(ctx, ptr, size, n)	(ctx)->read(ctx, ptr, size, n)
-#define SDL_RWwrite(ctx, ptr, size, n)	(ctx)->write(ctx, ptr, size, n)
-#define SDL_RWclose(ctx)		(ctx)->close(ctx)
+//#define SDL_RWread_ void(ctx, ptr, size, n)		(ctx)->read_ void(ctx, ptr, size, n)
+#define SDL_RWread(ctx, ptr, size, n)			(ctx)->read(ctx, ptr, size, n)
+//#define SDL_RWwrite(ctx, ptr, size, n)			(ctx)->write(ctx, ptr, size, n)
+#define SDL_RWseek(ctx, offset, whence)			(ctx)->seek(ctx, offset, whence)
+#define SDL_RWtell(ctx)							(ctx)->seek(ctx, 0, SEEK_CUR)
+#define SDL_RWclose(ctx)						(ctx)->close(ctx)
 
 
 /* Ends C function definitions when using C++ */

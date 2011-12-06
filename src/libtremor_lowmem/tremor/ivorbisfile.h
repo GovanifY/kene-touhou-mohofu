@@ -38,55 +38,54 @@ extern "C"
  */
 typedef struct
 {
-  size_t (*read_func)  (void *ptr, size_t size, size_t nmemb, void *datasource);
-  int    (*seek_func)  (void *datasource, ogg_int64_t offset, int whence);
-  int    (*close_func) (void *datasource);
-  long   (*tell_func)  (void *datasource);
+//	void/*size_t*/	(*read_func_ void)	(void *ptr, size_t size, size_t nmemb, void *datasource);
+	size_t			(*read_func)		(void *ptr, size_t size, size_t nmemb, void *datasource);
+	int 			(*seek_func)		(void *datasource, ogg_int64_t offset, int whence);
+	int 			(*close_func)		(void *datasource);
+	long			(*tell_func)		(void *datasource);
 } ov_callbacks;
 
 typedef struct OggVorbis_File
 {
-  void            *datasource; /* Pointer to a FILE *, etc. */
-  int              seekable;
-  ogg_int64_t      offset;
-  ogg_int64_t      end;
-  ogg_sync_state   *oy;
+	void				*datasource;	/* Pointer to a FILE *, etc. */
+	int 				seekable;
+	ogg_int64_t 		offset;
+	ogg_int64_t 		end;
+	ogg_sync_state		*oy;
 
-  /* If the FILE handle isn't seekable (eg, a pipe), only the current
-     stream appears */
-  int              links;
-  ogg_int64_t     *offsets;
-  ogg_int64_t     *dataoffsets;
-  ogg_uint32_t    *serialnos;
-  ogg_int64_t     *pcmlengths;
-  vorbis_info     vi;
-  vorbis_comment  vc;
+	/* If the FILE handle isn't seekable (eg, a pipe), only the current stream appears */
+	int 				links;
+	ogg_int64_t 		*offsets;
+	ogg_int64_t 		*dataoffsets;
+	ogg_uint32_t		*serialnos;
+	ogg_int64_t 		*pcmlengths;
+	vorbis_info 		vi;
+	vorbis_comment		vc;
 
-  /* Decoding working state local storage */
-  ogg_int64_t      pcm_offset;
-  int              ready_state;
-  ogg_uint32_t     current_serialno;
-  int              current_link;
+	/* Decoding working state local storage */
+	ogg_int64_t 		pcm_offset;
+	int 				ready_state;
+	ogg_uint32_t		current_serialno;
+	int 				current_link;
 
-  ogg_int64_t      bittrack;
-  ogg_int64_t      samptrack;
+	ogg_int64_t 		bittrack;
+	ogg_int64_t 		samptrack;
 
-  ogg_stream_state *os; /* take physical pages, weld into a logical
-                          stream of packets */
-  vorbis_dsp_state *vd; /* central working state for the packet->PCM decoder */
+	ogg_stream_state	*os;	/* take physical pages, weld into a logical stream of packets */
+	vorbis_dsp_state	*vd;	/* central working state for the packet->PCM decoder */
 
-  ov_callbacks callbacks;
+	ov_callbacks callbacks;
 
 } OggVorbis_File;
 
 extern int ov_clear(OggVorbis_File *vf);
 extern int ov_open(FILE *f,OggVorbis_File *vf,char *initial,long ibytes);
 extern int ov_open_callbacks(void *datasource, OggVorbis_File *vf,
-                char *initial, long ibytes, ov_callbacks callbacks);
+				char *initial, long ibytes, ov_callbacks callbacks);
 
 extern int ov_test(FILE *f,OggVorbis_File *vf,char *initial,long ibytes);
 extern int ov_test_callbacks(void *datasource, OggVorbis_File *vf,
-                char *initial, long ibytes, ov_callbacks callbacks);
+				char *initial, long ibytes, ov_callbacks callbacks);
 extern int ov_test_open(OggVorbis_File *vf);
 
 extern long ov_bitrate(OggVorbis_File *vf,int i);
@@ -112,8 +111,7 @@ extern ogg_int64_t ov_time_tell(OggVorbis_File *vf);
 extern vorbis_info *ov_info(OggVorbis_File *vf,int link);
 extern vorbis_comment *ov_comment(OggVorbis_File *vf,int link);
 
-extern long ov_read(OggVorbis_File *vf,void *buffer,int length,
-                    int *bitstream);
+extern long ov_read(OggVorbis_File *vf, void *buffer, int length, int *bitstream);
 
 #ifdef __cplusplus
 }

@@ -19,11 +19,11 @@ static char rcsid =
 
 
 /* bmp */
-int SDL_WriteLE16(SDL_RWops *dst, u16 value)
-{
-	value = SDL_SwapLE16(value);
-	return (SDL_RWwrite(dst, &value, (sizeof value), 1));
-}
+//int SDL_WriteLE16(SDL_RWops *dst, u16 value)
+//{
+//	value = SDL_SwapLE16(value);
+//	return (SDL_RWwrite(dst, &value, (sizeof value), 1));
+//}
 
 
 /* src/audio_mixer/wavestream.c */
@@ -32,14 +32,15 @@ int SDL_WriteLE16(SDL_RWops *dst, u16 value)
 /*static*/ u32 SDL_ReadLE32(SDL_RWops *src)
 {
 	u32 value;
+//	SDL_RWread_ void(src, &value, (sizeof value), 1);
 	SDL_RWread(src, &value, (sizeof value), 1);
 	return (SDL_SwapLE32(value));
 }
 
-int SDL_WriteLE32(SDL_RWops *dst, u32 value)
-{
-	value = SDL_SwapLE32(value);
-	return (SDL_RWwrite(dst, &value, (sizeof value), 1));
-}
+//int SDL_WriteLE32(SDL_RWops *dst, u32 value)
+//{
+//	value = SDL_SwapLE32(value);
+//	return (SDL_RWwrite(dst, &value, (sizeof value), 1));
+//}
 
 

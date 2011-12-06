@@ -13,6 +13,7 @@
 	-------------------------------------------------------
 	ハイスコア表示デモ画面(夢の記録)
 ---------------------------------------------------------*/
+#include "111_my_file.h"/*(bg読みこみ。)*/
 
 #include "kanji_system.h"
 
@@ -281,7 +282,7 @@ static void yume_no_kiroku_draw(void)
 	終わったら分岐する
 ---------------------------------------------------------*/
 
-static void result_05_do_slide_out_now(void)
+static MAIN_CALL_FUNC(result_05_do_slide_out_now)
 {
 	if (move_done_lines==MAX_7_LINES)
 	{
@@ -289,7 +290,10 @@ static void result_05_do_slide_out_now(void)
 		/* 注意：既にフォント解放してるから描画できないよ */
 		return;/* 描画するとハングアップするので、ここで強制リターン。 */
 	}
-	yume_no_kiroku_draw();//要る(退場描画)
+	else
+	{
+		yume_no_kiroku_draw();//要る(退場描画)
+	}
 }
 
 
@@ -297,7 +301,7 @@ static void result_05_do_slide_out_now(void)
 	退場準備。
 ---------------------------------------------------------*/
 
-static void result_04_set_slide_out(void)
+static MAIN_CALL_FUNC(result_04_set_slide_out)
 {
 	{
 		move_done_lines = 0;
@@ -316,8 +320,8 @@ static void result_04_set_slide_out(void)
 /*---------------------------------------------------------
 	キーチェック。
 ---------------------------------------------------------*/
-static void result_01_set_location(void);/*(宣言が必要)*/
-static void result_03_pad_check(void)
+static MAIN_CALL_FUNC(result_01_set_location);/*(宣言が必要)*/
+static MAIN_CALL_FUNC(result_03_pad_check)
 {
 	if (0==psp_pad.pad_data_alter)/* さっき何も押されてなかった場合にキーチェック(原作準拠) */
 	{
@@ -346,7 +350,7 @@ static void result_03_pad_check(void)
 	登場中。
 ---------------------------------------------------------*/
 
-static void result_02_do_slide_in_now(void)
+static MAIN_CALL_FUNC(result_02_do_slide_in_now)
 {
 	if (move_done_lines==MAX_7_LINES)
 	{
@@ -360,7 +364,7 @@ static void result_02_do_slide_in_now(void)
 	登場準備。新しい戦績の文字をレンダリングする。
 ---------------------------------------------------------*/
 
-static void result_01_set_location(void)
+static MAIN_CALL_FUNC(result_01_set_location)
 {
 	move_done_lines 		= 0;
 	result_font16_render_new_surface();
@@ -372,7 +376,7 @@ static void result_01_set_location(void)
 	ハイスコア表示デモ画面(夢の記録)(開始、初期設定)
 ---------------------------------------------------------*/
 
-global void yume_no_kiroku_start(void)
+global MAIN_CALL_FUNC(yume_no_kiroku_start)
 {
 	//void result_init(void)
 	show_player_num 		= ((cg_game_select_player) & 0x07);/*0*/	/* 現在選択されているプレイヤーから記録を表示開始する。 */
@@ -401,7 +405,6 @@ global void yume_no_kiroku_start(void)
 /*---------------------------------------------------------
 	ハイスコア名前入力、登録画面
 ---------------------------------------------------------*/
-
 
 #define KEYBOARD_W10	(16)
 #define KEYBOARD_H04	(5)
@@ -504,33 +507,15 @@ static void name_entry_draw(void)
 /*---------------------------------------------------------
 	ハイスコア名前入力、登録画面、動作[キー入力＆状態変更部分]
 ---------------------------------------------------------*/
-					#if 0
-					/* キーボードの文字を開放する */
-					{	int i;
-						for (i=0; i<KEYBOARD_M40; i++)
-						{
-							#if 0
-						//	if (letter_surface[i])
-							{
-								/* ここでハングアップ */
-								SDL_FreeSurface(letter_surface[i]);
-							}
-							#endif
-						}
-					}
-					#endif
 
 
-//static void name_entry_local_final(void)
+//static MAIN_CALL_FUNC(name_entry_local_final)
 //{
-//					cb.main_call_func = title_menu_start;	/* タイトルメニューへ移動 */
-//					/* 注意：既にフォント解放してるから描画できないよ */
-//					return;/* 描画するとハングアップするので、ここで強制リターン。 */
 //}
 #define MY_CODE_DEL_KEY 	(0x7e)
 #define MY_CODE_OK_KEY		(0x7f)
 
-static void name_entry_local_work(void)
+static MAIN_CALL_FUNC(name_entry_local_work)
 {
 	if (0 == psp_pad.pad_data_alter)/* さっき何も押されてなかった場合にキーチェック(原作準拠) */
 	{
@@ -578,8 +563,27 @@ static void name_entry_local_work(void)
 		agree_entry:	/* 入力終了決定 */
 			if (0 < now_select_name_chr)	// 名前入力の入力文字がある場合で。何か入力されている場合で。
 			{
-			//	cb.main_call_func = name_entry_local_final;
+			//	cb.main_call_func = name_entry_local_final;/*(解放処理)*/
 				cb.main_call_func = title_menu_start;	/* タイトルメニューへ移動 */
+				/*(有効にしても大丈夫な気もするけど、せっかくハイスコア出してハングアップすると、がっかりするし。)*/
+				/*(pspはmallocがあやしーのでハングアップする可能性がある。模倣風の場合BGMにmp3(libmad)とか使うと高確率でハングアップする。)*/
+				#if (0)/*(解放処理)*/
+				/* キーボードの文字を開放する */
+				{	int i;
+					for (i=0; i<KEYBOARD_M40; i++)
+					{
+						#if (1)
+					//	if (letter_surface[i])
+						{
+							/* ここでハングアップ */
+							SDL_FreeSurface(letter_surface[i]);
+						}
+						#endif
+					}
+				}
+				/*(注意：既にフォント解放してるから描画できないよ)*/
+				return;/*(描画するとハングアップするので、ここで強制リターン。)*/
+				#endif
 			}
 		}
 	}
@@ -587,8 +591,8 @@ static void name_entry_local_work(void)
 }
 
 
-//static void name_entry_init(void)
-global void name_entry_start(void)
+//static MAIN_CALL_FUNC(name_entry_init)
+global MAIN_CALL_FUNC(name_entry_start)
 {
 	unsigned int i;
 	unsigned int j;
@@ -673,14 +677,14 @@ global void name_entry_start(void)
 	/* PLAY RESULTが付いたから、画面おもいっきり消すことにした。 */
 	{
 	//	psp_clear_screen(); /* 表画面を消す */
-		load_SDL_bg(BG_TYPE_01_name_regist);/* 裏画面にロード */
+		my_file_common_name[0] = BG_TYPE_01_name_regist;psp_load_bg_file_name();/* 裏画面にロード */
 		psp_pop_screen();/* 裏画面を表にコピー */
 	}
 	/* ｎ位タイトル描画 */
 	{
 		for (j=0; j<5; j++)
 		{
-			high_score_render_sub((cg_game_select_player), j );/* FONT16W 白  FONT16R 紅(黄) */
+			high_score_render_sub((cg_game_select_player), j);/* FONT16W 白  FONT16R 紅(黄) */
 			cg.PSPL_font_x = (RANK_LOCATE_OFS_X_32);
 			cg.PSPL_font_y = (RANK_LOCATE_OFS_Y_40)+(j*20);
 			font_render_view_screen();
@@ -694,4 +698,7 @@ global void name_entry_start(void)
 	psp_push_screen();	/* 現在の表示画面を裏画面に保存 */
 	sel_aaa = 0;
 	cb.main_call_func = name_entry_local_work;
+	//
+//	set_music_volume(128);/*とりあえず*/
+	play_music_num(BGM_31_menu05);/*(th06_16.IT 紅より儚い永遠)*/
 }

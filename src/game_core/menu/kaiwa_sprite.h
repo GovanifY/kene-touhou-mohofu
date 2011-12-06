@@ -11,18 +11,18 @@
 /*(現在規格は、とりあえず仮のもの。後でOBJと統合する。)*/
 typedef struct /* _kaiwa_obj_tag_ */
 {
-	int cx256;			/* objの中心 x 座標, 精度確保用(256固定小数点形式) */
-	int cy256;			/* objの中心 y 座標, 精度確保用(256固定小数点形式) */
-	int target_x256;	/* 目標 x 座標 */
-	int target_y256;	/* 目標 y 座標 */
+	POINT256 	center;		/* objの中心 x 座標, 精度確保用(256固定小数点形式) */
+							/* objの中心 y 座標, 精度確保用(256固定小数点形式) */
+	POINT256 	target; 	/* 目標 x 座標 */
+							/* 目標 y 座標 */
 //[4==1*4]
-	int origin_x256;	/* 原点 x 座標 */
-	int origin_y256;	/* 原点 y 座標 */
-	int offset_x256;	/* 原点からの差分 x 座標 */
-	int offset_y256;	/* 原点からの差分 y 座標 */
+	POINT256 	origin; 	/* 原点 x 座標 */
+							/* 原点 y 座標 */
+	POINT256 	offset; 	/* 原点からの差分 x 座標 */
+							/* 原点からの差分 y 座標 */
 //[8==2*4]
-	int alt_x256;	/* 以前の x 座標(補間移動用) */
-	int alt_y256;	/* 以前の y 座標(補間移動用) */
+	POINT256 	alt;		/* 以前の x 座標(補間移動用) */
+							/* 以前の y 座標(補間移動用) */
 	int width_2n;// 	2^n 単位での画像横幅。(256とか128とか)			int w_bit;				/* objの幅(1<<w_bit) */
 	int height_2n;// 	2^n 単位での画像高さ。(256とか128とか)			int h_bit;				/* objの高さ(1<<h_bit) */
 //[12==3*4]

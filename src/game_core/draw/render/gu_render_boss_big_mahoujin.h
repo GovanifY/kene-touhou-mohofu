@@ -38,16 +38,16 @@ static void gu_draw_big_maho_jin(void)
 	unsigned int j;
 	unsigned short uv_x4;
 	OBJ *obj_boss;
-	obj_boss			= &obj99[OBJ_HEAD_01_0x0800_TEKI+TEKI_OBJ_00_BOSS_HONTAI];/*(ボス本体)*/
-	int boss_center_x	= ((obj_boss->cx256)>>8);
-	int boss_center_y	= ((obj_boss->cy256)>>8);
+	obj_boss			= &obj99[OBJ_HEAD_02_0x0900_TEKI_FIX+TEKI_OBJ_00_BOSS00_HONTAI];/*(ボス本体)*/
+	int boss_center_x	= ((obj_boss->center.x256)>>8);
+	int boss_center_y	= ((obj_boss->center.y256)>>8);
 
 	/* 内側 */
-//	int hankei_111 = (draw_boss_hp_value>>2);/* 128==1024/8 */
+//	int hankei_111 = (draw_bo ss_hp_value>>2);/* 128==1024/8 */
 //	int hankei_111 = (bo ss_life_value>>(2+3));/* 128==1024/8 */
-//	int hankei_111 = (card.boss_timer>>(2+3))+(64);/* 128==1024/8 */
-//	int hankei_111 = (card.boss_timer>>(7))+(64);/* 128==1024/8 */
-	int hankei_111 = (card.boss_timer>>(8))+(64);/* 128==1024/8 */
+//	int hankei_111 = (card.card_timer>>(2+3))+(64);/* 128==1024/8 */
+//	int hankei_111 = (card.card_timer>>(7))+(64);/* 128==1024/8 */
+	int hankei_111 = (card.card_timer>>(8))+(64);/* 128==1024/8 */
 	hankei_111 = psp_max(hankei_111, 64);
 	/* 外側 */
 	int hankei_222 = (hankei_111+(16)/*(8)*/);/* 8[pixel]文字高さ */

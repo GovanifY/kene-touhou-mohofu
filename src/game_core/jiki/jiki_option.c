@@ -142,7 +142,7 @@ static const s8 ggg[FORMATION_99_MAX][4] =
 /*---------------------------------------------------------
 
 ---------------------------------------------------------*/
-static void move_delta_xy(OBJ *src, int delta_x256, int delta_y256)
+static void move_delta_xy(OBJ/**/ *src, int delta_x256, int delta_y256)
 {	/* 目標地点に移動する */
 //	int ccc_angle1024 = at an_1024(((delta_y256)>>8), ((delta_x256)>>8));
 //	int ccc_speed256 = (/*10*/((REMILIA==(cg_game_select_player))?t256(8.0):t256(1.0)));
@@ -157,23 +157,23 @@ static void move_delta_xy(OBJ *src, int delta_x256, int delta_y256)
 	{	t256(4.0),	t256(4.0),	t256(4.0),	t256(4.0),	t256(8.0),	t256(2.0),	t256(1.0),	t256(1.0)	};
 	const int ccc_speed256 = bbb_speed_tbl[(cg_game_select_player)];
 	#if (0)//
-	src->cx256 += ((si n1024((ccc_angle1024))*(ccc_speed256))>>8);/*fps_factor*/	/* CCWの場合 */
-	src->cy256 += ((co s1024((ccc_angle1024))*(ccc_speed256))>>8);/*fps_factor*/
+	src->center.x256 += ((si n1024((ccc_angle1024))*(ccc_speed256))>>8);/*fps_factor*/	/* CCWの場合 */
+	src->center.y256 += ((co s1024((ccc_angle1024))*(ccc_speed256))>>8);/*fps_factor*/
 	//#el se
 	{
 		int sin_value_t256; 	//	sin_value_t256 = 0;
 		int cos_value_t256; 	//	cos_value_t256 = 0;
 		int256_si nco s1024( (deg65536to1024(cc_angle65536)), &sin_value_t256, &cos_value_t256);	/* 「1周が65536分割」から「1周が1024分割」へ変換する。 */
-		src->cx256 += ((sin_value_t256*(ccc_speed256))>>8);/*fps_factor*/
-		src->cy256 += ((cos_value_t256*(ccc_speed256))>>8);/*fps_factor*/
+		src->center.x256 += ((sin_value_t256*(ccc_speed256))>>8);/*fps_factor*/
+		src->center.y256 += ((cos_value_t256*(ccc_speed256))>>8);/*fps_factor*/
 	}
 	#endif
 	//------------------
 	HATSUDAN_01_speed256	= (ccc_speed256);
 	HATSUDAN_03_angle65536	= (cc_angle65536);
 	sincos256();/*(破壊レジスタ多いので注意)*/
-	src->cx256 += REG_03_DEST_Y;//sin_value_t256 // 下CCWの場合(右CWの場合ととxyが逆)
-	src->cy256 += REG_02_DEST_X;//cos_value_t256 // 下CCWの場合(右CWの場合ととxyが逆)
+	src->center.x256 += REG_03_DEST_Y;//sin_value_t256 // 下CCWの場合(右CWの場合ととxyが逆)
+	src->center.y256 += REG_02_DEST_X;//cos_value_t256 // 下CCWの場合(右CWの場合ととxyが逆)
 	//------------------
 
 }
@@ -191,17 +191,17 @@ static void move_delta_xy(OBJ *src, int delta_x256, int delta_y256)
 #define control_formation00 control_formation00_and_02
 #define control_formation02 control_formation00_and_02
 
-static void control_formation00_and_02(OBJ *src) /* FORMATION_TYPE_00 */ /* FORMATION_TYPE_02 */
+static OBJ_CALL_FUNC(control_formation00_and_02) /* FORMATION_TYPE_00 */ /* FORMATION_TYPE_02 */
 {
 	int player_offs_x256;
 	int player_offs_y256;
 	if (FORMATION_TYPE_00==cg.player_option_mode)
 	{
 		OBJ *zzz_player;
-		zzz_player = &obj99[OBJ_HEAD_02_0x0900_KOTEI+FIX_OBJ_00_PLAYER];
+		zzz_player = &obj99[OBJ_HEAD_03_0x0a00_KOTEI+FIX_OBJ_00_PLAYER];
 		#if 1/*Gu(中心座標)*/
-		player_offs_x256 = zzz_player->cx256;
-		player_offs_y256 = zzz_player->cy256;
+		player_offs_x256 = zzz_player->center.x256;
+		player_offs_y256 = zzz_player->center.y256;
 		#endif
 		/* 初期化 */
 		{
@@ -260,8 +260,8 @@ static void control_formation00_and_02(OBJ *src) /* FORMATION_TYPE_00 */ /* FORM
 	//	/* FORMATION_TYPE_00: レミリアの直前に四つ / チルノの直後に四人 */
 	//	/* FORMATION_TYPE_02: 画面後方から支援するよ */
 			#if 1/*Gu(中心座標)*/
-			delta_x256 = (-src->cx256+src->PL_OPTION_DATA_offset_x256);
-			delta_y256 = (-src->cy256+src->PL_OPTION_DATA_offset_y256);/*240*/
+			delta_x256 = (-src->center.x256+src->PL_OPTION_DATA_offset_x256);
+			delta_y256 = (-src->center.y256+src->PL_OPTION_DATA_offset_y256);/*240*/
 			#endif
 		//	not_break;
 			delta_y256 += player_offs_y256;
@@ -280,13 +280,13 @@ static void control_formation00_and_02(OBJ *src) /* FORMATION_TYPE_00 */ /* FORM
 				/* 位置の維持 & 配置完了flag */
 			//	/* FORMATION_TYPE_00: レミリアの直前に四つ / チルノの直後に四人 */
 			//	/* FORMATION_TYPE_02: 画面後方から支援するよ */
-				src->cx256 = src->PL_OPTION_DATA_offset_x256;
-				src->cy256 = src->PL_OPTION_DATA_offset_y256;
+				src->center.x256 = src->PL_OPTION_DATA_offset_x256;
+				src->center.y256 = src->PL_OPTION_DATA_offset_y256;
 			//	not_break;
-			//	src->cx256 = player_offs_x256 + src->PL_OPTION_DATA_offset_x256;
-			//	src->cy256 = player_offs_y256 + src->PL_OPTION_DATA_offset_y256;
-				src->cx256 += player_offs_x256;
-				src->cy256 += player_offs_y256;
+			//	src->center.x256 = player_offs_x256 + src->PL_OPTION_DATA_offset_x256;
+			//	src->center.y256 = player_offs_y256 + src->PL_OPTION_DATA_offset_y256;
+				src->center.x256 += player_offs_x256;
+				src->center.y256 += player_offs_y256;
 		//		break;
 			}
 		}
@@ -296,16 +296,16 @@ static void control_formation00_and_02(OBJ *src) /* FORMATION_TYPE_00 */ /* FORM
 /*---------------------------------------------------------
 
 ---------------------------------------------------------*/
-static void control_formation01(OBJ *src) /* FORMATION_TYPE_01 */
+static OBJ_CALL_FUNC(control_formation01) /* FORMATION_TYPE_01 */
 {
 	int player_offs_x256;
 	int player_offs_y256;
 	{
 		OBJ *zzz_player;
-		zzz_player = &obj99[OBJ_HEAD_02_0x0900_KOTEI+FIX_OBJ_00_PLAYER];
+		zzz_player = &obj99[OBJ_HEAD_03_0x0a00_KOTEI+FIX_OBJ_00_PLAYER];
 		#if 1/*Gu(中心座標)*/
-		player_offs_x256 = zzz_player->cx256;
-		player_offs_y256 = zzz_player->cy256;
+		player_offs_x256 = zzz_player->center.x256;
+		player_offs_y256 = zzz_player->center.y256;
 		#endif
 	}
 	/* 初期化 */
@@ -326,8 +326,8 @@ static void control_formation01(OBJ *src) /* FORMATION_TYPE_01 */
 		HATSUDAN_01_speed256	= ((remi_offset_r)<<8);
 		HATSUDAN_03_angle65536	= deg1024to65536((src->PL_OPTION_DATA_angleCCW1024));
 		sincos256();/*(破壊レジスタ多いので注意)*/
-		delta_x256 = (player_offs_x256-src->cx256) + REG_03_DEST_Y;//sin_value_t256 // 下CCWの場合(右CWの場合ととxyが逆)
-		delta_y256 = (player_offs_y256-src->cy256) + REG_02_DEST_X;//cos_value_t256 // 下CCWの場合(右CWの場合ととxyが逆)
+		delta_x256 = (player_offs_x256-src->center.x256) + REG_03_DEST_Y;//sin_value_t256 // 下CCWの場合(右CWの場合ととxyが逆)
+		delta_y256 = (player_offs_y256-src->center.y256) + REG_02_DEST_X;//cos_value_t256 // 下CCWの場合(右CWの場合ととxyが逆)
 		//------------------
 		move_delta_xy(src, delta_x256, delta_y256); /* 目標地点に移動する */
 	#if 1
@@ -347,8 +347,8 @@ static void control_formation01(OBJ *src) /* FORMATION_TYPE_01 */
 		HATSUDAN_01_speed256	= ((remi_offset_r)<<8);
 		HATSUDAN_03_angle65536	= deg1024to65536((src->PL_OPTION_DATA_angleCCW1024));
 		sincos256();/*(破壊レジスタ多いので注意)*/
-		src->cx256 = (player_offs_x256) + REG_03_DEST_Y;//sin_value_t256 // 下CCWの場合(右CWの場合ととxyが逆)
-		src->cy256 = (player_offs_y256) + REG_02_DEST_X;//cos_value_t256 // 下CCWの場合(右CWの場合ととxyが逆)
+		src->center.x256 = (player_offs_x256) + REG_03_DEST_Y;//sin_value_t256 // 下CCWの場合(右CWの場合ととxyが逆)
+		src->center.y256 = (player_offs_y256) + REG_02_DEST_X;//cos_value_t256 // 下CCWの場合(右CWの場合ととxyが逆)
 		//------------------
 			}
 		}
@@ -370,15 +370,15 @@ static void control_formation01(OBJ *src) /* FORMATION_TYPE_01 */
 
 ---------------------------------------------------------*/
 
-static void control_formation03(OBJ *src) /* FORMATION_TYPE_03 */
+static OBJ_CALL_FUNC(control_formation03) /* FORMATION_TYPE_03 */
 {
 	int player_offs_x256;
 	int player_offs_y256;
 	{
 		OBJ *zzz_player;
-		zzz_player = &obj99[OBJ_HEAD_02_0x0900_KOTEI+FIX_OBJ_00_PLAYER];
-		player_offs_x256 = zzz_player->cx256;
-		player_offs_y256 = zzz_player->cy256;
+		zzz_player = &obj99[OBJ_HEAD_03_0x0a00_KOTEI+FIX_OBJ_00_PLAYER];
+		player_offs_x256 = zzz_player->center.x256;
+		player_offs_y256 = zzz_player->center.y256;
 	}
 //	/* 初期化 */
 //	/* 目標地点へ移動中 */
@@ -386,8 +386,8 @@ static void control_formation03(OBJ *src) /* FORMATION_TYPE_03 */
 		int delta_y256 = (0);				/* delta_y : y座標における目標地点と現在地の差 */
 		int delta_x256 = (0);				/* delta_x : x座標における目標地点と現在地の差 */
 		/* FORMATION_TYPE_03: 減速時用(好きな位置に置けるよ) */
-		delta_y256 = (player_offs_y256) - (src->cy256);
-		delta_x256 = (player_offs_x256) - (src->cx256);
+		delta_y256 = (player_offs_y256) - (src->center.y256);
+		delta_x256 = (player_offs_x256) - (src->center.x256);
 		move_delta_xy(src, delta_x256, delta_y256); /* 目標地点に移動する */
 		#if 1
 		/* レミリア用 */
@@ -399,8 +399,8 @@ static void control_formation03(OBJ *src) /* FORMATION_TYPE_03 */
 			{
 //				/* 位置の維持 & 配置完了flag */
 				/* FORMATION_TYPE_03: 減速時用(好きな位置に置けるよ) */
-				src->cx256 = player_offs_x256;
-				src->cy256 = player_offs_y256;
+				src->center.x256 = player_offs_x256;
+				src->center.y256 = player_offs_y256;
 			}
 		}
 		#endif
@@ -412,7 +412,7 @@ static void control_formation03(OBJ *src) /* FORMATION_TYPE_03 */
 
 ---------------------------------------------------------*/
 
-/*static*/ void player_control_option(OBJ *src)
+/*static*/ OBJ_CALL_FUNC(player_control_option)
 {
 	unsigned int slow_remilia_flag;
 	slow_remilia_flag = 0;
@@ -429,10 +429,10 @@ static void control_formation03(OBJ *src) /* FORMATION_TYPE_03 */
 					(src->PL_OPTION_DATA_slow_count < ((src->PL_OPTION_DATA_opt_anime_add_id+1)<<(6+2))/* *30 64*/))
 				{
 					OBJ *zzz_player;
-					zzz_player = &obj99[OBJ_HEAD_02_0x0900_KOTEI+FIX_OBJ_00_PLAYER];
+					zzz_player = &obj99[OBJ_HEAD_03_0x0a00_KOTEI+FIX_OBJ_00_PLAYER];
 					/* FORMATION_TYPE_03: 減速時用(好きな位置に置けるよ) */
-					src->cx256 = zzz_player->cx256;
-					src->cy256 = zzz_player->cy256;
+					src->center.x256 = zzz_player->center.x256;
+					src->center.y256 = zzz_player->center.y256;
 				}
 			}
 			else
@@ -472,7 +472,7 @@ static void control_formation03(OBJ *src) /* FORMATION_TYPE_03 */
 			}
 		}
 		{
-			static /*const*/ void (*formation_call_table[(4)])(OBJ *src) =
+			static /*const*/ void (*formation_call_table[(4)])(OBJ/**/ *src) =
 			{
 				control_formation00,
 				control_formation01,
@@ -491,15 +491,14 @@ static void control_formation03(OBJ *src) /* FORMATION_TYPE_03 */
 /*---------------------------------------------------------
 	プレイヤー、オプションの定義
 ---------------------------------------------------------*/
-/* static */extern void player_move_option(OBJ *src);
-
+/* static */extern OBJ_CALL_FUNC(player_move_option);
 global/*static*/ void jiki_option_create(void)
 {
 	unsigned int jj;
 	for (jj=0; jj<(OPTION_04_MAX); jj++)
 	{
 		OBJ *h;
-		h						= obj_add_Ann_direct(OBJ_HEAD_02_0x0900_KOTEI+FIX_OBJ_04_JIKI_OPTION0/* +OPTION_C1 */+jj);	/* 必ず登録できる。 */
+		h						= obj_regist_direct_number(OBJ_HEAD_03_0x0a00_KOTEI+FIX_OBJ_04_JIKI_OPTION0/* +OPTION_C1 */+jj);	/* 必ず登録できる。 */
 		h->jyumyou				= JYUMYOU_MUGEN;/* 時間で自動消去しない */
 		{
 		//	h->obj_type_set 				= (JIKI_OPTION_00_00)+kk; kk += (16);/* オプションインターリーブ */ /* 8 */
@@ -515,32 +514,19 @@ global/*static*/ void jiki_option_create(void)
 				h->PL_OPTION_DATA_angleCCW1024 = aaa_tbl[jj];/* REMILIA_angle1024 */
 			}
 				h->PL_OPTION_DATA_opt_anime_add_id		= (OPTION_C1+jj);
-
 		//
-			#if /*(ステージ開始時に再設定されるので要らない)*/0/* Gu(中心座標) */
-			h->cx256					= (s1->cx256);	/* プレイヤーオプション位置の初期化 */
-			h->cy256					= (s1->cy256);	/* プレイヤーオプション位置の初期化 */
-			#endif
-			h->m_Hit256R				= TAMA_ATARI_BULLET_DUMMY;
-		//	h->PL_OPTION_DATA_yuukou_flag 			= (PL_OPTION_FLAG_01_OPTION_ON);
-			h->PL_OPTION_DATA_yuukou_flag 			= (PL_OPTION_FLAG_00_OPTION_OFF); 	/* 可視フラグのOFF(不可視) */
-			h->atari_hantei 			= ATARI_HANTEI_OFF; 				/* あたり判定のOFF(無敵) */
-
-//	/* ??? */ h->kougeki_ti 			= (0/* 1 8*5 */);/*(オプションが雑魚に体当たりした場合の強さ。1なら倒せる。あたり判定はあるが0なら倒せない。)*/
-			{
-			//
-				h->callback_mover		= player_move_option;
-			//
-			//	h->PL_OPTION_DATA_next					= obj99[OBJ_HEAD_02_0x0900_KOTEI+FIX_OBJ_00_PLAYER];
-			//	h->P L_OPTION_DATA_state2				= 0;
-				h->PL_OPTION_DATA_offset_x256			= t256(0);
-				h->PL_OPTION_DATA_offset_y256			= t256(0);
-			//	h->PL_OPTION_DATA_ccc_angle512			= cv1024r((0));
-				h->PL_OPTION_DATA_slow_count			= 0;
-			}
+			h->m_Hit256R					= TAMA_ATARI_BULLET_DUMMY;
+		//	h->PL_OPTION_DATA_yuukou_flag 	= (PL_OPTION_FLAG_01_OPTION_ON);
+			h->PL_OPTION_DATA_yuukou_flag 	= (PL_OPTION_FLAG_00_OPTION_OFF); 	/* 可視フラグのOFF(不可視) */
+			h->atari_hantei 				= ATARI_HANTEI_OFF; 				/* あたり判定のOFF(無敵) */
+//	/* ??? */ h->kougeki_ti 				= (0/* 1 8*5 */);/*(オプションが雑魚に体当たりした場合の強さ。1なら倒せる。あたり判定はあるが0なら倒せない。)*/
+		//
+			h->callback_mover				= player_move_option;
+		//
+			h->PL_OPTION_DATA_offset_x256			= t256(0);
+			h->PL_OPTION_DATA_offset_y256			= t256(0);
+			h->PL_OPTION_DATA_slow_count			= 0;
 			h->PL_OPTION_DATA_opt_shot_interval 	= 0;
-		//	h->PL_OPTION_DATA_state 				= 0;
-		//	h->PL_OPTION_DATA_state1				= 0;///
 			h->PL_OPTION_DATA_anime_wait			= 0;
 			/* レミリアのオプションは半透明っぽい */
 			if (REMILIA==(cg_game_select_player))
@@ -552,17 +538,15 @@ global/*static*/ void jiki_option_create(void)
 		}
 	}
 }
-
-
-
-
-
-
-
-
-
-
-
+	//	h->PL_OPTION_DATA_next					= obj99[OBJ_HEAD_03_0x0a00_KOTEI+FIX_OBJ_00_PLAYER];
+	//	h->PL_OPTION_DATA_ccc_angle512			= cv1024r((0));
+	//	h->PL_OPTION_DATA_state2				= 0;
+	//	h->PL_OPTION_DATA_state 				= 0;
+	//	h->PL_OPTION_DATA_state1				= 0;///
+			#if /*(ステージ開始時に再設定されるので要らない)*/0/* Gu(中心座標) */
+			h->center.x256					= (s1->center.x256);	/* プレイヤーオプション位置の初期化 */
+			h->center.y256					= (s1->center.y256);	/* プレイヤーオプション位置の初期化 */
+			#endif
 
 	#if (0)/*デバッグ用*/
 	/*	★「ボスと相打ちするとハングアップ」バグ(～r26)対策 */

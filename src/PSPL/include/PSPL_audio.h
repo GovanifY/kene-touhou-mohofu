@@ -52,7 +52,7 @@ extern "C" {
 #endif
 
 /* The calculated values in this structure are calculated by PSPL_OpenAudio() */
-typedef struct //PSPL_AUDIO_SPEC_tag
+typedef struct /* PSPL_AUDIO_SPEC_tag */
 {
 		int 	freq;					/* DSP frequency -- samples per second */
 		u16 	format; 				/* Audio data format */
@@ -66,6 +66,7 @@ typedef struct //PSPL_AUDIO_SPEC_tag
 		   'len' is the length of that buffer in bytes.
 		   Once the callback returns, the buffer will no longer be valid.
 		   Stereo samples are stored in a LRLRLR ordering.
+			pspÇÕ RLRLRL ordering ÇæÇÊÅB
 		*/
 		void	(/*SD LCALL*/ *callback)(void *userdata, u8 *stream, int len);
 		void	*userdata;

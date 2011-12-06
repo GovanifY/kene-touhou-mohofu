@@ -664,13 +664,13 @@ png_charp PNGAPI
 png_convert_to_rfc1123(png_structp png_ptr, png_timep ptime)
 {
 	static PNG_CONST char short_months[12][4] =
-		{	"Jan", "Feb", "Mar", "Apr", "May", "Jun",
-			"Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+	{	"Jan", "Feb", "Mar", "Apr", "May", "Jun",
+		"Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+	};
 
 	if (png_ptr->time_buffer == NULL)
 	{
-		png_ptr->time_buffer = (png_charp)png_malloc(png_ptr, (png_uint_32)(29*
-			png_sizeof(char)));
+		png_ptr->time_buffer = (png_charp)png_malloc(png_ptr, (png_uint_32)(29* png_sizeof(char)));
 	}
 
 #if defined(_WIN32_WCE)

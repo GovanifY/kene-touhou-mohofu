@@ -38,140 +38,141 @@ extern "C" {
 #endif
 
 /* Transparency definitions: These define alpha as the opacity of a surface */
-#define SDL_ALPHA_OPAQUE 255
-#define SDL_ALPHA_TRANSPARENT 0
+#define SDL_ALPHA_OPAQUE		(255)
+#define SDL_ALPHA_TRANSPARENT	(0)
 
 /* Useful data types */
-typedef struct SDL_Rect
+typedef struct /*SDL_Rect_tag*/
 {
-	s16 x, y;
-	u16 w, h;
+	s16 	x;
+	s16 	y;
+	u16 	w;
+	u16 	h;
 } SDL_Rect;
 
-typedef struct SDL_Color
+typedef struct /*SDL_Color_tag*/
 {
-	u8 r;
-	u8 g;
-	u8 b;
-	u8 unused;
+	u8		a;/*(unused)*/
+	u8		b;
+	u8		g;
+	u8		r;
 } SDL_Color;
-#define SDL_Colour SDL_Color
 
-typedef struct SDL_Palette
+
+typedef struct /*SDL_Palette_tag*/
 {
 	int 	  ncolors;
 	SDL_Color *colors;
 } SDL_Palette;
 
 /* Everything in the pixel format structure is read-only */
-typedef struct SDL_PixelFormat
+typedef struct /*SDL_PixelFormat_tag*/
 {
-	SDL_Palette *palette;
-	u8  BitsPerPixel;
-	u8  BytesPerPixel;
-	u8  Rloss;
-	u8  Gloss;
-	u8  Bloss;
-	u8  Aloss;
-	u8  Rshift;
-	u8  Gshift;
-	u8  Bshift;
-	u8  Ashift;
-	u32 Rmask;
-	u32 Gmask;
-	u32 Bmask;
 	u32 Amask;
-
+	u32 Bmask;
+	u32 Gmask;
+	u32 Rmask;
+	//
+	u8	Ashift;
+	u8	Bshift;
+	u8	Gshift;
+	u8	Rshift;
+	//
+	u8	Aloss;
+	u8	Bloss;
+	u8	Gloss;
+	u8	Rloss;
+	//
+	u8	BitsPerPixel;
+	u8	BytesPerPixel;
+	/* Alpha value information (per-surface alpha) */
+	u8	alpha;
+	u8	dummy111;
+	//
 	/* RGB color key information */
 	u32 colorkey;
-	/* Alpha value information (per-surface alpha) */
-	u8  alpha;
+	//
+	SDL_Palette *palette;
 } SDL_PixelFormat;
 
 /* This structure should be treated as read-only, except for 'pixels',
    which, if not NULL, contains the raw pixel data for the surface.
 */
-typedef struct SDL_Surface
+typedef struct /*SDL_Surface_tag*/
 {
-	u32 flags;				/* Read-only */
+	void	*pixels;				/* Read-write */
 	SDL_PixelFormat *format;		/* Read-only */
-	int w, h;				/* Read-only */
-	u16 pitch;				/* Read-only */
-	void *pixels;				/* Read-write */
-	int offset; 			/* Private */
-
-	/* Hardware-specific surface info */
-	struct private_hwdata *hwdata;
-
-	/* clipping information */
-	SDL_Rect clip_rect; 		/* Read-only */
-	u32 unused1; 			/* for binary compatibility */
-
+	int 	w;						/* Read-only */
+	int 	h;						/* Read-only */
+//
+	u32 	flags;					/* Read-only */
+	int 	offset; 				/* Private */
 	/* Allow recursive locks */
-	u32 locked;				/* Private */
-
+	u32 	locked; 				/* Private */
+	/* Reference count -- used when freeing surface */
+	int 	refcount;				/* Read-mostly */
+//
 	/* info for fast blit mapping to other surfaces */
 	struct SDL_BlitMap *map;		/* Private */
-
 	/* format version, bumped at every change to invalidate blit maps */
-	unsigned int format_version;		/* Private */
+	unsigned int	format_version; /* Private */
+	/* Hardware-specific surface info */
+	struct private_hwdata	*hwdata;
 
-	/* Reference count -- used when freeing surface */
-	int refcount;				/* Read-mostly */
+	/* clipping information */
+	SDL_Rect	clip_rect;			/* Read-only */
+	u16 		pitch;				/* Read-only */
+//	u32 		unused1;			/* for binary compatibility */
 } SDL_Surface;
+
+
+/*(configration)*/
+#define USE_RLEACCEL (0)
 
 /* These are the currently supported flags for the SDL_surface */
 /* Available for SDL_CreateRGBSurface() or SDL_SetVideoMode() */
-#define SDL_SWSURFACE		0x00000000	/* Surface is in system memory */
-#define SDL_HWSURFACE		0x00000001	/* Surface is in video memory */
-#define SDL_ASYNCBLIT		0x00000004	/* Use asynchronous blits if possible */
+#define SDL_SWSURFACE			0x00000000	/* Surface is in system memory */
+#define SDL_HWSURFACE			0x00000001	/* Surface is in video memory */
+#define SDL_ASYNCBLIT			0x00000004	/* Use asynchronous blits if possible */
 /* Available for SDL_SetVideoMode() */
-#define SDL_ANYFORMAT		0x10000000	/* Allow any video depth/pixel-format */
-#define SDL_HWPALETTE		0x20000000	/* Surface has exclusive palette */
-#define SDL_DOUBLEBUF		0x40000000	/* Set up double-buffered video mode */
-#define SDL_FULLSCREEN		0x80000000	/* Surface is a full screen display */
+//îpé~#define SDL_AN YFORMAT			0x10000000	/* Allow any video depth/pixel-format */
+//#define SDL_HW PALETTE		0x20000000	/* Surface has exclusive palette */
+#define SDL_DOUBLEBUF			0x40000000	/* Set up double-buffered video mode */
+#define SDL_FULLSCREEN			0x80000000	/* Surface is a full screen display */
 //#define SDL_OPENGL			0x00000002	/* Create an OpenGL rendering context */
 //#define SDL_OPENGLBLIT		0x0000000A	/* Create an OpenGL rendering context and use it for blitting */
-#define SDL_RESIZABLE		0x00000010	/* This video mode may be resized */
-#define SDL_NOFRAME 		0x00000020	/* No window caption or edge frame */
+#define SDL_RESIZABLE			0x00000010	/* This video mode may be resized */
+//#define S DL_NOFRAME			0x00000020	/* No window caption or edge frame */
 /* Used internally (read-only) */
-#define SDL_HWACCEL 		0x00000100	/* Blit uses hardware acceleration */
-#define SDL_SRCCOLORKEY 	0x00001000	/* Blit uses a source color key */
-#define SDL_RLEACCELOK		0x00002000	/* Private flag */
-#define SDL_RLEACCEL		0x00004000	/* Surface is RLE encoded */
-#define SDL_SRCALPHA		0x00010000	/* Blit uses source alpha blending */
-#define SDL_PREALLOC		0x01000000	/* Surface uses preallocated memory */
+#define SDL_HWACCEL 			0x00000100	/* Blit uses hardware acceleration */
+#define SDL_SRCCOLORKEY 		0x00001000	/* Blit uses a source color key */
+
+#if (1==USE_RLEACCEL)
+	#define SDL_RLEACCELOK		0x00002000	/* Private flag */
+	#define SDL_RLEACCEL		0x00004000	/* Surface is RLE encoded */
+#endif /*(USE_RLEACCEL)*/
+
+#define SDL_SRCALPHA			0x00010000	/* Blit uses source alpha blending */
+#define SDL_PREALLOC			0x01000000	/* Surface uses preallocated memory */
 
 /* Evaluates to true if the surface needs to be locked before access */
-#define SDL_MUSTLOCK(surface)	\
-  (surface->offset ||		\
-  ((surface->flags & (SDL_HWSURFACE|SDL_ASYNCBLIT|SDL_RLEACCEL)) != 0))
+#if (1==USE_RLEACCEL)
+	#define SDL_MUSTLOCK(surface)	\
+		((surface->offset) ||		\
+		((surface->flags & (SDL_HWSURFACE|SDL_ASYNCBLIT|SDL_RLEACCEL)) != 0))
+#else
+	#define SDL_MUSTLOCK(surface)	\
+		((surface->offset) ||		\
+		((surface->flags & (SDL_HWSURFACE|SDL_ASYNCBLIT/*|SDL_RLEACCEL*/)) != 0))
+#endif /*(USE_RLEACCEL)*/
 
 /* typedef for private surface blitting functions */
-typedef int (*SDL_blit)(struct SDL_Surface *src, SDL_Rect *srcrect,
-			struct SDL_Surface *dst, SDL_Rect *dstrect);
+typedef int (*SDL_blit)(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_Rect *dstrect);
 
 
 /* Useful for determining the video hardware capabilities */
-typedef struct SDL_VideoInfo
-{
-	u32 hw_available :1; /* Flag: Can you create hardware surfaces? */
-	u32 wm_available :1; /* Flag: Can you talk to a window manager? */
-	u32 UnusedBits1	:6;
-	u32 UnusedBits2	:1;
-	u32 blit_hw		:1; /* Flag: Accelerated blits HW --> HW */
-	u32 blit_hw_CC	:1; /* Flag: Accelerated blits with Colorkey */
-	u32 blit_hw_A	:1; /* Flag: Accelerated blits with Alpha */
-	u32 blit_sw		:1; /* Flag: Accelerated blits SW --> HW */
-	u32 blit_sw_CC	:1; /* Flag: Accelerated blits with Colorkey */
-	u32 blit_sw_A	:1; /* Flag: Accelerated blits with Alpha */
-	u32 blit_fill	:1; /* Flag: Accelerated color fill */
-	u32 UnusedBits3	:16;
-	u32 video_mem;	/* The total amount of video memory (in K) */
-	SDL_PixelFormat *vfmt;	/* Value: The format of the video surface */
-} SDL_VideoInfo;
 
-
+#if 0
 /* The most common video overlay formats.
    For an explanation of these pixel formats, see:
 	http://www.webartz.com/fourcc/indexyuv.htm
@@ -179,34 +180,34 @@ typedef struct SDL_VideoInfo
    For information on the relationship between color spaces, see:
    http://www.neuro.sfc.keio.ac.jp/~aly/polygon/info/color-space-faq.html
  */
-#define SDL_YV12_OVERLAY  0x32315659	/* Planar mode: Y + V + U  (3 planes) */
-#define SDL_IYUV_OVERLAY  0x56555949	/* Planar mode: Y + U + V  (3 planes) */
-#define SDL_YUY2_OVERLAY  0x32595559	/* Packed mode: Y0+U0+Y1+V0 (1 plane) */
-#define SDL_UYVY_OVERLAY  0x59565955	/* Packed mode: U0+Y0+V0+Y1 (1 plane) */
-#define SDL_YVYU_OVERLAY  0x55595659	/* Packed mode: Y0+V0+Y1+U0 (1 plane) */
-
+//#define SDL_YV12_OVERLAY	0x32315659	/* Planar mode: Y + V + U  (3 planes) */
+//#define SDL_IYUV_OVERLAY	0x56555949	/* Planar mode: Y + U + V  (3 planes) */
+//#define SDL_YUY2_OVERLAY	0x32595559	/* Packed mode: Y0+U0+Y1+V0 (1 plane) */
+//#define SDL_UYVY_OVERLAY	0x59565955	/* Packed mode: U0+Y0+V0+Y1 (1 plane) */
+//#define SDL_YVYU_OVERLAY	0x55595659	/* Packed mode: Y0+V0+Y1+U0 (1 plane) */
+//
 /* The YUV hardware video overlay */
-typedef struct SDL_Overlay
-{
-	u32 format;				/* Read-only */
-	int w, h;					/* Read-only */
-	int planes; 				/* Read-only */
-	u16 *pitches;			/* Read-only */
-	u8 **pixels; 			/* Read-write */
-
-	/* Hardware-specific surface info */
-	struct private_yuvhwfuncs *hwfuncs;
-	struct private_yuvhwdata *hwdata;
-
-	/* Special flags */
-	u32 hw_overlay :1;	/* Flag: This overlay hardware accelerated? */
-	u32 UnusedBits :31;
-} SDL_Overlay;
-
+//typedef struct SDL_Overlay
+//{
+//	u32 format; 			/* Read-only */
+//	int w, h;					/* Read-only */
+//	int planes; 				/* Read-only */
+//	u16 *pitches;			/* Read-only */
+//	u8 **pixels;			/* Read-write */
+//
+//	/* Hardware-specific surface info */
+//	struct private_yuvhwfuncs *hwfuncs;
+//	struct private_yuvhwdata *hwdata;
+//
+//	/* Special flags */
+//	u32 hw_overlay :1;	/* Flag: This overlay hardware accelerated? */
+//	u32 UnusedBits :31;
+//} SDL_Overlay;
+#endif
 
 /* flags for SDL_SetPalette() */
-#define SDL_LOGPAL 0x01
-#define SDL_PHYSPAL 0x02
+#define SDL_LOGPAL		0x01
+#define SDL_PHYSPAL 	0x02
 
 /* Function prototypes */
 
@@ -224,7 +225,6 @@ extern SDL_Surface * /*SD LCALL*/ SDL_GetVideoSurface(void);
  * member of the returned structure will contain the pixel format of the
  * "best" video mode.
  */
-extern const SDL_VideoInfo * /*SD LCALL*/ SDL_GetVideoInfo(void);
 
 /*
  * Check to see if a particular video mode is supported.
@@ -255,10 +255,10 @@ extern int /*SD LCALL*/ SDL_VideoModeOK(int width, int height, int bpp, u32 flag
  *
  * If 'bpp' is 0, it is treated as the current display bits per pixel.
  *
- * If SDL_ANYFORMAT is set in 'flags', the SDL library will try to set the
- * requested bits-per-pixel, but will return whatever video pixel format is
- * available.  The default is to emulate the requested pixel format if it
- * is not natively available.
+ * îpé~//If SD L_ANYFORMAT is set in 'flags', the SDL library will try to set the
+ * îpé~//requested bits-per-pixel, but will return whatever video pixel format is
+ * îpé~//available.  The default is to emulate the requested pixel format if it
+ * îpé~//is not natively available.
  *
  * If SDL_HWSURFACE is set in 'flags', the video surface will be placed in
  * video memory, if possible, and you may have to call SDL_LockSurface()
@@ -269,7 +269,7 @@ extern int /*SD LCALL*/ SDL_VideoModeOK(int width, int height, int bpp, u32 flag
  * updates asynchronously, but you must always lock before accessing pixels.
  * SDL will wait for updates to complete before returning from the lock.
  *
- * If SDL_HWPALETTE is set in 'flags', the SDL library will guarantee
+ * If SDL_HW PALETTE is set in 'flags', the SDL library will guarantee
  * that the colors set by SDL_SetColors() will be the colors you get.
  * Otherwise, in 8-bit mode, SDL_SetColors() may not be able to set all
  * of the colors exactly the way they are requested, and you should look
@@ -297,7 +297,7 @@ extern int /*SD LCALL*/ SDL_VideoModeOK(int width, int height, int bpp, u32 flag
  * and you must respond to the event by re-calling SDL_SetVideoMode()
  * with the requested size (or another size that suits the application).
  *
- * If SDL_NOFRAME is set in 'flags', the SDL library will create a window
+ * If S DL_NOFRAME is set in 'flags', the SDL library will create a window
  * without any title bar or frame decoration.  Fullscreen video modes have
  * this flag set automatically.
  *
@@ -308,8 +308,15 @@ extern int /*SD LCALL*/ SDL_VideoModeOK(int width, int height, int bpp, u32 flag
  * SDL will fall back to reduced functionality if the exact flags you wanted
  * are not available.
  */
-extern SDL_Surface * /*SD LCALL*/ SDL_SetVideoMode(int width, int height, int bpp, u32 flags);
-
+//extern SDL_Surface * /*SD LCALL*/ SDL_SetVideoMode(int width, int height, int bpp, u32 flags);
+extern SDL_Surface * PSPL_video_init(
+	int video_bpp_sdl,
+	int video_depth16,
+	u32 Amask,
+	u32 Bmask,
+	u32 Gmask,
+	u32 Rmask
+);
 /*
  * Makes sure the given list of rectangles is updated on the given screen.
  * If 'x' and 'y' and 'w' and 'h' are all 0, SDL_UpdateRect will update the entire
@@ -376,13 +383,13 @@ extern int /*SD LCALL*/ SDL_GetGammaRamp(u16 *red, u16 *green, u16 *blue);
  *
  * When 'surface' is the surface associated with the current display, the
  * display colormap will be updated with the requested colors.	If
- * SDL_HWPALETTE was set in SDL_SetVideoMode() flags, SDL_SetColors()
+ * SDL_HW PALETTE was set in SDL_SetVideoMode() flags, SDL_SetColors()
  * will always return 1, and the palette is guaranteed to be set the way
  * you desire, even if the window colormap has to be warped or run under
  * emulation.
  */
 extern int /*SD LCALL*/ SDL_SetColors(SDL_Surface *surface,
-			SDL_Color *colors, int firstcolor, int ncolors);
+	SDL_Color *colors, int firstcolor, int ncolors);
 
 /*
  * Sets a portion of the colormap for a given 8-bit surface.
@@ -392,7 +399,7 @@ extern int /*SD LCALL*/ SDL_SetColors(SDL_Surface *surface,
  * SDL_PHYSPAL -- set physical palette, which controls how pixels look on
  *		the screen
  * Only screens have physical palettes. Separate change of physical/logical
- * palettes is only possible if the screen has SDL_HWPALETTE set.
+ * palettes is only possible if the screen has SDL_HW PALETTE set.
  *
  * The return value is 1 if all colours could be set as requested, and 0
  * otherwise.
@@ -401,32 +408,19 @@ extern int /*SD LCALL*/ SDL_SetColors(SDL_Surface *surface,
  *	   flags = (SDL_LOGPAL|SDL_PHYSPAL).
  */
 extern int /*SD LCALL*/ SDL_SetPalette(SDL_Surface *surface, int flags,
-				   SDL_Color *colors, int firstcolor,
-				   int ncolors);
+	SDL_Color *colors, int firstcolor, int ncolors);
 
-/*
- * Maps an RGB triple to an opaque pixel value for a given pixel format
- */
-extern u32 /*SD LCALL*/ SDL_MapRGB
-			(SDL_PixelFormat *format, u8 r, u8 g, u8 b);
+/* Maps an RGB triple to an opaque pixel value for a given pixel format. */
+extern u32 /*SD LCALL*/ SDL_MapRGB(SDL_PixelFormat *format, u8 r, u8 g, u8 b);
 
-/*
- * Maps an RGBA quadruple to a pixel value for a given pixel format
- */
-extern u32 /*SD LCALL*/ SDL_MapRGBA(SDL_PixelFormat *format,
-				   u8 r, u8 g, u8 b, u8 a);
+/* Maps an RGBA quadruple to a pixel value for a given pixel format. */
+extern u32 /*SD LCALL*/ SDL_MapRGBA(SDL_PixelFormat *format, u8 r, u8 g, u8 b, u8 a);
 
-/*
- * Maps a pixel value into the RGB components for a given pixel format
- */
-extern void /*SD LCALL*/ SDL_GetRGB(u32 pixel, SDL_PixelFormat *fmt,
-	u8 *r, u8 *g, u8 *b);
+/* Maps a pixel value into the RGB components for a given pixel format. */
+extern void /*SD LCALL*/ SDL_GetRGB(u32 pixel, SDL_PixelFormat *fmt, u8 *r, u8 *g, u8 *b);
 
-/*
- * Maps a pixel value into the RGBA components for a given pixel format
- */
-extern void /*SD LCALL*/ SDL_GetRGBA(u32 pixel, SDL_PixelFormat *fmt,
-	u8 *r, u8 *g, u8 *b, u8 *a);
+/* Maps a pixel value into the RGBA components for a given pixel format. */
+extern void /*SD LCALL*/ SDL_GetRGBA(u32 pixel, SDL_PixelFormat *fmt, u8 *r, u8 *g, u8 *b, u8 *a);
 
 /*
  * Allocate and free an RGB surface (must be called after SDL_SetVideoMode)
@@ -462,15 +456,20 @@ extern void /*SD LCALL*/ SDL_GetRGBA(u32 pixel, SDL_PixelFormat *fmt,
  * reason the surface could not be placed in video memory, it will not have
  * the SDL_HWSURFACE flag set, and will be created in system memory instead.
  */
-#define SDL_AllocSurface	SDL_CreateRGBSurface
+//#define SDL_AllocSurface	SDL_CreateRGBSurface
 extern SDL_Surface * /*SD LCALL*/ SDL_CreateRGBSurface(
 	u32 flags,
-	int width, int height, int depth,
+	int width, int height,
+	int depth,
 	u32 Rmask, u32 Gmask, u32 Bmask, u32 Amask);
 extern SDL_Surface * /*SD LCALL*/ SDL_CreateRGBSurfaceFrom(
 	void *pixels,
-	int width, int height, int depth, int pitch,
+	int width, int height,
+	int depth, int pitch,
 	u32 Rmask, u32 Gmask, u32 Bmask, u32 Amask);
+extern SDL_Surface * /*SD LCALL*/ SDL_CreateSurface(
+	u32 flags,
+	int width, int height);
 extern void /*SD LCALL*/ SDL_FreeSurface(SDL_Surface *surface);
 
 /*
@@ -539,8 +538,7 @@ extern int /*SD LCALL*/ PSPL_save_vram16_to_file(const char *save_bmp_file_name)
  * If 'flag' is 0, this function clears any current color key.
  * This function returns 0, or -1 if there was an error.
  */
-extern int /*SD LCALL*/ SDL_SetColorKey
-			(SDL_Surface *surface, u32 flag, u32 key);
+extern int /*SD LCALL*/ SDL_SetColorKey(SDL_Surface *surface, u32 flag, u32 key);
 
 /*
  * This function sets the alpha value for the entire surface, as opposed to
@@ -592,8 +590,7 @@ extern void /*SD LCALL*/ SDL_GetClipRect(SDL_Surface *surface, SDL_Rect *rect);
  *
  * This function is used internally by SDL_DisplayFormat().
  */
-extern SDL_Surface * /*SD LCALL*/ SDL_ConvertSurface
-			(SDL_Surface *src, SDL_PixelFormat *fmt, u32 flags);
+extern SDL_Surface * /*SD LCALL*/ SDL_ConvertSurface(SDL_Surface *src, SDL_PixelFormat *fmt, u32 flags);
 
 /*
  * This performs a fast blit from the source surface to the destination
@@ -729,12 +726,11 @@ extern SDL_Surface * /*SD LCALL*/ SDL_DisplayFormatAlpha(SDL_Surface *surface);
    the contents of the display surface underneath the area where the overlay
    is shown is undefined - it may be overwritten with the converted YUV data.
 */
-extern SDL_Overlay * /*SD LCALL*/ SDL_CreateYUVOverlay(int width, int height,
-				u32 format, SDL_Surface *display);
+//extern SDL_Overlay * /*SD LCALL*/ SDL_CreateYUVOverlay(int width, int height, u32 format, SDL_Surface *display);
 
 /* Lock an overlay for direct access, and unlock it when you are done */
-extern int /*SD LCALL*/ SDL_LockYUVOverlay(SDL_Overlay *overlay);
-extern void /*SD LCALL*/ SDL_UnlockYUVOverlay(SDL_Overlay *overlay);
+//extern int /*SD LCALL*/ SDL_LockYUVOverlay(SDL_Overlay *overlay);
+//extern void /*SD LCALL*/ SDL_UnlockYUVOverlay(SDL_Overlay *overlay);
 
 /* Blit a video overlay to the display surface.
    The contents of the video surface underneath the blit destination are
@@ -742,10 +738,10 @@ extern void /*SD LCALL*/ SDL_UnlockYUVOverlay(SDL_Overlay *overlay);
    The width and height of the destination rectangle may be different from
    that of the overlay, but currently only 2x scaling is supported.
 */
-extern int /*SD LCALL*/ SDL_DisplayYUVOverlay(SDL_Overlay *overlay, SDL_Rect *dstrect);
+//extern int /*SD LCALL*/ SDL_DisplayYUVOverlay(SDL_Overlay *overlay, SDL_Rect *dstrect);
 
 /* Free a video overlay */
-extern void /*SD LCALL*/ SDL_FreeYUVOverlay(SDL_Overlay *overlay);
+//extern void /*SD LCALL*/ SDL_FreeYUVOverlay(SDL_Overlay *overlay);
 
 
 

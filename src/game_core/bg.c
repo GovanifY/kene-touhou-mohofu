@@ -81,7 +81,7 @@ global void bg_move_all(void)
 	BGコントロールコマンド(テスト中)
 --------------------------------------------------------- */
 
-global void game_command_02_bg_control(GAME_COMMAND *l)
+global void game_command_03_bg_control(GAME_COMMAND *l)
 {
-	request_bg0_y_scroll_speed256 = (l->user_y);	/* bg0のスクロール、予約速度を設定 */
+	request_bg0_y_scroll_speed256 = (l->user_speed256); 	/* bg0のスクロール、予約速度を設定 */
 }

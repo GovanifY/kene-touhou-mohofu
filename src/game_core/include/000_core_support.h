@@ -69,25 +69,34 @@ enum	//; 曲(Music) [.it や .ogg形式]
 	BGM_24_boss13,		/* th06_03.IT ルーミア 妖魔夜行 */
 	BGM_25_menu03,		/* th10_18.IT エンディング(シナリオ) プレイヤーズスコア */
 	BGM_26_menu02,		/* th07_02.IT キーコンフィグ 無何有の郷 ～ Deep Mountain */
-	BGM_27_menu01,		/* th06_16.IT タイトル画面 紅より儚い永遠 */
+	BGM_27_menu01,		/* th07_01.IT タイトル画面 妖々夢 ～ Snow or Cherry Petal */
 	BGM_28_stage10, 	/* th04_07.IT 使用曲です。 バッド・アップル ～ Bad Apple!! */
 	BGM_29_stage11, 	/* th08_08.IT 使用曲です。 永夜の報い */
 	BGM_30_stage12, 	/* th13_02.IT 使用曲です。 死霊の夜桜 */
+	BGM_31_menu05,		/* th06_16.IT 紅より儚い永遠 */
+	BGM_32_stage13, 	/* th07_15.IT 道中曲です。 妖々跋扈 */
+	BGM_33_stage14, 	/* th07_06.IT 道中曲です。 ブクレシュティの人形師 */
 /* ----- 曲の数(読み込みファイル数) */
 	USE_31_MUSIC_FILES
 };
 
+/*(ゲーム中のトラック設計)*/
 enum
 {
-	TRACK00_BULLETS = 0,
-	TRACK01_EXPLODE,
-	TRACK02_ALEART_IVENT,
-	TRACK03_SHORT_MUSIC,
-	TRACK04_TEKIDAN,
-	TRACK05_ZAKO_DEATH,
-	TRACK06_ALEART_IVENT_02,
+	TRACK00_JIKI_SHOT = 0,	// "自機弾"用。(ゲーム中は、常に発音しているので、他用途に使えない。基本的に専用)
+	TRACK01_PICHUN, 		// "自機ピチューン音" / "自機増えた音"用。
+	TRACK02_JIKI_BOMBER,	// "自機ボム"用。
+	TRACK03_IVENT_DAN,		// (敵弾)"敵弾目立たせたい用"/"目立たせたいイベント"用。
+	TRACK04_TEKIDAN,		// (敵弾)"敵弾通常用"
+	TRACK05_ZAKO_DEATH, 	// "雑魚破壊"用。(現在専用)
+	TRACK06_ITEM,			// 自機"アイテム"取得用。
 	TRACK07_GRAZE_AUDIO_DRIVER_INTERNAL/*(voice_play_graze();以外で、外部から使用しても正常に鳴らない)*/
 };
+#if (1)/*(検索出来るように、エイリアス[別名]定義する。)*/
+	/*(メニューのトラック設計)*/
+	#define TRACK01_MENU01 TRACK01_PICHUN
+	#define TRACK02_MENU02 TRACK02_JIKI_BOMBER
+#endif
 
 extern void init_audio(void);
 extern void exit_audio(void);
@@ -227,7 +236,8 @@ enum /*_bg_resource_*/
 	BG_TYPE_04_loading, 		/*(蓮池の画像)*/
 	BG_TYPE_99_MAX_HAIKEI,
 };
-extern void load_SDL_bg(int bg_type_number);
+//extern void load_S DL_bg(int bg_type_number);/*([廃止] my_file_common_name[0] = bg_type_number;psp_load_bg_file_name();で互換)*/
+extern void psp_load_bg_file_name(void);
 
 
 #endif /* _GAME_FILE_H_ */
@@ -259,7 +269,6 @@ extern void load_SDL_bg(int bg_type_number);
 /*(-r34互換用)*/	/* 16x16 x RED   紅(廃止) */
 //#define FONT16R 	FONT16W
 
-extern void font_init(void);
 
 /* サーフェイスを作らないで、直接画面に表示 */
 //extern void font88_print_screen_xy(void);//	char *text, int font_type, int x, int y);

@@ -7,6 +7,7 @@
 	-------------------------------------------------------
 	キーコンフィグ
 ---------------------------------------------------------*/
+#include "111_my_file.h"/*(bg読みこみ。)*/
 
 // 基本は絶対値指定(機能固定値)でsupport.cのkeypollの中のpad_configだけ
 // 配列指定番号に変数（pad_config[key_xxx）を取る
@@ -68,7 +69,7 @@ enum	/*(キーコンフィグ設定メニューの表示行に名前を付ける。)*/
 		{	PSP_KEY_SELECT, 		PSP_KEY_PAUSE,		PSP_KEY_SNAP_SHOT,		PSP_KEY_SLOW,
 			PSP_KEY_SLOW,			PSP_KEY_OPTION, 	PSP_KEY_BOMB_CANCEL,	PSP_KEY_SHOT_OK,
 		},
-		/* type 03 psp-1000 (□ボタンがカスなので使えない場合) □ボタンが死んでるから、×か○がショット(基本的に押しっぱなし)にならさる得ない。 */
+		/* type 03 psp-1000 (□ボタンがカスなので使えない場合) □ボタンが死んでるから、×か○がショット(基本的に押しっぱなし)にならざる得ない。 */
 		{	PSP_KEY_SELECT, 		PSP_KEY_PAUSE,		PSP_KEY_SNAP_SHOT,		PSP_KEY_SLOW,
 			PSP_KEY_SLOW,			PSP_KEY_SHOT_OK,	PSP_KEY_BOMB_CANCEL,	PSP_KEY_OPTION,
 		},
@@ -128,7 +129,7 @@ static int bg_alpha_aaa;
 
 ---------------------------------------------------------*/
 
-static void key_config_state_04_fade_out(void)
+static MAIN_CALL_FUNC(key_config_state_04_fade_out)
 {
 	bg_alpha_aaa += (2);	/*fps_factor*/		/*1*/		/*8*/
 	if ((/*250-8*/224) < bg_alpha_aaa)
@@ -155,10 +156,10 @@ static void key_config_state_04_fade_out(void)
 
 ---------------------------------------------------------*/
 
-static void key_config_state_03_fade_init(void)
+static MAIN_CALL_FUNC(key_config_state_03_fade_init)
 {
-	play_music_num(BGM_27_menu01);
-	load_SDL_bg(BG_TYPE_00_title_bg);
+//	pl ay_music_num(BGM_27_menu01);
+	my_file_common_name[0] = BG_TYPE_00_title_bg;psp_load_bg_file_name();
 	bg_alpha_aaa		= (0);
 	cb.main_call_func = key_config_state_04_fade_out;
 }
@@ -180,8 +181,8 @@ static const u32 aaa_table[KINOU_08_WARIATE_MAX] = /* 機能ビットを調べるテーブル
 	PSP_CTRL_SQUARE,	//7 KEY_NUM11_SQUARE,		/* □ */
 };
 
-extern void ini_save(void);
-static void key_config_state_02_select_left_menu(void)
+extern void ini_file_save(void);
+static MAIN_CALL_FUNC(key_config_state_02_select_left_menu)
 {
 	psp_pop_screen();
 	if (0==psp_pad.pad_data_alter)/* さっき何も押されてなかった場合にキーチェック(原作準拠) */
@@ -205,19 +206,19 @@ static void key_config_state_02_select_left_menu(void)
 				{
 					key_setting_default_type--;
 					key_setting_default_type &= (4-1);
-					voice_play(VOICE02_MENU_SELECT, TRACK01_EXPLODE);/* テキトー */
+					voice_play(VOICE02_MENU_SELECT, TRACK01_MENU01);/* テキトー */
 				}
 				else
 				if (psp_pad.pad_data & PSP_KEY_RIGHT) // 右ボタン入力
 				{
 					key_setting_default_type++;
 					key_setting_default_type &= (4-1);
-					voice_play(VOICE02_MENU_SELECT, TRACK01_EXPLODE);/* テキトー */
+					voice_play(VOICE02_MENU_SELECT, TRACK01_MENU01);/* テキトー */
 				}
 				else
 				if (psp_pad.pad_data & PSP_KEY_SHOT_OK) // ショットボタン入力
 				{
-					voice_play(VOICE07_BOMB, TRACK01_EXPLODE);/* テキトー */
+					voice_play(VOICE07_BOMB, TRACK01_MENU01);/* テキトー */
 					set_default_key(edit_pad_config, key_setting_default_type);
 					menu_cursor1 = MENU_LINE_Y_13_QUIT;
 				}
@@ -227,7 +228,7 @@ static void key_config_state_02_select_left_menu(void)
 			{
 				if (psp_pad.pad_data & PSP_KEY_BOMB_CANCEL) // キャンセルボタン入力
 				{
-					voice_play(VOICE04_SHIP_HAKAI, TRACK03_SHORT_MUSIC/*TRACK01_EXPLODE*/);/* 自機死に音は、なるべく重ねない */
+					voice_play(VOICE04_SHIP_HAKAI, TRACK02_MENU02/*TRACK01_MENU01*/);/* 自機死に音は、なるべく重ねない */
 					cb.main_call_func = key_config_state_03_fade_init;
 				}
 				else
@@ -269,13 +270,13 @@ static void key_config_state_02_select_left_menu(void)
 							}
 						}
 						#endif
-						ini_save();
-						voice_play(VOICE02_MENU_SELECT, TRACK01_EXPLODE);/* テキトー */
+						ini_file_save();
+						voice_play(VOICE02_MENU_SELECT, TRACK01_MENU01);/* テキトー */
 					}
 					else
 					{
 					//	"dame dayo"
-						voice_play(VOICE09_GRAZE, TRACK01_EXPLODE);/* テキトー */
+						voice_play(VOICE09_GRAZE, TRACK01_MENU01);/* テキトー */
 					}
 				}
 			}
@@ -295,12 +296,12 @@ static void key_config_state_02_select_left_menu(void)
 					menu_cursor2 = psp_min(menu_cursor2, 7);
 					menu_cursor2 = psp_max(menu_cursor2, 0);
 					//
-					voice_play(VOICE02_MENU_SELECT, TRACK01_EXPLODE);/* テキトー */
+					voice_play(VOICE02_MENU_SELECT, TRACK01_MENU01);/* テキトー */
 				}
 				if (psp_pad.pad_data & (PSP_KEY_SHOT_OK))		// ショットボタン入力
 				{
 					edit_pad_config[menu_cursor2] ^= aaa_table[(menu_cursor1)];
-					voice_play(VOICE07_BOMB, TRACK01_EXPLODE);/* テキトー */
+					voice_play(VOICE07_BOMB, TRACK01_MENU01);/* テキトー */
 				}
 			}
 		}
@@ -393,7 +394,7 @@ static void key_config_state_02_select_left_menu(void)
 
 ---------------------------------------------------------*/
 
-static void key_config_state_01_fade_in(void)
+static MAIN_CALL_FUNC(key_config_state_01_fade_in)
 {
 	bg_alpha_aaa += (2);	/*fps_factor*/	/*1 6*/
 	if ((/*250-6*/224) < bg_alpha_aaa)
@@ -415,18 +416,18 @@ static void key_config_state_01_fade_in(void)
 //	F_16K,			/* 16x16 x キーコンフィグ用 */
 //	F_16W,			/* 16x16 x WHITE 白 */
 //};
-global void key_config_start(void)
+global MAIN_CALL_FUNC(key_config_start)
 {
 	play_music_num(BGM_26_menu02);
-	load_SDL_bg(BG_TYPE_02_key_config);
+	my_file_common_name[0] = BG_TYPE_02_key_config;psp_load_bg_file_name();
 	#if 0
 	//	システム(PSPのハードウェア)順
 	edit_pad_config[NNN_00] = pad_config[KEY_NUM00_SELECT];
 	edit_pad_config[NNN_01] = pad_config[KEY_NUM01_START];
-//	edit_pad_config[NNN_02] = pad_config[KEY_NUM02_UP ];
-//	edit_pad_config[NNN_03] = pad_config[KEY_NUM03_RIGHT ];
-//	edit_pad_config[NNN_04] = pad_config[KEY_NUM04_DOWN ];
-//	edit_pad_config[NNN_05] = pad_config[KEY_NUM05_LEFT ];
+//	edit_pad_config[NNN_02] = pad_config[KEY_NUM02_UP];
+//	edit_pad_config[NNN_03] = pad_config[KEY_NUM03_RIGHT];
+//	edit_pad_config[NNN_04] = pad_config[KEY_NUM04_DOWN];
+//	edit_pad_config[NNN_05] = pad_config[KEY_NUM05_LEFT];
 	edit_pad_config[NNN_06] = pad_config[KEY_NUM06_L_TRIG];
 	edit_pad_config[NNN_07] = pad_config[KEY_NUM07_R_TRIG];
 	edit_pad_config[NNN_08] = pad_config[KEY_NUM08_TRIANGLE];
@@ -453,38 +454,38 @@ global void key_config_start(void)
 		{
 			// [[ 選択する並び順序 ]]
 			// 機能順序
-			"-", 		// "--" "None"
-			"\xe2",//"b", 		// "Se" "Select"
-			"\xe3",//"c", 		// "St" "Start"
-		//	"Up",		// 無し(アナログ対応の為、ややこしい)
-		//	"Right", 	// 無し(アナログ対応の為、ややこしい)
-		//	"Down",		// 無し(アナログ対応の為、ややこしい)
-		//	"Left",		// 無し(アナログ対応の為、ややこしい)
-			"\xe8",//"h", 		//"L "	 "SS"	 "Snap Shot",			//0 KEY_NUM06_L_TRIG = 0,	/* L */
-			"\xe9",//"i", 		//"R "	 "ZZ"	 "System", 			//1 KEY_NUM07_R_TRIG,		/* R */
-			"\xec",//"l", 		//"A "	 "SL"	 "Slow",				//2 KEY_NUM08_TRIANGLE, 	/* △ */	"Sankaku",
-			"\xed",//"m", 		//"O "	 "FM"	 "Option", 			//3 KEY_NUM09_CIRCLE,		/* ○ */	"Maru",
-			"\xee",//"n", 		//"X "	 "OK"	 "Shot / OK",			//4 KEY_NUM10_CROSS,		/* × */	"Batu",
-			"\xef",//"o", 		//"H "	 "NG"	 "Bomb / Cancel",		//5 KEY_NUM11_SQUARE,		/* □ */	"Sikaku",
+			"-",		// "--" "None"
+			"\xe2",//"b",		// "Se" "Select"
+			"\xe3",//"c",		// "St" "Start"
+		//	"Up",		// 無し(アナログ対応の為、ややこしい。ゲーム速度が低下する)
+		//	"Right",	// 無し(アナログ対応の為、ややこしい。ゲーム速度が低下する)
+		//	"Down", 	// 無し(アナログ対応の為、ややこしい。ゲーム速度が低下する)
+		//	"Left", 	// 無し(アナログ対応の為、ややこしい。ゲーム速度が低下する)
+			"\xe8",//"h",		//"L "	 "SS"	 "Snap Shot",			//0 KEY_NUM06_L_TRIG = 0,	/* L */
+			"\xe9",//"i",		//"R "	 "ZZ"	 "System",				//1 KEY_NUM07_R_TRIG,		/* R */
+			"\xec",//"l",		//"A "	 "SL"	 "Slow",				//2 KEY_NUM08_TRIANGLE, 	/* △ */	"Sankaku",
+			"\xed",//"m",		//"O "	 "FM"	 "Option",				//3 KEY_NUM09_CIRCLE,		/* ○ */	"Maru",
+			"\xee",//"n",		//"X "	 "OK"	 "Shot / OK",			//4 KEY_NUM10_CROSS,		/* × */	"Batu",
+			"\xef",//"o",		//"H "	 "NG"	 "Bomb / Cancel",		//5 KEY_NUM11_SQUARE,		/* □ */	"Sikaku",
 			#if 1
 			// システム(PSPのハードウェア)順
-			"Select",	// "Select"
-			"Pause", 	// "Start"
+			"Select",	// "Select" 	/*"ショートカット機能"*/
+			"Pause",	// "Start"		/*"一時停止機能"*/
 		//	"Up",
 		//	"Right",
 		//	"Down",
 		//	"Left",
-			"Snap Shot", 	//	"L" 			"Snap Shot" 	"System"
-			"System",		//	"R" 			"System"		"Slow"
-			"Slow",			//	"Sankaku"		"Slow"			"Snap Shot"
-			"Option",		//	"Maru"			"Option"
-			"Shot / OK", 	//	"Batu"			"Shot / OK"
-			"Bomb / NG", 	//	"Sikaku"		"Bomb / Cancel"
+			"Snap Shot",	//	"L" 			"Snap Shot" 	"System"		/*"画面保存機能"*/
+			"System",		//	"R" 			"System"		"Slow"			/*"未使用"*/
+			"Slow", 		//	"Sankaku"		"Slow"			"Snap Shot" 	/*"低速"*/
+			"Option",		//	"Maru"			"Option"						/*"再配置"*/
+			"Shot / OK",	//	"Batu"			"Shot / OK" 					/*"ショット / OK"*/
+			"Bomb / NG",	//	"Sikaku"		"Bomb / Cancel" 				/*"ボム / キャンセル"*/
 		//	"Teisoku Bomb",
 			#endif
 			// 初期設定 / 終了
-			"Reset",
-			"Quit",
+			"Reset",		// "リセット"
+			"Quit", 		// "終了"
 			// 初期設定タイプの選択
 			"Type 01",
 			"Type 02",

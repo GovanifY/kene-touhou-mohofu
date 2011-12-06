@@ -25,7 +25,7 @@
 			/* 3:  8 == 20-(3*4) */
 		//	REG_08_REG0 = ((20-1)-(((REG_0f_GAME_DIFFICULTY))<<2));/*(8-1)*/ /*(10-1)*/
 
-local void spell_create_11_tengu_shot(OBJ *src)
+local OBJ_CALL_FUNC(spell_create_11_tengu_shot)
 {
 	#if 0/*(Ç»Ç∫Ç©Ç§Ç‹Ç≠Ç¢Ç©Ç»Ç¢???)*/
 	count_up_limit_NUM(REG_NUM_09_REG1, 128);// ÉJÉEÉìÉ^ÅB(êFílóp)
@@ -74,7 +74,7 @@ local void spell_create_11_tengu_shot(OBJ *src)
 ---------------------------------------------------------*/
 
 /* [CW éûåvâÒÇË] */
-local void spell_create_20_sonota_debug_cw_ao/*CW*/(OBJ *src)
+local OBJ_CALL_FUNC(spell_create_20_sonota_debug_cw_ao/*CW*/)
 {
 	if (0==((REG_10_BOSS_SPELL_TIMER)&0x03))
 	{
@@ -109,7 +109,7 @@ local void spell_create_20_sonota_debug_cw_ao/*CW*/(OBJ *src)
 }
 
 /*[CCW îΩéûåvâÒÇË]*/
-local void spell_create_21_sonota_debug_ccw_aka/*CCW*/(OBJ *src)
+local OBJ_CALL_FUNC(spell_create_21_sonota_debug_ccw_aka/*CCW*/)
 {
 	if (0==((REG_10_BOSS_SPELL_TIMER)&0x03))
 	{
@@ -169,7 +169,7 @@ local void spell_create_21_sonota_debug_ccw_aka/*CCW*/(OBJ *src)
 #define HGT_DATA_add_delta256		user_data05 		/* â¡éZÅAâ¡ë¨ìx */
 
 #define HOSIGATA_DAN_LIMIT_01_512	(512+0)
-static void move_bullet_sakuya_hosi_gata(OBJ *src)
+static OBJ_CALL_FUNC(move_bullet_sakuya_hosi_gata)
 {
 	src->HGT_giji_jyumyou--;/* éûä‘åoâﬂ */
 	if (HOSIGATA_DAN_LIMIT_01_512 > (src->HGT_giji_jyumyou))/* ó\Çﬂê›íËÇ≥ÇÍÇΩéûä‘Ç≈ìÆÇ≠ */
@@ -180,26 +180,26 @@ static void move_bullet_sakuya_hosi_gata(OBJ *src)
 		HATSUDAN_01_speed256	= (src->HGT_DATA_speed256);
 		HATSUDAN_03_angle65536	= deg1024to65536((((src->HGT_DATA_angle1024))));
 		sincos256();/*(îjâÛÉåÉWÉXÉ^ëΩÇ¢ÇÃÇ≈íçà”)*/
-		src->vx256 = REG_03_DEST_Y;//sin_value_t256 // â∫CCWÇÃèÍçá(âECWÇÃèÍçáÇ∆Ç∆xyÇ™ãt)
-		src->vy256 = REG_02_DEST_X;//cos_value_t256 // â∫CCWÇÃèÍçá(âECWÇÃèÍçáÇ∆Ç∆xyÇ™ãt)
+		src->math_vector.x256 = REG_03_DEST_Y;//sin_value_t256 // â∫CCWÇÃèÍçá(âECWÇÃèÍçáÇ∆Ç∆xyÇ™ãt)
+		src->math_vector.y256 = REG_02_DEST_X;//cos_value_t256 // â∫CCWÇÃèÍçá(âECWÇÃèÍçáÇ∆Ç∆xyÇ™ãt)
 		//------------------
 	}
 	//move_bullet_vector(src);
-	src->cx256 += (src->vx256); 	/*fps_factor*/
-	src->cy256 += (src->vy256); 	/*fps_factor*/
+	src->center.x256 += (src->math_vector.x256); 	/*fps_factor*/
+	src->center.y256 += (src->math_vector.y256); 	/*fps_factor*/
 //	gamen_gai_nara_osimai(src);/* âÊñ äOÇ»ÇÁÇ®ÇµÇ‹Ç¢ */
 	hatudan_system_B_gamen_gai_tama_kesu(src);/*(âÊñ äOíeè¡Çµ)*/
 }
 		#if (0)//
-		src->vx256 = ((si n1024((src->HGT_DATA_angle1024))*(src->HGT_DATA_speed256))>>8);/*fps_factor*/ 	/* CCWÇÃèÍçá */
-		src->vy256 = ((co s1024((src->HGT_DATA_angle1024))*(src->HGT_DATA_speed256))>>8);/*fps_factor*/
+		src->math_vector.x256 = ((si n1024((src->HGT_DATA_angle1024))*(src->HGT_DATA_speed256))>>8);/*fps_factor*/ 	/* CCWÇÃèÍçá */
+		src->math_vector.y256 = ((co s1024((src->HGT_DATA_angle1024))*(src->HGT_DATA_speed256))>>8);/*fps_factor*/
 		//#el se
 		{
 			int sin_value_t256; 	//	sin_value_t256 = 0;
 			int cos_value_t256; 	//	cos_value_t256 = 0;
 			int256_si nco s1024( (src->HGT_DATA_angle1024), &sin_value_t256, &cos_value_t256);
-			src->vx256 = ((sin_value_t256*(src->HGT_DATA_speed256))>>8);/*fps_factor*/
-			src->vy256 = ((cos_value_t256*(src->HGT_DATA_speed256))>>8);/*fps_factor*/
+			src->math_vector.x256 = ((sin_value_t256*(src->HGT_DATA_speed256))>>8);/*fps_factor*/
+			src->math_vector.y256 = ((cos_value_t256*(src->HGT_DATA_speed256))>>8);/*fps_factor*/
 		}
 		#endif
 
@@ -224,12 +224,12 @@ static void move_bullet_sakuya_hosi_gata(OBJ *src)
 	src->giji_jyumyou Çîpé~ÇµÇƒ src->jyumyou Ç≈íuÇ´ä∑Ç¶ÇÈÅB
 ---------------------------------------------------------*/
 
-local void spell_init_27_hosigata_test(OBJ *src)
+local OBJ_CALL_FUNC(spell_init_27_hosigata_test)
 {
 	spell_init_mima_kaguya(src);/*(ì¡éÍ)*/	/*(DANMAKU01Ç…âJópÇäÑÇËìñÇƒÇÈ)*/
 		/* íeÇåÇÇøénÇﬂÇÈà íu(êØå^ï`Ç´énÇﬂÇÈà íu) */
-		REG_001_hosi_set_position_cx256 	= (src->cx256)+(ra_nd()&0xfff);
-		REG_002_hosi_set_position_cy256 	= (src->cy256)+(ra_nd()&0xfff);/* çÁñÈ â∫ï˚Ç©ÇÁï`Ç≠ */
+		REG_001_hosi_set_position_cx256 	= (src->center.x256)+(ra_nd()&0xfff);
+		REG_002_hosi_set_position_cy256 	= (src->center.y256)+(ra_nd()&0xfff);/* çÁñÈ â∫ï˚Ç©ÇÁï`Ç≠ */
 
 		/* êØå^Çï`Ç≠èÄîı */
 		REG_000_my_angle1024			= (0);
@@ -243,13 +243,13 @@ local void spell_init_27_hosigata_test(OBJ *src)
 ---------------------------------------------------------*/
 		/* éqãüñÇï˚êwÅAîzíuà íu */
 		#if 0
-		h->cx256					= (src->cx256);
-		h->cy256					= (src->cy256)-t256(16);/*çÁñÈ è„ï˚Ç…îzíu*/
+		h->center.x256					= (src->center.x256);
+		h->center.y256					= (src->center.y256)-t256(16);/*çÁñÈ è„ï˚Ç…îzíu*/
 		#endif
 	//
 //		h->boss_time_out			= ((64*8)+(5*16)+1);	/* êßå¿éûä‘ */
 
-local void spell_create_27_hosigata_test(OBJ *src)
+local OBJ_CALL_FUNC(spell_create_27_hosigata_test)
 {
 //	if ((64*8) < src->boss_time_out)
 	{
@@ -286,21 +286,21 @@ cdef ffff 7777	3+4
 		//	static void bullet_crate_sakuya_hosi_gata(void/*OBJ *src*/)
 			{		/*ä€íeÇW(ê‘ÇqÇfÇaóŒé·â©ê¬)*/
 				OBJ *h;
-				h					= obj_add_A00_tama_error();
+				h									= obj_regist_tama();
 				if (NULL != h)
 				{
-					h->cx256						= REG_001_hosi_set_position_cx256;
-					h->cy256						= REG_002_hosi_set_position_cy256;
+					h->center.x256					= REG_001_hosi_set_position_cx256;
+					h->center.y256					= REG_002_hosi_set_position_cy256;
 					h->obj_type_set 				= (BULLET_MINI8_BASE + TAMA_IRO_01_AKA);
-					reflect_sprite_spec444(h, OBJ_BANK_SIZE_00_TAMA);
+					reflect_sprite_spec(h, OBJ_BANK_SIZE_00_TAMA);
 					h->m_Hit256R					= TAMA_ATARI_MARU16_PNG;
 				//
 					h->callback_mover				= move_bullet_sakuya_hosi_gata;
 					h->hatudan_register_speed65536	= (0);
 					h->hatudan_register_tra65536	= (0);
 					h->hatudan_register_spec_data	= (DANMAKU_LAYER_03)|(TAMA_SPEC_3000_EFFECT_NONE)|(TAMA_SPEC_8000_NON_TILT);
-					h->vx256						= (0);
-					h->vy256						= (0);
+					h->math_vector.x256				= (0);
+					h->math_vector.y256				= (0);
 					/* hosi_gata_time_out */
 					h->HGT_giji_jyumyou 			= HOSIGATA_DAN_LIMIT_01_512 + ((REG_10_BOSS_SPELL_TIMER)&0x1ff); //((REG_10_BOSS_SPELL_TIMER)-(64*8))
 					/* hosi_gata_angle1024 */

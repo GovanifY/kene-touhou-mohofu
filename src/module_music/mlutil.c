@@ -18,17 +18,18 @@
 
 /*---------- Shared loader variables */
 
-s8  mm_re_map[UF_MAXCHAN];					/* for removing empty channels */
 u8* mm_position_look_up = NULL;				/* lookup table for pattern jumps after blank pattern removal */
 // u8  mm_midi_position_look_up_counter;
 u16* origpositions = NULL;
 
 // MM_BOOL	 mm_midi_use_resonant_filters;		/* resonant filters in use */
 // /*u8*/u32	mm_midi_active_macro;		/* active midi macro number for Sxx,xx<80h (現状 xx <= 0x0f ) */
-MOD_MUSIC_INTERNAL_MIDI_FILTER mm_midi;
+MOD_MUSIC_INTERNAL_MIDI_FILTER mmff;
 
+#if (1==USE_ITZ_ZXX_MIDI_RESONANT_FILTERS)
 u8  mm_filter_macros[UF_MAXMACRO];			/* midi macro settings */
 FILTER filtersettings[UF_MAXFILTER];			/* computed filter settings */
+#endif /*(USE_ITZ_ZXX_MIDI_RESONANT_FILTERS)*/
 
 /*---------- Linear periods stuff */
 
@@ -37,9 +38,9 @@ static int noteindexcount = 0;
 
 int *AllocLinear(void)
 {
-	if (of.numsmp>noteindexcount)
+	if (mmoo.numsmp>noteindexcount)
 	{
-		noteindexcount = of.numsmp;
+		noteindexcount = mmoo.numsmp;
 		noteindex = realloc(noteindex,noteindexcount*sizeof(int));
 	}
 	return noteindex;
@@ -63,7 +64,7 @@ int speed_to_mm_fine_tune(u32 speed, int sample)
 	int mm_fine_tune = 0;
 	//
 	speed >>= 1;
-	while ((tmp=getfrequency(of.flags,getlinearperiod(note<<1,0))) < speed)
+	while ((tmp=getfrequency(mmoo.flags,getlinearperiod(note<<1,0))) < speed)
 	{
 		ctmp = tmp;
 		note++;
@@ -73,13 +74,13 @@ int speed_to_mm_fine_tune(u32 speed, int sample)
 		if ( ((signed)tmp - (signed)speed) < ((signed)speed - (signed)ctmp))/* ...うーん */
 		{
 			while (tmp > speed)
-			{	tmp=getfrequency(of.flags,getlinearperiod(note<<1,--mm_fine_tune));}
+			{	tmp=getfrequency(mmoo.flags,getlinearperiod(note<<1,--mm_fine_tune));}
 		}
 		else
 		{
 			note--;
 			while (ctmp < speed)
-			{	ctmp=getfrequency(of.flags,getlinearperiod(note<<1,++mm_fine_tune));}
+			{	ctmp=getfrequency(mmoo.flags,getlinearperiod(note<<1,++mm_fine_tune));}
 		}
 	}
 	noteindex[sample] = note - (4*OCTAVE);
@@ -91,29 +92,29 @@ int speed_to_mm_fine_tune(u32 speed, int sample)
 /* handles S3M and IT orders */
 void S3MIT_CreateOrders(MM_BOOL curious)
 {
-	of.numpos = 0;
-	memset(of.positions, 0, mm_midi.mm_midi_position_look_up_counter*sizeof(u16));
+	mmoo.numpos = 0;
+	memset(mmoo.positions, 0, mmff.mm_midi_position_look_up_counter*sizeof(u16));
 	memset(mm_position_look_up,-1,256);
 	//
 	unsigned int t;
-	for (t=0; t<mm_midi.mm_midi_position_look_up_counter; t++)
+	for (t=0; t<mmff.mm_midi_position_look_up_counter; t++)
 	{
 		int order = origpositions[t];
 		if (order==255)
 		{
 			order = LAST_PATTERN;
 		}
-		of.positions[of.numpos] = order;
-		mm_position_look_up[t] = of.numpos; /* bug fix for freaky S3Ms / ITs */
+		mmoo.positions[mmoo.numpos] 	= order;
+		mm_position_look_up[t] 			= mmoo.numpos; /* bug fix for freaky S3Ms / ITs */
 		if (origpositions[t]<254)
 		{
-			of.numpos++;
+			mmoo.numpos++;
 		}
 		else
 		{
 			/* end of song special order */
 			if ((order==LAST_PATTERN)&&(!(curious--))) break;
-		//	if ((of.positions[t]==255)&&(!(curious--))) break;
+		//	if ((mmoo.positions[t]==255)&&(!(curious--))) break;
 		}
 	}
 }
@@ -137,7 +138,7 @@ void S3MIT_ProcessCmd(u8 cmd, u8 inf, /*unsigned int*/u8 flags)//MM_BOOL oldeffe
 				UniEffect(U231_ICODE_0x30_S3MEFFECTA,inf);
 				break;
 			case 2: /* Bxx position jump */
-				if (inf<mm_midi.mm_midi_position_look_up_counter)
+				if (inf<mmff.mm_midi_position_look_up_counter)
 				{
 					/* switch to curious mode if necessary, for example
 					   sympex.it, deep joy.it */
@@ -225,20 +226,22 @@ void S3MIT_ProcessCmd(u8 cmd, u8 inf, /*unsigned int*/u8 flags)//MM_BOOL oldeffe
 			case 0x13: /* Sxx special commands */
 				if (inf >= 0xf0)/* 0xf0 ... 0xff はmidi fliter 切り替えコマンド */
 				{
+					#if (1==USE_ITZ_ZXX_MIDI_RESONANT_FILTERS)
 					/* do if filter enables only. */
-					if (mm_midi.mm_midi_use_resonant_filters)/* filter 有効の場合のみ */
+					if (mmff.mm_midi_use_resonant_filters)/* filter 有効の場合のみ */
 					{
 						/* change resonant filter settings if necessary */
-						if (((inf&0x0f) != mm_midi.mm_midi_active_macro))/* filter が実際に切り替わった場合のみ */
+						if (((inf&0x0f) != mmff.mm_midi_active_macro))/* filter が実際に切り替わった場合のみ */
 						{
-							mm_midi.mm_midi_active_macro = (inf & 0x0f);/* 現在有効の midi fliter番号を保存。 */
+							mmff.mm_midi_active_macro = (inf & 0x0f);/* 現在有効の midi fliter番号を保存。 */
 							/* midi fliter 切り替え処理 */
 							for (inf=0; inf<0x80; inf++)
 							{
-								filtersettings[inf].filter = mm_filter_macros[mm_midi.mm_midi_active_macro];
+								filtersettings[inf].filter = mm_filter_macros[mmff.mm_midi_active_macro];
 							}
 						}
 					}
+					#endif /*(USE_ITZ_ZXX_MIDI_RESONANT_FILTERS)*/
 				}
 				else
 				{
@@ -287,12 +290,14 @@ void S3MIT_ProcessCmd(u8 cmd, u8 inf, /*unsigned int*/u8 flags)//MM_BOOL oldeffe
 				UniEffect(U231_ICODE_0x0d_ITEFFECTY,inf);
 				break;
 			case 0x1a: /* Zxx midi/resonant filters */
+				#if (1==USE_ITZ_ZXX_MIDI_RESONANT_FILTERS)
 				if (filtersettings[inf].filter)
 				{
 					UniWriteByte(U231_ICODE_0x0e_ITEFFECTZ);
 					UniWriteByte(filtersettings[inf].filter);
 					UniWriteByte(filtersettings[inf].inf);
 				}
+				#endif /*(USE_ITZ_ZXX_MIDI_RESONANT_FILTERS)*/
 				break;
 		}
 	}

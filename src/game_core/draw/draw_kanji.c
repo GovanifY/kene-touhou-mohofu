@@ -497,7 +497,6 @@ global void kanji_window_all_clear(void)
 //	msg_window_init();/*???*/
 //	inits				= 1;/*???*/
 //	is_bg				= 0;/*???*/
-//	cg.dr aw_flag_kaiwa_screen	= 0;/*???*/
 //	cursor_x_chached		= 0;/*???*/ /* カーソル初期化 */
 //	cursor_y_lines_chached	= 0;/*???*/ /* カーソル初期化 */
 //	clear_my_string_offset();/*???*/
@@ -645,6 +644,21 @@ global /*static*/ int kanji_draw(void)
 }
 
 
+
+/*---------------------------------------------------------
+	終了時に開放する部分...何だけど、
+	ハングアップしたりするので、取り敢えず無効になってる。
+	(開放しなくても終了すれば、OSがメモリ回収するので問題ないって言えば問題ない)
+---------------------------------------------------------*/
+
+/*only exit once*/global void kanji_system_boot_exit(void)/* 外す */
+{
+	#if 0/* 本当は要る */
+//	kanji_system_terminate();
+	if (NULL != cb.kanji_window_screen_image)		{	free(cb.kanji_window_screen_image); 				cb.kanji_window_screen_image = NULL;	}
+	#endif
+}
+
 /*---------------------------------------------------------
 	現在 3行 x 18 pixel == 54 laster + 背景用 10 laster(?) < 64(??)
 	-------------------------------------------------------
@@ -652,7 +666,7 @@ global /*static*/ int kanji_draw(void)
 ---------------------------------------------------------*/
 
 #include "graphics00.h"
-global void kanji_system_init(void)/* 組み込み */
+/*only boot once*/global void kanji_system_boot_init(void)/* 組み込み */
 {
 	set_kanji_origin_xy((10+6), (10+192));/*(表示原点の設定)*/
 	set_kanji_origin_kankaku(18);/*(字間を標準にする)*/
@@ -729,23 +743,6 @@ global void kanji_system_init(void)/* 組み込み */
 	//	SDL_FreeSurface(font_bg_bitmap_surface);
 		png_free_my_image(font_bg_bitmap_surface);
 	}
-}
-
-
-/*---------------------------------------------------------
-	終了時に開放する部分...何だけど、
-	ハングアップしたりするので、取り敢えず無効になってる。
-	(開放しなくても終了すれば、OSがメモリ回収するので問題ないって言えば問題ない)
----------------------------------------------------------*/
-
-global void kanji_system_exit(void)/* 外す */
-{
-	/*msg_window_init()*/
-//
-	#if 0/* 本当は要る */
-//	kanji_system_terminate();
-	if (NULL != cb.kanji_window_screen_image)		{	free(cb.kanji_window_screen_image); 				cb.kanji_window_screen_image = NULL;	}
-	#endif
 }
 
 

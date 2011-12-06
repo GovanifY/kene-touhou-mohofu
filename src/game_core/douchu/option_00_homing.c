@@ -28,7 +28,7 @@
 #define GENTEN_FRAME128 (128)
 #define ZERO_FRAME256	(256)
 
-static void teki_homing_move(OBJ *src)
+static OBJ_CALL_FUNC(teki_homing_move)
 {
 	if (GENTEN_FRAME128 > src->jyumyou)
 	{
@@ -41,8 +41,8 @@ static void teki_homing_move(OBJ *src)
 	{
 		REG_00_SRC_X	= (src->target_x256);					/* 弾源x256 */
 		REG_01_SRC_Y	= (src->target_y256);					/* 弾源y256 */
-		REG_02_DEST_X	= ((src->cx256));
-		REG_03_DEST_Y	= ((src->cy256));
+		REG_02_DEST_X	= ((src->center.x256));
+		REG_03_DEST_Y	= ((src->center.y256));
 		tmp_angleCCW65536_src_nerai();
 		#define ROTATE_1024HARF 	(1024/2)/*半周*/
 		const int sabun_aaa = ((deg65536to1024(HATSUDAN_03_angle65536))-src->rotationCCW1024);
@@ -77,19 +77,19 @@ static void teki_homing_move(OBJ *src)
 			HATSUDAN_03_angle65536	= (deg1024to65536((((src->jyumyou-(GENTEN_FRAME128-63))<<2))));
 			sincos256();/*(破壊レジスタ多いので注意)*/
 		//	radius_aaa = REG_03_DEST_Y;//sin_value_t256 // 下CCWの場合(右CWの場合ととxyが逆)
-		//	src->vy256 = REG_02_DEST_X;//cos_value_t256 // 下CCWの場合(右CWの場合ととxyが逆)
+		//	src->math_vector.y256 = REG_02_DEST_X;//cos_value_t256 // 下CCWの場合(右CWの場合ととxyが逆)
 			//------------------
 			HATSUDAN_01_speed256	= ((REG_03_DEST_Y)<<2);
 			HATSUDAN_03_angle65536	= (deg1024to65536(src->rotationCCW1024));
 			sincos256();/*(破壊レジスタ多いので注意)*/
-			src->vx256 = REG_03_DEST_Y;//sin_value_t256 // 下CCWの場合(右CWの場合ととxyが逆)
-			src->vy256 = REG_02_DEST_X;//cos_value_t256 // 下CCWの場合(右CWの場合ととxyが逆)
+			src->math_vector.x256 = REG_03_DEST_Y;//sin_value_t256 // 下CCWの場合(右CWの場合ととxyが逆)
+			src->math_vector.y256 = REG_02_DEST_X;//cos_value_t256 // 下CCWの場合(右CWの場合ととxyが逆)
 			//------------------
 		}
 	}
 	/* 実移動 */
-	src->cx256 += (src->vx256);
-	src->cy256 += (src->vy256);
+	src->center.x256 += (src->math_vector.x256);
+	src->center.y256 += (src->math_vector.y256);
 }
 
 
@@ -97,17 +97,17 @@ static void teki_homing_move(OBJ *src)
 	敵側の誘導ミサイルを作成する
 ---------------------------------------------------------*/
 
-global void bullet_create_teki_homing(OBJ *src)
+global OBJ_CALL_FUNC(bullet_create_teki_homing)
 {
 	/* 目標地点 */
 	OBJ *zzz_player;
-	zzz_player = &obj99[OBJ_HEAD_02_0x0900_KOTEI+FIX_OBJ_00_PLAYER];
+	zzz_player = &obj99[OBJ_HEAD_03_0x0a00_KOTEI+FIX_OBJ_00_PLAYER];
 	//
 	unsigned int i_angle;
 	for (i_angle=0; i_angle<(1024); i_angle += (1024/8) )/* */
 	{
 		OBJ *h;
-		h					= obj_add_A01_teki_error();
+		h					= obj_regist_teki();
 		if (NULL!=h)/* 登録できた場合のみ */
 		{
 			h->m_Hit256R			= ZAKO_ATARI_HOMING16_PNG;
@@ -117,13 +117,13 @@ global void bullet_create_teki_homing(OBJ *src)
 			h->callback_hit_teki	= callback_hit_zako;		/* 「ザコに自弾があたった場合の処理」に、標準の処理を設定 */
 			h->atari_hantei 		= (score(5*2)/*スコア兼用*/);
 			h->base_hp				= (1);		/* 誘導ミサイルの硬さ。 */
-			h->cx256				= (src->cx256);/* 発弾位置 */
-			h->cy256				= (src->cy256);/* 発弾位置 */
+			h->center.x256				= (src->center.x256);/* 発弾位置 */
+			h->center.y256				= (src->center.y256);/* 発弾位置 */
 	//
 			h->rotationCCW1024		= (i_angle);// ミサイルの向き
 			{
-				h->target_x256			= (zzz_player->cx256);/* 目標位置 */
-				h->target_y256			= (zzz_player->cy256);/* 目標位置 */
+				h->target_x256			= (zzz_player->center.x256);/* 目標位置 */
+				h->target_y256			= (zzz_player->center.y256);/* 目標位置 */
 			}
 			h->jyumyou		= (256+GENTEN_FRAME128);
 		}

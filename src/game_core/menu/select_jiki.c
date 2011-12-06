@@ -148,7 +148,7 @@ static void player_select_10_select(void)/* [選択] */
 			if (psp_pad.pad_data & (PSP_KEY_LEFT|PSP_KEY_RIGHT)/*左か右の両方*/) /* 左右ボタン入力 */
 			{
 				is_turn_right = (psp_pad.pad_data & PSP_KEY_RIGHT)?1:0;/* 右なら1, 左なら0 */
-				voice_play(VOICE02_MENU_SELECT, TRACK01_EXPLODE);
+				voice_play(VOICE02_MENU_SELECT, TRACK01_MENU01);
 				cb.main_call_func = player_select_08_load;	/* [load] */	/*(戻る)*/
 			}
 			if (psp_pad.pad_data & PSP_KEY_SHOT_OK)
@@ -163,7 +163,7 @@ static void player_select_10_select(void)/* [選択] */
 					difficulty_select_fg0_surface = NULL;
 					#endif /*(1==USE_KETM_IMAGE_CHACHE)*/
 				}
-				voice_play(VOICE01_MENU_OK, TRACK01_EXPLODE);/* テキトー */
+				voice_play(VOICE01_MENU_OK, TRACK01_MENU01);/* テキトー */
 				if (0!=cg.game_practice_mode)
 				{	/* プラクティスモードの場合 */
 					cb.main_call_func = stage_select_menu_start;	/* ステージ選択メニューの開始 */
@@ -177,7 +177,7 @@ static void player_select_10_select(void)/* [選択] */
 			if (psp_pad.pad_data & PSP_KEY_BOMB_CANCEL)
 			{
 				cg.msg_time = (0);/* 必要 */
-				voice_play(VOICE04_SHIP_HAKAI, TRACK03_SHORT_MUSIC/*TRACK01_EXPLODE*/);/* 自機死に音は、なるべく重ねない */
+				voice_play(VOICE04_SHIP_HAKAI, TRACK02_MENU02/*TRACK01_MENU01*/);/* 自機死に音は、なるべく重ねない */
 				/* 難易度選択メニューに戻る */
 				cb.main_call_func = rank_select_menu_start; 	/* 難易度選択メニューへ(戻る) */
 			}
@@ -352,21 +352,21 @@ static void player_select_09_move_draw(void)/* [描画1] */
 		/*(Guの場合、会話スプライトを使う)*/
 		#define PLAYER_OBJ_LOCATE_X 	(256-32)		/* cx256(r35) 素材[256x256] */
 		#define PLAYER_OBJ_LOCATE_Y 	(8) 			/* cy256(r35) 素材[256x256] */
-			kaiwa_sprite[0].cy256 = ((PLAYER_OBJ_LOCATE_Y)<<8);
+			kaiwa_sprite[0].center.y256 = ((PLAYER_OBJ_LOCATE_Y)<<8);
 		{int aaa;
 			sp_diff256 += (sp_scale256);
 			aaa = (((sp_diff256))>>8)-16;
 			if ((  is_turn_right))	{	aaa = -(aaa);}
-			kaiwa_sprite[0].cx256 = ((PLAYER_OBJ_LOCATE_X)<<8) + ((aaa)<<8);
+			kaiwa_sprite[0].center.x256 = ((PLAYER_OBJ_LOCATE_X)<<8) + ((aaa)<<8);
 		}
 			kaiwa_sprite[0].color32 = ((	sp_scale256)<<24)|(0x00ffffff);/*(透明)*/
 		//
-			kaiwa_sprite[1].cy256 = ((PLAYER_OBJ_LOCATE_Y)<<8);
+			kaiwa_sprite[1].center.y256 = ((PLAYER_OBJ_LOCATE_Y)<<8);
 		{int aaa;
 			sp_diff256 += (sp_scale256);
 			aaa = (((sp_diff256)>>8)-16);
 			if (1-is_turn_right)	{	aaa = (-(aaa));}
-			kaiwa_sprite[1].cx256 = ((PLAYER_OBJ_LOCATE_X)<<8) + ((aaa)<<8);
+			kaiwa_sprite[1].center.x256 = ((PLAYER_OBJ_LOCATE_X)<<8) + ((aaa)<<8);
 		}
 			kaiwa_sprite[1].color32 = ((255-sp_scale256)<<24)|(0x00ffffff);/*(透明)*/
 	}
@@ -393,13 +393,13 @@ static void set_file_name(unsigned char is_pl)
 /*---------------------------------------------------------
 	[プレイヤー選択メニュー]選択プレイヤー画像と背景をロード。
 ---------------------------------------------------------*/
-static void player_select_08_load(void)/* [load] */
+static MAIN_CALL_FUNC(player_select_08_load)/* [load] */
 {
 	(cg_game_select_player) &= (0x07);
 	//
 	set_file_name(0);	strcpy(&my_resource[TEX_09_TACHIE_L+0].file_name[0], (&my_file_common_name[0]) );
 						kaiwa_sprite[0].draw_flag = (1);	/* 描画する。 */
-						TGameTexture_Load_Surface(TEX_09_TACHIE_L+0);
+						psp_load_texture(TEX_09_TACHIE_L+0);
 	set_file_name(1);
 	#if (1==USE_KETM_IMAGE_CHACHE)
 	player_select_bg2_surface = load_chache_bmp();
@@ -414,7 +414,7 @@ static void player_select_08_load(void)/* [load] */
 	//
 	set_file_name(0);	strcpy(&my_resource[TEX_09_TACHIE_L+1].file_name[0], (&my_file_common_name[0]) );
 						kaiwa_sprite[1].draw_flag = (1);	/* 描画する。 */
-						TGameTexture_Load_Surface(TEX_09_TACHIE_L+1);
+						psp_load_texture(TEX_09_TACHIE_L+1);
 	set_file_name(1);
 	#if (1==USE_KETM_IMAGE_CHACHE)
 	player_select_bg0_surface = load_chache_bmp();
@@ -437,7 +437,7 @@ static void player_select_08_load(void)/* [load] */
 ---------------------------------------------------------*/
 global void menu_cancel_and_voice(void)
 {
-	voice_play(VOICE04_SHIP_HAKAI, TRACK03_SHORT_MUSIC/*TRACK01_EXPLODE*/);/* 自機死に音は、なるべく重ねない */
+	voice_play(VOICE04_SHIP_HAKAI, TRACK02_MENU02/*TRACK01_MENU01*/);/* 自機死に音は、なるべく重ねない */
 	cb.main_call_func = title_menu_start;	/* タイトルメニューへ移動 */
 }
 
@@ -445,7 +445,7 @@ global void menu_cancel_and_voice(void)
 /*---------------------------------------------------------
 	[難易度選択メニュー:文字退避]
 ---------------------------------------------------------*/
-static void rank_select_07_moji_taihi(void)/* [文字退避] */
+static MAIN_CALL_FUNC(rank_select_07_moji_taihi)/* [文字退避] */
 {
 	toutatu_wariai += (SPEED_06_FADE_OUT);
 	if (255 <= (toutatu_wariai) )
@@ -463,8 +463,8 @@ static void rank_select_07_moji_taihi(void)/* [文字退避] */
 /*---------------------------------------------------------
 	[難易度選択メニュー]
 ---------------------------------------------------------*/
-static void rank_select_04_initialize_value(void);/*(宣言が必要)*/
-static void rank_select_06_select(void)/* [選択] */
+static MAIN_CALL_FUNC(rank_select_04_initialize_value);/*(宣言が必要)*/
+static MAIN_CALL_FUNC(rank_select_06_select)/* [選択] */
 {
 	cg.msg_time = byou60(5);/* 必要 */	/* 約 5 秒 */
 	if (0==psp_pad.pad_data_alter)/* さっき何も押されてなかった場合にキーチェック(原作準拠) */
@@ -477,13 +477,13 @@ static void rank_select_06_select(void)/* [選択] */
 				if (psp_pad.pad_data & PSP_KEY_UP)
 						{	cg.game_difficulty--;	cg.game_difficulty = psp_max(cg.game_difficulty, (0)   );	}	/* メニュー上で停止 */
 				else	{	cg.game_difficulty++;	cg.game_difficulty = psp_min(cg.game_difficulty, (4-1) );	}	/* メニュー下で停止 */
-				voice_play(VOICE02_MENU_SELECT, TRACK01_EXPLODE);
+				voice_play(VOICE02_MENU_SELECT, TRACK01_MENU01);
 				cb.main_call_func = rank_select_04_initialize_value;	/* [load] */	/*(戻る)*/
 			}
 			if (psp_pad.pad_data & PSP_KEY_SHOT_OK)
 			{
 				cg.msg_time = (0);/* 必要 */
-				voice_play(VOICE01_MENU_OK, TRACK01_EXPLODE);/* テキトー */
+				voice_play(VOICE01_MENU_OK, TRACK01_MENU01);/* テキトー */
 				/* 通常／プラクティス、ゲーム開始 */
 				// static void player_opt_init(void)吸収。なし
 				{
@@ -519,7 +519,7 @@ static void rank_select_06_select(void)/* [選択] */
 /*---------------------------------------------------------
 	[難易度選択メニュー]
 ---------------------------------------------------------*/
-static void rank_select_05_move_draw(void)/* [描画1] */
+static MAIN_CALL_FUNC(rank_select_05_move_draw)/* [描画1] */
 {
 	sp_scale256 -= 15/*18*/;
 	if (sp_scale256 < 0 )
@@ -537,7 +537,7 @@ static void rank_select_05_move_draw(void)/* [描画1] */
 /*---------------------------------------------------------
 	[難易度選択メニュー]変数等を開始状態へ初期化設定。
 ---------------------------------------------------------*/
-static void rank_select_04_initialize_value(void)
+static MAIN_CALL_FUNC(rank_select_04_initialize_value)
 {
 	(cg.game_difficulty) &= (0x03);
 	//
@@ -552,7 +552,7 @@ static void rank_select_04_initialize_value(void)
 /*---------------------------------------------------------
 	[難易度選択メニュー:文字集まる]
 ---------------------------------------------------------*/
-static void rank_select_03_atumaru(void)/* [文字集まる] */
+static MAIN_CALL_FUNC(rank_select_03_atumaru)/* [文字集まる] */
 {
 	toutatu_wariai += (SPEED_06_FADE_OUT);
 	if (255 <= (toutatu_wariai) )
@@ -571,7 +571,7 @@ static void rank_select_03_atumaru(void)/* [文字集まる] */
 	[難易度選択メニュー#02]の初期化設定。(やり直しの場合はここから)
 ---------------------------------------------------------*/
 extern void kaiwa_obj_set_256(void);
-global void rank_select_menu_start(void)
+global MAIN_CALL_FUNC(rank_select_menu_start)
 {
 	/* [load] */
 	{
@@ -612,7 +612,7 @@ global void rank_select_menu_start(void)
 	#endif
 	/*(会話objをフル画面で表示)*/
 	{	/*(フル画面=="Story" モード専用の立ち絵移動)*/
-		cg.side_panel_draw_flag 		= (0);	/* パネル表示off */
+		cg.side_panel_draw_flag 		= (0);/*(右サイドのスコアパネル表示off)*/
 	}
 	//
 	move_mode			= (0);

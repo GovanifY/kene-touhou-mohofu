@@ -10,7 +10,7 @@ OBJS += $(OBJ)/game_core/my_math.o
 #--- tama 関連。
 OBJS += $(OBJ)/game_core/tama/hatudan_system.o
 OBJS += $(OBJ)/game_core/tama/laser_system.o
-OBJS += $(OBJ)/game_core/tama/sprite_bullet.o
+OBJS += $(OBJ)/game_core/tama/obj_system.o
 OBJS += $(OBJ)/game_core/tama/spell_system.o
 
 #--- spell/card/boss 関連。
@@ -35,7 +35,7 @@ OBJS += $(OBJ)/game_core/douchu/option_00_homing.o
 OBJS += $(OBJ)/game_core/douchu/teki.o
 
 #; 敵以外だが敵扱い
-OBJS += $(OBJ)/game_core/douchu/kanji_text.o
+#OBJS += $(OBJ)/game_core/douchu/kanji_text.o
 OBJS += $(OBJ)/game_core/douchu/game_clear.o
 OBJS += $(OBJ)/game_core/douchu/bakuhatsu.o
 
@@ -57,8 +57,8 @@ OBJS += $(OBJ)/game_core/draw/score_panel.o
 OBJS += $(OBJ)/game_core/draw/PSPL_font.o
 OBJS += $(OBJ)/game_core/draw/draw_kanji.o
 OBJS += $(OBJ)/game_core/draw/graphics00.o 
-OBJS += $(OBJ)/game_core/draw/gu_load_texture.o
-OBJS += $(OBJ)/game_core/draw/gu_draw_screen.o
+OBJS += $(OBJ)/game_core/draw/psp_load_texture.o
+OBJS += $(OBJ)/game_core/draw/psp_draw_screen.o
 
 #--- menu 関連。
 OBJS += $(OBJ)/font/shinonome16p.o

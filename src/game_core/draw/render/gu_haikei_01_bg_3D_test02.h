@@ -67,13 +67,21 @@ static void gu_draw_bg_3D_test02(void)
 	//		take the log of quaternion qb
 	//		reset the time counter
 
+	#if (1==USE_5SEC)/* 周期カウンタ値の計算 */
 	nnn++;
 	if (nnn >= byou60(5) ) /* 300==(5[sec] x 60[frame])*/
 	{
 		nnn = 0;
 		test_auto_rot_bbbb();
 	}
-
+	#else
+	nnn++;
+	nnn &= 0xff;
+	if (0==nnn) /* 256==(4.266...[sec] x 60[frame])*/
+	{
+		test_auto_rot_bbbb();
+	}
+	#endif
 
 	// to build the view matrix:
 	//		get the interpolated quaternion in qcam
@@ -88,8 +96,12 @@ static void gu_draw_bg_3D_test02(void)
 	// the reverse, -1 to 1
 	#if (1==TEST_AUTO_ROT)
 	{
+		#if (1==USE_5SEC)/* 等分値の計算 */
 	//	float t = (nnn)*((float)(1.0f/300.0f));
 		u32 t65536 = (nnn)*((u32)(65536.0/300.0));
+		#else
+		u32 t65536 = (((nnn)<<8)|(nnn));
+		#endif
 	//	vfpu_quaternion_sample_linear(&p9_qcam, &p9_qa, &p9_qb, vfpu_ease_in_out(t));
 	u32 i_rate65536;
 	//	i_rate65536 = (int)(vfpu_ease_in_out(t)*256.0);
@@ -111,9 +123,9 @@ static void gu_draw_bg_3D_test02(void)
 	#endif
 //
 		// load our generated matrix data into the display list
-		pgc_set_matrix_PROJECTION(	&m4_projection3d);	//sceGuSetMatrix(GU_PROJECTION,	&m4_projection3d);		/* 透視変換用マトリクス */
-		pgc_set_matrix_VIEW(		&m4_view);			//sceGuSetMatrix(GU_VIEW, 		&m4_view);				/* 視点変換ビュー用マトリクス */
-		pgc_set_matrix_MODEL(		&m4_model);			//sceGuSetMatrix(GU_MODEL,		&m4_model); 			/* ワールド座標用マトリクス */
+		pgc_set_matrix_PROJECTION(	&m4_projection3d);	//sceGuSetMatrix(GU_PROJECTION, &m4_projection3d);		/* 透視変換用マトリクス */
+		pgc_set_matrix_VIEW(		&m4_view);			//sceGuSetMatrix(GU_VIEW,		&m4_view);				/* 視点変換ビュー用マトリクス */
+		pgc_set_matrix_MODEL(		&m4_model); 		//sceGuSetMatrix(GU_MODEL,		&m4_model); 			/* ワールド座標用マトリクス */
 
 
 		// draw cube

@@ -10,7 +10,7 @@
 //{
 #define PL_OPTION_DATA_angleCCW1024 			user_data00 		/* 下が０として左回り(逆回り)の角度 */
 #define PL_OPTION_DATA_anime_wait				user_data01 		/* アニメーション速度のカウンタ */
-#define PL_OPTION_DATA_opt_anime_add_id 		user_data02 		/* アニメーション方向の加算値 / オプションID / (レミリア & チルノ)x offset */	/* pos */
+#define PL_OPTION_DATA_opt_anime_add_id 		user_data02/*(_only_layer_systemとりあえず)*/		/* アニメーション方向の加算値 / オプションID / (レミリア & チルノ)x offset */	/* pos */
 #define PL_OPTION_DATA_opt_shot_interval		user_data03 		/* オプションが発射するショットの更新間隔 */
 //	/* レミリア & チルノ */
 #define PL_OPTION_DATA_offset_x256				user_data04 		/* 円の半径と兼用 */
@@ -71,10 +71,3 @@ enum	/*_player_option_type_tag_*/
 	OPTION_C4,
 	OPTION_04_MAX/* 最大数 */
 };
-
-/*---------------------------------------------------------
-	player_local.h
----------------------------------------------------------*/
-
-extern OBJ *search_teki_from_obj(void);
-

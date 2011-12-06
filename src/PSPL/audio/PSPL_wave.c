@@ -580,8 +580,10 @@ PSPL_AUDIO_SPEC * PSPL_LoadWAV_RW(
 		goto done;
 	}
 	spec->channels_is_load_wave_only		= (u8)SDL_SwapLE16(format->channels);
-	spec->samples 		= (4096);		/* Good default buffer size */
-
+	spec->samples		= (4096);		/* Good default buffer size */
+//(???) 	(1024)/*spec->samples_is1024q*/ 	= PSP_BUFFER_SIZE_FIXED_1024_FOR_AUDIO/*(4096)*/;		/* Good default buffer size. */
+	/* samples_is1024q (mixer�̏ꍇ1024, ogg�̏ꍇ4096, wavestream�̏ꍇ4096, wave�̏ꍇ4096) */
+//
 	/* Read the audio data chunk */
 	*audio_buf = NULL;
 	do {
@@ -617,8 +619,8 @@ PSPL_AUDIO_SPEC * PSPL_LoadWAV_RW(
 	}
 
 	/* Don't return a buffer that isn't a multiple of samplesize */
-	samplesize 	= ((spec->format & 0xff)/8) * spec->channels_is_load_wave_only;
-	*audio_len 	&= ~(samplesize-1);
+	samplesize	= ((spec->format & 0xff)/8) * spec->channels_is_load_wave_only;
+	*audio_len	&= ~(samplesize-1);
 
 done:
 	if ( format != NULL )
@@ -657,12 +659,14 @@ static int ReadChunk(SDL_RWops *src, Chunk *chunk)
 		SDL_Error_bbb(SDL_ENOMEM);
 		return (-1);
 	}
-	if ( SDL_RWread(src, chunk->data, chunk->length, 1) != 1 )
-	{
-		SDL_Error_bbb(SDL_EFREAD);
-		free(chunk->data);
-		return (-1);
-	}
+//	SDL_RWread_ void(src, chunk->data, chunk->length, 1);
+	SDL_RWread(src, chunk->data, chunk->length, 1);
+//	if (  != 1 )
+//	{
+//		SDL_Error_bbb(SDL_EFREAD);
+//		free(chunk->data);
+//		return (-1);
+//	}
 	return (chunk->length);
 }
 

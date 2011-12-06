@@ -17,8 +17,8 @@ static char rcsid =
  "@(#) $Id: PSPL_rwops.c,v 1.9 2005/06/24 12:48:38 icculus Exp $";
 #endif
 
-/* This file provides a general interface for SDL to read and write
-   data sources.  It can easily be extended to files, memory, etc.
+/* This file provides a general interface for SDL to read and write data sources.
+	It can easily be extended to files, memory, etc.
 */
 
 #include <stdlib.h>
@@ -57,30 +57,48 @@ static int stdio_seek(SDL_RWops *context, int offset, int whence)
 #if (1)
 extern int sceIoRead(int fd, void *data, int size);
 #endif
-static int stdio_read(SDL_RWops *context, void *ptr, int size, int maxnum)
+#if 0
+static /*int*/void stdio_read_ void(SDL_RWops *context, void *ptr, int size, int maxnum)
 {
-	size_t nread;
+//	size_t nread;
 //	#if (0)
-	nread = fread(ptr, size, maxnum, context->hidden.stdio.fp);
+//	nread =
+	fread(ptr, size, maxnum, context->hidden.stdio.fp);
 //	#else
 //	nread = sceIoRead(fileno( (context->hidden.stdio.fp)), ptr, (maxnum*size) );
 //	#endif
+//	if ( nread == 0 && ferror(context->hidden.stdio.fp) )
+//	{
+//		SDL_Error_bbb(SDL_EFREAD);
+//	}
+//	return (nread);
+}
+#endif
+static int stdio_read(SDL_RWops *context, void *ptr, int size, int maxnum)
+{
+	size_t nread;
+	#if (0)
+	nread =
+	fread(ptr, size, maxnum, context->hidden.stdio.fp);
+	#else
+	nread = sceIoRead(fileno( (context->hidden.stdio.fp)), ptr, (maxnum*size) );
+	#endif
 	if ( nread == 0 && ferror(context->hidden.stdio.fp) )
 	{
 		SDL_Error_bbb(SDL_EFREAD);
 	}
 	return (nread);
 }
-static int stdio_write(SDL_RWops *context, const void *ptr, int size, int num)
-{
-	size_t nwrote;
-	nwrote = fwrite(ptr, size, num, context->hidden.stdio.fp);
-	if ( nwrote == 0 && ferror(context->hidden.stdio.fp) )
-	{
-		SDL_Error_bbb(SDL_EFWRITE);
-	}
-	return (nwrote);
-}
+//static int stdio_write(SDL_RWops *context, const void *ptr, int size, int num)
+//{
+//	size_t nwrote;
+//	nwrote = fwrite(ptr, size, num, context->hidden.stdio.fp);
+//	if ( nwrote == 0 && ferror(context->hidden.stdio.fp) )
+//	{
+//		SDL_Error_bbb(SDL_EFWRITE);
+//	}
+//	return (nwrote);
+//}
 static int stdio_close(SDL_RWops *context)
 {
 	if ( context )
@@ -118,6 +136,29 @@ static int mem_seek(SDL_RWops *context, int offset, int whence)
 	context->hidden.mem.here = newpos;
 	return (context->hidden.mem.here-context->hidden.mem.base);
 }
+#if 0
+static /*int*/void mem_read_ void(SDL_RWops *context, void *ptr, int size, int maxnum)
+{
+	int total_bytes;
+	int mem_available;
+	total_bytes = (maxnum * size);
+	if ( (maxnum <= 0) || (size <= 0) || ((total_bytes / maxnum) != size) )
+	{
+		return /*(0)*/;
+	}
+
+	mem_available = (context->hidden.mem.stop - context->hidden.mem.here);
+	if (total_bytes > mem_available)
+	{
+		total_bytes = mem_available;
+	}
+
+	memcpy(ptr, context->hidden.mem.here, total_bytes);
+	context->hidden.mem.here += total_bytes;
+
+//	return (total_bytes / size);
+}
+#endif
 static int mem_read(SDL_RWops *context, void *ptr, int size, int maxnum)
 {
 	int total_bytes;
@@ -125,6 +166,7 @@ static int mem_read(SDL_RWops *context, void *ptr, int size, int maxnum)
 	total_bytes = (maxnum * size);
 	if ( (maxnum <= 0) || (size <= 0) || ((total_bytes / maxnum) != size) )
 	{
+	//	return /*(0)*/;
 		return (0);
 	}
 
@@ -139,21 +181,21 @@ static int mem_read(SDL_RWops *context, void *ptr, int size, int maxnum)
 
 	return (total_bytes / size);
 }
-static int mem_write(SDL_RWops *context, const void *ptr, int size, int num)
-{
-	if ( (context->hidden.mem.here + (num*size)) > context->hidden.mem.stop )
-	{
-		num = (context->hidden.mem.stop-context->hidden.mem.here)/size;
-	}
-	memcpy(context->hidden.mem.here, ptr, num*size);
-	context->hidden.mem.here += num*size;
-	return (num);
-}
-static int mem_writeconst(SDL_RWops *context, const void *ptr, int size, int num)
-{
-	SDL_SetError_bbb("Can't write to read-only memory");
-	return (-1);
-}
+//static int mem_write(SDL_RWops *context, const void *ptr, int size, int num)
+//{
+//	if ( (context->hidden.mem.here + (num*size)) > context->hidden.mem.stop )
+//	{
+//		num = (context->hidden.mem.stop-context->hidden.mem.here)/size;
+//	}
+//	memcpy(context->hidden.mem.here, ptr, num*size);
+//	context->hidden.mem.here += num*size;
+//	return (num);
+//}
+//static int mem_writeconst(SDL_RWops *context, const void *ptr, int size, int num)
+//{
+//	SDL_SetError_bbb("Can't write to read-only memory");
+//	return (-1);
+//}
 static int mem_close(SDL_RWops *context)
 {
 	if ( context )
@@ -271,12 +313,13 @@ SDL_RWops *SDL_RWFromFP(FILE *fp, int autoclose)
 	rwops = SDL_AllocRW();
 	if ( rwops != NULL )
 	{
-		rwops->seek 	= stdio_seek;
-		rwops->read 	= stdio_read;
-		rwops->write	= stdio_write;
-		rwops->close	= stdio_close;
-		rwops->hidden.stdio.fp = fp;
-		rwops->hidden.stdio.autoclose = autoclose;
+	//	rwops->read_ void				= stdio_read_ void;
+		rwops->read 					= stdio_read;
+		rwops->seek 					= stdio_seek;
+	//	rwops->write					= stdio_write;
+		rwops->close					= stdio_close;
+		rwops->hidden.stdio.fp			= fp;
+		rwops->hidden.stdio.autoclose	= autoclose;
 	}
 	return (rwops);
 }
@@ -287,13 +330,14 @@ SDL_RWops *SDL_RWFromMem(void *mem, int size)
 	rwops = SDL_AllocRW();
 	if ( rwops != NULL )
 	{
-		rwops->seek 	= mem_seek;
-		rwops->read 	= mem_read;
-		rwops->write	= mem_write;
-		rwops->close	= mem_close;
-		rwops->hidden.mem.base = (u8 *)mem;
-		rwops->hidden.mem.here = rwops->hidden.mem.base;
-		rwops->hidden.mem.stop = rwops->hidden.mem.base+size;
+	//	rwops->read_ void			= mem_read_ void;
+		rwops->read 				= mem_read;
+		rwops->seek 				= mem_seek;
+	//	rwops->write				= mem_write;
+		rwops->close				= mem_close;
+		rwops->hidden.mem.base		= (u8 *)mem;
+		rwops->hidden.mem.here		= rwops->hidden.mem.base;
+		rwops->hidden.mem.stop		= rwops->hidden.mem.base+size;
 	}
 	return (rwops);
 }
@@ -304,13 +348,14 @@ SDL_RWops *SDL_RWFromConstMem(const void *mem, int size)
 	rwops = SDL_AllocRW();
 	if ( rwops != NULL )
 	{
-		rwops->seek 	= mem_seek;
-		rwops->read 	= mem_read;
-		rwops->write	= mem_writeconst;
-		rwops->close	= mem_close;
-		rwops->hidden.mem.base = (u8 *)mem;
-		rwops->hidden.mem.here = rwops->hidden.mem.base;
-		rwops->hidden.mem.stop = rwops->hidden.mem.base+size;
+	//	rwops->read_ void			= mem_read_ void;
+		rwops->read 				= mem_read;
+		rwops->seek 				= mem_seek;
+	//	rwops->write				= mem_writeconst;
+		rwops->close				= mem_close;
+		rwops->hidden.mem.base		= (u8 *)mem;
+		rwops->hidden.mem.here		= rwops->hidden.mem.base;
+		rwops->hidden.mem.stop		= rwops->hidden.mem.base+size;
 	}
 	return (rwops);
 }

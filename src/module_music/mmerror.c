@@ -18,7 +18,7 @@
 ---------------------------------------------------------*/
 
 #if 0
-MM_CHAR *mod_music_errmsg[MOD_MUSIC_ERROR_MAX+1] =
+MM_s8 *mod_music_errmsg[MOD_MUSIC_ERROR_MAX+1] =
 {
 /* No error */
 

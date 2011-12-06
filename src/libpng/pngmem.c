@@ -111,11 +111,9 @@ png_destroy_struct_2(png_voidp struct_ptr, png_free_ptr free_fn,
  * (which should cause a fatal error) and introducing major problems.
  */
 
-png_voidp PNGAPI
-png_malloc(png_structp png_ptr, png_uint_32 size)
+png_voidp PNGAPI png_malloc(png_structp png_ptr, png_uint_32 size)
 {
 	png_voidp ret;
-
 	if (png_ptr == NULL || size == 0)
 		return (NULL);
 
@@ -129,8 +127,7 @@ png_malloc(png_structp png_ptr, png_uint_32 size)
 	return (ret);
 }
 
-png_voidp PNGAPI
-png_malloc_default(png_structp png_ptr, png_uint_32 size)
+png_voidp PNGAPI png_malloc_default(png_structp png_ptr, png_uint_32 size)
 {
 	png_voidp ret;
 #endif /* PNG_OPTION_USER_MEM_SUPPORTED */
@@ -238,21 +235,19 @@ png_malloc_default(png_structp png_ptr, png_uint_32 size)
 
 		if (png_ptr->offset_table_count >= png_ptr->offset_table_number)
 		{
-#ifndef PNG_OPTION_USER_MEM_SUPPORTED
+			#ifndef PNG_OPTION_USER_MEM_SUPPORTED
 			if ((png_ptr->flags&PNG_FLAG_MALLOC_NULL_MEM_OK) == 0)
 				png_error(png_ptr, "Out of Memory."); /* Note "o" and "M" */
 			else
 				png_warning(png_ptr, "Out of Memory.");
-#endif
+			#endif
 			return (NULL);
 		}
-
 		ret = png_ptr->offset_table_ptr[png_ptr->offset_table_count++];
 	}
 	else
-		ret = farmalloc(size);
-
-#ifndef PNG_OPTION_USER_MEM_SUPPORTED
+	{	ret = farmalloc(size);	}
+	#ifndef PNG_OPTION_USER_MEM_SUPPORTED
 	if (ret == NULL)
 	{
 		if ((png_ptr->flags&PNG_FLAG_MALLOC_NULL_MEM_OK) == 0)
@@ -260,8 +255,7 @@ png_malloc_default(png_structp png_ptr, png_uint_32 size)
 		else
 			png_warning(png_ptr, "Out of memory."); /* Note "o" and "m" */
 	}
-#endif
-
+	#endif
 	return (ret);
 }
 

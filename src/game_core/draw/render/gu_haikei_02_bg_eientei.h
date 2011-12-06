@@ -40,7 +40,7 @@ static void gu_draw_bg_eientei(void)
 		#endif
 	#endif
 
-//	val1 = (player->cx256>>8);
+//	val1 = (player->center.x256>>8);
 		#if 1
 		val3_256 -= (cg.current_bg0_y_scroll_speed256);
 	//	val3--;

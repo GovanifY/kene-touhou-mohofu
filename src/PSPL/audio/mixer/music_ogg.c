@@ -98,16 +98,20 @@ OGG_music *OGG_new(const char *file)
 			fclose(fp);
 			return (NULL);
 		}
-	} else {
+	}
+	else
+	{
 		SDL_SetError_bbb("Out of memory");
 	}
 	return (music);
 }
 
 
+//static /*size_t*/void sdl_read_func_ void(void *ptr, size_t size, size_t nmemb, void *datasource)
 static size_t sdl_read_func(void *ptr, size_t size, size_t nmemb, void *datasource)
 {
-	return (SDL_RWread((SDL_RWops*)datasource, ptr, size, nmemb));
+//	/*return*/ SDL_RWread_ void((SDL_RWops*)datasource, ptr, size, nmemb);
+	return SDL_RWread((SDL_RWops*)datasource, ptr, size, nmemb);
 }
 
 static int sdl_seek_func(void *datasource, ogg_int64_t offset, int whence)
@@ -131,10 +135,11 @@ OGG_music *OGG_new_RW(SDL_RWops *rw)
 	OGG_music *music;
 	ov_callbacks callbacks;
 
-	callbacks.read_func 	= sdl_read_func;
-	callbacks.seek_func 	= sdl_seek_func;
-	callbacks.close_func	= sdl_close_func;
-	callbacks.tell_func 	= sdl_tell_func;
+//	callbacks.read_func_ void	= sdl_read_func_ void;
+	callbacks.read_func 		= sdl_read_func;
+	callbacks.seek_func 		= sdl_seek_func;
+	callbacks.close_func		= sdl_close_func;
+	callbacks.tell_func 		= sdl_tell_func;
 
 	music = (OGG_music *)malloc(sizeof *music);
 	if ( music )

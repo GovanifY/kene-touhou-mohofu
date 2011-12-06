@@ -31,23 +31,20 @@ static char rcsid =
 #include <stdlib.h>
 #include <string.h>
 
-#include "./../include/PSPL_error.h"			/* Žæ‚èŠ¸‚¦‚¸(‰¼) */
-#include "./../include/PSPL_video.h"			/* Žæ‚èŠ¸‚¦‚¸(‰¼) */
-#include "./PSPL_sysvideo.h"
-#include "./PSPL_blit.h"
-#include "./PSPL_RLEaccel_c.h"
-#include "./PSPL_pixels_c.h"
-#include "./PSPL_memops.h"
+#include "../include/PSPL_error.h"			/* Žæ‚èŠ¸‚¦‚¸(‰¼) */
+#include "../include/PSPL_video.h"			/* Žæ‚èŠ¸‚¦‚¸(‰¼) */
+#include "PSPL_sysvideo.h"
+#include "PSPL_blit.h"
+#include "PSPL_pixels_c.h"
+#include "PSPL_memops.h"
 
-
-
+#if (1==USE_RLEACCEL)
+	#include "PSPL_RLEaccel_c.h"
+#endif
 
 #ifndef SDL_SetError_bbb
 	#define SDL_SetError_bbb( ... )
 #endif
-
-
-
 
 /* The general purpose software blit routine */
 static int SDL_SoftBlit(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_Rect *dstrect)
@@ -186,10 +183,12 @@ int SDL_CalculateBlit(SDL_Surface *surface)
 {
 	int blit_index;
 	/* Clean everything out to start */
+	#if (1==USE_RLEACCEL)
 	if ( (surface->flags & SDL_RLEACCEL) == SDL_RLEACCEL )
 	{
 		SDL_UnRLESurface(surface, 1);
 	}
+	#endif /*(USE_RLEACCEL)*/
 	surface->map->sw_blit = NULL;
 
 	/* Figure out if an accelerated hardware blit is possible */
@@ -253,7 +252,8 @@ int SDL_CalculateBlit(SDL_Surface *surface)
 	}
 
 	/* Choose software blitting function */
-	if (surface->flags & SDL_RLEACCELOK
+	#if (1==USE_RLEACCEL)
+	if ( (surface->flags & SDL_RLEACCELOK)
 	   && (surface->flags & SDL_HWACCEL) != SDL_HWACCEL)
 	{
 		if (surface->map->identity
@@ -274,6 +274,7 @@ int SDL_CalculateBlit(SDL_Surface *surface)
 			}
 		}
 	}
+	#endif /*(USE_RLEACCEL)*/
 	if ( surface->map->sw_blit == NULL )
 	{
 		surface->map->sw_blit = SDL_SoftBlit;

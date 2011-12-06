@@ -31,17 +31,17 @@
 //	set_REG_DEST_XY(src);/* 発弾位置 座標xy */
 //	bakuhatsu_add_type_ccc(BAKUHATSU_ZAKO04/*BAKUHATSU_MINI00*/);/* ザコ消滅爆発 */
 
-static void move_zako_yarare(OBJ *src)
+static OBJ_CALL_FUNC(move_zako_yarare)
 {
 	/* 描画用グラ回転 */
 	src->rotationCCW1024	= (src->jyumyou<<6);
 	/* グラ拡大 */
-	src->m_zoom_x256		= (t256(4.0))-(src->jyumyou<<3);
-	src->m_zoom_y256		= (t256(4.0))-(src->jyumyou<<3);
+	src->m_zoom.x256		= (t256(4.0))-(src->jyumyou<<3);
+	src->m_zoom.y256		= (t256(4.0))-(src->jyumyou<<3);
 	/* 半透明 */
 	src->color32 -= 0x08000000; /* 8==256/32 */
 }
-static void init_zako_yarare(OBJ *src)
+static OBJ_CALL_FUNC(init_zako_yarare)
 {	// ザコ消滅爆発エフェクトを登録
 	src->callback_mover 	= move_zako_yarare;
 	src->callback_hit_teki	= NULL;
@@ -69,7 +69,7 @@ static void init_zako_yarare(OBJ *src)
 ---------------------------------------------------------*/
 
 /* 使い魔があるからglobal */
-global void callback_hit_zako(OBJ *src, OBJ *tama)
+global void callback_hit_zako(OBJ/**/ *src, OBJ/**/ *tama)
 {
 	/* 雑魚に自弾があたった場合の火花エフェクトを登録(現在Gu部分がないので描画してない) */
 	set_REG_DEST_XY(tama);/* 発弾位置 座標xy */
@@ -102,7 +102,7 @@ global void callback_hit_zako(OBJ *src, OBJ *tama)
 ---------------------------------------------------------*/
 static int ee_angle1024;
 static int ff_angle1024;
-/*static*/ void move_card_square_effect(OBJ *src)
+/*static*/ OBJ_CALL_FUNC(move_card_square_effect)
 {
 	ee_angle1024 += (4);	/* 4 回転速度 */
 	ff_angle1024 += (2);	/* 2 拡大縮小速度 */
@@ -121,21 +121,21 @@ static int ff_angle1024;
 			radius = (( (sin_value_t256))>>2)+16; /* 80==16+64 */
 		}
 		OBJ *h;
-		h					= &obj99[OBJ_HEAD_02_0x0900_KOTEI+FIX_OBJ_08_EFFECT01+i];
+		h					= &obj99[OBJ_HEAD_03_0x0a00_KOTEI+FIX_OBJ_08_EFFECT01+i];
 		#if (0)//
-		h->cx256			= src->cx256 + ((si n1024((ww_angle1024))*(radius)) );/*fps_factor*/	/* CCWの場合 */
-		h->cy256			= src->cy256 + ((co s1024((ww_angle1024))*(radius)) );/*fps_factor*/
+		h->center.x256			= src->center.x256 + ((si n1024((ww_angle1024))*(radius)) );/*fps_factor*/	/* CCWの場合 */
+		h->center.y256			= src->center.y256 + ((co s1024((ww_angle1024))*(radius)) );/*fps_factor*/
 		#else
 		{
 			int sin_value_t256; 	//	sin_value_t256 = 0;
 			int cos_value_t256; 	//	cos_value_t256 = 0;
 			int256_sincos1024( (ww_angle1024), &sin_value_t256, &cos_value_t256);
-			h->cx256			= src->cx256 + ((sin_value_t256*(radius)) );/*fps_factor*/
-			h->cy256			= src->cy256 + ((cos_value_t256*(radius)) );/*fps_factor*/
+			h->center.x256			= src->center.x256 + ((sin_value_t256*(radius)) );/*fps_factor*/
+			h->center.y256			= src->center.y256 + ((cos_value_t256*(radius)) );/*fps_factor*/
 		}
 		#endif
-		h->m_zoom_x256		= ( (1/*+255*/+(radius<<2)) );
-		h->m_zoom_y256		= ( (1/*+255*/+(radius<<2)) );
+		h->m_zoom.x256		= ( (1/*+255*/+(radius<<2)) );
+		h->m_zoom.y256		= ( (1/*+255*/+(radius<<2)) );
 		#if 1
 		/* 描画用角度(下が0度で左回り(反時計回り)) */
 		h->rotationCCW1024	= -ww_angle1024;
@@ -150,7 +150,7 @@ static int ff_angle1024;
 		for (i=0; i<5; i++)
 		{
 			OBJ *h;
-			h = &obj99[OBJ_HEAD_02_0x0900_KOTEI+FIX_OBJ_08_EFFECT01+i];
+			h = &obj99[OBJ_HEAD_03_0x0a00_KOTEI+FIX_OBJ_08_EFFECT01+i];
 			sprite_kotei_obj_r36_taihi(h);/*(effect obj使用中であるが退避位置へ退避)*/
 		}
 	}
@@ -160,23 +160,37 @@ static int ff_angle1024;
 /*---------------------------------------------------------
 	ボスオプション、共通
 ---------------------------------------------------------*/
-global void check_tukaima_time_out(OBJ *src)
+global int check_boss_action(void);
+global OBJ_CALL_FUNC(check_tukaima_kougeki_time_out)
 {
+	/*(攻撃処理があれば攻撃する。)*/
+	{/*(攻撃処理)*/
+		if (NULL != src->callback_kougeki)
+		{
+			(src->callback_kougeki)(src);
+		}
+	}
+	//
 	#if 0
 	/* ボスを倒すと皆破壊される。 */
 //	if (0==boss_life_value)/* ダメかも(?) */
 //	if (0==src->base_hp)/* ダメかも(?) */
 	OBJ *obj_boss;
-	obj_boss = &obj99[OBJ_HEAD_01_0x0800_TEKI+TEKI_OBJ_00_BOSS_HONTAI];/*(ボス本体)*/
+	obj_boss = &obj99[OBJ_HEAD_02_0x0900_TEKI_FIX+TEKI_OBJ_00_BOSS_HONTAI];/*(ボス本体)*/
 	if (0==obj_boss->base_hp)/* ダメかも(?) */
 	{
 		src->BOSS_DATA_05_move_jyumyou = (0);
 	}
 	#endif
-	if (CARD_BOSS_TIMER_0000_HATUDAN <= card.mode_timer)/*発弾時以外*/ /*(カード中以外)*/
+	#if (1)
+	/*(ボスがスペカを変えた場合、同期してボスオプションを消す)*/
+//	if (CARD_BOSS_TIMER_0000_HATUDAN <= card.mo de_state)/*発弾時以外*/ /*(カード中以外)*/
+//	if (boss_01_speka_kougeki != card.bo ss_select_action_callback)/*ボス、スペカで攻撃中。以外*/ /*(カード中以外)*/
+	if (check_boss_action())/*ボス、スペカで攻撃中。以外*/ /*(カード中以外)*/
 	{
 		src->BOSS_DATA_05_move_jyumyou = (0);/*消去*/
 	}
+	#endif
 	src->BOSS_DATA_05_move_jyumyou--;
 	if (0 > src->BOSS_DATA_05_move_jyumyou)
 	{
@@ -192,7 +206,7 @@ global void check_tukaima_time_out(OBJ *src)
 	ボスオプション、共通
 	時間切れの場合の透明度設定
 ---------------------------------------------------------*/
-global void set_timeout_alpha(OBJ *src)
+global OBJ_CALL_FUNC(set_timeout_alpha)
 {
 	if (0x1ff > (src->BOSS_DATA_05_move_jyumyou))
 	{

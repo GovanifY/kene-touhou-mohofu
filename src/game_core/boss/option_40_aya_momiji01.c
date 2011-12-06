@@ -19,9 +19,8 @@
 /*---------------------------------------------------------
 
 ---------------------------------------------------------*/
-
-/*static*/extern void add_zako_aya_5_momiji(OBJ *src);
-static void move_aya_momiji_oya(OBJ *src)
+/*static*/extern OBJ_CALL_FUNC(add_zako_aya_5_momiji);
+static OBJ_CALL_FUNC(move_aya_momiji_oya)
 {
 	src->BOSS_DATA_05_move_jyumyou--;/*fps_factor*/
 	if ((0 > src->BOSS_DATA_05_move_jyumyou))
@@ -29,8 +28,8 @@ static void move_aya_momiji_oya(OBJ *src)
 		add_zako_aya_5_momiji(src); 	/* 5方向もみじ小弾を生成 */
 		src->jyumyou = JYUMYOU_NASI;
 	}
-	src->cx256 += (src->vx256);/*fps_factor*/
-	src->cy256 += (src->vy256);/*fps_factor*/
+	src->center.x256 += (src->math_vector.x256);/*fps_factor*/
+	src->center.y256 += (src->math_vector.y256);/*fps_factor*/
 //
 	/* 親が画面外なら分裂しない */
 	gamen_gai_nara_zako_osimai(src);/* 画面外ならおしまい */
@@ -41,14 +40,14 @@ static void move_aya_momiji_oya(OBJ *src)
 
 ---------------------------------------------------------*/
 
-/*static*/ void add_zako_aya_doll(OBJ *src)
+/*static*/ OBJ_CALL_FUNC(add_zako_aya_doll)
 {
 	int angle1024;
 //	for (angle1024=(int)((1024)-(1024*2/24)); angle1024<(int)((1024)+(1024*3/24)); angle1024+=(int)(1024*1/24) )
 	for (angle1024=(0); angle1024<(1024); angle1024+=(int)(1024*1/24) )
 	{
 		OBJ *h;
-		h							= obj_add_A01_teki_error();
+		h							= obj_regist_teki();
 		if (NULL!=h)/* 登録できた場合のみ */
 		{
 			h->m_Hit256R			= ZAKO_ATARI16_PNG;
@@ -66,26 +65,26 @@ static void move_aya_momiji_oya(OBJ *src)
 			h->BOSS_DATA_05_move_jyumyou			= ((30+15)/*+1*/);
 			{
 				/* 初期位置 */
-				h->cx256			= src->cx256;
-				h->cy256			= src->cy256;
+				h->center.x256			= src->center.x256;
+				h->center.y256			= src->center.y256;
 			}
 			#if 1/*???*/
 			h->MOMIJI_KODOMO_next_angle1024 	= (angle1024);
 			#endif
 	//		regist_vector(h, speed256, angle512);
 		//	const int speed256 = t256(1.00);
-		//	h->vx256	= ((si n1024((angle1024))*(speed256))>>8);	/*fps_factor*/
-		//	h->vy256	= ((co s1024((angle1024))*(speed256))>>8);	/*fps_factor*/
+		//	h->math_vector.x256 = ((si n1024((angle1024))*(speed256))>>8);	/*fps_factor*/
+		//	h->math_vector.y256 = ((co s1024((angle1024))*(speed256))>>8);	/*fps_factor*/
 			#if (0)//
-			h->vx256	= ((si n1024((angle1024))));	/*fps_factor*/	/* CCWの場合 */
-			h->vy256	= ((co s1024((angle1024))));	/*fps_factor*/
+			h->math_vector.x256 = ((si n1024((angle1024))));	/*fps_factor*/	/* CCWの場合 */
+			h->math_vector.y256 = ((co s1024((angle1024))));	/*fps_factor*/
 			#else
 			{
 				int sin_value_t256; 		//	sin_value_t256 = 0;
 				int cos_value_t256; 		//	cos_value_t256 = 0;
 				int256_sincos1024( (angle1024), &sin_value_t256, &cos_value_t256);
-				h->vx256			= ((sin_value_t256));/*fps_factor*/
-				h->vy256			= ((cos_value_t256));/*fps_factor*/
+				h->math_vector.x256 		= ((sin_value_t256));/*fps_factor*/
+				h->math_vector.y256 		= ((cos_value_t256));/*fps_factor*/
 			}
 			#endif
 		}

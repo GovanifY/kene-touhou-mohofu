@@ -95,7 +95,7 @@ ne222:
 }
 
 /*---------------------------------------------------------
-
+	インタプリタ命令(オペコード)内部コード。
 ---------------------------------------------------------*/
 
 enum
@@ -147,7 +147,7 @@ enum
 
 typedef struct _kaiwa_youso_tag_
 {
-	s16 i_code; 		/* Interprited Code. / Intermediate Language, Command 中間言語 / 終わったかどうか */
+	s16 i_code; 	/* Interprited Code. / Intermediate Language, Command 中間言語 / 終わったかどうか */
 	s16 para1;
 	s16 para2;
 	s16 para3;
@@ -272,8 +272,7 @@ static void regist_kaiwa_youso(
 //			"kaiwa: s_command。" "\\n"
 //			"値: %d。 test ok。", str_stack_position);
 					if (0==tiny_strcmp(command, "OBJ_LOAD"))	{	new_kaiwa_youso->i_code = I_CODE_02_OBJ_LOAD;		strcpy( (&str_stack[str_stack_position][0]), c_p0);str_stack_position++;			}	/* 汎用オブジェのロード / 再読み込み / 汎用オブジェに画像を読みこむ。 */
-					if (0==tiny_strcmp(command, "OBJ_TEXT"))
-																{	new_kaiwa_youso->i_code = I_CODE_1c_STAGE_LOAD; 	strcpy( (&str_stack[str_stack_position][0]), c_p0);str_stack_position++;			}	/* 雑魚データー読みこみ */
+					if (0==tiny_strcmp(command, "OBJ_TEXT"))	{	new_kaiwa_youso->i_code = I_CODE_1c_STAGE_LOAD; 	strcpy( (&str_stack[str_stack_position][0]), c_p0);str_stack_position++;			}	/* 雑魚データー読みこみ */
 		if (0==tiny_strcmp(command, 			"OBJ"))
 		{
 					if (0==tiny_strcmp(c_p0,	"look"))		{	new_kaiwa_youso->i_code = I_CODE_00_OBJ_LOOK;			}	/* オブジェクト注目コマンド */
@@ -443,7 +442,6 @@ global void kaiwa_system_set_re_draw(void)
 /*---------------------------------------------------------
 	[ "i_code_" シナリオ会話システム内部コマンド]
 ---------------------------------------------------------*/
-extern void load_SDL_bg_file_name(char *file_name);
 
 //static int i_code_fade_bg_exec_fade;
 //MY_ICODE_GET_FUNC(i_code_get_bg_fade)
@@ -564,7 +562,7 @@ MY_ICODE_FUNC(i_code_fade_bg)
 	}
 	i_code_fade_bg_bg_alpha_speed = i_code_fade_bg_set_alpha_speed;
 	draw_bg 					= (1);/*on*/	/*check_draw_bg();*/
-	i_code_fade_bg_exec_fade 	= (1);/*on*/	/* 処理中 */
+	i_code_fade_bg_exec_fade	= (1);/*on*/	/* 処理中 */
 
 //	return /*(0)*/; 	/* 処理中 */
 }
@@ -628,25 +626,25 @@ static void obj_move_refresh(void)
 		}
 		else/* 注目オブジェ以外ならオフセットあり */
 		{	/*(隠れるモード ON)*/
-			offset_x	= my_std_obj->offset_x256;
-			offset_y	= my_std_obj->offset_y256;
+			offset_x	= my_std_obj->offset.x256;
+			offset_y	= my_std_obj->offset.y256;
 		// /* 色 */
 			my_std_obj->color32 = (0x60ffffff);/*(半透明 [180/alpha255])*/
 		}
 		/* 合成位置[A]として、あらかじめ移動完了位置を算出しておく */
-	//	my_std_obj->target_x256 = my_std_obj->origin_x256 + offset_x + ((-((my_std_obj->w)>>1))<<8);	/* 移動完了座標 */
-	//	my_std_obj->target_y256 = my_std_obj->origin_y256 + offset_y + ((-((my_std_obj->h)>>1))<<8);	/* 移動完了座標 */
-	//	my_std_obj->target_x256 = my_std_obj->origin_x256 + offset_x + ((-((1<<(my_std_obj->w_bit))>>1))<<8);	/* 移動完了座標 */
-	//	my_std_obj->target_y256 = my_std_obj->origin_y256 + offset_y + ((-((1<<(my_std_obj->h_bit))>>1))<<8);	/* 移動完了座標 */
-		my_std_obj->target_x256 = my_std_obj->origin_x256 + offset_x + ((-(( (my_std_obj->width_2n))>>1))<<8);		/* 移動完了座標 */
-		my_std_obj->target_y256 = my_std_obj->origin_y256 + offset_y + ((-(( (my_std_obj->height_2n))>>1))<<8); 	/* 移動完了座標 */
-		//	my_std_obj->target_x256 	= (my_std_obj->target_x256);//移動完了予定位置
-		//	my_std_obj->target_y256 	= (my_std_obj->target_y256);//移動完了予定位置
+	//	my_std_obj->target.x256 = my_std_obj->origin.x256 + offset_x + ((-((my_std_obj->w)>>1))<<8);	/* 移動完了座標 */
+	//	my_std_obj->target.y256 = my_std_obj->origin.y256 + offset_y + ((-((my_std_obj->h)>>1))<<8);	/* 移動完了座標 */
+	//	my_std_obj->target.x256 = my_std_obj->origin.x256 + offset_x + ((-((1<<(my_std_obj->w_bit))>>1))<<8);	/* 移動完了座標 */
+	//	my_std_obj->target.y256 = my_std_obj->origin.y256 + offset_y + ((-((1<<(my_std_obj->h_bit))>>1))<<8);	/* 移動完了座標 */
+		my_std_obj->target.x256 = my_std_obj->origin.x256 + offset_x + ((-(( (my_std_obj->width_2n))>>1))<<8);		/* 移動完了座標 */
+		my_std_obj->target.y256 = my_std_obj->origin.y256 + offset_y + ((-(( (my_std_obj->height_2n))>>1))<<8); 	/* 移動完了座標 */
+		//	my_std_obj->target.x256 	= (my_std_obj->target.x256);//移動完了予定位置
+		//	my_std_obj->target.y256 	= (my_std_obj->target.y256);//移動完了予定位置
 
 		/* 現在位置を、合成位置[B]として保存。 */
 		{
-			my_std_obj->alt_x256		= (my_std_obj->cx256);//現在位置
-			my_std_obj->alt_y256		= (my_std_obj->cy256);//現在位置
+			my_std_obj->alt.x256		= (my_std_obj->center.x256);//現在位置
+			my_std_obj->alt.y256		= (my_std_obj->center.y256);//現在位置
 		}
 		/*(合成到達割合の設定)*/
 		my_std_obj->toutatu_wariai256 = (0);			/* 初速度 (x32) */
@@ -671,8 +669,8 @@ MY_ICODE_FUNC(i_code_obj_xy)
 	KAIWA_OBJ *my_std_obj;
 	my_std_obj = &kaiwa_sprite[((num)&(KAIWA_OBJ_99_MAX-1))]; /* 汎用オブジェ */
 	//
-	my_std_obj->origin_x256 = ((origin_x)<<8);		/* 原点座標の設定 */
-	my_std_obj->origin_y256 = ((origin_y)<<8);		/* 原点座標の設定 */
+	my_std_obj->origin.x256 = ((origin_x)<<8);		/* 原点座標の設定 */
+	my_std_obj->origin.y256 = ((origin_y)<<8);		/* 原点座標の設定 */
 	obj_move_refresh();
 }
 
@@ -722,7 +720,7 @@ MY_ICODE_FUNC(i_code_obj_load_gazo)
 		//
 		str_stack_position++;/*pop_string();(文字列スタックを消化する)*/
 	}
-	TGameTexture_Load_Surface(TEX_09_TACHIE_L+sitei_number);
+	psp_load_texture(TEX_09_TACHIE_L+sitei_number);
 	#if 0
 	/*(要らない？) (別で設定すれば要らない)  */
 	kaiwa_obj_set2n(sitei_number);
@@ -783,7 +781,7 @@ MY_ICODE_FUNC(i_code_load_stage)
 			my_file_common_name );
 	}
 	#endif
-//	TGameTexture_Load_Surface(TEX_09_TACHIE_L+sitei_number);
+//	psp_load_texture(TEX_09_TACHIE_L+sitei_number);
 	{
 		/* Load next stage */
 		load_stage_data();//	ステージ読み込み。
@@ -798,12 +796,12 @@ enum /* マルチタスク機能のタスクスイッチ */
 {																		// 意味。
 	TASK_SWITCH_00_EXECUTE							= 0x00,/*(0<<0)*/	// 会話スクリプト処理実行中。
 
-	TASK_SWITCH_01_HOLD_REASON_KEY_CHECK_ON_BOOT	= 0x01,/*(1<<3)*/	// スクリプト開始時に特別に、キー入力待ちを行うその為、スクリプト停止中。
-	TASK_SWITCH_02_HOLD_REASON_KEY_HOLD_MODE		= 0x02,/*(1<<2)*/	// キー入力待ちでスクリプト処理停止中。
+	TASK_SWITCH_01_HOLD_REASON_KEY_CHECK_ON_BOOT	= 0x01,/*(1<<0)*/	// スクリプト開始時に特別に、キー入力待ちを行うその為、スクリプト停止中。
+	TASK_SWITCH_02_HOLD_REASON_KEY_HOLD_MODE		= 0x02,/*(1<<1)*/	// キー入力待ちでスクリプト処理停止中。
 	TASK_SWITCH_04_HOLD_REASON_WAIT_COUNT			= 0x04,/*(1<<2)*/	// 指定ウェイト待ちでスクリプト処理停止中。
 	//
-	TASK_SWITCH_10_HOLD_REASON_TEXT_DRAWING 		= 0x10,/*(1<<1)*/	// テキスト描画中でスクリプト停止中。
-	TASK_SWITCH_20_HOLD_REASON_OBJECT_WAIT			= 0x20,/*(1<<0)*/	// オブジェクト移動位置まで移動するのを待ち中。(オブジェクト移動完了状態までスクリプト停止して待つ)
+	TASK_SWITCH_10_HOLD_REASON_TEXT_DRAWING 		= 0x10,/*(1<<4)*/	// テキスト描画中でスクリプト停止中。
+	TASK_SWITCH_20_HOLD_REASON_OBJECT_WAIT			= 0x20,/*(1<<5)*/	// オブジェクト移動位置まで移動するのを待ち中。(オブジェクト移動完了状態までスクリプト停止して待つ)
 };
 // HOLD_REASON == (会話スクリプト)停止理由。
 enum
@@ -995,10 +993,10 @@ static void kaiwa_system_vbl_sprite_move(void)
 			#endif
 			//------------------
 			#if (1)/*(到達割合を考慮して、合成する。)*/
-			REG_00_SRC_X	= ((my_std_obj->alt_x256)); 	/*(合成位置[A]t256()形式)*/
-			REG_01_SRC_Y	= ((my_std_obj->alt_y256)); 	/*(合成位置[A]t256()形式)*/
-			REG_02_DEST_X	= ((my_std_obj->target_x256));	/*(合成位置[B]t256()形式)*/
-			REG_03_DEST_Y	= ((my_std_obj->target_y256));	/*(合成位置[B]t256()形式)*/
+			REG_00_SRC_X	= ((my_std_obj->alt.x256)); 	/*(合成位置[A]t256()形式)*/
+			REG_01_SRC_Y	= ((my_std_obj->alt.y256)); 	/*(合成位置[A]t256()形式)*/
+			REG_02_DEST_X	= ((my_std_obj->target.x256));	/*(合成位置[B]t256()形式)*/
+			REG_03_DEST_Y	= ((my_std_obj->target.y256));	/*(合成位置[B]t256()形式)*/
 			REG_11_GOUSEI_WARIAI256 	= move_rate256;/*(合成割合t256()形式)*/
 			multiprex_rate_vector();/*(破壊レジスタ多いので注意)*/
 			#endif
@@ -1006,8 +1004,8 @@ static void kaiwa_system_vbl_sprite_move(void)
 			// REG_02_DEST_X: 合成値
 			// REG_03_DEST_Y: 合成値
 			//-----------------------
-			my_std_obj->cx256 = (REG_02_DEST_X);
-			my_std_obj->cy256 = (REG_03_DEST_Y);
+			my_std_obj->center.x256 = (REG_02_DEST_X);
+			my_std_obj->center.y256 = (REG_03_DEST_Y);
 		}
 	}
 }
@@ -1079,14 +1077,14 @@ static /*int*/void kaiwa_system_execute(void)
 	};
 	goto *aaa[(ssc->i_code)&0x1f];/*(ccc)&(I_CODE_99_MAX-1)*/
 	{
-	case_I_CODE_00_OBJ_LOOK:			MY_ICODE_CALL(i_code_obj_look);			goto I_CODE_break;	/* オブジェクト注目コマンド */
-	case_I_CODE_01_OBJ_XY:				MY_ICODE_CALL(i_code_obj_xy); 			goto I_CODE_break;	/*(原点設定のみ)*/
-	case_I_CODE_02_OBJ_LOAD:			MY_ICODE_CALL(i_code_obj_load_gazo);	goto I_CODE_break;	/*(読みこみのみ) 汎用絵  立ち絵L	立ち絵R */
-	case_I_CODE_04_OBJ_DRAW_ON_OFF: 	MY_ICODE_CALL(i_code_obj_draw);			goto I_CODE_break;	/*(表示の 0:off / 1:on ) 汎用絵  立ち絵L	立ち絵R */
+	case_I_CODE_00_OBJ_LOOK:			MY_ICODE_CALL(i_code_obj_look); 					goto I_CODE_break;	/* オブジェクト注目コマンド */
+	case_I_CODE_01_OBJ_XY:				MY_ICODE_CALL(i_code_obj_xy);						goto I_CODE_break;	/*(原点設定のみ)*/
+	case_I_CODE_02_OBJ_LOAD:			MY_ICODE_CALL(i_code_obj_load_gazo);				goto I_CODE_break;	/*(読みこみのみ) 汎用絵  立ち絵L	立ち絵R */
+	case_I_CODE_04_OBJ_DRAW_ON_OFF: 	MY_ICODE_CALL(i_code_obj_draw); 					goto I_CODE_break;	/*(表示の 0:off / 1:on ) 汎用絵  立ち絵L	立ち絵R */
 	//
 	case_I_CODE_03_OBJ_WAIT:			kaiwa_system_hold_mode |= TASK_SWITCH_20_HOLD_REASON_OBJECT_WAIT; /* 停止 */	goto I_CODE_break;
 	//
-	case_I_CODE_08_DRAW_TEXT:	//廃止	cg.dr aw_flag_kaiwa_screen	= ssc->para1;
+	case_I_CODE_08_DRAW_TEXT:
 		#if (0)/*(最近の(gcc4.3.5)はたぶん同じ。gcc4.0.2ぐらい古いと違う。)*/
 		if (ssc->para1&1)	{	ml_font[(0)].haikei 		= (ML_HAIKEI_03_MESSAGE);/* [黒/会話用背景]せりふ背景on */}
 		else				{	ml_font[(0)].haikei 		= (ML_HAIKEI_m1_OFF);/* せりふ背景off */}
@@ -1094,44 +1092,42 @@ static /*int*/void kaiwa_system_execute(void)
 		{	ml_font[(0)].haikei 		= (ssc->para1&1)?(ML_HAIKEI_03_MESSAGE)/* [黒/会話用背景]せりふ背景on */:(ML_HAIKEI_m1_OFF);/* せりふ背景off */}
 		#endif
 		goto I_CODE_break;
-	case_I_CODE_09_DRAW_BG: 		draw_bg 					= ssc->para1;		goto I_CODE_break;/* view bg, 0:on, 1:off */
-	case_I_CODE_0a_DRAW_PANEL:		cg.side_panel_draw_flag 	= ssc->para1;		goto I_CODE_break;
-	case_I_CODE_0b_DRAW_SKIP:		kaiwa_system_skip_mode		= ssc->para1;		goto I_CODE_break;
+	case_I_CODE_09_DRAW_BG: 		draw_bg 					= ssc->para1;				goto I_CODE_break;/* view bg, 0:on, 1:off */
+	case_I_CODE_0a_DRAW_PANEL:		cg.side_panel_draw_flag 	= ssc->para1;				goto I_CODE_break;
+	case_I_CODE_0b_DRAW_SKIP:		kaiwa_system_skip_mode		= ssc->para1;				goto I_CODE_break;
 	case_I_CODE_0c_DRAW_WAIT:		kaiwa_system_wait_mode		= ssc->para1;		kaiwa_system_hold_mode |= TASK_SWITCH_04_HOLD_REASON_WAIT_COUNT;						goto I_CODE_break;
 	//
 	case_I_CODE_10_TEXT:
 				strcpy(i_code_text_para0, (&str_stack[str_stack_position][0]));str_stack_position++;/*pop_string();(文字列スタックを消化する)*/
 			//	strcpy(i_code_text_para0, ssc->para0);
-					kaiwa_system_hold_mode |= TASK_SWITCH_10_HOLD_REASON_TEXT_DRAWING;					goto I_CODE_break;
+					kaiwa_system_hold_mode |= TASK_SWITCH_10_HOLD_REASON_TEXT_DRAWING;		goto I_CODE_break;
 	case_I_CODE_11_HOLD:			limit_timer 				= byou60(10);/*(10[秒]制限時間。本家互換)*/ 	kaiwa_system_hold_mode |= TASK_SWITCH_02_HOLD_REASON_KEY_HOLD_MODE; goto I_CODE_break;
-	case_I_CODE_12_FONT_COLOR:		i_code_text_color			= ssc->para1;						goto I_CODE_break;
-	case_I_CODE_13_FONT_SPEED:		i_code_text_speed_wait		= ssc->para1;						goto I_CODE_break;
+	case_I_CODE_12_FONT_COLOR:		i_code_text_color			= ssc->para1;				goto I_CODE_break;
+	case_I_CODE_13_FONT_SPEED:		i_code_text_speed_wait		= ssc->para1;				goto I_CODE_break;
 	//
-	case_I_CODE_14_BG_LOAD: 		MY_ICODE_CALL(i_code_load_bg);									goto I_CODE_break;
-	case_I_CODE_15_BG_FADE: 		MY_ICODE_CALL(i_code_fade_bg);									goto I_CODE_break;
-	case_I_CODE_16_BGM: 			play_music_num( (ssc->para1) ); 								goto I_CODE_break;
-	case_I_CODE_17_BGM_VOLUME:		set_music_volume( (ssc->para1) );								goto I_CODE_break;
-	case_I_CODE_18_BOSS_LOAD:		called_from_kaiwa_system_boss_load( (ssc->para1) ); 			goto I_CODE_break;/*boss_number*/
+	case_I_CODE_14_BG_LOAD: 		MY_ICODE_CALL(i_code_load_bg);							goto I_CODE_break;
+	case_I_CODE_15_BG_FADE: 		MY_ICODE_CALL(i_code_fade_bg);							goto I_CODE_break;
+	case_I_CODE_16_BGM: 			play_music_num( (ssc->para1) ); 						goto I_CODE_break;
+	case_I_CODE_17_BGM_VOLUME:		set_music_volume( (ssc->para1) );						goto I_CODE_break;
+	case_I_CODE_18_BOSS_LOAD:		called_from_kaiwa_system_boss_load( (ssc->para1) ); 	goto I_CODE_break;/*boss_number*/
 	case_I_CODE_19_BOSS_TERMINATE:
-									#if (1==USE_r36_SCENE_FLAG)
+									#if (1)//(USE_r36_SCENE_FLAG)
 	/* off / 道中コマンド追加読み込み処理を停止する。 */
 //	cg.state_flag		&= (~SCENE_NUMBER_MASK);	/*(シーンを消す)*/
 	cg.state_flag		&= (0xffff00ffu);	/*(シーンを消す)*/
 	cg.state_flag		|= (0x00008000u); //プレイヤーループを抜ける処理(とりあえず????)
-									#else
-									cg.state_flag |= STATE_FLAG_13_GAME_TERMINATE;
 									#endif
-																									goto I_CODE_break;
+																							goto I_CODE_break;
 	#if (1==USE_AFTER_LOAD_STAGE)
-	case_I_CODE_1c_STAGE_LOAD:		MY_ICODE_CALL(i_code_load_stage); 								goto I_CODE_break;	/*(読みこみのみ) 汎用絵  立ち絵L	立ち絵R */
+	case_I_CODE_1c_STAGE_LOAD:		MY_ICODE_CALL(i_code_load_stage);						goto I_CODE_break;	/*(読みこみのみ) 汎用絵  立ち絵L	立ち絵R */
 	#endif
 		/*	called_from_kaiwa_system_boss_start();*/
 		/*	cg.state_flag |= STATE_FLAG_0x0800_IS_BOSS; */
 		/* ボス戦闘前の会話終了を設定 */
-//	case_I_CODE_1a_BOSS_START:		/*ダミー*/; 													goto I_CODE_break;
-//	case_I_CODE_1b_BOSS_RESULT: 	/*ダミー*/; 													goto I_CODE_break;
+//	case_I_CODE_1a_BOSS_START:		/*ダミー*/; 											goto I_CODE_break;
+//	case_I_CODE_1b_BOSS_RESULT: 	/*ダミー*/; 											goto I_CODE_break;
 	//
-//	case_I_CODE_OBJ_SPEED:			MY_ICODE_CALL(i_code_set_sprite_speed);							goto I_CODE_break;
+//	case_I_CODE_OBJ_SPEED:			MY_ICODE_CALL(i_code_set_sprite_speed); 				goto I_CODE_break;
 	// [テキストのカーソル制御]
 //	case I_CODE_CUR_POP:			cursor_x = cursor_x_chached;	cursor_y = cursor_y_chached;		break;	/* カーソル位置、復元 */
 //	case I_CODE_CUR_PUSH:			cursor_x_chached = cursor_x;	cursor_y_chached = cursor_y;		break;	/* カーソル位置、記憶 */
@@ -1162,7 +1158,6 @@ I_CODE_break:
 		kaiwa_system_terminate_flag = KAIWA_SYSTEM_00_CONTINUE;/*(0)*/		/* シナリオ会話処理はつづく */
 	}
 }
-
 
 
 /*---------------------------------------------------------
@@ -1226,7 +1221,6 @@ static void aaa_kaiwa_system_reset(void)
 {
 //	bg_alpha = 0;
 	ml_font[(0)].haikei 		= (ML_HAIKEI_m1_OFF);/* せりふ背景off */
-//廃止	cg.dr aw_flag_kaiwa_screen	= (0);	/* せりふウィンドウ表示フラグ off */
 	load_kaiwa_youso_free();	/* 前回のシナリオがメモリにあればすべて開放。 */
 	aaa_kaiwa_system_reset();
 //	draw_bg = 0;/* (描画と分離できない)バグ修正 */
@@ -1238,13 +1232,7 @@ static void aaa_kaiwa_system_reset(void)
 ---------------------------------------------------------*/
 static void kaiwa_system_terminate_game_core(void)
 {
-	#if (1==USE_r36_SCENE_FLAG)
 	NEXT_SCENE;
-	#else
-	cg.state_flag &= (~(STATE_FLAG_0x0200_IS_KAIWA_MODE));/*off*/
-	cg.state_flag |= STATE_FLAG_0x0300_END_KAIWA_MODE;
-	/* ボス戦闘前後イベント pd_bo ssmode = B08_START; = B09_STAGE_LOAD; */
-	#endif
 }
 
 
@@ -1279,7 +1267,7 @@ global void kaiwa_system_execute_move_only_main(void)
 			/* ==== text描画処理(非同期) ==== */
 			kaijyo_text_drawing();			/* 描画終了なら、解除。 */
 		}
-	#if (1==USE_r36_SCENE_FLAG)
+	#if (1)//(USE_r36_SCENE_FLAG)
 		/*
 			r36から道中イベントでスクリプトが呼ばれるようになりました。
 			道中でキー入力待ちがあると、ショットが撃てないので、
@@ -1295,7 +1283,6 @@ global void kaiwa_system_execute_move_only_main(void)
 			kaiwa_system_hold_mode &= ~(TASK_SWITCH_02_HOLD_REASON_KEY_HOLD_MODE|TASK_SWITCH_01_HOLD_REASON_KEY_CHECK_ON_BOOT);
 		}
 		else
-	#else
 	#endif
 		{
 			if (kaiwa_system_hold_mode & TASK_SWITCH_02_HOLD_REASON_KEY_HOLD_MODE)
@@ -1326,13 +1313,13 @@ global void kaiwa_system_execute_move_only_main(void)
 /*static*/ void kaiwa_init_obj_position(void)
 {
 	// プレイヤー
-	kaiwa_sprite[0].cx256		= t256(-96);		kaiwa_sprite[0].cy256		= t256(16);
-	kaiwa_sprite[0].origin_x256 = t256(-96);		kaiwa_sprite[0].origin_y256 = t256(16);
-	kaiwa_sprite[0].offset_x256 = t256(-32);		kaiwa_sprite[0].offset_y256 = t256(16);
+	kaiwa_sprite[0].center.x256 = t256(-96);		kaiwa_sprite[0].center.y256 = t256(16);
+	kaiwa_sprite[0].origin.x256 = t256(-96);		kaiwa_sprite[0].origin.y256 = t256(16);
+	kaiwa_sprite[0].offset.x256 = t256(-32);		kaiwa_sprite[0].offset.y256 = t256(16);
 	// ボス
-	kaiwa_sprite[1].cx256		= t256(352);		kaiwa_sprite[1].cy256		= t256(16);
-	kaiwa_sprite[1].origin_x256 = t256(352);		kaiwa_sprite[1].origin_y256 = t256(16);
-	kaiwa_sprite[1].offset_x256 = t256( 32);		kaiwa_sprite[1].offset_y256 = t256(16);
+	kaiwa_sprite[1].center.x256 = t256(352);		kaiwa_sprite[1].center.y256 = t256(16);
+	kaiwa_sprite[1].origin.x256 = t256(352);		kaiwa_sprite[1].origin.y256 = t256(16);
+	kaiwa_sprite[1].offset.x256 = t256( 32);		kaiwa_sprite[1].offset.y256 = t256(16);
 }
 
 /*---------------------------------------------------------
@@ -1364,10 +1351,10 @@ static int aaa_kaiwa_system_start(void) /* シナリオファイル名と背景ファイル名 */
 //			kaiwa_sprite[i].img = NULL;
 //		}
 //	}
-//	draw_bg 				= (0);
+//	draw_bg 					= (0);
 		#endif
 	kaiwa_init_obj_position();
-	obj_look_up 							= (KAIWA_OBJ_99_MAX)+(1);/*(全部注目オブジェに設定)*/
+	obj_look_up 				= (KAIWA_OBJ_99_MAX)+(1);/*(全部注目オブジェに設定)*/
 	#endif
 	//
 //	kaiwa_all_obj_draw_on_off(1);	/* 立ち絵を描画する。 */
@@ -1382,7 +1369,6 @@ static int aaa_kaiwa_system_start(void) /* シナリオファイル名と背景ファイル名 */
 	kaiwa_system_terminate_flag = KAIWA_SYSTEM_00_CONTINUE;/*(0)*/	/* 初期化 */
 
 	ml_font[(0)].haikei 		= (ML_HAIKEI_03_MESSAGE);/* [黒/会話用背景]せりふ背景on */
-//廃止	cg.dr aw_flag_kaiwa_screen	= (1);/*0*/
 	limit_timer 				= byou60(1);/*(1[秒]制限時間。起動時のパッドチェック時間)*/
 	i_code_text_color			= (7);
 	i_code_text_speed_wait		= (0);
@@ -1405,7 +1391,7 @@ r35 r36x
 */
 global void kaiwa_load_ivent(void)
 {
-#if (1==USE_r36_SCENE_FLAG)
+/*(USE_r36_SCENE_FLAG)*/
 	/* ファイル名作成 */
 	{
 		/* 'data' '/kaiwa/' の分のオフセット */
@@ -1417,7 +1403,7 @@ global void kaiwa_load_ivent(void)
 		NEXT_SCENE;
 		//
 		//#if (1==USE_EASY_BADEND)
-		if ('1'==my_file_common_name[DIRECTRY_NAME_OFFSET+4])/*(bad判定が必要ならbad判定処理)*/
+/*(バグ抜き)*/if (/*'1'*/'2'==my_file_common_name[DIRECTRY_NAME_OFFSET+4])/*(bad判定が必要ならbad判定処理)*/
 		{
 			/* 5面終わりでeasyの場合、特殊処理(BAD END) */
 			{
@@ -1444,59 +1430,6 @@ global void kaiwa_load_ivent(void)
 	{
 		NEXT_SCENE;
 	}
-
-#else
-	/* ファイル名作成 */
-	{
-		/* 'data' '/kaiwa/' の分のオフセット */
-		#define DIRECTRY_NAME_OFFSET	(DIRECTRY_NAME_DATA_LENGTH + DIRECTRY_NAME_KAIWA_LENGTH)
-		strcpy(my_file_common_name, DIRECTRY_NAME_DATA_STR DIRECTRY_NAME_KAIWA_STR "Z/sZ1" DIRECTRY_NAME_KAKUCHOUSI_TEXT_STR);
-		my_file_common_name[DIRECTRY_NAME_OFFSET+0] = ('0'+(cg_game_select_player));
-		my_file_common_name[DIRECTRY_NAME_OFFSET+3] = get_stage_chr(cg.game_now_stage);
-		//
-		if ((cg.state_flag & STATE_FLAG_0x0800_IS_BOSS))/*(ボス戦闘後の場合)*/
-		{
-			// my_file_common_name[DIRECTRY_NAME_OFFSET+4] = '1';
-			//#if (1==USE_EASY_BADEND)
-			/* 5面終わりでeasyの場合、特殊処理(BAD END) */
-			{
-			//	if ((5) == (cg.game_now_stage))/*(5面の場合)*/
-				if (
-					((5) == (cg.game_now_stage))/*(5面の場合)*/
-					||
-					((6) == (cg.game_now_stage))/*(6面の場合、隠しエンド)*/
-				)
-				{
-					if ((0)==(cg.game_difficulty))/*(easyの場合)*/
-					{
-					//	my_file_common_name[DIRECTRY_NAME_OFFSET+4] = '2';
-						my_file_common_name[DIRECTRY_NAME_OFFSET+4]++;/*(bad確定)*/
-					}
-				}
-			}
-			//#endif
-		}
-		else/*(ボス戦闘前の場合)*/
-		{
-		//	my_file_common_name[DIRECTRY_NAME_OFFSET+4] = '0';
-			my_file_common_name[DIRECTRY_NAME_OFFSET+4]--;
-		}
-	}
-	kaiwa_system_terminate_call_func = kaiwa_system_terminate_game_core;	/* シナリオ会話 終わったらゲームコア用状態遷移 */
-	load_kaiwa_youso_free();			/* 前回のシナリオがメモリにあればすべて開放。 */
-	if (0 == aaa_kaiwa_system_start())	// ファイルがない場合はイベントを飛ばす
-	{
-		cg.state_flag |= STATE_FLAG_0x0300_END_KAIWA_MODE;
-	}
-	else
-	{
-		cg.state_flag |= STATE_FLAG_0x0200_IS_KAIWA_MODE;	/*on*/
-		#if 0
-		/* シナリオ中にボムが発生してしまう。バグがあるので。 */
-		pd_bomber_time = 0;
-		#endif
-	}
-#endif
 }
 
 
@@ -1505,7 +1438,7 @@ global void kaiwa_load_ivent(void)
 	「ストーリーモード専用」シナリオ動作
 ---------------------------------------------------------*/
 
-static void story_mode_local_work(void)
+static MAIN_CALL_FUNC(story_mode_local_work)
 {
 	kaiwa_system_SDL_BG_draw(); 				/* シナリオ会話システム SDL_BG 描画(遅い) */
 	kaiwa_system_execute_move_only_main();		/* シナリオ会話システム 動作(移動) */
@@ -1516,13 +1449,14 @@ static void story_mode_local_work(void)
 	「ストーリーモード専用」シナリオ開始
 ---------------------------------------------------------*/
 
-global void story_mode_start(void)
+global MAIN_CALL_FUNC(story_mode_start)
 {
 //	bg_alpha = 0;
 	/* ファイル名作成 */
 	{
 		strcpy(my_file_common_name, DIRECTRY_NAME_DATA_STR DIRECTRY_NAME_KAIWA_STR "story" DIRECTRY_NAME_KAKUCHOUSI_TEXT_STR);
 	}
+/*(バグ抜き)*/	cg.state_flag |= 0x0400;
 	kaiwa_system_terminate_call_func = menu_cancel_and_voice;		/* 会話モードシナリオが終わったらタイトルメニューへ移動 */
 	load_kaiwa_youso_free();		/* 前回のシナリオがメモリにあればすべて開放。 */
 	aaa_kaiwa_system_start();		/* ストーリー用のシナリオ会話システム 開始 */
@@ -1537,15 +1471,13 @@ global void story_mode_start(void)
 /*---------------------------------------------------------
 	pspでは開放が正常動作出来ないので、起動時に確保して(終了時まで)開放しない
 ---------------------------------------------------------*/
-
-global void kaiwa_system_init(void)/* 組み込み */
+/*only boot once*/global void kaiwa_system_boot_init(void)/* 組み込み */
 {
 	#if 1
 	kaiwa_youso_list_bigin	= NULL; 	/* 命令列の開始位置を保持 */
 	kaiwa_youso_list_scan	= NULL; 	/* 命令走査位置で使用 */
 //
 	ml_font[(0)].haikei 		= (ML_HAIKEI_m1_OFF);/* せりふ背景off */
-//廃止	cg.dr aw_flag_kaiwa_screen	= (0);		/* せりふウィンドウ表示フラグ */
 	draw_bg 					= (0);			/* 0:off 背景表示フラグ */
 	kanji_cursor_move_home_position();			/* 漢字カーソルをホームポジションへ移動 */
 	#endif
@@ -1560,11 +1492,9 @@ global void kaiwa_system_init(void)/* 組み込み */
 	ハングアップしたりするので、取り敢えず無効になってる。
 	(開放しなくても終了すれば、OSがメモリ回収するので問題ないって言えば問題ない)
 ---------------------------------------------------------*/
-
-global void kaiwa_system_exit(void)/* 外す */
+#if 0/* 本当は要る */
+/*only exit once*/global void kaiwa_system_boot_exit(void)/* 外す */
 {
-	/*msg_window_init()*/
-//
-	#if 0/* 本当は要る */
-	#endif
+	;
 }
+#endif

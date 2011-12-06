@@ -6,6 +6,12 @@
 	http://code.google.com/p/kene-touhou-mohofu/
 	-------------------------------------------------------
 	道中の中ボス
+	ToDo:
+		(r39u1)背後の魔方陣は、現在の形態は廃止し、
+		使い魔システムに移動する必要がある。
+		-------------------------------------------------------
+		中ボス->使い魔
+		ボス->使い魔
 	-------------------------------------------------------
 		"ルーミア", 				"GFAIRY",
 		"妖怪2"(赤),				"GFAIRY",
@@ -19,7 +25,7 @@
 //	REG_08_REG0 	向き。
 ---------------------------------------------------------*/
 
-//#define YOKAI1_DATA_repeat				user_data05 	/* 繰り返し回数 */
+//#define YOKAI1_DATA_repeat			user_data05 	/* 繰り返し回数 */
 #define YOKAI1_DATA_start_limit_y256	user_data06 	/* 登場y座標 */
 //#define yokai_type					user_data07 	/* 妖怪の種類(0 ... 3) */
 	/* 開始するカード番号 */
@@ -43,7 +49,7 @@
 	OBJ *tama;	自弾
 ---------------------------------------------------------*/
 
-static void callback_hit_chuu_boss(OBJ *src, OBJ *tama)
+static void callback_hit_chuu_boss(OBJ/**/ *src, OBJ/**/ *tama)
 {
 	/* ボス & 中-ボスに自弾があたった場合の火花エフェクトを登録(現在Gu部分がないので描画してない) */
 	set_REG_DEST_XY(tama);/* 発弾位置 座標xy */
@@ -51,7 +57,7 @@ static void callback_hit_chuu_boss(OBJ *src, OBJ *tama)
 //
 	/* 上と分離した方がコード効率があがる。 */
 	{
-		src->base_hp -= tama->kougeki_ti; 	/* 攻撃して体力減らす(強さ分引く) */
+		src->base_hp -= tama->kougeki_ti;	/* 攻撃して体力減らす(強さ分引く) */
 		if (0 >= src->base_hp)			/* ０か負値なら、倒した。 */
 		{
 			#if 1/*要るの？*/
@@ -61,12 +67,12 @@ static void callback_hit_chuu_boss(OBJ *src, OBJ *tama)
 			bullets_to_hosi();/* 弾全部、星アイテムにする */
 		//
 			/* (ザコの)カスタムやられ処理 */
-			if (NULL != src->callback_loser)	/* カスタムやられ処理があれば実行。 */
-			{
-				src->callback_loser(src);	/* カスタムやられ処理を実行する。(標準は「ランダムテーブルからアイテム生成」) */
-				src->callback_loser = NULL; 	/* 実行したので(念の為)消す。 */
-				/* (やられ処理は1度しか実行しない) */
-			}
+/*[スペカコールバック共用なので不可能]*/	if (NULL != src->callback_loser)	/* カスタムやられ処理があれば実行。 */
+/*[スペカコールバック共用なので不可能]*/	{
+/*[スペカコールバック共用なので不可能]*/		src->callback_loser(src);	/* カスタムやられ処理を実行する。(標準は「ランダムテーブルからアイテム生成」) */
+/*[スペカコールバック共用なので不可能]*/		src->callback_loser = NULL; 	/* 実行したので(念の為)消す。 */
+/*[スペカコールバック共用なので不可能]*/		/* (やられ処理は1度しか実行しない) */
+/*[スペカコールバック共用なので不可能]*/	}
 			player_dummy_add_score(src->base_score);
 			//
 			bakuhatsu_add_circle(src, 0);
@@ -78,46 +84,26 @@ static void callback_hit_chuu_boss(OBJ *src, OBJ *tama)
 		}
 	}
 }
-		//	if (YOKAI_TYPE_00_RUMIA == src->yokai_type)
-		//	{
-		//		item_create_15_rumia(src);
-		//	}
-		//	else
-		//	{
-		//		item_create_14_yokai(src);
-		//	}
-
 
 /*---------------------------------------------------------
 
 ---------------------------------------------------------*/
-//	if (512+100 > src->jyumyou) 	// SS03:	/* しばし待つ */
-//	{
-//	//	if (0 > src->time_out)
-//		{
-//	//		src->time_out = 100/*150*/;
-//			/* 規定の繰り返し回数こなしたら退場 */
-//			src->YOKAI1_DATA_repeat--;
-//			if ((0) != src->YOKAI1_DATA_repeat) 	{	src->jyumyou = (512+100+512+100-1);/*SS01;*/		}/* 繰り返し */
-//			else									{	src->jyumyou = (512-1);/* = SS04*/					}/* 上へ退場 */
-//		}
-//	}
-//	else
+
 #define LIMIT_TIME_512	(1536)
-static void move_chuu_boss(OBJ *src)
+static OBJ_CALL_FUNC(move_chuu_boss)
 {
-	if ((OSIMAI_JIKAN_256) > src->jyumyou) 	/* 「上へ退場」(256[count]==約4秒) */
+	if ((OSIMAI_JIKAN_256) > src->jyumyou)	/* 「上へ退場」(256[count]==約4秒) */
 	{
 		#if 1/* 現在の実装方式は、あんま良くない気もする。 */
 		/* 倒した場合背後の魔方陣が消えているが、逃がした場合背後の魔方陣がある。 */
 		if (JYUMYOU_NASI <= src->YOKAI1_DATA_s2->jyumyou)/* 背後の魔方陣があれば移動。 */
 		{
-			src->YOKAI1_DATA_s2->cy256	-= t256(1.5);	/*fps_factor*/
+			src->YOKAI1_DATA_s2->center.y256	-= t256(1.5);	/*fps_factor*/
 		}
 		#endif
-		src->cy256						-= t256(1.5);	/*fps_factor*/
-		if (0 > (src->cy256+t256(55.0)))/* 55ドットとして(左上基点、縦のサイズ) */
-	//	if (0 > src->cy256)/* 簡略版 */
+		src->center.y256						-= t256(1.5);	/*fps_factor*/
+		if (0 > (src->center.y256+t256(55.0)))/* 55ドットとして(左上基点、縦のサイズ) */
+	//	if (0 > src->center.y256)/* 簡略版 */
 		{
 			src->jyumyou						= JYUMYOU_NASI;
 			if (JYUMYOU_NASI <= src->YOKAI1_DATA_s2->jyumyou)/* 背後の魔方陣があれば消去。 */
@@ -152,11 +138,11 @@ static void move_chuu_boss(OBJ *src)
 	else
 //	if ((512) > src->jyumyou)	/* 「上から登場」(128[count]==約2秒) */
 	{
-		src->YOKAI1_DATA_s2->cy256	+= t256(2.0);	/*fps_factor*/
-		src->cy256					+= t256(2.0);	/*fps_factor*/
-		if ((src->YOKAI1_DATA_start_limit_y256) < src->cy256)
+		src->YOKAI1_DATA_s2->center.y256	+= t256(2.0);	/*fps_factor*/
+		src->center.y256					+= t256(2.0);	/*fps_factor*/
+		if ((src->YOKAI1_DATA_start_limit_y256) < src->center.y256)
 		{
-			src->jyumyou 			= ((256+LIMIT_TIME_512)-1);/* 「カードが終わるまで待機」へ設定。 */
+			src->jyumyou			= ((256+LIMIT_TIME_512)-1);/* 「カードが終わるまで待機」へ設定。 */
 			card.spell_used_number	= card.address_temporaly;	/* カードをセット */		/* "妖怪2"&"ルーミア"専用 */
 			card_maikai_init(src);/*(r35-, カードの初期化。カードが変わると毎回行う必要がある)*/
 		}
@@ -182,31 +168,26 @@ static void move_chuu_boss(OBJ *src)
 		card_generate(src); 	/* スペルをCPU実行し、カードを１フレーム生成する。 */
 	}
 }
-	//	if (YOKAI_TYPE_00_RUMIA == src->yokai_type)
-	//	else
-	//	{
-	//		zako_anime_type03(src);
-	//	}
 
 
 /*---------------------------------------------------------
 	敵を追加する
 ---------------------------------------------------------*/
 //extern void regist_settei_common(GAME_COMMAND *l, OBJ *src);
-global void game_command_06_regist_chuu_boss(GAME_COMMAND *l)
+global void game_command_01_regist_chuu_boss(GAME_COMMAND *l)
 {
 	if (0==cg.chuu_boss_mode)
 	{
 		cg.chuu_boss_mode = (1);
 		//hold_game_mode_on();
 		/* プライオリティー(表示優先順位)があるから、背後に表示させる為に、初めに後ろの魔方陣を確保。 */
-		OBJ *s2; 		/* 後ろの魔方陣 */
-		s2								= obj_add_A01_teki_error();
+		OBJ *s2;		/* 後ろの魔方陣 */
+		s2								= obj_regist_teki();
 		if (NULL != s2)/* 登録できた場合のみ */
 		{
 			/* 後ろの魔方陣が確保出来たら本体を確保。 */
-			OBJ *s1; 	/* 本体 */
-			s1									= obj_add_A01_teki_error();
+			OBJ *s1;	/* 本体 */
+			s1									= obj_regist_teki();
 			if (NULL != s1)/* 登録できた場合のみ */
 			{
 				/* 0ttd dddd
@@ -220,7 +201,7 @@ global void game_command_06_regist_chuu_boss(GAME_COMMAND *l)
 			//
 				/* 魔方陣生成 */
 				s2->m_Hit256R				= ZAKO_ATARI02_PNG;
-				s2->obj_type_set					= ZAKO_28_MAHOJIN;
+				s2->obj_type_set			= ZAKO_28_MAHOJIN;
 				s2->atari_hantei			= (1/*スコア兼用*/);
 				{
 					const u32 color_table[4] =
@@ -234,24 +215,23 @@ global void game_command_06_regist_chuu_boss(GAME_COMMAND *l)
 				}
 			//
 				s1->callback_mover			= move_chuu_boss;
-			//	s1->callback_loser			= lose_youkai1;
 			//
 				regist_settei_common(l, s1);/* 中ボスと共用する必要がある。 */
 				//	s1->type		 /* 設定ファイルから決める */
 				/* easyでも存在感を印象づける為に 200 は必要 */ 	// 50+150*di fficulty;
-			//	s1->atari_hantei			= (1/*スコア兼用*/);
-			//	s1->m_Hit256R				= ZAKO_ATARI16_PNG;
-			//	s1->base_hp 				= ((l->user_hp));		/* 設定ファイルから体力を決める。 */
-			//	s1->base_score				= ((l->user_score));	/* 設定ファイルから獲得スコアを決める。 */
-			//	s1->cx256					= ((l->user_x)<<(8));
-			//	s1->cy256					= ((l->user_y)<<(8));
-				s1->cy256					= t256(-30.0);		/* (中ボス用、特殊修正) */
-			//	s1->cx256					= (s1->cx256);
-			//	s1->cy256					= (s1->cy256);
-				s2->cx256					= (s1->cx256);
-				s2->cy256					= (s1->cy256);
+			//	s1->atari_hantei				= (1/*スコア兼用*/);
+			//	s1->m_Hit256R					= ZAKO_ATARI16_PNG;
+			//	s1->base_hp 					= ((l->user_hp));		/* 設定ファイルから体力を決める。 */
+			//	s1->base_score					= ((l->user_score));	/* 設定ファイルから獲得スコアを決める。 */
+			//	s1->center.x256 				= ((l->user_locate_x)<<(8));
+			//	s1->center.y256 				= ((l->user_locate_y)<<(8));
+				s1->center.y256 				= t256(-30.0);		/* (中ボス用、特殊修正) */
+			//	s1->center.x256 				= (s1->center.x256);
+			//	s1->center.y256 				= (s1->center.y256);
+				s2->center.x256 				= (s1->center.x256);
+				s2->center.y256 				= (s1->center.y256);
 				// 中ボスの場合、y座標は登場予定座標。
-				s1->YOKAI1_DATA_start_limit_y256	= ((l->user_y)<<(8));/* t256(50.0) */
+				s1->YOKAI1_DATA_start_limit_y256	= ((l->user_locate_y)<<(8));/* t256(50.0) */
 				//
 				s1->callback_hit_teki		= callback_hit_chuu_boss;	/* コールバック登録 */
 			//
@@ -260,7 +240,7 @@ global void game_command_06_regist_chuu_boss(GAME_COMMAND *l)
 				#if 1
 				//------------ カード関連
 				card.spell_used_number		= (SPELL_00);/*(カード実行停止にする)*/
-				card.address_temporaly 		= ((l->user_kougeki_type)&0x3f);
+				card.address_temporaly		= ((l->user_kougeki_type)&0x3f);
 				s1->jyumyou = ((256+LIMIT_TIME_512+256)-1);/* 「上から登場」へ設定。 */
 				#endif
 			}

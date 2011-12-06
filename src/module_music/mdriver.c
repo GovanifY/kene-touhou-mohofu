@@ -165,7 +165,7 @@ static void MusicMod_Exit_internal(void)
 //	initialized = 0;
 }
 #if 1/*–Í•í•—‚ÅŽg—p‚µ‚Ä‚¢ */
-static MM_BOOL smod_music_init(void/*MM_CHAR *cmdline*/)
+static MM_BOOL smod_music_init(void/*MM_s8 *cmdline*/)
 {
 	mod_music_critical = 1;
 	/* if m d_device==0, try to find a device number */
@@ -199,7 +199,7 @@ static MM_BOOL smod_music_init(void/*MM_CHAR *cmdline*/)
 	return (0);
 }
 
-/*global*/MM_BOOL MusicMod_Init(void/*MM_CHAR *cmdline*/)
+/*global*/MM_BOOL MusicMod_Init(void/*MM_s8 *cmdline*/)
 {
 	MM_BOOL result;
 

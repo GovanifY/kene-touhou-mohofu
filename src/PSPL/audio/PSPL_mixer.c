@@ -53,6 +53,7 @@ static char rcsid =
  * the value to avoid overflow.  (used with permission from ARDI)
  * Changed to use 0xFE instead of 0xff for better sound quality.
  */
+#if 0
 static const u8 mix8[0x200] =
 {
  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* 0x00x : 0(min) */
@@ -89,7 +90,7 @@ static const u8 mix8[0x200] =
  0xfe, 0xfe, 0xfe, 0xfe, 0xfe, 0xfe, 0xfe, 0xfe, 0xfe, 0xfe, 0xfe, 0xfe, 0xfe, 0xfe, 0xfe, 0xfe, /* 0x0ex : 0xfe(max) */
  0xfe, 0xfe, 0xfe, 0xfe, 0xfe, 0xfe, 0xfe, 0xfe, 0xfe, 0xfe, 0xfe, 0xfe, 0xfe, 0xfe, 0xfe, 0xfe  /* 0x0fx : 0xfe(max) */
 };
-
+#endif
 /* The volume ranges from 0 - 128 */
 #define ADJUST_VOLUME(s, v) 	(s = (s*v)/SDL_MIX_MAXVOLUME)
 #define ADJUST_VOLUME_U8(s, v)	(s = (((s-128)*v)/SDL_MIX_MAXVOLUME)+128)
@@ -105,13 +106,8 @@ void PSPL_MixAudio(u8 *dst, const u8 *src, u32 len, int volume)
 	if ( current_audio )
 	{
 		if ( current_audio->convert.needed )
-		{
-			format = current_audio->convert.src_format;
-		}
-		else
-		{
-			format = current_audio->spec.format;
-		}
+				{	format = current_audio->convert.src_format;		}
+		else	{	format = current_audio->spec.format;			}
 	}
 	else
 	{
@@ -130,7 +126,14 @@ void PSPL_MixAudio(u8 *dst, const u8 *src, u32 len, int volume)
 				u8 src_sample;
 				src_sample = *src;
 				ADJUST_VOLUME_U8(src_sample, volume);
-				*dst = mix8[(*dst)+(src_sample)];
+//				*dst = mix8[(*dst)+(src_sample)];
+				{
+					u32 i;
+					i = (*dst)+(src_sample);
+					i >>= 1;
+					i = psp_min(i, 0xfe);
+					*dst = (u8)i;
+				}
 				dst++;
 				src++;
 			}
@@ -157,7 +160,8 @@ void PSPL_MixAudio(u8 *dst, const u8 *src, u32 len, int volume)
 			PSPL_MixAudio_m68k_S8((char*)dst, (char*)src, (unsigned long)len, (long)volume);
 			#else
 			{
-				s8 *dst8, *src8;
+				s8 *dst8;
+				s8 *src8;
 				s8 src_sample;
 				int dst_sample;
 				src8 = (s8 *)src;
@@ -207,10 +211,11 @@ void PSPL_MixAudio(u8 *dst, const u8 *src, u32 len, int volume)
 			PSPL_MixAudio_m68k_S16LSB((short*)dst, (short*)src, (unsigned long)len, (long)volume);
 			#else
 			{
-				len >>= 1;//	len /= 2;
-				while ( len-- )
+			//	len >>= 1;//	len /= 2;
+				while ( len-=2 )
 				{
-					s16 src1, src2;
+					s16 src1;
+					s16 src2;
 					src1 = (((src[1])<<8)|(src[0]));
 					ADJUST_VOLUME(src1, volume);
 					src2 = (((dst[1])<<8)|(dst[0]));
@@ -242,10 +247,11 @@ void PSPL_MixAudio(u8 *dst, const u8 *src, u32 len, int volume)
 			PSPL_MixAudio_m68k_S16MSB((short*)dst, (short*)src, (unsigned long)len, (long)volume);
 			#else
 			{
-				len >>= 1;//	len /= 2;
-				while ( len-- )
+			//	len >>= 1;//	len /= 2;
+				while ( len-=2 )
 				{
-					s16 src1, src2;
+					s16 src1;
+					s16 src2;
 					src1 = (((src[0])<<8)|(src[1]));
 					ADJUST_VOLUME(src1, volume);
 					src2 = (((dst[0])<<8)|(dst[1]));

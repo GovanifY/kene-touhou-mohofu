@@ -294,83 +294,163 @@ extern void player_check_extend_score(void);
 	}
 	return (ttt);
 }
-#define USE_PANEL_BASE_DIRECT (1)
-#if (1==USE_PANEL_BASE_DIRECT)
+
 //static u8 *pb_image;
 static void 	blit_panel_base(void)
 {
-//	#define BG_PANEL_HAIKEI_OFFSET		((512*10))
-	#define BG_PANEL_HAIKEI_OFFSET		((480-128))
-int x;
-int y;
-	x= 0;
-	y= 0;
-		int haikei_offset;
-		haikei_offset	= (0);
-		unsigned int dy;
-		for (dy=0; dy<272/*16*/ /*KANJI_FONT_16_HEIGHT_P0*/; dy++)
-		{
-			unsigned int dx;
-			for (dx=0; dx<(128)/*16*/ /*KANJI_FONT_08_HARF_WIDTH*/; dx++)
-			{
-				{
-					#if (0==USE_32BIT_DRAW_MODE)/*(16bit mode)*/
-					/*
-						いまいち良くわかんない(が、とりあえず動く)。
-						アドレスはバイト単位なので u8 ポインタでＣ言語に計算させてる。
-						(short なら2で割るとか、int なら4で割るとか)
-						変える場合は、定数(BG_PANEL_HAIKEI_OFFSET_U16等)や変数(dy,y,他)も変えないとダメ。
-					*/
-				//	s_getpixel16
-				volatile u8 *src_p = (u8 *)(/*font_bg_bitmap_surface_image*/((panel_base->pixels)/*FONT_fontimg->pixels*/)/*cb.kanji_window_screen_image*/) /*surface*/
-						+ (dy * (/*幅128なので*/256/*512*/ /*font_bg_bitmap_surface_pitch*/))		/*surface*/
-						+ (dx+dx)
-						+ (haikei_offset+haikei_offset);
-				//	putpixel16
-				volatile u8 *dst_p = (u8 *)(cb.sdl_screen[SDL_00_VIEW_SCREEN]->pixels/*cb.kanji_window_screen_image*/)/*surface->pixels*/
-						+ (((dy+y))*(512*2))/*surface->pitch*/
-						+ (dx+dx)
-						+ (x+x)
-						+ (BG_PANEL_HAIKEI_OFFSET*2);	/* 512[pixel]x 2[bytes](short) */
-					*(u16 *)dst_p = (u32)(*(u16 *)src_p);
-					#else/*(32bit mode)*/
-					/*
-						いまいち良くわかんない(が、とりあえず動く)。
-						アドレスはバイト単位なので u8 ポインタでＣ言語に計算させてる。
-						(short なら2で割るとか、int なら4で割るとか)
-						変える場合は、定数(BG_PANEL_HAIKEI_OFFSET_U16等)や変数(dy,y,他)も変えないとダメ。
-					*/
-				//	s_getpixel16
-				volatile u8 *src_p = (u8 *)(/*font_bg_bitmap_surface_image*/((panel_base->pixels)/*FONT_fontimg->pixels*/)/*cb.kanji_window_screen_image*/) 	/*surface*/
-						+ (dy * (2*512/*font_bg_bitmap_surface_pitch*/))		/*surface*/
-						+ (dx+dx+dx+dx)
-						+ (haikei_offset+haikei_offset+haikei_offset+haikei_offset);
-				//	putpixel16
-				volatile u8 *dst_p = (u8 *)(cb.sdl_screen[SDL_00_VIEW_SCREEN]->pixels/*cb.kanji_window_screen_image*/)/*surface->pixels*/
-						+ (((dy+y))*(2*512*2))/*surface->pitch*/
-						+ (dx+dx+dx+dx)
-						+ (x+x+x+x)
-						+ (BG_PANEL_HAIKEI_OFFSET*4);	/* 512[pixel]x 2[bytes](short) */
-				//	*(u16 *)dst_p = (u32)(*(u16 *)src_p);
-					*(u32 *)dst_p = (u32)(*(u16 *)src_p);
-					#endif
-				}
-			}
-		}
-}
-#endif
-static u32 top_score;
-global void score_display(void)
-{
-	#if (0==USE_PANEL_BASE_DIRECT)/*テストoff*/
+
+
+//#define USE_PANEL_BASE_DIRECT (1)
+
+
+/*([A]パネルベースをブロック転送。SDL版)*/
+#if 0//(0==USE_PANEL_BASE_DIRECT)/*テストoff*/
 	/* [ パネルベースを表示 ] */
 	{
 		SDL_Rect panel_base_r = {GAME_WIDTH, 0, 0, 0};	// データウィンドウ用rect_srct->w,h,x,y
 		PSPL_UpperBlit(panel_base, NULL, cb.sdl_screen[SDL_00_VIEW_SCREEN], &panel_base_r);
 	}
-	#else
+#endif
+
+//#else
+
+/*([B]パネルベースをブロック転送。SDL版を単純変換した版)*/
+#if (0)/*(良くわかんないが、とりあえず動く版。強引に8bitのポインタでアドレス計算させてるので動く)*/
+//	#define BG_PANEL_HAIKEI_OFFSET		((512*10))
+	#define BG_PANEL_HAIKEI_OFFSET		((480-128))
+	int x;
+	int y;
+	x= 0;
+	y= 0;
+	int haikei_offset;
+	haikei_offset	= (0);
+	unsigned int dy;
+	for (dy=0; dy<272/*16*/ /*KANJI_FONT_16_HEIGHT_P0*/; dy++)
+	{
+		unsigned int dx;
+		for (dx=0; dx<(128)/*16*/ /*KANJI_FONT_08_HARF_WIDTH*/; dx++)
+		{
+				#if (0==USE_32BIT_DRAW_MODE)/*(16bit mode)*/
+				/*
+					いまいち良くわかんない(が、とりあえず動く)。
+					アドレスはバイト単位なので u8 ポインタでＣ言語に計算させてる。
+					(short なら2で割るとか、int なら4で割るとか)
+					変える場合は、定数(BG_PANEL_HAIKEI_OFFSET_U16等)や変数(dy,y,他)も変えないとダメ。
+				*/
+			//	s_getpixel16
+			volatile u8 *src_p = (u8 *)(/*font_bg_bitmap_surface_image*/((panel_base->pixels)/*FONT_fontimg->pixels*/)/*cb.kanji_window_screen_image*/) /*surface*/
+					+ (dy * (/*幅128なので*/256/*512*/ /*font_bg_bitmap_surface_pitch*/))		/*surface*/
+					+ (dx+dx)
+					+ (haikei_offset+haikei_offset);
+			//	putpixel16
+			volatile u8 *dst_p = (u8 *)(cb.sdl_screen[SDL_00_VIEW_SCREEN]->pixels/*cb.kanji_window_screen_image*/)/*surface->pixels*/
+					+ (((dy+y))*(512*2))/*surface->pitch*/
+					+ (dx+dx)
+					+ (x+x)
+					+ (BG_PANEL_HAIKEI_OFFSET*2);	/* 512[pixel]x 2[bytes](short) */
+				*(u16 *)dst_p = (u32)(*(u16 *)src_p);
+				#else/*(32bit mode)*/
+				/*
+					いまいち良くわかんない(が、とりあえず動く)。
+					アドレスはバイト単位なので u8 ポインタでＣ言語に計算させてる。
+					(short なら2で割るとか、int なら4で割るとか)
+					変える場合は、定数(BG_PANEL_HAIKEI_OFFSET_U16等)や変数(dy,y,他)も変えないとダメ。
+				*/
+			//	s_getpixel16
+			volatile u8 *src_p = (u8 *)(/*font_bg_bitmap_surface_image*/((panel_base->pixels)/*FONT_fontimg->pixels*/)/*cb.kanji_window_screen_image*/) 	/*surface*/
+					+ (dy * (2*512/*font_bg_bitmap_surface_pitch*/))		/*surface*/
+					+ (dx+dx+dx+dx)
+					+ (haikei_offset+haikei_offset+haikei_offset+haikei_offset);
+			//	putpixel16
+			volatile u8 *dst_p = (u8 *)(cb.sdl_screen[SDL_00_VIEW_SCREEN]->pixels/*cb.kanji_window_screen_image*/)/*surface->pixels*/
+					+ (((dy+y))*(2*512*2))/*surface->pitch*/
+					+ (dx+dx+dx+dx)
+					+ (x+x+x+x)
+					+ (BG_PANEL_HAIKEI_OFFSET*4);	/* 512[pixel]x 2[bytes](short) */
+			//	*(u16 *)dst_p = (u32)(*(u16 *)src_p);
+				*(u32 *)dst_p = (u32)(*(u16 *)src_p);
+				#endif
+		}
+	}
+#endif
+
+/*([C]パネルベースをブロック転送。とりあえず普通に書いた版)*/
+#if (1)/*(16bitだけてすと。とりあえず動く版。)*/
+	// 512 == (pspの)vram幅 == cb.sdl_screen[SDL_00_VIEW_SCREEN]の幅。
+	// 128 == 右のパネル幅。
+	//  32 == 左のパネル幅。
+	// 384 == 512-128 == 1行の加算差分。
+	// 352 == 512-128-32 == 始めの位置は左のパネル幅を考慮しないと。
+				#if (0==USE_32BIT_DRAW_MODE)/*(16bit mode)*/
+	//[とりあえず動く]
+	// 16[bit]のポインタなので +1 すると 2[byte] 加算される事に注意。
+	volatile u16 *dst_p = (u16 *)(cb.sdl_screen[SDL_00_VIEW_SCREEN]->pixels/*cb.kanji_window_screen_image*/) + (352);/*(始めの位置, 352x2[bytes])*/
+	volatile u16 *src_p = (u16 *)(/*font_bg_bitmap_surface_image*/((panel_base->pixels)/*FONT_fontimg->pixels*/)/*cb.kanji_window_screen_image*/) /*surface*/;
+	unsigned int dy;
+	for (dy=0; dy<272; dy++)/*(psp縦272[pixel])*/
+	{
+		unsigned int dx;
+		for (dx=0; dx<(128); dx++)/*(右のパネル幅128[pixel])*/
+		{
+		//	*dst_p = (u16)(0x11fa);/*(デバッグ用ダミー色)*/
+			*dst_p = *src_p;
+			dst_p += (1);/*(1==わざとらしいですが, +2[bytes])*/
+			src_p += (1);/*(1==わざとらしいですが, +2[bytes])*/
+		}
+		dst_p += (384);/*(1行の加算差分, 384x2[bytes])*/
+	}
+				#else/*(32bit mode)*/
+	//[未テスト。上のが動くので動く気もするが未テスト]
+	// 32[bit]のポインタなので +1 すると 4[byte] 加算される事に注意。
+	volatile u32 *dst_p = (u32 *)(cb.sdl_screen[SDL_00_VIEW_SCREEN]->pixels/*cb.kanji_window_screen_image*/) + (352);/*(始めの位置, 352x4[bytes])*/
+	volatile u32 *src_p = (u32 *)(/*font_bg_bitmap_surface_image*/((panel_base->pixels)/*FONT_fontimg->pixels*/)/*cb.kanji_window_screen_image*/) /*surface*/;
+	unsigned int dy;
+	for (dy=0; dy<272; dy++)/*(psp縦272[pixel])*/
+	{
+		unsigned int dx;
+		for (dx=0; dx<(128); dx++)/*(右のパネル幅128[pixel])*/
+		{
+		//	*dst_p = (u32)(0xff11ffaa);/*(デバッグ用ダミー色)*/
+			*dst_p = *src_p;
+			dst_p += (1);/*(1==わざとらしいですが, +4[bytes])*/
+			src_p += (1);/*(1==わざとらしいですが, +4[bytes])*/
+		}
+		dst_p += (384);/*(1行の加算差分, 384x4[bytes])*/
+	}
+				#endif
+#endif
+
+
+/*([D]パネルベース部分を(0)で消去。Guであとで転送)*/
+#if 0
+/*(上の奴コピペしてsrc_p削除して、データーは(0)にする。SDLがあるとめんどくさいよなぁ。)*/
+/*(それかmemcpy32の方が良いかも？)*/
+/*(パネルベースのコピーは、 sceGuCopyImage() あたりでいけそうな気がする。)*/
+	/* こんな感じかな？ */
+//	sceGuStart(GU_DIRECT, gulist);
+//	sceGuCopyImage(
+//		/*GU_PSM_5551*/SDL_GU_PSM_0000/*GU_PSM_5650*/,	//	int psm,	GU_PSM_8888 /* Image format */
+//		0,						//	int sx, 		/* src location */
+//		0,						//	int sy, 		/* src location */
+//		(128)/*512*/,			//	int width,		/* Image size */右のパネル幅
+//		272,					//	int height, 	/* Image size */右のパネル高さ
+//		(128)/*512*/, 			//	int srcw,		/* src buffer width */右のパネル幅
+//		(panel_base->pixels),	//	void* src,		/* src Image from RAM */転送元。
+//		(352)/*0*/, 			//	int dx, 		/* dest location */
+//		0,						//	int dy, 		/* dest location */
+//		512,					//	int destw,		/* dest buffer width */
+//		draw_frame/*dest_p*/	//	void* dest		/* dest Image to VRAM */
+//	);
+//	sceGuFinish();
+//	sceGuSync(0, 0);
+#endif
+}
+
+
+//static u32 top_score;
+global void score_display(void)
+{
 	blit_panel_base();/*(単純転送)*/
-	#endif
 //
 	/* [ プレイヤー数表示 ] */
 	draw_stars_status( R_00_aka_hosi_png,  (cg.zanki), 10*8+4); /*R_01_mizu_hosi_png*/
@@ -381,10 +461,14 @@ global void score_display(void)
 	//{/*←何故かスコープしない方が良い(もちろんスコープあるなしで,コードが変わる)*/
 
 	/* 通常時(デバッグ以外は死ぬ(喰らいボムモードへ)) */
-		/* [ ハイスコア表示 ] */
+
+		#if (0/*(r39Gu化済み)*/)/* [ ハイスコア比較 ] */
 	//	if (top_score < cg.game_score)
 	//	{	top_score = cg.game_score;}
 		top_score = psp_max(top_score, cg.game_score);
+		#endif
+		//
+		#if (0/*(r39Gu化済み)*/)/* [ ハイスコア表示 ] */
 	//	sp rintf(my_font_text,"%09d0", top_score);
 		strcpy(my_font_text, "0000000000");
 		dec_print_format(top_score, 	9/*8*/, (char *)my_font_text);
@@ -392,8 +476,9 @@ global void score_display(void)
 		cg.PSPL_font_x		= (PPP+5*8+4);
 		cg.PSPL_font_y		= (3*8+2);
 		s_font88_print_screen_xy();
-	//
-		/* [ スコア表示 ] */
+		#endif
+		//
+		#if (0/*(r39Gu化済み)*/)/* [ スコア表示 ] */
 	//	sp rintf(my_font_text,"%09d0", pd_game_score);
 		strcpy(my_font_text, "0000000000");
 		dec_print_format(cg.game_score, 9/*8*/, (char *)my_font_text);
@@ -401,9 +486,8 @@ global void score_display(void)
 	//	cg.PSPL_font_x		= (PPP+5*8+4);
 		cg.PSPL_font_y		= (6*8+7);
 		s_font88_print_screen_xy();
-	//
-
-
+		#endif
+		//
 		/* [ パワーゲージ表示 ] */
 		draw_power_gauge(cg.weapon_power); /*,PPP+7,124*/
 		if (cg.weapon_power > (MAX_POWER_IS_128-1) /*== 128*/)/*max==MAX_POWER_IS_128==「129段階」*/
@@ -439,15 +523,16 @@ global void score_display(void)
 		cg.PSPL_font_y = (17*8+5);//125/*+1*/-2
 		s_font88_print_screen_xy();
 	//
+		#if (0/*(r39Gu化済み)*/)/* [ グレイズスコア表示 ] */
 		/* --- 妖のグレイズカンスト 99999回 (5桁) --- */
-		/* [ グレイズスコア表示 ] */
 		//	sp rintf(my_font_text," %d", pd_graze_point);
 			strcpy(my_font_text,"   0");
-			dec_print_format( cg.graze_point, 4, (char *)&my_font_text[0]);
+			dec_print_format(cg.graze_point, 4, (char *)&my_font_text[0]);
 		//
 			cg.PSPL_font_x		= (PPP+11*8+4);//(PPP+7*8+3)
 			cg.PSPL_font_y		= (20*8);//(140)
 			s_font88_print_screen_xy();/*4桁(稼げる)*/ /*3桁(足りない)*/
+		#endif
 	//
 		/* [ 難易度表示 ] */
 		{
@@ -535,6 +620,7 @@ static/*global*/ void kaiwa_obj_set2n(unsigned int obj_number)
 /*---------------------------------------------------------
 	パネル表示、初期化
 ---------------------------------------------------------*/
+extern void set_topscore(void);
 global void score_panel_init(void)
 {
 	#if 0/*(???)*/
@@ -559,7 +645,7 @@ global void score_panel_init(void)
 	kaiwa_sprite[0].draw_flag = (0);	/* 描画しない。 */
 	kaiwa_sprite[1].draw_flag = (0);	/* 描画しない。 */
 	//
-	top_score			= high_score_table[(cg_game_select_player)][0].score;	// 常に表示するハイコアの取得=>score.cで利用
+	set_topscore();
 	strcpy(my_file_common_name, (char*)DIRECTRY_NAME_DATA_STR"/fonts/" "panel_base.png");
 	//#if 0// memory on load で解放しない。==画像キャッシュしない。(1==USE_KETM_IMAGE_CHACHE)
 	#if (1==USE_KETM_IMAGE_CHACHE)/*(????)*/
@@ -569,9 +655,9 @@ global void score_panel_init(void)
 	#endif /*(1==USE_KETM_IMAGE_CHACHE)*/
 
 
-	#if (1==USE_PANEL_BASE_DIRECT)
+//	#if (1==USE_PANEL_BASE_DIRECT)
 //	pb_image = (panel_base->pixels);
-	#endif
+//	#endif
 
 }
 

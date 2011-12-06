@@ -8,7 +8,7 @@
 	エンディング後の終了判定
 	-------------------------------------------------------
 ---------------------------------------------------------*/
-extern void ini_save(void);
+extern void ini_file_save(void);
 
 #if (0)/*(旧パスワード機能。メモ)*/
 	/*static*/ char str_pass_word[32];/*20*/
@@ -48,15 +48,15 @@ static void game_clear_set_password(void)
 	}
 	#endif
 	{
-		ini_save();
+		ini_file_save();
 	}
 }
 #else
-	#define game_clear_set_password ini_save
+	#define game_clear_set_password ini_file_save
 #endif
 
 extern void player_loop_quit(void);
-global void game_command_01_game_all_clear(GAME_COMMAND *l)
+global void game_command_04_game_all_clear(GAME_COMMAND *l)
 {
 	#if 0
 	/* なんか知らんが、Lunaticでちょっとチェックしたら、オーバーフローするｗ。 */

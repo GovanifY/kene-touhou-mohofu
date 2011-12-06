@@ -30,7 +30,7 @@
 	REG_0b_REG3 	弾番号。0x0fが1弾目、0x0eが2弾目。
 	-------------------------------------------------------
 ---------------------------------------------------------*/
-local void spell_create_08_rumia_night_bird(OBJ *src)
+local OBJ_CALL_FUNC(spell_create_08_rumia_night_bird)
 {
 	count_up_limit_NUM(REG_NUM_08_REG0, 32);
 //	if (0x10==((REG_10_BOSS_SPELL_TIMER)&0x1f))/* 自機狙い角作成 */
@@ -38,8 +38,8 @@ local void spell_create_08_rumia_night_bird(OBJ *src)
 	{
 		count_up_limit_NUM(REG_NUM_09_REG1, 2);/*(カウンタ2)*/
 		#if 1
-		REG_02_DEST_X	= ((src->cx256));
-		REG_03_DEST_Y	= ((src->cy256));
+		REG_02_DEST_X	= ((src->center.x256));
+		REG_03_DEST_Y	= ((src->center.y256));
 		calculate_jikinerai();/* 自機狙い角作成 */
 		REG_0a_REG2 = HATSUDAN_03_angle65536;/* 自機狙い角 */
 		#endif
@@ -146,7 +146,7 @@ local void spell_create_08_rumia_night_bird(OBJ *src)
 	-------------------------------------------------------
 	交差弾。時計回り。
 ---------------------------------------------------------*/
-local void rumia_danmaku_01_callback(OBJ *src)
+local OBJ_CALL_FUNC(rumia_danmaku_01_callback)
 {
 	/* 0-32 カウントまで */ 	/* [0]カウント==発弾位置 */
 	if ((HATUDAN_ITI_NO_JIKAN-32) < src->jyumyou)/* 発弾エフェクト後から[0-31]カウント経過した弾 */
@@ -210,13 +210,13 @@ local void rumia_danmaku_01_callback(OBJ *src)
 	-------------------------------------------------------
 	自機を狙わない場合があるが、原因が良く解からない。
 ---------------------------------------------------------*/
-local void rumia_danmaku_02_callback(OBJ *src)/* 連弾 */
+local OBJ_CALL_FUNC(rumia_danmaku_02_callback)/* 連弾 */
 {
 	/* 32 カウントなら */
 	if ((HATUDAN_ITI_NO_JIKAN-32) == src->jyumyou)/* 発弾エフェクト後から[32]カウント経過した弾 */
 	{
-		REG_02_DEST_X	= ((src->cx256));
-		REG_03_DEST_Y	= ((src->cy256));
+		REG_02_DEST_X	= ((src->center.x256));
+		REG_03_DEST_Y	= ((src->center.y256));
 		calculate_jikinerai();/* 自機狙い角作成 */
 		#if 0
 		/*(ダメ)*/
@@ -242,7 +242,7 @@ local void rumia_danmaku_02_callback(OBJ *src)/* 連弾 */
 	-------------------------------------------------------
 ---------------------------------------------------------*/
 
-local void spell_init_29_rumia_demarcation(OBJ *src)
+local OBJ_CALL_FUNC(spell_init_29_rumia_demarcation)
 {
 	card.danmaku_callback[1] = rumia_danmaku_01_callback;/*(米弾。交差弾。反時計回り。) (米弾。交差弾。時計回り。)*/
 	card.danmaku_callback[2] = rumia_danmaku_02_callback;/*(丸弾。連弾。自機狙い。)*/
@@ -259,7 +259,7 @@ local void spell_init_29_rumia_demarcation(OBJ *src)
 
 ---------------------------------------------------------*/
 // カードスクリプト語では「else」は無い。
-local void spell_create_29_rumia_demarcation(OBJ *src)
+local OBJ_CALL_FUNC(spell_create_29_rumia_demarcation)
 {
 //	if ((0x1f)==((REG_10_BOSS_SPELL_TIMER)&0x1f))
 	count_up_limit_NUM(REG_NUM_08_REG0, 32);
@@ -267,8 +267,8 @@ local void spell_create_29_rumia_demarcation(OBJ *src)
 	{
 		count_up_limit_NUM(REG_NUM_09_REG1, 16);//
 		#if (1)/*(発弾座標を修正)*/
-			REG_02_DEST_X	= ((src->cx256));
-			REG_03_DEST_Y	= ((src->cy256));
+			REG_02_DEST_X	= ((src->center.x256));
+			REG_03_DEST_Y	= ((src->center.y256));
 		#endif
 		if (2==REG_09_REG1)
 		{
@@ -297,13 +297,13 @@ local void spell_create_29_rumia_demarcation(OBJ *src)
 			-------------------------------------------------------
 			記憶だけで作りがちなので、原作でチェック。normalの場合、飛んでくる連弾は４回だった。
 			---------------------------------------------------------*/
-			//local void dimmer_shot_02_rendan(OBJ *src)
+			//local OBJ_CALL_FUNC(dimmer_shot_02_rendan)
 			unsigned int ii;
 			for (ii=0; ii<8; ii++)
 			{
 				#if 1
-				REG_02_DEST_X	= ((src->cx256));
-				REG_03_DEST_Y	= ((src->cy256));
+				REG_02_DEST_X	= ((src->center.x256));
+				REG_03_DEST_Y	= ((src->center.y256));
 				calculate_jikinerai();/* 自機狙い角作成 */
 				REG_0b_REG3 = HATSUDAN_03_angle65536;/* 自機狙い角 */
 				#endif
@@ -345,7 +345,7 @@ local void spell_create_29_rumia_demarcation(OBJ *src)
 			/*---------------------------------------------------------
 				交差弾。 青弾 / 緑弾 / 赤弾
 			---------------------------------------------------------*/
-		//	local void dimmer_shot_01_kousadan(OBJ *src, u8 tama_type)
+		//	local void dimmer_shot_01_kousadan(OBJ/**/ *src, u8 tama_type)
 			REG_0b_REG3 = (((REG_0a_REG2)&0x06)<<8);/* 弾色別に発弾角を変える。(((REG_0a_REG2)&0x06)<<6) */
 			HATSUDAN_01_speed256				= (t256(1.0));			/* 弾速 (t256(1.5)) */
 			HATSUDAN_02_speed_offset			= t256(0);/*(テスト)*/

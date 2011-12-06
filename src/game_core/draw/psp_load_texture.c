@@ -41,15 +41,15 @@ static void convert_swizzle
 	const u8	*src_y = in_data;
 	u32 		*dst  = (u32*)out_data;
 	u8 block_y;
-	for (block_y = 0; block_y < /*height_blocks*/(height >>3/* /8 */); block_y++)/*max: 64-1*/
+	for (block_y=0; block_y</*height_blocks*/(height >>3/* /8 */); block_y++)/*max: 64-1*/
 	{
 		const u8	*src_x = src_y;
 		u8 block_x;
-		for (block_x = 0; block_x < /*width_blocks*/(width_x_size  >>4/* /16 */); block_x++)/*max: 32-1*/
+		for (block_x=0; block_x</*width_blocks*/(width_x_size  >>4/* /16 */); block_x++)/*max: 32-1*/
 		{
 			const u32	*src = (u32*)src_x;
 			u8 j;
-			for (j = 0; j < 8; j++)/*max: 8-1*/
+			for (j=0; j<8; j++)/*max: 8-1*/
 			{
 				*(dst++) = *(src++);
 				*(dst++) = *(src++);
@@ -65,13 +65,13 @@ static void convert_swizzle
 	u32 		*src = (u32*)in_data;
 	u32 		*dst = (u32*)out_data;
 	u8 block_y;
-	for (block_y = 0; block_y < /*height_blocks*/(height >>3/* /8 */); block_y++)/*max: 64-1*/
+	for (block_y=0; block_y</*height_blocks*/(height >>3/* /8 */); block_y++)/*max: 64-1*/
 	{
 		u8 block_x;
-		for (block_x = 0; block_x < /*width_blocks*/(width_x_size  >>4/* /16 */); block_x++)/*max: 32-1*/
+		for (block_x=0; block_x</*width_blocks*/(width_x_size >>4/* /16 */); block_x++)/*max: 32-1*/
 		{
 			u8 j;
-			for (j = 0; j < 8; j++)/*max: 8-1*/
+			for (j=0; j<8; j++)/*max: 8-1*/
 			{
 				*(dst++) = *(src++);
 				*(dst++) = *(src++);
@@ -84,38 +84,38 @@ static void convert_swizzle
 }
 #endif
 
-/*static*/global void TGameTexture_Load_Surface( int num )	/*, char *file_name*/
+/*static*/global void psp_load_texture(int set_reagion_number)	/*, char *file_name*/
 {
 	/* ----- テクスチャ番号が不正だったら終了 */
-//	if (num < 0) return;
-//	if (num > TEXTURE_MAX) return;
+//	if (set_reagion_number < 0) return;
+//	if (set_reagion_number > TEXTURE_MAX) return;
 
 	/* ----- 既にテクスチャがあったら解放 */
-	if (NULL != my_resource[num].my_texture)
+	if (NULL != my_resource[set_reagion_number].my_texture)
 	{
 		#if (1==USE_SDL_image)
-		SDL_FreeSurface(my_resource[num].my_texture);
+		SDL_FreeSurface(my_resource[set_reagion_number].my_texture);
 		#else
-		png_free_my_image(my_resource[num].my_texture);
+		png_free_my_image(my_resource[set_reagion_number].my_texture);
 		#endif
-		my_resource[num].my_texture = NULL;
+		my_resource[set_reagion_number].my_texture = NULL;
 	}
 
 	/* ----- テクスチャーの読み込み */
 	#if (1==USE_SDL_image)
-	my_resource[num].my_texture = IMG_Load(my_resource[num].file_name);
-//	my_resource[num].my_texture = SDL_LoadBMP(my_resource[num].file_name);
+	my_resource[set_reagion_number].my_texture = IMG_Load(my_resource[set_reagion_number].file_name);
+//	my_resource[set_reagion_number].my_texture = SDL_LoadBMP(my_resource[set_reagion_number].file_name);
 	#else
-	my_resource[num].my_texture = png_load_my_image(my_resource[num].file_name);//
+	my_resource[set_reagion_number].my_texture = png_load_my_image(my_resource[set_reagion_number].file_name);//
 	#endif
-	if (NULL == my_resource[num].my_texture)
+	if (NULL == my_resource[set_reagion_number].my_texture)
 	{
-	//	my_resource[num].my_texture = NULL;
+	//	my_resource[set_reagion_number].my_texture = NULL;
 		#if (1)
 		psp_fatal_error( (char*)
 		//	"0123456789012345678901234567890123456789"	// 半角40字"最大表示文字数"
 			"gu texture: 画像ファイルがありません。" "\\n"
-			"%s", my_resource[num].file_name);
+			"%s", my_resource[set_reagion_number].file_name);
 		#endif
 		return;
 	}
@@ -126,21 +126,21 @@ static void convert_swizzle
 	/* --- そこで memalign(); を使い、メモリ境界を合わせる。 */
 	void *nonalign;
 //	nonalign = 0;
-	nonalign = (my_resource[num].my_texture)->MY_DIB_DATA;
+	nonalign = (my_resource[set_reagion_number].my_texture)->MY_DIB_DATA;
 
 	int mymap_aaa;
 	int mymap_bbb;
-	//	mymap_aaa = (my_resource[num].my_texture)->texture_width;
-		mymap_aaa = my_resource[num].texture_width;
-		mymap_bbb = my_resource[num].texture_height;
+	//	mymap_aaa = (my_resource[set_reagion_number].my_texture)->texture_width;
+		mymap_aaa = my_resource[set_reagion_number].texture_width;
+		mymap_bbb = my_resource[set_reagion_number].texture_height;
 		#define my_map_TW128 mymap_aaa
 		#define my_map_TH128 mymap_bbb
 
 	unsigned int msize;
 //	msize = 0;
 	#if (1==USE_SDL_image)
-	msize = ((my_resource[num].my_texture)->w * (my_resource[num].my_texture)->h)
-		 * (my_resource[num].my_texture)->format->BytesPerPixel;
+	msize = ((my_resource[set_reagion_number].my_texture)->w * (my_resource[set_reagion_number].my_texture)->h)
+		 * (my_resource[set_reagion_number].my_texture)->format->BytesPerPixel;
 	#else
 	msize = (/*w*/my_map_TW128/*512*/ * /*h*/my_map_TH128/*512*/) * /*bpp*/(4);
 	#endif
@@ -150,7 +150,7 @@ static void convert_swizzle
 #if (1==USE_COLOR_16_AND_32)
 	/* --- PSP で簡易16ビット色を指定した場合は16bitに落とす */
 	#if (1==USE_SDL_image)
-	if (my_texture[num]->format->BytesPerPixel == (4))	/* PSP16bit mode && DIB==32bit color */
+	if (my_texture[set_reagion_number]->format->BytesPerPixel == (4))	/* PSP16bit mode && DIB==32bit color */
 	#else
 	if (/*BytesPerPixel*/(4) == (4))	/* PSP16bit mode && DIB==32bit color */
 	#endif
@@ -159,19 +159,19 @@ static void convert_swizzle
 		u16 *pixdst;
 		u32 *pixsrc;
 		/* --- 16bit色に 減色して保持 */
-		(my_resource[num].my_texture)->pixels = (void*)memalign(16, (msize>>1)/*(msize / 2)*/);
+		(my_resource[set_reagion_number].my_texture)->pixels = (void*)memalign(16, (msize>>1)/*(msize / 2)*/);
 		#if (1==USE_SDL_image)
-		msize = ((my_resource[num].my_texture)->w * (my_resource[num].my_texture)->h);
+		msize = ((my_resource[set_reagion_number].my_texture)->w * (my_resource[set_reagion_number].my_texture)->h);
 		#else
 		msize = (my_map_TW128 * my_map_TH128);
 		#endif
-		pixdst = (u16 *)/*convert_works*/gulist/*pclass->bitmap[num]->pixels*/;
+		pixdst = (u16 *)/*convert_works*/gulist/*pclass->bitmap[set_reagion_number]->pixels*/;
 		pixsrc = (u32 *)nonalign;
 
 		trans_format8888to5650(pixsrc, pixdst, (msize));
 
 	//	unsigned short *pixsrc2;
-	//	pixsrc2 = (unsigned short *)pclass->bitmap[num]->pixels;
+	//	pixsrc2 = (unsigned short *)pclass->bitmap[set_reagion_number]->pixels;
 	//	pixdst = (unsigned short *)gulist/*convert_works*/;
 	//	for (loop=0; loop<msize; loop++)
 	//	{
@@ -180,16 +180,16 @@ static void convert_swizzle
 	//		pixsrc2++;
 	//	}
 		#if (1==USE_SDL_image)
-		my_texture[num]->format->BytesPerPixel =  (2);
-		my_texture[num]->format->BitsPerPixel  = (16);
-		my_texture[num]->format->Rmask = /*PSP_SCREEN_FORMAT_RMASK*/RMASK16;/*RMASK16*/
-		my_texture[num]->format->Gmask = /*PSP_SCREEN_FORMAT_GMASK*/GMASK16;/*GMASK16*/
-		my_texture[num]->format->Bmask = /*PSP_SCREEN_FORMAT_BMASK*/BMASK16;/*BMASK16*/
-		my_texture[num]->format->Amask = /*PSP_SCREEN_FORMAT_AMASK*/AMASK16;/*AMASK16*/
+		my_texture[set_reagion_number]->format->BytesPerPixel =  (2);
+		my_texture[set_reagion_number]->format->BitsPerPixel  = (16);
+		my_texture[set_reagion_number]->format->Rmask = /*PSP_SCREEN_FORMAT_RMASK*/RMASK16;/*RMASK16*/
+		my_texture[set_reagion_number]->format->Gmask = /*PSP_SCREEN_FORMAT_GMASK*/GMASK16;/*GMASK16*/
+		my_texture[set_reagion_number]->format->Bmask = /*PSP_SCREEN_FORMAT_BMASK*/BMASK16;/*BMASK16*/
+		my_texture[set_reagion_number]->format->Amask = /*PSP_SCREEN_FORMAT_AMASK*/AMASK16;/*AMASK16*/
 		#endif
 	// 16bit色
 		convert_swizzle(
-			(u8*)((my_resource[num].my_texture)->MY_DIB_DATA),
+			(u8*)((my_resource[set_reagion_number].my_texture)->MY_DIB_DATA),
 			(const u8*)gulist/*convert_works*/,
 			/* texture width x 2 */  my_map_TW128/*512*/*(2), 	/* short だから 2倍 */
 			/* texture height	 */  my_map_TH128/*512*/);
@@ -200,12 +200,12 @@ static void convert_swizzle
 #endif
 	{
 		/* --- 32bit色 通常モード */
-		((my_resource[num].my_texture)->MY_DIB_DATA) = (void*)memalign(16, msize);
-		memcpy(/*convert_works*/gulist/*pclass->bitmap[num]->pixels*/, nonalign, msize);
+		((my_resource[set_reagion_number].my_texture)->MY_DIB_DATA) = (void*)memalign(16, msize);
+		memcpy(/*convert_works*/gulist/*pclass->bitmap[set_reagion_number]->pixels*/, nonalign, msize);
 		#if (1)
 	// 32bit色
 		convert_swizzle(
-			(u8*)((my_resource[num].my_texture)->MY_DIB_DATA),
+			(u8*)((my_resource[set_reagion_number].my_texture)->MY_DIB_DATA),
 			(const u8*)gulist/*convert_works*/,
 			/* texture width x 4 */  my_map_TW128/*512*/*(4), 	/* int だから 4倍 */
 			/* texture height	 */  my_map_TH128/*512*/);

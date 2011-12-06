@@ -1920,7 +1920,7 @@ extern PNG_EXPORT(png_voidp,png_malloc) PNGARG((png_structp png_ptr,
    png_uint_32 size));
 
 #if defined(PNG_1_0_X)
-#  define png_malloc_warn png_malloc
+	#define png_malloc_warn png_malloc
 #else
 /* Added at libpng version 1.2.4 */
 extern PNG_EXPORT(png_voidp,png_malloc_warn) PNGARG((png_structp png_ptr,

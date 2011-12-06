@@ -23,9 +23,12 @@
 	REG_0a_REG2 	bbb_angle65536
 	REG_0b_REG3 	だんだん大きくなる円の半径。
 	REG_0c_REG4 	音用カウンタ。(48回に1回) 発音。
+	-------------------------------------------------------
+	REG_0d_REG5 	x位置/退避/復旧
+	REG_0e_REG6 	y位置/退避/復旧
 ---------------------------------------------------------*/
 
-local void spell_create_15_aya_misogi1(OBJ *src)
+local OBJ_CALL_FUNC(spell_create_15_aya_misogi1)
 {
 //	if ((0x08)==((REG_10_BOSS_SPELL_TIMER)&0x0f))/* (16回に1回)(16回毎に発弾) */
 	count_up_limit_NUM(REG_NUM_08_REG0, 16);//	/* (16回に1回)(16回毎に発弾) */
@@ -37,17 +40,23 @@ local void spell_create_15_aya_misogi1(OBJ *src)
 		#define NUM_12_OF_CIRCLE_ONE	(9)
 	//	const unsigned int REG_0b_REG3 = (((~(REG_10_BOSS_SPELL_TIMER))>>3)&0x1f);/* テキトーに大きくしてみる。 */
 		count_up_limit_NUM(REG_NUM_0b_REG3, 24);//		/*(r34, 32)*/
+		//------------------
+		#if (0)//
+		// 退避
+		REG_0d_REG5 = REG_02_DEST_X;
+		REG_0e_REG6 = REG_03_DEST_Y;
+		//------------------
+		#endif
 		unsigned int jj;
 		for (jj=0; jj<(65536); jj+=(65536/NUM_12_OF_CIRCLE_ONE))/* 一周 */
 		{
 		//	REG_02_DEST_X += (sin65536((jj))*(16)); 			/* 弾源x256 */
 		//	REG_03_DEST_Y += (cos65536((jj))*(16)); 			/* 弾源y256 */
-			#if (0)//
-			REG_02_DEST_X += ((si n65536((jj))*((16+(REG_0b_REG3)))));/*fps_factor*/	/* 弾源x256 */	/* CCWの場合 */
-			REG_03_DEST_Y += ((co s65536((jj))*((16+(REG_0b_REG3)))));/*fps_factor*/	/* 弾源y256 */
-			REG_02_DEST_X += ((si n1024((deg65536to1024(jj)))*((16+(REG_0b_REG3)))));/*fps_factor*/ 	/* 弾源x256 */	/* CCWの場合 */
-			REG_03_DEST_Y += ((co s1024((deg65536to1024(jj)))*((16+(REG_0b_REG3)))));/*fps_factor*/ 	/* 弾源y256 */
-			#else
+			#if (1)//
+		//	REG_02_DEST_X += ((si n65536((jj))*((16+(REG_0b_REG3)))));/*fps_factor*/	/* 弾源x256 */	/* CCWの場合 */
+		//	REG_03_DEST_Y += ((co s65536((jj))*((16+(REG_0b_REG3)))));/*fps_factor*/	/* 弾源y256 */
+		//	REG_02_DEST_X += ((si n1024((deg65536to1024(jj)))*((16+(REG_0b_REG3)))));/*fps_factor*/ 	/* 弾源x256 */	/* CCWの場合 */
+		//	REG_03_DEST_Y += ((co s1024((deg65536to1024(jj)))*((16+(REG_0b_REG3)))));/*fps_factor*/ 	/* 弾源y256 */
 			{
 				int sin_value_t256; 	//	sin_value_t256 = 0;
 				int cos_value_t256; 	//	cos_value_t256 = 0;
@@ -55,6 +64,19 @@ local void spell_create_15_aya_misogi1(OBJ *src)
 				REG_02_DEST_X += ((sin_value_t256*((12+(REG_0b_REG3)))));/*fps_factor*/ 	/*(r34, 16)*/
 				REG_03_DEST_Y += ((cos_value_t256*((12+(REG_0b_REG3)))));/*fps_factor*/ 	/*(r34, 16)*/
 			}
+			#else/*(ダメ)*/
+			//------------------
+			HATSUDAN_01_speed256	= ((12+(REG_0b_REG3))<<8);
+			HATSUDAN_03_angle65536	= (((jj)));
+			sincos256();/*(破壊レジスタ多いので注意)*/
+		//	REG_09_REG1 -= ( ((REG_03_DEST_Y))); 	/* 弾速 */
+		//	h->center.y256 = (REG_02_DEST_X);/*fps_factor*/
+			//------------------
+			//------------------
+			// 復旧
+			REG_02_DEST_X = REG_0d_REG5 + (REG_03_DEST_Y);
+			REG_03_DEST_Y = REG_0e_REG6 + (REG_02_DEST_X);
+			//------------------
 			#endif
 			unsigned int ii;
 			for (ii=0; ii<(65536); ii+=(65536/2))/* 一周 */
@@ -114,7 +136,7 @@ local void spell_create_15_aya_misogi1(OBJ *src)
 	REG_0c_REG4 	音用カウンタ。(40回に1回) 発音。
 ---------------------------------------------------------*/
 
-local void spell_create_23_aya_misogi2(OBJ *src)
+local OBJ_CALL_FUNC(spell_create_23_aya_misogi2)
 {
 //	if ((0x04)==((REG_10_BOSS_SPELL_TIMER)&0x07))/* (8回に1回 発弾) */
 	count_up_limit_NUM(REG_NUM_08_REG0, 8);//	/* (8回に1回 発弾) */
@@ -222,7 +244,7 @@ local void spell_create_23_aya_misogi2(OBJ *src)
 	[弾幕グループ(1)セクション]
 	-------------------------------------------------------
 ---------------------------------------------------------*/
-local void aya_danmaku_01_callback(OBJ *src)/* 岐符「天の八衢」 */
+local OBJ_CALL_FUNC(aya_danmaku_01_callback)/* 岐符「天の八衢」 */
 {
 	if (((32*18)-HATUDAN_FRAME64)==((REG_0a_REG2) ))/* 約0.33[秒](==20[frame])停止 */
 	{
@@ -257,7 +279,7 @@ local void aya_danmaku_01_callback(OBJ *src)/* 岐符「天の八衢」 */
 			src->hatudan_register_tra65536			= t256(1);	/* (1) 調整加速弾 */
 		/* チルノ(パーフェクトフリーズ)の場合は先に変身するが、文(天の八衢)の場合は後で変身する。 */
 			src->obj_type_set							= (BULLET_MARU10_BASE + TAMA_IRO_03_AOI);	/* 青丸弾 */
-			reflect_sprite_spec444(src, OBJ_BANK_SIZE_00_TAMA); 	/* 弾グラと弾あたり判定を変更する。 */
+			reflect_sprite_spec(src, OBJ_BANK_SIZE_00_TAMA); 	/* 弾グラと弾あたり判定を変更する。 */
 			/* (通常弾へ変身する) */
 			src->hatudan_register_spec_data 		= (DANMAKU_LAYER_00)|(TAMA_SPEC_8000_NON_TILT);/* (r33-)非傾き弾 */
 		}
@@ -265,7 +287,7 @@ local void aya_danmaku_01_callback(OBJ *src)/* 岐符「天の八衢」 */
 		#if (1)
 	//	voice_play(VOICE15_BOSS_KOUGEKI_01, TRACK04_TEKIDAN);
 	//	bullet_play_04_auto(VOICE11_BOSS_KIRARIN);		/* 効果音: きらりん */
-		voice_play(VOICE11_BOSS_KIRARIN, TRACK03_SHORT_MUSIC);		/* 効果音: きらりん */
+		voice_play(VOICE11_BOSS_KIRARIN, TRACK03_IVENT_DAN);		/* 効果音: きらりん */
 		voice_play(VOICE11_BOSS_KIRARIN, TRACK04_TEKIDAN);			/* 効果音: きらりん */
 		/* 大事な事なので２回言いました。 */
 		#endif
@@ -279,7 +301,7 @@ local void aya_danmaku_01_callback(OBJ *src)/* 岐符「天の八衢」 */
 	[初期化セクション]
 	-------------------------------------------------------
 ---------------------------------------------------------*/
-local void spell_init_22_aya_yatimata(OBJ *src)
+local OBJ_CALL_FUNC(spell_init_22_aya_yatimata)
 {
 	card.danmaku_callback[1] = aya_danmaku_01_callback;/*(岐符「天の八衢」用。)*/
 //	card.danmaku_callback[2] = NULL;/*(未使用)*/
@@ -294,7 +316,7 @@ local void spell_init_22_aya_yatimata(OBJ *src)
 	REG_0a_REG2 	ボスタイマー値、コールバック側に連絡用。(とりあえず)
 //	REG_0b_REG3 	再加速の速度用に一時使用。
 ---------------------------------------------------------*/
-local void spell_create_22_aya_yatimata(OBJ *src)
+local OBJ_CALL_FUNC(spell_create_22_aya_yatimata)
 {
 	REG_0a_REG2 = (REG_10_BOSS_SPELL_TIMER);/*(とりあえず)*/
 	if ((32*20)-1==((REG_10_BOSS_SPELL_TIMER) ))/* 約1.0[秒](==64[frame])全弾を展開 */
@@ -339,7 +361,7 @@ local void spell_create_22_aya_yatimata(OBJ *src)
 // 4096 == 65536/16
 // 3855.05882352941176470588235294118 == 65536/17
 //	240.941176470588235294117647058824 == ((65536/16)-(16636/17)) 差分
-local void spell_create_26_aya_saifu(OBJ *src)
+local OBJ_CALL_FUNC(spell_create_26_aya_saifu)
 {
 	if ((SPELL_TIME_9999-1)==((REG_10_BOSS_SPELL_TIMER) ))/* 初期化 */
 	{
@@ -421,9 +443,9 @@ local void spell_create_26_aya_saifu(OBJ *src)
 	-------------------------------------------------------
 	テキトー
 ---------------------------------------------------------*/
-//tern void add_zako_aya_doll(OBJ *src);/* 椛弾 */
-extern void add_zako_aya_doll(OBJ *src);/* 文人形カード */
-local void spell_create_0f_aya_doll(OBJ *src)
+//tern OBJ_CALL_FUNC(add_zako_aya_doll);/* 椛弾 */
+extern OBJ_CALL_FUNC(add_zako_aya_doll);/* 文人形カード */
+local OBJ_CALL_FUNC(spell_create_0f_aya_doll)
 {
 	if (50==((REG_10_BOSS_SPELL_TIMER) ))
 	{
@@ -440,7 +462,7 @@ local void spell_create_0f_aya_doll(OBJ *src)
 	大玉弾
 ---------------------------------------------------------*/
 
-local void bullet_create_aya_kougeki_03(OBJ *src)
+local OBJ_CALL_FUNC(bullet_create_aya_kougeki_03)
 {
 	s_bullet_create_aya_oodama3(src, /* 仕様変更 */(t256(4.0)+((REG_0f_GAME_DIFFICULTY)<<7))/*, 10*/);
 }
@@ -450,7 +472,7 @@ local void bullet_create_aya_kougeki_03(OBJ *src)
 	危険な種弾
 ---------------------------------------------------------*/
 
-local void bullet_create_aya_kougeki_02(OBJ *src)
+local OBJ_CALL_FUNC(bullet_create_aya_kougeki_02)
 {
 	add_zako_aya_doll(src);
 };
@@ -462,7 +484,7 @@ local void bullet_create_aya_kougeki_02(OBJ *src)
 	-------------------------------------------------------
 ---------------------------------------------------------*/
 #if 0
-local void spell_init_1d_amefuri_test(OBJ *src)
+local OBJ_CALL_FUNC(spell_init_1d_amefuri_test)
 {
 	REG_09_REG1 	= (t256(1.5)+((REG_0f_GAME_DIFFICULTY)<<6));//[定数1]雨の速度
 //	REG_0a_REG2 	= ((1024/2)+(1024/24)+(REG_0f_GAME_DIFFICULTY<<3));//[定数2]赤青クナイが曲がる角度

@@ -7,11 +7,6 @@
 	SDL Copyright (C) 1997-2004 Sam Lantinga.
 ---------------------------------------------------------*/
 
-#ifdef SAVE_RCSID
-static char rcsid =
- "@(#) $Id: PSPL_sysaudio.h,v 1.21 2004/08/21 03:21:44 slouken Exp $";
-#endif
-
 #ifndef _PSPL_sysaudio_h
 #define _PSPL_sysaudio_h
 
@@ -22,7 +17,7 @@ static char rcsid =
 typedef struct SDL_AudioDevice SDL_AudioDevice;
 
 /* Define the SDL audio driver structure */
-#define _THIS	SDL_AudioDevice *_this
+
 #ifndef _STATUS
 #define _STATUS SDL_status *status
 #endif
@@ -34,12 +29,14 @@ typedef struct SDL_AudioDevice SDL_AudioDevice;
 
 	/* --- */
 	/* Public driver functions */
+//#define _THIS	SDL_AudioDevice *_this
 //NULL	void (*WaitDone)(_THIS);
 
 	/* --- */
 	/* Lock / Unlock functions added for the Mac port */
 //	void (*LockAudio)(_THIS);
 //	void (*UnlockAudio)(_THIS);
+//#undef _THIS
 
 
 
@@ -78,7 +75,6 @@ struct SDL_AudioDevice
 	SDL_Thread *thread;
 	u32 threadid;
 };
-#undef _THIS
 
 //typedef struct AudioBootStrap
 //{

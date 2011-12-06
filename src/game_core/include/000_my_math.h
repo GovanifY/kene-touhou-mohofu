@@ -10,14 +10,6 @@
 #ifndef _GAME_MY_MATH_H_
 #define _GAME_MY_MATH_H_
 
-enum /*_errlevel*/
-{
-	ERR_FATAL=0,
-	ERR_WARN,
-//	ERR_INFO,
-//	ERR_DEBUG,
-};
-
 #if 0
 enum PspCtrlButtons
 {
@@ -84,20 +76,16 @@ enum
 	KINOU_07_SQUARE,			//__BOMB_CANCEL,		/* Å† */		//	#define PSP_KEY_BOMB_CANCEL 	PSP_CTRL_SQUARE
 	KINOU_08_WARIATE_MAX		/* äÑÇËìñÇƒç≈ëÂêî */
 };
-/*
 
 
-*/
-
-
-extern void psp_fatal_error(char *msg, ...);/*int errorlevel,*/
+extern void psp_fatal_error(char *msg, ...);
 
 extern void *my_calloc(size_t size);
 
 /*  */
 #define USE_KETM_IMAGE_CHACHE (1)
 #if (1==USE_KETM_IMAGE_CHACHE)
-	extern SDL_Surface *load_chache_bmp(void);/*char *filename*/	//, int use_alpha, int use_chache);
+	extern SDL_Surface *load_chache_bmp(void);
 	extern void unloadbmp_by_surface(SDL_Surface *surface);
 #endif /*(1==USE_KETM_IMAGE_CHACHE)*/
 

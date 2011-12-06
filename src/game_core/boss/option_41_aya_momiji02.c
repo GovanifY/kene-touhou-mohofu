@@ -25,7 +25,7 @@
 	•ª—ô(last)
 ---------------------------------------------------------*/
 
-static void move_aya_doll_last_burrets(OBJ *src)
+static OBJ_CALL_FUNC(move_aya_doll_last_burrets)
 {
 //	/*[r35—v”¼•ª‘¬]*/HATSUDAN_01_speed256	= (t256(0.75)+(ra_nd()&0xff));					/* ’e‘¬ */
 	/*[r35”¼•ª‘¬]*/HATSUDAN_01_speed256 	= (t256(0.375)+(ra_nd()&0xff)); 				/* ’e‘¬ */
@@ -44,7 +44,7 @@ static void move_aya_doll_last_burrets(OBJ *src)
 
 ---------------------------------------------------------*/
 
-static void move_bullet_momiji(OBJ *src)
+static OBJ_CALL_FUNC(move_bullet_momiji)
 {
 	src->BOSS_DATA_05_move_jyumyou--;
 	if ((0 > src->BOSS_DATA_05_move_jyumyou))
@@ -75,21 +75,21 @@ static void move_bullet_momiji(OBJ *src)
 		#endif
 	//	mono_angle_move(src,(BULLET_ANGLE_DATA *)data);
 		#if (0)//
-		src->vx256			= ((si n1024((src->MOMIJI_KODOMO_DATA_angle1024))*(src->MOMIJI_KODOMO_DATA_speed256))>>8);/*fps_factor*/	/* CCW‚Ìê‡ */
-		src->vx256			= ((si n1024((src->MOMIJI_KODOMO_DATA_angle1024))*(src->MOMIJI_KODOMO_DATA_speed256))>>8);/*fps_factor*/
-		src->vy256			= ((co s1024((src->MOMIJI_KODOMO_DATA_angle1024))*(src->MOMIJI_KODOMO_DATA_speed256))>>8);/*fps_factor*/
-		src->vy256			= ((co s1024((src->MOMIJI_KODOMO_DATA_angle1024))*(src->MOMIJI_KODOMO_DATA_speed256))>>8);/*fps_factor*/
+		src->math_vector.x256			= ((si n1024((src->MOMIJI_KODOMO_DATA_angle1024))*(src->MOMIJI_KODOMO_DATA_speed256))>>8);/*fps_factor*/	/* CCW‚Ìê‡ */
+		src->math_vector.x256			= ((si n1024((src->MOMIJI_KODOMO_DATA_angle1024))*(src->MOMIJI_KODOMO_DATA_speed256))>>8);/*fps_factor*/
+		src->math_vector.y256			= ((co s1024((src->MOMIJI_KODOMO_DATA_angle1024))*(src->MOMIJI_KODOMO_DATA_speed256))>>8);/*fps_factor*/
+		src->math_vector.y256			= ((co s1024((src->MOMIJI_KODOMO_DATA_angle1024))*(src->MOMIJI_KODOMO_DATA_speed256))>>8);/*fps_factor*/
 		#else
 		{
 			int sin_value_t256; 	//	sin_value_t256 = 0;
 			int cos_value_t256; 	//	cos_value_t256 = 0;
 			int256_sincos1024( (src->MOMIJI_KODOMO_DATA_angle1024), &sin_value_t256, &cos_value_t256);
-			src->vx256			= ((sin_value_t256*(src->MOMIJI_KODOMO_DATA_speed256))>>8);/*fps_factor*/
-			src->vy256			= ((cos_value_t256*(src->MOMIJI_KODOMO_DATA_speed256))>>8);/*fps_factor*/
+			src->math_vector.x256			= ((sin_value_t256*(src->MOMIJI_KODOMO_DATA_speed256))>>8);/*fps_factor*/
+			src->math_vector.y256			= ((cos_value_t256*(src->MOMIJI_KODOMO_DATA_speed256))>>8);/*fps_factor*/
 		}
 		#endif
-		src->cx256 += (src->vx256);/*fps_factor*/
-		src->cy256 += (src->vy256);/*fps_factor*/
+		src->center.x256 += (src->math_vector.x256);/*fps_factor*/
+		src->center.y256 += (src->math_vector.y256);/*fps_factor*/
 
 	}
 }
@@ -99,7 +99,7 @@ static void move_bullet_momiji(OBJ *src)
 ---------------------------------------------------------*/
 #define MOMIJI_KODOMO_next_angle1024	tmp_angleCCW1024	/* Žq‹Ÿ’eA¶¬Šp“x */
 
-/*static*/ void add_zako_aya_5_momiji(OBJ *src)
+/*static*/ OBJ_CALL_FUNC(add_zako_aya_5_momiji)
 {
 	int angle1024;
 	angle1024 = (src->MOMIJI_KODOMO_next_angle1024)-((int)(1024*1/20));
@@ -108,18 +108,18 @@ static void move_bullet_momiji(OBJ *src)
 	for (jj=(0); jj<(5); jj++)
 	{
 		OBJ *h;
-		h							= obj_add_A01_teki_error();
+		h							= obj_regist_teki();
 		if (NULL!=h)/* “o˜^‚Å‚«‚½ê‡‚Ì‚Ý */
 		{
 			h->m_Hit256R			= ZAKO_ATARI16_PNG;
-			h->obj_type_set 				= (TEKI_32_20)+((angle1024>>7)&0x07);/* 0 ... 8 */
+			h->obj_type_set 		= (TEKI_32_20)+((angle1024>>7)&0x07);/* 0 ... 8 */
 			h->atari_hantei 		= (1/*ƒXƒRƒAŒ“—p*/);
 			h->callback_mover		= move_bullet_momiji;
 			h->BOSS_DATA_05_move_jyumyou			= (50); 	/* 200Žõ–½ */
 			{
 				/* ‰ŠúˆÊ’u */
-				h->cx256			= src->cx256;
-				h->cy256			= src->cy256;
+				h->center.x256			= src->center.x256;
+				h->center.y256			= src->center.y256;
 			}
 		//
 			h->MOMIJI_KODOMO_DATA_angle222_1024 	= (angle1024);

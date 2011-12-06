@@ -3,33 +3,58 @@
 	“Œ•û–Í•í•— ` Toho Imitation Style.
 	http://mohou.huuryuu.com/
 	-------------------------------------------------------
+	PSPL - PSP customised SDL Layer port.
+	SDL Copyright (C) 1997-2004 Sam Lantinga.
+	-------------------------------------------------------
 	/src/SDL231/video/SDL_video.c
 	date:		2011/02/04
 	source: 	http://psp.jim.sh/svn/filedetails.php?repname=psp&path=%2Ftrunk%2FSDL%2Fsrc%2Fvideo%2FSDL_video.c&peg=2366
 	revision:	448(2366ˆÈ‰º‚Å‚ÍÅV)
---------------------------------------------------------- */
+	-------------------------------------------------------
+	/src/SDL231/video/SDL_pspvideo.c
+	date:		2011/02/04
+	source: 	http://psp.jim.sh/svn/filedetails.php?repname=psp&path=%2Ftrunk%2FSDL%2Fsrc%2Fvideo%2Fpsp%2FSDL_pspvideo.c
+	revision:	2366(2366ˆÈ‰º‚Å‚ÍÅV)
+	-------------------------------------------------------
+http://psp.jim.sh/svn/filedetails.php?repname=psp&path=%2Ftrunk%2FSDL%2Fsrc%2Fvideo%2Fpsp%2FSDL_pspvideo.h
+---------------------------------------------------------*/
 
 /*
 psp - ƒŠƒrƒWƒ‡ƒ“ 448Subversion ƒŠƒ|ƒWƒgƒŠˆê——: pspps2ps2wareps3ps3warepspwareƒŠƒrƒWƒ‡ƒ“:(root)/trunk/SDL/src/video/SDL_video.c @ 2366
 ƒŠƒrƒWƒ‡ƒ“ 441 - Ú×•\¦ - ‘O‚ÌƒŠƒrƒWƒ‡ƒ“‚Æ‚Ì·•ª - ÅIXV“ú - ƒƒO‚ğŒ©‚é -
+psp - ƒŠƒrƒWƒ‡ƒ“ 2366Subversion ƒŠƒ|ƒWƒgƒŠˆê——: pspps2ps2wareps3ps3warepspwareƒŠƒrƒWƒ‡ƒ“:(root)/trunk/SDL/src/video/psp/SDL_pspvideo.c
+ƒŠƒrƒWƒ‡ƒ“ 1689 - Ú×•\¦ - ‘O‚ÌƒŠƒrƒWƒ‡ƒ“‚Æ‚Ì·•ª - ÅIXV“ú - ƒƒO‚ğŒ©‚é -
+psp - ƒŠƒrƒWƒ‡ƒ“ 1464Subversion ƒŠƒ|ƒWƒgƒŠˆê——: pspps2ps2wareps3ps3warepspwareƒŠƒrƒWƒ‡ƒ“:(root)/trunk/SDL/src/video/psp/SDL_pspvideo.h
+ƒŠƒrƒWƒ‡ƒ“ 1444 - Ú×•\¦ - ‘O‚ÌƒŠƒrƒWƒ‡ƒ“‚Æ‚Ì·•ª - ÅIXV“ú - ƒƒO‚ğŒ©‚é -
 */
+
+/*
+	PSP port contributed by:
+	Marcus R. Brown <mrbrown@ocgnet.org>
+	Jim Paris <jim@jtan.com>
+*/
+
+#ifdef SAVE_RCSID
+static char rcsid =
+ "@(#) $Id: PSPL_nullvideo.h,v 1.4 2004/01/04 16:49:24 slouken Exp $";
+#endif
 
 /* The high-level video driver subsystem */
 
 #include <psptypes.h>
 #include <pspge.h>
-#include <pspkernel.h>
-#include <psputils.h>
+//#include <pspkernel.h>
+//#include <psputils.h>
 #include <pspdisplay.h>
-#include <pspgu.h>
+//#include <pspgu.h>
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "./../include/PSPL.h"			/* æ‚èŠ¸‚¦‚¸(‰¼) */
-#include "./../include/PSPL_error.h" 	/* æ‚èŠ¸‚¦‚¸(‰¼) */
-#include "./../include/PSPL_video.h" 	/* æ‚èŠ¸‚¦‚¸(‰¼) */
+#include "./../include/PSPL_error.h"	/* æ‚èŠ¸‚¦‚¸(‰¼) */
+#include "./../include/PSPL_video.h"	/* æ‚èŠ¸‚¦‚¸(‰¼) */
 //#include "PSPL_events.h"
 //#include "PSPL_mutex.h"
 #include "PSPL_sysvideo.h"
@@ -39,541 +64,179 @@ psp - ƒŠƒrƒWƒ‡ƒ“ 448Subversion ƒŠƒ|ƒWƒgƒŠˆê——: pspps2ps2wareps3ps3warepspwareƒŠƒ
 #include "PSPL_events_c.h"
 //#include "PSPL_cursor_c.h"
 
-#include "PSPL_pspvideo.h"
-
 #ifndef SDL_SetError_bbb
 	#define SDL_SetError_bbb( ... )
 #endif
 
 
+#define SCREEN_480_WIDTH	(480)
+#define SCREEN_272_HEIGHT	(272)
 
 
-SDL_VideoDevice *current_video = NULL;
+	SDL_Surface *pspl_screen;
+/*---------------------------------------------------------
+
+---------------------------------------------------------*/
 
 
-
-/*
- * Get the current information about the video hardware
- */
-const SDL_VideoInfo *SDL_GetVideoInfo(void)/* memo: call from SDL_surface.c */
+/* PSP driver bootstrap functions */
+/* vidmem handling from Holger Waechtler's pspgl */
+struct vidmem_chunk
 {
-	const SDL_VideoInfo *info;
-	info = NULL;
-	if ( current_video )
-	{
-		info = &current_video->info;
-	}
-	return (info);
-}
-
-
-
-/*
- * Return a pointer to an array of available screen dimensions for the
- * given format, sorted largest to smallest.  Returns NULL if there are
- * no dimensions available for a particular format, or (SDL_Rect **)-1
- * if any dimension is okay for the given format.  If 'format' is NULL,
- * the mode list will be for the format given by SDL_GetVideoInfo()->vfmt
- */
-static const SDL_Rect RECT_480x272 =
-{
-	.x = 0,
-	.y = 0,
-	.w = 480,
-	.h = 272
-};
-static const SDL_Rect *modelist[] =
-{
-	&RECT_480x272,
-	NULL
-};
-static SDL_Rect **PSP_List_Modes(_THIS, SDL_PixelFormat *format, u32 flags)
-{
-	#define IS_SWSURFACE(flags) 	((flags & SDL_HWSURFACE) == SDL_SWSURFACE)
-	/* x dimension should be a multiple of PSP_SLICE_SIZE */
-	if (IS_SWSURFACE(flags))
-	{	return ((SDL_Rect **)-1);	}
-
-	switch(format->BitsPerPixel)
-	{
-	case 8: /* proxied by a shadow surface */
-	case 15:
-	case 16:
-	case 32:
-		return (SDL_Rect **)modelist;
-	default:
-		return (NULL);
-	}
-}
-static SDL_Rect ** s_PSPL_List_Modes(SDL_PixelFormat *format, u32 flags)
-{
-//	SDL_VideoDevice *video = current_video;
-	SDL_VideoDevice *this  = current_video;
-	SDL_Rect **modes;
-	modes = NULL;
-	if ( SDL_VideoSurface )
-	{
-		if ( format == NULL )
-		{
-			format = SDL_VideoSurface->format;
-		}
-	//	modes = video->List Modes(this, format, flags);//”p~Ï
-		modes = PSP_List_Modes(this, format, flags);
-	}
-	return (modes);
-}
-/*
- * Check to see if a particular video mode is supported.
- * It returns 0 if the requested mode is not supported under any bit depth,
- * or returns the bits-per-pixel of the closest available mode with the
- * given width and height.	If this bits-per-pixel is different from the
- * one used when setting the video mode, SDL_SetVideoMode() will succeed,
- * but will emulate the requested bits-per-pixel with a shadow surface.
- */
-static u8 SDL_closest_depths[4][8] =
-{
-	/* 8 bit closest depth ordering */
-	{ 0, 8, 16, 15, 32, 24, 0, 0 },
-	/* 15,16 bit closest depth ordering */
-	{ 0, 16, 15, 32, 24, 8, 0, 0 },
-	/* 24 bit closest depth ordering */
-	{ 0, 24, 32, 16, 15, 8, 0, 0 },
-	/* 32 bit closest depth ordering */
-	{ 0, 32, 16, 15, 24, 8, 0, 0 }
+	void *ptr;
+	unsigned int len;
 };
 
 
-#ifdef macintosh /* MPW optimization bug? */
-	#define NEGATIVE_ONE (0xffffffff)
-#else
-	#define NEGATIVE_ONE (-1)
-#endif
+static struct vidmem_chunk *vidmem_map = NULL;
+static unsigned int vidmem_map_len = 0;
 
-static int s_PSPL_VideoModeOK(/*int width, int height,*/ int bpp, u32 flags)
+static void *vidmem_map_insert_new (unsigned int idx, unsigned int adr, unsigned int size)
 {
-	/* Currently 1 and 4 bpp are not supported */
-	if ( bpp < 8 || bpp > 32 )
-	{
-		return (0);
-	}
-//	if ( (width <= 0) || (height <= 0) )
-//	{
-//		return (0);
-//	}
+	void *tmp = realloc(vidmem_map, (vidmem_map_len + 1) * sizeof(vidmem_map[0]));
+	if (!tmp)
+	{	return (NULL);	}
 
-	/* Search through the list valid of modes */
-	SDL_PixelFormat format;
-	memset(&format, 0, sizeof(format));
-	int supported;
-	supported = 0;
-	unsigned int table;
-//	table = (((bpp+7)/8)-1);
-	table = (((bpp+7)>>3)-1);
-	SDL_closest_depths[table][0] = bpp;
-	SDL_closest_depths[table][7] = 0;
-//
-	int b;
-	int i;
-	for (b=0; !supported && SDL_closest_depths[table][b]; b++)
+	vidmem_map = tmp;
+	memmove(&vidmem_map[idx+1], &vidmem_map[idx], (vidmem_map_len-idx) * sizeof(vidmem_map[0]));
+	vidmem_map_len++;
+	vidmem_map[idx].ptr = (void*) adr;
+	vidmem_map[idx].len = size;
+
+	return vidmem_map[idx].ptr;
+}
+
+
+static void* vidmem_alloc(unsigned int size)
+{
+	unsigned int start;
+	unsigned int adr;
+	unsigned int i;
+	//
+	start = ((unsigned int)sceGeEdramGetAddr());
+	adr = start;
+
+	/* round the size up to the nearest 16 bytes and all hwsurfaces are safe to
+	   use as textures */
+	if (size % 16 != 0)
+	{	size += 16 - (size % 16);	}
+
+	for (i=0; i<vidmem_map_len; i++)
 	{
-		SDL_Rect **sizes;
-		format.BitsPerPixel = SDL_closest_depths[table][b];
-		sizes = s_PSPL_List_Modes(&format, flags);
-		if ( sizes == (SDL_Rect **)0 )
+		if (vidmem_map[i].ptr != NULL)
 		{
-			/* No sizes supported at this bit-depth */
-			continue;
-		}
-		else
-		if (sizes == (SDL_Rect **)NEGATIVE_ONE)
-		{
-			/* Any size supported at this bit-depth */
-			supported = 1;
-			continue;
-		}
-//		else
-//		if (current_video->handles_any_size)
-//		{
-//			/* Driver can center a smaller surface to simulate fullscreen */
-//			for (i=0; sizes[i]; i++)
-//			{
-//			//	if ((sizes[i]->w >= width) && (sizes[i]->h >= height))
-//				if ((sizes[i]->w >= /*width*/480) && (sizes[i]->h >= /*height*/272))
-//				{
-//					supported = 1; /* this mode can fit the centered window. */
-//					break;
-//				}
-//			}
-//		}
-		else
-		{
-			for (i=0; sizes[i]; i++)
-			{
-			//	if ((sizes[i]->w == width) && (sizes[i]->h == height))
-				if ((sizes[i]->w == /*width*/480) && (sizes[i]->h == /*height*/272))
-				{
-					supported = 1;
-					break;
-				}
+			unsigned int new_adr = (unsigned int) vidmem_map[i].ptr;
+			if (size <= new_adr - adr)
+			{	return vidmem_map_insert_new(i, adr, size);
 			}
+			adr = new_adr + vidmem_map[i].len;
 		}
 	}
-	if ( supported )
+
+	if (adr + size > start + sceGeEdramGetSize())
+	{	return (NULL);		}
+	return vidmem_map_insert_new(vidmem_map_len, adr, size);
+}
+
+
+static void  vidmem_free(void * ptr)
+{
+	unsigned int i;
+	for (i=0; i<vidmem_map_len; i++)
 	{
-		b--;
-		return (SDL_closest_depths[table][b]);
-	}
-	else
-	{
-		return (0);
+		if (vidmem_map[i].ptr == ptr)
+		{
+			void *tmp;
+			vidmem_map_len--;
+			memmove(&vidmem_map[i], &vidmem_map[i+1], (vidmem_map_len-i) * sizeof(vidmem_map[0]));
+			tmp = realloc(vidmem_map, vidmem_map_len * sizeof(vidmem_map[0]));
+			if (tmp)
+			{	vidmem_map = tmp;	}
+		}
 	}
 }
 
+/*---------------------------------------------------------
+
+---------------------------------------------------------*/
+
+#if 1/*(???)*/
 /*
- * Get the closest non-emulated video mode to the one requested
- */
-static int s_PSPL_GetVideoMode(int *BitsPerPixel, u32 flags)/*int *w, int *h,*/
+Anybody have a routine that will take a number and round it up to the next
+power of two?
+
+i.e.:
+15 gets rounded up to 16 (2^4).
+120 gets rounded up to 128 (2^7).
+1000 gets rounded up to 1024 (2^10).
+
+etc...
+*/
+
+static /*inline*/ int round_up_to_power_of_2(int x)
 {
-	int table, b, i;
-	int supported;
-	int native_bpp;
-	SDL_PixelFormat format;
-	SDL_Rect **sizes;
-
-	/* Check parameters */
-	if ( (*BitsPerPixel) < 8 || (*BitsPerPixel) > 32 )
+	#if (1)
+	/* alegrex(psp‚Ìcpu)‘Î‰‚Ì‘g‚İ‚İŠÖ”‚ğg‚¤ */
+	return (1 << (32 - __builtin_allegrex_clz(x - 1)));
+	#else
+	/* alegrex”ñ‘Î‰‚Ìê‡ */
+	/* –œˆêƒRƒ“ƒpƒCƒ‹‚Å‚«‚È‚¢SDK‚Ìê‡—p */
 	{
-		SDL_SetError_bbb("Invalid bits per pixel(range is {8...32})");
-		return (0);
-	}
-//	if ((*w <= 0) || (*h <= 0))
-//	{
-//		SDL_SetError_bbb("Invalid width or height");
-//		return (0);
-//	}
-
-	/* Try the original video mode, get the closest depth */
-	native_bpp = s_PSPL_VideoModeOK(*BitsPerPixel, flags);/* *w, *h,*/
-	if (native_bpp == (*BitsPerPixel))
-	{
-		return (1);
-	}
-	if (0 < native_bpp)
-	{
-		(*BitsPerPixel) = native_bpp;
-		return (1);
-	}
-
-	/* No exact size match at any depth, look for closest match */
-	memset(&format, 0, sizeof(format));
-	supported = 0;
-	table = ((*BitsPerPixel+7)/8)-1;
-	SDL_closest_depths[table][0] = *BitsPerPixel;
-	SDL_closest_depths[table][7] = SDL_VideoSurface->format->BitsPerPixel;
-	for (b=0; !supported && SDL_closest_depths[table][b]; b++)
-	{
-		int best;
-		format.BitsPerPixel = SDL_closest_depths[table][b];
-		sizes = s_PSPL_List_Modes(&format, flags);
-		if ( sizes == (SDL_Rect **)0 )
+		int b = x;
+		int n;
+		for (n=0; b!=0; n++)
 		{
-			/* No sizes supported at this bit-depth */
-			continue;
+			b >>= 1;
 		}
-		best = 0;
-		for (i=0; sizes[i]; i++)
+		b = (1 << n);
+		//
+		if (b == (2 * x))
 		{
-			/* Mode with both dimensions bigger or equal than asked ? */
-			if ((sizes[i]->w >= /* *w*/480) && (sizes[i]->h >= /* *h*/272))
-			{
-				/* Mode with any dimension smaller or equal than current best ? */
-				if ((sizes[i]->w <= sizes[best]->w) || (sizes[i]->h <= sizes[best]->h))
-				{
-					best = i;
-					supported = 1;
-				}
-			}
+			b >>= 1;
 		}
-		if (supported)
-		{
-//480		*w=sizes[best]->w;
-//272		*h=sizes[best]->h;
-			*BitsPerPixel = SDL_closest_depths[table][b];
-		}
-	}
-	if ( ! supported )
-	{
-	//	SDL_SetError_bbb("No video mode large enough for %dx%d", *w, *h);
-		SDL_SetError_bbb("No video mode large enough for 480x272" );
-	}
-	return (supported);
-}
-
-/*
- * Create a shadow surface suitable for fooling the app. :-)
- */
-static void SDL_CreateShadowSurface(int depth)
-{
-	u32 Rmask, Gmask, Bmask;
-
-	/* Allocate the shadow surface */
-	if ( depth == (SDL_VideoSurface->format)->BitsPerPixel )
-	{
-		Rmask = (SDL_VideoSurface->format)->Rmask;
-		Gmask = (SDL_VideoSurface->format)->Gmask;
-		Bmask = (SDL_VideoSurface->format)->Bmask;
-	}
-	else
-	{
-		Rmask = Gmask = Bmask = 0;
-	}
-	SDL_ShadowSurface = SDL_CreateRGBSurface(SDL_SWSURFACE,
-				SDL_VideoSurface->w, SDL_VideoSurface->h,
-						depth, Rmask, Gmask, Bmask, 0);
-	if ( SDL_ShadowSurface == NULL )
-	{
-		return;
-	}
-
-	/* 8-bit shadow surfaces report that they have exclusive palette */
-	if ( SDL_ShadowSurface->format->palette )
-	{
-		SDL_ShadowSurface->flags |= SDL_HWPALETTE;
-		if ( depth == (SDL_VideoSurface->format)->BitsPerPixel )
-		{
-			memcpy(SDL_ShadowSurface->format->palette->colors,
-				SDL_VideoSurface->format->palette->colors,
-				SDL_VideoSurface->format->palette->ncolors*
-							sizeof(SDL_Color));
-		}
-		else
-		{
-			SDL_DitherColors(SDL_ShadowSurface->format->palette->colors, depth);
-		}
-	}
-
-	/* If the video surface is resizable, the shadow should say so */
-	if ( (SDL_VideoSurface->flags & SDL_RESIZABLE) == SDL_RESIZABLE )
-	{
-		SDL_ShadowSurface->flags |= SDL_RESIZABLE;
-	}
-	/* If the video surface has no frame, the shadow should say so */
-	if ( (SDL_VideoSurface->flags & SDL_NOFRAME) == SDL_NOFRAME )
-	{
-		SDL_ShadowSurface->flags |= SDL_NOFRAME;
-	}
-	/* If the video surface is fullscreen, the shadow should say so */
-	if ( (SDL_VideoSurface->flags & SDL_FULLSCREEN) == SDL_FULLSCREEN )
-	{
-		SDL_ShadowSurface->flags |= SDL_FULLSCREEN;
-	}
-	/* If the video surface is flippable, the shadow should say so */
-	if ( (SDL_VideoSurface->flags & SDL_DOUBLEBUF) == SDL_DOUBLEBUF )
-	{
-		SDL_ShadowSurface->flags |= SDL_DOUBLEBUF;
-	}
-//	return;
-}
-
-/*
- * Set the requested video mode, allocating a shadow buffer if necessary.
- */
-/*static*/extern SDL_Surface *SDLVIDEO_PSP_SetVideoMode480x272(_THIS, SDL_Surface *current, /*int width_480, int height_272,*/ int bpp, u32 flags);
-SDL_Surface * SDL_SetVideoMode(int dummy_width, int dummy_height, int bpp, u32 flags)
-{
-	SDL_VideoDevice *video, *this;
-	SDL_Surface *prev_mode, *mode;
-	int video_bpp;
-
-	/* Start up the video driver, if necessary..
-	   WARNING: This is the only function protected this way!
-	 */
-	if ( ! current_video )
-	{
-		if ( SDL_Init(SDL_INIT_VIDEO|SDL_INIT_NOPARACHUTE) < 0 )
-		{
-			return (NULL);
-		}
-	}
-	this = video = current_video;
-
-	/* Default to the current video bpp */
-	if ( bpp == 0 )
-	{
-		flags |= SDL_ANYFORMAT;
-		bpp = SDL_VideoSurface->format->BitsPerPixel;
-	}
-
-	/* Get a good video mode, the closest one possible */
-//	int video_w;	video_w = width;
-//	int video_h;	video_h = height;
-	video_bpp = bpp;
-	if ( ! s_PSPL_GetVideoMode(/*&video_w, &video_h,*/ &video_bpp, flags) )
-	{
-		return (NULL);
-	}
-
-	/* Check the requested flags */
-	/* There's no palette in > 8 bits-per-pixel mode */
-	if ( video_bpp > 8 )
-	{
-		flags &= ~SDL_HWPALETTE;
-	}
-	#if 0
-	if ( (flags&SDL_FULLSCREEN) != SDL_FULLSCREEN )
-	{
-		/* There's no windowed double-buffering */
-		flags &= ~SDL_DOUBLEBUF;
+		return (b);
 	}
 	#endif
-	if ( (flags&SDL_DOUBLEBUF) == SDL_DOUBLEBUF )
-	{
-		/* Use hardware surfaces when double-buffering */
-		flags |= SDL_HWSURFACE;
-	}
+}
 
-	/* Clean up any previous video mode */
-	if ( SDL_PublicSurface != NULL )
+	/* Allocates a surface in video memory */
+//	int (*AllocHWSurface)(_THIS, SDL_Surface *surface);
+/*static*/extern int SDLVIDEO_PSP_AllocHWSurface_aaa(/*_THIS,*/ SDL_Surface *surface)
+{
+	int pitch;
+	pitch = round_up_to_power_of_2(surface->pitch);
+	surface->pixels = vidmem_alloc(pitch * surface->h);
+	if (!surface->pixels)
 	{
-		SDL_PublicSurface = NULL;
+		return (-1);/* ¸”s */
 	}
-	if ( SDL_ShadowSurface != NULL )
-	{
-		SDL_Surface *ready_to_go;
-		ready_to_go = SDL_ShadowSurface;
-		SDL_ShadowSurface = NULL;
-		SDL_FreeSurface(ready_to_go);
-	}
-//”p~	if ( video->physpal )
-//”p~	{
-//”p~		free(video->physpal->colors);
-//”p~		free(video->physpal);
-//”p~		video->physpal = NULL;
-//”p~	}
-//”p~	if ( video->gammacols)
-//”p~	{
-//”p~		free(video->gammacols);
-//”p~		video->gammacols = NULL;
-//”p~	}
+	surface->pitch = pitch;
+	surface->flags |= SDL_HWSURFACE;/* HW‰Â”\ */
+	surface->hwdata = (void*)1; /* Hack to make SDL realize it's a HWSURFACE when freeing */
+	return (0);/* ¬Œ÷ */
+}
+#endif
 
-	/* Try to set the video mode, along with offset and clipping */
-	prev_mode = SDL_VideoSurface;
-	SDL_VideoSurface = NULL;	/* In case it's freed by driver */
-//	mode = video->SetVideoMode(this, prev_mode, /*video_w*/480, /*video_h*/272, video_bpp, flags);
-	mode = SDLVIDEO_PSP_SetVideoMode480x272(this, prev_mode, video_bpp, flags);
-	if ( mode ) 	/* Prevent resize events from mode change */
-	{
-//”p~Ï	SDL_PrivateResize(mode->w, mode->h);
-	}
-	/*
-	 * rcg11292000
-	 * If you try to set an SDL_OPENGL surface, and fail to find a
-	 * matching  visual, then the next call to SDL_SetVideoMode()
-	 * will segfault, since  we no longer point to a dummy surface,
-	 * but rather NULL.
-	 * Sam 11/29/00
-	 * WARNING, we need to make sure that the previous mode hasn't
-	 * already been freed by the video driver.	What do we do in
-	 * that case?  Should we call PSPL_VideoInit() again?
-	 */
-	SDL_VideoSurface = (mode != NULL) ? mode : prev_mode;
+/*---------------------------------------------------------
 
-	if ( (mode != NULL)	)
-	{
-		/* Sanity check */
-//		if ( (mode->w < /*width*/480) || (mode->h < /*height*/272) )
-//		{
-//			SDL_SetError_bbb("Video mode smaller than requested");
-//			return (NULL);
-//		}
+---------------------------------------------------------*/
 
-		/* If we have a palettized surface, create a default palette */
-		if ( mode->format->palette )
-		{
-			SDL_PixelFormat *vf = mode->format;
-			SDL_DitherColors(vf->palette->colors, vf->BitsPerPixel);
-//”p~Ï			video->SetColors(this, 0, vf->palette->ncolors, vf->palette->colors);
-		}
-
-		/* Clear the surface to black */
-//”p~		video->offset_x 	= (0);
-//”p~		video->offset_y 	= (0);
-		mode->offset		= (0);
-		SDL_SetClipRect(mode, NULL);
-		#if 0/*(‚Æ‚è‚ ‚¦‚¸)*/
-		SDL_ClearSurface(mode);// –{—ˆA‹N“®(‰æ–Êƒ‚[ƒhØ‚è‘Ö‚¦)‚É‰æ–ÊÁ‚·‹@”\B
-		#endif
-		/* Now adjust the offsets to match the desired mode */
-	//	video->offset_x = ((/*mode->w*/480-/*width*/480)/2);
-	//	video->offset_y = ((/*mode->h*/272-/*height*/272)/2);
-//”p~		video->offset_x = (0);
-//”p~		video->offset_y = (0);
-		mode->offset = (0);//(video->offset_y * mode->pitch) + (video->offset_x * mode->format->BytesPerPixel);
-		#ifdef DEBUG_VIDEO
-		fprintf(stderr,
-			"Requested mode: %dx%dx%d, obtained mode %dx%dx%d (offset %d)\n",
-			width, height, bpp,
-			mode->w, mode->h, mode->format->BitsPerPixel, mode->offset);
-		#endif
-		mode->w = /*width*/480;
-		mode->h = /*height*/272;
-		SDL_SetClipRect(mode, NULL);
-	}
-
-	/* If we failed setting a video mode, return NULL... (Uh Oh!) */
-	if ( mode == NULL )
-	{
-		return (NULL);
-	}
-
-	/* If there is no window manager, set the SDL_NOFRAME flag */
-	if ( ! video->info.wm_available )
-	{
-		mode->flags |= SDL_NOFRAME;
-	}
-
-	/* Create a shadow surface if necessary */
-	/* There are three conditions under which we create a shadow surface:
-		1.	We need a particular bits-per-pixel that we didn't get.
-		2.	We need a hardware palette and didn't get one.
-		3.	We need a software surface and got a hardware surface.
-	*/
-	if (
-		 (
-		 (	!(flags&SDL_ANYFORMAT) &&
-			(SDL_VideoSurface->format->BitsPerPixel != bpp)) ||
-		 (	 (flags&SDL_HWPALETTE) &&
-				!(SDL_VideoSurface->flags&SDL_HWPALETTE)) ||
-		/* If the surface is in hardware, video writes are visible
-		   as soon as they are performed, so we need to buffer them
-		 */
-		 (	 ((flags&SDL_HWSURFACE) == SDL_SWSURFACE) &&
-				(SDL_VideoSurface->flags&SDL_HWSURFACE)) ||
-		 (	 (flags&SDL_DOUBLEBUF) &&
-				(SDL_VideoSurface->flags&SDL_HWSURFACE) &&
-				!(SDL_VideoSurface->flags&SDL_DOUBLEBUF))
-		 ) )
-	{
-		SDL_CreateShadowSurface(bpp);
-		if ( SDL_ShadowSurface == NULL )
-		{
-			SDL_SetError_bbb("Couldn't create shadow surface");
-			return (NULL);
-		}
-		SDL_PublicSurface = SDL_ShadowSurface;
-	}
-	else
-	{
-		SDL_PublicSurface = SDL_VideoSurface;
-	}
-	video->info.vfmt = SDL_VideoSurface->format;
-
-	/* We're done! */
-	return (SDL_PublicSurface);
+	/* Frees a previously allocated video surface */
+//	void (*FreeHWSurface)(_THIS, SDL_Surface *surface);
+/*static*/extern void SDLVIDEO_PSP_FreeHWSurface_aaa(/*_THIS,*/ SDL_Surface *surface)
+{
+	vidmem_free(surface->pixels);
+	surface->pixels = NULL;
 }
 
 
 
+
+
+
+/*---------------------------------------------------------
+
+---------------------------------------------------------*/
 
 
 #if (1)/* call from src/core/menu/scenario_script.c */
@@ -583,179 +246,231 @@ SDL_Surface * SDL_SetVideoMode(int dummy_width, int dummy_height, int bpp, u32 f
 /*global*/ SDL_Surface *SDL_DisplayFormat(SDL_Surface *surface)
 {
 	u32 flags;
-	#if (000)/* NOT support check. */
-	if ( ! SDL_PublicSurface )
-	{
-		// SDL‚ÌƒrƒfƒIƒ‚[ƒh‚ªˆê“x‚àƒZƒbƒg‚³‚ê‚Ä‚È‚¢‚æB
-		SDL_SetError_bbb("No video mode has been set");
-		return (NULL);
-	}
-	#endif
-	#if (000)/* NOT support get SDL_HWSURFACE. */
-	/* Set the flags appropriate for copying to display surface */
-	if (((SDL_PublicSurface->flags&SDL_HWSURFACE) == SDL_HWSURFACE) && current_video->info.blit_hw)
-	{	flags = SDL_HWSURFACE;}
-	else
-	#endif
+//	#if (000)/* NOT support check. */
+//	if ( ! (pspl_screen) )
+//	{
+//		// SDL‚ÌƒrƒfƒIƒ‚[ƒh‚ªˆê“x‚àƒZƒbƒg‚³‚ê‚Ä‚È‚¢‚æB
+//		SDL_SetError_bbb("No video mode has been set");
+//		return (NULL);
+//	}
+//	#endif
+//	#if (000)/* NOT support get SDL_HWSURFACE. */
+//	/* Set the flags appropriate for copying to display surface */
+//	if ((((pspl_screen)->flags&SDL_HWSURFACE) == SDL_HWSURFACE) && current_video->info.blit_hw)
+//	{	flags = SDL_HWSURFACE;}
+//	else
+//	#endif
 	{	flags = SDL_SWSURFACE;}
-	#ifdef AUTORLE_DISPLAYFORMAT
-	flags |= (surface->flags & (SDL_SRCCOLORKEY|SDL_SRCALPHA));
-	flags |= SDL_RLEACCELOK;
+//	#ifdef AUTORLE_DISPLAYFORMAT
+//	flags |= (surface->flags & (SDL_SRCCOLORKEY|SDL_SRCALPHA));
+//	flags |= SDL_RLEACCELOK;
+//	#else
+	#if (1==USE_RLEACCEL)
+		flags |= surface->flags & (SDL_SRCCOLORKEY|SDL_SRCALPHA|SDL_RLEACCELOK);
 	#else
-	flags |= surface->flags & (SDL_SRCCOLORKEY|SDL_SRCALPHA|SDL_RLEACCELOK);
-	#endif
-	return (SDL_ConvertSurface(surface, SDL_PublicSurface->format, flags));
+		flags |= surface->flags & (SDL_SRCCOLORKEY|SDL_SRCALPHA/*|SDL_RLEACCELOK*/);
+	#endif /*(USE_RLEACCEL)*/
+//	#endif
+	return (SDL_ConvertSurface(surface, (pspl_screen)->format, flags));
 }
 #endif
 
-
-/*
- * Clean up the video subsystem
- */
-extern void SDLVIDEO_PSP_VideoQuit(_THIS);
-/*static*/extern void SDLVIDEO_PSP_DeleteDevice(SDL_VideoDevice *device);
+	/* * * */
+static void *psp_vram_base;
+/*---------------------------------------------------------
+	Clean up the video subsystem.
+	Note:	If we are terminated, this could be called in the middle of
+			another SDL video routine -- notably UpdateRects.
+--------------------------------------------------------- */
+/* Reverse the effects VideoInit() -- called if VideoInit() fails
+   or if the application is shutting down the video subsystem. */
 void PSPL_VideoQuit(void)/*only exit once*/
 {
-	if ( current_video )
+	/* Clean up allocated window manager items */
+//	if ( (pspl_screen) )
+//	{
+//		(pspl_screen) = NULL;
+//	}
+	/* Just in case... */
+	/* Clean up the system video */
+//	sceGuTerm();/*???*/
+	vidmem_free(psp_vram_base);
+	/* Free any lingering surfaces */
+	if ( (pspl_screen) != NULL )
 	{
-		/* Halt event processing before doing anything else */
-//”p~Ï	SDL_StopEventLoop();
-
-		/* Clean up allocated window manager items */
-		if ( SDL_PublicSurface )
-		{
-			SDL_PublicSurface = NULL;
-		}
-		/* Just in case... */
-
-		{
-		//	SDL_VideoDevice *video = current_video;
-			SDL_VideoDevice *this  = current_video;
-			/* Clean up the system video */
-		//	video->VideoQuit(this);
-			SDLVIDEO_PSP_VideoQuit(this);
-
-			/* Free any lingering surfaces */
-			{
-				SDL_Surface *ready_to_go;
-				ready_to_go 		= SDL_ShadowSurface;
-				SDL_ShadowSurface	= NULL;
-				SDL_FreeSurface(ready_to_go);
-				if ( SDL_VideoSurface != NULL )
-				{
-					ready_to_go 		= SDL_VideoSurface;
-					SDL_VideoSurface	= NULL;
-					SDL_FreeSurface(ready_to_go);
-				}
-			}
-			SDL_PublicSurface = NULL;
-
-			/* Clean up miscellaneous memory */
-//”p~			if ( video->physpal )
-//”p~			{
-//”p~				free(video->physpal->colors);
-//”p~				free(video->physpal);
-//”p~				video->physpal = NULL;
-//”p~			}
-//”p~			if ( video->gammacols ) 			{	free(video->gammacols); 	video->gammacols = NULL;	}
-//”p~			if ( video->gamma ) 				{	free(video->gamma); 		video->gamma = NULL;		}
-			/* Finish cleaning up video subsystem */
-		//	video->free(this);
-			SDLVIDEO_PSP_DeleteDevice(this);
-			current_video = NULL;
-		}
+		SDL_Surface *ready_to_go;
+		ready_to_go 		= (pspl_screen);
+		(pspl_screen)	= NULL;
+		SDL_FreeSurface(ready_to_go);
 	}
-//	return;
+	(pspl_screen) = NULL;
+	/* Clean up miscellaneous memory */
+	/* Finish cleaning up video subsystem */
+//	video->free(this);
 }
 
-/*
- * Initialize the video and event subsystems -- determine native pixel format
- */
-extern SDL_VideoDevice *PSP_CreateDevice(int devindex);
-/*static*/extern int SDLVIDEO_PSP_VideoInit(_THIS, SDL_PixelFormat *vformat);
-void PSPL_VideoInit(void)/*only boot once*/
-{
-	SDL_PixelFormat vformat;
-	u32 video_flags;
-//
-	/* Toggle the event thread flags, based on OS requirements */
-	#if defined(MUST_THREAD_EVENTS)
-	flags |= SDL_INIT_EVENTTHREAD;
-	#elif defined(CANT_THREAD_EVENTS)
-	if ( (flags & SDL_INIT_EVENTTHREAD) == SDL_INIT_EVENTTHREAD )
-	{
-		SDL_SetError_bbb("OS doesn't support threaded events");
-		return (-1);
-	}
-	#endif
-//
-	/* Select the proper video driver */
-	SDL_VideoDevice *video;
-	{
-		/* Available video drivers */
-//		static VideoBootStrap *bootstrap[] =
-//		{
-//		//	#ifdef ENABLE_PSP
-//			&PSP_bootstrap,
-//		//	#endif
-//			NULL
-//		};
-	//	video = NULL;
-	//	video = bootstrap[0/*i*/]->create(0/*index*/);
-		video = PSP_CreateDevice(0/*index*/);
-		current_video = video;
-//????		current_video->name = bootstrap[0/*i*/]->name;
-	}
-	/* Do some basic variable initialization */
-	video->screen		= NULL;
-	video->shadow		= NULL;
-	video->visible		= NULL;
-//”p~	video->physpal		= NULL;
-//”p~		video->gammacols	= NULL;
-//”p~		video->gamma		= NULL;
-//”p~	video->offset_x 	= 0;
-//”p~	video->offset_y 	= 0;
-	memset(&video->info, 0, (sizeof video->info));
 
-	video->displayformatalphapixel		= NULL;
+/*---------------------------------------------------------
+	void PSPL_VideoInit(void)
+	Initialize the video and event subsystems -- determine native pixel format.
+	SDL_SetVideoMode
+--------------------------------------------------------- */
+
+//SDL_Surface * SDL_SetVideoMode(int dummy_width, int dummy_height, int video_bpp, u32 dummy_flags)
+SDL_Surface * PSPL_video_init(
+	int video_bpp_sdl,	/*sdl depth(15 or 16 or 32)*/
+	int video_depth16,	/*psp depth(16 or 32)*/
+	u32 Amask,
+	u32 Bmask,
+	u32 Gmask,
+	u32 Rmask
+)/*only boot once*/
+// /*static*/extern int SDLVIDEO_PSP_VideoInit(_THIS, SDL_PixelFormat *vformat);
+{
+	/* Select the proper video driver */
+	/* Initialize all variables that we clean on shutdown */
+	memset(&pspl_screen, 0, (sizeof(pspl_screen)));
+
+	/* Do some basic variable initialization */
+	pspl_screen 						= NULL; 	/* Until SDL_SetVideoMode() */
 
 	/* Initialize the video subsystem */
-	memset(&vformat, 0, sizeof(vformat));
-//	video->VideoInit(video, &vformat);
-	SDLVIDEO_PSP_VideoInit(video, &vformat);
-//	if (  < 0 )
-//	{
-//		//–³‚µ	SDL_Vid eoQuit();
-//		return (-1);
-//	}
 
-	/* Create a zero sized video surface of the appropriate format */
-	video_flags = SDL_SWSURFACE;
-	SDL_VideoSurface = SDL_CreateRGBSurface(video_flags, 0, 0,
-				vformat.BitsPerPixel,
-				vformat.Rmask, vformat.Gmask, vformat.Bmask, 0);
-//	if ( SDL_VideoSurface == NULL )
-//	{
-//		//–³‚µ	SDL_Vid eoQuit();
-//		return (-1);
-//	}
-	SDL_PublicSurface = NULL;		/* Until SDL_SetVideoMode() */
-
-#if 0 /* Don't change the current palette - may be used by other programs.
-	   * The application can't do anything with the display surface until
-	   * a video mode has been set anyway. :)
-	   */
-	/* If we have a palettized surface, create a default palette */
-	if ( SDL_VideoSurface->format->palette )
+	//	video->VideoInit(video, &vformat);
+	//	SDLVIDEO_PSP_VideoInit(video, &vformat);
+		/* Initialize the native video subsystem, filling 'vformat' with the
+		   "best" display pixel format, returning 0 or -1 if there's an error.
+		 */
+	// /*static*/extern int SDLVIDEO_PSP_VideoInit(_THIS, SDL_PixelFormat *vformat)
+	#if (1)
 	{
-		SDL_PixelFormat *vf = SDL_VideoSurface->format;
-		SDL_DitherColors(vf->palette->colors, vf->BitsPerPixel);
-		video->SetColors(video,
-				 0, vf->palette->ncolors, vf->palette->colors);
+		SDL_PixelFormat vformat;
+		memset(&vformat, 0, sizeof(vformat));
+		vformat.BytesPerPixel		= 4;	/* Default for pspsdk is 8888 ABGR */
+		vformat.BitsPerPixel		= /*video_depth16*/16/*32*/;	/* Default for pspsdk is 8888 ABGR */
+	//	vformat.Amask= /*Amask*/0/*0*/;
+	//	vformat.Bmask= /*Bmask*/0/*0*/;
+	//	vformat.Gmask= /*Gmask*/0/*0*/;
+	//	vformat.Rmask= /*Rmask*/0/*0*/;
+		/* Create a zero sized video surface of the appropriate format */
+		pspl_screen =
+			SDL_CreateRGBSurface
+			(
+				/*video_flags =*/(SDL_SWSURFACE),
+				(0)/*width*/,
+				(0)/*height*/
+			,
+				vformat.BitsPerPixel,
+				vformat.Rmask,
+				vformat.Gmask,
+				vformat.Bmask,
+				0
+			);
 	}
-#endif
-	video->info.vfmt = SDL_VideoSurface->format;
+	#endif
+	#if (0)/*(ƒ_ƒ)*/
+	{
+	//	SDL_PixelFormat vformat;
+	//	memset(&vformat, 0, sizeof(vformat));
+	//unused	vformat.BytesPerPixel		= 4;	/* Default for pspsdk is 8888 ABGR */
+		/*vformat.*/(pspl_screen)->format->BitsPerPixel 	= /*video_depth16*/16/*32*/;	/* Default for pspsdk is 8888 ABGR */
+		/*vformat.*/(pspl_screen)->format->Amask= /*Amask*/0/*0*/;
+		/*vformat.*/(pspl_screen)->format->Bmask= /*Bmask*/0/*0*/;
+		/*vformat.*/(pspl_screen)->format->Gmask= /*Gmask*/0/*0*/;
+		/*vformat.*/(pspl_screen)->format->Rmask= /*Rmask*/0/*0*/;
+		/* Create a zero sized video surface of the appropriate format */
+		pspl_screen =
+		//	SDL_CreateRGBSurface
+			SDL_CreateSurface
+			(
+				/*video_flags =*/(SDL_SWSURFACE),
+				(0)/*width*/,
+				(0)/*height*/
+			//,
+			//	vformat.BitsPerPixel,
+			//	vformat.Rmask,
+			//	vformat.Gmask,
+			//	vformat.Bmask,
+			//	0
+			);
+	}
+	#endif
+//	info_vfmt = (pspl_screen)->format;
 
-
+	/* Clean up any previous video mode */
+//	if ( (pspl_screen) != NULL )
+//	{
+//		(pspl_screen) = NULL;
+//	}
+	/* Try to set the video mode, along with offset and clipping */
+//	SDL_Surface *mode;
+//	mode = (pspl_screen);
+	//
+	int disp_pitch;
+	int pixel_format;
+	disp_pitch = (512*2);
+	{
+	//	u32 Amask;
+	//	u32 Bmask;
+	//	u32 Gmask;
+	//	u32 Rmask;
+		if (15==video_bpp_sdl)//case 15: /* 5-5-5-1 */
+		{
+		//	Amask = 0x00008000;
+		//	Bmask = 0x00007c00;
+		//	Gmask = 0x000003e0;
+		//	Rmask = 0x0000001f;
+			pixel_format = PSP_DISPLAY_PIXEL_FORMAT_5551;
+		}
+		else
+		if (16==video_bpp_sdl)//case 16: /* 5-6-5 */
+		{
+		//	Amask = 0;
+		//	Bmask = 0x0000f800;
+		//	Gmask = 0x000007e0;
+		//	Rmask = 0x0000001f;
+			pixel_format = PSP_DISPLAY_PIXEL_FORMAT_565;
+		}
+		else
+	//	if (32==video_bpp_sdl)//case 32: /* 8-8-8-8 */
+		{
+			disp_pitch += disp_pitch;
+		//	Amask = 0xff000000;
+		//	Bmask = 0x00ff0000;
+		//	Gmask = 0x0000ff00;
+		//	Rmask = 0x000000ff;
+			pixel_format = PSP_DISPLAY_PIXEL_FORMAT_8888;
+		}
+	}
+	/* Now adjust the offsets to match the desired mode */
+	//”p~		video->offset_x 		= (0);
+	//”p~		video->offset_y 		= (0);
+	SDL_ReallocFormat(pspl_screen, video_bpp_sdl, Rmask, Gmask, Bmask, 0/*Amask*/);
+	pspl_screen->offset 	= (0);//(video->offset_y * pspl_screen->pitch) + (video->offset_x * pspl_screen->format->BytesPerPixel);
+	pspl_screen->w		= SCREEN_480_WIDTH;/*width*/
+	pspl_screen->h		= SCREEN_272_HEIGHT;/*height*/
+	pspl_screen->pitch	= (disp_pitch);
+	/* allocate display buffer */
+	{
+		u32 	psp_frame_offset;	/* Byte offset of the start of the second frame. */
+		psp_frame_offset = (disp_pitch * SCREEN_272_HEIGHT);/*height*/
+		psp_vram_base	= vidmem_alloc((psp_frame_offset+psp_frame_offset));	/* allocate dispbuffer + drawbuffer */
+		pspl_screen->pixels 	= (void *) ((u32) psp_vram_base + psp_frame_offset);
+	}
+	sceDisplaySetMode(0, SCREEN_480_WIDTH, SCREEN_272_HEIGHT);
+	sceDisplaySetFrameBuf(psp_vram_base, 512, pixel_format, PSP_DISPLAY_SETBUF_NEXTFRAME);
+	{
+		u32 flags;
+		flags = (SDL_FULLSCREEN | SDL_DOUBLEBUF | SDL_HWSURFACE | SDL_PREALLOC );
+		pspl_screen->flags	= flags;
+		/* SDL_PREALLOC: so SDL doesn't free ->pixels */
+	}
+	/* Clear the surface to black */
+//	SDL_SetClipRect(pspl_screen, NULL);
+	#if 0/*(‚Æ‚è‚ ‚¦‚¸)*/
+	SDL_ClearSurface(pspl_screen);// –{—ˆA‹N“®(‰æ–Êƒ‚[ƒhØ‚è‘Ö‚¦)‚É‰æ–ÊÁ‚·‹@”\B
+	#endif
+//	info_vfmt = (pspl_screen)->format;
+	return (pspl_screen);
 }
 //#include "not_use_PSPL_video.c" // g—p‚µ‚È‚¢•”•ª‚ª‘½‚¢‚Ì‚Å•ªŠ„

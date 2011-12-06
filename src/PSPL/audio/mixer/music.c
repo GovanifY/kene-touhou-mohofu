@@ -33,6 +33,8 @@ error! "‚±‚ÌƒvƒƒOƒ‰ƒ€‚Í SDL_mixer.h ‚ªƒCƒ“ƒNƒ‹[ƒh‚³‚ê‚Ä‚¢‚é‚ÆAƒRƒ“ƒpƒCƒ‹‚Å‚«‚
 #endif
 #define _SDL_MIXER_H
 
+#include <pspkernel.h>
+
 #include <stdlib.h>
 #include <malloc.h>
 
@@ -1023,27 +1025,38 @@ Mix_Music *Mix_LoadMUS(const char *file)
 	u8 magic[5];
 	u8 moremagic[9];
 	Mix_Music *music;
-
 	/* Figure out what kind of file this is */
-	FILE *fp;
-	fp = fopen(file, "rb");
-	if ( (fp == NULL) || !fread(magic, 4, 1, fp) )
+	#if (0)
 	{
-		if ( fp != NULL )
+		FILE *fp;
+		fp = fopen(file, "rb");
+		if (NULL==fp)
 		{
-			fclose(fp);
+			Mix_SetError_bbb("Couldn't read from '%s'", file);
+			return (NULL);
 		}
-		Mix_SetError_bbb("Couldn't read from '%s'", file);
-		return (NULL);
+		fread(magic,		4, 1, fp);
+		fread(moremagic,	8, 1, fp);
+		magic[4] = '\0';
+		moremagic[8] = '\0';
+		fclose(fp);
 	}
-	if (!fread(moremagic, 8, 1, fp))
+	#else
 	{
-		Mix_SetError_bbb("Couldn't read from '%s'", file);
-		return (NULL);
+		SceUID fd;
+		fd = sceIoOpen(file, PSP_O_RDONLY, 0777);
+		if (0==fd)
+		{
+			Mix_SetError_bbb("Couldn't read from '%s'", file);
+			return (NULL);
+		}
+		sceIoRead(fd, magic,		(4*1) );
+		sceIoRead(fd, moremagic,	(8*1) );
+		magic[4] = '\0';
+		moremagic[8] = '\0';
+		sceIoClose(fd);
 	}
-	magic[4] = '\0';
-	moremagic[8] = '\0';
-	fclose(fp);
+	#endif
 
 	/* Figure out the file extension, so we can determine the type */
 	char *ext;
@@ -1192,7 +1205,7 @@ Mix_Music *Mix_LoadMUS(const char *file)
 	#endif
 	// || defined(LIB_MOHOU_MOD_MUSIC) LIB_MOHOU_MOD_MUSIC not supported.
 	#if defined(MOD_MUSIC)
-	if ( 1 )
+	if (1)
 	{
 		music->type = MUS_MOD;
 		music->data.module = MusicMod_LoadSong((char *)file, 64);

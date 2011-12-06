@@ -27,7 +27,7 @@
 /* header */
 typedef struct ITHEADER
 {
-	MM_CHAR songname[26];	/* '01234567890123456789012345' 曲名(但しシフトjisコード対象外) */
+	MM_s8 songname[26];	/* '01234567890123456789012345' 曲名(但しシフトjisコード対象外) */
 	u8		blank01[2];
 	u16 	ordnum;
 	u16 	insnum;
@@ -53,13 +53,13 @@ typedef struct ITHEADER
 /* sample information */
 typedef struct ITSAMPLE
 {
-	MM_CHAR filename[12];
+	MM_s8 filename[12];
 	u8	zerobyte;
 	u8	globvol;
 	u8	flag;
 	u8	volume;
 	u8	panning;
-	MM_CHAR sampname[28];
+	MM_s8 sampname[28];
 	u16 convert;	/* sample conversion flag */
 	u32 length;
 	u32 loopbeg;
@@ -81,7 +81,7 @@ typedef struct ITSAMPLE
 typedef struct ITINSTHEADER
 {
 	u32 size;			/* (dword) Instrument size */
-	MM_CHAR filename[12];	/* (char) Instrument filename */
+	MM_s8 filename[12];	/* (char) Instrument filename */
 	u8	zerobyte;		/* (byte) Instrument type (always 0) */
 	u8	volflg;
 	u8	volpts;
@@ -115,7 +115,7 @@ typedef struct ITINSTHEADER
 	u8	rvolvar;		/* random volume varations */
 	u8	rpanvar;		/* random panning varations */
 	u16 numsmp; 		/* Number of samples in instrument [files only] */
-	MM_CHAR name[26];		/* Instrument name */
+	MM_s8 name[26];		/* Instrument name */
 	u8	blank01[6];
 	u16 samptable[ITNOTECNT];/* sample for each note [note / samp pairs] */
 	u8	volenv[200];		 /* volume envelope (IT 1.x stuff) */
@@ -156,7 +156,8 @@ static u8/*unsigned int*/ old_effect;	/* if set, use S3M old-effects stuffs */
 MM_BOOL IT_Test(void)
 {
 	u8 id[4];
-	if (!mod_music_file_read_multi_u8(mm_midi.mod_FILE_reader, id, 4))	{return (0);}
+	mod_music_file_read_multi_u8(mmff.mod_FILE_reader, id, 4);
+	//if (0==)	{return (0);}
 	if (!memcmp(id, "IMPM", 4)) {return (1);}
 	return (0);
 }
@@ -213,7 +214,7 @@ static MM_BOOL IT_GetNumChannels(u16 patrows)
 		else
 		{
 			ch = ((flag-1)&63);
-			mm_re_map[ch] = 0;
+			mmff.re_map[ch] = 0;
 			if (flag & 128) 	{	mask[ch]	= (u8)(music_fgetc());	}
 			if (mask[ch]&1) 	{	skip_dummy	= (u8)(music_fgetc());	}
 			if (mask[ch]&2) 	{	skip_dummy	= (u8)(music_fgetc());	}
@@ -242,9 +243,9 @@ static u8* IT_ConvertTrack(ITNOTE* tr, u16 numrows)
 	for (t=0; t<numrows; t++)
 	{
 		u8 note, ins, volpan;
-		note	= tr[t*of.numchn].note;
-		ins 	= tr[t*of.numchn].ins;
-		volpan	= tr[t*of.numchn].volpan;
+		note	= tr[t*mmoo.numchn].note;
+		ins 	= tr[t*mmoo.numchn].ins;
+		volpan	= tr[t*mmoo.numchn].volpan;
 
 		if (note!=255)
 		{
@@ -309,7 +310,7 @@ static u8* IT_ConvertTrack(ITNOTE* tr, u16 numrows)
 	//		mod_music_error_number=MOD_MUSIC_ERROR_LOADING_PATTERN;
 	//		return (NULL);
 	//	}
-		S3MIT_ProcessCmd(tr[t*of.numchn].cmd, tr[t*of.numchn].inf, (old_effect|S3MIT_IT) );
+		S3MIT_ProcessCmd(tr[t*mmoo.numchn].cmd, tr[t*mmoo.numchn].inf, (old_effect|S3MIT_IT) );
 		UniNewline();
 	}
 	return (UniDup());
@@ -339,12 +340,12 @@ static MM_BOOL IT_ReadPattern(u16 patrows)
 		}
 		if (!flag)
 		{
-			itt = &itt[of.numchn];
+			itt = &itt[mmoo.numchn];
 			row++;
 		}
 		else
 		{
-			ch = mm_re_map[(flag-1)&63];
+			ch = mmff.re_map[(flag-1)&63];
 			if (ch!=-1)
 			{
 				n = &itt[ch];
@@ -378,9 +379,9 @@ static MM_BOOL IT_ReadPattern(u16 patrows)
 			}
 		}
 	} while (row<patrows);
-	for (blah=0; blah<of.numchn; blah++)
+	for (blah=0; blah<mmoo.numchn; blah++)
 	{
-		if (!(of.tracks[numtrk++]=IT_ConvertTrack(&itpat[blah], patrows)))
+		if (!(mmoo.tracks[numtrk++]=IT_ConvertTrack(&itpat[blah], patrows)))
 		{	return (0);}
 	}
 	return (1);
@@ -393,10 +394,10 @@ static MM_BOOL IT_ReadPattern(u16 patrows)
 	`{|}~ 変換前
 	@[\]^ 変換後
 */
-static int is_LoadMidiString(MF_READER* modreader, MM_CHAR* midiline)
+static int is_LoadMidiString(MF_READER* modreader, MM_s8* midiline)
 {
-	MM_CHAR *cur;
-	MM_CHAR *last;
+	MM_s8 *cur;
+	MM_s8 *last;
 	mod_music_file_read_multi_u8(modreader, midiline, 32);
 	cur = last = midiline;
 	/* remove blanks and uppercase all */
@@ -439,51 +440,63 @@ static int is_LoadMidiString(MF_READER* modreader, MM_CHAR* midiline)
 static void IT_LoadMidiConfiguration(int use_file_mode)//MF_READER* modreader)
 {
 	int i;
+	#if (1==USE_ITZ_ZXX_MIDI_RESONANT_FILTERS)
 	memset(mm_filter_macros, 0, sizeof(mm_filter_macros) );
 	memset(filtersettings, 0, sizeof(filtersettings) );
+	#endif /*(USE_ITZ_ZXX_MIDI_RESONANT_FILTERS)*/
 
 	if (use_file_mode/*modreader*/) /* information is embedded in file */
 	{
 		u16 dat;
 		dat = music_fget16();
-		mod_music_file_seek_cur(mm_midi.mod_FILE_reader, 8*dat+0x120);
+		mod_music_file_seek_cur(mmff.mod_FILE_reader, 8*dat+0x120);
 		{
-			MM_CHAR midiline[(5*8)/*33*/];
+			MM_s8 midiline[(5*8)/*33*/];
 			midiline[32] = (0);
 			/* read midi macros */
 			for (i=0; i<UF_MAXMACRO; i++)
 			{
-				if (is_LoadMidiString(mm_midi.mod_FILE_reader, midiline))
-				{	mm_filter_macros[i] = ((midiline[5]-'0')|0x80);}
+				if (is_LoadMidiString(mmff.mod_FILE_reader, midiline))
+				{
+					#if (1==USE_ITZ_ZXX_MIDI_RESONANT_FILTERS)
+					mm_filter_macros[i] = ((midiline[5]-'0')|0x80);
+					#endif /*(USE_ITZ_ZXX_MIDI_RESONANT_FILTERS)*/
+				}
 			}
 			/* read standalone filters */
 			for (i=0x80; i<0x100; i++)
 			{
-				if (is_LoadMidiString(mm_midi.mod_FILE_reader, midiline))
+				if (is_LoadMidiString(mmff.mod_FILE_reader, midiline))
 				{
+					#if (1==USE_ITZ_ZXX_MIDI_RESONANT_FILTERS)
 					filtersettings[i].filter = ((midiline[5]-'0')|0x80);
 					dat = (midiline[6])?(midiline[6]-'0'):0;
 					if (midiline[7])		{dat = ((dat<<4)|(midiline[7]-'0'));}
 					filtersettings[i].inf = (u8)dat;
+					#endif /*(USE_ITZ_ZXX_MIDI_RESONANT_FILTERS)*/
 				}
 			}
 		}
 	}
 	else	/* use default information */
 	{
+		#if (1==USE_ITZ_ZXX_MIDI_RESONANT_FILTERS)
 		mm_filter_macros[0] = FILT_CUT;
 		for (i=0x80; i<0x90; i++)
 		{
 			filtersettings[i].filter = FILT_RESONANT;
 			filtersettings[i].inf = ((i&0x7f)<<3);
 		}
+		#endif /*(USE_ITZ_ZXX_MIDI_RESONANT_FILTERS)*/
 	}
-	mm_midi.mm_midi_active_macro = 0;
+	mmff.mm_midi_active_macro = 0;
+	#if (1==USE_ITZ_ZXX_MIDI_RESONANT_FILTERS)
 	for (i=0; i<0x80; i++)
 	{
 		filtersettings[i].filter = mm_filter_macros[0];
 		filtersettings[i].inf = i;
 	}
+	#endif /*(USE_ITZ_ZXX_MIDI_RESONANT_FILTERS)*/
 }
 
 MM_BOOL IT_Load(MM_BOOL curious)
@@ -492,11 +505,13 @@ MM_BOOL IT_Load(MM_BOOL curious)
 	int uuu;
 /*	MM_BOOL compressed=0;*/
 	numtrk = 0;
-	mm_midi.mm_midi_use_resonant_filters = 0;/* 新規ロード時に無効 */
+	#if (1==USE_ITZ_ZXX_MIDI_RESONANT_FILTERS)
+	mmff.mm_midi_use_resonant_filters = 0;/* 新規ロード時に無効 */
+	#endif /*(USE_ITZ_ZXX_MIDI_RESONANT_FILTERS)*/
 	/* try to read module header */
 	music_fget32(); /* kill the 4 byte header */
-	mod_music_file_read_string(mm_midi.mod_FILE_reader, mh_it->songname, 26);
-	mod_music_file_read_multi_u8(mm_midi.mod_FILE_reader, mh_it->blank01, 2);
+	mod_music_file_read_string(mmff.mod_FILE_reader, mh_it->songname, 26);
+	mod_music_file_read_multi_u8(mmff.mod_FILE_reader, mh_it->blank01, 2);
 	mh_it->ordnum		= music_fget16();
 	mh_it->insnum		= music_fget16();
 	mh_it->smpnum		= music_fget16();
@@ -513,35 +528,35 @@ MM_BOOL IT_Load(MM_BOOL curious)
 	mh_it->zerobyte 	= (u8)(music_fgetc());
 	mh_it->msglength	= music_fget16();
 	mh_it->msgoffset	= music_fget32();
-	mod_music_file_read_multi_u8(mm_midi.mod_FILE_reader, mh_it->blank02,	4);
-	mod_music_file_read_multi_u8(mm_midi.mod_FILE_reader, mh_it->pantable, 64);
-	mod_music_file_read_multi_u8(mm_midi.mod_FILE_reader, mh_it->voltable, 64);
+	mod_music_file_read_multi_u8(mmff.mod_FILE_reader, mh_it->blank02,	4);
+	mod_music_file_read_multi_u8(mmff.mod_FILE_reader, mh_it->pantable, 64);
+	mod_music_file_read_multi_u8(mmff.mod_FILE_reader, mh_it->voltable, 64);
 
-	if (mod_music_eof(mm_midi.mod_FILE_reader))
+	if (mod_music_eof(mmff.mod_FILE_reader))
 	{
 		mod_music_error_number = MOD_MUSIC_ERROR_LOADING_HEADER;
 		return (0);
 	}
 
 	/* set module variables */
-//廃止	曲名文字列: 	of.string_songname	  = DupStr(mh_it->songname, 26, 0); /* make a cstr of songname	*/
-	of.reppos	   = 0;
-	of.numpat	   = mh_it->patnum;
-	of.numins	   = mh_it->insnum;
-	of.numsmp	   = mh_it->smpnum;
-	of.initspeed   = mh_it->initspeed;
-	of.inittempo   = mh_it->inittempo;
-	of.initvolume  = mh_it->globvol;
-	of.flags	  |= UF_BGSLIDES | UF_ARPMEM;
+//廃止	曲名文字列: 	mmoo.string_songname	  = DupStr(mh_it->songname, 26, 0); /* make a cstr of songname	*/
+	mmoo.reppos	   = 0;
+	mmoo.numpat	   = mh_it->patnum;
+	mmoo.numins	   = mh_it->insnum;
+	mmoo.numsmp	   = mh_it->smpnum;
+	mmoo.initspeed   = mh_it->initspeed;
+	mmoo.inittempo   = mh_it->inittempo;
+	mmoo.initvolume  = mh_it->globvol;
+	mmoo.flags	  |= UF_BGSLIDES | UF_ARPMEM;
 //	if (!(mh_it->flags & 1))
-//	{	of.flags |= UF_PANNING;}
-//	of.bpmlimit = 32;
+//	{	mmoo.flags |= UF_PANNING;}
+//	mmoo.bpmlimit = 32;
 
 	if (mh_it->songname[25])
 	{
-		of.numvoices = 1+mh_it->songname[25];
+		mmoo.numvoices = 1+mh_it->songname[25];
 		#ifdef MIKMOD_DEBUG
-		error(0/*ERR_FATAL*/, "Embedded IT limitation to %d voices\n", of.numvoices);
+		error(0/*ERR_FATAL*/, "Embedded IT limitation to %d voices\n", mmoo.numvoices);
 		#endif
 	}
 	#if 0//廃止  (MikMODが判別した)モジュール名文字列:
@@ -558,23 +573,23 @@ MM_BOOL IT_Load(MM_BOOL curious)
 		/* 2.15 : IT 2.14p3 (improved compression) */
 		if ((mh_it->cwt<=0x219)&&(mh_it->cwt>=0x217))
 		{
-			of.string_modtype = strdup(IT_Version[mh_it->cmwt<0x214?4:5]);
+			mmoo.string_modtype = strdup(IT_Version[mh_it->cmwt<0x214?4:5]);
 		}
 		else if (mh_it->cwt>=0x215)
 		{
-			of.string_modtype = strdup(IT_Version[mh_it->cmwt<0x214?2:3]);
+			mmoo.string_modtype = strdup(IT_Version[mh_it->cmwt<0x214?2:3]);
 		}
 		else
 		{
-			of.string_modtype	   = strdup(IT_Version[mh_it->cmwt<0x214?0:1]);
-			of.string_modtype[mh_it->cmwt<0x214?15:26] = ((mh_it->cwt>>8)	  )+'0';
-			of.string_modtype[mh_it->cmwt<0x214?17:28] = ((mh_it->cwt>>4)&0x0f)+'0';
-			of.string_modtype[mh_it->cmwt<0x214?18:29] = ((mh_it->cwt	)&0x0f)+'0';
+			mmoo.string_modtype	   = strdup(IT_Version[mh_it->cmwt<0x214?0:1]);
+			mmoo.string_modtype[mh_it->cmwt<0x214?15:26] = ((mh_it->cwt>>8)	  )+'0';
+			mmoo.string_modtype[mh_it->cmwt<0x214?17:28] = ((mh_it->cwt>>4)&0x0f)+'0';
+			mmoo.string_modtype[mh_it->cmwt<0x214?18:29] = ((mh_it->cwt	)&0x0f)+'0';
 		}
 	}
 	#endif
 	if (mh_it->flags&8)
-	{	of.flags |= (UF_XMPERIODS | UF_LINEAR);}
+	{	mmoo.flags |= (UF_XMPERIODS | UF_LINEAR);}
 
 	if ((mh_it->cwt>=0x106)&&(mh_it->flags&16))
 	{	old_effect = S3MIT_OLDSTYLE;}
@@ -589,21 +604,21 @@ MM_BOOL IT_Load(MM_BOOL curious)
 			mh_it->pantable[t] &= 0x7f;
 			/* 0 ... 63 の場合は、 0 ... 255 にマッピング*/
 			if ((mh_it->pantable[t])<64)
-			{	of.panning[t] = ((mh_it->pantable[t])<<2);}
+			{	mmoo.panning[t] = ((mh_it->pantable[t])<<2);}
 			else
 			/* 64 の場合は、 255。多分(0 ... 64 が 0 ... 255 にマッピング) */
 			if (mh_it->pantable[t]==64)
-			{	of.panning[t] = 255;}
+			{	mmoo.panning[t] = 255;}
 			#if (1==USE_PAN_SURROUND)
 			/* 100 の場合は、拡張形式のサラウンドモード。  */
 			else
 			if (mh_it->pantable[t]==100)
-			{	of.panning[t] = PAN_SURROUND;}
+			{	mmoo.panning[t] = PAN_SURROUND;}
 			#endif //(USE_PAN_SURROUND)
 			/* 127 の場合は、中心(128)にする。	*/
 			else
 			if (mh_it->pantable[t]==127)
-			{	of.panning[t] = PAN_CENTER;}
+			{	mmoo.panning[t] = PAN_CENTER;}
 			else
 			{
 				mod_music_error_number = MOD_MUSIC_ERROR_LOADING_HEADER;
@@ -614,11 +629,11 @@ MM_BOOL IT_Load(MM_BOOL curious)
 //	else
 //	{
 //		for (t=0; t<64; t++)
-//		{	of.panning[t] = PAN_CENTER;}
+//		{	mmoo.panning[t] = PAN_CENTER;}
 //	}
 
 	/* set channel volumes */
-	memcpy(of.chanvol, mh_it->voltable, 64);
+	memcpy(mmoo.chanvol, mh_it->voltable, 64);
 
 	/* read the order data */
 	if (!AllocPositions(mh_it->ordnum)) 	{	return (0); }
@@ -632,24 +647,24 @@ MM_BOOL IT_Load(MM_BOOL curious)
 		{	origpositions[t] = 255; }
 	}
 
-	if (mod_music_eof(mm_midi.mod_FILE_reader))
+	if (mod_music_eof(mmff.mod_FILE_reader))
 	{
 		mod_music_error_number = MOD_MUSIC_ERROR_LOADING_HEADER;
 		return (0);
 	}
 
-	mm_midi.mm_midi_position_look_up_counter = (u8)mh_it->ordnum;
+	mmff.mm_midi_position_look_up_counter = (u8)mh_it->ordnum;
 	S3MIT_CreateOrders(curious);
 	//
-	paraptr_it = (u32*)mod_music_malloc((mh_it->insnum+mh_it->smpnum+of.numpat)* sizeof(u32));
+	paraptr_it = (u32*)mod_music_malloc((mh_it->insnum+mh_it->smpnum+mmoo.numpat)* sizeof(u32));
 	if (!paraptr_it)
 	{
 		return (0);
 	}
 	/* read the instrument, sample, and pattern parapointers */
-	mod_music_file_read_multi_u32LE(mm_midi.mod_FILE_reader, paraptr_it, mh_it->insnum+mh_it->smpnum+of.numpat);
+	mod_music_file_read_multi_u32LE(mmff.mod_FILE_reader, paraptr_it, mh_it->insnum+mh_it->smpnum+mmoo.numpat);
 
-	if (mod_music_eof(mm_midi.mod_FILE_reader))
+	if (mod_music_eof(mmff.mod_FILE_reader))
 	{
 		mod_music_error_number = MOD_MUSIC_ERROR_LOADING_HEADER;
 		return (0);
@@ -660,8 +675,8 @@ MM_BOOL IT_Load(MM_BOOL curious)
 	{
 		if ((mh_it->special)&8)
 		{
-			IT_LoadMidiConfiguration(1/*mm_midi.mod_FILE_reader*/);
-			if (mod_music_eof(mm_midi.mod_FILE_reader))
+			IT_LoadMidiConfiguration(1/*mmff.mod_FILE_reader*/);
+			if (mod_music_eof(mmff.mod_FILE_reader))
 			{
 				mod_music_error_number = MOD_MUSIC_ERROR_LOADING_HEADER;
 				return (0);
@@ -669,19 +684,21 @@ MM_BOOL IT_Load(MM_BOOL curious)
 		}
 		else
 		{	IT_LoadMidiConfiguration(0/*NULL*/);}
-		mm_midi.mm_midi_use_resonant_filters = 1;
+		#if (1==USE_ITZ_ZXX_MIDI_RESONANT_FILTERS)
+		mmff.mm_midi_use_resonant_filters = 1;
+		#endif /*(USE_ITZ_ZXX_MIDI_RESONANT_FILTERS)*/
 	}
 
 	#if 0//廃止 曲のコメント文字列:
 	/* Check for and load song comment */
 	if ((mh_it->special&1)&&(mh_it->cwt>=0x104)&&(mh_it->msglength))
 	{
-		mod_music_file_seek_set(mm_midi.mod_FILE_reader, (long)(mh_it->msgoffset));
+		mod_music_file_seek_set(mmff.mod_FILE_reader, (long)(mh_it->msgoffset));
 		if (!ReadComment(mh_it->msglength)) 	{return (0);/*(失敗)*/}
 	}
 	#endif
 
-	if (!((mh_it->flags)&4)) of.numins = of.numsmp;
+	if (!((mh_it->flags)&4)) mmoo.numins = mmoo.numsmp;
 	if (!AllocSamples())	{	return (0);}
 
 	if (!AllocLinear()) 	{	return (0);}
@@ -689,19 +706,19 @@ MM_BOOL IT_Load(MM_BOOL curious)
 	/* Load all samples */
 	{
 		MM_SAMPLE *q;
-		q = of.samples;
+		q = mmoo.samples;
 		for (t=0; t<(mh_it->smpnum); t++)
 		{
 			ITSAMPLE s;
 			/* seek to sample position */
-			mod_music_file_seek_set(mm_midi.mod_FILE_reader, (long)(paraptr_it[mh_it->insnum+t]+4));
+			mod_music_file_seek_set(mmff.mod_FILE_reader, (long)(paraptr_it[mh_it->insnum+t]+4));
 			/* load sample info */
-			mod_music_file_read_string(mm_midi.mod_FILE_reader, s.filename, 12);
+			mod_music_file_read_string(mmff.mod_FILE_reader, s.filename, 12);
 			s.zerobyte		= (u8)(music_fgetc());
 			s.globvol		= (u8)(music_fgetc());
 			s.flag			= (u8)(music_fgetc());
 			s.volume		= (u8)(music_fgetc());
-			mod_music_file_read_string(mm_midi.mod_FILE_reader, s.sampname, 26);
+			mod_music_file_read_string(mmff.mod_FILE_reader, s.sampname, 26);
 			s.convert		= (u8)(music_fgetc());
 			s.panning		= (u8)(music_fgetc());
 			s.length		= music_fget32();
@@ -717,7 +734,7 @@ MM_BOOL IT_Load(MM_BOOL curious)
 			s.vibwave		= (u8)(music_fgetc());
 			/* Generate an error if c5spd is > 512k, or samplelength > 256 megs
 			   (nothing would EVER be that high) */
-			if (	mod_music_eof(mm_midi.mod_FILE_reader) ||
+			if (	mod_music_eof(mmff.mod_FILE_reader) ||
 				(s.c5spd   >   0x7ffffL) ||
 				(s.length  > 0xfffffffUL) ||
 				(s.loopbeg > 0xfffffffUL) ||
@@ -738,7 +755,7 @@ MM_BOOL IT_Load(MM_BOOL curious)
 			q->globvol		= s.globvol;
 			q->seekpos		= s.sampoffset;
 			/* Convert speed to XM linear mm_fine_tune */
-			if (of.flags&UF_LINEAR)
+			if (mmoo.flags&UF_LINEAR)
 			{	q->speed = speed_to_mm_fine_tune(s.c5spd, t);	}
 			if (s.panning&128)	{q->flags |= SF_OWNPAN;}
 			if (s.vibrate)
@@ -773,15 +790,15 @@ MM_BOOL IT_Load(MM_BOOL curious)
 		{
 			int skip_dummy; 	/* read skip dummy read. / ダミー読み込み用(読んだ値は使わない) */
 			if (!AllocInstruments())	{return (0);}
-			d = of.instruments;
-			of.flags |= (UF_NNA|UF_INST);
+			d = mmoo.instruments;
+			mmoo.flags |= (UF_NNA|UF_INST);
 			for (t=0; t<(mh_it->insnum); t++)
 			{
 				ITINSTHEADER ih;
 				/* seek to instrument position */
-				mod_music_file_seek_set(mm_midi.mod_FILE_reader, paraptr_it[t]+4);
+				mod_music_file_seek_set(mmff.mod_FILE_reader, paraptr_it[t]+4);
 				/* load instrument info */
-				mod_music_file_read_string(mm_midi.mod_FILE_reader, ih.filename, 12);
+				mod_music_file_read_string(mmff.mod_FILE_reader, ih.filename, 12);
 				ih.zerobyte  = (u8)(music_fgetc());
 				if ((mh_it->cwt)<0x200)
 				{
@@ -814,15 +831,15 @@ MM_BOOL IT_Load(MM_BOOL curious)
 				ih.trkvers			= music_fget16();
 				ih.numsmp			= (u8)(music_fgetc());
 				skip_dummy			= (u8)(music_fgetc());
-				mod_music_file_read_string(mm_midi.mod_FILE_reader, ih.name, 26);
-				mod_music_file_read_multi_u8(mm_midi.mod_FILE_reader, ih.blank01, 6);
-				mod_music_file_read_multi_u16LE(mm_midi.mod_FILE_reader, ih.samptable, ITNOTECNT);
+				mod_music_file_read_string(mmff.mod_FILE_reader, ih.name, 26);
+				mod_music_file_read_multi_u8(mmff.mod_FILE_reader, ih.blank01, 6);
+				mod_music_file_read_multi_u16LE(mmff.mod_FILE_reader, ih.samptable, ITNOTECNT);
 //	int lp;
 #define lp uuu
 				if ((mh_it->cwt)<0x200)
 				{
 					/* load IT 1xx volume envelope */
-					mod_music_file_read_multi_u8(mm_midi.mod_FILE_reader, ih.volenv, 200);
+					mod_music_file_read_multi_u8(mmff.mod_FILE_reader, ih.volenv, 200);
 					for (lp=0; lp<ITENVCNT; lp++)
 					{
 						ih.oldvoltick[lp]	= (u8)(music_fgetc());
@@ -869,7 +886,7 @@ MM_BOOL IT_Load(MM_BOOL curious)
 					}
 					skip_dummy			= (u8)(music_fgetc());
 				}
-				if (mod_music_eof(mm_midi.mod_FILE_reader))
+				if (mod_music_eof(mmff.mod_FILE_reader))
 				{
 					mod_music_error_number	= MOD_MUSIC_ERROR_LOADING_SAMPLEINFO;
 					return (0);
@@ -991,9 +1008,9 @@ MM_BOOL IT_Load(MM_BOOL curious)
 				{
 					d->samplenote[uuu]		= (ih.samptable[uuu]&255);
 					d->samplenumber[uuu]	= (ih.samptable[uuu]>>8)?((ih.samptable[uuu]>>8)-1):0xffff;
-					if (d->samplenumber[uuu] >= of.numsmp)
+					if (d->samplenumber[uuu] >= mmoo.numsmp)
 					{	d->samplenote[uuu] = 255;}
-					else if (of.flags & UF_LINEAR)
+					else if (mmoo.flags & UF_LINEAR)
 					{
 						int note	= (int)d->samplenote[uuu]+noteindex[d->samplenumber[uuu]];
 						d->samplenote[uuu] = (note<0)?(0):((note>255)?(255):(note));
@@ -1003,16 +1020,16 @@ MM_BOOL IT_Load(MM_BOOL curious)
 			}
 		}
 		else
-		if (of.flags & UF_LINEAR)
+		if (mmoo.flags & UF_LINEAR)
 		{
 			if (!AllocInstruments())	{return (0);}
-			d = of.instruments;
-			of.flags |= UF_INST;
+			d = mmoo.instruments;
+			mmoo.flags |= UF_INST;
 			for (t=0; t<(mh_it->smpnum); t++, d++)
 			{
 				for (uuu=0; uuu<ITNOTECNT; uuu++)
 				{
-					if ((d->samplenumber[uuu])>=of.numsmp)
+					if ((d->samplenumber[uuu]) >= mmoo.numsmp)
 					{	d->samplenote[uuu] = 255;}
 					else
 					{
@@ -1024,9 +1041,9 @@ MM_BOOL IT_Load(MM_BOOL curious)
 		}
 	}
 	/* Figure out how many channels this song actually uses */
-	of.numchn = 0;
-	memset(mm_re_map, -1, UF_MAXCHAN*sizeof(u8) );
-	for (t=0; t<of.numpat; t++)
+	mmoo.numchn = 0;
+	memset(mmff.re_map, -1, (UF_MAXCHAN*sizeof(u8)) );
+	for (t=0; t<mmoo.numpat; t++)
 	{
 		u16 packlen;
 		/* seek to pattern position */
@@ -1034,7 +1051,7 @@ MM_BOOL IT_Load(MM_BOOL curious)
 		aaa = paraptr_it[(mh_it->insnum)+(mh_it->smpnum)+(t)];
 		if (aaa)	/* 0 -> empty 64 row pattern */
 		{
-			mod_music_file_seek_set(mm_midi.mod_FILE_reader, ((long)aaa));
+			mod_music_file_seek_set(mmff.mod_FILE_reader, ((long)aaa));
 			music_fget16();
 			/* read pattern length (# of rows)
 			   Impulse Tracker never creates patterns with less than 32 rows,
@@ -1053,15 +1070,15 @@ MM_BOOL IT_Load(MM_BOOL curious)
 	/* give each of them a different number */
 	for (t=0; t<UF_MAXCHAN; t++)
 	{
-		if (!mm_re_map[t])
-		{	mm_re_map[t] = of.numchn++; }
+		if (!mmff.re_map[t])
+		{	mmff.re_map[t] = mmoo.numchn++; }
 	}
-	of.numtrk = of.numpat*of.numchn;
-	if (of.numvoices)
-	{	if (of.numvoices<of.numchn) 	{of.numvoices = of.numchn;}}
+	mmoo.numtrk = mmoo.numpat*mmoo.numchn;
+	if (mmoo.numvoices)
+	{	if (mmoo.numvoices < mmoo.numchn) 	{mmoo.numvoices = mmoo.numchn;}}
 	if (!AllocPatterns())	{return (0);}
 	if (!AllocTracks()) 	{return (0);}
-	for (t=0; t<of.numpat; t++)
+	for (t=0; t<mmoo.numpat; t++)
 	{
 		u16 packlen;
 		/* seek to pattern position */
@@ -1069,33 +1086,34 @@ MM_BOOL IT_Load(MM_BOOL curious)
 		aaa = paraptr_it[(mh_it->insnum)+(mh_it->smpnum)+(t)];
 		if (!aaa) /* 0 -> empty 64 row pattern */
 		{
-			of.pattrows[t] = 64;
-			for (uuu=0; uuu<of.numchn; uuu++)
+			mmoo.pattrows[t] = 64;
+			for (uuu=0; uuu<mmoo.numchn; uuu++)
 			{
 				UniReset();
 				{int k;
 				for (k=0; k<64; k++)	{UniNewline();}}
-				of.tracks[numtrk++] = UniDup();
+				mmoo.tracks[numtrk++] = UniDup();
 			}
 		}
 		else
 		{
-			mod_music_file_seek_set(mm_midi.mod_FILE_reader, ((long)aaa));
+			mod_music_file_seek_set(mmff.mod_FILE_reader, ((long)aaa));
 			packlen 		= music_fget16();
-			of.pattrows[t]	= music_fget16();
+			mmoo.pattrows[t]	= music_fget16();
 			music_fget32();
-			if (!IT_ReadPattern(of.pattrows[t]))	{return (0);}
+			if (!IT_ReadPattern(mmoo.pattrows[t]))	{return (0);}
 		}
 	}
 	return (1);/*(成功)*/
 }
 
 #if 0/*曲名廃止*/
-MM_CHAR *IT_LoadTitle(void)
+MM_s8 *IT_LoadTitle(void)
 {
-	MM_CHAR s[26];
-	mod_music_file_seek_set(mm_midi.mod_FILE_reader, 4);
-	if (!mod_music_file_read_multi_u8(mm_midi.mod_FILE_reader, s, 26))	{return (NULL);}
+	MM_s8 s[26];
+	mod_music_file_seek_set(mmff.mod_FILE_reader, 4);
+	mod_music_file_read_multi_u8(mmff.mod_FILE_reader, s, 26);
+//	if (0==)	{return (NULL);}
 	return (DupStr(s, 26, 0));
 }
 #endif

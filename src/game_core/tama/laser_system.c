@@ -19,12 +19,12 @@ global LASER lz[MAX_99_LASER];
 /*---------------------------------------------------------
 	ÉåÅ[ÉUÅ[
 ---------------------------------------------------------*/
-global void add_laser_off(OBJ *src)
+global OBJ_CALL_FUNC(add_laser_off)
 {
 	lz[0].laser_type = LASER_TYPE_00_OFF;/* off */
 	lz[1].laser_type = LASER_TYPE_00_OFF;/* off */
 }
-global void add_laser_on(OBJ *src)
+global OBJ_CALL_FUNC(add_laser_on)
 {
 	lz[0].laser_type = LASER_TYPE_01_4_PACHE;/* on */
 	lz[1].laser_type = LASER_TYPE_01_4_PACHE;/* on */

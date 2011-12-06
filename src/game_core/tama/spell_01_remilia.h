@@ -6,7 +6,7 @@
 	ƒŒƒ~ƒŠƒA ‚Á‚Û‚¢ƒJ[ƒh‚ğ’è‹`‚µ‚Ü‚·B
 ---------------------------------------------------------*/
 
-local void remilia_oyasumi_kougeki(OBJ *src)
+local OBJ_CALL_FUNC(remilia_oyasumi_kougeki)
 {
 	// ¡  [‘å‹Ê’e]
 //	HATSUDAN_01_speed256			= (t256(3.5));						/* ’e‘¬ */
@@ -44,7 +44,7 @@ local void remilia_oyasumi_kougeki(OBJ *src)
 }
 
 
-local void remilia_shot00(OBJ *src)
+local OBJ_CALL_FUNC(remilia_shot00)
 {
 	// ¡  [‘å‹Ê’e]
 //	HATSUDAN_01_speed256			= (t256(3.5));						/* ’e‘¬ */
@@ -91,7 +91,7 @@ local void remilia_shot00(OBJ *src)
 0000 0011 1111 1111
 ---------------------------------------------------------*/
 
-local void spell_create_1f_remilia_kougeki2(OBJ *src)
+local OBJ_CALL_FUNC(spell_create_1f_remilia_kougeki2)
 {
 	if (0x80==((REG_10_BOSS_SPELL_TIMER)&0x80))/* Œã”¼ */
 	{
@@ -189,8 +189,8 @@ local void spell_create_1f_remilia_kougeki2(OBJ *src)
 	-------------------------------------------------------
 
 ---------------------------------------------------------*/
-//local void spell_create_07_80way_dual_five(OBJ *src)
-local void spell_create_4d_remilia_rasen_knife(OBJ *src)/* —éå‚Å‚È‚­‚Ä—†ù‚Å‚·B */
+//local OBJ_CALL_FUNC(spell_create_07_80way_dual_five)
+local OBJ_CALL_FUNC(spell_create_4d_remilia_rasen_knife)/* —éå‚Å‚È‚­‚Ä—†ù‚Å‚·B */
 {
 //	if (0==((REG_10_BOSS_SPELL_TIMER)&0x01))
 	{
@@ -231,8 +231,8 @@ local void spell_create_4d_remilia_rasen_knife(OBJ *src)/* —éå‚Å‚È‚­‚Ä—†ù‚Å‚·
 	CŒ¾Œê‚Ìê‡‚Í‹¤’ÊƒTƒuB
 	ƒXƒNƒŠƒvƒg‰»‚µ‚½ê‡‚ÍAƒRƒsƒy‚·‚éB
 ---------------------------------------------------------*/
-#define TAMA_DATA_10_TAMA_OKI_KANKAKU	src->hatudan_register_user_data10
-local void remilia_common_tama_oki_sub(OBJ *src)
+#define TAMA_DATA_10_TAMA_OKI_KANKAKU	src->hatudan_register_user_data_a01
+local OBJ_CALL_FUNC(remilia_common_tama_oki_sub)
 {
 		src->hatudan_register_speed65536	+= (1<<8);			/* ’e‘¬ */
 	//
@@ -243,8 +243,8 @@ local void remilia_common_tama_oki_sub(OBJ *src)
 		{
 			TAMA_DATA_10_TAMA_OKI_KANKAKU = REG_09_REG1;//[’è”1]n‰ñ‚Éˆê‰ñ’e‚ğ’u‚­B
 			//
-		//	REG_02_DEST_X	= (src->cx256); 	/* ’eŒ¹x256 ƒ{ƒX’†S‚©‚ç”­’eB */
-		//	REG_03_DEST_Y	= (src->cy256); 	/* ’eŒ¹y256 ƒ{ƒX’†S‚©‚ç”­’eB */
+		//	REG_02_DEST_X	= (src->center.x256); 	/* ’eŒ¹x256 ƒ{ƒX’†S‚©‚ç”­’eB */
+		//	REG_03_DEST_Y	= (src->center.y256); 	/* ’eŒ¹y256 ƒ{ƒX’†S‚©‚ç”­’eB */
 			set_REG_DEST_XY(src);
 			REG_00_SRC_X	= (REG_0b_REG3);
 			REG_01_SRC_Y	= (REG_0c_REG4);
@@ -267,7 +267,7 @@ local void remilia_common_tama_oki_sub(OBJ *src)
 	[’e–‹ƒOƒ‹[ƒv(1)ƒZƒNƒVƒ‡ƒ“]
 	-------------------------------------------------------
 ---------------------------------------------------------*/
-local void brp_tamaoki_danmaku_01_callback(OBJ *src)/* ì’u‚« */
+local OBJ_CALL_FUNC(brp_tamaoki_danmaku_01_callback)/* ì’u‚« */
 {
 	/*(225==1+224==1+7*32)*/
 //	if ((HATUDAN_ITI_NO_JIKAN-224) < src->jyumyou)/* ”­’eƒGƒtƒFƒNƒgŒã‚©‚ç[224]ƒJƒEƒ“ƒg–¢–‚Ì’e */
@@ -299,7 +299,7 @@ local void brp_tamaoki_danmaku_01_callback(OBJ *src)/* ì’u‚« */
 	[’e–‹ƒOƒ‹[ƒv(1)ƒZƒNƒVƒ‡ƒ“]
 	-------------------------------------------------------
 ---------------------------------------------------------*/
-local void red_magic_tamaoki_danmaku_01_callback(OBJ *src)/* ì’u‚« */
+local OBJ_CALL_FUNC(red_magic_tamaoki_danmaku_01_callback)/* ì’u‚« */
 {
 	/*(225==1+224==1+7*32)*/
 //	if ((HATUDAN_ITI_NO_JIKAN-224) < src->jyumyou)/* ”­’eƒGƒtƒFƒNƒgŒã‚©‚ç[224]ƒJƒEƒ“ƒg–¢–‚Ì’e */
@@ -308,7 +308,7 @@ local void red_magic_tamaoki_danmaku_01_callback(OBJ *src)/* ì’u‚« */
 		if (0!=(src->hatudan_register_spec_data & TAMA_SPEC_KAITEN_HOUKOU_BIT))/*TAMA_SPEC_AKA_AO_KUNAI_BIT*/
 		{
 			/*(¶‰E‚Ì•Ç‚Å”½Ë‚·‚éB)*/
-			if (src->cx256 < t256(32))
+			if (src->center.x256 < t256(32))
 			{
 				/*(ˆê“x‚µ‚©”½Ë‚µ‚È‚¢)*/
 			//	src->hatudan_register_spec_data = (DANMAKU_LAYER_01)|(TAMA_SPEC_KAITEN_HOUKOU_BIT)|(0)|(TAMA_SPEC_8000_NON_TILT);/* (r33-)”ñŒX‚«’e */
@@ -316,7 +316,7 @@ local void red_magic_tamaoki_danmaku_01_callback(OBJ *src)/* ì’u‚« */
 				goto red_magic_hansya_syori;
 			}
 			else
-			if (src->cx256 > t256(32)+t256(320) )
+			if (src->center.x256 > t256(32)+t256(320) )
 			{
 			red_magic_hansya_syori:
 				/*(ˆê“x‚µ‚©”½Ë‚µ‚È‚¢)*/
@@ -340,7 +340,7 @@ local void red_magic_tamaoki_danmaku_01_callback(OBJ *src)/* ì’u‚« */
 	[’e–‹ƒOƒ‹[ƒv(2)ƒZƒNƒVƒ‡ƒ“]
 	-------------------------------------------------------
 ---------------------------------------------------------*/
-local void remilia_tahane_danmaku_02_callback(OBJ *src)/* ì’µ‚Ë */
+local OBJ_CALL_FUNC(remilia_tahane_danmaku_02_callback)/* ì’µ‚Ë */
 {
 	if ((HATUDAN_ITI_NO_JIKAN-128) == src->jyumyou)/* ”­’eƒGƒtƒFƒNƒgŒã‚©‚ç[128]ƒJƒEƒ“ƒg ‚Ì’e */
 	{
@@ -360,7 +360,7 @@ local void remilia_tahane_danmaku_02_callback(OBJ *src)/* ì’µ‚Ë */
 	2hard:			8
 	3lunatic:		4
 ---------------------------------------------------------*/
-local void spell_init_4e_remilia_vlad_tepes(OBJ *src)
+local OBJ_CALL_FUNC(spell_init_4e_remilia_vlad_tepes)
 {
 //	TAMA_DATA_10_TAMA_OKI_KANKAKU	= (0);// ƒJƒEƒ“ƒ^
 	REG_09_REG1 	= ( (16)-((REG_0f_GAME_DIFFICULTY)<<2));//[’è”1]n‰ñ‚Éˆê‰ñ’e‚ğ’u‚­B
@@ -379,7 +379,7 @@ local void spell_init_4e_remilia_vlad_tepes(OBJ *src)
 	2hard:			8
 	3lunatic:		4
 ---------------------------------------------------------*/
-local void spell_init_4f_remilia_red_magic(OBJ *src)
+local OBJ_CALL_FUNC(spell_init_4f_remilia_red_magic)
 {
 //	TAMA_DATA_10_TAMA_OKI_KANKAKU	= (0);// ƒJƒEƒ“ƒ^
 	REG_09_REG1 	= ( (16)-((REG_0f_GAME_DIFFICULTY)<<2));//[’è”1]n‰ñ‚Éˆê‰ñ’e‚ğ’u‚­B
@@ -407,7 +407,7 @@ local void spell_init_4f_remilia_red_magic(OBJ *src)
 	REG_0b_REG3 	”­’eŒãAW‚Ü‚éXÀ•W(t256Œ`®)
 	REG_0c_REG4 	”­’eŒãAW‚Ü‚éYÀ•W(t256Œ`®)
 ---------------------------------------------------------*/
-local void spell_create_4e_remilia_vlad_tepes(OBJ *src)
+local OBJ_CALL_FUNC(spell_create_4e_remilia_vlad_tepes)
 {
 	if ((SPELL_TIME_0256-1)==((REG_10_BOSS_SPELL_TIMER) ))/*(ˆê”Ôn‚ß)*/
 	{
@@ -441,7 +441,7 @@ local void spell_create_4e_remilia_vlad_tepes(OBJ *src)
 	REG_0b_REG3 	”­’eŒãAW‚Ü‚éXÀ•W(t256Œ`®)
 	REG_0c_REG4 	”­’eŒãAW‚Ü‚éYÀ•W(t256Œ`®)
 ---------------------------------------------------------*/
-local void spell_create_4f_remilia_red_magic(OBJ *src)
+local OBJ_CALL_FUNC(spell_create_4f_remilia_red_magic)
 {
 	if ((SPELL_TIME_0256-1)==((REG_10_BOSS_SPELL_TIMER) ))/*(ˆê”Ôn‚ß)*/
 	{

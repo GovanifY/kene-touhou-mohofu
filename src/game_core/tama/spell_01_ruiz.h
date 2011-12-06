@@ -39,7 +39,7 @@
 	’è”	t256(1.2)
 	’è”	((65536/4)/32)
 ---------------------------------------------------------*/
-local void spell_create_44_ruiz3(OBJ *src)
+local OBJ_CALL_FUNC(spell_create_44_ruiz3)
 {
 	count_up_limit_NUM(REG_NUM_08_REG0, 4);//	æ‚èŠ¸‚¦‚¸4‰ñ‚Éˆê‰ñ‚Å‚¢‚¢‚âB
 	if (0==(REG_08_REG0))

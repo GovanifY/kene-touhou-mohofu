@@ -25,9 +25,9 @@
 
 typedef struct XMHEADER
 {								/*               012345678901234567 */
-	MM_CHAR  id[17];			/* ID text:     'Extended module: ' ID */
-	MM_CHAR  songname[21];		/* Module name: '012345678901234567890' 曲名(但しシフトjisコード対象外) */
-	MM_CHAR  trackername[20];	/* Tracker name:'01234567890123456789'  作曲ソフト名(但しシフトjisコード対象外) */
+	MM_s8  id[17];			/* ID text:     'Extended module: ' ID */
+	MM_s8  songname[21];		/* Module name: '012345678901234567890' 曲名(但しシフトjisコード対象外) */
+	MM_s8  trackername[20];	/* Tracker name:'01234567890123456789'  作曲ソフト名(但しシフトjisコード対象外) */
 	u16 version;				/* Version number */
 	u32 headersize; 			/* Header size */
 	u16 songlength; 			/* Song length (in patten order table) */
@@ -44,7 +44,7 @@ typedef struct XMHEADER
 typedef struct XMINSTHEADER
 {
 	u32 size;					/* Instrument size */
-	MM_CHAR  name[22];			/* Instrument name */
+	MM_s8  name[22];			/* Instrument name */
 	u8 type;					/* Instrument type (always 0) */
 	u16 numsmp; 				/* Number of samples in instrument */
 	u32 ssize;
@@ -87,7 +87,7 @@ typedef struct XMWAVHEADER
 	u8 panning; 				/* Panning (0-255) */
 	s8 relnote; 				/* Relative note number (signed byte) */
 	u8 reserved;
-	MM_CHAR  samplename[22];	/* Sample name */
+	MM_s8  samplename[22];	/* Sample name */
 	u8 vibtype; 				/* Vibrato type */
 	u8 vibsweep;				/* Vibrato sweep */
 	u8 vibdepth;				/* Vibrato depth */
@@ -127,7 +127,8 @@ static	XMWAVHEADER *s		= NULL;
 MM_BOOL XM_Test(void)
 {
 	u8 id[38];
-	if (!mod_music_file_read_multi_u8(mm_midi.mod_FILE_reader, id, 38)) {	return (0);}
+	mod_music_file_read_multi_u8(mmff.mod_FILE_reader, id, 38);
+//	if (0==) {	return (0);}
 	if (memcmp(id, "Extended Module: ", 17))		{	return (0);}
 	if (id[37]==0x1a)	{	return (1);}
 	return (0);
@@ -336,20 +337,20 @@ static MM_BOOL LoadPatterns(MM_BOOL dummypat)
 
 		ph.size -= (mh_xm->version==0x0102?8:9);
 		if (ph.size)
-		{	mod_music_file_seek_cur(mm_midi.mod_FILE_reader, ph.size);
+		{	mod_music_file_seek_cur(mmff.mod_FILE_reader, ph.size);
 		}
-		of.pattrows[t]=ph.numrows;
+		mmoo.pattrows[t]=ph.numrows;
 
 		if (ph.numrows)
 		{
-			xmpat = (XMNOTE*)mod_music_calloc(ph.numrows*of.numchn, sizeof(XMNOTE));
+			xmpat = (XMNOTE*)mod_music_calloc(ph.numrows*mmoo.numchn, sizeof(XMNOTE));
 			if (!xmpat)
 			{	return (0);
 			}
 			/* when packsize is 0, don't try to load a pattern.. it's empty. */
 			if (ph.packsize)
 			{	for (u=0; u<ph.numrows; u++)
-				{	for (v=0; v<of.numchn; v++)
+				{	for (v=0; v<mmoo.numchn; v++)
 					{
 						if (!ph.packsize)	{break;}
 						ph.packsize -= XM_ReadNote(&xmpat[(v*ph.numrows)+u]);
@@ -364,36 +365,36 @@ static MM_BOOL LoadPatterns(MM_BOOL dummypat)
 			}
 			if (ph.packsize)
 			{
-				mod_music_file_seek_cur(mm_midi.mod_FILE_reader, ph.packsize);
+				mod_music_file_seek_cur(mmff.mod_FILE_reader, ph.packsize);
 			}
 
-			if (mod_music_eof(mm_midi.mod_FILE_reader))
+			if (mod_music_eof(mmff.mod_FILE_reader))
 			{
 				free(xmpat);xmpat = NULL;
 				mod_music_error_number = MOD_MUSIC_ERROR_LOADING_PATTERN;
 				return (0);
 			}
 
-			for (v=0; v<(of.numchn); v++)
-			{	of.tracks[numtrk++] = XM_Convert(&xmpat[v*ph.numrows],ph.numrows);
+			for (v=0; v<(mmoo.numchn); v++)
+			{	mmoo.tracks[numtrk++] = XM_Convert(&xmpat[v*ph.numrows],ph.numrows);
 			}
 			free(xmpat);xmpat = NULL;
 		}
 		else
 		{
-			for (v=0; v<(of.numchn); v++)
-			{	of.tracks[numtrk++]=XM_Convert(NULL,ph.numrows);
+			for (v=0; v<(mmoo.numchn); v++)
+			{	mmoo.tracks[numtrk++]=XM_Convert(NULL,ph.numrows);
 			}
 		}
 	}
 
 	if (dummypat)
 	{
-		of.pattrows[t] = 64;
-		xmpat = (XMNOTE*)mod_music_calloc(64*of.numchn, sizeof(XMNOTE));
+		mmoo.pattrows[t] = 64;
+		xmpat = (XMNOTE*)mod_music_calloc(64*mmoo.numchn, sizeof(XMNOTE));
 		if (!xmpat) 	{return (0);}
-		for (v=0; v<(of.numchn); v++)
-		{	of.tracks[numtrk++] = XM_Convert(&xmpat[v*64],64);
+		for (v=0; v<(mmoo.numchn); v++)
+		{	mmoo.tracks[numtrk++] = XM_Convert(&xmpat[v*64],64);
 		}
 		free(xmpat);xmpat = NULL;
 	}
@@ -408,8 +409,8 @@ static MM_BOOL LoadInstruments(void)
 	u16 wavcnt = 0;
 
 	if (!AllocInstruments())	{	return (0); }
-	d = of.instruments;
-	for (t=0; t<(of.numins); t++,d++)
+	d = mmoo.instruments;
+	for (t=0; t<(mmoo.numins); t++,d++)
 	{
 		XMINSTHEADER ih;
 		long headend;
@@ -417,10 +418,10 @@ static MM_BOOL LoadInstruments(void)
 		memset(d->samplenumber, 0xff, INSTNOTES*sizeof(u16));
 
 		/* read instrument header */
-		headend 	= mod_music_ftell(mm_midi.mod_FILE_reader);
+		headend 	= mod_music_ftell(mmff.mod_FILE_reader);
 		ih.size 	= music_fget32();
 		headend    += ih.size;
-		mod_music_file_read_string(mm_midi.mod_FILE_reader, ih.name, 22);
+		mod_music_file_read_string(mmff.mod_FILE_reader, ih.name, 22);
 		ih.type 	= (u8)(music_fgetc());
 		ih.numsmp	= music_fget16();
 
@@ -433,9 +434,9 @@ static MM_BOOL LoadInstruments(void)
 			{
 				XMPATCHHEADER pth;
 				int p;
-				mod_music_file_read_multi_u8(	mm_midi.mod_FILE_reader, pth.what,	 (XMNOTECNT ));
-				mod_music_file_read_multi_u16LE(	mm_midi.mod_FILE_reader, pth.volenv, (XMENVCNT_1));
-				mod_music_file_read_multi_u16LE(	mm_midi.mod_FILE_reader, pth.panenv, (XMENVCNT_1));
+				mod_music_file_read_multi_u8(	mmff.mod_FILE_reader, pth.what,	 (XMNOTECNT ));
+				mod_music_file_read_multi_u16LE(	mmff.mod_FILE_reader, pth.volenv, (XMENVCNT_1));
+				mod_music_file_read_multi_u16LE(	mmff.mod_FILE_reader, pth.panenv, (XMENVCNT_1));
 				pth.volpts		= (u8)(music_fgetc());
 				pth.panpts		= (u8)(music_fgetc());
 				pth.volsus		= (u8)(music_fgetc());
@@ -454,7 +455,7 @@ static MM_BOOL LoadInstruments(void)
 
 				/* read the remainder of the header
 				   (2 bytes for 1.03, 22 for 1.04) */
-				for (u=headend-mod_music_ftell(mm_midi.mod_FILE_reader); u; u--)
+				for (u=headend-mod_music_ftell(mmff.mod_FILE_reader); u; u--)
 				{	(u8)(music_fgetc());
 				}
 				/* we can't trust the envelope point count here, as some
@@ -463,7 +464,7 @@ static MM_BOOL LoadInstruments(void)
 				if (pth.volpts>(XMENVCNT_2))	{pth.volpts=(XMENVCNT_2);}
 				if (pth.panpts>(XMENVCNT_2))	{pth.panpts=(XMENVCNT_2);}
 
-				if ((mod_music_eof(mm_midi.mod_FILE_reader))||(pth.volpts>(XMENVCNT_2))||(pth.panpts>(XMENVCNT_2)))
+				if ((mod_music_eof(mmff.mod_FILE_reader))||(pth.volpts>(XMENVCNT_2))||(pth.panpts>(XMENVCNT_2)))
 				{
 					if (nextwav)	{ free(nextwav);nextwav = NULL; }
 					if (wh) 		{ free(wh);wh = NULL; }
@@ -472,7 +473,7 @@ static MM_BOOL LoadInstruments(void)
 				}
 
 				for (u=0; u<XMNOTECNT; u++)
-				{	d->samplenumber[u]=pth.what[u]+of.numsmp;}
+				{	d->samplenumber[u]=pth.what[u]+mmoo.numsmp;}
 				d->volfade = pth.volfade;
 				#if 1
 				memcpy(d->volenv, pth.volenv, (XMENVCNT_1));
@@ -505,14 +506,14 @@ static MM_BOOL LoadInstruments(void)
 				{	d->panflg &= ~EF_ON;}
 				#endif
 				/* Samples are stored outside the instrument struct now, so we
-				   have to load them all into a temp area, count the of.numsmp
+				   have to load them all into a temp area, count the mmoo.numsmp
 				   along the way and then do an AllocSamples() and move
 				   everything over */
 				if ((mh_xm->version)>0x0103)	{	next = 0;}
 				for (u=0; u<(ih.numsmp); u++,s++)
 				{
 					/* Allocate more room for sample information if necessary */
-					if (of.numsmp+u==wavcnt)
+					if (mmoo.numsmp+u==wavcnt)
 					{
 						wavcnt += XM_SMPINCR;
 						nextwav = realloc(nextwav, wavcnt*sizeof(u32));
@@ -545,12 +546,12 @@ static MM_BOOL LoadInstruments(void)
 					s->vibdepth 		= pth.vibdepth*4;
 					s->vibrate			= pth.vibrate;
 					s->reserved 		= (u8)(music_fgetc());
-					mod_music_file_read_string(mm_midi.mod_FILE_reader, s->samplename, 22);
+					mod_music_file_read_string(mmff.mod_FILE_reader, s->samplename, 22);
 
-					nextwav[of.numsmp+u] = next;
+					nextwav[mmoo.numsmp+u] = next;
 					next += s->length;
 
-					if (mod_music_eof(mm_midi.mod_FILE_reader))
+					if (mod_music_eof(mmff.mod_FILE_reader))
 					{
 						free(nextwav);nextwav = NULL;
 						free(wh);wh = NULL;
@@ -562,20 +563,20 @@ static MM_BOOL LoadInstruments(void)
 				if (mh_xm->version>0x0103)
 				{
 					for (u=0; u<ih.numsmp; u++)
-					{	nextwav[of.numsmp++] += mod_music_ftell(mm_midi.mod_FILE_reader);
+					{	nextwav[mmoo.numsmp++] += mod_music_ftell(mmff.mod_FILE_reader);
 					}
-					mod_music_file_seek_cur(mm_midi.mod_FILE_reader, next);
+					mod_music_file_seek_cur(mmff.mod_FILE_reader, next);
 				}
 				else
-				{	of.numsmp += ih.numsmp;
+				{	mmoo.numsmp += ih.numsmp;
 				}
 			}
 			else
 			{
 				/* read the remainder of the header */
-				for (u=headend-mod_music_ftell(mm_midi.mod_FILE_reader); u; u--)	{(u8)(music_fgetc());}
+				for (u=headend-mod_music_ftell(mmff.mod_FILE_reader); u; u--)	{(u8)(music_fgetc());}
 
-				if (mod_music_eof(mm_midi.mod_FILE_reader))
+				if (mod_music_eof(mmff.mod_FILE_reader))
 				{
 					free(nextwav);nextwav = NULL;
 					free(wh);wh = NULL;
@@ -587,7 +588,7 @@ static MM_BOOL LoadInstruments(void)
 	}
 
 	/* sanity check */
-	if (!of.numsmp)
+	if (!mmoo.numsmp)
 	{
 		if (nextwav)	{ free(nextwav);nextwav = NULL; }
 		if (wh) 		{ free(wh);wh = NULL; }
@@ -610,9 +611,9 @@ MM_BOOL XM_Load(MM_BOOL curious)
 	#endif
 
 	/* try to read module header */
-	mod_music_file_read_string(mm_midi.mod_FILE_reader, mh_xm->id,			17);
-	mod_music_file_read_string(mm_midi.mod_FILE_reader, mh_xm->songname,	21);
-	mod_music_file_read_string(mm_midi.mod_FILE_reader, mh_xm->trackername, 20);
+	mod_music_file_read_string(mmff.mod_FILE_reader, mh_xm->id,			17);
+	mod_music_file_read_string(mmff.mod_FILE_reader, mh_xm->songname,	21);
+	mod_music_file_read_string(mmff.mod_FILE_reader, mh_xm->trackername, 20);
 	mh_xm->version	   = music_fget16();
 	if ((mh_xm->version<0x102)||(mh_xm->version>0x104))
 	{
@@ -633,17 +634,17 @@ MM_BOOL XM_Load(MM_BOOL curious)
 		mod_music_error_number = MOD_MUSIC_ERROR_NOT_A_MOD_MUSIC_MODULE;
 		return (0);
 	}
-	mod_music_file_read_multi_u8(mm_midi.mod_FILE_reader, mh_xm->orders, 256);
+	mod_music_file_read_multi_u8(mmff.mod_FILE_reader, mh_xm->orders, 256);
 
-	if (mod_music_eof(mm_midi.mod_FILE_reader))
+	if (mod_music_eof(mmff.mod_FILE_reader))
 	{
 		mod_music_error_number = MOD_MUSIC_ERROR_LOADING_HEADER;
 		return (0);
 	}
 
 	/* set module variables */
-	of.initspeed = (u8)mh_xm->tempo;
-	of.inittempo = (u8)mh_xm->bpm;
+	mmoo.initspeed = (u8)mh_xm->tempo;
+	mmoo.inittempo = (u8)mh_xm->bpm;
 
 	#if (1==USE_TRACKER_NAME_COPY)
 	strncpy(tracker, mh_xm->trackername, 20);	tracker[20] = 0;
@@ -657,47 +658,48 @@ MM_BOOL XM_Load(MM_BOOL curious)
 	#else
 	sprintf(modtype,		"%s (XM format %d.%02d)",	tracker, mh_xm->version>>8, mh_xm->version&0xff);
 	#endif
-//廃止		of.string_modtype		= strdup(modtype);
+//廃止		mmoo.string_modtype		= strdup(modtype);
 	#endif
 
-	of.numchn		= mh_xm->numchn;
-	of.numpat		= mh_xm->numpat;
-	of.numtrk		= (u16)of.numpat*of.numchn; /* get number of channels */
-//廃止	曲名文字列: 		of.string_songname	= DupStr(mh_xm->songname,20,1);
-	of.numpos		= mh_xm->songlength;				/* copy the songlength */
-	of.reppos		= mh_xm->restart<mh_xm->songlength?mh_xm->restart:0;
-	of.numins		= mh_xm->numins;
-	of.flags	   |= UF_XMPERIODS|UF_INST|UF_NOWRAP|UF_FT2QUIRKS;
-	if (mh_xm->flags&1) of.flags |= UF_LINEAR;
+	mmoo.numchn		= mh_xm->numchn;
+	mmoo.numpat		= mh_xm->numpat;
+	mmoo.numtrk		= (u16)mmoo.numpat*mmoo.numchn; /* get number of channels */
+//廃止	曲名文字列: 		mmoo.string_songname	= DupStr(mh_xm->songname,20,1);
+	mmoo.numpos		= mh_xm->songlength;				/* copy the songlength */
+	mmoo.reppos		= mh_xm->restart<mh_xm->songlength?mh_xm->restart:0;
+	mmoo.numins		= mh_xm->numins;
+	mmoo.flags	   |= UF_XMPERIODS|UF_INST|UF_NOWRAP|UF_FT2QUIRKS;
+	if (mh_xm->flags&1) mmoo.flags |= UF_LINEAR;
 
-	memset(of.chanvol, 64, of.numchn);			 /* store channel volumes */
+	memset(mmoo.chanvol, 64, mmoo.numchn);			 /* store channel volumes */
 
-	if (!AllocPositions(of.numpos+1))		{	return (0);}
-	for (t=0; t<of.numpos; t++)
-	{	of.positions[t] = mh_xm->orders[t];
+	if (!AllocPositions(mmoo.numpos+1))		{	return (0);}
+	for (t=0; t<mmoo.numpos; t++)
+	{	mmoo.positions[t] = mh_xm->orders[t];
 	}
 	/* We have to check for any pattern numbers in the order list greater than
 	   the number of patterns total. If one or more is found, we set it equal to
 	   the pattern total and make a dummy pattern to workaround the problem */
-	for (t=0; t<of.numpos; t++)
+	for (t=0; t<mmoo.numpos; t++)
 	{
-		if (of.positions[t]>=of.numpat)
+		if (mmoo.positions[t]>=mmoo.numpat)
 		{
-			of.positions[t] = of.numpat;
+			mmoo.positions[t] = mmoo.numpat;
 			dummypat = 1;
 		}
 	}
 	if (dummypat)
 	{
-		of.numpat++;of.numtrk += of.numchn;
+		mmoo.numpat++;
+		mmoo.numtrk += mmoo.numchn;
 	}
 
 	if (mh_xm->version<0x0104)
 	{
 		if (!LoadInstruments()) 		{	return (0);}
 		if (!LoadPatterns(dummypat))	{	return (0);}
-		for (t=0; t<of.numsmp; t++)
-		{	nextwav[t] += mod_music_ftell(mm_midi.mod_FILE_reader);
+		for (t=0; t<mmoo.numsmp; t++)
+		{	nextwav[t] += mod_music_ftell(mmff.mod_FILE_reader);
 		}
 	}
 	else
@@ -712,9 +714,9 @@ MM_BOOL XM_Load(MM_BOOL curious)
 		free(wh);		wh = NULL;
 		return (0);
 	}
-	q = of.samples;
+	q = mmoo.samples;
 	s = wh;
-	for (u=0; u<of.numsmp; u++,q++,s++)
+	for (u=0; u<mmoo.numsmp; u++,q++,s++)
 	{
 		q->samplename	= DupStr(s->samplename,22,1);
 		q->length		= s->length;
@@ -742,13 +744,13 @@ MM_BOOL XM_Load(MM_BOOL curious)
 		if (s->type&0x10)	{	q->flags |= SF_16BITS;}
 		q->flags |= (SF_DELTA|SF_SIGNED);
 	}
-	d = of.instruments;
+	d = mmoo.instruments;
 	s = wh;
-	for (u=0; u<of.numins; u++,d++)
+	for (u=0; u<mmoo.numins; u++,d++)
 	{
 		for (t=0; t<XMNOTECNT; t++)
 		{
-			if (d->samplenumber[t]>=of.numsmp)
+			if (d->samplenumber[t]>=mmoo.numsmp)
 			{	d->samplenote[t] = 255;}
 			else
 			{
@@ -763,11 +765,12 @@ MM_BOOL XM_Load(MM_BOOL curious)
 }
 
 #if 0/*曲名廃止*/
-MM_CHAR *XM_LoadTitle(void)
+MM_s8 *XM_LoadTitle(void)
 {
-	MM_CHAR s[21];
-	mod_music_file_seek_set(mm_midi.mod_FILE_reader, 17);
-	if (!mod_music_file_read_u8S(s, 21, mm_midi.mod_FILE_reader))	{return (NULL);}
+	MM_s8 s[21];
+	mod_music_file_seek_set(mmff.mod_FILE_reader, 17);
+	mod_music_file_read_u8S(s, 21, mmff.mod_FILE_reader);
+//	if (0==)	{return (NULL);}
 	return (DupStr(s,21,1));
 }
 #endif
