@@ -217,7 +217,7 @@ static void common_menu_work_MENU_STATE_03_FININSH(void)
 	if (MENU_TYPE_01_PAUSE==aaa.menu_type)
 	{
 		/* ボスデバッグ用 USE_r36_SCENE_FLAG */
-		#if 1/*(1==DEBUG_MODE)*/
+		#if 0//1/*(1==DEBUG_MODE)*/
 	//	if (psp_pad.pad_data & PSP_KEY_RIGHT)
 		{
 		//	cg_game_now_max_continue = (90);/*test*/	/* ランキングにさせない */
@@ -233,7 +233,7 @@ static void common_menu_work_MENU_STATE_03_FININSH(void)
 			cg.graze_point	= (cg.game_score);/*test*/
 		}
 		#endif
-		#if 1/*(1==DEBUG_MODE)*/
+		#if 0//1/*(1==DEBUG_MODE)*/
 	//	else
 		if (psp_pad.pad_data & PSP_KEY_LEFT)
 		{
@@ -332,7 +332,7 @@ static void stage_select_menu_work_MENU_STATE_01_WORK_MENU(void)
 		/*(上下を押した場合に操作音を出す。)*/
 		if (psp_pad.pad_data & (PSP_KEY_DOWN|PSP_KEY_UP/*|PSP_KEY_PAUSE|PSP_KEY_SELECT*/))
 		{
-			voice_play(VOICE02_MENU_SELECT, TRACK01_MENU01);
+			voice_play_menu(VOICE02_MENU_SELECT, TRACK01_MENU01);
 		}
 		#if 0/*(-r34)*/
 		/*(上下を押した場合、回り込み選択をする。上下は必ずワープ)*/
@@ -389,7 +389,7 @@ static void stage_select_menu_work_MENU_STATE_01_WORK_MENU(void)
 		}
 		if (psp_pad.pad_data & PSP_KEY_SHOT_OK)
 		{
-			voice_play(VOICE01_MENU_OK/*VOICE02_MENU_SELECT*/, TRACK01_MENU01);
+			voice_play_menu(VOICE01_MENU_OK/*VOICE02_MENU_SELECT*/, TRACK01_MENU01);
 			cb.main_call_func = common_menu_work_MENU_STATE_02_FADE_OUT;	/* メニュー消去準備 */
 		}
 	}

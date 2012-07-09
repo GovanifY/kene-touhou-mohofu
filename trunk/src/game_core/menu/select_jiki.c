@@ -57,7 +57,8 @@ static void draw_spec_message(unsigned int set_mode)
 		{	"吸血鬼\\n" 			"レミリア スカーレット\\n"	"ナイトダンス\\n"			"不夜城ブレッド\\n",			"移動速度★★☆\\n" 				"攻撃範囲★★☆\\n" 	"攻撃力　★★☆",	},// No. 4 レミリア(血符)
 		{	"華胥の亡霊\\n" 		"西行寺 幽々子\\n"			"対岸の誘い\\n" 			"ギャストリドリーム\\n",		"移動速度☆☆☆\\n" 				"攻撃範囲★★☆\\n" 	"攻撃力　★★★",	},// No. 5 幽々子(符蝶)
 		{	"湖上の氷精\\n" 		"チルノ (氷符)\\n"			"アイシクルニードル\\n" 	"アイシクルストライク\\n",		"移動速度★★★★\\n"				"攻撃範囲？？？\\n" 	"攻撃力　★★☆",	},// No. 6 チルノ A(氷符)
-		{	"湖上の氷精\\n" 		"チルノ (⑨符)\\n"			"アイシクルニードル\\n" 	"ガッチガチ\\n",				"移動速度★☆★☆★☆★☆★\\n" 	"攻撃範囲？？？\\n" 	"攻撃力　⑨⑨⑨",	},// No. 7 チルノ Q(⑨系)
+	//	{	"湖上の氷精\\n" 		"チルノ (⑨符)\\n"			"アイシクルニードル\\n" 	"ガッチガチ\\n",				"移動速度★☆★☆★☆★☆★\\n" 	"攻撃範囲？？？\\n" 	"攻撃力　⑨⑨⑨",	},// No. 7 チルノ Q(⑨系)
+		{	"湖上の氷精\\n" 		"チルノ (⑨符)\\n"			"★アイスソ\ード\\n" 		"冷凍剣+99999\\n",				"移動速度★★★★★\\n" 		 	"攻撃範囲？？？\\n" 	"攻撃力　⑨⑨⑨",	},// No. 7 チルノ Q(⑨系)
 		{	"Easy\\n"				"簡単かどうかは人による。\\n",															"エンディング無し\\n"	"(全５面)", },// No. 0 easy
 		{	"Normal\\n" 			"普通な人にはハード。\\n",																"(全６面)", },// No. 1 normal
 		{	"Hard\\n"				"ハードな人には普通。\\n",																"(全６面)", },// No. 2 hard
@@ -148,7 +149,7 @@ static void player_select_10_select(void)/* [選択] */
 			if (psp_pad.pad_data & (PSP_KEY_LEFT|PSP_KEY_RIGHT)/*左か右の両方*/) /* 左右ボタン入力 */
 			{
 				is_turn_right = (psp_pad.pad_data & PSP_KEY_RIGHT)?1:0;/* 右なら1, 左なら0 */
-				voice_play(VOICE02_MENU_SELECT, TRACK01_MENU01);
+				voice_play_menu(VOICE02_MENU_SELECT, TRACK01_MENU01);
 				cb.main_call_func = player_select_08_load;	/* [load] */	/*(戻る)*/
 			}
 			if (psp_pad.pad_data & PSP_KEY_SHOT_OK)
@@ -163,7 +164,7 @@ static void player_select_10_select(void)/* [選択] */
 					difficulty_select_fg0_surface = NULL;
 					#endif /*(1==USE_KETM_IMAGE_CHACHE)*/
 				}
-				voice_play(VOICE01_MENU_OK, TRACK01_MENU01);/* テキトー */
+				voice_play_menu(VOICE01_MENU_OK, TRACK01_MENU01);/* テキトー */
 				if (0!=cg.game_practice_mode)
 				{	/* プラクティスモードの場合 */
 					cb.main_call_func = stage_select_menu_start;	/* ステージ選択メニューの開始 */
@@ -177,7 +178,7 @@ static void player_select_10_select(void)/* [選択] */
 			if (psp_pad.pad_data & PSP_KEY_BOMB_CANCEL)
 			{
 				cg.msg_time = (0);/* 必要 */
-				voice_play(VOICE04_SHIP_HAKAI, TRACK02_MENU02/*TRACK01_MENU01*/);/* 自機死に音は、なるべく重ねない */
+				voice_play_menu(VOICE04_SHIP_HAKAI, TRACK02_MENU02/*TRACK01_MENU01*/);/* 自機死に音は、なるべく重ねない */
 				/* 難易度選択メニューに戻る */
 				cb.main_call_func = rank_select_menu_start; 	/* 難易度選択メニューへ(戻る) */
 			}
@@ -437,7 +438,7 @@ static MAIN_CALL_FUNC(player_select_08_load)/* [load] */
 ---------------------------------------------------------*/
 global void menu_cancel_and_voice(void)
 {
-	voice_play(VOICE04_SHIP_HAKAI, TRACK02_MENU02/*TRACK01_MENU01*/);/* 自機死に音は、なるべく重ねない */
+	voice_play_menu(VOICE04_SHIP_HAKAI, TRACK02_MENU02/*TRACK01_MENU01*/);/* 自機死に音は、なるべく重ねない */
 	cb.main_call_func = title_menu_start;	/* タイトルメニューへ移動 */
 }
 
@@ -477,13 +478,13 @@ static MAIN_CALL_FUNC(rank_select_06_select)/* [選択] */
 				if (psp_pad.pad_data & PSP_KEY_UP)
 						{	cg.game_difficulty--;	cg.game_difficulty = psp_max(cg.game_difficulty, (0)   );	}	/* メニュー上で停止 */
 				else	{	cg.game_difficulty++;	cg.game_difficulty = psp_min(cg.game_difficulty, (4-1) );	}	/* メニュー下で停止 */
-				voice_play(VOICE02_MENU_SELECT, TRACK01_MENU01);
+				voice_play_menu(VOICE02_MENU_SELECT, TRACK01_MENU01);
 				cb.main_call_func = rank_select_04_initialize_value;	/* [load] */	/*(戻る)*/
 			}
 			if (psp_pad.pad_data & PSP_KEY_SHOT_OK)
 			{
 				cg.msg_time = (0);/* 必要 */
-				voice_play(VOICE01_MENU_OK, TRACK01_MENU01);/* テキトー */
+				voice_play_menu(VOICE01_MENU_OK, TRACK01_MENU01);/* テキトー */
 				/* 通常／プラクティス、ゲーム開始 */
 				// static void player_opt_init(void)吸収。なし
 				{

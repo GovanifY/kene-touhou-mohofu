@@ -59,8 +59,7 @@ local OBJ_CALL_FUNC(spell_create_0a_houka_kenran)
 		HATSUDAN_07_div_angle65536			= REG_0b_REG3;/*(分割数、紅色)*/	/*(int)(1024/(48))*/	/* 分割角度(1024[360/360度]を 48 分割) */	/* 1周をn分割した角度 */
 		hatudan_system_regist_katayori_n_way();/* (r33-) */
 		#if (1)
-	//	voice_play(VOICE15_BOSS_KOUGEKI_01, TRACK04_TEKIDAN);
-		bullet_play_04_auto(VOICE15_BOSS_KOUGEKI_01);/* 本家はきこきこ音 */
+		cpu_bullet_play_15_auto();/* 本家はきこきこ音 */
 		#endif
 	}
 //	if ((0x02)==((REG_10_BOSS_SPELL_TIMER)&0x03))/* (2回に1回)(8回毎に発弾) */
@@ -237,8 +236,7 @@ a	1010
 			hatudan_system_regist_katayori_n_way();/* (r33-) */
 		}
 		#if (1)
-	//	voice_play(VOICE15_BOSS_KOUGEKI_01, TRACK04_TEKIDAN);
-		bullet_play_04_auto(VOICE15_BOSS_KOUGEKI_01);
+		cpu_bullet_play_15_auto();
 		#endif
 	}
 }

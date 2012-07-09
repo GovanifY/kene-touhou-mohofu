@@ -432,8 +432,7 @@ local OBJ_CALL_FUNC(spell_create_22_sakuya_miss_direction)
 				hatudan_system_regist_katayori_n_way();/* (r33-) */
 			}
 			#if (1)
-		//	voice_play(VOICE15_BOSS_KOUGEKI_01, TRACK04_TEKIDAN);
-			bullet_play_04_auto(VOICE15_BOSS_KOUGEKI_01);
+			cpu_bullet_play_15_auto();
 			#endif
 		}
 	}
@@ -466,8 +465,7 @@ local OBJ_CALL_FUNC(spell_create_22_sakuya_miss_direction)
 				hatudan_system_regist_n_way();/* (r33-) */
 			}
 			#if (1)
-		//	voice_play(VOICE15_BOSS_KOUGEKI_01, TRACK04_TEKIDAN);
-			bullet_play_04_auto(VOICE15_BOSS_KOUGEKI_01);/* 青ナイフの音はずらす必要がある */
+			cpu_bullet_play_15_auto();/* 青ナイフの音はずらす必要がある */
 			#endif
 		}
 	}
@@ -482,73 +480,12 @@ local OBJ_CALL_FUNC(spell_create_22_sakuya_miss_direction)
 		if (0==((REG_10_BOSS_SPELL_TIMER)&0x0f))
 		{
 			#if (1)
-		//	voice_play(VOICE15_BOSS_KOUGEKI_01, TRACK04_TEKIDAN);
-			bullet_play_04_auto(VOICE15_BOSS_KOUGEKI_01);/* 青ナイフの音はずらす必要がある */
+			cpu_bullet_play_15_auto();/* 青ナイフの音はずらす必要がある */
 			#endif
 		}
 	}
 	#endif
 }
-
-
-#if 0/*(旧版、未使用。雑魚スペカとしても再利用は無理がある)*/
-/*---------------------------------------------------------
-	紅5面中-ボス 咲夜「奇術：ミスディレクション(1/2)」にちょっとだけ似たカード
-	-------------------------------------------------------
-	自機狙い、全方向24分割、赤クナイ弾
----------------------------------------------------------*/
-//SPELL_TIME_0048
-local OBJ_CALL_FUNC(spell_create_02_24nerai)
-{
-	if (0==((REG_10_BOSS_SPELL_TIMER)&0x03))
-	{
-		REG_02_DEST_X	= ((src->center.x256));
-		REG_03_DEST_Y	= ((src->center.y256));
-		calculate_jikinerai();/* 1:いちいち作成するっぽい。 */
-	//	HATSUDAN_01_speed256			= (t256(2.0)+((REG_10_BOSS_SPELL_TIMER)<<2)); /* 弾速 */
-		HATSUDAN_01_speed256			= (t256(2.0)-((REG_10_BOSS_SPELL_TIMER)));	/* 弾速 */
-		HATSUDAN_02_speed_offset		= t256(1);/*(テスト)*/
-		HATSUDAN_04_tama_spec			= (DANMAKU_LAYER_00)|(TAMA_SPEC_2000_EFFECT_MINI)|(TAMA_SPEC_0000_TILT);/* (r33-)標準弾 */
-		HATSUDAN_05_bullet_obj_type 	= (BULLET_KUNAI12_BASE + TAMA_IRO_01_AKA);			/* [赤クナイ弾] */
-		HATSUDAN_06_n_way				= (24); 							/* [24way] */
-		HATSUDAN_07_div_angle65536		= (int)(65536/24);					/* 分割角度 */
-		hatudan_system_regist_katayori_n_way();/* (r33-) */
-		#if (1)
-	//	voice_play(VOICE15_BOSS_KOUGEKI_01, TRACK04_TEKIDAN);
-		bullet_play_04_auto(VOICE15_BOSS_KOUGEKI_01);
-		#endif
-	}
-}
-/*---------------------------------------------------------
-	紅5面中-ボス 咲夜 「奇術：ミスディレクション(2/2)」にちょっとだけ似たカード
-	-------------------------------------------------------
-	自機狙い、11弾(中心と、左右に5弾ずつ狙い)
-	-------------------------------------------------------
-	原作やりなおしたら、ここは３回撃つ。
----------------------------------------------------------*/
-//SPELL_TIME_0064
-local OBJ_CALL_FUNC(spell_create_03_11nife)
-{
-	if (0==((REG_10_BOSS_SPELL_TIMER)&0x07))
-	{
-		REG_02_DEST_X	= ((src->center.x256));
-		REG_03_DEST_Y	= ((src->center.y256));
-		calculate_jikinerai();/* 1:いちいち作成するっぽい。 */
-		HATSUDAN_01_speed256				= (t256(2.0));						/* 弾速 */
-		HATSUDAN_02_speed_offset			= t256(0);/*(テスト)*/
-		HATSUDAN_03_angle65536				= ((HATSUDAN_03_angle65536))-(int)(65536*6/(7*4));		/* 弾源角度1024 */
-		HATSUDAN_04_tama_spec				= (DANMAKU_LAYER_00)|(TAMA_SPEC_2000_EFFECT_MINI)|(TAMA_SPEC_0000_TILT);/* (r33-)標準弾 */
-		HATSUDAN_05_bullet_obj_type 		= BULLET_KNIFE20_04_AOI;			/* [青ナイフ弾] */
-		HATSUDAN_06_n_way					= (11); 							/* [11way] */
-		HATSUDAN_07_div_angle65536			= (int)(65536/(7*4));				/* 分割角度([90/360]度を7分割==28分割) */
-		hatudan_system_regist_katayori_n_way();/* (r33-) */
-		#if (1)
-	//	voice_play(VOICE15_BOSS_KOUGEKI_01, TRACK04_TEKIDAN);
-		bullet_play_04_auto(VOICE15_BOSS_KOUGEKI_01);
-		#endif
-	}
-}
-#endif
 
 
 /*---------------------------------------------------------
@@ -621,8 +558,7 @@ local OBJ_CALL_FUNC(spell_create_05_32way_dual)
 		HATSUDAN_03_angle65536				= (65536/32);			/* 弾源角度65536 */
 		hatudan_system_regist_katayori_n_way();/* (r33-) */
 		#if (1)
-	//	voice_play(VOICE15_BOSS_KOUGEKI_01, TRACK04_TEKIDAN);
-		bullet_play_04_auto(VOICE15_BOSS_KOUGEKI_01);
+		cpu_bullet_play_15_auto();
 		#endif
 	}
 }
@@ -698,8 +634,7 @@ local OBJ_CALL_FUNC(spell_create_06_luna_clock_32way)
 		HATSUDAN_07_div_angle65536		= (int)(65536/(32));		/* 分割角度(1024[360/360度]を 32 分割) */	/* 1周をn分割した角度 */
 		hatudan_system_regist_katayori_n_way();/* (r33-) */
 		#if (1)
-	//	voice_play(VOICE15_BOSS_KOUGEKI_01, TRACK04_TEKIDAN);
-		bullet_play_04_auto(VOICE15_BOSS_KOUGEKI_01);
+		cpu_bullet_play_15_auto();
 		#endif
 	}
 }
@@ -740,8 +675,7 @@ local OBJ_CALL_FUNC(spell_create_07_80way_dual_five)
 			hatudan_system_regist_single();/* (r33-) */
 		}
 		#if (1)
-	//	voice_play(VOICE15_BOSS_KOUGEKI_01, TRACK04_TEKIDAN);
-		bullet_play_04_auto(VOICE15_BOSS_KOUGEKI_01);
+		cpu_bullet_play_15_auto();
 		#endif
 	}
 }
@@ -788,8 +722,7 @@ local OBJ_CALL_FUNC(spell_create_2c_sakuya_blue_red_knife)
 				hatudan_system_regist_single();/* (r33-) */
 			}
 			#if (1)
-		//	voice_play(VOICE15_BOSS_KOUGEKI_01, TRACK04_TEKIDAN);
-			bullet_play_04_auto(VOICE15_BOSS_KOUGEKI_01);
+			cpu_bullet_play_15_auto();
 			#endif
 		}
 	}
@@ -998,7 +931,9 @@ exchange_damnaku_sakuya_tuika:
 				tmp_angleCCW65536_src_nerai();/* src狙い角作成 */
 				hatudan_system_regist_single();/* (r33-) */
 			}
-			voice_play(VOICE16_BOSS_KYUPIN, TRACK04_TEKIDAN);/*(ナイフ追加音)*/
+			AUDIO_18_voice_number	= VOICE16_BOSS_KYUPIN;/*(ナイフ追加音)*/
+			AUDIO_19_voice_truck	= TRACK04_TEKIDAN;
+			cpu_voice_play();
 		}
 	}
 my_quit:
@@ -1114,22 +1049,11 @@ local OBJ_CALL_FUNC(spell_create_14_sakuya_jack_oodama32)
 				goto loop;
 			}
 			#if (1)
-		//	voice_play(VOICE15_BOSS_KOUGEKI_01, TRACK04_TEKIDAN);
-			bullet_play_04_auto(VOICE15_BOSS_KOUGEKI_01);
+			cpu_bullet_play_15_auto();
 			#endif
 		}
 	}
 }
-
-
-
-
-
-
-
-
-
-
 
 
 /*-------------------------------------------------------
@@ -1178,7 +1102,6 @@ local OBJ_CALL_FUNC(spell_create_14_sakuya_jack_oodama32)
 	(ここの発弾処理のせいで他の弾が処理落ちする)
 	ここの発弾処理を hatudan_system_regist_single に置きかえる必要がある。
 ---------------------------------------------------------*/
-
 
 // バグ対策。 user_data02 良くワカンナイけど空けとく。()
 	/*-r34旧仕様メモ*/ /* r(-1)==+128, l(+1)==-128 */	/* -1==l, +1==r */

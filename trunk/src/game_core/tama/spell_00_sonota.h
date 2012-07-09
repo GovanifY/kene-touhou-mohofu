@@ -57,7 +57,9 @@ local OBJ_CALL_FUNC(spell_create_11_tengu_shot)
 			HATSUDAN_06_n_way				= (7)+(REG_0a_REG2);
 			HATSUDAN_07_div_angle65536		= (int)(65536/24);
 			hatudan_system_regist_n_way();/* (r33-) */
-			voice_play(VOICE15_BOSS_KOUGEKI_01, TRACK04_TEKIDAN);/* テキトー */
+			AUDIO_18_voice_number	= VOICE15_BOSS_KOUGEKI_01;
+			AUDIO_19_voice_truck	= TRACK04_TEKIDAN;/* テキトー */
+			cpu_voice_play();
 		}
 	}
 }
@@ -102,8 +104,9 @@ local OBJ_CALL_FUNC(spell_create_20_sonota_debug_cw_ao/*CW*/)
 			hatudan_system_regist_katayori_n_way();/* (r33-) */
 		}
 		#if (1)
-	//	voice_play(VOICE15_BOSS_KOUGEKI_01, TRACK04_TEKIDAN);
-		bullet_play_04_auto(VOICE15_BOSS_KOUGEKI_01);
+		AUDIO_18_voice_number	= VOICE15_BOSS_KOUGEKI_01;
+	//	AUDIO_19_voice_truck	= TRACK04_TEKIDAN;
+		cpu_bullet_play_05_auto();
 		#endif
 	}
 }
@@ -137,8 +140,9 @@ local OBJ_CALL_FUNC(spell_create_21_sonota_debug_ccw_aka/*CCW*/)
 			hatudan_system_regist_katayori_n_way();/* (r33-) */
 		}
 		#if (1)
-	//	voice_play(VOICE15_BOSS_KOUGEKI_01, TRACK04_TEKIDAN);
-		bullet_play_04_auto(VOICE15_BOSS_KOUGEKI_01);
+		AUDIO_18_voice_number	= VOICE15_BOSS_KOUGEKI_01;
+	//	AUDIO_19_voice_truck	= TRACK04_TEKIDAN;
+		cpu_bullet_play_05_auto();
 		#endif
 	}
 }

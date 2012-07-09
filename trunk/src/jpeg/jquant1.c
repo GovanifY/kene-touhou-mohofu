@@ -184,8 +184,7 @@ typedef my_cquantizer * my_cquantize_ptr;
  */
 
 
-/*LOCAL*/static int
-select_ncolors (j_decompress_ptr cinfo, int Ncolors[])
+/*LOCAL*/static int select_ncolors (j_decompress_ptr cinfo, int Ncolors[])
 /* Determine allocation of desired colors to components, */
 /* and fill in Ncolors[] array to indicate choice. */
 /* Return value is total number of colors (product of Ncolors[] values). */
@@ -194,7 +193,7 @@ select_ncolors (j_decompress_ptr cinfo, int Ncolors[])
 	int max_colors = cinfo->desired_number_of_colors;
 	int total_colors, iroot, i, j;
 	boolean changed;
-	long temp;
+	s32 temp;
 	static const int RGB_order[3] = { RGB_GREEN, RGB_RED, RGB_BLUE };
 
 	/* We can allocate at least the nc'th root of max_colors per component. */
@@ -207,7 +206,7 @@ select_ncolors (j_decompress_ptr cinfo, int Ncolors[])
 		for (i = 1; i < nc; i++)
 			temp *= iroot;
 	}
-	while (temp <= (long) max_colors); /* repeat till iroot exceeds root */
+	while (temp <= (s32) max_colors); /* repeat till iroot exceeds root */
 	iroot--;			/* now iroot = floor(root) */
 
 	/* Must have at least 2 color values per component */
@@ -236,7 +235,7 @@ select_ncolors (j_decompress_ptr cinfo, int Ncolors[])
 			/* calculate new total_colors if Ncolors[j] is incremented */
 			temp = total_colors / Ncolors[j];
 			temp *= Ncolors[j]+1;	/* done in long arith to avoid oflo */
-			if (temp > (long) max_colors)
+			if (temp > (s32) max_colors)
 			{	break;		}	/* won't fit, done with this pass */
 			Ncolors[j]++;		/* OK, apply the increment */
 			total_colors = (int) temp;

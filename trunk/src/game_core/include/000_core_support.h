@@ -112,16 +112,48 @@ extern void resume_music(void);
 
 extern void play_music_num(int num);
 
-extern void play_voice_auto_track(int req_idx);
-extern void bullet_play_04_auto(int req_idx);
+// スクリプト I/F
+
+//------------
+extern CPU_FUNC(cpu_voice_play);/*(スクリプト用)*/
+//extern void voice_play(int req, int play_track );
+extern void voice_play_menu(int request_number, int play_track);/*(外部用)*/
+//------------
+extern CPU_FUNC(cpu_bullet_play_05_auto);/*(スクリプト用)*/
+extern CPU_FUNC(cpu_bullet_play_15_auto);/*(スクリプト用)*/
+extern void bullet_play_04_set(int request_index_number);/*(スクリプト用)*/
+extern void bullet_play_04_auto(int request_index_number);/*(外部用)*/
+//------------
+extern void play_voice_auto_track(int request_index_number);
 extern void voice_play_graze(void); 	/* グレイズ音に関しては、専用の発音処理が必要。 */
 
 
 extern void voice_play_vbl(void);
-extern void voice_play(int req, int play_track );
+
 
 /* 効果音の音響設計を行う(トラック割り振り) */
 #define USE_DESIGN_TRACK	(1)
+
+
+
+
+
+
+/*---------------------------------------------------------
+	受け渡し設定
+	-------------------------------------------------------
+	audio systemがカードCPUから呼ばれるので、
+	カードCPUより後でないと出来ない。
+---------------------------------------------------------*/
+
+#if 1
+	/*([audio_system に直接接続しているレジスタ])*/
+	#define AUDIO_18_voice_number			spell_register[REG_NUM_18_VOICE_NUMBER]/*(効果音の固有番号。音の種類)*/
+	#define AUDIO_19_voice_truck			spell_register[REG_NUM_19_VOICE_TRACK]/*(再生トラック指定)*/
+#endif
+
+
+
 
 #endif /* _BGM_VOICE_H_ */
 

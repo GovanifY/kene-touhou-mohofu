@@ -296,9 +296,9 @@ static OBJ_CALL_FUNC(gekiha_keitai)/*(src==ボス敵本体)*/
 //	obj_maru->color32	= MAKE32RGBA(0xff, 0xff, 0xff, 0x50);	//	obj_maru->alpha = 0x50; 	/* 半透明 */
 	// ボスを倒したときの処理
 	bullets_to_hosi();/* 弾全部、星アイテムにする */
-	voice_play(VOICE03_BOSS_HAKAI, TRACK03_IVENT_DAN/*TRACK02_JIKI_BOMBER*/);
-//	voice_play(VOICE03_BOSS_HAKAI, TR ACK01_PICHUN);/*予備(うるさい)*/
-
+	AUDIO_18_voice_number	= VOICE03_BOSS_HAKAI;
+	AUDIO_19_voice_truck	= TRACK03_IVENT_DAN/*TRACK02_JIKI_BOMBER*/; 	cpu_voice_play();
+//	AUDIO_19_voice_truck	= TRACK01_PICHUN; /*予備(うるさい)*/			cpu_voice_play();
 	cg.draw_boss_hp_value	= (0); /* 必要 */ /*(boss_hp_frame_check()を無効にする。Gu側でチェックさせない)*/
 	cg.bomber_time			= (0); /* 都合上 */
 	{
@@ -442,7 +442,9 @@ static OBJ_CALL_FUNC(boss_action_01_gekiha_go)
 	zako_all_timeup();/* ザコタイムアウト(フェイドアウト消去処理へ移行) */
 	#endif
 	//
-	voice_play(VOICE07_BOMB, TRACK02_JIKI_BOMBER);/*テキトー*/
+	AUDIO_18_voice_number	= VOICE07_BOMB;
+	AUDIO_19_voice_truck	= TRACK02_JIKI_BOMBER;/*テキトー*/
+	cpu_voice_play();
 	/*--- BOSS 共通して値を 0 にする。------------*/
 	src->BOSS_DATA_05_move_jyumyou = (0);
 //	src->BOSS_DATA_05_boss_base_state777 = (0);/* 共通して 値を 0 にする */
@@ -761,11 +763,18 @@ global void called_from_kaiwa_system_boss_load(int boss_number)
 	boss_number &= (8-1);
 	/*(ボス本体の移動範囲を制限する。)*/
 	{
+		const char boss_clip_y_pixel[4] =
+		{
+			 (64),/*(easy)*/
+			 (80),/*(normal)*/
+			 (96),/*(hard)[r39]*/
+			 (96),/*(lunatic)*/
+		};
 		/* boss_rect_init */
 		rect_clip.boss_clip_min.x256	= t256(GAME_X_OFFSET)+t256( 			0)+t256(24);
 		rect_clip.boss_clip_max.x256	= t256(GAME_X_OFFSET)+t256(GAME_320_WIDTH)-t256(24);
 		rect_clip.boss_clip_min.y256	= t256(0);
-		rect_clip.boss_clip_max.y256	= t256(96);
+		rect_clip.boss_clip_max.y256	= ((boss_clip_y_pixel[((cg.game_difficulty)&3)])<<8);/*t256()*/
 	}
 	//----[BOSS]
 	OBJ *h;

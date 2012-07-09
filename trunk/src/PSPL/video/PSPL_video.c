@@ -109,33 +109,39 @@ static void *vidmem_map_insert_new (unsigned int idx, unsigned int adr, unsigned
 
 static void* vidmem_alloc(unsigned int size)
 {
-	unsigned int start;
-	unsigned int adr;
+	/*(16[bytes]‹«ŠE‚Ö .align ’²®ˆ—.)*/
 	unsigned int i;
-	//
-	start = ((unsigned int)sceGeEdramGetAddr());
-	adr = start;
-
-	/* round the size up to the nearest 16 bytes and all hwsurfaces are safe to
-	   use as textures */
-	if (size % 16 != 0)
-	{	size += 16 - (size % 16);	}
-
+	/* round the size up to the nearest 16 bytes and
+	 all hwsurfaces are safe to use as textures. */
+	i = (size & (16-1));//(size % 16)
+//	if (0 != i) 	{	size += 16 - i; 	}
+	if (0 != i) 	{	size += 16; size -= i;	}
+	/*(ƒŠƒXƒg‚É‘}“üˆ—.)*/
+	unsigned int start_addr;
+	unsigned int temp_addr;
+	start_addr	= ((unsigned int)sceGeEdramGetAddr());
+	temp_addr	= start_addr;
+	/*(c‚èvram‚Ì‚ ‚éŒÀ‚è’²‚×‚é)*/
 	for (i=0; i<vidmem_map_len; i++)
 	{
 		if (vidmem_map[i].ptr != NULL)
 		{
-			unsigned int new_adr = (unsigned int) vidmem_map[i].ptr;
-			if (size <= new_adr - adr)
-			{	return vidmem_map_insert_new(i, adr, size);
+			unsigned int new_addr;
+			new_addr = ((unsigned int)vidmem_map[i].ptr);
+			if (size <= new_addr - temp_addr)
+			{
+				goto my_insert_end;/*(‚»‚ÌêŠ‚É‘}“ü)*/
 			}
-			adr = new_adr + vidmem_map[i].len;
+			temp_addr = new_addr + vidmem_map[i].len;
 		}
 	}
-
-	if (adr + size > start + sceGeEdramGetSize())
-	{	return (NULL);		}
-	return vidmem_map_insert_new(vidmem_map_len, adr, size);
+	/*(¸”s”»’è)*/
+	if (temp_addr + size > start_addr + sceGeEdramGetSize())
+	{return (NULL);/*(‘}“ü‚Å‚«‚È‚¢)*/}
+	/*(ÅŒã‚É‘}“ü)*/
+	i = vidmem_map_len;
+my_insert_end:
+	return (vidmem_map_insert_new(i, temp_addr, size));/* (‘}“üˆ—.) */
 }
 
 

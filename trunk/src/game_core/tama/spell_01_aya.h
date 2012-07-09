@@ -108,8 +108,7 @@ local OBJ_CALL_FUNC(spell_create_15_aya_misogi1)
 		if (1==REG_0c_REG4) /* (48âÒÇ…1âÒ) î≠âπ */
 		{
 			#if (1)
-		//	voice_play(VOICE15_BOSS_KOUGEKI_01, TRACK04_TEKIDAN);
-			bullet_play_04_auto(VOICE15_BOSS_KOUGEKI_01);
+			cpu_bullet_play_15_auto();
 			#endif
 		}
 	}
@@ -194,8 +193,7 @@ local OBJ_CALL_FUNC(spell_create_23_aya_misogi2)
 		if (1==REG_0c_REG4) /* (40âÒÇ…1âÒ) î≠âπ */
 		{
 			#if (1)
-		//	voice_play(VOICE15_BOSS_KOUGEKI_01, TRACK04_TEKIDAN);
-			bullet_play_04_auto(VOICE15_BOSS_KOUGEKI_01);
+			cpu_bullet_play_15_auto();
 			#endif
 		}
 	}
@@ -285,10 +283,10 @@ local OBJ_CALL_FUNC(aya_danmaku_01_callback)/* äÚïÑÅuìVÇÃî™ÂÀÅv */
 		}
 		/* é~Ç‹Ç¡ÇΩéûÇÊÇËÇ‡ÅAìÆÇ´énÇﬂÇÈéûÇ…å¯â âπñ¬ÇÁÇµÇΩï˚Ç™ÇªÇÍÇ¡Ç€Ç¢ÅB */
 		#if (1)
-	//	voice_play(VOICE15_BOSS_KOUGEKI_01, TRACK04_TEKIDAN);
-	//	bullet_play_04_auto(VOICE11_BOSS_KIRARIN);		/* å¯â âπ: Ç´ÇÁÇËÇÒ */
-		voice_play(VOICE11_BOSS_KIRARIN, TRACK03_IVENT_DAN);		/* å¯â âπ: Ç´ÇÁÇËÇÒ */
-		voice_play(VOICE11_BOSS_KIRARIN, TRACK04_TEKIDAN);			/* å¯â âπ: Ç´ÇÁÇËÇÒ */
+		AUDIO_18_voice_number	= VOICE11_BOSS_KIRARIN;/* å¯â âπ: Ç´ÇÁÇËÇÒ */
+	//	AUDIO_18_voice_number	= VOICE11_BOSS_KIRARIN;/* å¯â âπ: Ç´ÇÁÇËÇÒ */
+		AUDIO_19_voice_truck	= TRACK03_IVENT_DAN;	cpu_voice_play();
+		AUDIO_19_voice_truck	= TRACK04_TEKIDAN;		cpu_voice_play();
 		/* ëÂéñÇ»éñÇ»ÇÃÇ≈ÇQâÒåæÇ¢Ç‹ÇµÇΩÅB */
 		#endif
 	}
@@ -339,8 +337,7 @@ local OBJ_CALL_FUNC(spell_create_22_aya_yatimata)
 			HATSUDAN_07_div_angle65536			= /*(1792);*/((65536-(65536/8))/32);	/* [îjâÛ] */	/* ï™äÑäpìx(íeÇ™Ç±Ç»Ç¢îÕàÕÇèúÇ´32ï™äÑ) */	/* (ra_nd16>>4) == óêêî(0-4095) */
 			hatudan_system_regist_n_way();/* (r33-) */
 		}
-	//	voice_play(VOICE15_BOSS_KOUGEKI_01, TRACK04_TEKIDAN);
-		bullet_play_04_auto(VOICE15_BOSS_KOUGEKI_01);
+		cpu_bullet_play_15_auto();
 	}
 }
 
@@ -451,8 +448,7 @@ local OBJ_CALL_FUNC(spell_create_0f_aya_doll)
 	{
 		add_zako_aya_doll(src);
 		#if (1)
-	//	voice_play(VOICE15_BOSS_KOUGEKI_01, TRACK04_TEKIDAN);
-		bullet_play_04_auto(VOICE15_BOSS_KOUGEKI_01);
+		cpu_bullet_play_15_auto();
 		#endif
 	}
 }

@@ -410,10 +410,10 @@ static u64 psp_ticker(void)
 	sceRtcGetCurrentTick(&current_ticks);
 	return current_ticks;
 }
-static /*cycles_t*/unsigned long SDL_GetTicks_bbb/*osd_cycles*/(void)
+static /*cycles_t*/u32 SDL_GetTicks_bbb/*osd_cycles*/(void)
 {
-//	return (/*cycles_t*/unsigned long)(psp_ticker()/1000);
-	return (/*cycles_t*/unsigned long)(psp_ticker() /*/1000*/ );
+//	return (/*cycles_t*/u32)(psp_ticker()/1000);
+	return (/*cycles_t*/u32)(psp_ticker() /*/1000*/ );
 }
 
 // Helper function for SDL audio
@@ -452,7 +452,7 @@ int Play_MPEGaudio(MPEGaudio *audio, u8 *stream, int render_len)
 	assert(audio);
 	assert(audio->ring);
 	#endif
-	long copylen;
+	s32 copylen;
 	do
 	{
 	/* this is empirical, I don't realy know how to find out when
@@ -524,7 +524,7 @@ int Play_MPEGaudio(MPEGaudio *audio, u8 *stream, int render_len)
 	/* Copy in any saved data */
 	if ( audio->rawdatawriteoffset >= audio->rawdatareadoffset)
 	{
-		long copylen;
+		s32 copylen;
 		copylen = (audio->rawdatawriteoffset-audio->rawdatareadoffset);
 		#ifdef DEBUG_SYSTEM
 		assert(copylen >= 0);

@@ -67,7 +67,7 @@ jpeg_start_decompress (j_decompress_ptr cinfo)
 			(retcode == JPEG_ROW_COMPLETED || retcode == JPEG_REACHED_SOS)) {
 		if (++cinfo->progress->pass_counter >= cinfo->progress->pass_limit) {
 			/* jdmaster underestimated number of scans; ratchet up one scan */
-			cinfo->progress->pass_limit += (long) cinfo->total_iMCU_rows;
+			cinfo->progress->pass_limit += (s32) cinfo->total_iMCU_rows;
 		}
 	}
 			}
@@ -108,8 +108,8 @@ output_pass_setup (j_decompress_ptr cinfo)
 			JDIMENSION last_scanline;
 			/* Call progress monitor hook if present */
 			if (cinfo->progress != NULL) {
-	cinfo->progress->pass_counter = (long) cinfo->output_scanline;
-	cinfo->progress->pass_limit = (long) cinfo->output_height;
+	cinfo->progress->pass_counter = (s32) cinfo->output_scanline;
+	cinfo->progress->pass_limit = (s32) cinfo->output_height;
 	(*cinfo->progress->progress_monitor) ((j_common_ptr) cinfo);
 			}
 			/* Process some data */
@@ -162,8 +162,8 @@ output_pass_setup (j_decompress_ptr cinfo)
 
 	/* Call progress monitor hook if present */
 	if (cinfo->progress != NULL) {
-		cinfo->progress->pass_counter = (long) cinfo->output_scanline;
-		cinfo->progress->pass_limit = (long) cinfo->output_height;
+		cinfo->progress->pass_counter = (s32) cinfo->output_scanline;
+		cinfo->progress->pass_limit = (s32) cinfo->output_height;
 		(*cinfo->progress->progress_monitor) ((j_common_ptr) cinfo);
 	}
 
@@ -194,8 +194,8 @@ output_pass_setup (j_decompress_ptr cinfo)
 
 	/* Call progress monitor hook if present */
 	if (cinfo->progress != NULL) {
-		cinfo->progress->pass_counter = (long) cinfo->output_scanline;
-		cinfo->progress->pass_limit = (long) cinfo->output_height;
+		cinfo->progress->pass_counter = (s32) cinfo->output_scanline;
+		cinfo->progress->pass_limit = (s32) cinfo->output_height;
 		(*cinfo->progress->progress_monitor) ((j_common_ptr) cinfo);
 	}
 

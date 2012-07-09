@@ -46,8 +46,8 @@
 ---------------------------------------------------------*/
 
 //	#define BITSHIFT		(9)/*è¨Ç≥âﬂÇ¨ÇÈ*/
-//	#define BITSHIFT		(8)
-	#define BITSHIFT		(7)
+	#define BITSHIFT		(8)/*r40(?)*/
+//	#define BITSHIFT		(7)/*-r39*/
 //	#define BITSHIFT		(6)
 
 #define FRACBITS 11

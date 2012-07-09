@@ -328,7 +328,7 @@ static void title_menu_02_select_menu(void)
 		{
 			if (psp_pad.pad_data & (PSP_KEY_DOWN|PSP_KEY_UP|PSP_KEY_PAUSE|PSP_KEY_RIGHT))
 			{
-				voice_play(VOICE02_MENU_SELECT, TRACK01_MENU01);
+				voice_play_menu(VOICE02_MENU_SELECT, TRACK01_MENU01);
 			}
 			if (psp_pad.pad_data & PSP_KEY_DOWN)
 			{
@@ -378,7 +378,7 @@ static void title_menu_02_select_menu(void)
 			}
 			if (psp_pad.pad_data & PSP_KEY_SHOT_OK)
 			{
-				voice_play(VOICE01_MENU_OK/*VOICE02_MENU_SELECT*/, TRACK01_MENU01);
+				voice_play_menu(VOICE01_MENU_OK/*VOICE02_MENU_SELECT*/, TRACK01_MENU01);
 				move_mode++;//(2)Ç…Ç»ÇÈÅB
 				cb.main_call_func = title_menu_03_moji_taihi;	/* ÉÅÉjÉÖÅ[ï∂éöëﬁîà⁄ìÆ */
 				time_out_flag	= M1_NOT_TIME_OUT;/* éûä‘êÿÇÍÇ»Çµ */

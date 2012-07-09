@@ -260,7 +260,7 @@ enum
 
 /*(0: アナログ量を使わない[リプレイ対応するならアナログ量を使わない方が妥当な気がする。1byteフォーマット(上下左右,ＡＢＣ[Slow])に出来る。さらにメモリ上でランレングス圧縮できる。(圧縮しながら記録/再生)])*/
 /*(1: アナログ量を使う[アナログの場合ランレングス圧縮が効かないので純粋にメモリを食う。0.5M[bytes]程メモリを食うが、取れるか不明])*/
-#define USE_ANALOG_VALUE (0)
+//r39で廃止済み#define USE_ANA LOG_VALUE (0)
 /*[1/60sec]==4[byte]*/
 /*[1sec]==60*4[byte]*/
 /*[1min]==60*60*4[byte]*/
@@ -298,10 +298,6 @@ typedef struct _game_core_global_callback_
 	/*(共通)*/
 	u32 pad_data;						/*今回入力*/				//	extern	u32 cg_m y_pad;
 	u32 pad_data_alter; 				/*前回入力*/				//	extern	u32 cg_m y_pad_alter;
-	#if (1==USE_ANALOG_VALUE)
-	s16 analog_absolute_value_x;		/* アナログ量、補正済み */	//	extern	s16 cg_analog_x;
-	s16 analog_absolute_value_y;		/* アナログ量、補正済み */	//	extern	s16 cg_analog_y;
-	#endif/*(USE_ANALOG_VALUE)*/
 	#endif/*(USE_PAD_STRUCT)*/
 } GAME_CORE_GLOBAL_CALLBACK;
 extern GAME_CORE_GLOBAL_CALLBACK cb;
@@ -314,10 +310,6 @@ typedef struct _psp_pad_global_class_
 {
 	u32 pad_data;						/*今回入力*/				//	extern	u32 cg_m y_pad;
 	u32 pad_data_alter; 				/*前回入力*/				//	extern	u32 cg_m y_pad_alter;
-	#if (1==USE_ANALOG_VALUE)
-	s16 analog_absolute_value_x;		/* アナログ量、補正済み */	//	extern	s16 cg_analog_x;
-	s16 analog_absolute_value_y;		/* アナログ量、補正済み */	//	extern	s16 cg_analog_y;
-	#endif/*(USE_ANALOG_VALUE)*/
 } PSP_PAD_GLOBAL_CLASS;
 extern PSP_PAD_GLOBAL_CLASS psp_pad;
 	#else/*(0==USE_PAD_STRUCT)*/
@@ -337,7 +329,7 @@ typedef struct _game_core_global_class_
 	int bombs;			/* ボム数 */
 	int zanki;			/* 残りチャンス */
 //[0x20 8]
-	s32 game_difficulty;/* cg.game_difficulty: GAME_CORE_GLOBAL_CLASSに入れると速度低下する。(pspのmax,min命令を使っているので signed int の必要がある ) */
+	s32 game_difficulty;/* (pspのmax,min命令を使っているので signed int の必要がある ) */
 	s32 game_rank;		/* ランク変動システムのゲームランク */
 	unsigned int jiki_weapon_level; 	/* (r35u2)強さのみ */		//	/*u8*/unsigned int jiki_weapon_level_offset;/* 装備した武器レベル(番号)の８倍にプレイヤー値を足した値をオフセットとして保持 */
 	unsigned int conv_bg_alpha;
@@ -389,12 +381,9 @@ extern GAME_CORE_GLOBAL_CLASS cg;
 //	u8 laser_mode;	/* てすと(レーザーモード 0:off, 1:on) */
 	/* 集計システム以外の保持状態 */
 //	u8 game_select_player;
-//遅過ぎる。	u8 game_difficulty/* = RANK_EASY*/; 	/*	RANK_NORMAL*/
-//遅過ぎる。	int game_difficulty;
-
 
 /* 意図的に入れないもの */
-extern unsigned int cg_game_select_player;/* cg.game_difficulty: (将来はともかく)現状(r33)は GAME_CORE_GLOBAL_CLASSに入れない方が良いっぽい。 */
+extern unsigned int cg_game_select_player;/* : (将来はともかく)現状(r33)は GAME_CORE_GLOBAL_CLASSに入れない方が良いっぽい。 */
 
 
 

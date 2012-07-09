@@ -239,7 +239,10 @@ static OBJ_CALL_FUNC(aya_kougeki_all)
 //	}
 //	else
 	if (AYA_KOUGEKI_TYPE_01_RENDAN==REG_09_REG1)	/* 攻撃タイプ00:	米連弾 */
-	{	voice_play(VOICE11_BOSS_KIRARIN, TRACK04_TEKIDAN);/*テキトー*/
+	{
+		AUDIO_18_voice_number	= VOICE11_BOSS_KIRARIN;
+		AUDIO_19_voice_truck	= TRACK04_TEKIDAN;/*テキトー*/
+		cpu_voice_play();
 		HATSUDAN_02_speed_offset			= t256(1);/* ？ */
 		HATSUDAN_04_tama_spec				= (DANMAKU_LAYER_00)|(TAMA_SPEC_3000_EFFECT_NONE)|(TAMA_SPEC_0000_TILT);/* (r33-)標準弾 */
 		{	/* 毎回 */

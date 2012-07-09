@@ -125,44 +125,46 @@ enum
 ---------------------------------------------------------*/
 
 
-/*global*/static/*static*/ OBJ_CALL_FUNC(item_create_00_item)	{	item_create_mono(src, SP_ITEM_00_P001  );}
-/*global*/static/*static*/ OBJ_CALL_FUNC(item_create_01_item)	{	item_create_mono(src, SP_ITEM_01_P008  );}
-/*global*/static/*static*/ OBJ_CALL_FUNC(item_create_02_item)	{	item_create_mono(src, SP_ITEM_02_P128  );}
-/*global*/static/*static*/ OBJ_CALL_FUNC(item_create_03_item)	{	item_create_mono(src, SP_ITEM_03_1UP   );}
-/*global*/static/*static*/ OBJ_CALL_FUNC(item_create_04_item)	{	item_create_mono(src, SP_ITEM_04_BOMB  );}
-/*global*/static/*static*/ OBJ_CALL_FUNC(item_create_05_item)	{	item_create_mono(src, SP_ITEM_05_TENSU );}//static void item_create_018_meido4
-/*global*/static/*static*/ OBJ_CALL_FUNC(item_create_06_item)	{	item_create_mono(src, SP_ITEM_06_HOSI  );}
+/*global*/static/*static*/ OBJ_CALL_FUNC(item_create_00_item)	{item_create_mono(src, SP_ITEM_00_P001  );}
+/*global*/static/*static*/ OBJ_CALL_FUNC(item_create_01_item)	{item_create_mono(src, SP_ITEM_01_P008  );}
+/*global*/static/*static*/ OBJ_CALL_FUNC(item_create_02_item)	{item_create_mono(src, SP_ITEM_02_P128  );}
+/*global*/static/*static*/ OBJ_CALL_FUNC(item_create_03_item)	{item_create_mono(src, SP_ITEM_03_1UP   );}
+/*global*/static/*static*/ OBJ_CALL_FUNC(item_create_04_item)	{item_create_mono(src, SP_ITEM_04_BOMB  );}
+/*global*/static/*static*/ OBJ_CALL_FUNC(item_create_05_item)	{item_create_mono(src, SP_ITEM_05_TENSU );}//static void item_create_018_meido4
+/*global*/static/*static*/ OBJ_CALL_FUNC(item_create_06_item)	{item_create_mono(src, SP_ITEM_06_HOSI  );}
 #define item_create_07_item item_create_random_table
 
 
 /*---------------------------------------------------------
 	ザコ敵やられ
 ---------------------------------------------------------*/
+/* aaa%の確率で */
+#define replay_rand_percent(aaa) ((unsigned char)(ra_nd())<=(unsigned char)( (aaa*256)/100 ) ) /* aaa%の確率で */
 
 /*global*/static/*static*/ OBJ_CALL_FUNC(item_create_000_kougeki_mahoujin)
 {
-	if (rand_percent(30))	{	item_create_mono(src, SP_ITEM_00_P001  );}
-	if (rand_percent(30))	{	item_create_mono(src, SP_ITEM_00_P001  );}
-	if (rand_percent(30))	{	item_create_mono(src, SP_ITEM_05_TENSU );}
+	if (replay_rand_percent(30))	{item_create_mono(src, SP_ITEM_00_P001	);}
+	if (replay_rand_percent(30))	{item_create_mono(src, SP_ITEM_00_P001	);}
+	if (replay_rand_percent(30))	{item_create_mono(src, SP_ITEM_05_TENSU );}
 }
 
 static void zako_shot_supeka(OBJ/**/ *src, u8 zako_supeka_type);/*(宣言)*/
 /*global*/static/*static*/ OBJ_CALL_FUNC(item_create_002_inyou_zako)
 {
-//	if (0==(ra nd()&(16-1)))	/*確率上げた。[1/16]←[1/20]*/ /*%20*/
-//	if (0==(ra nd()&( 8-1)))	/*確率上げた。[1/8]←[1/20]*/ /*%20*/
+//	if (0==(replay_rand()&(16-1)))	/*確率上げた。[1/16]←[1/20]*/ /*%20*/
+//	if (0==(replay_rand()&( 8-1)))	/*確率上げた。[1/8]←[1/20]*/ /*%20*/
 	if (0==((src->center.x256)&( 8-1))) /*確率上げた。[1/8]←[1/20]*/ /*%20*/
 	{
 		zako_shot_supeka(src, ZAKO_SPEKA_09_inyou1);
 	}
 	else
 	{
-	//	item_create_mono(src, (SP_ITEM_00_P001+(ra nd()&1)) );
+	//	item_create_mono(src, (SP_ITEM_00_P001+(replay_rand()&1)) );
 		item_create_mono(src, (SP_ITEM_00_P001+((src->center.x256)&1)) );
 	}
 }
 /*50%(SP_ITEM_00_P001 or SP_ITEM_01_P008)*/
-//66%==SP_ITEM_04_BOMB or 33%==SP_ITEM_01_P008	 (SP_ITEM_EXTRA_HOMING+(ra nd()&3/*%3*/)),
+//66%==SP_ITEM_04_BOMB or 33%==SP_ITEM_01_P008	 (SP_ITEM_EXTRA_HOMING+(replay_rand()&3/*%3*/)),
 
 
 //static OBJ_CALL_FUNC(item_create_003_tatsumaki1)
@@ -171,14 +173,14 @@ static void zako_shot_supeka(OBJ/**/ *src, u8 zako_supeka_type);/*(宣言)*/
 //	if ((NUM_OF_ENEMIES-1) < destoroy/*all_destoroy*/)
 //	{
 //		destoroy = 0;
-//		if (rand_percent(50/*10*/))
+//		if (replay_rand_percent(50/*10*/))
 //		{
 //			item_create(src, (SP_ITEM_04_BOMB), 1, ITEM_MOVE_FLAG_06_RAND_XY);
 //		}
 //	}
 //}
-/*50%(SP_ITEM_01_P008 or SP_ITEM_04_BOMB) (SP_ITEM_01_P008+(ra nd()&1)) */
-//66%==SP_ITEM_04_BOMB or 33%==SP_ITEM_01_P008 (SP_ITEM_EXTRA_HOMING+(ra nd()&3/*%3*/)),
+/*50%(SP_ITEM_01_P008 or SP_ITEM_04_BOMB) (SP_ITEM_01_P008+(replay_rand()&1)) */
+//66%==SP_ITEM_04_BOMB or 33%==SP_ITEM_01_P008 (SP_ITEM_EXTRA_HOMING+(replay_rand()&3/*%3*/)),
 
 
 //static OBJ_CALL_FUNC(item_create_017_meido3)
@@ -190,7 +192,7 @@ static void zako_shot_supeka(OBJ/**/ *src, u8 zako_supeka_type);/*(宣言)*/
 //		item_create(src, SP_ITEM_01_P008, 1, ITEM_MOVE_FLAG_06_RAND_XY);
 //	}
 //}
-//		if (0==(ra nd()&(512-1)))	/* 1/512 ← 1/600 の確率確率でアイテム出す */	/*%600*/
+//		if (0==(replay_rand()&(512-1))) /* 1/512 ← 1/600 の確率確率でアイテム出す */	/*%600*/
 //		{
 //			item_create(src, SP_ITEM_00_P001, 1, ITEM_MOVE_FLAG_06_RAND_XY);
 //		}
@@ -603,7 +605,7 @@ label_ZAKO_SPEKA_1b_ao2:	// [ 青妖精1/青妖精4のカード(B)]
 		goto COMMON_JIKINERAI;
 
 label_ZAKO_SPEKA_1c_ao1:	// [ 青妖精1/青妖精4のカード(A)]
-//		HATSUDAN_05_bullet_obj_type 					= (BULLET_KUNAI12_BASE);/*((ra nd())&7)*/		/* [弾グラ] */
+//		HATSUDAN_05_bullet_obj_type 					= (BULLET_KUNAI12_BASE);/*((replay_rand())&7)*/ 	/* [弾グラ] */
 //		HATSUDAN_06_n_way								= (8);											/* 8way弾 */
 		HATSUDAN_07_div_angle65536						-= ((cg.game_difficulty)<<6);	/* 分割角度 */
 		goto COMMON_JIKINERAI_p_cx;
@@ -613,7 +615,7 @@ label_ZAKO_SPEKA_1e_kedama1:		// [ 毛玉1のカード]
 		HATSUDAN_06_n_way								= (3+(cg.game_difficulty)+(cg.game_difficulty));	/* [3 5 7 9way] */
 //		HATSUDAN_07_div_angle65536						= (int)(65536/24);
 //label_ZAKO_SPEKA_1d_karasu:	// [ 青妖精3/烏1のカード]
-//		HATSUDAN_05_bullet_obj_type 					= (BULLET_KUNAI12_BASE);/*((ra nd())&7)*/
+//		HATSUDAN_05_bullet_obj_type 					= (BULLET_KUNAI12_BASE);/*((replay_rand())&7)*/
 //		HATSUDAN_06_n_way								= (8);
 //		HATSUDAN_07_div_angle65536						= (int)(65536/(8));
 //		goto COMMON_JIKINERAI_p_cx;
@@ -640,7 +642,7 @@ label_ZAKO_SPEKA_1e_kedama1:		// [ 毛玉1のカード]
 	ザコ移動共通、等直線移動処理。
 	-------------------------------------------------------
 	速度: src->zd04_system_speed256。雑魚登録時に自動設定を使用する。
-	角度: src->tmp_angleCCW1024。    雑魚登録時に自動設定を使用する。
+	角度: src->tmp_angleCCW1024。	 雑魚登録時に自動設定を使用する。
 	-------------------------------------------------------
 ---------------------------------------------------------*/
 #if 0
@@ -670,7 +672,7 @@ static OBJ_CALL_FUNC(zako_system_move_vector)
 
 #if 0
 	#if (0)//
-	src->center.x256 += ((si n1024((src->tmp_angleCCW1024))*(src->zd04_system_speed256))>>8);/*fps_factor*/	/* CCWの場合 */
+	src->center.x256 += ((si n1024((src->tmp_angleCCW1024))*(src->zd04_system_speed256))>>8);/*fps_factor*/ /* CCWの場合 */
 	src->center.y256 += ((co s1024((src->tmp_angleCCW1024))*(src->zd04_system_speed256))>>8);/*fps_factor*/
 	#else
 	{
@@ -814,7 +816,7 @@ src->yx_an im_frame  --1a --bc
 	src->math_vector.y256 = REG_02_DEST_X;//cos_value_t256 // 下CCWの場合(右CWの場合ととxyが逆)
 	//------------------ [初期値]
 	src->zd03_system_hoson_angle1024	= src->tmp_angleCCW1024;
-	src->zd05_system_hoson_speed256	= src->zd04_system_speed256;
+	src->zd05_system_hoson_speed256 = src->zd04_system_speed256;
 	//
 	src->obj_type_set		= (OBJ_Z02_TEKI)|((l->user_select_gazou)&0x3f); /* 設定ファイルから画像を決める。 */
 	/*
@@ -893,7 +895,7 @@ global void game_command_00_regist_zako(GAME_COMMAND *l)
 		{regist_NULL,								move_ao_yousei1},					/* "青妖精1"	TEKI_YOUSEI1_1 */
 	};
 //012廃止{regist_NULL/*(非/回転共用)*/, 			move_zako_06_inseki},				/* "おばけ1"	TEKI_YOUSEI2_5 */
-//020廃止{regist_zako_012_ao_yousei, 				move_zako_12_ao_yousei},			/* "青妖精2"	TEKI_YOUSEI1_1 */
+//020廃止{regist_zako_012_ao_yousei,				move_zako_12_ao_yousei},			/* "青妖精2"	TEKI_YOUSEI1_1 */
 	//	{regist_zako_014_karasu1,					move_zako_14_karasu},				/* ["烏1"へ吸収]"青妖精3"	TEKI_YOUSEI1_1 */
 	//	{regist_NULL,								move_ao_yousei1},					/* ["青妖精1"へ吸収]"青妖精4"	TEKI_YOUSEI1_1 */ //(r33では未使用)
 	OBJ *h;

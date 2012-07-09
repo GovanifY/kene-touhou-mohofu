@@ -24,6 +24,9 @@ static OBJ_CALL_FUNC(move_bakuhatsu)
 
 /*---------------------------------------------------------
 	Ží—Þ•Ê‚É”š”­‚ð’Ç‰Á‚·‚é
+Todo:
+	ƒŠƒvƒŒƒC‚ÉŠÖŒW‚Ì–³‚¢—”‚Íra_nd()‚ðŽg—p‚µ‚È‚¢‚ÅA
+	vfpu_ra_nd()‚ðŽg—p‚·‚é
 ---------------------------------------------------------*/
 /*int x256, int y256*/
 /*int delay_wait,*/
@@ -31,7 +34,7 @@ global void bakuhatsu_add_type_ccc(int type)
 {
 	{
 		OBJ *h;
-		h					= obj_regist_teki();
+		h						= obj_regist_teki();
 		if (NULL!=h)/* “o˜^‚Å‚«‚½ê‡‚Ì‚Ý */
 		{
 			h->m_Hit256R		= TAMA_ATARI_JIPPOU32_PNG;/*????*/
@@ -39,30 +42,29 @@ global void bakuhatsu_add_type_ccc(int type)
 
 		//	/* ‚ ‚½‚è”»’è‚ÌOFF(–³“G) */
 			h->atari_hantei 		= (ATARI_HANTEI_OFF/*ƒXƒRƒAŒ“—p*/);
-
 			#if 1
 			h->center.x256			= REG_02_DEST_X;/* ”­’eˆÊ’u À•Wx */
 			h->center.y256			= REG_03_DEST_Y;/* ”­’eˆÊ’u À•Wy */
 			#endif
 			h->color32			= MAKE32RGBA(0xff, 0xff, 0xff, 0x66);	/*	s->alpha			= 0x80;*/
 			//
-		//	if (BAKUHATSU_MINI00==type) 	{	type = (ra_nd()%3+1);	}/* ‚ ‚¿‚±‚¿‚É‚ ‚é‚Æ’x‚¢ */
+		//	if (BAKUHATSU_MINI00==type) 	{type = (/*vfpu_*/ra_nd()%3+1);}/* ‚ ‚¿‚±‚¿‚É‚ ‚é‚Æ’x‚¢ */
 			if (0==(type&0xfb))
 			{
-				type |= (ra_nd()&0x03); if (0==(type & 0x03))	{	type |= (0x01); }
+				type |= (/*vfpu_*/ra_nd()&0x03); if (0==(type & 0x03))	{type |= (0x01);}
 			}
 			if (12==(type & 0xff))
 			{
-				h->math_vector.x256	= (ra_nd()&0x07ff)-(0x03ff);
-				h->math_vector.y256	= (ra_nd()&0x07ff)-(0x03ff);
+				h->math_vector.x256 	= (/*vfpu_*/ra_nd()&0x07ff)-(0x03ff);
+				h->math_vector.y256 	= (/*vfpu_*/ra_nd()&0x07ff)-(0x03ff);
 			}
 			else
 			{
-				h->math_vector.x256	= (0);
-				h->math_vector.y256	= (0);
+				h->math_vector.x256 	= (0);
+				h->math_vector.y256 	= (0);
 			}
 			h->obj_type_set 			= SP_FRONT_YUKI;
-			h->callback_mover	= move_bakuhatsu;
+			h->callback_mover			= move_bakuhatsu;
 		}
 	}
 }

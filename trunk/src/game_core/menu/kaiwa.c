@@ -67,28 +67,28 @@ ne111:
 /*---------------------------------------------------------
 	複数に渡る命令パラメーター(オペランド)を一つ分だけ読む。
 ---------------------------------------------------------*/
-extern int is_digit_or_hifun(char *ccc);/*(load_stage.c)*/
-static char *read_operand_int_only(char *ccc, int *number, int *line_terminate_end_flag)
+extern int is_digit_or_hifun(char *read_str_position);/*(load_stage.c)*/
+static char *read_operand_int_only(char *read_str_position, int *number, int *line_terminate_end_flag)
 {
-	char buffer[32];/*20*/
-	char *ddd = buffer;
+	char tmp_str32bytes[32];/*(atoiの場合、バッファ長32[bytes]==最大31文字に統一)*/
+	char *tmp_str_position = tmp_str32bytes;
 	int i = 0;
-	while ( is_digit_or_hifun(ccc) )/*(負数に対応した)*/
+	while ( is_digit_or_hifun(read_str_position) )/*(負数に対応した)*/
 	{
 		i++;
-		if ((32-1) <= i)/*20*/ /*(31文字以上はエラー。)*/
+		if ((32-1) <= i)/*(バッファ長31文字以上はエラー。)*/
 		{	goto ne222;}
-		*ddd++ = *ccc++;
+		*tmp_str_position++ = *read_str_position++;
 	}
 	/* ',' または '\n' が来たら終了 */
-	if (13==(*ccc)) 	/* 改行コードは OD OA */
+	if (13==(*read_str_position)) 	/* 改行コードは OD OA */
 	{
 		*line_terminate_end_flag = 1;
 	}
-	*ddd = 0;
-	if (((','==(*ccc)) || (13==(*ccc))) && (','==(*(ccc-1))))	{	*number = m1_SYOU_RYAKU_TI; /*(値の読みこみに失敗した場合省略値とする。)*/ }
-	else														{	*number = atoi(buffer); }
-	return (ccc);
+	*tmp_str_position = 0;
+	if (((','==(*read_str_position)) || (13==(*read_str_position))) && (','==(*(read_str_position-1))))	{*number = m1_SYOU_RYAKU_TI; /*(値の読みこみに失敗した場合省略値とする。)*/ }
+	else														{*number = atoi(tmp_str32bytes); }
+	return (read_str_position);
 /*error*/
 ne222:
 	return ((char *)NULL);/*(エラー。)*/
@@ -1075,7 +1075,7 @@ static /*int*/void kaiwa_system_execute(void)
 	//
 	//	I_CODE_99_MAX/*(2^n)*/	// 必要ないが安全の為
 	};
-	goto *aaa[(ssc->i_code)&0x1f];/*(ccc)&(I_CODE_99_MAX-1)*/
+	goto *aaa[(ssc->i_code)&(0x1f)];/*(I_CODE_99_MAX-1)*/
 	{
 	case_I_CODE_00_OBJ_LOOK:			MY_ICODE_CALL(i_code_obj_look); 					goto I_CODE_break;	/* オブジェクト注目コマンド */
 	case_I_CODE_01_OBJ_XY:				MY_ICODE_CALL(i_code_obj_xy);						goto I_CODE_break;	/*(原点設定のみ)*/

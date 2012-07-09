@@ -91,9 +91,9 @@ static int round_up_to_power_of_2(int x)
 /* for png and gif read from memory */
 //typedef struct my_img_buffer_
 //{
-static unsigned char *png_buf_data;
-static unsigned long png_buf_length;
-static unsigned long png_buf_offset;
+static u8 *png_buf_data;
+static u32 png_buf_length;
+static u32 png_buf_offset;
 //} my_img_buffer;
 
 //static my_img_buffer	png_buf;

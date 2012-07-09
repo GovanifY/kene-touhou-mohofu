@@ -352,7 +352,7 @@ global void psp_video_init01(void)
 	//	if (NULL == dummy_SDL_VRAM_SCREEN)
 	//	{
 	//		CHECKPOINT;
-	//		error(ERR_FATAL, "cant open screen: "/*"%s", SDL_GetError()*/);
+	//		error(ERR_FATAL, "cant open screen.");
 	//	}
 	}
 
@@ -407,7 +407,7 @@ global void psp_video_init01(void)
 	if (NULL == cb.sdl_screen[SDL_01_BACK_SCREEN])
 	{
 		CHECKPOINT;
-		error(ERR_FATAL, "cant create SDL_Surface: "/*"%s", SDL_GetError()*/);
+		error(ERR_FATAL, "cant create SDL_Surface.");
 	}
 	#endif
 
@@ -1225,7 +1225,7 @@ static void set_boss_gauge(void)
 	//	if ((10  )>boss_draw_timer_value)	/* (10	)==設定値 10 で、カウント 8 から音が鳴るように聞こえる． */
 		if ((10+1)>boss_draw_timer_value)	/* (10+1)==設定値 11 で、カウント 9 から音が鳴るように聞こえる． */
 		{
-			voice_play(VOICE10_COUNT_TIMER, TRACK06_ITEM/*TRACK03_IVENT_DAN*/);/*(テキトー)*/
+			voice_play_menu(VOICE10_COUNT_TIMER, TRACK06_ITEM/*TRACK03_IVENT_DAN*/);/*(テキトー)*/
 		}
 	}
 
@@ -1265,12 +1265,10 @@ static void set_boss_gauge(void)
 }
 
 
-
 /*---------------------------------------------------------
-
+	直接描画
 ---------------------------------------------------------*/
 
-/* 直接描画 */
 static void gu_draw_score_chache(void)
 {
 	VIRTUAL_OBJ_STATE *head_obj_status_table;
@@ -1435,10 +1433,10 @@ static void gu_draw_score_chache(void)
 	#include "render/gu_haikei_01_bg_3D_test01.h"
 	#include "render/gu_haikei_01_bg_3D_test02.h"
 
+
 /*---------------------------------------------------------
 
 ---------------------------------------------------------*/
-
 
 static void gu_draw_serifu_haikei(void)
 {
@@ -1447,6 +1445,11 @@ static void gu_draw_serifu_haikei(void)
 		gu_draw_rect_window(ml_font[(0)].haikei);
 	}
 }
+
+
+/*---------------------------------------------------------
+
+---------------------------------------------------------*/
 
 static void gu_draw_font_texture_transfer(void)
 {

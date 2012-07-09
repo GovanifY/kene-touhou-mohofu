@@ -154,8 +154,9 @@ local OBJ_CALL_FUNC(spell_create_1f_koakuma)
 		REG_0a_REG2 = 0;
 		REG_0b_REG3 = 0;
 		#if (1)
-		voice_play(VOICE17_BOSS_TAME01, TRACK03_IVENT_DAN);
-	//	bullet_play_04_auto(VOICE17_BOSS_TAME01);	//	"ボス溜め1",		/* r	うぃーん音 */
+		AUDIO_18_voice_number	= VOICE17_BOSS_TAME01;	//	"ボス溜め1",		/* r	うぃーん音 */
+		AUDIO_19_voice_truck	= TRACK03_IVENT_DAN;
+		cpu_voice_play();
 		#endif
 	}
 	if (0== (REG_08_REG0 & 0x0f) ) /* 16回に1回なら撃つ */

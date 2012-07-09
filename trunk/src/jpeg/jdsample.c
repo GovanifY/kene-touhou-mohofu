@@ -499,8 +499,8 @@ h2v2_upsample (j_decompress_ptr cinfo, jpeg_component_info * compptr,
 		{
 			upsample->color_buf[ci] = (*cinfo->mem->alloc_sarray)
 				((j_common_ptr) cinfo, JPOOL_IMAGE,
-				 (JDIMENSION) jround_up((long) cinfo->output_width,
-				(long) cinfo->max_h_samp_factor),
+				 (JDIMENSION) jround_up((s32) cinfo->output_width,
+				(s32) cinfo->max_h_samp_factor),
 				 (JDIMENSION) cinfo->max_v_samp_factor);
 		}
 	}

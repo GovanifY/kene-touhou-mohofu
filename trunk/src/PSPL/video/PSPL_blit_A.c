@@ -375,7 +375,7 @@ static void Blit16to16SurfaceAlpha128(SDL_BlitInfo *info, u16 mask)
 
 	while (height--)
 	{
-		if (((unsigned long)srcp ^ (unsigned long)dstp) & 2)
+		if (((u32)srcp ^ (u32)dstp) & 2)
 		{
 			/*
 			 * Source and destination not aligned, pipeline it.
@@ -386,7 +386,7 @@ static void Blit16to16SurfaceAlpha128(SDL_BlitInfo *info, u16 mask)
 			int w = width;
 
 			/* handle odd destination */
-			if ((unsigned long)dstp & 2)
+			if ((u32)dstp & 2)
 			{
 				u16 d = *dstp, s = *srcp;
 				*dstp = BLEND16_50(d, s, mask);
@@ -436,7 +436,7 @@ static void Blit16to16SurfaceAlpha128(SDL_BlitInfo *info, u16 mask)
 			int w = width;
 
 			/* first odd pixel? */
-			if ((unsigned long)srcp & 2)
+			if ((u32)srcp & 2)
 			{
 				u16 d = *dstp, s = *srcp;
 				*dstp = BLEND16_50(d, s, mask);

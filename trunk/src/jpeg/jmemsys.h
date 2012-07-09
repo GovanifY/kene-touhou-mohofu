@@ -100,10 +100,10 @@ EXTERN(void) jpeg_free_large JPP((j_common_ptr cinfo, void FAR * object,
  * Conversely, zero may be returned to always use the minimum amount of memory.
  */
 
-EXTERN(long) jpeg_mem_available JPP((j_common_ptr cinfo,
-				     long min_bytes_needed,
-				     long max_bytes_needed,
-				     long already_allocated));
+EXTERN(s32) jpeg_mem_available JPP((j_common_ptr cinfo,
+				     s32 min_bytes_needed,
+				     s32 max_bytes_needed,
+				     s32 already_allocated));
 
 
 /*
@@ -141,11 +141,11 @@ typedef struct backing_store_struct {
   JMETHOD(void, read_backing_store, (j_common_ptr cinfo,
 				     backing_store_ptr info,
 				     void FAR * buffer_address,
-				     long file_offset, long byte_count));
+				     s32 file_offset, s32 byte_count));
   JMETHOD(void, write_backing_store, (j_common_ptr cinfo,
 				      backing_store_ptr info,
 				      void FAR * buffer_address,
-				      long file_offset, long byte_count));
+				      s32 file_offset, s32 byte_count));
   JMETHOD(void, close_backing_store, (j_common_ptr cinfo,
 				      backing_store_ptr info));
 
@@ -179,7 +179,7 @@ typedef struct backing_store_struct {
 
 EXTERN(void) jpeg_open_backing_store JPP((j_common_ptr cinfo,
 					  backing_store_ptr info,
-					  long total_bytes_needed));
+					  s32 total_bytes_needed));
 
 
 /*
@@ -194,5 +194,5 @@ EXTERN(void) jpeg_open_backing_store JPP((j_common_ptr cinfo,
  * all opened backing-store objects have been closed.
  */
 
-EXTERN(long) jpeg_mem_init JPP((j_common_ptr cinfo));
+EXTERN(s32) jpeg_mem_init JPP((j_common_ptr cinfo));
 EXTERN(void) jpeg_mem_term JPP((j_common_ptr cinfo));

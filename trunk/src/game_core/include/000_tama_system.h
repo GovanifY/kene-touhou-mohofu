@@ -32,11 +32,12 @@
 		その後、カードスクリプト用の[初期化セクション]で指示された初期化処理が一度だけ行われる。
 		([初期化セクション]では難易度レジスタが必ず使用できる)
 		発弾処理で難易度レジスタを使わない場合は、汎用レジスタとして使用して値を破壊しても良い。
+		(値を破壊しても次のスペカでは再初期化されるので影響が無い)
 ---------------------------------------------------------*/
 
 enum
 {
-	// レジスタ
+	// レジスタ(全ての計算は内部レジスタ0x00-0x0fでしか出来ない)
 	REG_NUM_00_SRC_X = (0), 		// 0受け渡しレジスタ。
 	REG_NUM_01_SRC_Y,				// 1受け渡しレジスタ。
 	REG_NUM_02_DEST_X,				// 2受け渡しレジスタ。
@@ -52,8 +53,8 @@ enum
 	REG_NUM_0c_REG4,				// 汎用レジスタ4。
 	REG_NUM_0d_REG5,				// 汎用レジスタ5。
 	REG_NUM_0e_REG6,				// 汎用レジスタ6。
-	REG_NUM_0f_REG7_difficulty_only,				// 汎用レジスタ7。(難易度レジスタ)
-	// I/Oポート
+	REG_NUM_0f_REG7_difficulty_only,// 汎用レジスタ7。(難易度レジスタ)
+	// I/Oポート(外部の入出力はI/Oポート0x10-0x1fを経由しないと出来ない)
 	REG_NUM_10_BOSS_SPELL_TIMER,	// スペル経過時間用レジスタ。
 	REG_NUM_11_TAMA1,				// 発弾用レジスタ1。tama_system に接続。HATSUDAN_01_speed256
 	REG_NUM_12_TAMA2,				// 発弾用レジスタ2。tama_system に接続。HATSUDAN_02_speed_offset
@@ -62,14 +63,15 @@ enum
 	REG_NUM_15_TAMA5,				// 発弾用レジスタ5。tama_system に接続。HATSUDAN_05_bullet_obj_type
 	REG_NUM_16_TAMA6,				// 発弾用レジスタ6。tama_system に接続。HATSUDAN_06_n_way
 	REG_NUM_17_TAMA7,				// 発弾用レジスタ7。tama_system に接続。HATSUDAN_07_div_angle65536
-	REG_NUM_18_SOUND_REG0,			// 効果音用レジスタ0。
-	REG_NUM_19_SOUND_REG1,			// 効果音用レジスタ1。
-	REG_NUM_1a_SOUND_REG2,			// 効果音用レジスタ2。
-	REG_NUM_1b_SOUND_REG3,			// 効果音用レジスタ3。
-	REG_NUM_1c_SOUND_NUM0,			// 効果音番号保持用レジスタ0。
-	REG_NUM_1d_SOUND_NUM1,			// 効果音番号保持用レジスタ1。
-	REG_NUM_1e_SOUND_NUM2,			// 効果音番号保持用レジスタ2。
-	REG_NUM_1f_SOUND_NUM3,			// 効果音番号保持用レジスタ3。
+	// スクリプトから効果音をどう扱うか仕様が確定していない。
+	REG_NUM_18_VOICE_NUMBER,		// REG_NUM_18_SOUND_REG0,// [未定]効果音用レジスタ0。
+	REG_NUM_19_VOICE_TRACK, 		// REG_NUM_19_SOUND_REG1,// [未定]効果音用レジスタ1。
+	REG_NUM_1a_,					// REG_NUM_1a_SOUND_REG2,// [未定]効果音用レジスタ2。
+	REG_NUM_1b_,					// REG_NUM_1b_SOUND_REG3,// [未定]効果音用レジスタ3。
+	REG_NUM_1c_,					// REG_NUM_1c_SOUND_NUM0,// [未定]効果音番号保持用レジスタ0。
+	REG_NUM_1d_,					// REG_NUM_1d_SOUND_NUM1,// [未定]効果音番号保持用レジスタ1。
+	REG_NUM_1e_,					// REG_NUM_1e_SOUND_NUM2,// [未定]効果音番号保持用レジスタ2。
+	REG_NUM_1f_,					// REG_NUM_1f_SOUND_NUM3,// [未定]効果音番号保持用レジスタ3。
 	#if 0
 	// メモリ(レジスタ退避用領域)
 	MEM_NUM_20_ 					// メモリ。
@@ -145,6 +147,10 @@ extern void sincos256(void);
 
 ///////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////
+
+
+
 ///////////////////////////////////////////////////////////////////
 
 #ifndef _HATSUDAN_SYSTEM_H_
@@ -335,9 +341,6 @@ extern LASER lz[MAX_99_LASER];
 //#define set_REG_DEST_XY(aaa) {REG_02_SEND1_BOSS_X_LOCATE = (aaa->center.x256);	REG_03_SEND1_BOSS_Y_LOCATE = (aaa->center.y256); }
 extern OBJ_CALL_FUNC(set_REG_DEST_XY);
 #if 0/*あとで有効にする*/
-extern void tmp_angleCCW65536_src_nerai(void);
-extern void calculate_jikinerai(void);
-
 extern void spell_cpu_douchuu_init(void);
 extern OBJ_CALL_FUNC(card_maikai_init);
 extern OBJ_CALL_FUNC(card_generate);
@@ -345,16 +348,16 @@ extern OBJ_CALL_FUNC(card_generate);
 
 
 /* HATSUDAN_03_angle65536 に 自機狙い弾の角度を計算 */
-extern void tmp_angleCCW65536_src_nerai(void);
+extern CPU_FUNC(tmp_angleCCW65536_src_nerai);
 
 /* HATSUDAN_03_angle65536 に 自機狙い弾の角度を計算 */
-extern void calculate_jikinerai(void);
+extern CPU_FUNC(calculate_jikinerai);
 
 /*---------------------------------------------------------
 	(r36)カードスクリプト用命令(multiprex_rate_vector)
 	複合割合合成。
 ---------------------------------------------------------*/
-extern void multiprex_rate_vector(void);
+extern CPU_FUNC(multiprex_rate_vector);
 
 
 /* スペルをCPU実行し、カードを１フレーム生成する。 */

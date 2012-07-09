@@ -52,8 +52,7 @@ local OBJ_CALL_FUNC(spell_create_09_zako_sentakki)
 		}
 		#endif
 		#if (1)
-	//	voice_play(VOICE15_BOSS_KOUGEKI_01, TRACK04_TEKIDAN);
-		bullet_play_04_auto(VOICE15_BOSS_KOUGEKI_01);
+		cpu_bullet_play_15_auto();
 		#endif
 	}
 }

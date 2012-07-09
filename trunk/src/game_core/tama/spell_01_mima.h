@@ -322,7 +322,9 @@ local OBJ_CALL_FUNC(spell_create_24_mima_toge)
 			//------------------
 			#endif
 			#if (1)
-			voice_play(VOICE11_BOSS_KIRARIN, TRACK04_TEKIDAN);
+			AUDIO_18_voice_number	= VOICE11_BOSS_KIRARIN;
+			AUDIO_19_voice_truck	= TRACK04_TEKIDAN;
+			cpu_voice_play();
 		//	bullet_play_04_auto(VOICE11_BOSS_KIRARIN);
 			#endif
 		}

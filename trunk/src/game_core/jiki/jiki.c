@@ -237,7 +237,7 @@ static void player_keycontrol(OBJ *s1)
 					cg.bombs--;
 					cg.player_data_used_bomber++;	/* 集計システム(player_data)ボム使用回数 */
 					cg.state_flag	|= JIKI_FLAG_0x0020_BOMBER_SYUU_SYUU; /*(ボムによる自動収集可能)*/
-					voice_play(VOICE07_BOMB, TRACK02_JIKI_BOMBER);/*("自機ボム"用トラック)*/
+					voice_play_menu(VOICE07_BOMB, TRACK02_JIKI_BOMBER);/*("自機ボム"用トラック)*/
 					set_bg_alpha(50);/* (100);(127);画面を暗くする */
 					/* 立ち絵 */
 					player_create_bomber_tachie(/* obj99[OBJ_HEAD_03_0x0a00_KOTEI+FIX_OBJ_00_PLAYER] */);
@@ -593,47 +593,26 @@ http://wikiwiki.jp/let/?etc%2F%C3%CE%BC%B1%2F%BC%AB%B5%A1%A4%CE%B0%DC%C6%B0%C2%A
 		#endif
 	{	(my_speed >>= 1);	}
 	#endif
-	#if (1==USE_ANALOG_VALUE)
-	short	aaa_cg_analog_x = (((my_speed)*(psp_pad.analog_absolute_value_x))>>8);
-	short	aaa_cg_analog_y = (((my_speed)*(psp_pad.analog_absolute_value_y))>>8);
-	/* 斜めを考慮して移動する。 */
-	s1->center.x256 += ((((signed int)(jiki_move_length[((psp_pad.pad_data&0xf0)>>4)][0]))*(aaa_cg_analog_x))>>8);	/* fps_factor */
-	s1->center.y256 += ((((signed int)(jiki_move_length[((psp_pad.pad_data&0xf0)>>4)][1]))*(aaa_cg_analog_y))>>8);	/* fps_factor */
-	#else/*(0==USE_ANALOG_VALUE)*/
 	/* 斜めを考慮して移動する。 */
 	s1->center.x256 += ((((signed int)(jiki_move_length[((psp_pad.pad_data&0xf0)>>4)][0]))*(my_speed))>>8); 	/* fps_factor */
 	s1->center.y256 += ((((signed int)(jiki_move_length[((psp_pad.pad_data&0xf0)>>4)][1]))*(my_speed))>>8); 	/* fps_factor */
-	#endif/*(USE_ANALOG_VALUE)*/
-
 	/* 画面外に、はみだしたら修正。(中心座標で判定) */
-//		 if (s1->center.x256 < t256(0)) 			{	s1->center.x256 = t256(0);				}/* 左チェック */
-//	else if (s1->center.x256 > t256(GAME_WIDTH)  )	{	s1->center.x256 = t256(GAME_WIDTH); 	}/* 右チェック */
-//		 if (s1->center.y256 < t256(0)) 			{	s1->center.y256 = t256(0);				}/* 上チェック */
-//	else if (s1->center.y256 > t256(GAME_HEIGHT) )	{	s1->center.y256 = t256(GAME_HEIGHT);		}/* 下チェック */
-	/*	psp は、弾でゲーム性を再現するには、いくらなんでも上下が狭すぎる。
-		上下が喰み出すのはゲーム性と、ゲーム画面設計の両方の問題で意図的である。
-		ゲーム画面設計上は左右は喰み出しても良いのだが、模倣風では喰み出さない事にする。
-		これは左右の壁で反射する弾処理が、喰み出し可だと遅くなりそうなので都合上の問題。
-		咲夜さんの上避けは何時になったら出来るのやら。 */
-	#if 0/*(-r34)*/
-		 if (s1->center.x256 < t256(PLAYER_WIDTH/2))					{	s1->center.x256 = t256(PLAYER_WIDTH/2); 				}/* 左チェック(喰み出さない) */
-	else if (s1->center.x256 > t256(GAME_WIDTH-(PLAYER_WIDTH/2))	)	{	s1->center.x256 = t256(GAME_WIDTH-(PLAYER_WIDTH/2));		}/* 右チェック(喰み出さない) */
-//		 if (s1->center.y256 < t256(PLAYER_HEIGHT/2))				{	s1->center.y256 = t256((PLAYER_HEIGHT/2));				}/* 上チェック(喰み出さない) */
-//	else if (s1->center.y256 > t256(GAME_HEIGHT-(PLAYER_HEIGHT/2)) )	{	s1->center.y256 = t256(GAME_HEIGHT-(PLAYER_HEIGHT/2));	}/* 下チェック(喰み出さない、5[pixel]内側っぽいがpspは縦解像度無さ過ぎる) */
-		 if (s1->center.y256 < t256(0)) 							{	s1->center.y256 = t256(0);								}/* 上チェック(上が喰み出すか、喰み出さないかまだ仕様が決まってない) */
-	else if (s1->center.y256 > t256(GAME_HEIGHT))					{	s1->center.y256 = t256(GAME_HEIGHT);						}/* 下チェック(下が喰み出すのは意図的) */
-	#else/*(r35-)*/
-//		 if (s1->center.x256 < t256(GAME_X_OFFSET)) 				{	s1->center.x256 = t256(GAME_X_OFFSET);					}/* 左チェック(喰み出さない) */
-//	else if (s1->center.x256 > t256(GAME_WIDTH) )					{	s1->center.x256 = t256(GAME_WIDTH); 					}/* 右チェック(喰み出さない) */
-//		 if (s1->center.y256 < t256(0)) 							{	s1->center.y256 = t256(0);								}/* 上チェック(上が喰み出すか、喰み出さないかまだ仕様が決まってない) */
-//	else if (s1->center.y256 > t256(GAME_HEIGHT))					{	s1->center.y256 = t256(GAME_HEIGHT);						}/* 下チェック(下が喰み出すのは意図的) */
+/*(r35-)*/
+//		 if (s1->center.x256 < t256(GAME_X_OFFSET)) {s1->center.x256 = t256(GAME_X_OFFSET); }/* 左チェック(喰み出さない) */
+//	else if (s1->center.x256 > t256(GAME_WIDTH) )	{s1->center.x256 = t256(GAME_WIDTH);	}/* 右チェック(喰み出さない) */
+//		 if (s1->center.y256 < t256(0)) 			{s1->center.y256 = t256(0); 			}/* 上チェック(上が喰み出すか、喰み出さないかまだ仕様が決まってない) */
+//	else if (s1->center.y256 > t256(GAME_HEIGHT))	{s1->center.y256 = t256(GAME_HEIGHT);	}/* 下チェック(下が喰み出すのは意図的) */
 	/* 喰み出さない分[pixel] */
 	#define ADJUST_JIKI_WIDTH	(8)
 	s1->center.x256 = psp_min(s1->center.x256, t256(GAME_WIDTH-ADJUST_JIKI_WIDTH)); 		/* 右チェック(喰み出す) */
 	s1->center.x256 = psp_max(s1->center.x256, t256(GAME_X_OFFSET+ADJUST_JIKI_WIDTH));		/* 左チェック(喰み出す) */
 	s1->center.y256 = psp_min(s1->center.y256, t256(GAME_HEIGHT));							/* 下チェック(下が喰み出すのは意図的) */
 	s1->center.y256 = psp_max(s1->center.y256, t256(0));									/* 上チェック(上が喰み出すか、喰み出さないかまだ仕様が決まってない) */
-	#endif
+	/*	psp は、弾でゲーム性を再現するには、いくらなんでも上下が狭すぎる。
+		上下が喰み出すのはゲーム性と、ゲーム画面設計の両方の問題で意図的である。
+		ゲーム画面設計上は左右は喰み出しても良いのだが、模倣風では喰み出さない事にする。
+		これは左右の壁で反射する弾処理が、喰み出し可だと遅くなりそうなので都合上の問題。
+		咲夜さんの上避けは何時になったら出来るのやら。 */
 	/* コア移動 */
 	{
 		OBJ *s2;
@@ -965,7 +944,7 @@ static int player_add_power_ttt_type(OBJ/**/ *src, u8 ttt_type)
 	}
 	check_weapon_level();/* [cg.weapon_powerが変更された場合に必ず行う後チェック] */
 //
-	voice_play(VOICE05_BONUS, TRACK06_ITEM);/* テキトー */
+	voice_play_menu(VOICE05_BONUS, TRACK06_ITEM);/* テキトー */
 	return (add_score_point);
 }
 /* http://hossy.info/game/toho/k_score.php
@@ -1028,7 +1007,7 @@ static OBJ_CALL_FUNC(player_collision_check_item)/* , int mask */ /* ,OBJ_Z03_IT
 			#if 1/* バグfix? */
 			ttt->jyumyou = JYUMYOU_NASI;/* おしまい */
 			#endif
-			voice_play(VOICE05_BONUS, TRACK06_ITEM);/* テキトー */
+			voice_play_menu(VOICE05_BONUS, TRACK06_ITEM);/* テキトー */
 			goto case_break;
 		case_SP_ITEM_03_1UP:
 			if ((8-1) < cg.zanki)	{	goto add_10000pts;	}/* 既に最大値(8)ならば、10000+ [pts] */
@@ -1036,7 +1015,7 @@ static OBJ_CALL_FUNC(player_collision_check_item)/* , int mask */ /* ,OBJ_Z03_IT
 			#if 1/* バグfix? */
 			ttt->jyumyou = JYUMYOU_NASI;/* おしまい */
 			#endif
-			/* effect_sound_number= */voice_play(VOICE06_EXTEND, TRACK01_PICHUN/*TRACK03_IVENT_DAN*/);/* テキトー */
+			voice_play_menu(VOICE06_EXTEND, TRACK01_PICHUN/*TRACK03_IVENT_DAN*/);/* テキトー */ /* effect_sound_number */
 			goto case_break;
 		case_SP_ITEM_05_TENSU:
 			// チルノQの場合、点数アイテムでパワーアップ[p]power+1。
@@ -1065,7 +1044,7 @@ static OBJ_CALL_FUNC(player_collision_check_item)/* , int mask */ /* ,OBJ_Z03_IT
 				bonus_info_score_nodel(ttt, add_score_point);
 				/* */ttt->jyumyou = JYUMYOU_NASI;/* おしまい */
 			}
-			voice_play(VOICE05_BONUS, TRACK06_ITEM);/* テキトー */
+			voice_play_menu(VOICE05_BONUS, TRACK06_ITEM);/* テキトー */
 		case_break:
 			;
 	}
@@ -1093,7 +1072,7 @@ extern int jiki_shot_get_kurai_bombtimer(void);/* 喰らいボムの入力受け付け時間を
 static void player_set_pichuun(void)
 {
 	pds_status_timer	= jiki_shot_get_kurai_bombtimer();
-	voice_play(VOICE04_SHIP_HAKAI, /*TRACK03_IVENT_DAN*/TRACK01_PICHUN/* TRACK01_PICHUN */);/* 自機死に音は、なるべく重ねない */
+	voice_play_menu(VOICE04_SHIP_HAKAI, /*TRACK03_IVENT_DAN*/TRACK01_PICHUN/* TRACK01_PICHUN */);/* 自機死に音は、なるべく重ねない */
 	{
 		OBJ *zzz_player;
 		zzz_player = &obj99[OBJ_HEAD_03_0x0a00_KOTEI+FIX_OBJ_00_PLAYER];

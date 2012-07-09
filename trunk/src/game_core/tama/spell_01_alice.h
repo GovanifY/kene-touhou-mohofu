@@ -74,8 +74,7 @@ local OBJ_CALL_FUNC(spell_create_0e_aka_2nd)
 				calculate_jikinerai();/* é©ã@ë_Ç¢äpçÏê¨ */
 				REG_0a_REG2 						= HATSUDAN_03_angle65536;/* é©ã@ë_Ç¢äp */
 				#if (1)
-			//	voice_play(VOICE15_BOSS_KOUGEKI_01, TRACK04_TEKIDAN);
-				bullet_play_04_auto(VOICE15_BOSS_KOUGEKI_01);
+				cpu_bullet_play_15_auto();
 				#endif
 			}
 			//	HATSUDAN_01_speed256			= (t256(1.1));							/* íeë¨ */
@@ -205,8 +204,7 @@ local OBJ_CALL_FUNC(spell_create_17_alice_nejiri10sec)
 				hatudan_system_regist_katayori_n_way();/* (r33-) */
 			}
 			#if (1)
-		//	voice_play(VOICE15_BOSS_KOUGEKI_01, TRACK04_TEKIDAN);
-			bullet_play_04_auto(VOICE15_BOSS_KOUGEKI_01);
+			cpu_bullet_play_15_auto();
 			#endif
 		}
 	}
@@ -240,8 +238,7 @@ local OBJ_CALL_FUNC(spell_create_17_alice_nejiri10sec)
 				hatudan_system_regist_katayori_n_way();/* (r33-) */
 			}
 			#if (1)
-		//	voice_play(VOICE15_BOSS_KOUGEKI_01, TRACK04_TEKIDAN);
-			bullet_play_04_auto(VOICE15_BOSS_KOUGEKI_01);
+			cpu_bullet_play_15_auto();
 			#endif
 		}
 	}
@@ -278,8 +275,7 @@ local OBJ_CALL_FUNC(spell_create_0b_alice_zako_doll)
 	{
 		add_zako_alice_doll_type_a(src);
 		#if (1)
-	//	voice_play(VOICE15_BOSS_KOUGEKI_01, TRACK04_TEKIDAN);
-		bullet_play_04_auto(VOICE15_BOSS_KOUGEKI_01);
+		cpu_bullet_play_15_auto();
 		#endif
 	}
 }
@@ -321,8 +317,7 @@ local OBJ_CALL_FUNC(spell_create_1e_alice_tama_doll)
 	{
 		add_zako_alice_doll_type_b(src);
 		#if (1)
-	//	voice_play(VOICE15_BOSS_KOUGEKI_01, TRACK04_TEKIDAN);
-		bullet_play_04_auto(VOICE15_BOSS_KOUGEKI_01);
+		cpu_bullet_play_15_auto();
 		#endif
 	}
 	if (0x00==((REG_10_BOSS_SPELL_TIMER)&0x3f))
@@ -330,8 +325,7 @@ local OBJ_CALL_FUNC(spell_create_1e_alice_tama_doll)
 		/* íeï™óÙ */
 //		exchange_damnaku_arice_7_bunretu();
 		#if (1)
-	//	voice_play(VOICE15_BOSS_KOUGEKI_01, TRACK04_TEKIDAN);
-		bullet_play_04_auto(VOICE15_BOSS_KOUGEKI_01);
+		cpu_bullet_play_15_auto();
 		#endif
 	}
 }
@@ -388,8 +382,7 @@ local OBJ_CALL_FUNC(spell_create_25_alice_suwako)
 		if ((0) ==((REG_10_BOSS_SPELL_TIMER)&0x0f))/* 16Ç…1âÒ */
 		{
 			REG_08_REG0 -= (int)(65536*8/256);
-		//	voice_play(VOICE15_BOSS_KOUGEKI_01, TRACK04_TEKIDAN);
-			bullet_play_04_auto(VOICE15_BOSS_KOUGEKI_01);
+			cpu_bullet_play_15_auto();
 		}
 	//	REG_08_REG0 -= (65536/256); 	/* 1é¸Ç256ï™äÑÇµÇΩäpìx */
 	//	REG_08_REG0 -= (65536/512); 	/* 1é¸Ç256ï™äÑÇµÇΩäpìxÇÃîºï™ÅB */

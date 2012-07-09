@@ -151,9 +151,8 @@ static OBJ_CALL_FUNC(move_item_type02)	/* 自動収集ならば、自分に集まる */
 				)
 			)
 			{
-				src->jyumyou = JYUMYOU_NASI;/* 星点のみ特別処理 */				/* おしまい */
-//
-				voice_play(VOICE05_BONUS, TRACK06_ITEM);/* テキトー */
+				src->jyumyou = JYUMYOU_NASI;/* 星点のみ特別処理 */	/* おしまい */
+				voice_play_menu(VOICE05_BONUS, TRACK06_ITEM);/* テキトー */
 			}
 		}
 //		src->center.x256					= zzz_player->center.x256 + (aaa_x256); /*fps_factor*/
@@ -861,8 +860,9 @@ global void player_check_extend_score(void)
 			実際やってみたら２つ鳴らして、丁度良い。
 			特にうるさくはなかった。
 		*/
-		voice_play(VOICE06_EXTEND, TRACK03_IVENT_DAN/*TRACK02_JIKI_BOMBER*/);		/* エクステンド音 */
-		voice_play(VOICE06_EXTEND, TRACK01_PICHUN);/*予備(必要)*/					/* エクステンド音 */
+		AUDIO_18_voice_number	= VOICE06_EXTEND;/* エクステンド音 */
+		AUDIO_19_voice_truck	= TRACK03_IVENT_DAN/*TRACK02_JIKI_BOMBER*/; 	cpu_voice_play();
+		AUDIO_19_voice_truck	= TRACK01_PICHUN;/*予備(必要)*/ 				cpu_voice_play();
 		{
 			/*
 			★ 模倣風で 1000万 エクステンドが無いのは、

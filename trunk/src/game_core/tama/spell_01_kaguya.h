@@ -111,7 +111,9 @@ local OBJ_CALL_FUNC(kaguya_hari_shot)
 		spd += (64>>3/*difficulty*/);
 	}
 	//
-	voice_play(VOICE11_BOSS_KIRARIN, TRACK04_TEKIDAN);/* テキトー */
+	AUDIO_18_voice_number	= VOICE11_BOSS_KIRARIN;
+	AUDIO_19_voice_truck	= TRACK04_TEKIDAN;/* テキトー */
+	cpu_voice_play();
 }
 
 /*---------------------------------------------------------
@@ -136,18 +138,6 @@ local OBJ_CALL_FUNC(kaguya_hari_dan_seisei)
 /*---------------------------------------------------------
 	4面の場合跳ねる珠
 ---------------------------------------------------------*/
-//static int bomb_n;
-			//
-			//	bomb_n++;
-			//	if (31 < bomb_n)		{	bomb_n = 31;		}
-			//	1 ... 31
-				// 341.333333333333333333333333333333 ==  1024 / 3
-			//	int jj;
-			//	jj = (100)*(11-(int)((bomb_n*(0x100/3))>>8));
-			//	jj = (1024*3)/(bomb_n+(2*3));
-			//	for (ii=0; i <= (int)((bomb_n*(0x100/3))>>8); i++)
-//	bomb_n				= 0;
-
 
 static int fire_wait3;
 static int bomb_aaa;
@@ -241,7 +231,6 @@ local OBJ_CALL_FUNC(spell_create_19_kaguya04)
 }
 
 
-
 /*---------------------------------------------------------
 	輝夜、蓬莱の玉の枝もどき
 	神宝「蓬莱の玉の枝 - 夢色の郷 -」
@@ -253,6 +242,12 @@ local OBJ_CALL_FUNC(spell_create_19_kaguya04)
 	２．弓状にならんだオプションから始めだけ全方位(48方向)弾発射。
 	３．弓状にならんだオプションから画面左右端に反転色米弾発射し、
 		画面左右端で通常色米弾のプレイヤー狙い弾に変わる。
+	-------------------------------------------------------
+	[発弾セクション]
+	-------------------------------------------------------
+	使用レジスタ
+	REG_08_REG0 	珠の色(1 ... 7)。	//	static u32 REG_09_REG1;
+	REG_09_REG1 	角度?				//	static u32 REG_08_REG0;
 ---------------------------------------------------------*/
 // 4096 == 65536/16
 // 3855.05882352941176470588235294118 == 65536/17
@@ -262,19 +257,23 @@ local OBJ_CALL_FUNC(spell_create_23_kaguya_tamanoe)
 //	if ((0x02)==((REG_10_BOSS_SPELL_TIMER)&0x03))/* (2回に1回)(8回毎に発弾) */
 	if ((0x04)==((REG_10_BOSS_SPELL_TIMER)&0x07))/* (2回に1回)(8回毎に発弾) */
 	{
-		static unsigned int bbb;
-		bbb += (77);
-		static unsigned int aaa;
-		aaa++;
-		aaa &= (0x07);
-		if (0==aaa) 	{	aaa++;	};
+	#if (1)//[-r39]変数化するとスペカ切り替え時にリセットされる。
+		static u32 kaguya_REG_09_REG1;
+		static u32 kaguya_REG_08_REG0;
+	#else//[r40]変数化するとスペカ切り替え時にリセットされる。
+		#define kaguya_REG_09_REG1 REG_09_REG1
+		#define kaguya_REG_08_REG0 REG_08_REG0
+	#endif
+		kaguya_REG_08_REG0++;
+		kaguya_REG_08_REG0 &= (0x07);
+		if (0==kaguya_REG_08_REG0)	{	kaguya_REG_08_REG0++;	};
 		//
 //		HATSUDAN_01_speed256			= (t256(1.00)); 			/* 弾速 */
 		HATSUDAN_01_speed256			= (t256(0.50)); 			/* 弾速 */
 //		HATSUDAN_02_speed_offset		= t256(0);/*(テスト)*/
 		HATSUDAN_02_speed_offset		= t256(1);/*(テスト)*/
 		HATSUDAN_04_tama_spec			= (DANMAKU_LAYER_00)|(TAMA_SPEC_8000_NON_TILT);/* (r33-)非傾き弾 */
-		HATSUDAN_05_bullet_obj_type 	= (BULLET_MARU10_BASE) + aaa;	/* [中丸弾] */
+		HATSUDAN_05_bullet_obj_type 	= (BULLET_MARU10_BASE) + kaguya_REG_08_REG0;	/* [中丸弾] */
 	//	HATSUDAN_06_n_way				= (17); 						/* [17way] */	/* 発弾数 */
 		HATSUDAN_06_n_way				= (16/*8*/);					/* [16way] */	/* 発弾数 */
 	//	HATSUDAN_07_div_angle65536		= (int)(65536/(16))-(((si n1024(( ra_nd() & REG_10_BOSS_SPELL_TIMER)))&0xff));	/*(int)(1024/(6))*/ 	/* 分割角度(1024[360/360度]を 6 分割) */	/* 1周をn分割した角度 */
@@ -282,14 +281,20 @@ local OBJ_CALL_FUNC(spell_create_23_kaguya_tamanoe)
 //
 //		HATSUDAN_03_angle65536			= ((65536/2));					/* 発射中心角度 / 特殊機能(自機狙い/他) */
 //		HATSUDAN_03_angle65536			= (int)((65536*1/4))+(REG_10_BOSS_SPELL_TIMER&0xff);				/* 発射中心角度 / 特殊機能(自機狙い/他) */
-		HATSUDAN_03_angle65536			= ((bbb));						/* 発射中心角度 / 特殊機能(自機狙い/他) */
+		kaguya_REG_09_REG1 += (77);
+		HATSUDAN_03_angle65536			= ((kaguya_REG_09_REG1));						/* 発射中心角度 / 特殊機能(自機狙い/他) */
 		if (0==((REG_10_BOSS_SPELL_TIMER)&0x08))
 		{
 //			HATSUDAN_03_angle65536		= (int)((65536*3/4))+(REG_10_BOSS_SPELL_TIMER&0xff);				/* 発射中心角度 / 特殊機能(自機狙い/他) */
-			HATSUDAN_03_angle65536		= -(bbb);				/* 発射中心角度 / 特殊機能(自機狙い/他) */
+			HATSUDAN_03_angle65536		= -(kaguya_REG_09_REG1);				/* 発射中心角度 / 特殊機能(自機狙い/他) */
 		}
 		hatudan_system_regist_katayori_n_way();/* (r33-) */
 	}
+	/*(r40てすと)*/
+//	if ((64-10)==((REG_10_BOSS_SPELL_TIMER) ))
+//	{
+//		kaguya_hari_dan_seisei(src);
+//	}
 }
 
 
