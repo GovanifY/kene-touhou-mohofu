@@ -47,8 +47,7 @@ local OBJ_CALL_FUNC(spell_create_1e_momiji_no_nonoji)
 			REG_09_REG1 += (65536/48);	/* â∫Ç©ÇÁåÇÇøénÇﬂÇÈÅB */
 			REG_0a_REG2++;
 			#if (1)
-		//	voice_play(VOICE15_BOSS_KOUGEKI_01, TRACK04_TEKIDAN);
-			bullet_play_04_auto(VOICE15_BOSS_KOUGEKI_01);
+			cpu_bullet_play_15_auto();
 			#endif
 		}
 	}

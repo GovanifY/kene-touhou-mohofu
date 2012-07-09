@@ -540,8 +540,7 @@ local OBJ_CALL_FUNC(spell_create_13_perfect_freeze)
 		#if (1)
 		if (0==((REG_10_BOSS_SPELL_TIMER)&0x07))
 		{
-		//	voice_play(VOICE15_BOSS_KOUGEKI_01, TRACK04_TEKIDAN);
-			bullet_play_04_auto(VOICE15_BOSS_KOUGEKI_01);
+			cpu_bullet_play_15_auto();
 		}
 		#endif
 	}
@@ -613,10 +612,42 @@ local OBJ_CALL_FUNC(spell_create_16_diamond_blizzard)
 	/*(毎フレーム発弾)*/
 	{
 		REG_09_REG1 = (ra_nd()/*&0xffff*/);
+		REG_0a_REG2 = REG_02_DEST_X;/*(ボスx座標保存, push stack)*/
+		REG_0b_REG3 = REG_03_DEST_Y;/*(ボスy座標保存, push stack)*/
+		#if /*雪符「ダイアモンドブリザード」*/1/*[廃止予定](-r39)*/
 		/*(楕円の範囲で発弾)*/
-		sincos65536_NUM(REG_NUM_09_REG1, REG_NUM_0a_REG2);/*(ダメ???)*/
-		REG_02_DEST_X		+= (((REG_0a_REG2)*(REG_09_REG1&0x7f00))>>8);
-		REG_03_DEST_Y		+= (((REG_0b_REG3)*((REG_09_REG1>>8)&0x3f00))>>8);
+	//	sincos65536_ZZZ();/*(ダメ???)*/
+	HATSUDAN_03_angle65536 = REG_09_REG1;
+//	HATSUDAN_01_speed256 = t256(1.0);
+//	HATSUDAN_01_speed256 = (REG_09_REG1&0x7f00);
+{
+	#if (0)//
+	REG_0a_REG2 	= (((si n1024((deg65536to1024(HATSUDAN_03_angle65536)))) ) );		/* CCWの場合 */
+	REG_0b_REG3 	= (((co s1024((deg65536to1024(HATSUDAN_03_angle65536)))) ) );
+	#else
+	{
+		int sin_value_t256; 		//	sin_value_t256 = 0;
+		int cos_value_t256; 		//	cos_value_t256 = 0;
+		int256_sincos1024( (deg65536to1024(HATSUDAN_03_angle65536)), &sin_value_t256, &cos_value_t256);
+		REG_02_DEST_X	 = (((sin_value_t256)*(REG_09_REG1&0x7f00))>>8);
+		REG_03_DEST_Y	 = (((cos_value_t256)*((REG_09_REG1>>8)&0x3f00))>>8);
+	//	REG_02_DEST_X	 = (((cos_value_t256)*(HATSUDAN_01_speed256))>>8);/*fps_factor*/
+	//	REG_03_DEST_Y	 = (((sin_value_t256)*(HATSUDAN_01_speed256))>>8);/*fps_factor*/
+	}
+	#endif
+}
+		#else/*(xxx-)*/
+		//------------------
+		HATSUDAN_03_angle65536 = REG_09_REG1;
+	//	HATSUDAN_01_speed256 = t256(1.0);
+		HATSUDAN_01_speed256 = (REG_09_REG1&0x7f00);
+		sincos256();/*(破壊レジスタ多いので注意)*/
+	//	radius_aaa = REG_03_DEST_Y;//sin_value_t256 // 下CCWの場合(右CWの場合ととxyが逆)
+	//	src->math_vector.y256 = REG_02_DEST_X;//cos_value_t256 // 下CCWの場合(右CWの場合ととxyが逆)
+		//------------------
+		#endif
+		REG_02_DEST_X += REG_0a_REG2;/*(ボスx座標加算, pull stack)*/
+		REG_03_DEST_Y += REG_0b_REG3;/*(ボスy座標加算, pull stack)*/
 		//
 		HATSUDAN_01_speed256			= (t256(0.5));				/* 弾速(2.5) */
 		HATSUDAN_02_speed_offset		= t256(2);/*(てすと)*/
@@ -628,7 +659,7 @@ local OBJ_CALL_FUNC(spell_create_16_diamond_blizzard)
 	count_up_limit_NUM(REG_NUM_08_REG0, 32);//	/* (32回毎に発音) */
 	if (1==REG_08_REG0) /* (32回に1回) 発音 */
 	{
-	//	bullet_play_04_auto(VOICE15_BOSS_KOUGEKI_01);
+	//	cpu_bullet_play_15_auto();
 		bullet_play_04_auto(VOICE16_BOSS_KYUPIN);
 	}
 }

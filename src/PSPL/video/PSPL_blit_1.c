@@ -107,7 +107,7 @@ static void Blit1to2(SDL_BlitInfo *info)
 	}
 	#else
 	/* Memory align at 4-byte boundary, if necessary */
-	if ( (long)dst & 0x03 )
+	if ( (u32)dst & 0x03 )
 	{
 		/* Don't do anything if width is 0 */
 		if ( width == 0 )

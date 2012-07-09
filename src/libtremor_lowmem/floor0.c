@@ -110,7 +110,7 @@ static const ogg_uint16_t barklook[54/*+2*/ /*.align*/] =
 static inline ogg_int32_t toBARK(int n)
 {
 	int i;
-	for (i=0;i<54;i++)
+	for (i=0; i<54; i++)
 	{
 		if (n>=barklook[i] && n<barklook[i+1])
 		{
@@ -164,7 +164,7 @@ void vorbis_lsp_to_curve(
 			 (barklook[(nextbark>>14)+1]-barklook[nextbark>>14]))>>14);
 
 	/* lsp is in 8.24, range 0 to PI; coslook wants it in .16 0 to 1*/
-	for (i=0;i<m;i++)
+	for (i=0; i<m; i++)
 	{
 		#ifndef _LOW_ACCURACY_
 		ogg_int32_t val=MULT32(lsp[i],0x517cc2);
@@ -175,7 +175,7 @@ void vorbis_lsp_to_curve(
 		/* safeguard against a malicious stream */
 		if (val<0 || (val>>COS_LOOKUP_I_SHIFT)>=COS_LOOKUP_I_SZ)
 		{
-			memset(curve,0,sizeof(*curve)*n);
+			memset(curve, 0, sizeof(*curve)*n);
 			return;
 		}
 		ilsp[i] = vorbis_coslook_i(val);
@@ -244,7 +244,7 @@ static const unsigned char MLOOP_2[64] =
 
 static const unsigned char MLOOP_3[8] = {0,1,2,2,3,3,3,3};
 
-		for (j=3;j<m;j+=2)
+		for (j=3; j<m; j+=2)
 		{
 			if (!(shift = MLOOP_1[(pi|qi)>>25]))
 			{
@@ -492,8 +492,7 @@ int floor0_inverse2(
 {
 	vorbis_info_floor0 *info	= (vorbis_info_floor0 *)(i);
 	codec_setup_info  *ci		= (codec_setup_info *)(vd->vi->codec_setup);
-
-//1948641
+//
 	unsigned int aaa;
 	aaa = ((ci->blocksizes[vd->W])>>1);
 	if (lsp)

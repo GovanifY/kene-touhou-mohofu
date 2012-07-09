@@ -283,7 +283,7 @@ static MAIN_CALL_FUNC(music_room_state_02_select_menu)
 				if (psp_pad.pad_data & (PSP_KEY_SHOT_OK|PSP_KEY_BOMB_CANCEL))	/* ショット || キャンセルボタン入力 */
 				{
 					#if (1)
-					voice_play(VOICE04_SHIP_HAKAI, TRACK02_MENU02/*TRACK01_MENU01*/);/* 自機死に音は、なるべく重ねない */
+					voice_play_menu(VOICE04_SHIP_HAKAI, TRACK02_MENU02/*TRACK01_MENU01*/);/* 自機死に音は、なるべく重ねない */
 				//	voice_play(VOICE02_MENU_SELECT, TRACK01_MENU01);/*テキトー*/
 					#endif
 				//	pl ay_music_num(BGM_27_menu01);
@@ -341,7 +341,7 @@ static MAIN_CALL_FUNC(music_room_state_02_select_menu)
 //				if (SOUND_TYPE_01_SOUND == sound_type)	/* 項目[ SOUND ] を選んでいる場合 */
 				{
 					#if (1)
-					voice_play(music_room_setting[sound_type+SOUND_INDEX_00_BASE_CURSOR_01]/*VOICE07_BOMB*/, TRACK01_MENU01);/*テキトー*/
+					voice_play_menu(music_room_setting[sound_type+SOUND_INDEX_00_BASE_CURSOR_01]/*VOICE07_BOMB*/, TRACK01_MENU01);/*テキトー*/
 					#endif
 				}
 			}

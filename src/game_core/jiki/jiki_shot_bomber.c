@@ -168,7 +168,7 @@ erase_shot_type:
 		if (NULL != tekidan_obj)		/* ìGíeÇ…ìñÇΩÇ¡ÇΩÇÁ */
 		{
 			tekidan_obj->jyumyou = JYUMYOU_NASI;	/* ìGíeÇ™è¡ñ≈ */
-			voice_play(VOICE02_MENU_SELECT, /*TRACK03_IVENT_DAN*//*(???)*/TRACK05_ZAKO_DEATH /*TRA CK01_PICHUN*/);
+			voice_play_menu(VOICE02_MENU_SELECT, /*(???)*/TRACK05_ZAKO_DEATH);/*TRACK03_IVENT_DAN*/ /*TRA CK01_PICHUN*/
 		}
 	}
 	/* ìGÇ…Ç†ÇΩÇ¡ÇΩèÍçáÇ…ìGÇè¡Ç∑ */
@@ -877,7 +877,7 @@ global void register_main_shot(OBJ *s1)
 		//	/*cg.*/weapon_interval = jiki_auto_shot_interval_table[(weapon_List<<3)+(cg_ga me_select_player)];
 		//	/*cg.*/weapon_interval = jiki_auto_shot_interval_table[(cg.jiki_weapon_level_offset)];
 			/*cg.*/weapon_interval = current.shot_status[SHOT_STATUS_10_JIKI_SHOT_INTERVAL_L1+(cg.jiki_weapon_level)];
-			voice_play(VOICE00_SHOT, TRACK00_JIKI_SHOT);
+			voice_play_menu(VOICE00_SHOT, TRACK00_JIKI_SHOT);
 			static /*const*/ void (*bbb[(WEAPON_L_MAX)*(PLAYERS8)])(OBJ *sss) =
 			{	/* óUì±õﬁèó(A)	 êjõﬁèó(B)		 É~ÉTÉ}Éä(A)	 ÉåÉCÉ}Éä(B)  */
 				/*REIMU_A*/ 	/*REIMU_B*/ 	/*MARISA_A*/	/*MARISA_B*/	/*REMILIA*/ 	/*YUYUKO*/		/*CIRNO_A*/ 	/*CIRNO_Q*/

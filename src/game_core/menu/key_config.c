@@ -206,19 +206,19 @@ static MAIN_CALL_FUNC(key_config_state_02_select_left_menu)
 				{
 					key_setting_default_type--;
 					key_setting_default_type &= (4-1);
-					voice_play(VOICE02_MENU_SELECT, TRACK01_MENU01);/* テキトー */
+					voice_play_menu(VOICE02_MENU_SELECT, TRACK01_MENU01);/*(トラック配置はテキトー)*/
 				}
 				else
 				if (psp_pad.pad_data & PSP_KEY_RIGHT) // 右ボタン入力
 				{
 					key_setting_default_type++;
 					key_setting_default_type &= (4-1);
-					voice_play(VOICE02_MENU_SELECT, TRACK01_MENU01);/* テキトー */
+					voice_play_menu(VOICE02_MENU_SELECT, TRACK01_MENU01);/*(トラック配置はテキトー)*/
 				}
 				else
 				if (psp_pad.pad_data & PSP_KEY_SHOT_OK) // ショットボタン入力
 				{
-					voice_play(VOICE07_BOMB, TRACK01_MENU01);/* テキトー */
+					voice_play_menu(VOICE07_BOMB, TRACK01_MENU01);/*(トラック配置はテキトー)*/
 					set_default_key(edit_pad_config, key_setting_default_type);
 					menu_cursor1 = MENU_LINE_Y_13_QUIT;
 				}
@@ -228,7 +228,7 @@ static MAIN_CALL_FUNC(key_config_state_02_select_left_menu)
 			{
 				if (psp_pad.pad_data & PSP_KEY_BOMB_CANCEL) // キャンセルボタン入力
 				{
-					voice_play(VOICE04_SHIP_HAKAI, TRACK02_MENU02/*TRACK01_MENU01*/);/* 自機死に音は、なるべく重ねない */
+					voice_play_menu(VOICE04_SHIP_HAKAI, TRACK02_MENU02/*TRACK01_MENU01*/);/* 自機死に音は、なるべく重ねない */
 					cb.main_call_func = key_config_state_03_fade_init;
 				}
 				else
@@ -271,12 +271,12 @@ static MAIN_CALL_FUNC(key_config_state_02_select_left_menu)
 						}
 						#endif
 						ini_file_save();
-						voice_play(VOICE02_MENU_SELECT, TRACK01_MENU01);/* テキトー */
+						voice_play_menu(VOICE02_MENU_SELECT, TRACK01_MENU01);/*(トラック配置はテキトー)*/
 					}
 					else
 					{
 					//	"dame dayo"
-						voice_play(VOICE09_GRAZE, TRACK01_MENU01);/* テキトー */
+						voice_play_menu(VOICE09_GRAZE, TRACK01_MENU01);/*(トラック配置はテキトー)*/
 					}
 				}
 			}
@@ -296,12 +296,12 @@ static MAIN_CALL_FUNC(key_config_state_02_select_left_menu)
 					menu_cursor2 = psp_min(menu_cursor2, 7);
 					menu_cursor2 = psp_max(menu_cursor2, 0);
 					//
-					voice_play(VOICE02_MENU_SELECT, TRACK01_MENU01);/* テキトー */
+					voice_play_menu(VOICE02_MENU_SELECT, TRACK01_MENU01);/*(トラック配置はテキトー)*/
 				}
 				if (psp_pad.pad_data & (PSP_KEY_SHOT_OK))		// ショットボタン入力
 				{
 					edit_pad_config[menu_cursor2] ^= aaa_table[(menu_cursor1)];
-					voice_play(VOICE07_BOMB, TRACK01_MENU01);/* テキトー */
+					voice_play_menu(VOICE07_BOMB, TRACK01_MENU01);/*(トラック配置はテキトー)*/
 				}
 			}
 		}

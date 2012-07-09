@@ -122,8 +122,8 @@
 /*static*/ char my_file_line_buffer256[256];	// 仮想fgets()用の行バッファ		/* parth text, 1 line buffer */ 	/* 走査する行の取得 */
 /*static*/ char my_file_common_name[256];		// 読み/書きする場合のファイル名	/* fopenするファイル名 (128) */
 #if 1
-static unsigned long file_size; 	// 読み込んだファイルサイズ
-static unsigned long file_seek; 	// 仮想ファイルの読み出し位置
+static u32 file_size; 	// 読み込んだファイルサイズ
+static u32 file_seek; 	// 仮想ファイルの読み出し位置
 //static char *my_buf;
 //static void *malloc_buf;
 static char *malloc_buf;			// 仮想ファイルバッファ
@@ -273,7 +273,7 @@ static int ini_load_value(char *str_search, char *str_result)/*FILE *fp,*/
 			while (KUGIRI_KAMMA_1_CHAR != (*ch))	/* 区切り',' を探す */
 			{
 				i++;
-				if (30 < i) 	{	return (-1);	}	/* >= 30 長すぎたらエラー */
+				if (30 < i) 	{return (-1);}	/* >= 30 長すぎたらエラー */
 				*sc++ = *ch++;
 			}
 			ch++;		/* 区切り',' を無視 (',' の分をとばす) */
@@ -286,30 +286,28 @@ static int ini_load_value(char *str_search, char *str_result)/*FILE *fp,*/
 		{
 			if (NULL==str_result) // 対象を整数として解析する。(PARTH_MODE_INT) */
 			{
-				char re_s[32];/*30*/
-				char *re_e = re_s;
-			//	while ('\n' != (*ch))		/* intの方は数字じゃない物は排除してくれるみたいだから問題なし。(13でなくてok) */
-				while (0x0a != (*ch))		/* intの方は数字じゃない物は排除してくれるみたいだから問題なし。(13でなくてok) */
+				char tmp_str32bytes[32];/*(atoiの場合、バッファ長32[bytes]==最大31文字に統一)*/
+				char *tmp_str_position = tmp_str32bytes;
+			//	while ('\n' != (*ch))/* intの方は数字じゃない物は排除してくれるみたいだから問題なし。(13でなくてok) */
+				while (0x0a != (*ch))/* intの方は数字じゃない物は排除してくれるみたいだから問題なし。(13でなくてok) */
 				{
-					*re_e++ = *ch++;
+					*tmp_str_position++ = *ch++;
 				}
-				re_e = 0;
-				/*int_result =*/return (atoi(re_s));
+				tmp_str_position = 0;
+				/*int_result =*/return (atoi(tmp_str32bytes));
 //				goto my_exit;
-		//		break;
 			}
 			else // 対象を文字列として解析する。 (PARTH_MODE_CHAR) */
 			{
-				char *re_e = str_result;
+				char *tmp_str_position = str_result;
 			//	while (0x0d != (*ch)/*13*/) /* charの方は\nじゃなくて13にしないとちゃんと取ってくれないよ。(13でないとng) */
 				while (0x0a != (*ch))		/* charの方は\nじゃなくて13にしないとちゃんと取ってくれないよ。(13でないとng) */
 				{
-					*re_e++ = *ch++;
+					*tmp_str_position++ = *ch++;
 				}
-				re_e = 0;
+				tmp_str_position = 0;
 				/*int_result =*/return (0);/* ok */
 //				goto my_exit;
-		//		break;
 			}
 		}
 		MY_FILE_LOOP_CONTINUE;
@@ -375,9 +373,9 @@ global void ini_file_load(void)
 				key_config_tag[2] = ('a'+i);
 			//
 				{	int value;
-					value = ini_load_value(/*fp,*/ key_config_tag, NULL);
-					if (0 > value)	{	goto error00;	}
-					else			{	pad_config[i] = value;	}
+					value = ini_load_value(key_config_tag, NULL);/*fp,*/
+					if (0 > value)	{goto error00;	}
+					else			{pad_config[i] = value;	}
 				}
 			}
 		}
@@ -387,9 +385,9 @@ global void ini_file_load(void)
 		for (i=0; i<OPTION_CONFIG_08_MAX; i++)
 		{
 			int value;
-			value = ini_load_value(/*fp,*/ (char *)my_config_title[i], NULL);
-			if (0 > value)	{	goto error00;	}
-			else			{	option_config[i] = value; }
+			value = ini_load_value((char *)my_config_title[i], NULL);/*fp,*/
+			if (0 > value)	{goto error00;	}
+			else			{option_config[i] = value; }
 		}
 	}
 	int_result = 1;/* 正常 */
@@ -419,12 +417,9 @@ error00:
 					char readed_str_name32[64/*50*/];
 				//	if (1 == fscanf(fp, "%23s\n", readed_str_name32 ))
 				//	if (0 != my_fgets(/*fp, "%23s\n", readed_str_name32*/ ))
-					int aaa;
-					aaa = ini_load_value(search_str_name32, readed_str_name32);
-					if (0 > aaa)
-					{
-						ng2 = 1;/* エラー */
-					}
+					int value;
+					value = ini_load_value(search_str_name32, readed_str_name32);
+					if (0 > value)	{ng2 = 1;/* エラー */}
 					else
 					{
 						/* 埋め込む */
@@ -440,30 +435,32 @@ error00:
 						high_score_table[j][i].name[5] = readed_str_name32[7];/*15*/
 						high_score_table[j][i].name[6] = readed_str_name32[8];/*16*/
 						high_score_table[j][i].name[7] = readed_str_name32[9];/*16*/
-						char tmp_str16[64];/*50*/
-						strcpy(tmp_str16, &readed_str_name32[10]);/*5 13*/
-						tmpscore = atoi(tmp_str16);
-//						tmpscore / = 10;
+						{	char tmp_str32bytes[32];/*(atoiの場合、バッファ長32[bytes]==最大31文字に統一)*/
+							strcpy(tmp_str32bytes, &readed_str_name32[10]);/*5 13*/
+							tmpscore = atoi(tmp_str32bytes);
+						}
 					}
 				}
+				#if (1)
 			/*	else // 直前の ini_load_value() でエラーが起きた場合に初期化するので このelse無効。 */
 			//	if (1==ng2) /* pspは0レジスタがあるので0と比較したほうが速い */
-				if (0!=ng2)
+				if (0!=ng2)/*(エラー発生している場合、強制的にスコアテーブルを初期化する。)*/
 				{
-					high_score_table[j][i].final_stage = (6-i); 	/* 到達ステージ */
+					high_score_table[j][i].final_stage = (6-i);/* 到達ステージ */
 					static const int init_score_tbl[5] =
 					{
-						score(100000000),	//	score(70000000),		//score(50000000),
-						score( 50000000),	//	score(60000000),		//score(4000000),
-						score( 10000000),	//	score(50000000),		//score(300000),
-						score(	5000000),	//	score(10000000),		//score(20000),
-						score(	1000000),	//	score( 5000000),		//score(1000),
+						score(100000000),//score(70000000),//score(50000000),
+						score( 50000000),//score(60000000),//score(4000000),
+						score( 10000000),//score(50000000),//score(300000),
+						score(	5000000),//score(10000000),//score(20000),
+						score(	1000000),//score( 5000000),//score(1000),
 					};
 				//	strcpy(high_score_table[j][i].name, "12345678");
 				//	strcpy(high_score_table[j][i].name, "ZUN     ");
 					strcpy(high_score_table[j][i].name, "Nanashi ");
 					tmpscore = init_score_tbl[i];
 				}
+				#endif
 				high_score_table[j][i].score = tmpscore;
 			}
 		}
@@ -475,8 +472,7 @@ error00:
 		my_file_fclose();/*fp*/ //fclose(fp);
 	}
 	//return (int_result)/*1*/;
-
-	if (0==(int_result)) // 090110
+	if (0==(int_result)) // 20090110
 	{
 //		chooseModDir();
 		set_default_key(pad_config, 0/*0==type 01 模倣風 標準*/);
@@ -486,23 +482,16 @@ error00:
 	//	option_config[OPTION_CONFIG_06_ANALOG]				= 0;
 		option_config[OPTION_CONFIG_07_OPEN]				= 0x0500;
 	}
-//
 	/* 範囲外チェック(範囲外の場合は修正) */
 	check_limit_value_option(option_config);/* */
 	/* 読み込んだデーターで初期設定 */
 	cg.game_difficulty		= option_config[OPTION_CONFIG_04_CURRENT_DIFFICULTY];
 	cg_game_select_player	= option_config[OPTION_CONFIG_05_CURRENT_PLAYER];
-//	if (0 > ini_load_value(/*fp,*/ "pa ssword", st r_pass_word)) {	goto error00;/* return (-1); */ 	}
-
-	#if 1/*修正ずみ*/
-//	範囲外の場合は修正
-//	if (difficulty>3 || 0>difficulty)/* (easy)0 1 2 3(Lunatic) */
-//	{	difficulty = 0/* 0==easy 2*/;}
-	cg.game_difficulty		&= 0x03;
+	#if 1/*(範囲外の場合は強制的に修正する。)*/
+	cg.game_difficulty		&= 0x03;/* (easy)0 1 2 3(Lunatic) */
 	cg_game_select_player	&= 0x07;
 	#endif
 }
-
 
 
 /*---------------------------------------------------------
@@ -646,27 +635,25 @@ global void ini_file_save(void)
 					(j+'0'),		/* player number */
 					(i+'0'),		/* score rank number */
 									/* practice mode */
-					(high_score_table[j][i].final_stage+'0'),				/* final stage */
+					(high_score_table[j][i].final_stage+'0'),/* final stage */
 					high_score_table[j][i].name,
-					(int)high_score_table[j][i].score	/* gcc 4.3.5 */
+					(int)high_score_table[j][i].score/* gcc 4.3.5 */
 				);
 				write_line_buffer_to_file(fd);/*fp*/
 			}
 		}
 	}
-	sceIoClose(fd);/*	fclose(fp);*/
+	sceIoClose(fd);/*fclose(fp);*/
 }
 
 /*---------------------------------------------------------
 	画面保存機能
 ---------------------------------------------------------*/
 
-//#include "kaiwa_system.h" /* 会話システムにSDL再描画指示。 */
-
 global void save_screen_shot(void)
 {
 	static int screen_num = 0;
-//	sp rintf(my_file_common_name, "ms0:/PICTURE/Toho_Moho%d.bmp", screen_num);		// 保存場所の変更。
+//	sp rintf(my_file_common_name, "ms0:/PICTURE/Toho_Moho%d.bmp", screen_num);	// 保存場所の変更。
 //	strcpy(my_file_common_name, "ms0:/PICTURE/東方模倣風/Toho_MohoZ.bmp");	//	「33文字目を強制書き換え」
 //	strcpy(my_file_common_name, "ms0:/PICTURE/kene/MohoZ.bmp"); /* "ms0:/PICTURE/kene/"の作成方法がわからない */
 //	strcpy(my_file_common_name, "ms0:/PICTURE/Toho_MohoZ.bmp"); 			//	「22文字目を強制書き換え」
@@ -682,16 +669,3 @@ global void save_screen_shot(void)
 	/*(作ってない)*/								/*(画面モードが32bitの場合に画面をセーブ)*/
 	#endif
 }
-	#if (0)
-//	gu_sa ve_screen();
-//	SDL_SaveBMP(sdl_screen[SDL_00_VIEW_SCREEN], my_file_common_name);
-//	psp_clear_screen();
-//	#if 0/* Gu化完了したら要らなくなる */
-//	{
-//		psp_clear_screen(); 	/* [PAUSE] 復帰時にSDL画面を消す。 */
-//	}
-//	/* SDLなのでこの機構が必要。Gu化完了したら要らなくなる */
-//	kaiwa_system_set_re_draw(); 	/* 会話システムにSDL再描画指示。 */
-//	#endif
-	#else
-	#endif

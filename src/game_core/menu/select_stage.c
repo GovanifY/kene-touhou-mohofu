@@ -137,7 +137,7 @@ static MAIN_CALL_FUNC(stage_select_menu_work_MENU_STATE_01_WORK_MENU)
 		/*(上下を押した場合に操作音を出す。)*/
 		if (psp_pad.pad_data & (PSP_KEY_DOWN|PSP_KEY_UP/*|PSP_KEY_PAUSE|PSP_KEY_SELECT*/))
 		{
-			voice_play(VOICE02_MENU_SELECT, TRACK01_MENU01);
+			voice_play_menu(VOICE02_MENU_SELECT, TRACK01_MENU01);
 		}
 		#if 0/*(-r34)*/
 		/*(上下を押した場合、回り込み選択をする。上下は必ずワープ)*/
@@ -165,15 +165,14 @@ static MAIN_CALL_FUNC(stage_select_menu_work_MENU_STATE_01_WORK_MENU)
 		/*(OKボタン)*/
 		if (psp_pad.pad_data & PSP_KEY_SHOT_OK)
 		{
-			voice_play(VOICE01_MENU_OK/*VOICE02_MENU_SELECT*/, TRACK01_MENU01);
+			voice_play_menu(VOICE01_MENU_OK/*VOICE02_MENU_SELECT*/, TRACK01_MENU01);
 			cb.main_call_func = common_menu_work_MENU_STATE_02_FADE_OUT;	/* メニュー消去準備 */
 		}
 		else
 		/*(CANCELボタン)*/
 		if (psp_pad.pad_data & PSP_KEY_BOMB_CANCEL)
 		{
-		//	voice_play(VOICE01_MENU_OK/*VOICE02_MENU_SELECT*/, TRACK01_MENU01);
-			voice_play(VOICE04_SHIP_HAKAI, TRACK02_MENU02/*TRACK01_MENU01*/);/* 自機死に音は、なるべく重ねない */
+			voice_play_menu(VOICE04_SHIP_HAKAI, TRACK02_MENU02/*TRACK01_MENU01*/);/* 自機死に音は、なるべく重ねない */
 			aaa_selected_number = (-1);/*(負数ならなんでもいい)*/
 			cb.main_call_func = common_menu_work_MENU_STATE_02_FADE_OUT;	/* メニュー消去準備 */
 		}

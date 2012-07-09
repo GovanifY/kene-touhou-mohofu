@@ -54,7 +54,7 @@ static OBJ_CALL_FUNC(attack_kougeki_mahoujin02)
 		{
 			src->zd04_zako_wait1 = (8);/*(5) (プログラムが速くなってる分遅くする)*/
 			src->zd05_zako_wait2--;
-			voice_play(VOICE12_MAGICF_E_SHOT, TRACK03_IVENT_DAN);/*テキトー*/
+			voice_play_menu(VOICE12_MAGICF_E_SHOT, TRACK03_IVENT_DAN);/*テキトー*/
 			zako_shot_supeka(src, ZAKO_SPEKA_12_mahou_random);
 		}
 	}
@@ -90,7 +90,7 @@ static OBJ_CALL_FUNC(attack_kougeki_mahoujin03)
 		if (src->zd04_zako_wait1 <= 0)	/* ばらまき間隔カウンタ */
 		{
 			src->zd04_zako_wait1 = (25-((cg.game_difficulty)*5)); /* ばらまき間隔カウンタ */
-			voice_play(VOICE12_MAGICF_E_SHOT, TRACK03_IVENT_DAN);/*テキトー*/
+			voice_play_menu(VOICE12_MAGICF_E_SHOT, TRACK03_IVENT_DAN);/*テキトー*/
 			/* 速度は 1.0-4.0までの乱数(ただし上方域に偏差)に変更 */
 //...		HATSUDAN_01_speed256						= ((ra_nd()&(1024-1))|(0x100))+t256(1.0);	/* 弾速 */
 			HATSUDAN_03_angle65536						= ((ra_nd()&(65536-1)));					/* 角度 */
@@ -141,7 +141,7 @@ static OBJ_CALL_FUNC(move_zako_00_kougeki_mahoujin)
 	else
 	if (MAHOU_TIME_LIMIT_02_ADJ == src->jyumyou)
 	{
-		src->atari_hantei			= (1/*スコア兼用*/);	/* あたり判定あり */
+		src->atari_hantei			= /*(テキトー)*/score(100);/*スコア兼用*/ 	/* あたり判定あり */
 		/*(ここでスコアを設定する)*/
 	}
 	/* 攻撃 */
@@ -149,7 +149,7 @@ static OBJ_CALL_FUNC(move_zako_00_kougeki_mahoujin)
 	if (MAHOU_TIME_LIMIT_01_ADJ < src->jyumyou)
 	{
 	//	set_REG_DEST_XY(src);	/* 弾源x256 y256 中心から発弾。 */
-		/* カード選択 */
+		/* (魔方陣の攻撃)カード選択 */
 		void (*aaa[8])(OBJ/**/ *src) =
 		{
 			attack_kougeki_mahoujin00,		/* 攻撃しない */
@@ -564,7 +564,7 @@ static OBJ_CALL_FUNC(move_zako_02_inyou1)
 	src->center.x256 += src->math_vector.x256;
 	/* 画面両端では、跳ね返る */
 	if (
-		((t256(0)) > (src->center.x256) ) ||
+		((t256(GAME_X_OFFSET)) > (src->center.x256) ) ||
 		((t256(GAME_WIDTH)) < (src->center.x256) ) )
 	{
 		src->math_vector.x256 = -src->math_vector.x256;

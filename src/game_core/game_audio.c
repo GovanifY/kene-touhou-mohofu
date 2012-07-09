@@ -353,13 +353,22 @@ global void play_voice_auto_track(int req)
 ---------------------------------------------------------*/
 
 #if (1==USE_DESIGN_TRACK)
-global void voice_play(int req, int play_track)
+//global void voice_play()
+//int AUDIO_18_voice_number=req;
+//int AUDIO_19_voice_truck=play_track;
+global CPU_FUNC(cpu_voice_play)
 {
-	if (0==use_audio)	{	return; 	}
+	if (0==use_audio)	{return;}
 	/* 範囲チェック */
 //
 	/* 効果音 予約 */
-	request_voice[play_track]	= req;
+	request_voice[AUDIO_19_voice_truck] = AUDIO_18_voice_number;
+}
+global void voice_play_menu(int request_index_number, int play_track)
+{
+	AUDIO_18_voice_number	= request_index_number;
+	AUDIO_19_voice_truck	= play_track;
+	cpu_voice_play();
 }
 #endif
 
@@ -368,9 +377,10 @@ global void voice_play(int req, int play_track)
 ---------------------------------------------------------*/
 
 #if (1==USE_DESIGN_TRACK)
-global void bullet_play_04_auto(int req)
+// 内部 I/F
+global CPU_FUNC(cpu_bullet_play_05_auto)
 {
-	if (0==use_audio)	{	return; 	}
+	if (0==use_audio)	{return;}
 	/* 範囲チェック */
 //
 	/* 効果音 予約 */
@@ -378,7 +388,24 @@ global void bullet_play_04_auto(int req)
 	aaa_play_track++;
 	aaa_play_track &= 0x03;
 	aaa_play_track |= 0x04;
-	request_voice[aaa_play_track] = req;
+	request_voice[aaa_play_track] = AUDIO_18_voice_number;
+}
+// 内部 I/F
+//global void bullet_play_04_set(int request_index_number)
+//{
+//	AUDIO_17_voice_default	= request_index_number;
+//}
+// 内部 I/F
+global CPU_FUNC(cpu_bullet_play_15_auto)
+{
+	AUDIO_18_voice_number	= VOICE15_BOSS_KOUGEKI_01;//AUDIO_17_voice_default;
+	cpu_bullet_play_05_auto();
+}
+// 外部 I/F
+global void bullet_play_04_auto(int request_index_number)
+{
+	AUDIO_18_voice_number	= request_index_number;
+	cpu_bullet_play_05_auto();
 }
 #endif
 
@@ -432,7 +459,7 @@ global void voice_play_graze(void)
 #if (1==USE_VSYNC_SOUND)
 global void voice_play_vbl(void)
 {
-	if (0==use_audio)	{	return; 	}
+	if (0==use_audio)	{return;}
 	/* ----- 設定で効果音再生OFFなら再生しない */
 	if (0==option_config[OPTION_CONFIG_03_SOUND])
 	{
@@ -456,7 +483,9 @@ global void voice_play_vbl(void)
 					{
 			//			graze_wav_pending = (1);/*(グレイズ再入発音禁止)*/
 						/*(グレイズ発音処理)*/
-						voice_play(VOICE09_GRAZE, TRACK07_GRAZE_AUDIO_DRIVER_INTERNAL);
+						AUDIO_18_voice_number	= VOICE09_GRAZE;
+						AUDIO_19_voice_truck	= TRACK07_GRAZE_AUDIO_DRIVER_INTERNAL;
+						cpu_voice_play();
 					}
 			//	}
 			}
@@ -553,10 +582,10 @@ global void set_music_volume(int volume)
 
 global void exit_audio(void)
 {
-	if (0==use_audio)	{	return; 	}
+	if (0==use_audio)	{return;}
 	/* 曲の解放 */
 //	if (Mix_PlayingMusic() )
-	{	Mix_HaltMusic();	}
+	{Mix_HaltMusic();}
 	Mix_FreeMusic(music_track);
 	music_track = NULL;
 	/* 効果音の解放 */
@@ -616,7 +645,7 @@ static void voice_load(void)
 		voice_track[i] = Mix_LoadWAV_RW(SDL_RWFromFile(name, "rb"), 1);
 		if (NULL == voice_track[i])
 		{
-			//ps pDebugScreenPrintf("Couldn't load: %s\n", name);
+			//pspDebugScreenPrintf("Couldn't load: %s\n", name);
 			use_audio = 0;/*使用不可能*/
 //			return;
 		}
@@ -652,7 +681,7 @@ global void init_audio(void)
 	const int audio_buffers 	= 1024; 	//512
 	if (Mix_OpenAudio(audio_rate, audio_format, audio_channels, audio_buffers) < 0)
 	{
-		//ps pDebugScreenPrintf( "Couldn't open audio: %s\n", SDL_GetError());
+		//error(ERR_FATAL, "Couldn't open audio.\n");
 		return;
 	}
 	//else

@@ -64,14 +64,14 @@ enum
 ---------------------------------------------------------*/
 
 #if (1)
-/*static*/ int is_digit_or_hifun(char *ccc)
+/*static*/ int is_digit_or_hifun(char *read_str_position)
 {
 	#if 0
 	/* 負数にも対応 / isdi git : 数字かどうかの判定 */
 	if (
-		(isdi git((int)((char)(*ccc)))) /* gcc 4.3.5 */
+		(isdi git((int)((char)(*read_str_position)))) /* gcc 4.3.5 */
 		||
-		(((char)'-')==(*ccc))
+		(((char)'-')==(*read_str_position))
 	)
 	{
 		return (1/*TRUE*/);
@@ -81,15 +81,15 @@ enum
 		return (0/*FALSE*/);/*NG!,*/
 	}/*(ng!)*/
 	#else
-	if (('9') < (*ccc))
+	if (('9') < (*read_str_position))
 	{
 		goto my_false;/*NG!,*/
 	}
 	//else
-	if (('0') > (*ccc))
+	if (('0') > (*read_str_position))
 	{
 		/*('-'の可能性がある。)*/
-		if ('-'!=(*ccc))
+		if ('-'!=(*read_str_position))
 		{
 			goto my_false;
 		}
@@ -102,21 +102,21 @@ enum
 }
 #endif
 /*[is_digit_or_hifun();'数字'もしくは'-'記号の場合。であるかを調べる。]*/
-static char *load_stage_get_int(char *ccc, int *number)
+static char *load_stage_get_int(char *read_str_position, int *number)
 {
-	char buffer[32];/*128*/
-	char *ddd = buffer;
+	char tmp_str32bytes[32];/*(atoiの場合、バッファ長32[bytes]==最大31文字に統一)*/
+	char *tmp_str_position = tmp_str32bytes;
 	int i = 0;
-	while ( is_digit_or_hifun(ccc) )/*(負数に対応した)*/
+	while ( is_digit_or_hifun(read_str_position) )/*(負数に対応した)*/
 	{
 		i++;
 		if (i >= 32)/*128*/
 		{	goto ne222;}
-		*ddd++ = *ccc++;
+		*tmp_str_position++ = *read_str_position++;
 	}
-	*ddd = 0;
-	*number = atoi(buffer);
-	return (ccc);
+	*tmp_str_position = 0;
+	*number = atoi(tmp_str32bytes);
+	return (read_str_position);
 /*error*/
 ne222:
 	return ((char *) NULL);

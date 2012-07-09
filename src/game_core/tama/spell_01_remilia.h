@@ -5,94 +5,123 @@
 	-------------------------------------------------------
 	ÉåÉ~ÉäÉA Ç¡Ç€Ç¢ÉJÅ[ÉhÇíËã`ÇµÇ‹Ç∑ÅB
 ---------------------------------------------------------*/
-
-local OBJ_CALL_FUNC(remilia_oyasumi_kougeki)
-{
-	// Å°  [ëÂã íe]
-//	HATSUDAN_01_speed256			= (t256(3.5));						/* íeë¨ */
-//	HATSUDAN_01_speed256			= (t256(2.25)); 					/* íeë¨ */
-	HATSUDAN_01_speed256			= (t256(6.00)); 					/* íeë¨ */
-//	HATSUDAN_02_speed_offset		= -t256(1);/* å∏ë¨íeÅH */
-	HATSUDAN_02_speed_offset		= -t256(4);/* å∏ë¨íeÅH */
-	HATSUDAN_03_angle65536			= (16384)+(((REG_10_BOSS_SPELL_TIMER)&0x40)<<8);/* é©ã@ë_Ç¢äp */
-	HATSUDAN_04_tama_spec			= (DANMAKU_LAYER_00)|(TAMA_SPEC_1000_EFFECT_MIDDLE)|(TAMA_SPEC_8000_NON_TILT);/* (r33-)îÒåXÇ´íe */
-	HATSUDAN_05_bullet_obj_type 	= BULLET_OODAMA32_01_AKA;			/* [ê‘ëÂã íe] */
-	hatudan_system_regist_single();
-	// Å°  [íÜã íe]
-	HATSUDAN_01_speed256			= (t256(4.00)); 					/* íeë¨ */
-	HATSUDAN_02_speed_offset		= -t256(2);/* å∏ë¨íeÅH */
-	HATSUDAN_05_bullet_obj_type 	= (BULLET_MARU10_BASE + TAMA_IRO_01_AKA);			/* [ê‘ëÂíÜíe] */
-	u32 ii;
-	for (ii=0; ii<8; ii++)
-	{
-		HATSUDAN_03_angle65536		= src->tmp_angleCCW65536 + ((ra_nd()) & ((65536/8)-1)) - ((65536/16)-1);/* é©ã@ë_Ç¢äp */
-		hatudan_system_regist_single();
-	}
-	// Å°  [è¨ã íe]
-	HATSUDAN_01_speed256			= (t256(2.00)); 					/* íeë¨ */
-	HATSUDAN_02_speed_offset		= -t256(1);/* å∏ë¨íeÅH */
-	HATSUDAN_05_bullet_obj_type 	= (BULLET_MINI8_BASE + TAMA_IRO_01_AKA);				/* [ê‘ëÂíÜíe] */
-	for (ii=0; ii<(u32)(0x02<<(REG_0f_GAME_DIFFICULTY)); ii++)/*(16)*/
-	{
-		HATSUDAN_03_angle65536		= src->tmp_angleCCW65536 + ((ra_nd()) & ((65536/4)-1)) - ((65536/8)-1);/* é©ã@ë_Ç¢äp */
-		hatudan_system_regist_single();
-	}
-	#if (0)
-//	voice_play(VOICE15_BOSS_KOUGEKI_01, TRACK04_TEKIDAN);
-	bullet_play_04_auto(VOICE15_BOSS_KOUGEKI_01);
-	#endif
-}
-
-
+/*---------------------------------------------------------
+	ÉVÉáÉbÉgî≠íeÉTÉuÅB
+	-------------------------------------------------------
+	CåæåÍÇÃèÍçáÇÕã§í ÉTÉuÅB
+	ÉXÉNÉäÉvÉgâªÇµÇΩèÍçáÇÕÅAÉRÉsÉyÇ∑ÇÈÅB
+	-------------------------------------------------------
+	égópÉåÉWÉXÉ^
+	src->tmp_angleCCW65536;	à¯ìnÇµÅAë_Ç¢äÓèÄäpìx
+---------------------------------------------------------*/
 local OBJ_CALL_FUNC(remilia_shot00)
 {
 	// Å°  [ëÂã íe]
 //	HATSUDAN_01_speed256			= (t256(3.5));						/* íeë¨ */
 //	HATSUDAN_01_speed256			= (t256(2.25)); 					/* íeë¨ */
-	HATSUDAN_01_speed256			= (t256(6.00)); 					/* íeë¨ */
+	HATSUDAN_01_speed256			= (t256(8.00)); 					/* íeë¨ */
 //	HATSUDAN_02_speed_offset		= -t256(1);/* å∏ë¨íeÅH */
 	HATSUDAN_02_speed_offset		= -t256(4);/* å∏ë¨íeÅH */
-	HATSUDAN_03_angle65536			= src->tmp_angleCCW65536;/* é©ã@ë_Ç¢äp */
+	HATSUDAN_03_angle65536			= src->tmp_angleCCW65536;/* à¯ìnÇµÅAë_Ç¢äÓèÄäpìx */
 	HATSUDAN_04_tama_spec			= (DANMAKU_LAYER_00)|(TAMA_SPEC_1000_EFFECT_MIDDLE)|(TAMA_SPEC_8000_NON_TILT);/* (r33-)îÒåXÇ´íe */
 	HATSUDAN_05_bullet_obj_type 	= BULLET_OODAMA32_01_AKA;			/* [ê‘ëÂã íe] */
 	hatudan_system_regist_single();
-	// Å°  [íÜã íe]
-	HATSUDAN_01_speed256			= (t256(4.00)); 					/* íeë¨ */
-	HATSUDAN_02_speed_offset		= -t256(2);/* å∏ë¨íeÅH */
-	HATSUDAN_05_bullet_obj_type 	= (BULLET_MARU10_BASE + TAMA_IRO_01_AKA);			/* [ê‘ëÂíÜíe] */
-	u32 ii;
-	for (ii=0; ii<8; ii++)
+		// Å°  [íÜã íe]
+	//	HATSUDAN_01_speed256			= (t256(6.00)); 					/* íeë¨ */
+		HATSUDAN_02_speed_offset		= -t256(2);/* å∏ë¨íeÅH */
+		HATSUDAN_05_bullet_obj_type 	= (BULLET_MARU10_BASE + TAMA_IRO_01_AKA);			/* [ê‘ëÂíÜíe] */
 	{
-		HATSUDAN_03_angle65536		= src->tmp_angleCCW65536 + ((ra_nd()) & ((65536/8)-1)) - ((65536/16)-1);/* é©ã@ë_Ç¢äp */
-		hatudan_system_regist_single();
-	}
-	// Å°  [è¨ã íe]
-	HATSUDAN_01_speed256			= (t256(2.00)); 					/* íeë¨ */
-	HATSUDAN_02_speed_offset		= -t256(1);/* å∏ë¨íeÅH */
-	HATSUDAN_05_bullet_obj_type 	= (BULLET_MINI8_BASE + TAMA_IRO_01_AKA);				/* [ê‘ëÂíÜíe] */
-	for (ii=0; ii<(u32)(0x02<<(REG_0f_GAME_DIFFICULTY)); ii++)/*(16)*/
-	{
-		HATSUDAN_03_angle65536		= src->tmp_angleCCW65536 + ((ra_nd()) & ((65536/4)-1)) - ((65536/8)-1);/* é©ã@ë_Ç¢äp */
-		hatudan_system_regist_single();
+		u32 rrr;
+		rrr = (ra_nd());
+		u32 ii;
+		for (ii=0; ii<(8*3); ii++)
+		{
+			rrr += 13579;
+			rrr &= 0xffffffffu;
+			HATSUDAN_01_speed256		= (t256(5.00)+(rrr&0x1ff)); 					/* íeë¨ */
+			HATSUDAN_03_angle65536		= src->tmp_angleCCW65536 + ((rrr) & ((65536/8)-1)) - ((65536/16)-1);/* é©ã@ë_Ç¢äp */
+			hatudan_system_regist_single();
+		}
+		// Å°  [è¨ã íe]
+	//	HATSUDAN_01_speed256			= (t256(4.00)); 					/* íeë¨ */
+		HATSUDAN_02_speed_offset		= -t256(1);/* å∏ë¨íeÅH */
+		HATSUDAN_05_bullet_obj_type 	= (BULLET_MINI8_BASE + TAMA_IRO_01_AKA);				/* [ê‘ëÂíÜíe] */
+		for (ii=0; ii<(16*2); ii++)/*(16)*/
+		{
+			rrr += 1234567;
+			rrr &= 0xffffffffu;
+			HATSUDAN_01_speed256		= (t256(2.00)+(rrr&0x1ff)); 					/* íeë¨ */
+			HATSUDAN_03_angle65536		= src->tmp_angleCCW65536 + ((rrr) & ((65536/4)-1)) - ((65536/8)-1);/* é©ã@ë_Ç¢äp */
+			hatudan_system_regist_single();
+		}
 	}
 	#if (1)
-//	voice_play(VOICE15_BOSS_KOUGEKI_01, TRACK04_TEKIDAN);
-	bullet_play_04_auto(VOICE15_BOSS_KOUGEKI_01);
+	cpu_bullet_play_15_auto();
 	#endif
 }
 
-
+/*---------------------------------------------------------
+	[èâä˙âªÉZÉNÉVÉáÉì]	ÉåÉ~ÉäÉA í èÌçUåÇ2 Ç¡Ç€Ç¢Ç‡ÇÃ
+	-------------------------------------------------------
+	égópÉåÉWÉXÉ^
+	REG_08_REG0 	ÉJÉEÉìÉ^ÅBäÓñ{ìIÇ…24âÒÇ…àÍâÒèàóùÅB
+	REG_09_REG1 	åÇÇ¬âÒêîêßå¿ÅB
+	REG_0a_REG2 	â¡éZäpìxÅB
+	REG_0b_REG3 	íeäpìx(äÓèÄà íuÇï€éù)ÅB
+---------------------------------------------------------*/
+//local OBJ_CALL_FUNC(spell_init_1f_remilia_kougeki2)
+//{
+//}
 /*---------------------------------------------------------
 	ÉåÉ~ÉäÉA í èÌçUåÇ2 Ç¡Ç€Ç¢Ç‡ÇÃ
 	-------------------------------------------------------
 	1ïbåÇÇ¡ÇΩÇÁÅA3ïbãxÇﬁ(à⁄ìÆ)ÅB
 
+	REG_0f	ìÔà’ìx
+	REG_10	É{ÉXÉ^ÉCÉ}Å[
 ---- ---- ---- ----
 0000 0011 1111 1111
 ---------------------------------------------------------*/
 
 local OBJ_CALL_FUNC(spell_create_1f_remilia_kougeki2)
 {
+	count_up_limit_NUM(REG_NUM_08_REG0, 24);// äÓñ{ìIÇ…24âÒÇ…àÍâÒèàóùÅB(åÇÇ¬)
+	if (0==(REG_08_REG0))
+	{
+		count_up_limit_NUM(REG_NUM_09_REG1, 16);// 16, ç≈ëÂ10(10.666==256/24)Ç»ÇÃÇ≈16ÇÕÉ_É~Å[ílÅB
+		if (1==(REG_09_REG1))	/* énÇﬂÇƒÇÃèÍçá */
+		{
+			calculate_jikinerai();/* é©ã@ë_Ç¢äpçÏê¨ */
+			src->tmp_angleCCW65536		= HATSUDAN_03_angle65536;/* é©ã@ë_Ç¢äp */
+			REG_0a_REG2 	= (int)( ((65536/12)));/*(table3[]â¡éZäpìxÇê›íË)*/
+			if ((src->center.x256)&0x100)
+			{
+				REG_0a_REG2 	= -REG_0a_REG2;/*(table3[]â¡éZäpìxÇê›íË)*/
+			}
+			src->tmp_angleCCW65536		-= REG_0a_REG2;/*(table3[]â¡éZäpìxÇà⁄ìÆ)*/
+			src->tmp_angleCCW65536		-= REG_0a_REG2;/*(table3[]â¡éZäpìxÇà⁄ìÆ)*/
+			src->tmp_angleCCW65536		-= REG_0a_REG2;/*(table3[]â¡éZäpìxÇà⁄ìÆ)*/
+			src->tmp_angleCCW65536		-= REG_0a_REG2;/*(table3[]â¡éZäpìxÇà⁄ìÆ)*/
+			REG_0b_REG3 = src->tmp_angleCCW65536;/*(énÇﬂÇÃäpìxÇê›íË)*/
+		}
+		if (0<(6-1)+(REG_0f_GAME_DIFFICULTY)-(REG_09_REG1))
+		{
+			// easy 	ÇÕ 6âÒ 3âÒ 0000
+			// normal	ÇÕ 7âÒ 5âÒ 0001
+			// hard 	ÇÕ 8âÒ 7âÒ 0010
+			// lunatic	ÇÕ 9âÒ 9âÒ 0011
+			/*(ï€éùäpìxÇà⁄ìÆ)*/
+			{
+				REG_0b_REG3 	+= REG_0a_REG2;/*(table2[]ï€éùäpìxÇà⁄ìÆ)*/
+				/*(äÓèÄäpìxÇ…ï€éùäpìxÇê›íË)*/
+				src->tmp_angleCCW65536		= REG_0b_REG3;/*(äÓèÄäpìxÇéwíË)*/
+			}
+			remilia_shot00(src);
+		}
+	}
+}
+
+#if 0
 	if (0x80==((REG_10_BOSS_SPELL_TIMER)&0x80))/* å„îº */
 	{
 	//	if (0xc0==((REG_10_BOSS_SPELL_TIMER)&0xc0))
@@ -103,62 +132,14 @@ local OBJ_CALL_FUNC(spell_create_1f_remilia_kougeki2)
 					if (0x0000==((REG_10_BOSS_SPELL_TIMER)&0x30))	{	remilia_shot00(src);	}	/* é©ã@ë_Ç¢åÇÇø */
 			else	if (0x0100==((REG_10_BOSS_SPELL_TIMER)&0x30))	{	remilia_shot00(src);	}	/* CW åÇÇø */
 			else	if (0x0200==((REG_10_BOSS_SPELL_TIMER)&0x30))	{	remilia_shot00(src);	}	/* CCW åÇÇø */
-			else/*	if (0x0300==((REG_10_BOSS_SPELL_TIMER)&0x30)) */	{	remilia_shot00(src);	}	/* é©ã@ë_Ç¢åÇÇø */	/* àÍãCåÇÇø */
+			else/*	if (0x0300==((REG_10_BOSS_SPELL_TIMER)&0x30)) */{	remilia_shot00(src);	}	/* é©ã@ë_Ç¢åÇÇø */	/* àÍãCåÇÇø */
 			#endif
-			if (0==(((REG_10_BOSS_SPELL_TIMER)+0x100)&0x200))
-			{
-				calculate_jikinerai();/* é©ã@ë_Ç¢äpçÏê¨ */
-				src->tmp_angleCCW65536		= HATSUDAN_03_angle65536;/* é©ã@ë_Ç¢äp */
-			}
-			else
-			{
-				src->tmp_angleCCW65536		+= (((REG_10_BOSS_SPELL_TIMER)&0x20)<<5)-( ((65536/24)-1));/* */
-			}
-			remilia_shot00(src);
 		}
 	}
-	/* ñ{ìñÇÕãxÇ›ÇæÇØÇ«ÅAÇ†Ç‹ÇËÇ…ä»íPÇ»ÇÃÇ≈çUåÇ */
-	else
-	{
-/*
-8421
-1111 f	- - - -
-1110 e	- - - -
-1101 d	- - - -
-1100 c	- - - L
-1011 b	- - - -
-1010 a	- - - -
-1001 9	- - - -
-1000 8	- - - L
-0111 7	- - - -
-0110 6	- - H -
-0101 5	- - - -
-0100 4	- - H L
-0011 3	- - - -
-0010 2	- N H -
-0001 1	- - - -
-0000 0	e N H L
-*/
-		/* ãxÇ› */
-		const u8 aaa[4] =
-		{
-			0xff,	/* easy */
-			0x0d,	/* NORMAL */
-			0x09,	/* HARD */
-			0x03,	/* LUNATIC */
-		};
-		if (0==((REG_10_BOSS_SPELL_TIMER) & aaa[(REG_0f_GAME_DIFFICULTY)] ))
-		{
-			remilia_oyasumi_kougeki(src);
-		}
-	}
-}
+#endif
+
 
 /*---------------------------------------------------------
-
-
-
-
 
 ëÂíeÅïíÜíeÅïè¨íeóêéÀ
 ñªïÑÅuçgêFÇÃñªäEÅv
@@ -166,13 +147,6 @@ local OBJ_CALL_FUNC(spell_create_1f_remilia_kougeki2)
 ê‘êjíeÇŒÇÁéTÇ´Å®ÇXWAYê‘ëÂíeòAéÀÅ®ëSï˚à 12wayâäíeòAéÀÅiÉãÅ[ÉvÅj
 çgïÑÅuÉXÉJÅ[ÉåÉbÉgÉVÉÖÅ[ÉgÅv
 ---------------------------------------------------------*/
-
-
-
-
-
-
-
 
 
 /*---------------------------------------------------------
@@ -215,8 +189,7 @@ local OBJ_CALL_FUNC(spell_create_4d_remilia_rasen_knife)/* óÈêÂÇ≈Ç»Ç≠ÇƒóÜê˘Ç≈Ç∑Å
 				REG_0a_REG2 		= HATSUDAN_03_angle65536;			/* äpìxÇï€éù */
 	}
 		#if (0)
-	//	voice_play(VOICE15_BOSS_KOUGEKI_01, TRACK04_TEKIDAN);
-		bullet_play_04_auto(VOICE15_BOSS_KOUGEKI_01);
+		cpu_bullet_play_15_auto();
 		#endif
 }
 
@@ -354,7 +327,7 @@ local OBJ_CALL_FUNC(remilia_tahane_danmaku_02_callback)/* éÏíµÇÀ */
 /*---------------------------------------------------------
 	[èâä˙âªÉZÉNÉVÉáÉì]	éÙÊfÅuÉuÉâÉhÅEÉcÉFÉyÉVÉÖÇÃéÙÇ¢Åv
 	-------------------------------------------------------
-	[íËêî1]nâÒÇ…àÍâÒíeÇíuÇ≠ÅB
+	REG_09_REG1[íËêî1]nâÒÇ…àÍâÒíeÇíuÇ≠ÅB
 	0easy:			16
 	1normal:		12
 	2hard:			8
@@ -373,16 +346,17 @@ local OBJ_CALL_FUNC(spell_init_4e_remilia_vlad_tepes)
 /*---------------------------------------------------------
 	[èâä˙âªÉZÉNÉVÉáÉì]	ÅuÉåÉbÉhÉ}ÉWÉbÉNÅv
 	-------------------------------------------------------
-	[íËêî1]nâÒÇ…àÍâÒíeÇíuÇ≠ÅB
-	0easy:			16
-	1normal:		12
-	2hard:			8
-	3lunatic:		4
+	REG_09_REG1[íËêî1]nâÒÇ…àÍâÒíeÇíuÇ≠ÅB
+	0easy:			32
+	1normal:		24
+	2hard:			16
+	3lunatic:		8
 ---------------------------------------------------------*/
 local OBJ_CALL_FUNC(spell_init_4f_remilia_red_magic)
 {
 //	TAMA_DATA_10_TAMA_OKI_KANKAKU	= (0);// ÉJÉEÉìÉ^
-	REG_09_REG1 	= ( (16)-((REG_0f_GAME_DIFFICULTY)<<2));//[íËêî1]nâÒÇ…àÍâÒíeÇíuÇ≠ÅB
+//	REG_09_REG1 	= ( (16)-((REG_0f_GAME_DIFFICULTY)<<2));//[íËêî1]nâÒÇ…àÍâÒíeÇíuÇ≠ÅB
+	REG_09_REG1 	= ( (32)-((REG_0f_GAME_DIFFICULTY)<<3));//[íËêî1]nâÒÇ…àÍâÒíeÇíuÇ≠ÅB
 //	REG_09_REG1 	= (t256(1.5)+((REG_0f_GAME_DIFFICULTY)<<6));//[íËêî1]âJÇÃë¨ìx
 //	REG_0a_REG2 	= ((1024/2)+(1024/24)+(REG_0f_GAME_DIFFICULTY<<3));//[íËêî2]ê‘ê¬ÉNÉiÉCÇ™ã»Ç™ÇÈäpìx
 	//
@@ -423,8 +397,7 @@ local OBJ_CALL_FUNC(spell_create_4e_remilia_vlad_tepes)
 		REG_0b_REG3 = ((aaa    )&0xff00) + t256(((480-128-32-256)/2));
 		REG_0c_REG4 = ((aaa<<8 )&0xff00) + t256(((272-256)/2));
 		#if (1)
-	//	voice_play(VOICE15_BOSS_KOUGEKI_01, TRACK04_TEKIDAN);
-		bullet_play_04_auto(VOICE15_BOSS_KOUGEKI_01);
+		cpu_bullet_play_15_auto();
 		#endif
 	}
 }
@@ -445,8 +418,9 @@ local OBJ_CALL_FUNC(spell_create_4f_remilia_red_magic)
 {
 	if ((SPELL_TIME_0256-1)==((REG_10_BOSS_SPELL_TIMER) ))/*(àÍî‘énÇﬂ)*/
 	{
-		HATSUDAN_01_speed256			= t256(1.0);	/* íeë¨ */
-		HATSUDAN_02_speed_offset		= t256(5);/*(ÉeÉXÉg)*/
+		/*(éÙÊfÅuÉuÉâÉhÅEÉcÉFÉyÉVÉÖÇÃéÙÇ¢ÅvÇ…î‰Ç◊ÇƒÅAÅuÉåÉbÉhÉ}ÉWÉbÉNÅvÇÃëÂã íeÇÃìÆÇ´ÇÕîÒèÌÇ…íxÇ¢)*/
+		HATSUDAN_01_speed256			= t256(0.5);	/* íeë¨(r40==0.5, r39==1.0) */
+		HATSUDAN_02_speed_offset		= t256(3);/*(ÉeÉXÉg)*/
 	//	HATSUDAN_03_angle65536			= (65536/4);	/* äÓèÄäpìx(êÖïΩÇ…åÇÇ¬ÅBç∂âEÇ™äÓèÄÇOìx) */
 		HATSUDAN_03_angle65536			= ((ra_nd())&0x1fff);	/* äÓèÄäpìx(?) */
 		HATSUDAN_04_tama_spec			= (DANMAKU_LAYER_01)|(TAMA_SPEC_KAITEN_HOUKOU_BIT)|(0)|(TAMA_SPEC_8000_NON_TILT);/* (r33-)îÒåXÇ´íe */
@@ -458,8 +432,7 @@ local OBJ_CALL_FUNC(spell_create_4f_remilia_red_magic)
 		REG_0b_REG3 = ((aaa    )&0xff00) + t256(((480-128-32-256)/2));
 		REG_0c_REG4 = ((aaa<<8 )&0xff00) + t256(((272-256)/2));
 		#if (1)
-	//	voice_play(VOICE15_BOSS_KOUGEKI_01, TRACK04_TEKIDAN);
-		bullet_play_04_auto(VOICE15_BOSS_KOUGEKI_01);
+		cpu_bullet_play_15_auto();
 		#endif
 	}
 }

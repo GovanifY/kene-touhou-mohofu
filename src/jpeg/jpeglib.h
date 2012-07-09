@@ -686,7 +686,7 @@ struct jpeg_error_mgr
 	 * can check for bad data by seeing if num_warnings is nonzero at the
 	 * end of processing.
 	 */
-	long num_warnings;		/* number of corrupt-data warnings */
+	s32 num_warnings;		/* number of corrupt-data warnings */
 
 	/* These fields point to the table(s) of error message strings.
 	 * An application can change the table pointer to switch to a different
@@ -715,8 +715,8 @@ struct jpeg_progress_mgr
 {
 	JMETHOD(void, progress_monitor, (j_common_ptr cinfo));
 
-	long pass_counter;		/* work units completed in this pass */
-	long pass_limit;		/* total number of work units in this pass */
+	s32 pass_counter;		/* work units completed in this pass */
+	s32 pass_limit;		/* total number of work units in this pass */
 	int completed_passes;	/* passes completed so far */
 	int total_passes;		/* total number of passes expected */
 };
@@ -743,7 +743,7 @@ struct jpeg_source_mgr
 
 	/*(廃止中)*/JMETHOD(void, dummy_in_it_source, (j_decompress_ptr cinfo));//(jpeg展開前処理用コールバック)
 	JMETHOD(boolean, fill_input_buffer, (j_decompress_ptr cinfo));
-	JMETHOD(void, skip_input_data, (j_decompress_ptr cinfo, long num_bytes));
+	JMETHOD(void, skip_input_data, (j_decompress_ptr cinfo, s32 num_bytes));
 	JMETHOD(boolean, resync_to_restart, (j_decompress_ptr cinfo, int desired));
 	/*(廃止中)*/JMETHOD(void, dummy_te_rm_source, (j_decompress_ptr cinfo));//(jpeg展開後処理用コールバック)
 };
@@ -812,10 +812,10 @@ struct jpeg_memory_mgr
 	 * used for virtual-array buffers.)  May be changed by outer application
 	 * after creating the JPEG object.
 	 */
-	long max_memory_to_use;
+	s32 max_memory_to_use;
 
 	/* Maximum allocation request accepted by alloc_large. */
-	long max_alloc_chunk;
+	s32 max_alloc_chunk;
 };
 
 
@@ -1070,28 +1070,28 @@ EXTERN(boolean) jpeg_resync_to_restart JPP((j_decompress_ptr cinfo, int desired)
 
 #ifdef INCOMPLETE_TYPES_BROKEN
 #ifndef JPEG_INTERNALS		/* will be defined in jpegint.h */
-struct jvirt_sarray_control 	{ long dummy; };
-struct jvirt_barray_control 	{ long dummy; };
-struct jpeg_comp_master 		{ long dummy; };
-struct jpeg_c_main_controller	{ long dummy; };
-struct jpeg_c_prep_controller	{ long dummy; };
-struct jpeg_c_coef_controller	{ long dummy; };
-struct jpeg_marker_writer		{ long dummy; };
-struct jpeg_color_converter 	{ long dummy; };
-struct jpeg_downsampler 		{ long dummy; };
-struct jpeg_forward_dct 		{ long dummy; };
-struct jpeg_entropy_encoder 	{ long dummy; };
-struct jpeg_decomp_master		{ long dummy; };
-struct jpeg_d_main_controller	{ long dummy; };
-struct jpeg_d_coef_controller	{ long dummy; };
-struct jpeg_d_post_controller	{ long dummy; };
-struct jpeg_input_controller	{ long dummy; };
-struct jpeg_marker_reader		{ long dummy; };
-struct jpeg_entropy_decoder 	{ long dummy; };
-struct jpeg_inverse_dct 		{ long dummy; };
-struct jpeg_upsampler			{ long dummy; };
-struct jpeg_color_deconverter	{ long dummy; };
-struct jpeg_color_quantizer 	{ long dummy; };
+struct jvirt_sarray_control 	{ s32 dummy; };
+struct jvirt_barray_control 	{ s32 dummy; };
+struct jpeg_comp_master 		{ s32 dummy; };
+struct jpeg_c_main_controller	{ s32 dummy; };
+struct jpeg_c_prep_controller	{ s32 dummy; };
+struct jpeg_c_coef_controller	{ s32 dummy; };
+struct jpeg_marker_writer		{ s32 dummy; };
+struct jpeg_color_converter 	{ s32 dummy; };
+struct jpeg_downsampler 		{ s32 dummy; };
+struct jpeg_forward_dct 		{ s32 dummy; };
+struct jpeg_entropy_encoder 	{ s32 dummy; };
+struct jpeg_decomp_master		{ s32 dummy; };
+struct jpeg_d_main_controller	{ s32 dummy; };
+struct jpeg_d_coef_controller	{ s32 dummy; };
+struct jpeg_d_post_controller	{ s32 dummy; };
+struct jpeg_input_controller	{ s32 dummy; };
+struct jpeg_marker_reader		{ s32 dummy; };
+struct jpeg_entropy_decoder 	{ s32 dummy; };
+struct jpeg_inverse_dct 		{ s32 dummy; };
+struct jpeg_upsampler			{ s32 dummy; };
+struct jpeg_color_deconverter	{ s32 dummy; };
+struct jpeg_color_quantizer 	{ s32 dummy; };
 #endif /* JPEG_INTERNALS */
 #endif /* INCOMPLETE_TYPES_BROKEN */
 

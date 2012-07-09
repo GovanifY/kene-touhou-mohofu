@@ -741,7 +741,7 @@ examine_app0 (j_decompress_ptr cinfo, JOCTET FAR * data,
 	/* skip any remaining data -- could be lots */
 	INPUT_SYNC(cinfo);
 	if (length > 0)
-	{	(*cinfo->src->skip_input_data) (cinfo, (long) length);
+	{	(*cinfo->src->skip_input_data) (cinfo, (s32) length);
 	}
 	return (TRUE);
 }
@@ -858,7 +858,7 @@ examine_app0 (j_decompress_ptr cinfo, JOCTET FAR * data,
 	/* skip any remaining data -- could be lots */
 	INPUT_SYNC(cinfo);		/* do before skip_input_data */
 	if (length > 0)
-	{	(*cinfo->src->skip_input_data) (cinfo, (long) length);	}
+	{	(*cinfo->src->skip_input_data) (cinfo, (s32) length);	}
 	return (TRUE);
 }
 
@@ -879,7 +879,7 @@ skip_variable (j_decompress_ptr cinfo)
 
 	INPUT_SYNC(cinfo);		/* do before skip_input_data */
 	if (length > 0)
-	{	(*cinfo->src->skip_input_data) (cinfo, (long) length);
+	{	(*cinfo->src->skip_input_data) (cinfo, (s32) length);
 	}
 	return (TRUE);
 }
@@ -1353,7 +1353,7 @@ read_restart_marker (j_decompress_ptr cinfo)
 	 * (should only be a concern in a 16-bit environment).
 	 */
 	maxlength = cinfo->mem->max_alloc_chunk - SIZEOF(struct jpeg_marker_struct);
-	if (((long) length_limit) > maxlength)
+	if (((s32) length_limit) > maxlength)
 	{	length_limit = (unsigned int) maxlength;
 	}
 	/* Choose processor routine to use.

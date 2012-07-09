@@ -359,7 +359,7 @@ local OBJ_CALL_FUNC(spell_create_29_rumia_demarcation)
 			HATSUDAN_03_angle65536				= (REG_0b_REG3);					/* 発射中心角度 / 特殊機能(自機狙い/他) */
 			HATSUDAN_04_tama_spec				= (DANMAKU_LAYER_01)|(TAMA_SPEC_KAITEN_HOUKOU_BIT)|(TAMA_SPEC_0000_TILT);/* (r33-)標準弾 */
 			hatudan_system_regist_katayori_n_way();
-			bullet_play_04_auto(VOICE15_BOSS_KOUGEKI_01);
+			cpu_bullet_play_15_auto();
 		}
 	oyasumi:	/* お休み */
 		;

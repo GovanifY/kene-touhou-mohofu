@@ -91,7 +91,7 @@ global void callback_hit_zako(OBJ/**/ *src, OBJ/**/ *tama)
 			bonus_info_any_score_nodel(src, ((src->base_score)*(cg.game_now_stage)) );
 		//	/* 自動消去へ仕様変更 */src->jyumyou = JYUMYOU_NASI;/* スプライトシステムに再利用をお願いする。 */
 			init_zako_yarare(src);	// ザコを消滅爆発エフェクトにする。
-			voice_play(VOICE08_DEATH, TRACK05_ZAKO_DEATH);/* 雑魚爆発音を鳴らす。 */
+			voice_play_menu(VOICE08_DEATH, TRACK05_ZAKO_DEATH);/* 雑魚爆発音を鳴らす。 */
 		}
 	}
 }

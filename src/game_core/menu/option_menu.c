@@ -233,7 +233,7 @@ static MAIN_CALL_FUNC(option_menu_state_01_select_menu)
 				/* あまり重要でないので上下音、無しにしてみた */
 				if (psp_pad.pad_data & (/*PSP_KEY_UP|PSP_KEY_DOWN|*/PSP_KEY_LEFT|PSP_KEY_RIGHT))	// 上下左右ボタン入力 */
 				{
-					voice_play(VOICE02_MENU_SELECT, TRACK01_MENU01);
+					voice_play_menu(VOICE02_MENU_SELECT, TRACK01_MENU01);
 				}
 			}
 		//
@@ -254,7 +254,7 @@ static MAIN_CALL_FUNC(option_menu_state_01_select_menu)
 				{
 					if (psp_pad.pad_data & PSP_KEY_SHOT_OK) // ショットボタン入力 */
 					{
-						voice_play(VOICE07_BOMB, TRACK01_MENU01);/*テキトー*/
+						voice_play_menu(VOICE07_BOMB, TRACK01_MENU01);/*テキトー*/
 						set_default_option(option_setting);
 						menu_cursor1 = OPTION_MENU_09_QUIT;
 					}
@@ -264,7 +264,7 @@ static MAIN_CALL_FUNC(option_menu_state_01_select_menu)
 				{
 					if (psp_pad.pad_data & PSP_KEY_BOMB_CANCEL) 	// キャンセルボタン入力
 					{
-						voice_play(VOICE04_SHIP_HAKAI, TRACK02_MENU02/*TRACK01_MENU01*/);/* 自機死に音は、なるべく重ねない */
+						voice_play_menu(VOICE04_SHIP_HAKAI, TRACK02_MENU02/*TRACK01_MENU01*/);/* 自機死に音は、なるべく重ねない */
 						cb.menu_out_call_func	= title_menu_start; 	/* タイトルメニューへ移動指示 */
 						cb.main_call_func		= option_menu_terminate;
 					}
@@ -283,7 +283,7 @@ static MAIN_CALL_FUNC(option_menu_state_01_select_menu)
 								}
 							}
 						//	ini_file_save(); */
-							voice_play(VOICE02_MENU_SELECT, TRACK01_MENU01);/*(トラック配置はテキトー)*/
+							voice_play_menu(VOICE02_MENU_SELECT, TRACK01_MENU01);/*(トラック配置はテキトー)*/
 						}
 						cb.menu_out_call_func	= title_menu_start; 	/* タイトルメニューへ移動指示 */
 						cb.main_call_func		= option_menu_terminate;
@@ -294,7 +294,7 @@ static MAIN_CALL_FUNC(option_menu_state_01_select_menu)
 				{
 					if (psp_pad.pad_data & PSP_KEY_SHOT_OK) 	/* ショットボタン入力 */
 					{
-						voice_play(VOICE07_BOMB, TRACK01_MENU01);/*(トラック配置はテキトー)*/
+						voice_play_menu(VOICE07_BOMB, TRACK01_MENU01);/*(トラック配置はテキトー)*/
 						cb.menu_out_call_func	= key_config_start; 	/* キーコンフィグメニューへ移動指示 */
 						cb.main_call_func		= option_menu_terminate;
 					}
@@ -307,7 +307,7 @@ static MAIN_CALL_FUNC(option_menu_state_01_select_menu)
 						/* 選択した所に何が入っているのか調べる */
 						menu_cursor2 = option_setting[menu_cursor1];
 						//
-						if (psp_pad.pad_data & PSP_KEY_LEFT)			/* 左ボタン入力 */
+						if (psp_pad.pad_data & PSP_KEY_LEFT)		/* 左ボタン入力 */
 						{
 							menu_cursor2--;
 							if ((0/*KINOU_00_NONE*/) > menu_cursor2)	{	menu_cursor2 = (option_status_setting[menu_cursor1].item-1); }

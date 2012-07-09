@@ -51,7 +51,7 @@ global int spell_register[REG_NUM_99_MAX];
 	(r35)カードスクリプト用命令(カードレジスタ全初期化)
 ---------------------------------------------------------*/
 
-static void spell_cpu_initialize_all_register(void)
+static CPU_FUNC(spell_cpu_initialize_all_register)
 {
 	unsigned int i;
 	for (i=0; i<REG_NUM_99_MAX; i++)
@@ -95,30 +95,8 @@ DEBUG_global/*static*/ void count_up_limit_NUM(int register_number_counter, int 
 		spell_register[register_number_counter] = (0);
 	}
 }
-
-/*---------------------------------------------------------
-	(r35)カードスクリプト用命令(sincos)
----------------------------------------------------------*/
-/*([global]このモジュールしか使わないが、スクリプト移行する為のものなので最適化防止の為。[static]だとインライン展開されてしまうのでまずい)*/
-DEBUG_global/*static*/ void sincos65536_NUM(int register_number_angle65536, int register_number_value)
-{
-	/*unsigned*/ int angle1024;
-	angle1024 = spell_register[register_number_angle65536];
-	angle1024 = deg65536to1024(angle1024);	/*(65536分割を1024分割に変更)*/
-	#if (0)//
-	spell_register[register_number_value]		= (((si n1024((angle1024))) ) );		/* CCWの場合 */
-	spell_register[register_number_value+1] 	= (((co s1024((angle1024))) ) );
-	#else
-	{
-		int sin_value_t256; 		//	sin_value_t256 = 0;
-		int cos_value_t256; 		//	cos_value_t256 = 0;
-		int256_sincos1024( (angle1024), &sin_value_t256, &cos_value_t256);
-		spell_register[register_number_value]		= (((sin_value_t256) ) );
-		spell_register[register_number_value+1] 	= (((cos_value_t256) ) );
-	}
-	#endif
-}
 #endif
+
 /*---------------------------------------------------------
 	(r36)カードスクリプト用命令(sincos)
 	-------------------------------------------------------
@@ -129,7 +107,7 @@ DEBUG_global/*static*/ void sincos65536_NUM(int register_number_angle65536, int 
 	REG_03: 	出力(sin(angle) x radius, t256形式)
 ---------------------------------------------------------*/
 
-global void sincos256(void)
+global CPU_FUNC(sincos256)
 {
 	#if (0)//
 	h->math_vector.x256  = si n1024((int_angle1024))*(/*p->speed*/(16*KETM075));/*fps_factor*/		/* CCWの場合 */
@@ -172,7 +150,7 @@ global OBJ_CALL_FUNC(set_REG_DEST_XY)
 	本家ではこれと似た仕様になっていると思われる。
 ---------------------------------------------------------*/
 extern int atan_65536(int y, int x);/*(vfpu/math_atan65536i.c)*/
-global /*static*/ void tmp_angleCCW65536_src_nerai(void)
+global CPU_FUNC(tmp_angleCCW65536_src_nerai)
 {
 	#if (0)/*(旧仕様メモ)*/
 	REG_00_SRC_X	= (src->center.x256);		/*(狙い先)*/
@@ -189,7 +167,7 @@ global /*static*/ void tmp_angleCCW65536_src_nerai(void)
 	dest(x,y)の位置から、プレイヤー(x,y)に向けた角度を
 	HATSUDAN_03_angle65536に計算する。
 ---------------------------------------------------------*/
-global void calculate_jikinerai(void)
+global CPU_FUNC(calculate_jikinerai)
 {
 	OBJ *zzz_player;
 	zzz_player = &obj99[OBJ_HEAD_03_0x0a00_KOTEI+FIX_OBJ_00_PLAYER];
@@ -223,7 +201,7 @@ global void calculate_jikinerai(void)
 			multiprex_rate();
 			#endif
 
-global void multiprex_rate_vector(void)
+global CPU_FUNC(multiprex_rate_vector)
 {
 	#if 1/*([X]ベクトル合成)*/
 	/*(合成順序は割合[A]と割合[B]で、どちらが先でも構わない。)*/
@@ -241,6 +219,21 @@ global void multiprex_rate_vector(void)
 	#endif
 }
 
+/*---------------------------------------------------------
+	(r36)カードスクリプト用命令(replay_rand_init)
+	リプレイ対応乱数生成。
+	-------------------------------------------------------
+	使用レジスタ:
+	REG_00: 	入力(リプレイ対応乱数シード設定)
+---------------------------------------------------------*/
+
+/*---------------------------------------------------------
+	(r36)カードスクリプト用命令(replay_rand)
+	リプレイ対応乱数生成。
+	-------------------------------------------------------
+	使用レジスタ:
+	REG_03: 	出力(リプレイ対応乱数値)
+---------------------------------------------------------*/
 
 
 /*---------------------------------------------------------
@@ -330,10 +323,6 @@ global void multiprex_rate_vector(void)
 	//	(6*8),					(6*8),					(10*8), 				(17*8), 				/* 華符「芳華絢爛」用 */
 	//	(int)(65536/(6)),		(int)(65536/(6)),		(int)(65536/(10)),		(int)(65536/(17)),		/* 華符「芳華絢爛」用 */
 	//	(int)(65536/(6*8)), 	(int)(65536/(6*8)), 	(int)(65536/(10*8)),	(int)(65536/(17*8)),	/* 華符「芳華絢爛」用 */
-//		(6),					(6),					(10),					(15),					/* 華符「芳華絢爛」用 */	/* (r35-r38)少し簡単にしてみる。 */
-//		(6*8),					(6*8),					(10*8), 				(15*8), 				/* 華符「芳華絢爛」用 */	/* (r35-r38)少し簡単にしてみる。 */
-//		(int)(65536/(6)),		(int)(65536/(6)),		(int)(65536/(10)),		(int)(65536/(15)),		/* 華符「芳華絢爛」用 */	/* (r35-r38)少し簡単にしてみる。 */
-//		(int)(65536/(6*8)), 	(int)(65536/(6*8)), 	(int)(65536/(10*8)),	(int)(65536/(15*8)),	/* 華符「芳華絢爛」用 */	/* (r35-r38)少し簡単にしてみる。 */
 //		// (r39)ボスが中心に拠って来る仕様に変更した為、従来のままでは高密度て避けれない。
 		(6),					(6),					(8),					(10),					/* 華符「芳華絢爛」用 */	/* (r39-)仕様を少し変えたので簡単にしないとゲームにならない。 */
 		(6*8),					(6*8),					(8*8),  				(10*8), 				/* 華符「芳華絢爛」用 */	/* (r39-)仕様を少し変えたので簡単にしないとゲームにならない。 */
@@ -421,17 +410,7 @@ local OBJ_CALL_FUNC(hatudan_system_B_side_hansya)/* 弾反射コールバック */
 		src->jyumyou = JYUMYOU_NASI;
 	}
 }
-			#if 0
-		//	src->hatudan_system_speed256			= ((src->hatudan_system_speed256)>>1);/*減速*/
-			src->hatudan_register_speed65536		= ((src->hatudan_register_speed65536)>>(1));/*減速*/
-			/*(減速しても、速すぎる場合のリミット)*/
-			#define mmm_MAX_SPEED_65536 	(t256(1.0)<<8)
-		//	if (mmm_MAX_SPEED_65536 < (obj->hatudan_register_speed65536))
-		//	{
-		//		src->hatudan_register_speed65536	= mmm_MAX_SPEED_65536;
-		//	}
-			src->hatudan_register_speed65536		= psp_min(src->hatudan_register_speed65536, mmm_MAX_SPEED_65536);
-			#endif
+
 
 /*---------------------------------------------------------
 	[弾幕グループ(1)セクション]
@@ -454,6 +433,7 @@ local OBJ_CALL_FUNC(hatudan_system_B_gamen_gai_tama_kesu)/* 画面外弾消しコールバ
 		src->jyumyou = JYUMYOU_NASI;
 	}
 }
+
 
 /*---------------------------------------------------------
 	カードを生成。
@@ -483,6 +463,7 @@ local OBJ_CALL_FUNC(hatudan_system_B_gamen_gai_tama_kesu)/* 画面外弾消しコールバ
 //
 #include "spell_01_ruiz.h"
 
+
 /*---------------------------------------------------------
 	共通カード生成部
 	-------------------------------------------------------
@@ -504,9 +485,9 @@ typedef struct
 {
 	void (*spell_generate_section)(OBJ/**/ *sss);		/* [発弾(弾生成)セクション]実行処理 */		/* カードスクリプトに移行した場合の[発弾セクション]。 */
 	void (*spell_initialze_section)(OBJ/**/ *sss);		/* [初期化セクション]初期化処理 */			/* カードスクリプトに移行した場合の[初期化セクション]。 */
-	u16 spell_limit_max_time;						/* カード寿命時間 */						/* カードスクリプトに移行した場合、本来[初期化セクション]内で行う。 */
-	u8 tama_map;									/* 弾画像のマップ番号 */					/* カードスクリプトに移行した場合、本来[初期化セクション]内で行う。 */
-	u8 scr_ipt_run_flag;							/* 実行言語(カードインタプリタ / C言語) */
+	u16 spell_limit_max_time;							/* カード寿命時間 */						/* カードスクリプトに移行した場合、本来[初期化セクション]内で行う。 */
+	u8 tama_map;										/* 弾画像のマップ番号 */					/* カードスクリプトに移行した場合、本来[初期化セクション]内で行う。 */
+	u8 scr_ipt_run_flag;								/* 実行言語(カードインタプリタ / C言語) */
 } SPELL_RESOURCE;
 //	/*const*/ static void (*spell_create_bbb[(SPELL_MAX/*16+1*/)])(OBJ/**/ *sss) =
 	/*const*/ static SPELL_RESOURCE system_spell_resource[(SPELL_MAX/*16+1*/)] =
@@ -620,15 +601,13 @@ static void spell_cpu_common_init(void)
 	#if (1)
 	/* 弾幕コールバックシステムの初期化 */
 	{
-		card.danmaku_callback[0] = danmaku_00_standard_angle_mover;/*(r36-書き換え禁止)*/
+		card.danmaku_callback[0] = danmaku_00_standard_angle_mover;/*(r36-書き換え禁止)*/	/*(通常弾用)*/
 		card.danmaku_callback[1] = NULL;
 		card.danmaku_callback[2] = NULL;
 		card.danmaku_callback[3] = NULL;
 	}
 	#endif
 }
-//	card.danmaku_callback[0] = danmaku_00_standard_angle_mover;/*(通常弾用)*/	/*(後追い弾は通常弾)*/
-//	card.danmaku_callback[0] = danmaku_00_standard_angle_mover;/*(通常弾用)*/	/*(画面外なら弾を消す)*/
 
 
 /*---------------------------------------------------------
@@ -640,6 +619,7 @@ global void spell_cpu_douchuu_init(void)
 	spell_cpu_common_init();/*(共通部分)*/
 }
 
+
 /*---------------------------------------------------------
 	カードの初期化。カードが変わると毎回行う必要がある。
 ---------------------------------------------------------*/
@@ -647,21 +627,19 @@ global void spell_cpu_douchuu_init(void)
 global OBJ_CALL_FUNC(card_maikai_init)
 {
 	spell_cpu_common_init();/*(共通部分)*/
-	//
 	#if (1)/* カードスクリプトに移行した場合の[初期化セクション]。 */
 	/* カード初期化セクションを実行する。 */
 	if (NULL!=(system_spell_resource[(card.spell_used_number/*-1*/)].spell_initialze_section))
 	{
 		(system_spell_resource[(card.spell_used_number/*-1*/)].spell_initialze_section)(src);
 	}
-	//
-
 	/* カード時間に予め登録された寿命時間を設定する。 */
 	/* カードの制限時間を設定(予めカードごとに設定されている標準時間に設定) */
 	/* カードの時間切れを設定 */
 	REG_10_BOSS_SPELL_TIMER = system_spell_resource[(card.spell_used_number/*-1*/)].spell_limit_max_time;
 	#endif
 }
+
 
 /*---------------------------------------------------------
 	スペルCPUを実行し、カードを１フレーム生成する。

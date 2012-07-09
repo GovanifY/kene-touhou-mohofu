@@ -364,8 +364,10 @@ static OBJ_CALL_FUNC(move_T03_kaguya_doll)
 	/* オプション位置、移動 */
 	if (0x2ff == src->BOSS_DATA_05_move_jyumyou)
 	{
-		voice_play(VOICE11_BOSS_KIRARIN, TRACK02_JIKI_BOMBER);/*(流用する)*/
-		voice_play(VOICE11_BOSS_KIRARIN, TRACK03_IVENT_DAN);/*(流用する)*/
+		AUDIO_18_voice_number	= VOICE11_BOSS_KIRARIN;
+	//	AUDIO_18_voice_number	= VOICE11_BOSS_KIRARIN;
+		AUDIO_19_voice_truck	= TRACK02_JIKI_BOMBER;/*(流用する)*/	cpu_voice_play();
+		AUDIO_19_voice_truck	= TRACK03_IVENT_DAN;/*(流用する)*/		cpu_voice_play();
 	}
 	if (0x2ff > src->BOSS_DATA_05_move_jyumyou)
 	{

@@ -46,11 +46,21 @@ local OBJ_CALL_FUNC(test_pache_16_shot_AOI)
 	{
 		HATSUDAN_03_angle65536 = (lz[0].laser_angle65536+ii);
 		//
+		#if 0/*[廃止予定](-r39)*/
 		REG_0b_REG3 = ((HATSUDAN_03_angle65536));
 		// ベクトル弾登録。 regist vector.
 		sincos65536_NUM(REG_NUM_0b_REG3, REG_NUM_0c_REG4);
 		REG_02_DEST_X	 = (((REG_0c_REG4)*(REG_09_REG1))>>8);
 		REG_03_DEST_Y	 = (((REG_0d_REG5)*(REG_09_REG1))>>8);
+		#else/*(r40-)*/
+		//------------------
+		HATSUDAN_01_speed256	= (REG_09_REG1);
+	//	HATSUDAN_03_angle65536	= ((HATSUDAN_03_angle65536));
+		sincos256();/*(破壊レジスタ多いので注意)*/
+	//	radius_aaa = REG_03_DEST_Y;//sin_value_t256 // 下CCWの場合(右CWの場合ととxyが逆)
+	//	src->math_vector.y256 = REG_02_DEST_X;//cos_value_t256 // 下CCWの場合(右CWの場合ととxyが逆)
+		//------------------
+		#endif
 		//
 		REG_02_DEST_X	+= ((src->center.x256));
 		REG_03_DEST_Y	+= ((src->center.y256));
@@ -114,8 +124,7 @@ local OBJ_CALL_FUNC(spell_create_42_pache_laser1)
 		{
 			test_pache_16_shot_AKA(src);
 			#if (1)
-		//	voice_play(VOICE15_BOSS_KOUGEKI_01, TRACK04_TEKIDAN);
-			bullet_play_04_auto(VOICE15_BOSS_KOUGEKI_01);
+			cpu_bullet_play_15_auto();
 			#endif
 		}
 	}
@@ -125,16 +134,14 @@ local OBJ_CALL_FUNC(spell_create_42_pache_laser1)
 		add_zako_pache_laser(src);
 		test_pache_16_shot_AKA(src);
 		#if (1)
-	//	voice_play(VOICE15_BOSS_KOUGEKI_01, TRACK04_TEKIDAN);
-		bullet_play_04_auto(VOICE15_BOSS_KOUGEKI_01);
+		cpu_bullet_play_15_auto();
 		#endif
 	}
 	/*0x200*/if ((640-128)==((REG_10_BOSS_SPELL_TIMER) ))
 	{
 		add_zako_pache_laser(src);
 		#if (1)
-	//	voice_play(VOICE15_BOSS_KOUGEKI_01, TRACK04_TEKIDAN);
-		bullet_play_04_auto(VOICE15_BOSS_KOUGEKI_01);
+		cpu_bullet_play_15_auto();
 		#endif
 	}
 	#endif
@@ -202,8 +209,7 @@ local OBJ_CALL_FUNC(spell_create_43_pache_laser2)
 		{
 			test_pache_16_shot_AOI(src);
 			#if (1)
-		//	voice_play(VOICE15_BOSS_KOUGEKI_01, TRACK04_TEKIDAN);
-			bullet_play_04_auto(VOICE15_BOSS_KOUGEKI_01);
+			cpu_bullet_play_15_auto();
 			#endif
 		}
 	}
@@ -214,16 +220,14 @@ local OBJ_CALL_FUNC(spell_create_43_pache_laser2)
 		add_zako_pache_laser(src);
 		test_pache_16_shot_AKA(src);
 		#if (1)
-	//	voice_play(VOICE15_BOSS_KOUGEKI_01, TRACK04_TEKIDAN);
-		bullet_play_04_auto(VOICE15_BOSS_KOUGEKI_01);
+		cpu_bullet_play_15_auto();
 		#endif
 	}
 	/*0x200*/if ((640-128)==((REG_10_BOSS_SPELL_TIMER) ))
 	{
 		add_zako_pache_laser(src);
 		#if (1)
-	//	voice_play(VOICE15_BOSS_KOUGEKI_01, TRACK04_TEKIDAN);
-		bullet_play_04_auto(VOICE15_BOSS_KOUGEKI_01);
+		cpu_bullet_play_15_auto();
 		#endif
 	}
 	#endif
@@ -238,9 +242,13 @@ local OBJ_CALL_FUNC(spell_create_43_pache_laser2)
 /*---------------------------------------------------------
 	[弾幕グループ(1)セクション]
 	-------------------------------------------------------
+	原作はサイクロイド曲線っぽい感じだけど、良くわかんない。
+	-------------------------------------------------------
+//	REG_XX_REGX 		個弾の向かう方向(角度、ベクトル方向)
+//	REG_YY_REGY 		個弾の向かう量(ベクトル長さ)
 ---------------------------------------------------------*/
 #define aaa_TAMA_DATA_10_TAMA_OKI_KANKAKU	src->hatudan_register_user_data_a01
-local OBJ_CALL_FUNC(aaa_tamaoki_danmaku_01_callback)/* 珠置き */
+local OBJ_CALL_FUNC(agnishine_danmaku_01_callback)/* 珠置き */
 {
 	/*(225==1+224==1+7*32)*/
 //	if ((HATUDAN_ITI_NO_JIKAN-224) < src->jyumyou)/* 発弾エフェクト後から[224]カウント未満の弾 */
@@ -249,26 +257,37 @@ local OBJ_CALL_FUNC(aaa_tamaoki_danmaku_01_callback)/* 珠置き */
 	{
 		if (0==(src->hatudan_register_spec_data & TAMA_SPEC_KAITEN_HOUKOU_BIT))/*TAMA_SPEC_AKA_AO_KUNAI_BIT*/
 		{	/*CW(時計回り)*/
-		//	src->rotationCCW1024 -= (6);/* 90/360 度 曲げてみるテスト(32カウントかけて曲げる。256==8*32) */
+		//	src->rotationCCW1024 -= (6);/* 90/360 度 曲げてみるテスト(32カウントかけて曲げる。256==8*32) */ /*(-r39)*/
 		//	src->rotationCCW1024 -= (3);/* 90/360 度 曲げてみるテスト(32カウントかけて曲げる。256==8*32) */
-			src->rotationCCW1024 -= (6);/* 90/360 度 曲げてみるテスト(32カウントかけて曲げる。256==8*32) */
+			src->rotationCCW1024 -= (1);/* 90/360 度 曲げてみるテスト(32カウントかけて曲げる。256==8*32) */ /*(r40-)*/
 		}
 		else
 		{	/*CCW(反時計回り)*/
-		//	src->rotationCCW1024 += (6);/* 90/360 度 曲げてみるテスト(32カウントかけて曲げる。256==8*32) */
+		//	src->rotationCCW1024 += (6);/* 90/360 度 曲げてみるテスト(32カウントかけて曲げる。256==8*32) */ /*(-r39)*/
 		//	src->rotationCCW1024 += (3);/* 90/360 度 曲げてみるテスト(32カウントかけて曲げる。256==8*32) */
-			src->rotationCCW1024 += (6);/* 90/360 度 曲げてみるテスト(32カウントかけて曲げる。256==8*32) */
+			src->rotationCCW1024 += (src->jyumyou&1);/* 90/360 度 曲げてみるテスト(32カウントかけて曲げる。256==8*32) */ /*(r40-)*/
 		}
-//		src->hatudan_register_speed65536	+= (1<<8);			/* 弾速 */
-		src->hatudan_register_speed65536	+= (512);		/*(加速)*/	/* 弾速 */
-	//
+//		src->hatudan_register_speed65536	+= (1<<8);		/* 弾速 */
+	//	src->hatudan_register_speed65536	+= (512);		/*(加速)*/	/* 弾速 */ /*(-r39)*/
+		src->hatudan_register_speed65536	+= (32);		/*(加速)*/	/* 弾速 */ /*(r40-)*/
+		src->hatudan_register_speed65536	-= (REG_0f_GAME_DIFFICULTY);	/* 弾速 */ /*(r40-)*/
+	//	#if 0/*(サイクロイド曲線)*/
+	//	REG_XX_REGX++;
+	//	REG_YY_REGY++;
+		//------------------
+//		HATSUDAN_01_speed256	= (REG_YY_REGY);
+//		HATSUDAN_03_angle65536	= (REG_XX_REGX);
+//		sincos256();/*(破壊レジスタ多いので注意)*/
+//		src->center.x256 += REG_03_DEST_Y;//sin_value_t256 // 下CCWの場合(右CWの場合ととxyが逆)
+//		src->center.y256 += REG_02_DEST_X;//cos_value_t256 // 下CCWの場合(右CWの場合ととxyが逆)
+//		//------------------
+	//	#endif//vfpu_sincos()//
 	//	if (0==(src->jyumyou&0x0f))/*16回に1回弾を置く*/
 	//	if (0==(src->jyumyou&0x07))/*8回に1回弾を置く*/
 		aaa_TAMA_DATA_10_TAMA_OKI_KANKAKU--;
 		if (0 > aaa_TAMA_DATA_10_TAMA_OKI_KANKAKU)
 		{
 			aaa_TAMA_DATA_10_TAMA_OKI_KANKAKU = REG_09_REG1;//[定数1]n回に一回弾を置く。
-
 			#if 0
 			//
 		//	REG_02_DEST_X	= (src->center.x256); 	/* 弾源x256 ボス中心から発弾。 */
@@ -312,7 +331,7 @@ local OBJ_CALL_FUNC(spell_init_2e_pache_agni_shine_1)
 	REG_09_REG1 	= ( (16)-((REG_0f_GAME_DIFFICULTY)<<2));//[定数1]n回に一回弾を置く。
 //	REG_09_REG1 	= (t256(1.5)+((REG_0f_GAME_DIFFICULTY)<<6));//[定数1]雨の速度
 //	REG_0a_REG2 	= ((1024/2)+(1024/24)+(REG_0f_GAME_DIFFICULTY<<3));//[定数2]赤青クナイが曲がる角度
-	card.danmaku_callback[1] = aaa_tamaoki_danmaku_01_callback;/*(珠置き用)*/
+	card.danmaku_callback[1] = agnishine_danmaku_01_callback;/*(珠置き用)*/
 //	card.danmaku_callback[2] = aaa_tahane_danmaku_02_callback;/*(珠跳ね用)*/
 //	card.danmaku_callback[3] = NULL;/*(未使用)*/
 }
@@ -327,29 +346,35 @@ local OBJ_CALL_FUNC(spell_init_2e_pache_agni_shine_1)
 	使用レジスタ:
 	REG_0c_REG4 	発弾後、集まるX座標(t256形式)
 	REG_0d_REG5 	発弾後、集まるY座標(t256形式)
+	REG_0e_REG6 	てきとー
 ---------------------------------------------------------*/
 local OBJ_CALL_FUNC(spell_create_2e_pache_agni_shine_1)
 {
 //	if ((SPELL_TIME_0256-1)==((REG_10_BOSS_SPELL_TIMER) ))/*(一番始め)*/
 //	if (0== (REG_10_BOSS_SPELL_TIMER & 0x7f) ) /* 128回に1回なら撃つ */
-	if (0x0f > (REG_10_BOSS_SPELL_TIMER & 0x7f) ) /* 128回に1回なら撃つ */
+//	if (0x0f > (REG_10_BOSS_SPELL_TIMER & 0x7f) ) /* 128回に1回なら撃つ */ /*(-r39)*/
+	if ((0x0f+((REG_0f_GAME_DIFFICULTY)<<1)) > (REG_10_BOSS_SPELL_TIMER & 0x3f) ) /* 64回に1回なら撃つ */ /*(r40-)*/
 	{
 	//	HATSUDAN_01_speed256			= t256(1.0);	/* 弾速 */
 	//	HATSUDAN_02_speed_offset		= t256(5);/*(テスト)*/
 		HATSUDAN_01_speed256			= t256(0.75);	/* 弾速 */
 		HATSUDAN_02_speed_offset		= t256(1.5);/*(テスト)*/
-		HATSUDAN_03_angle65536			= 0;	/* 基準角度 */
+	//	HATSUDAN_03_angle65536			= 0;	/* 基準角度 */ /*(-r39)*/
+		HATSUDAN_03_angle65536			= REG_0e_REG6; 	/* 基準角度 */ /*(r40-)*/
+		REG_0e_REG6 					+= ((ra_nd())&0x0f); /*(r40-)*/
+		REG_0e_REG6 					+= ((REG_0f_GAME_DIFFICULTY)<<8); /*(r40-)*/
 		HATSUDAN_04_tama_spec			= (DANMAKU_LAYER_01)|((ra_nd()) & TAMA_SPEC_KAITEN_HOUKOU_BIT)|(0)|(TAMA_SPEC_8000_NON_TILT);/* (r33-)非傾き弾 */
 		HATSUDAN_05_bullet_obj_type 	= (BULLET_UROKO14_BASE + TAMA_IRO_01_AKA);			/* [赤鱗弾] */
 		HATSUDAN_06_n_way				= (13); 	/* [13way] */		/* 発弾数 */
 		HATSUDAN_07_div_angle65536		= (int)(65536/(13));	/* 分割角度(65536[360/360度]を 18 分割) */
+		// 13分割。アグニシャイン。
+		// 11分割。アグニシャイン上級。
 		hatudan_system_regist_katayori_n_way();/* (r33-) */
 		u32 aaa = ra_nd();
 		REG_0c_REG4 = ((aaa    )&0xff00) + t256(((480-128-32-256)/2));
 		REG_0d_REG5 = ((aaa<<8 )&0xff00) + t256(((272-256)/2));
 		#if (1)
-	//	voice_play(VOICE15_BOSS_KOUGEKI_01, TRACK04_TEKIDAN);
-		bullet_play_04_auto(VOICE15_BOSS_KOUGEKI_01);
+		cpu_bullet_play_15_auto();
 		#endif
 	}
 }
@@ -481,6 +506,10 @@ local OBJ_CALL_FUNC(spell_create_2f_pache_princess_undine)
 /*---------------------------------------------------------
 [パチェ] "　　　　木符「シルフィホルン」" No.17
 	-------------------------------------------------------
+	木符「シルフィホルン」は弾の動きがもっと速い。
+	（出始めが速いが遅くなり、後で再加速する）
+	３～４個しか出てこないで、上じゃなくて横から出てくる気もする。
+	-------------------------------------------------------
 	使用レジスタ
 	REG_08_REG0 	乱数?。
 	REG_09_REG1 	[定数1]雨の速度
@@ -503,13 +532,13 @@ local OBJ_CALL_FUNC(spell_create_2f_pache_princess_undine)
 ---------------------------------------------------------*/
 local OBJ_CALL_FUNC(pache_sh1_danmaku_01_callback)/* シルフィホルン */
 {
-	#if 1
+	#if (1)
 	if ((HATUDAN_ITI_NO_JIKAN-64) < src->jyumyou)/* 発弾エフェクト時は無効 */
 	{
 		return;
 	}
 	#endif
-	#if 1
+	#if (1)
 	if ((HATUDAN_ITI_NO_JIKAN-64) == src->jyumyou)/* 発弾エフェクト後から64カウント経過した弾 */
 	{
 		angle_to_vector(src);
@@ -518,6 +547,7 @@ local OBJ_CALL_FUNC(pache_sh1_danmaku_01_callback)/* シルフィホルン */
 	//	src->hatudan_register_tra65536 = (0);
 	}
 	#endif
+//	common_danmaku_01_amefuri_callback(src);
 //	src->center.x256 &= (0x0001ffff);
 	if (t256(32) > (src->center.x256) )
 	{
@@ -591,11 +621,11 @@ local OBJ_CALL_FUNC(spell_create_30_pache_sylphy_horn_1)
 	if (0==(REG_10_BOSS_SPELL_TIMER & 0x07))
 	{
 		const u32 ra_nd32 = (ra_nd()/*&0xffff*/);
-//		REG_0b_REG3 = rand32 & 0xff;
+//		REG_0b_REG3 = replay_rand32 & 0xff;
 		REG_08_REG0 += ra_nd32;
 		REG_02_DEST_X	= t256(16)+(ra_nd32 & 0xff00)+(ra_nd32 & 0x3f00);	/* 弾源x256 */
 //		REG_03_DEST_Y	+= -t256(32)+((ra_nd32>>8)&0x3f00); 				/* 弾源y256 */
-//		REG_02_DEST_X	= ((rand32) & (0x0001ffff) );/*(512-1==0x01ff)*/
+//		REG_02_DEST_X	= ((replay_rand32) & (0x0001ffff) );/*(512-1==0x01ff)*/
 		REG_03_DEST_Y	= (t256(-8));/*(画面外から降る)*/
 	//	REG_03_DEST_Y	= (t256(32));/*(画面外から降る)*/
 //
@@ -674,14 +704,17 @@ local OBJ_CALL_FUNC(spell_create_31_pache_rage_tririton_1)
 	// 最初の発射 (64フレーム==約1秒)ばら撒く。
 	if (((64))<(REG_10_BOSS_SPELL_TIMER)) // 192== (64*3)
 	{
-		HATSUDAN_01_speed256			= (t256(2.00) );						/* 弾速 */
-		HATSUDAN_02_speed_offset		= (t256(3));/*(テスト)*/
-		HATSUDAN_03_angle65536			= (ra_nd() &(0x7fff)) + (65536/4)+(65536/2);/*(下半分)*/
-		HATSUDAN_04_tama_spec			= (DANMAKU_LAYER_01)|(TAMA_SPEC_8000_NON_TILT);/* (r33-)非傾き弾 */
-		HATSUDAN_05_bullet_obj_type 	= (BULLET_WAKU12_BASE + TAMA_IRO_06_KI_IRO);//			/* [黄弾] */
-	//	HATSUDAN_06_n_way				= (1);	/* [1way] */				/* 発弾数 */
-	//	HATSUDAN_07_div_angle65536		= (int)(65536/(24));	/* 分割角度(65536[360/360度]を 19 分割) */
-		hatudan_system_regist_single();
+		if ((REG_10_BOSS_SPELL_TIMER&3)<=(REG_0f_GAME_DIFFICULTY))
+		{
+			HATSUDAN_01_speed256			= (t256(2.00) );						/* 弾速 */
+			HATSUDAN_02_speed_offset		= (t256(3));/*(テスト)*/
+			HATSUDAN_03_angle65536			= (ra_nd() &(0x7fff)) + (65536/4)+(65536/2);/*(下半分)*/
+			HATSUDAN_04_tama_spec			= (DANMAKU_LAYER_01)|(TAMA_SPEC_8000_NON_TILT);/* (r33-)非傾き弾 */
+			HATSUDAN_05_bullet_obj_type 	= (BULLET_WAKU12_BASE + TAMA_IRO_06_KI_IRO);//			/* [黄弾] */
+		//	HATSUDAN_06_n_way				= (1);	/* [1way] */				/* 発弾数 */
+		//	HATSUDAN_07_div_angle65536		= (int)(65536/(24));	/* 分割角度(65536[360/360度]を 19 分割) */
+			hatudan_system_regist_single();
+		}
 	}
 }
 
@@ -776,7 +809,7 @@ local OBJ_CALL_FUNC(spell_create_32_pache_metal_fatigue)
 		HATSUDAN_07_div_angle65536		= (int)(65536/(8)); 	/* 分割角度(65536[360/360度]を 8 分割) */
 		hatudan_system_regist_katayori_n_way();/* (r33-) */
 		//
-		bullet_play_04_auto(VOICE15_BOSS_KOUGEKI_01);
+		cpu_bullet_play_15_auto();
 	}
 }
 
@@ -959,8 +992,7 @@ local OBJ_CALL_FUNC(spell_create_39_pache_tririton_shake)
 		HATSUDAN_07_div_angle65536		= (int)(65536/(7)); /* 分割角度(65536[360/360度]を 7 分割) */
 		hatudan_system_regist_katayori_n_way();/* (r33-) */
 		#if (1)
-	//	voice_play(VOICE15_BOSS_KOUGEKI_01, TRACK04_TEKIDAN);
-		bullet_play_04_auto(VOICE15_BOSS_KOUGEKI_01);
+		cpu_bullet_play_15_auto();
 		#endif
 	}
 }
@@ -1053,7 +1085,7 @@ local OBJ_CALL_FUNC(spell_create_3a_pache_silver_dragon)
 			hatudan_system_regist_katayori_n_way();/* (r33-) */
 		}
 		//
-		bullet_play_04_auto(VOICE15_BOSS_KOUGEKI_01);
+		cpu_bullet_play_15_auto();
 	}
 }
 
@@ -1215,7 +1247,7 @@ local OBJ_CALL_FUNC(pache_mp1_danmaku_01_callback)/* マーキュリポイズン */
 		#if 0
 		s32 ang = bullet_get_angle(eb);
 		int add_angle;
-		add_angle = ((A_ROUND65536)/4 + deg360to_rad(rand()%10));
+		add_angle = ((A_ROUND65536)/4 + deg360to_rad(replay_rand()%10));
 		bullet_set_angle(eb, ang - add_angle );
 		bullet_set_angle(eb, ang + add_angle );
 		#else
@@ -1321,7 +1353,7 @@ local OBJ_CALL_FUNC(spell_create_3e_pache_mercury_poison)
 		HATSUDAN_07_div_angle65536		= (int)(65536/(18));	/* 分割角度(65536[360/360度]を 18 分割) */
 		{
 			unsigned int random_angle_offset;
-		//	random_angle_offset = deg360to_rad((rand() % 5)); // 910.222222222222222222222222222222
+		//	random_angle_offset = deg360to_rad((replay_rand() % 5)); // 910.222222222222222222222222222222
 			random_angle_offset = (ra_nd()&0x0fff);// 0xe38 == 3640 == 65536/18
 			HATSUDAN_03_angle65536		= random_angle_offset;	/* 基準角度 */
 	//		HATSUDAN_01_speed256		= t256(3.0) + jj*t256(0.3);
@@ -1333,7 +1365,7 @@ local OBJ_CALL_FUNC(spell_create_3e_pache_mercury_poison)
 			hatudan_system_regist_katayori_n_way();/* (r33-) */
 		}
 		//
-		bullet_play_04_auto(VOICE15_BOSS_KOUGEKI_01);
+		cpu_bullet_play_15_auto();
 	}
 }
 
@@ -1358,7 +1390,7 @@ local OBJ_CALL_FUNC(spell_init_3f_pache_emerald_megalith)
 	[発弾セクション]
 	-------------------------------------------------------
 	使用レジスタ
-	REG_08_REG0 	?。
+	REG_08_REG0 	乱数っぽい数値。
 //	REG_09_REG1 	z
 //	REG_0a_REG2 	z
 	REG_0b_REG3 	難易度別定数。
@@ -1406,6 +1438,6 @@ local OBJ_CALL_FUNC(spell_create_3f_pache_emerald_megalith)
 	// 効果音
 	if (0== ((REG_10_BOSS_SPELL_TIMER)&(32-1) ))
 	{
-		bullet_play_04_auto(VOICE15_BOSS_KOUGEKI_01);
+		cpu_bullet_play_15_auto();
 	}
 }

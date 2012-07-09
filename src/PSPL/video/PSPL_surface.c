@@ -735,7 +735,7 @@ int SDL_FillRect(SDL_Surface *dst, SDL_Rect *dstrect, u32 color)
 	if ( dst->format->palette || (color == 0) )
 	{
 		x = dstrect->w*dst->format->BytesPerPixel;
-		if ( !color && !((long)row&3) && !(x&3) && !(dst->pitch&3) )
+		if ( !color && !((u32)row&3) && !(x&3) && !(dst->pitch&3) )
 		{
 			int n = x >> 2;
 			for ( y=dstrect->h; y; --y )
@@ -767,7 +767,7 @@ int SDL_FillRect(SDL_Surface *dst, SDL_Rect *dstrect, u32 color)
 				u16 c = color;
 				u32 cc = (u32)c << 16 | c;
 				int n = dstrect->w;
-				if ((unsigned long)pixels & 3)
+				if ((u32)pixels & 3)
 				{
 					*pixels++ = c;
 					n--;

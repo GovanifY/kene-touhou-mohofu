@@ -222,10 +222,10 @@ static u64 psp_ticker(void)
 	sceRtcGetCurrentTick(&current_ticks);
 	return (current_ticks);
 }
-static /*cycles_t*/unsigned long SDL_GetTicks_bbb/*osd_cycles*/(void)
+static /*cycles_t*/u32 SDL_GetTicks_bbb/*osd_cycles*/(void)
 {
-//	return ((/*cycles_t*/unsigned long)(psp_ticker()/1000));
-	return ((/*cycles_t*/unsigned long)(psp_ticker() /*/1000*/ ));
+//	return ((/*cycles_t*/u32)(psp_ticker()/1000));
+	return ((/*cycles_t*/u32)(psp_ticker() /*/1000*/ ));
 }
 
 /* MPEG actions */

@@ -70,7 +70,7 @@ const int jpeg_natural_order[DCTSIZE2+16] =
  * Arithmetic utilities
  */
 #if 1
-/*GLOBAL*/global long jdiv_round_up(long a, long b)
+/*GLOBAL*/global s32 jdiv_round_up(s32 a, s32 b)
 /* Compute a/b rounded up to next integer, ie, ceil(a/b) */
 /* Assumes a >= 0, b > 0 */
 {
@@ -78,7 +78,7 @@ const int jpeg_natural_order[DCTSIZE2+16] =
 }
 
 
-/*GLOBAL*/global long jround_up(long a, long b)
+/*GLOBAL*/global s32 jround_up(s32 a, s32 b)
 /* Compute a rounded up to next multiple of b, ie, ceil(a/b)*b */
 /* Assumes a >= 0, b > 0 */
 {
@@ -149,11 +149,11 @@ jcopy_sample_rows (JSAMPARRAY input_array, int source_row,
 	FMEMCOPY(output_row, input_row, num_blocks * (DCTSIZE2 * SIZEOF(JCOEF)));
 	#else
 	register JCOEFPTR inptr, outptr;
-	register long count;
+	register s32 count;
 
 	inptr = (JCOEFPTR) input_row;
 	outptr = (JCOEFPTR) output_row;
-	for (count = (long) num_blocks * DCTSIZE2; count > 0; count--)
+	for (count = (s32) num_blocks * DCTSIZE2; count > 0; count--)
 	{
 		*outptr++ = *inptr++;
 	}

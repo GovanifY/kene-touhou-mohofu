@@ -82,11 +82,11 @@ global void psp_pad_init(void)
 		SceCtrlData pad;
 		sceCtrlReadBufferPositive(&pad, 1);
 		/* 起動時にアナログ入力があった場合、故障していると判断しアナログ入力無効。 */
-		if (pad.Lx < 64/*70*/)			{	use_analog = 0; 	}
-		else if (pad.Lx > 192/*185*/)	{	use_analog = 0; 	}
+		if (pad.Lx < 64/*70*/)			{use_analog = 0;	}
+		else if (pad.Lx > 192/*185*/)	{use_analog = 0;	}
 		//
-		if (pad.Ly < 64/*70*/)			{	use_analog = 0; 	}
-		else if (pad.Ly > 192/*185*/)	{	use_analog = 0; 	}
+		if (pad.Ly < 64/*70*/)			{use_analog = 0;	}
+		else if (pad.Ly > 192/*185*/)	{use_analog = 0;	}
 		#if (0)
 		if (0 == use_analog)
 		{
@@ -120,7 +120,7 @@ global void do_input_vbl(void)
 			last_time	+= 16666;/* 必ずオーバーフローして小さな値になる筈 */
 			#if (0)
 			if (now_time < last_time)	/* ありえない筈 */
-			{	/* 念の為 */
+			{/* 念の為 */
 				now_time	= 16666;
 				last_time	= 0;
 			}
@@ -172,23 +172,16 @@ global void do_input_vbl(void)
 	#endif /* (1==USE_KEY_CONFIG) */
 	pad_data = pad.Buttons;
 	{
-	#if (1==USE_ANALOG_VALUE)
-		psp_pad.analog_absolute_value_x = 0;
-		psp_pad.analog_absolute_value_y = 0;
-		#define UAX(aaa) aaa
-	#else
-		#define UAX(aaa) /**/
-	#endif
 		/* 標準アナログキー機能 */
 	//	if (1==use_analog)
 		if (0 != use_analog)
 		{
-			/* PSPのアナログ入力はデジタル入力へ変換、アナログ量は中心を削除し256固定小数点形式へ補正 */
-			if (pad.Lx < 64/*70*/)			{	pad_data |= PSP_CTRL_LEFT;		UAX(psp_pad.analog_absolute_value_x = ((64-pad.Lx)<<2)); 	}
-			else if (pad.Lx > 192/*185*/)	{	pad_data |= PSP_CTRL_RIGHT; 	UAX(psp_pad.analog_absolute_value_x = ((pad.Lx-192)<<2));	}
+			/* PSPのアナログ入力はデジタル入力へ変換、アナログ量は将来のリプレイ対応を考え使用しない。 */
+			if (pad.Lx < 64/*70*/)			{pad_data |= PSP_CTRL_LEFT; 	}
+			else if (pad.Lx > 192/*185*/)	{pad_data |= PSP_CTRL_RIGHT;	}
 			//
-			if (pad.Ly < 64/*70*/)			{	pad_data |= PSP_CTRL_UP;		UAX(psp_pad.analog_absolute_value_y = ((64-pad.Ly)<<2)); 	}
-			else if (pad.Ly > 192/*185*/)	{	pad_data |= PSP_CTRL_DOWN;		UAX(psp_pad.analog_absolute_value_y = ((pad.Ly-192)<<2));	}
+			if (pad.Ly < 64/*70*/)			{pad_data |= PSP_CTRL_UP;		}
+			else if (pad.Ly > 192/*185*/)	{pad_data |= PSP_CTRL_DOWN; 	}
 		}
 	}
 	#if (1==USE_KEY_CONFIG)
@@ -198,41 +191,21 @@ global void do_input_vbl(void)
 //	psp_pad.pad_data |= (pad_data & (PSP_CTRL_UP|PSP_CTRL_RIGHT|PSP_CTRL_DOWN|PSP_CTRL_LEFT));
 	psp_pad.pad_data	= (pad_data & (PSP_CTRL_UP|PSP_CTRL_RIGHT|PSP_CTRL_DOWN|PSP_CTRL_LEFT/*|PSP_CTRL_SELECT|PSP_CTRL_START*/));/* 上下左右/SELECT/STARTは都合によりキーコンフィグなし */
 	/* PSPのデジタル入力からキーコンフィグを考慮して入力値を決める */
-	if (pad_data & PSP_CTRL_SELECT) 	{	psp_pad.pad_data |= pad_config[KINOU_00_SELECT];		}	//	if (keyboard[KINOU_01_SELECT])		{psp_pad.pad_data |= (PSP_KEY_SELECT);}
-	if (pad_data & PSP_CTRL_START)		{	psp_pad.pad_data |= pad_config[KINOU_01_START]; 		}	//	if (keyboard[KINOU_02_PAUSE])		{psp_pad.pad_data |= (PSP_KEY_PAUSE);}
+	if (pad_data & PSP_CTRL_SELECT) 	{psp_pad.pad_data |= pad_config[KINOU_00_SELECT];		}	//	if (keyboard[KINOU_01_SELECT])		{psp_pad.pad_data |= (PSP_KEY_SELECT);}
+	if (pad_data & PSP_CTRL_START)		{psp_pad.pad_data |= pad_config[KINOU_01_START];		}	//	if (keyboard[KINOU_02_PAUSE])		{psp_pad.pad_data |= (PSP_KEY_PAUSE);}
 //
-	if (pad_data & PSP_CTRL_LTRIGGER)	{	psp_pad.pad_data |= pad_config[KINOU_02_LTRIGGER];		}	//	if (keyboard[KINOU_07_SNAP_SHOT])	{psp_pad.pad_data |= (PSP_KEY_SNAP_SHOT);}
-	if (pad_data & PSP_CTRL_RTRIGGER)	{	psp_pad.pad_data |= pad_config[KINOU_03_RTRIGGER];		}	//	if (keyboard[KINOU_08_SYSTEM])		{psp_pad.pad_data |= (PSP_KEY_SYSTEM);}
-	if (pad_data & PSP_CTRL_TRIANGLE)	{	psp_pad.pad_data |= pad_config[KINOU_04_TRIANGLE];		}	//	if (keyboard[KINOU_09_SLOW])		{psp_pad.pad_data |= (PSP_KEY_SLOW);}
-	if (pad_data & PSP_CTRL_CIRCLE) 	{	psp_pad.pad_data |= pad_config[KINOU_05_CIRCLE];		}	//	if (keyboard[KINOU_10_OPTION])		{psp_pad.pad_data |= (PSP_KEY_OPTION);}
-	if (pad_data & PSP_CTRL_CROSS)		{	psp_pad.pad_data |= pad_config[KINOU_06_CROSS]; 		}	//	if (keyboard[KINOU_11_SHOT])		{psp_pad.pad_data |= (PSP_KEY_SHOT_OK);}
-	if (pad_data & PSP_CTRL_SQUARE) 	{	psp_pad.pad_data |= pad_config[KINOU_07_SQUARE];		}	//	if (keyboard[KINOU_12_BOMB])		{psp_pad.pad_data |= (PSP_KEY_BOMB_CANCEL);}
+	if (pad_data & PSP_CTRL_LTRIGGER)	{psp_pad.pad_data |= pad_config[KINOU_02_LTRIGGER]; 	}	//	if (keyboard[KINOU_07_SNAP_SHOT])	{psp_pad.pad_data |= (PSP_KEY_SNAP_SHOT);}
+	if (pad_data & PSP_CTRL_RTRIGGER)	{psp_pad.pad_data |= pad_config[KINOU_03_RTRIGGER]; 	}	//	if (keyboard[KINOU_08_SYSTEM])		{psp_pad.pad_data |= (PSP_KEY_SYSTEM);}
+	if (pad_data & PSP_CTRL_TRIANGLE)	{psp_pad.pad_data |= pad_config[KINOU_04_TRIANGLE]; 	}	//	if (keyboard[KINOU_09_SLOW])		{psp_pad.pad_data |= (PSP_KEY_SLOW);}
+	if (pad_data & PSP_CTRL_CIRCLE) 	{psp_pad.pad_data |= pad_config[KINOU_05_CIRCLE];		}	//	if (keyboard[KINOU_10_OPTION])		{psp_pad.pad_data |= (PSP_KEY_OPTION);}
+	if (pad_data & PSP_CTRL_CROSS)		{psp_pad.pad_data |= pad_config[KINOU_06_CROSS];		}	//	if (keyboard[KINOU_11_SHOT])		{psp_pad.pad_data |= (PSP_KEY_SHOT_OK);}
+	if (pad_data & PSP_CTRL_SQUARE) 	{psp_pad.pad_data |= pad_config[KINOU_07_SQUARE];		}	//	if (keyboard[KINOU_12_BOMB])		{psp_pad.pad_data |= (PSP_KEY_BOMB_CANCEL);}
 	#endif /* (1==USE_KEY_CONFIG) */
 	/* スクリーンショット機能。 */
 	// keypollに入れると何故かうまくいかなかったのでこっちに場所を変更。
-	if (psp_pad.pad_data & PSP_KEY_SNAP_SHOT)	{	save_screen_shot(); 	 }/*keyboard[KINOU_07_SNAP_SHOT]*/
+	if (psp_pad.pad_data & PSP_KEY_SNAP_SHOT)	{save_screen_shot();	 }/*keyboard[KINOU_07_SNAP_SHOT]*/
 
-	/* アナログサポート機能 */
-	#if (1==USE_ANALOG_VALUE)
-//	if (1==use_analog)
-	{
-		/* デジタルよりアナログ優先 */
-		if (0 == (psp_pad.analog_absolute_value_x+psp_pad.analog_absolute_value_y) )
-		/*アナログ押してないと思われる場合(アナログ押してる場合はアナログ量をそのまま使う)*/
-		{
-			/* デジタルよりアナログ量を算出 */
-			#if (0)
-				 if (pad_data & PSP_CTRL_UP)				{	psp_pad.analog_absolute_value_y 	= 256;	}
-			else if (pad_data & PSP_CTRL_DOWN)				{	psp_pad.analog_absolute_value_y 	= 256;	}
-				 if (pad_data & PSP_CTRL_RIGHT) 			{	psp_pad.analog_absolute_value_x 	= 256;	}
-			else if (pad_data & PSP_CTRL_LEFT)				{	psp_pad.analog_absolute_value_x 	= 256;	}
-			#else
-			if (pad_data & (PSP_CTRL_UP|PSP_CTRL_DOWN)) 	{	psp_pad.analog_absolute_value_y 	= 256;	}	/* 上下のアナログ量 */
-			if (pad_data & (PSP_CTRL_RIGHT|PSP_CTRL_LEFT))	{	psp_pad.analog_absolute_value_x 	= 256;	}	/* 左右のアナログ量 */
-			#endif
-		}
-	}
-	#endif/*(USE_ANALOG_VALUE)*/
+
 
 }
 //		 if (keyboard[KINOU_06_LEFT])	{psp_pad.pad_data |= PSP_CTRL_LEFT; 	/*direction=-1;*/		}

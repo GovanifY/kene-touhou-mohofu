@@ -1,6 +1,6 @@
 
 /*---------------------------------------------------------
-	もやもやエフェクト
+	もやもやエフェクト(r40-)
 	-------------------------------------------------------
 	最新の研究(?)の結果、もやもや部分は1パスで描画してなくて、
 	少なくとも2パスで描画している事が判った。
@@ -56,7 +56,7 @@ src2	-- p3 p4
 
 //	#define MY_FILTER_WINDOW_SIZE_X_03_DOT	(3)
 //	#define MY_FILTER_WINDOW_SIZE_Y_02_DOT	(2)
-	#define MY_FILTER_X_SIZE_350_DOT	(GAME_WIDTH-(2))/*(xは2[pixel]処理しない)*/
+	#define MY_FILTER_X_SIZE_350_DOT	(GAME_WIDTH-(32)-(2))/*(xは2[pixel]処理しない, 32[pixel]処理しない)*/
 	#define MY_FILTER_Y_SIZE_271_DOT	(GAME_HEIGHT-(1))/*(yは1[pixel]処理しない)*/
 
 /* 仮想スクリーン(SDL_00_VIEW_SCREEN)にもやもやエフェクトをかける */
@@ -71,13 +71,13 @@ global void psp_pause_filter(void)
 		#define MY_16_G_(aaa) ( (((aaa&0x07e0) )) )
 		#define MY_16_BR(aaa) ( (((aaa&0xf81f) )) )
 		{/*[パス1]上から処理する。*/
-			u16 *src1;	src1 = render_image;								/* 始めのライン */
-			u16 *src2;	src2 = render_image + (PSP_BUFFER_WIDTH512);		/* 1ライン下 */
+			u16 *src1;	src1 = render_image + (32); 							/* 始めのライン, 32[pixel]ずらす */
+			u16 *src2;	src2 = render_image + (32) + (PSP_BUFFER_WIDTH512); 	/* 1ライン下, 32[pixel]ずらす */
 			int jj;
 			for (jj=0; jj<(MY_FILTER_Y_SIZE_271_DOT); jj++)/*(yは1[pixel]処理しない)*/
 			{
 				int ii;
-				for (ii=0; ii<(MY_FILTER_X_SIZE_350_DOT); ii++)/*(xは2[pixel]処理しない)*/  	/* パネル部分を除く */
+				for (ii=0; ii<(MY_FILTER_X_SIZE_350_DOT); ii++)/*(xは2[pixel]処理しない)*/		/* パネル部分を除く */
 				{
 					u16 pixel1;
 					u16 pixel2;
@@ -112,7 +112,7 @@ global void psp_pause_filter(void)
 			for (jj=0; jj<(MY_FILTER_Y_SIZE_271_DOT); jj++)/*(yは1[pixel]処理しない)*/
 			{
 				int ii;
-				for (ii=0; ii<(MY_FILTER_X_SIZE_350_DOT); ii++)/*(xは2[pixel]処理しない)*/ 	/* パネル部分を除く */
+				for (ii=0; ii<(MY_FILTER_X_SIZE_350_DOT); ii++)/*(xは2[pixel]処理しない)*/	/* パネル部分を除く */
 				{
 					u16 pixel1;
 					u16 pixel2;
@@ -141,14 +141,18 @@ global void psp_pause_filter(void)
 			}
 		}
 	}
-	/*(色調、変換処理)*/
+	/*(色調、変換処理)
+	本物は色調割合があるのだけど、これは描画画面+元画面+処理済み画面の3画面分のサーフェイスが確保できれば
+	元画面と処理済み画面を合成割合のアルファブレンドで合成して描画画面に描く事で実現できる。
+	r40現在は(メモリ不足なので)2画面分のサーフェイスしか確保してないから、この方法では出来ない。
+	*/
 	{
-		u16 *src;	src = render_image;
+		u16 *src;	src = render_image + (32);//, 32[pixel]ずらす
 		int jj;
 		for (jj=0; jj<(GAME_HEIGHT); jj++)
 		{
 			int ii;
-			for (ii=0; ii<(GAME_WIDTH); ii++)		/* パネル部分を除く */		/* GAME_WIDTH==352 == 480-128 */
+			for (ii=0; ii<(GAME_WIDTH -(32)); ii++) 	/* パネル部分を除く, 32[pixel]ずらす */ 	/* GAME_WIDTH==352 == 480-128 */
 			{
 				u16 pixel;
 				pixel = *src;
@@ -168,7 +172,7 @@ global void psp_pause_filter(void)
 				}
 				src++;
 			}
-			src += (PSP_BUFFER_WIDTH512-PSP_WIDTH480+PANEL_WIDTH);/* 残り */
+			src += (PSP_BUFFER_WIDTH512-PSP_WIDTH480+PANEL_WIDTH+32);/* 残り, 32[pixel]ずらす */
 		}
 	}
 	if (SDL_MUSTLOCK(cb.sdl_screen[SDL_00_VIEW_SCREEN]))	{	SDL_UnlockSurface(cb.sdl_screen[SDL_00_VIEW_SCREEN]);	}	/* ロック解除 */

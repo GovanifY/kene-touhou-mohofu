@@ -130,16 +130,8 @@ local OBJ_CALL_FUNC(move_vector_gamen_sita)
 	#endif
 }
 
-
-
 /* HATUDAN_ITI_NO_JIKAN==発弾エフェクト後から[0]カウント経過した弾。発弾エフェクト時間==[64]カウント。 */
 #define HATUDAN_ITI_NO_JIKAN	(JYUMYOU_1MIN-64)
-
-
-
-
-
-
 
 /*---------------------------------------------------------
 	雨降り弾
