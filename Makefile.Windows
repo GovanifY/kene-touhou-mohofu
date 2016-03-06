@@ -82,7 +82,7 @@ PSP_SYOMEI_OFW = 1
 # 800200D9 メモリブロックを割り当てられませんでした。  Failure to allocate memory block.
 # 800200D9 = Failure to allocate memory block (ex. missing PSP)
 # 80020148 サポートされていないPRXを使用しています。
-# リカバリーモードより「Advanced configration」→「Execute boot.bin in UMD/ISO」をDisabledにして下さい。
+# リカバリーモードより「Advanced configration」→「Execute boot.bin in UMD/ISO」をDisabledにして下さい。 
 # 80020148 = Unsupported PRX type | This error also seems to appear when you are running an iso with a fake mem. stick
 
 # prx->eboot   // 起動に失敗しました(800200D9) (PRXだけどメモリ不足? )
@@ -141,7 +141,7 @@ USE_FPU_HACK = 1
 # 0 == デバッグ用のシンボル配置情報を出力しない。
 # 「ライブラリの具体的な依存関係(実際の配置)」 や
 # 「グローバル変数の配置」、
-# 「データーセクションの実際の.align調整(「*fill*」ってのがGCCが.alignした奴)」
+# 「データーセクションの実際の.align調整(「*fill*」ってのがGCCが.alignした奴)」 
 # 等が知りたくなった場合のデバッグ情報。
 #DEBUG_MAP = 0
 DEBUG_MAP = 1
@@ -277,8 +277,8 @@ else
 	# 1 == アップデート版(タイトルの文字あり)
 	PSP_EBOOT_ICON	 = ICON0.PNG
 #test	PSP_EBOOT_ICON1  = ICON0.PMF
-	PSP_EBOOT_UNKPNG =
-	PSP_EBOOT_PIC1	 =
+	PSP_EBOOT_UNKPNG = 
+	PSP_EBOOT_PIC1	 = 
 #test	PSP_EBOOT_SND0	 = SND0.AT3
 endif
 
@@ -292,8 +292,8 @@ PSPDEV = $(shell psp-config --pspdev-path)
 PSPSDK = $(shell psp-config --pspsdk-path)
 else
 # pspsdk-setup-0.11.1
-PSPDEV = /opt/pspsdk/
-PSPSDK = /opt/pspsdk/psp/sdk/
+PSPDEV = C:/pspsdk
+PSPSDK = C:/pspsdk/psp/sdk
 endif
 
 #------------------------------------------------------------------------------
@@ -565,11 +565,11 @@ CFLAGS_OPTIMIZE += -O3
 
 #------------------------------------------------------------------------------
 # 参考 http://www.sra.co.jp/wingnut/gcc/gcc-j.html
-# GNU CC(GCC) のバージョン 2.95 に対応している。(日本語版ドラフト-17 July 2001)
+# GNU CC(GCC) のバージョン 2.95 に対応している。(日本語版ドラフト-17 July 2001) 
 # MIPS 系コンピュータ用オプション
-# 以下の -m オプションが、定義されている。
+# 以下の -m オプションが、定義されている。 
 
-# ============================================= cpuの指定
+# ============================================= cpuの指定 
 # -mcpu=<cpu type>  // psp用GCC-4.3.5時点ではこのオプションは存在しない。
 # 解説: cpuを指定する。 最近のGCC(4.x.x系)では -mcpu は廃止されて、-march になった。
 # 解説: psp用GCC-4.3.5時点では -mcpu はサポートされない。
@@ -581,9 +581,9 @@ CFLAGS_OPTIMIZE += -O3
 #------------
 # http://www7.atwiki.jp/pspprogram/pages/12.html
 # CPU(Allegrex)
-# MIPS 32bitコア R4000
-# 周波数：1～333MHz
-# 浮動小数点計算能力：2.6Gflops(333MHz駆動時)
+# MIPS 32bitコア R4000 
+# 周波数：1～333MHz 
+# 浮動小数点計算能力：2.6Gflops(333MHz駆動時) 
 # VFPU有り
 # 便利な定数がハードコード済み
 
@@ -596,12 +596,12 @@ CFLAGS_OPTIMIZE += -march=$(CPUTYPE)
 # -march=<cpu type>
 #	命令スケジューリングの際の機種のデフォルトを <cpu type> と想定する。
 #	<cpu type> は、
-#	mips1, mips2, mips3, mips4, mips5,
-#	mips32, mips32r2, mips64, mips64r2,
+#	mips1, mips2, mips3, mips4, mips5, 
+#	mips32, mips32r2, mips64, mips64r2, 
 #	r2000, r3000, r3900, r4000, r4010, r4400, r4600, r4650,
-#	r6000, r8000, r10000, r12000, orion, allegrex,
-#	vr4100, vr4111, vr4120, vr4130, vr4181, vr4300, vr5000, vr5400, vr5500,
-#	rm5200, rm5230, rm5231, rm5261, rm5721, rm7000, rm9000,
+#	r6000, r8000, r10000, r12000, orion, allegrex, 
+#	vr4100, vr4111, vr4120, vr4130, vr4181, vr4300, vr5000, vr5400, vr5500, 
+#	rm5200, rm5230, rm5231, rm5261, rm5721, rm7000, rm9000, 
 #	4kc, 4km, 4kp, 5kc, 20kc, sb1, from-abi
 #	のどれかである。
 # 解説: アーキテクチャー(cpuの設計)を指定する。
@@ -611,26 +611,26 @@ CFLAGS_OPTIMIZE += -march=$(CPUTYPE)
 
 # ある特定の <cpu type> を選ぶとその特定のチップに適したスケジューリングを行なう一方で、
 # -mipsX や -mabi を指定しない限り、MIPS ISA(Instruction Set Architecture、命令セットアーキテクチャ)の
-# レベル 1 に合わないコードは何も生成しない。
+# レベル 1 に合わないコードは何も生成しない。 
 
-# ============================================= MIPSタイプの指定
+# ============================================= MIPSタイプの指定 
 # ------ MIPS I/II/III/IV
 # -mips1  // (pspでは指定できない。)# error: -mips1 conflicts with the other architecture options, which specify a MIPS2 processor
 # -mips2  // (pspでは指定できる。  )# allegrex アーキテクチャーは MIPS II ベースなのかな？。(MIPS II準拠のr4000系を改造した物?)
 # -mips3  // (pspでは指定できない。)# error: -mips3 conflicts with the other architecture options, which specify a MIPS2 processor
 # -mips4  // (pspでは指定できない。)# error: -mips4 conflicts with the other architecture options, which specify a MIPS2 processor
-#-mips1
+#-mips1 
 #	MIPS ISA のレベル 1 の命令を発行する。これがデフォルトである。
-#	r3000 が、この ISA レベルのデフォルトの CPU タイプである。
-#-mips2
+#	r3000 が、この ISA レベルのデフォルトの CPU タイプである。 
+#-mips2 
 #	MIPS ISA のレベル 2 の命令(branch likely, square root 命令)を発行する。
-#	r6000 が、この ISA レベルのデフォルトの CPU タイプである。
-#-mips3
+#	r6000 が、この ISA レベルのデフォルトの CPU タイプである。 
+#-mips3 
 #	MIPS ISA のレベル 3 の命令(64ビット命令)を発行する。
-#	r4000 が、この ISA レベルのデフォルトの CPU タイプである。
-#-mips4
+#	r4000 が、この ISA レベルのデフォルトの CPU タイプである。 
+#-mips4 
 #	MIPS ISA のレベル 4 の命令(条件付き move 命令、プリフェッチ命令、強化された FPU 命令)を発行する。
-#	r8000 は、この ISA レベルのデフォルトの cpu type である。
+#	r8000 は、この ISA レベルのデフォルトの cpu type である。 
 # CFLAGS_OPTIMIZE += -mips2
 # 解説: pspでは -mips2 しか指定できないにもかかわらず、デフォルトという訳ではなく、
 #	指定した場合と省略した場合の扱いが特殊なので注意。
@@ -649,145 +649,145 @@ CFLAGS_OPTIMIZE += -march=$(CPUTYPE)
 
 # 解説: -mfp32 は、PCでいう(float)を使う。
 # 解説: -mfp64 は、PCでいう(double)を使う。しかしpspでは設定できない。pspで double と書けば float精度。
-#-mfp32
-#	32個の32ビット浮動小数点レジスタが利用可能であることを仮定する。これはデフォルトである。
+#-mfp32 
+#	32個の32ビット浮動小数点レジスタが利用可能であることを仮定する。これはデフォルトである。 
 #-mfp64  // (pspでは指定できない。) // error: unsupported combination: -mfp64 -msingle-float
-#	32個の64ビット浮動小数点レジスタが利用可能であることを仮定する。これは、-mips3 オプションが指定されたときのデフォルトである。
+#	32個の64ビット浮動小数点レジスタが利用可能であることを仮定する。これは、-mips3 オプションが指定されたときのデフォルトである。 
 CFLAGS_OPTIMIZE += -mfp32
 
 #------------ CPU内の汎用レジスタ設定。# 1レジスタあたりのビット数
-#-mgp32
-#	32個の32ビット汎用レジスタが利用可能であることを仮定する。これはデフォルトである。
+#-mgp32 
+#	32個の32ビット汎用レジスタが利用可能であることを仮定する。これはデフォルトである。 
 #-mgp64  // (pspでは指定できない。) error: '-mgp64' used with a 32-bit processor.
-#	32個の64ビット汎用レジスタが利用可能であることを仮定する。これは、-mips3 オプションが指定されたときのデフォルトである。
+#	32個の64ビット汎用レジスタが利用可能であることを仮定する。これは、-mips3 オプションが指定されたときのデフォルトである。 
 CFLAGS_OPTIMIZE += -mgp32
 
 #------------ long型の大きさを指定する。
-#-mlong32
-#	long 型、int 型、ポインタ型を強制的に 32 ビット幅にする。
+#-mlong32 
+#	long 型、int 型、ポインタ型を強制的に 32 ビット幅にする。 
 #	-mlong32、-mlong64、-mint64 のどれも指定されていないと、int、long、ポインタのサイズは、ABI と選択された ISA に依存する。
 #	-mabi=64 の場合、int は 32 ビット幅で long は 64 ビット幅である。
 #	-mabi=eabi の場合、-mips1 か -mips2 が指定されていると、int と long は 32 ビット幅になる。
 #	-mabi=eabi の場合、それより高い ISA が指定されていると、int は 32 ビット幅で、long が 64 ビット幅になる。
-#	ポインタ型の幅は、long の幅と汎用レジスタの幅の小さいほうになる(これは、ISA に依存する)。
-#-mlong64
-#	long 型を強制的に 64 ビットにする。デフォルトについての説明とポインタの大きさについては -mlong32 を参照のこと。
-#-mint64
-#	long 型と int 型を強制的に 64 ビット幅にする。デフォルトについての説明とポインタの大きさについては -mlong32 を参照のこと。
+#	ポインタ型の幅は、long の幅と汎用レジスタの幅の小さいほうになる(これは、ISA に依存する)。 
+#-mlong64 
+#	long 型を強制的に 64 ビットにする。デフォルトについての説明とポインタの大きさについては -mlong32 を参照のこと。 
+#-mint64 
+#	long 型と int 型を強制的に 64 ビット幅にする。デフォルトについての説明とポインタの大きさについては -mlong32 を参照のこと。 
 # 解説: pspでは -mlong32 だとlong に 64bitを必要とするアプリがコンパイルできない。Timidityとかは -mlong64 でないとコンパイルできないと思う。
 # 解説: long long はこの辺のオプションに影響されずpspでは恐らく 64 ビットになって関係ないと思われるけど、解らない。
 CFLAGS_OPTIMIZE += -mlong32
 
-#-mabi=32
+#-mabi=32 
 #-mabi=o64  // (pspでは指定できない。たぶん)
 #-mabi=n32  // (pspでは指定できない。たぶん)
-#-mabi=64
-#-mabi=eabi
+#-mabi=64 
+#-mabi=eabi 
 #	指定された ABI 用のコードを生成する。
 #	デフォルトの命令レベルは、32 に対しては -mips1 であり、
 #	n32 に対しては-mips3、その他に対しては -mips4 である。
-#	逆に、-mips1 か -mips2 を指定するとデフォルトの ABI は 32 になり、それ以外は 64 になる。
+#	逆に、-mips1 か -mips2 を指定するとデフォルトの ABI は 32 になり、それ以外は 64 になる。 
 CFLAGS_OPTIMIZE += -mabi=eabi
 
-#-mmips-as
+#-mmips-as 
 #	MIPS アセンブラ用のコードを生成し、通常のデバッグ情報を追加するためにmips-tfile を起動する。
 #	これは、OSF/rose オブジェクト形式を使っている、OSF/1 参照プラットフォーム以外の全てのプラットフォームでのデフォルトである。
-#	-gstabs か -gstabs+ のどちらかのオプションを使うと、mips-tfile プログラムが、MIPS ECOFF 内に stabs 形式のデバッグ情報を包み込む。
-#-mgas
+#	-gstabs か -gstabs+ のどちらかのオプションを使うと、mips-tfile プログラムが、MIPS ECOFF 内に stabs 形式のデバッグ情報を包み込む。 
+#-mgas 
 #	GNU アセンブラ用のコードを生成する。これは、OSF/rose オブジェクト形式を使っている、OSF/1 の参照プラットフォームではデフォルトである。
-#	また、configure のオプション --with-gnu-as が指定されたときのデフォルトでもある。
+#	また、configure のオプション --with-gnu-as が指定されたときのデフォルトでもある。 
 
-#-msplit-addresses
-#-mno-split-addresses
+#-msplit-addresses 
+#-mno-split-addresses 
 #	アドレス定数の上位部と下位部を別々にロードするコードを生成する。
 #	これにより、gcc が、アドレスの上位ビットを無駄にロードしないように最適化することが可能になる。
 #	この最適化には、GNU as と GNU ld が必要になる。この最適化は、GNU as と GNU ld が標準のツールである幾つかの組み込みターゲットでは
-#	デフォルトで有効になる。
-#-mrnames
-#-mno-rnames
+#	デフォルトで有効になる。 
+#-mrnames 
+#-mno-rnames 
 #	-mrnames を指定すると、レジスタ名として、ハードウェア名の代わりに、MIPS のソフトウェア名(例えば、$4 の代わりに a0)を使ったコードを出力する。
-#	このオプションをサポートしているアセンブラはAlgorithmics のアセンブラだけである。
-#-mgpopt
-#-mno-gpopt
+#	このオプションをサポートしているアセンブラはAlgorithmics のアセンブラだけである。 
+#-mgpopt 
+#-mno-gpopt 
 #	-mgpopt オプションを指定すると、全てのデータ宣言を、テキストセクションの命令部分の前に書き出す。
 #	これにより MIPS のアセンブラが小さいグローバルおよび静的データ項目に対し、二語ではなく、一語によるメモリ参照を生成することが可能になる。
-#	最適化が指定されている場合には、これはデフォルトで有効になる。
-#-mstats
-#-mno-stats
+#	最適化が指定されている場合には、これはデフォルトで有効になる。 
+#-mstats 
+#-mno-stats 
 #	-mstats オプションを指定すると、非インライン関数が処理される度に、標準エラー出力に一行出力し、
-#	プログラムの統計情報(セーブされたレジスタ数、スタックの大きさ等)を表示する。
-#-mmemcpy
-#-mno-memcpy
+#	プログラムの統計情報(セーブされたレジスタ数、スタックの大きさ等)を表示する。 
+#-mmemcpy 
+#-mno-memcpy 
 #	-mmemcpy オプションを指定すると、全てのブロック移動に対し、インラインコードを生成する代わりに、
-#	適切な文字列関数(memcpy かbcopy)を呼び出すようにする。
-#-mmips-tfile
-#-mno-mips-tfile
+#	適切な文字列関数(memcpy かbcopy)を呼び出すようにする。 
+#-mmips-tfile 
+#-mno-mips-tfile 
 #	-mno-mips-tfile を指定すると、MIPS のアセンブラがデバッグ情報を追加した後のオブジェクトファイルに対し、
 #	mips-tfile プログラムによる後処理を行なわない。
 #	mips-tfile を実行しておかないと、デバッガからローカル変数の情報が扱えなくなる。
 #	さらに、stage2 と stage3 のオブジェクトには、アセンブラに渡された一時ファイル名が、オブジェクトファイル内に埋め込まれた形で入っている。
 #	このため、stage2 のオブジェクトと stage3 のオブジェクトが同じになることはない。
-#	-mno-mips-tfile オプションを指定するのは、mips-tfile プログラムにバグがあり、コンパイルが行えない場合にだけに術器である。
+#	-mno-mips-tfile オプションを指定するのは、mips-tfile プログラムにバグがあり、コンパイルが行えない場合にだけに術器である。 
 
-#-msoft-float
+#-msoft-float 
 #	浮動小数点用ライブラリ呼び出しを含む出力を生成する。
 #	警告: 必要となるライブラリは GCC の一部ではない。
 #	普通はその機種の通常の C コンパイラの機能が使われるが、クロスコンパイルの場合はこれをそのまま行なうことはできない。
-#	クロスコンパイルの場合は、適切なライブラリ関数を自分で用意しなければならない。
-#-mhard-float
-#	浮動小数点命令を含む出力を生成する。これは、GCC のソースを変更しなければ、デフォルトである。
+#	クロスコンパイルの場合は、適切なライブラリ関数を自分で用意しなければならない。 
+#-mhard-float 
+#	浮動小数点命令を含む出力を生成する。これは、GCC のソースを変更しなければ、デフォルトである。 
 
-#-mabicalls
-#-mno-abicalls
-#	位置独立コード用に、System V.4 用の移植で使っている疑似命令.abicalls、.cpload、.cprestore を生成する(あるいは生成しない)。
+#-mabicalls 
+#-mno-abicalls 
+#	位置独立コード用に、System V.4 用の移植で使っている疑似命令.abicalls、.cpload、.cprestore を生成する(あるいは生成しない)。 
 
-#-mlong-calls
-#-mno-long-calls
+#-mlong-calls 
+#-mno-long-calls 
 #	全ての呼出しを JALR 命令で行う。このためには、呼出しの前に、関数のアドレスをレジスタにロードしておく必要がある。
-#	このオプションを使う必要があるのは、現在の 512 メガバイトのセグメントの外側の関数を、ポインタ経由でなく呼び出す場合である。
+#	このオプションを使う必要があるのは、現在の 512 メガバイトのセグメントの外側の関数を、ポインタ経由でなく呼び出す場合である。 
 
-#-mhalf-pic
-#-mno-half-pic
-#	外部参照へのポインタを、テキストセクションに置くのではなく、データセクションに置いてロードするようにする。
+#-mhalf-pic 
+#-mno-half-pic 
+#	外部参照へのポインタを、テキストセクションに置くのではなく、データセクションに置いてロードするようにする。 
 
-#-membedded-pic
-#-mno-embedded-pic
+#-membedded-pic 
+#-mno-embedded-pic 
 #	いくつかの組み込みシステム向けに適した PIC コードを生成する。全ての呼出しは PC 相対アドレスを使って行われ、
 #	全てのデータのアドレスは$gp レジスタを使って扱われる。
 #	これには、そのための作業のほとんどを行う GNU as と GNU ld が必要である。
-#	これは、現在、ECOFF を使っているターゲットでしか動作していない。ELF では動いていない。
+#	これは、現在、ECOFF を使っているターゲットでしか動作していない。ELF では動いていない。 
 
-#-membedded-data
-#-mno-embedded-data
+#-membedded-data 
+#-mno-embedded-data 
 #	可能であれば、変数を、まず最初に読み出し専用データセクションに割り当てる。
 #	次に可能であれば、小データセクションに割り当てる。さもなければ、データセクションに置く。
 #	こうすると、デフォルトよりも幾分遅いコードになるが、実行時に必要な RAM の量が小さくなるので、
-#	いくつかの組み込みシステムにとっては望ましいだろう。
+#	いくつかの組み込みシステムにとっては望ましいだろう。 
 
-#-msingle-float
-#-mdouble-float
+#-msingle-float 
+#-mdouble-float 
 #	-msingle-float オプションを指定すると、r4650 チップのように、浮動小数点コプロセッサが単精度演算しかサポートしていないと想定する。
-#	-mdouble-float オプションを指定すると、倍精度演算を使うようになる。こちらがデフォルトである。
+#	-mdouble-float オプションを指定すると、倍精度演算を使うようになる。こちらがデフォルトである。 
 
-#-mmad
-#-mno-mad
-#	r4650 チップの場合のように、mad、madu、mul 命令を使うことを許す。
+#-mmad 
+#-mno-mad 
+#	r4650 チップの場合のように、mad、madu、mul 命令を使うことを許す。 
 
-#-m4650
-#	-msingle-float、-mmad、それに少なくとも現在のところでは、-mcpu=r4650 を有効にする。
+#-m4650 
+#	-msingle-float、-mmad、それに少なくとも現在のところでは、-mcpu=r4650 を有効にする。 
 
-#-mips16
-#-mno-mips16
-#	16ビット命令を有効にする。
+#-mips16 
+#-mno-mips16 
+#	16ビット命令を有効にする。 
 
-#-mentry
-#	疑似命令 entry と exit を使う。このオプションは -mips16 を一緒にしか使えない。
+#-mentry 
+#	疑似命令 entry と exit を使う。このオプションは -mips16 を一緒にしか使えない。 
 
 # ------- endian (pspは -EL Little Endian.)
 #-EL
-#	リトルエンディアン・モードのプロセッサ用にコードをコンパイルする。必要となるライブラリが存在すると仮定する。
+#	リトルエンディアン・モードのプロセッサ用にコードをコンパイルする。必要となるライブラリが存在すると仮定する。 
 #-EB   // (pspでは指定できない。)
-#	ビッグエンディアン・モードのプロセッサ用にコードをコンパイルする。必要となるライブラリが存在すると仮定する。
+#	ビッグエンディアン・モードのプロセッサ用にコードをコンパイルする。必要となるライブラリが存在すると仮定する。 
 # 解説: pspのcpuはリトルエンディアンなので -EL (Little Endian)。デフォルトなのであえて指定する意味が無い。
 
 #-G<number>
@@ -797,16 +797,16 @@ CFLAGS_OPTIMIZE += -mabi=eabi
 #	グローバルポインタ(gp あるいは $28)に基づいた一命令のメモリ参照を生成することが可能になる。
 #	<number> のデフォルト値は、MIPS のアセンブラを使う場合には 8 で、GNU アセンブラを使う場合には 0 である。
 #	-G<number> オプションはアセンブラとリンカにも渡される。
-#	全てのモジュールは、同じ値の -G<number> でコンパイルしなければならない。
+#	全てのモジュールは、同じ値の -G<number> でコンパイルしなければならない。 
 # 解説: pspでは GNUアセンブラを使うので初期値が -G0 と思われる。
 #CFLAGS += -G8
 
 # ------- アセンブラにプリプロセッサを使わない
-#-nocpp
+#-nocpp 
 #	MIPS アセンブラに対し、ユーザのアセンブラソースファイル(サフィックスが.s のもの)をアセンブルする場合に、
 #	アセンブラのプリプロセッサを実行しないように指示する。
 #	これらのオプションは、マシン記述の TARGET_SWITCHES マクロで定義されている。
-#	これらのオプションのデフォルトも、このマクロで定義されているので、デフォルトを変更するが可能である。
+#	これらのオプションのデフォルトも、このマクロで定義されているので、デフォルトを変更するが可能である。 
 
 # =============================================
 
@@ -893,7 +893,7 @@ CFLAGS += -std=gnu99
 
 
 
-# 全部調べた訳じゃないけど、どういう場合に Warning扱い にするかの設定。(たぶん)
+# 全部調べた訳じゃないけど、どういう場合に Warning扱い にするかの設定。(たぶん) 
 	# 模倣風では -Werror なので Warning扱いは、エラー扱いにして即コンパイル中止。
 
 
@@ -919,7 +919,7 @@ CFLAGS += -ffast-math
 	# このオプションを指定すると、実行速度を最適化するという観点から、
 	# ある面で ANSI や IEEE の規則や仕様を破ることを GCC に許す。
 	# 例えば、このオプションを指定すると、GCC は、sqrt 関数の引数が負にならないとか、
-	# 浮動小数点値がNaN になることはないという仮定を行なう。
+	# 浮動小数点値がNaN になることはないという仮定を行なう。 
 
 
 
@@ -939,11 +939,11 @@ CFLAGS += -ffast-math
 # ループの強度削減と繰り返し変数の削除の最適化を実行します。
 # ループの外に出せる計算は外に出して、ステップ数を減らします。
 # ========
-# -frerun-cse-after-loop
+# -frerun-cse-after-loop 
 # ループ最適化の実行後に共通部分式の削除をもう一度実行します。
 # -fstrength-reduce で行ったことを徹底して行います。
 # ========
-# -frerun-loop-opt
+# -frerun-loop-opt 
 # ループ最適化を徹底して行います。-fstrength-reduceで行ったことです。
 # ループ内で変化しない式やアドレス計算がチェックされます。
 # そして、そうした計算はループの外に移され、その評価値がレジスタに格納されます。
@@ -1014,7 +1014,7 @@ else
 	LIB_CFLAGS += -pg
 endif
 
-# $(shell $(SDL_CONFIG) --cflags)
+# $(shell $(SDL_CONFIG) --cflags) 
 ###
 #CXXFLAGS += $(CFLAGS)
 #CXXFLAGS += -fno-exceptions
@@ -1180,7 +1180,7 @@ ifneq ($(USE_MINIMALIST_PSP_SDK),1)
 # (unix:ディレクトリー ,msdos: ディレクトリー ,windows: フォルダ)[OSで名称が違うが同じ物]
 # make directory (unix:mkdir ,msdos:md) メイク-ディアー、メイク-ディレクトリー(ディレクトリを作成する)
 #435ではbuild.mak内にある。MKDIR = mkdir.exe
-RM = -rm
+RM = -rm.exe
 # copy    (unix:cp ,msdos: copy) コピー(ファイルを複製する)[2つに増える]
 #435ではbuild.mak内にある。CP = cp
 CP = cp
@@ -1198,9 +1198,9 @@ else
 # ただ、make.exe とか 速度要る奴はcygwin関係無くてnativeで動いてるっぽい。
 #MKDIR = -mkdir
 #RM = -rm
-MKDIR = mkdir
+MKDIR = C:/pspsdk/bin/mkdir
 #RM = -rm.exe
-RM = rm
+RM = C:/pspsdk/bin/rm.exe
 #MV = mv
 endif
 
@@ -1251,7 +1251,7 @@ core:
 	@echo Remove shooting core files.
 	@$(DELTREE_OBJ_CORE)
 
-# ゲームコア自機のみ、リコンパイル用。
+# ゲームコア自機のみ、リコンパイル用。 
 # Make jiki ↓ (但しcygwin)
 jiki:
 	@echo Remove shooting core jiki files.
@@ -1306,3 +1306,4 @@ rr:
 	@$(RM) -f *.elf
 	@$(RM) -f $(TARGET)_map.txt
 	@$(DELTREE_OBJ_ALL)
+
